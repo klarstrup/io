@@ -118,24 +118,30 @@ enum HoldScore {
 }
 const BASE_PROBLEM_SCORE = 1000;
 const FLASH_SCORE_MULTIPLIER = 1.1;
+const fetchJson = async <T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<T> => fetch(input, init).then((r) => r.json());
+
 const fetchCache = new Map<RequestInfo | URL, Promise<any>>();
 const cachedFetchJSON = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<T> => {
-  console.log(fetchCache.size);
   const key = JSON.stringify({ input, init });
-  if (!fetchCache.has(key)) {
-    const jsonPromise = fetch(input, init).then((r) => r.json());
-    fetchCache.set(key, jsonPromise);
-  }
+  if (!fetchCache.has(key)) fetchCache.set(key, fetchJson(input, init));
 
   return fetchCache.get(key)!;
 };
+
 const fetchClimbalong = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit
-) => cachedFetchJSON<T>(`https://comp.climbalong.com/api${input}`, init);
+) =>
+  (process.env.NODE_ENV === "development" ? cachedFetchJSON : fetchJson)<T>(
+    `https://comp.climbalong.com/api${input}`,
+    init
+  );
 
 export async function getIoPercentileForClimbalongCompetition(
   competitionId: number,
