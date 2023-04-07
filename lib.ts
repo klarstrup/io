@@ -123,6 +123,7 @@ const cachedFetchJSON = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<T> => {
+  console.log(fetchCache.size);
   const key = JSON.stringify({ input, init });
   if (!fetchCache.has(key)) {
     const jsonPromise = fetch(input, init).then((r) => r.json());
