@@ -283,10 +283,11 @@ export async function getIoPercentileForClimbalongCompetition(
       ([athlete]) => athlete.athleteId === io?.athleteId
     )?.[1] || NaN;
 
-  const ioPercentile =
-    atheletesWithTopAndZoneScores.filter(
-      ([, topScore]) => topScore < ioTopScore
-    ).length / atheletesWithTopAndZoneScores.length;
+  const ioPercentile = ioTopScore
+    ? atheletesWithTopAndZoneScores.filter(
+        ([, topScore]) => topScore < ioTopScore
+      ).length / atheletesWithTopAndZoneScores.length
+    : NaN;
   const ioPercentileString = (ioPercentile * 100).toFixed(1) + "%";
 
   return {
