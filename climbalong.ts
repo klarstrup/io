@@ -1,191 +1,183 @@
-export interface Athlete {
-  athleteId: number;
-  competitionId: number;
-  bib: number;
-  name: string;
-  dateOfBirth: null;
-  sex: Sex;
-  category: null;
-  nationality: null;
-  club: null;
-  tags: Tags;
-}
+import { dbFetch } from "./fetch";
 
-export enum Sex {
-  F = "F",
-  M = "M",
-}
+export namespace Climbalong {
+  export interface Athlete {
+    athleteId: number;
+    competitionId: number;
+    bib: number;
+    name: string;
+    dateOfBirth: null;
+    sex: Sex;
+    category: null;
+    nationality: null;
+    club: null;
+    tags: Tags;
+  }
 
-export interface Tags {}
+  export enum Sex {
+    F = "F",
+    M = "M",
+  }
 
-export interface Competition {
-  competitionId: number;
-  title: string;
-  description: string;
-  startTime: Date;
-  endTime: Date;
-  urlFriendlyAbbreviation: null;
-  columnsInAthleteLists: null;
-  climbAlongLocationId: number;
-  listed: boolean;
-  athleteRegistrationSubject: string;
-  athleteRegistrationMessage: string;
-  officialRegistrationSubject: string;
-  officialRegistrationMessage: string;
-  address: string;
-  facility: string;
-  city: string;
-  countries: string[];
-  imageName: string;
-  eventLink: string;
-  showRegisterButton: boolean;
-  signUpOpen: boolean;
-  participantLimit: number;
-  thumbnail: string;
-  autoCheckIn: boolean;
-}
+  export interface Tags {}
 
-export interface Performance {
-  circuitId: number;
-  athleteId: number;
-  problemId: number;
-  judgeId: null;
-  performanceStartedTime: Date;
-  performanceEndedTime: Date | null;
-  didNotStart: boolean;
-  numberOfAttempts: number;
-  attempts: Attempt[];
-  scores: Score[];
-  registrationTime: Date;
-}
+  export interface Competition {
+    competitionId: number;
+    title: string;
+    description: string;
+    startTime: Date;
+    endTime: Date;
+    urlFriendlyAbbreviation: null;
+    columnsInAthleteLists: null;
+    climbAlongLocationId: number;
+    listed: boolean;
+    athleteRegistrationSubject: string;
+    athleteRegistrationMessage: string;
+    officialRegistrationSubject: string;
+    officialRegistrationMessage: string;
+    address: string;
+    facility: string;
+    city: string;
+    countries: string[];
+    imageName: string;
+    eventLink: string;
+    showRegisterButton: boolean;
+    signUpOpen: boolean;
+    participantLimit: number;
+    thumbnail: string;
+    autoCheckIn: boolean;
+  }
 
-export interface Attempt {
-  attemptNumber: number;
-  holdsReached: Score[];
-}
+  export interface Performance {
+    circuitId: number;
+    athleteId: number;
+    problemId: number;
+    judgeId: null;
+    performanceStartedTime: Date;
+    performanceEndedTime: Date | null;
+    didNotStart: boolean;
+    numberOfAttempts: number;
+    attempts: Attempt[];
+    scores: Score[];
+    registrationTime: Date;
+  }
 
-export interface Score {
-  holdId: number;
-  holdScore: number;
-  reachedInAttempt: number;
-  reachedTime: Date | null;
-}
+  export interface Attempt {
+    attemptNumber: number;
+    holdsReached: Score[];
+  }
 
-export interface Lane {
-  laneId: number;
-  competitionId: number;
-  startNodeId: number;
-  startEdgeId: number;
-  endNodeId: number;
-  endEdgeId: number;
-  title: string;
-  description: string;
-  roundId: number;
-  scheduledStart: null;
-  scheduledEnd: null;
-  sortOrder: number;
-  isResultsOnly: boolean;
-}
+  export interface Score {
+    holdId: number;
+    holdScore: number;
+    reachedInAttempt: number;
+    reachedTime: Date | null;
+  }
 
-export interface Round {
-  roundId: number;
-  competitionId: number;
-  title: string;
-  description: string;
-  scheduledStart: null;
-  scheduledEnd: null;
-  sortOrder: number;
-}
-export interface Problem {
-  problemId: number;
-  title: string;
-  discipline: number;
-  circuitId: number;
-  climbAlongRouteId: number;
-  sortOrder: number;
-  imageName: string;
-  categoryId: string;
-}
-export interface Circuit {
-  competitionId: number;
-  circuitId: number;
-  title: string;
-}
+  export interface Lane {
+    laneId: number;
+    competitionId: number;
+    startNodeId: number;
+    startEdgeId: number;
+    endNodeId: number;
+    endEdgeId: number;
+    title: string;
+    description: string;
+    roundId: number;
+    scheduledStart: null;
+    scheduledEnd: null;
+    sortOrder: number;
+    isResultsOnly: boolean;
+  }
 
+  export interface Round {
+    roundId: number;
+    competitionId: number;
+    title: string;
+    description: string;
+    scheduledStart: null;
+    scheduledEnd: null;
+    sortOrder: number;
+  }
+  export interface Problem {
+    problemId: number;
+    title: string;
+    discipline: number;
+    circuitId: number;
+    climbAlongRouteId: number;
+    sortOrder: number;
+    imageName: string;
+    categoryId: string;
+  }
+  export interface Circuit {
+    competitionId: number;
+    circuitId: number;
+    title: string;
+  }
+}
 enum HoldScore {
   "TOP" = 4,
   "ZONE" = 1,
 }
-const BASE_PROBLEM_SCORE = 1000;
-const FLASH_SCORE_MULTIPLIER = 1.1;
-const fetchJson = async <T>(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<T> => fetch(input, init).then((r) => r.json());
-
-const fetchCache = new Map<RequestInfo | URL, Promise<any>>();
-const cachedFetchJSON = async <T>(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<T> => {
-  const key = JSON.stringify({ input, init });
-  if (!fetchCache.has(key)) fetchCache.set(key, fetchJson(input, init));
-
-  return fetchCache.get(key)!;
-};
 
 const fetchClimbalong = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit
-) =>
-  (process.env.NODE_ENV === "development" ? cachedFetchJSON : fetchJson)<T>(
-    `https://comp.climbalong.com/api${input}`,
-    init
-  );
+) => dbFetch<T>(`https://comp.climbalong.com/api${input}`, init);
 
+const BASE_PROBLEM_SCORE = 1000;
+const FLASH_SCORE_MULTIPLIER = 1.1;
 export async function getIoPercentileForClimbalongCompetition(
   competitionId: number,
   ioId?: number,
-  sex?: Sex
+  sex?: boolean
 ) {
-  const competition = await fetchClimbalong<Competition>(
+  const competition = await fetchClimbalong<Climbalong.Competition>(
     `/v0/competitions/${competitionId}`
   );
 
-  const athletes = (
-    await fetchClimbalong<Athlete[]>(
-      `/v0/competitions/${competitionId}/athletes`
-    )
-  ).filter((athlete) => (sex ? athlete.sex === sex : true));
+  let athletes = await fetchClimbalong<Climbalong.Athlete[]>(
+    `/v0/competitions/${competitionId}/athletes`
+  );
 
   const io = ioId
     ? athletes.find((athlete) => athlete.athleteId === ioId)
     : athletes.find(({ name }) => name.startsWith("Io ") || name === "Io");
 
+  if (sex) athletes = athletes.filter((athlete) => athlete.sex === io.sex);
+
   const rounds = (
-    await fetchClimbalong<Round[]>(`/v1/competitions/${competitionId}/rounds`)
+    await fetchClimbalong<Climbalong.Round[]>(
+      `/v1/competitions/${competitionId}/rounds`
+    )
   ).filter((round) => !round.title.match(/final/gi)); // Only score quals
   const lanes = (
-    await fetchClimbalong<Lane[]>(`/v1/competitions/${competitionId}/lanes`)
+    await fetchClimbalong<Climbalong.Lane[]>(
+      `/v1/competitions/${competitionId}/lanes`
+    )
   ).filter((lane) => rounds.some((round) => lane.roundId === round.roundId));
   const circuits = (
     await Promise.all(
       lanes.map(({ laneId }) =>
-        fetchClimbalong<Circuit[]>(`/v0/lanes/${laneId}/circuits`)
+        fetchClimbalong<Climbalong.Circuit[]>(`/v0/lanes/${laneId}/circuits`)
       )
     )
   ).flat();
   const performances = (
     await Promise.all(
       circuits.map(({ circuitId }) =>
-        fetchClimbalong<Performance[]>(`/v0/circuits/${circuitId}/performances`)
+        fetchClimbalong<Climbalong.Performance[]>(
+          `/v0/circuits/${circuitId}/performances`
+        )
       )
     )
   ).flat();
   const problems = (
     await Promise.all(
       circuits.map(({ circuitId }) =>
-        fetchClimbalong<Problem[]>(`/v0/circuits/${circuitId}/problems`)
+        fetchClimbalong<Climbalong.Problem[]>(
+          `/v0/circuits/${circuitId}/problems`
+        )
       )
     )
   ).flat();
@@ -204,7 +196,7 @@ export async function getIoPercentileForClimbalongCompetition(
     )
       memo.set(problem.title, [...topPerformances, performance]);
     return memo;
-  }, new Map<string, Performance[]>());
+  }, new Map<string, Climbalong.Performance[]>());
   const atheleteZonesByProblemId = performances.reduce((memo, performance) => {
     const problem = problems.find(
       (p) => p.problemId === performance.problemId
@@ -217,7 +209,7 @@ export async function getIoPercentileForClimbalongCompetition(
     )
       memo.set(problem.title, [...zonePerformances, performance]);
     return memo;
-  }, new Map<string, Performance[]>());
+  }, new Map<string, Climbalong.Performance[]>());
 
   const atheletesWithTopAndZoneScores = athletes
     .map((athlete) => {
@@ -299,21 +291,3 @@ export async function getIoPercentileForClimbalongCompetition(
     })`,
   };
 }
-
-/*
-  Promise.all([
-    getIoPercentileForClimbalongCompetition(13, 844, Sex["M"]),
-    getIoPercentileForClimbalongCompetition(20, 1284, Sex["M"]),
-    {
-      event: `Beta Boulders Winter Pump Fest (Feb 4th) (M)`,
-      ioPercentile: `62.4% (of 140)`,
-    },
-    getIoPercentileForClimbalongCompetition(26, 3381, Sex["M"]),
-    {
-      event: `Beta Boulders Gorilla Unleashed II (Apr 1st) (M)`,
-      ioPercentile: `31.7% (of 115)`,
-    },
-    getIoPercentileForClimbalongCompetition(27, undefined, Sex["M"]),
-  ]).then((a) => console.table(a), console.error);
-  
-  */
