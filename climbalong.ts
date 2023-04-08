@@ -144,7 +144,8 @@ export async function getIoPercentileForClimbalongCompetition(
     ? athletes.find((athlete) => athlete.athleteId === ioId)
     : athletes.find(({ name }) => name.startsWith("Io ") || name === "Io");
 
-  if (sex) athletes = athletes.filter((athlete) => athlete.sex === io.sex);
+  if (io && sex)
+    athletes = athletes.filter((athlete) => athlete.sex === io.sex);
 
   const rounds = (
     await fetchClimbalong<Climbalong.Round[]>(
