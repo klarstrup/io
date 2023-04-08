@@ -32,6 +32,7 @@ export const dbFetch = async <T>(
   };
   const fetchArgs = JSON.stringify({ input, init: sanitizedInit });
   const filter = { fetchArgs };
+  const now = new Date();
   let fetchRow = await Fetch.findOne(filter);
   let result: string | null = null;
   let resultJson: T;
@@ -41,7 +42,7 @@ export const dbFetch = async <T>(
     let stale = false;
     if (typeof cacheOptions?.maxAge === "number") {
       const rowAge = Math.floor(
-        (Number(new Date()) - Number(fetchRow.lastSuccessfulFetchAt)) / 1000
+        (Number(now) - Number(fetchRow.lastSuccessfulFetchAt)) / 1000
       );
       if (rowAge > cacheOptions.maxAge) {
         stale = true;
@@ -51,29 +52,33 @@ export const dbFetch = async <T>(
       if (fetchRow.lastResult) {
         result = fetchRow.lastResult;
         resultJson = JSON.parse(result);
+        console.info(`DB HIT ${input}`);
       }
+    } else {
+      console.info(`DB STALE ${input}`);
     }
   }
 
   if (!result) {
     await Fetch.updateOne(
       filter,
-      { lastAttemptedFetchAt: new Date() },
+      { lastAttemptedFetchAt: now },
       { upsert: true }
     );
+    console.info(`DB FETCHING ${input}`);
     const response = await fetch(input, init);
     if (response.status !== 200) {
       error = await response.text();
       await Fetch.updateOne(filter, {
         lastError: error,
-        lastFailedFetchAt: new Date(),
+        lastFailedFetchAt: now,
       });
     } else {
       result = await response.text();
       resultJson = JSON.parse(result);
       await Fetch.updateOne(filter, {
         lastResult: result,
-        lastSuccessfulFetchAt: new Date(),
+        lastSuccessfulFetchAt: now,
       });
     }
   }
