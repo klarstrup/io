@@ -66,7 +66,10 @@ export const dbFetch = async <T>(
       { upsert: true }
     );
     console.info(`DB FETCHING ${input}`);
-    const response = await fetch(input, init);
+    const response = await fetch(input, {
+      ...init,
+      next: { revalidate: cacheOptions?.maxAge },
+    });
     if (response.status !== 200) {
       error = await response.text();
       await Fetch.updateOne(filter, {
