@@ -149,8 +149,29 @@ const getCircuitProblems = (id: number) =>
 const getCircuitsProblems = (ids: number[]) =>
   Promise.all(ids.map((id) => getCircuitProblems(id)));
 
-const BASE_PROBLEM_SCORE = 1000;
-const FLASH_SCORE_MULTIPLIER = 1.1;
+const TDB_BASE = 1000;
+const TDB_FLASH_MULTIPLIER = 1.1;
+const PTS_SEND = 100;
+const PTS_FLASH_BONUS = 20;
+
+const resultToSortableTopsAndZonesAndAttemptsNumber = ({
+  tops,
+  zones,
+  topsAttempts,
+  zonesAttempts,
+}) =>
+  Number(
+    "0." +
+      [
+        String(tops).padStart(3, "0"),
+        String(zones).padStart(3, "0"),
+        String(topsAttempts).padStart(3, "0"),
+        String(zonesAttempts).padStart(3, "0"),
+      ].join("")
+  );
+
+const percent = (n: number) => (n * 100).toFixed(1) + "%";
+
 export async function getIoPercentileForClimbalongCompetition(
   competitionId: number,
   ioId?: number,
@@ -204,108 +225,118 @@ export async function getIoPercentileForClimbalongCompetition(
     [new Map<string, number>(), new Map<string, number>()]
   );
 
-  const atheletesWithTopAndZoneScores = athletes
-    .map((athlete) => {
-      let topScore = 0;
-      let zoneScore = 0;
-      let tops = 0;
-      let zones = 0;
-      let topsAttempts = 0;
-      let zonesAttempts = 0;
+  const atheletesWithResults = athletes.map((athlete) => {
+    let topsTDBScore = 0;
+    let zonesTDBScore = 0;
+    let topsPTSScore = 0;
+    let tops = 0;
+    let zones = 0;
+    let topsAttempts = 0;
+    let zonesAttempts = 0;
 
-      const athletePerformances = performances.filter(
-        (performance) => performance.athleteId === athlete.athleteId
-      );
-      for (const performance of athletePerformances) {
-        const problem = problems.find(
-          (p) => p.problemId === performance.problemId
-        )!;
+    const athletePerformances = performances.filter(
+      (performance) => performance.athleteId === athlete.athleteId
+    );
+    for (const performance of athletePerformances) {
+      const problem = problems.find(
+        (p) => p.problemId === performance.problemId
+      )!;
+      let problemTopTDBScore =
+        TDB_BASE / (topsByProblemTitle.get(problem.title) || 0);
+      let problemZoneTDBScore =
+        TDB_BASE / (zonesByProblemTitle.get(problem.title) || 0);
 
-        for (const score of performance.scores) {
-          if (score.holdScore === HoldScore["TOP"]) {
-            let problemTopScore =
-              BASE_PROBLEM_SCORE / (topsByProblemTitle.get(problem.title) || 0);
-
-            if (score.reachedInAttempt === 1) {
-              problemTopScore *= FLASH_SCORE_MULTIPLIER;
-            }
-            topsAttempts += score.reachedInAttempt;
-            tops += 1;
-            topScore += problemTopScore;
-          } else if (score.holdScore === HoldScore["ZONE"]) {
-            let problemZoneScore =
-              BASE_PROBLEM_SCORE /
-              (zonesByProblemTitle.get(problem.title) || 0);
-
-            if (score.reachedInAttempt === 1) {
-              problemZoneScore *= FLASH_SCORE_MULTIPLIER;
-            }
-            zonesAttempts += score.reachedInAttempt;
-            zones += 1;
-            zoneScore += problemZoneScore;
+      for (const score of performance.scores) {
+        if (score.holdScore === HoldScore["TOP"]) {
+          topsAttempts += score.reachedInAttempt;
+          tops += 1;
+          topsPTSScore += PTS_SEND;
+          if (score.reachedInAttempt === 1) {
+            topsPTSScore += PTS_FLASH_BONUS;
+            problemTopTDBScore *= TDB_FLASH_MULTIPLIER;
           }
+          topsTDBScore += problemTopTDBScore;
+        } else if (score.holdScore === HoldScore["ZONE"]) {
+          if (score.reachedInAttempt === 1) {
+            problemZoneTDBScore *= TDB_FLASH_MULTIPLIER;
+          }
+          zonesAttempts += score.reachedInAttempt;
+          zones += 1;
+          zonesTDBScore += problemZoneTDBScore;
         }
       }
+    }
 
-      return {
-        athlete,
-        topScore,
-        zoneScore,
-        tops,
-        zones,
-        topsAttempts,
-        zonesAttempts,
-      } as const;
-    })
-    .sort(
-      ({ zoneScore: zoneScoreA }, { zoneScore: zoneScoreB }) =>
-        zoneScoreB - zoneScoreA
-    )
-    .sort(
-      ({ topScore: topScoreA }, { topScore: topScoreB }) =>
-        topScoreB - topScoreA
-    );
+    return {
+      athlete,
+      topsPTSScore,
+      topsTDBScore,
+      zonesTDBScore,
+      tops,
+      zones,
+      topsAttempts,
+      zonesAttempts,
+    } as const;
+  });
   if (!io) return null;
+  const atheletesInOrderOfTDBScore = Array.from(atheletesWithResults)
+    .sort((a, b) => b.zonesTDBScore - a.zonesTDBScore)
+    .sort((a, b) => b.topsTDBScore - a.topsTDBScore)
+    .map(({ athlete }) => athlete);
+  const atheletesInOrderOfPTSScore = Array.from(atheletesWithResults)
+    .sort((a, b) => b.topsPTSScore - a.topsPTSScore)
+    .map(({ athlete }) => athlete);
+  const atheletesInOrderOfTopsAndZones = Array.from(atheletesWithResults)
+    .sort((a, b) => a.zonesAttempts - b.zonesAttempts)
+    .sort((a, b) => a.topsAttempts - b.topsAttempts)
+    .sort((a, b) => b.zones - a.zones)
+    .sort((a, b) => b.tops - a.tops)
+    .map(({ athlete }) => athlete);
 
-  const ioResults = atheletesWithTopAndZoneScores.find(
+  const ioResults = atheletesWithResults.find(
     ({ athlete }) => athlete.athleteId === io.athleteId
   );
   if (!ioResults) return null;
 
-  const ioTopPercentile =
-    atheletesWithTopAndZoneScores.filter(
-      ({ topScore }) => topScore < ioResults.topScore
-    ).length / atheletesWithTopAndZoneScores.length;
-  const ioTopPercentileString = (ioTopPercentile * 100).toFixed(1) + "%";
+  const ioTopsAndZonesRank = atheletesInOrderOfTopsAndZones.indexOf(io) + 1;
+  const ioTopsAndZonesPercentile =
+    1 - ioTopsAndZonesRank / atheletesWithResults.length;
 
-  const ioZonePercentile =
-    atheletesWithTopAndZoneScores.filter(
-      ({ zoneScore }) => zoneScore < ioResults.zoneScore
-    ).length / atheletesWithTopAndZoneScores.length;
-  const ioZonePercentileString = (ioZonePercentile * 100).toFixed(1) + "%";
+  const ioTDBRank = atheletesInOrderOfTDBScore.indexOf(io) + 1;
+  const ioTDBPercentile = 1 - ioTDBRank / atheletesWithResults.length;
+
+  const ioPointsRank = atheletesInOrderOfPTSScore.indexOf(io) + 1;
+  const ioPointsPercentile = 1 - ioPointsRank / atheletesWithResults.length;
 
   const competition = await getCompetition(competitionId);
   const noProblems = topsByProblemTitle.size;
-  const noClimbers = atheletesWithTopAndZoneScores.length || NaN;
+  const noClimbers = atheletesWithResults.length || NaN;
 
   return {
     start: competition.startTime,
     end: competition.endTime,
-    event: `${competition.facility} ${competition.title}${
-      sex ? ` (${io.sex} category)` : ""
-    }`,
+    event: `${competition.facility} ${competition.title}`,
+    category: sex ? io.sex : null,
+    climbers: noClimbers,
     problems: noProblems,
-    tops: ioResults.tops,
-    zopsAttempts: ioResults.topsAttempts,
-    zones: ioResults.zones,
-    zonesAttempts: ioResults.zonesAttempts,
-    topScore: `${Math.floor(ioResults.topScore)} total (${Math.floor(
-      ioResults.topScore / noProblems
-    )} average across ${noProblems} problems)`,
-    topPercentile: `${ioTopPercentileString} (of ${noClimbers} climbers)`,
-    zoneScore: `${Math.floor(ioResults.zoneScore)} total (${Math.floor(
-      ioResults.zoneScore / noProblems
-    )} average across ${noProblems} problems)`,
-    zonePercentile: `${ioZonePercentileString} (of ${noClimbers} climbers)`,
+    topsAndZonesScoring: {
+      rank: ioTopsAndZonesRank,
+      percentile: percent(ioTopsAndZonesPercentile),
+      tops: ioResults.tops,
+      zones: ioResults.zones,
+      topsAttempts: ioResults.topsAttempts,
+      zonesAttempts: ioResults.zonesAttempts,
+    },
+    thousandDividedByScoring: {
+      rank: ioTDBRank,
+      percentile: percent(ioTDBPercentile),
+      topsScore: Math.round(ioResults.topsTDBScore),
+      zonesScore: Math.round(ioResults.zonesTDBScore),
+    },
+    pointsScoring: {
+      rank: ioPointsRank,
+      percentile: percent(ioPointsPercentile),
+      points: ioResults.topsPTSScore,
+    },
   };
 }
