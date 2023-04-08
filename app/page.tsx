@@ -28,13 +28,13 @@ const getData = async () => {
     getIoPercentileForClimbalongCompetition(13, 844, sex),
     getIoPercentileForClimbalongCompetition(20, 1284, sex),
     {
-      event: `Beta Boulders Winter Pump Fest (Feb 4th) (M)`,
-      ioPercentile: `62.4% (of 140)`,
+      event: `Beta Boulders Winter Pump Fest (Feb 4th) (M category)`,
+      topPercentile: `62.4% (of 140)`,
     },
     getIoPercentileForClimbalongCompetition(26, 3381, sex),
     {
-      event: `Beta Boulders Gorilla Unleashed II (Apr 1st) (M)`,
-      ioPercentile: `31.7% (of 115)`,
+      event: `Beta Boulders Gorilla Unleashed II (Apr 1st) (M category)`,
+      topPercentile: `31.7% (of 115)`,
     },
     getIoPercentileForClimbalongCompetition(27, 8468, sex),
   ]);

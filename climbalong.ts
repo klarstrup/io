@@ -182,114 +182,130 @@ export async function getIoPercentileForClimbalongCompetition(
     await getCircuitsProblems(circuits.map(({ circuitId }) => circuitId))
   ).flat();
 
-  const atheleteTopsByProblemId = performances.reduce((memo, performance) => {
-    if (
-      !athletes.some((athlete) => athlete.athleteId === performance.athleteId)
-    )
-      return memo;
-    const problem = problems.find(
-      (p) => p.problemId === performance.problemId
-    )!;
-    const topPerformances = memo.get(problem.title) || [];
-    if (
-      performance.scores.some(({ holdScore }) => holdScore === HoldScore["TOP"])
-    )
-      memo.set(problem.title, [...topPerformances, performance]);
-    return memo;
-  }, new Map<string, Climbalong.Performance[]>());
-  const atheleteZonesByProblemId = performances.reduce((memo, performance) => {
-    const problem = problems.find(
-      (p) => p.problemId === performance.problemId
-    )!;
-    const zonePerformances = memo.get(problem.title) || [];
-    if (
-      performance.scores.some(
-        ({ holdScore }) => holdScore === HoldScore["ZONE"]
-      )
-    )
-      memo.set(problem.title, [...zonePerformances, performance]);
-    return memo;
-  }, new Map<string, Climbalong.Performance[]>());
+  const [topsByProblemTitle, zonesByProblemTitle] = performances.reduce(
+    ([topMemo, zoneMemo], performance) => {
+      if (
+        athletes.some((athlete) => athlete.athleteId === performance.athleteId)
+      ) {
+        const problem = problems.find(
+          (p) => p.problemId === performance.problemId
+        )!;
+        for (const score of performance.scores) {
+          if (score.holdScore === HoldScore["ZONE"]) {
+            zoneMemo.set(problem.title, (zoneMemo.get(problem.title) || 0) + 1);
+          }
+          if (score.holdScore === HoldScore["TOP"]) {
+            topMemo.set(problem.title, (topMemo.get(problem.title) || 0) + 1);
+          }
+        }
+      }
+      return [topMemo, zoneMemo];
+    },
+    [new Map<string, number>(), new Map<string, number>()]
+  );
 
   const atheletesWithTopAndZoneScores = athletes
     .map((athlete) => {
       let topScore = 0;
       let zoneScore = 0;
+      let tops = 0;
+      let zones = 0;
+      let topsAttempts = 0;
+      let zonesAttempts = 0;
 
-      for (const performance of performances.filter(
+      const athletePerformances = performances.filter(
         (performance) => performance.athleteId === athlete.athleteId
-      )) {
+      );
+      for (const performance of athletePerformances) {
         const problem = problems.find(
           (p) => p.problemId === performance.problemId
         )!;
 
-        if (
-          performance.scores.some(
-            ({ holdScore }) => holdScore === HoldScore["TOP"]
-          )
-        ) {
-          let problemScore =
-            BASE_PROBLEM_SCORE /
-            atheleteTopsByProblemId.get(problem.title)!.length;
-          if (
-            performance.scores.some(
-              ({ holdScore, reachedInAttempt }) =>
-                holdScore === HoldScore["TOP"] && reachedInAttempt === 1
-            )
-          ) {
-            problemScore *= FLASH_SCORE_MULTIPLIER;
+        for (const score of performance.scores) {
+          if (score.holdScore === HoldScore["TOP"]) {
+            let problemTopScore =
+              BASE_PROBLEM_SCORE / (topsByProblemTitle.get(problem.title) || 0);
+
+            if (score.reachedInAttempt === 1) {
+              problemTopScore *= FLASH_SCORE_MULTIPLIER;
+            }
+            topsAttempts += score.reachedInAttempt;
+            tops += 1;
+            topScore += problemTopScore;
+          } else if (score.holdScore === HoldScore["ZONE"]) {
+            let problemZoneScore =
+              BASE_PROBLEM_SCORE /
+              (zonesByProblemTitle.get(problem.title) || 0);
+
+            if (score.reachedInAttempt === 1) {
+              problemZoneScore *= FLASH_SCORE_MULTIPLIER;
+            }
+            zonesAttempts += score.reachedInAttempt;
+            zones += 1;
+            zoneScore += problemZoneScore;
           }
-          topScore += problemScore;
-        }
-        if (
-          performance.scores.some(
-            ({ holdScore }) => holdScore === HoldScore["ZONE"]
-          )
-        ) {
-          let problemScore =
-            BASE_PROBLEM_SCORE /
-            atheleteZonesByProblemId.get(problem.title)!.length;
-          if (
-            performance.scores.some(
-              ({ holdScore, reachedInAttempt }) =>
-                holdScore === HoldScore["ZONE"] && reachedInAttempt === 1
-            )
-          ) {
-            problemScore *= FLASH_SCORE_MULTIPLIER;
-          }
-          zoneScore += problemScore;
         }
       }
 
-      return [athlete, topScore, zoneScore] as const;
+      return {
+        athlete,
+        topScore,
+        zoneScore,
+        tops,
+        zones,
+        topsAttempts,
+        zonesAttempts,
+      } as const;
     })
-    .sort(([, , zoneScoreA], [, , zoneScoreB]) => zoneScoreB - zoneScoreA)
-    .sort(([, topScoreA], [, topScoreB]) => topScoreB - topScoreA)
-    .map(
-      ([athlete, topScore, zoneScore]) =>
-        [athlete, topScore, zoneScore] as const
+    .sort(
+      ({ zoneScore: zoneScoreA }, { zoneScore: zoneScoreB }) =>
+        zoneScoreB - zoneScoreA
+    )
+    .sort(
+      ({ topScore: topScoreA }, { topScore: topScoreB }) =>
+        topScoreB - topScoreA
     );
+  if (!io) return null;
 
-  const ioTopScore =
-    atheletesWithTopAndZoneScores.find(
-      ([athlete]) => athlete.athleteId === io?.athleteId
-    )?.[1] || NaN;
+  const ioResults = atheletesWithTopAndZoneScores.find(
+    ({ athlete }) => athlete.athleteId === io.athleteId
+  );
+  if (!ioResults) return null;
 
-  const ioPercentile = ioTopScore
-    ? atheletesWithTopAndZoneScores.filter(
-        ([, topScore]) => topScore < ioTopScore
-      ).length / atheletesWithTopAndZoneScores.length
-    : NaN;
-  const ioPercentileString = (ioPercentile * 100).toFixed(1) + "%";
+  const ioTopPercentile =
+    atheletesWithTopAndZoneScores.filter(
+      ({ topScore }) => topScore < ioResults.topScore
+    ).length / atheletesWithTopAndZoneScores.length;
+  const ioTopPercentileString = (ioTopPercentile * 100).toFixed(1) + "%";
+
+  const ioZonePercentile =
+    atheletesWithTopAndZoneScores.filter(
+      ({ zoneScore }) => zoneScore < ioResults.zoneScore
+    ).length / atheletesWithTopAndZoneScores.length;
+  const ioZonePercentileString = (ioZonePercentile * 100).toFixed(1) + "%";
 
   const competition = await getCompetition(competitionId);
+  const noProblems = topsByProblemTitle.size;
+  const noClimbers = atheletesWithTopAndZoneScores.length || NaN;
 
   return {
+    start: competition.startTime,
+    end: competition.endTime,
     event: `${competition.facility} ${competition.title}${
-      sex ? ` (${sex})` : ""
+      sex ? ` (${io.sex} category)` : ""
     }`,
-    ioPercentile: `${ioPercentileString} (of ${
-      atheletesWithTopAndZoneScores.length || NaN
-    })`,
+    problems: noProblems,
+    tops: ioResults.tops,
+    zopsAttempts: ioResults.topsAttempts,
+    zones: ioResults.zones,
+    zonesAttempts: ioResults.zonesAttempts,
+    topScore: `${Math.floor(ioResults.topScore)} total (${Math.floor(
+      ioResults.topScore / noProblems
+    )} average across ${noProblems} problems)`,
+    topPercentile: `${ioTopPercentileString} (of ${noClimbers} climbers)`,
+    zoneScore: `${Math.floor(ioResults.zoneScore)} total (${Math.floor(
+      ioResults.zoneScore / noProblems
+    )} average across ${noProblems} problems)`,
+    zonePercentile: `${ioZonePercentileString} (of ${noClimbers} climbers)`,
   };
 }
