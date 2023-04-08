@@ -33,7 +33,7 @@ export const dbFetch = async <T>(
   const fetchArgs = JSON.stringify({ input, init: sanitizedInit });
   const filter = { fetchArgs };
   let fetchRow = await Fetch.findOne(filter);
-  let result: string;
+  let result: string | null = null;
   let resultJson: T;
   let error: unknown;
   if (fetchRow) {
@@ -77,7 +77,7 @@ export const dbFetch = async <T>(
       });
     }
   }
-  return resultJson;
+  return resultJson!;
 };
 
 export const fetchJson = async <T>(
