@@ -154,22 +154,6 @@ const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
 const PTS_FLASH_BONUS = 20;
 
-const resultToSortableTopsAndZonesAndAttemptsNumber = ({
-  tops,
-  zones,
-  topsAttempts,
-  zonesAttempts,
-}) =>
-  Number(
-    "0." +
-      [
-        String(tops).padStart(3, "0"),
-        String(zones).padStart(3, "0"),
-        String(topsAttempts).padStart(3, "0"),
-        String(zonesAttempts).padStart(3, "0"),
-      ].join("")
-  );
-
 const percent = (n: number) => (n * 100).toFixed(1) + "%";
 
 export async function getIoPercentileForClimbalongCompetition(
