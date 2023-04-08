@@ -36,6 +36,6 @@ const getData = async () => {
       event: `Beta Boulders Gorilla Unleashed II (Apr 1st) (M)`,
       ioPercentile: `31.7% (of 115)`,
     },
-    getIoPercentileForClimbalongCompetition(27, undefined, true),
+    getIoPercentileForClimbalongCompetition(27, 8468, true),
   ]);
 };
