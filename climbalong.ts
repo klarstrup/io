@@ -154,7 +154,8 @@ const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
 const PTS_FLASH_BONUS = 20;
 
-const percent = (n: number) => (n * 100).toFixed(1) + "%";
+const percentile = (rank: number, tally: number) =>
+  ((1 - rank / tally) * 100).toFixed(1) + "%";
 
 export async function getIoPercentileForClimbalongCompetition(
   competitionId: number,
@@ -277,25 +278,18 @@ export async function getIoPercentileForClimbalongCompetition(
     .sort((a, b) => b.tops - a.tops)
     .map(({ athlete }) => athlete);
 
-  const ioResults = atheletesWithResults.find(
-    ({ athlete }) => athlete.athleteId === io.athleteId
-  );
-  if (!ioResults) return null;
-
   const ioTopsAndZonesRank = atheletesInOrderOfTopsAndZones.indexOf(io) + 1;
-  const ioTopsAndZonesPercentile =
-    1 - ioTopsAndZonesRank / atheletesWithResults.length;
-
   const ioTDBRank = atheletesInOrderOfTDBScore.indexOf(io) + 1;
-  const ioTDBPercentile = 1 - ioTDBRank / atheletesWithResults.length;
-
   const ioPointsRank = atheletesInOrderOfPTSScore.indexOf(io) + 1;
-  const ioPointsPercentile = 1 - ioPointsRank / atheletesWithResults.length;
 
   const competition = await getCompetition(competitionId);
   const noProblems = topsByProblemTitle.size;
   const noClimbers = atheletesWithResults.length || NaN;
 
+  const ioResults =
+    atheletesWithResults.find(
+      ({ athlete }) => athlete.athleteId === io.athleteId
+    ) ?? null;
   return {
     start: competition.startTime,
     end: competition.endTime,
@@ -303,23 +297,23 @@ export async function getIoPercentileForClimbalongCompetition(
     category: sex ? io.sex : null,
     climbers: noClimbers,
     problems: noProblems,
-    topsAndZonesScoring: {
+    topsAndZonesScoring: ioResults && {
       rank: ioTopsAndZonesRank,
-      percentile: percent(ioTopsAndZonesPercentile),
+      percentile: percentile(ioTopsAndZonesRank, noClimbers),
       tops: ioResults.tops,
       zones: ioResults.zones,
       topsAttempts: ioResults.topsAttempts,
       zonesAttempts: ioResults.zonesAttempts,
     },
-    thousandDividedByScoring: {
+    thousandDividedByScoring: ioResults && {
       rank: ioTDBRank,
-      percentile: percent(ioTDBPercentile),
+      percentile: percentile(ioTDBRank, noClimbers),
       topsScore: Math.round(ioResults.topsTDBScore),
       zonesScore: Math.round(ioResults.zonesTDBScore),
     },
-    pointsScoring: {
+    pointsScoring: ioResults && {
       rank: ioPointsRank,
-      percentile: percent(ioPointsPercentile),
+      percentile: percentile(ioPointsRank, noClimbers),
       points: ioResults.topsPTSScore,
     },
   };
