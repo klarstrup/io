@@ -125,6 +125,30 @@ const fetchClimbalong = async <T>(
   init?: RequestInit
 ) => dbFetch<T>(`https://comp.climbalong.com/api${input}`, init);
 
+const getCompetition = (id: number) =>
+  fetchClimbalong<Climbalong.Competition>(`/v0/competitions/${id}`);
+const getCompetitionAthletes = (id: number) =>
+  fetchClimbalong<Climbalong.Athlete[]>(`/v0/competitions/${id}/athletes`);
+const getCompetitionRounds = (id: number) =>
+  fetchClimbalong<Climbalong.Round[]>(`/v1/competitions/${id}/rounds`);
+const getCompetitionLanes = (id: number) =>
+  fetchClimbalong<Climbalong.Lane[]>(`/v1/competitions/${id}/lanes`);
+
+const getLaneCircuits = (id: number) =>
+  fetchClimbalong<Climbalong.Circuit[]>(`/v0/lanes/${id}/circuits`);
+const getLanesCircuits = (ids: number[]) =>
+  Promise.all(ids.map((id) => getLaneCircuits(id)));
+
+const getCircuitPerformances = (id: number) =>
+  fetchClimbalong<Climbalong.Performance[]>(`/v0/circuits/${id}/performances`);
+const getCircuitsPerformances = (ids: number[]) =>
+  Promise.all(ids.map((id) => getCircuitPerformances(id)));
+
+const getCircuitProblems = (id: number) =>
+  fetchClimbalong<Climbalong.Problem[]>(`/v0/circuits/${id}/problems`);
+const getCircuitsProblems = (ids: number[]) =>
+  Promise.all(ids.map((id) => getCircuitProblems(id)));
+
 const BASE_PROBLEM_SCORE = 1000;
 const FLASH_SCORE_MULTIPLIER = 1.1;
 export async function getIoPercentileForClimbalongCompetition(
@@ -132,55 +156,30 @@ export async function getIoPercentileForClimbalongCompetition(
   ioId?: number,
   sex?: boolean
 ) {
-  const competition = await fetchClimbalong<Climbalong.Competition>(
-    `/v0/competitions/${competitionId}`
-  );
-
-  let athletes = await fetchClimbalong<Climbalong.Athlete[]>(
-    `/v0/competitions/${competitionId}/athletes`
-  );
+  let athletes = await getCompetitionAthletes(competitionId);
 
   const io = ioId
     ? athletes.find((athlete) => athlete.athleteId === ioId)
     : athletes.find(({ name }) => name.startsWith("Io ") || name === "Io");
 
-  if (io && sex)
+  if (io && sex) {
     athletes = athletes.filter((athlete) => athlete.sex === io.sex);
+  }
 
-  const rounds = (
-    await fetchClimbalong<Climbalong.Round[]>(
-      `/v1/competitions/${competitionId}/rounds`
-    )
-  ).filter((round) => !round.title.match(/final/gi)); // Only score quals
-  const lanes = (
-    await fetchClimbalong<Climbalong.Lane[]>(
-      `/v1/competitions/${competitionId}/lanes`
-    )
-  ).filter((lane) => rounds.some((round) => lane.roundId === round.roundId));
+  const rounds = (await getCompetitionRounds(competitionId)).filter(
+    ({ title }) => !title.match(/final/gi) // Only score quals
+  );
+  const lanes = (await getCompetitionLanes(competitionId)).filter((lane) =>
+    rounds.some(({ roundId }) => lane.roundId === roundId)
+  );
   const circuits = (
-    await Promise.all(
-      lanes.map(({ laneId }) =>
-        fetchClimbalong<Climbalong.Circuit[]>(`/v0/lanes/${laneId}/circuits`)
-      )
-    )
+    await getLanesCircuits(lanes.map(({ laneId }) => laneId))
   ).flat();
   const performances = (
-    await Promise.all(
-      circuits.map(({ circuitId }) =>
-        fetchClimbalong<Climbalong.Performance[]>(
-          `/v0/circuits/${circuitId}/performances`
-        )
-      )
-    )
+    await getCircuitsPerformances(circuits.map(({ circuitId }) => circuitId))
   ).flat();
   const problems = (
-    await Promise.all(
-      circuits.map(({ circuitId }) =>
-        fetchClimbalong<Climbalong.Problem[]>(
-          `/v0/circuits/${circuitId}/problems`
-        )
-      )
-    )
+    await getCircuitsProblems(circuits.map(({ circuitId }) => circuitId))
   ).flat();
 
   const atheleteTopsByProblemId = performances.reduce((memo, performance) => {
@@ -282,6 +281,8 @@ export async function getIoPercentileForClimbalongCompetition(
       ).length / atheletesWithTopAndZoneScores.length
     : NaN;
   const ioPercentileString = (ioPercentile * 100).toFixed(1) + "%";
+
+  const competition = await getCompetition(competitionId);
 
   return {
     event: `${competition.facility} ${competition.title}${
