@@ -316,5 +316,5 @@ export async function getIoPercentileForClimbalongCompetition(
       percentile: percentile(ioPointsRank, noClimbers),
       points: ioResults.topsPTSScore,
     },
-  };
+  } as const;
 }

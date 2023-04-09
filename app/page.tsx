@@ -1,7 +1,6 @@
 import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
-import { dbFetch } from "../fetch";
-import { Fitocracy } from "../fitocracy";
+import { getIoPercentileForTopLoggerGroup } from "../toplogger";
 
 export default async function Home() {
   const ioPercentiles = await getData();
@@ -10,7 +9,7 @@ export default async function Home() {
 
 const getData = async () => {
   await dbConnect();
-
+  /*
   const activities = await dbFetch<Fitocracy.UserActivity[]>(
     "https://www.fitocracy.com/get_user_activities/528455/",
     { headers: { cookie: "sessionid=blahblahblah;" } }
@@ -23,19 +22,14 @@ const getData = async () => {
       )
     )
   );
+    */
   const sex = true;
   return Promise.all([
     getIoPercentileForClimbalongCompetition(13, 844, sex),
     getIoPercentileForClimbalongCompetition(20, 1284, sex),
-    {
-      event: `Beta Boulders Winter Pump Fest (Feb 4th) (M category)`,
-      topPercentile: `62.4% (of 140)`,
-    },
+    getIoPercentileForTopLoggerGroup(3113, 176390, sex),
     getIoPercentileForClimbalongCompetition(26, 3381, sex),
-    {
-      event: `Beta Boulders Gorilla Unleashed II (Apr 1st) (M category)`,
-      topPercentile: `31.7% (of 115)`,
-    },
+    getIoPercentileForTopLoggerGroup(3188, 176390, sex),
     getIoPercentileForClimbalongCompetition(27, 8468, sex),
-  ]);
+  ] as const);
 };
