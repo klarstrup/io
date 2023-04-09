@@ -303,27 +303,33 @@ export async function getIoPercentileForClimbalongCompetition(
     climbers: noClimbers,
     problems: noProblems,
     officialScoring: null,
-    topsAndZonesScoring: ioResults &&
-      ioTopsAndZonesRank && {
-        rank: ioTopsAndZonesRank,
-        percentile: percentile(ioTopsAndZonesRank, noClimbers),
-        tops: ioResults.tops,
-        zones: ioResults.zones,
-        topsAttempts: ioResults.topsAttempts,
-        zonesAttempts: ioResults.zonesAttempts,
-      },
-    thousandDividedByScoring: ioResults &&
-      ioTDBRank && {
-        rank: ioTDBRank,
-        percentile: percentile(ioTDBRank, noClimbers),
-        topsScore: Math.round(ioResults.topsTDBScore),
-        zonesScore: Math.round(ioResults.zonesTDBScore),
-      },
-    pointsScoring: ioResults &&
-      ioPointsRank && {
-        rank: ioPointsRank,
-        percentile: percentile(ioPointsRank, noClimbers),
-        points: ioResults.topsPTSScore,
-      },
+    topsAndZonesScoring:
+      ioResults && ioTopsAndZonesRank
+        ? {
+            rank: ioTopsAndZonesRank,
+            percentile: percentile(ioTopsAndZonesRank, noClimbers),
+            tops: ioResults.tops,
+            zones: ioResults.zones,
+            topsAttempts: ioResults.topsAttempts,
+            zonesAttempts: ioResults.zonesAttempts,
+          }
+        : null,
+    thousandDividedByScoring:
+      ioResults && ioTDBRank
+        ? {
+            rank: ioTDBRank,
+            percentile: percentile(ioTDBRank, noClimbers),
+            topsScore: Math.round(ioResults.topsTDBScore),
+            zonesScore: Math.round(ioResults.zonesTDBScore),
+          }
+        : null,
+    pointsScoring:
+      ioResults && ioPointsRank
+        ? {
+            rank: ioPointsRank,
+            percentile: percentile(ioPointsRank, noClimbers),
+            points: ioResults.topsPTSScore,
+          }
+        : null,
   } as const;
 }

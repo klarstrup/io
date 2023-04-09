@@ -458,11 +458,13 @@ export async function getIoPercentileForTopLoggerGroup(
     category: sex ? io.gender : null,
     climbers: noClimbers,
     problems: noProblems,
-    officialScoring: ioResults && {
-      rank: ioResults.officialRank,
-      percentile: percentile(ioResults.officialRank, noClimbers),
-      score: Number(ioResults.officialScore),
-    },
+    officialScoring: ioResults
+      ? {
+          rank: ioResults.officialRank,
+          percentile: percentile(ioResults.officialRank, noClimbers),
+          score: Number(ioResults.officialScore),
+        }
+      : null,
     topsAndZonesScoring: null,
     thousandDividedByScoring: ioResults?.topsTDBScore
       ? {
