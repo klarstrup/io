@@ -236,20 +236,20 @@ export default async function Home() {
 
   return (
     <div>
-      <div className="timeline">
+      <section id="timeline">
         {ioPercentiles
           .filter(({ climbers }) => climbers)
           .map((event, i) => (
-            <div
+            <article
               key={String(event.start)}
-              className={i % 2 ? "container left" : "container right"}
+              className={!(i % 2) ? "left" : "right"}
             >
               <div className="content">
                 <EventContent event={event} />
               </div>
-            </div>
+            </article>
           ))}
-      </div>
+      </section>
     </div>
   );
 }
