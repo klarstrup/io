@@ -318,7 +318,7 @@ const getAscends = (jsonParams: JSONParams = {}) =>
       jsonParams
     )}&serialize_checks=true`
   );
-const getGroupsUsers = (
+export const getGroupsUsers = (
   jsonParams: JSONParams = {},
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>

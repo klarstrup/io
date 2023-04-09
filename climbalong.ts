@@ -164,9 +164,10 @@ export async function getIoPercentileForClimbalongCompetition(
 ) {
   let athletes = await getCompetitionAthletes(competitionId);
 
-  const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
-  );
+  const io =
+    athletes.find(({ athleteId, name }) =>
+      ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
+    ) ?? null;
 
   if (io && sex) {
     athletes = athletes.filter((athlete) => athlete.sex === io.sex);
@@ -263,7 +264,6 @@ export async function getIoPercentileForClimbalongCompetition(
       zonesAttempts,
     } as const;
   });
-  if (!io) return null;
   const atheletesInOrderOfTDBScore = Array.from(atheletesWithResults)
     .sort((a, b) => b.zonesTDBScore - a.zonesTDBScore)
     .sort((a, b) => b.topsTDBScore - a.topsTDBScore)
@@ -278,44 +278,51 @@ export async function getIoPercentileForClimbalongCompetition(
     .sort((a, b) => b.tops - a.tops)
     .map(({ athlete }) => athlete);
 
-  const ioTopsAndZonesRank = atheletesInOrderOfTopsAndZones.indexOf(io) + 1;
-  const ioTDBRank = atheletesInOrderOfTDBScore.indexOf(io) + 1;
-  const ioPointsRank = atheletesInOrderOfPTSScore.indexOf(io) + 1;
+  const ioTopsAndZonesRank =
+    io && atheletesInOrderOfTopsAndZones.indexOf(io) + 1;
+  const ioTDBRank = io && atheletesInOrderOfTDBScore.indexOf(io) + 1;
+  const ioPointsRank = io && atheletesInOrderOfPTSScore.indexOf(io) + 1;
 
   const competition = await getCompetition(competitionId);
   const noProblems = topsByProblemTitle.size;
   const noClimbers = atheletesWithResults.length || NaN;
 
   const ioResults =
-    atheletesWithResults.find(
-      ({ athlete }) => athlete.athleteId === io.athleteId
-    ) ?? null;
+    (io &&
+      atheletesWithResults.find(
+        ({ athlete }) => athlete.athleteId === io.athleteId
+      )) ??
+    null;
+
   return {
-    start: competition.startTime,
-    end: competition.endTime,
+    start: new Date(competition.startTime),
+    end: new Date(competition.endTime),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
-    category: sex ? io.sex : null,
+    category: io && sex ? io.sex : null,
     climbers: noClimbers,
     problems: noProblems,
-    topsAndZonesScoring: ioResults && {
-      rank: ioTopsAndZonesRank,
-      percentile: percentile(ioTopsAndZonesRank, noClimbers),
-      tops: ioResults.tops,
-      zones: ioResults.zones,
-      topsAttempts: ioResults.topsAttempts,
-      zonesAttempts: ioResults.zonesAttempts,
-    },
-    thousandDividedByScoring: ioResults && {
-      rank: ioTDBRank,
-      percentile: percentile(ioTDBRank, noClimbers),
-      topsScore: Math.round(ioResults.topsTDBScore),
-      zonesScore: Math.round(ioResults.zonesTDBScore),
-    },
-    pointsScoring: ioResults && {
-      rank: ioPointsRank,
-      percentile: percentile(ioPointsRank, noClimbers),
-      points: ioResults.topsPTSScore,
-    },
+    topsAndZonesScoring: ioResults &&
+      ioTopsAndZonesRank && {
+        rank: ioTopsAndZonesRank,
+        percentile: percentile(ioTopsAndZonesRank, noClimbers),
+        tops: ioResults.tops,
+        zones: ioResults.zones,
+        topsAttempts: ioResults.topsAttempts,
+        zonesAttempts: ioResults.zonesAttempts,
+      },
+    thousandDividedByScoring: ioResults &&
+      ioTDBRank && {
+        rank: ioTDBRank,
+        percentile: percentile(ioTDBRank, noClimbers),
+        topsScore: Math.round(ioResults.topsTDBScore),
+        zonesScore: Math.round(ioResults.zonesTDBScore),
+      },
+    pointsScoring: ioResults &&
+      ioPointsRank && {
+        rank: ioPointsRank,
+        percentile: percentile(ioPointsRank, noClimbers),
+        points: ioResults.topsPTSScore,
+      },
   } as const;
 }

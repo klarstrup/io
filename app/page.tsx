@@ -1,6 +1,6 @@
 import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
-import { getIoPercentileForTopLoggerGroup } from "../toplogger";
+import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
 
 export default async function Home() {
   const ioPercentiles = await getData();
@@ -24,12 +24,20 @@ const getData = async () => {
   );
     */
   const sex = true;
-  return Promise.all([
-    getIoPercentileForClimbalongCompetition(13, 844, sex),
-    getIoPercentileForClimbalongCompetition(20, 1284, sex),
-    getIoPercentileForTopLoggerGroup(3113, 176390, sex),
-    getIoPercentileForClimbalongCompetition(26, 3381, sex),
-    getIoPercentileForTopLoggerGroup(3188, 176390, sex),
-    getIoPercentileForClimbalongCompetition(27, 8468, sex),
-  ] as const);
+  return (
+    await Promise.all(
+      [
+        getIoPercentileForClimbalongCompetition(13, 844, sex),
+        getIoPercentileForClimbalongCompetition(20, 1284, sex),
+        getIoPercentileForClimbalongCompetition(26, 3381, sex),
+        getIoPercentileForClimbalongCompetition(27, 8468, sex),
+        getIoPercentileForClimbalongCompetition(28, undefined, sex),
+        (
+          await getGroupsUsers({ filters: { user_id: 176390 } })
+        ).map(({ group_id, user_id }) =>
+          getIoPercentileForTopLoggerGroup(group_id, user_id, sex)
+        ),
+      ].flat()
+    )
+  ).sort((a, b) => Number(b.start) - Number(a.start));
 };
