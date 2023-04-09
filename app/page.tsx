@@ -1,5 +1,6 @@
 import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
+import { getSportsTimingEventResults } from "../sportstiming";
 import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
 import "./page.css";
 
@@ -118,7 +119,7 @@ function EventContent({
     topsAndZonesScoring,
     thousandDividedByScoring,
     pointsScoring,
-    climbers,
+    noParticipants,
     problems,
     problemByProblem,
     category,
@@ -130,23 +131,32 @@ function EventContent({
   return (
     <>
       <small>
-        {venue},{" "}
-        {new Intl.DateTimeFormat("en-DK", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          timeZone: "Europe/Copenhagen",
-        }).formatRange(start, end)}
+        <b>
+          {new Intl.DateTimeFormat("en-DK", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            timeZone: "Europe/Copenhagen",
+          }).formatRange(start, end)}
+        </b>
+        {venue ? (
+          <>
+            {" "}
+            at <b>{venue}</b>
+          </>
+        ) : (
+          ""
+        )}
       </small>
       <h2 style={{ margin: 0 }}>{event}</h2>
       <small>
         {problems ? <b>{problems} problems</b> : null}
-        {problems && climbers ? <> between </> : null}
-        {climbers ? <b>{climbers} climbers</b> : null}
-        {climbers && category ? <> in the </> : null}
+        {problems && noParticipants ? <> between </> : null}
+        {noParticipants ? <b>{noParticipants} participants</b> : null}
+        {noParticipants && category ? <> in the </> : null}
         {category ? (
           <b>{category === "male" ? "M" : category} bracket</b>
         ) : null}
@@ -158,7 +168,26 @@ function EventContent({
             <legend>Official Scoring</legend>
             <RankBadge scoring={officialScoring} />
             <hr />
-            <ResultList data={[["Score", officialScoring.score]]} />
+            <ResultList
+              data={
+                [
+                  "score" in officialScoring && [
+                    "Score",
+                    officialScoring.score,
+                  ],
+                  "duration" in officialScoring && [
+                    "Duration",
+                    seconds2time(officialScoring.duration),
+                  ],
+                  "duration" in officialScoring && [
+                    "Distance",
+                    (officialScoring.distance / 1000).toLocaleString("en-DK", {
+                      unit: "kilometer",
+                    }) + " km",
+                  ],
+                ].filter(Boolean) as any
+              }
+            />
           </fieldset>
         ) : null}
         {topsAndZonesScoring && (
@@ -239,7 +268,7 @@ export default async function Home() {
     <div>
       <section id="timeline">
         {ioPercentiles
-          .filter(({ climbers }) => climbers)
+          .filter(({ noParticipants }) => noParticipants)
           .map((event, i) => (
             <article
               key={String(event.start)}
@@ -275,6 +304,13 @@ const getData = async () => {
   return (
     await Promise.all(
       [
+        getSportsTimingEventResults(10694, 5096890, true),
+        getSportsTimingEventResults(8962, 4433356, true),
+        getSportsTimingEventResults(8940, 3999953, true),
+        getSportsTimingEventResults(7913, 3825124, true),
+        getSportsTimingEventResults(5805, 2697593, true),
+        getSportsTimingEventResults(5647, 2619935, true),
+        getSportsTimingEventResults(4923, 2047175, true),
         getIoPercentileForClimbalongCompetition(13, 844, sex),
         getIoPercentileForClimbalongCompetition(20, 1284, sex),
         getIoPercentileForClimbalongCompetition(26, 3381, sex),
@@ -289,3 +325,13 @@ const getData = async () => {
     )
   ).sort((a, b) => Number(b.start) - Number(a.start));
 };
+
+function seconds2time(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds - hours * 3600) / 60);
+  seconds = seconds - hours * 3600 - minutes * 60;
+
+  return `${hours || "0"}:${minutes < 10 ? "0" + minutes : String(minutes)}:${
+    seconds < 10 ? "0" + seconds : String(seconds)
+  }`;
+}

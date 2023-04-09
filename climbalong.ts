@@ -1,4 +1,5 @@
 import { dbFetch } from "./fetch";
+import { percentile } from "./utils";
 
 export namespace Climbalong {
   export interface Athlete {
@@ -154,9 +155,6 @@ const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
 const PTS_FLASH_BONUS = 20;
 
-const percentile = (rank: number, tally: number) =>
-  ((1 - rank / tally) * 100).toFixed(1) + "%";
-
 export async function getIoPercentileForClimbalongCompetition(
   competitionId: number,
   ioId?: number,
@@ -300,7 +298,7 @@ export async function getIoPercentileForClimbalongCompetition(
     venue: competition.facility.trim(),
     event: competition.title.trim(),
     category: io && sex ? io.sex : null,
-    climbers: noClimbers,
+    noParticipants: noClimbers,
     problems: noProblems,
     problemByProblem: problems.length
       ? Array.from(

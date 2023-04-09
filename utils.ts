@@ -9,3 +9,9 @@ export class RelativeURL extends URL {
     return this.toString();
   }
 }
+
+export const percentile = (rank: number, tally: number) =>
+  ((1 - rank / tally) * 100).toLocaleString("en-DK", {
+    unit: "percent",
+    maximumFractionDigits: 1,
+  }) + "%";

@@ -1,4 +1,5 @@
 import { dbFetch } from "./fetch";
+import { percentile } from "./utils";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -334,9 +335,6 @@ const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
 const PTS_FLASH_BONUS = 20;
 
-const percentile = (rank: number, tally: number) =>
-  ((1 - rank / tally) * 100).toFixed(1) + "%";
-
 export async function getIoPercentileForTopLoggerGroup(
   groupId: number,
   ioId: number,
@@ -456,7 +454,7 @@ export async function getIoPercentileForTopLoggerGroup(
     venue: gyms[0].name.trim(),
     event: group.name.trim(),
     category: sex ? io.gender : null,
-    climbers: noClimbers,
+    noParticipants: noClimbers,
     problems: noProblems,
     problemByProblem: climbs.length
       ? climbs
