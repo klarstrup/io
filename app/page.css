@@ -153,3 +153,20 @@ fieldset > legend[title] {
 fieldset > hr {
   margin: 4px 0;
 }
+
+dl {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin: 0;
+}
+dl > div {
+  display: flex;
+  flex-direction: column;
+}
+dl > div > dt {
+  font-weight: bold;
+}
+dl > div > dd {
+  margin: 0;
+}

@@ -32,6 +32,17 @@ function RankBadge({
   );
 }
 
+const ResultList = ({ data }: { data: [string, string | number][] }) => (
+  <dl>
+    {data.map(([label, data]) => (
+      <div key={label}>
+        <dt>{label}</dt>
+        <dd>{data}</dd>
+      </div>
+    ))}
+  </dl>
+);
+
 const FlashBadge = () => (
   <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
     <rect
@@ -157,18 +168,7 @@ export default async function Home() {
                         <legend>Official Scoring</legend>
                         <RankBadge scoring={officialScoring} />
                         <hr />
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Score</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>{officialScoring.score}</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                        <ResultList data={[["Score", officialScoring.score]]} />
                       </fieldset>
                     ) : null}
                     {topsAndZonesScoring && (
@@ -176,24 +176,14 @@ export default async function Home() {
                         <legend>Tops & Zones Scoring</legend>
                         <RankBadge scoring={topsAndZonesScoring} />
                         <hr />
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>T</th>
-                              <th>Z</th>
-                              <th>aT</th>
-                              <th>aZ</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>{topsAndZonesScoring.tops}</td>
-                              <td>{topsAndZonesScoring.zones}</td>
-                              <td>{topsAndZonesScoring.topsAttempts}</td>
-                              <td>{topsAndZonesScoring.zonesAttempts}</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                        <ResultList
+                          data={[
+                            ["T", topsAndZonesScoring.tops],
+                            ["Z", topsAndZonesScoring.zones],
+                            ["aT", topsAndZonesScoring.topsAttempts],
+                            ["aZ", topsAndZonesScoring.zonesAttempts],
+                          ]}
+                        />
                       </fieldset>
                     )}
                     {thousandDividedByScoring && (
@@ -203,28 +193,22 @@ export default async function Home() {
                         </legend>
                         <RankBadge scoring={thousandDividedByScoring} />
                         <hr />
-                        <table>
-                          <thead>
-                            <tr>
-                              {thousandDividedByScoring.zonesScore ? (
-                                <>
-                                  <th>Top Pts</th>
-                                  <th>Zone Pts</th>
-                                </>
-                              ) : (
-                                <th>Points</th>
-                              )}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>{thousandDividedByScoring.topsScore}</td>
-                              {thousandDividedByScoring.zonesScore && (
-                                <td>{thousandDividedByScoring.zonesScore}</td>
-                              )}
-                            </tr>
-                          </tbody>
-                        </table>
+                        <ResultList
+                          data={
+                            thousandDividedByScoring.zonesScore
+                              ? [
+                                  [
+                                    "Top Pts",
+                                    thousandDividedByScoring.topsScore,
+                                  ],
+                                  [
+                                    "Zone Pts",
+                                    thousandDividedByScoring.zonesScore,
+                                  ],
+                                ]
+                              : [["Points", thousandDividedByScoring.topsScore]]
+                          }
+                        />
                       </fieldset>
                     )}
                     {pointsScoring && (
@@ -234,18 +218,7 @@ export default async function Home() {
                         </legend>
                         <RankBadge scoring={pointsScoring} />
                         <hr />
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Points</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>{pointsScoring.points}</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                        <ResultList data={[["Points", pointsScoring.points]]} />
                       </fieldset>
                     )}
                   </div>
