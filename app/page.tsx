@@ -108,6 +108,129 @@ const NoSendBadge = () => (
   </svg>
 );
 
+function EventContent({
+  event: {
+    start,
+    end,
+    venue,
+    event,
+    officialScoring,
+    topsAndZonesScoring,
+    thousandDividedByScoring,
+    pointsScoring,
+    climbers,
+    problems,
+    problemByProblem,
+    category,
+    ...e
+  },
+}: {
+  event: Awaited<ReturnType<typeof getData>>[number];
+}) {
+  return (
+    <>
+      <small>
+        {venue},{" "}
+        {new Intl.DateTimeFormat("en-DK", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        }).formatRange(start, end)}
+      </small>
+      <h2 style={{ margin: 0 }}>{event}</h2>
+      <small>
+        {problems ? <b>{problems} problems</b> : null}
+        {problems && climbers ? <> between </> : null}
+        {climbers ? <b>{climbers} climbers</b> : null}
+        {climbers && category ? <> in the </> : null}
+        {category ? (
+          <b>{category === "male" ? "M" : category} bracket</b>
+        ) : null}
+      </small>
+      <hr />
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
+        {officialScoring ? (
+          <fieldset>
+            <legend>Official Scoring</legend>
+            <RankBadge scoring={officialScoring} />
+            <hr />
+            <ResultList data={[["Score", officialScoring.score]]} />
+          </fieldset>
+        ) : null}
+        {topsAndZonesScoring && (
+          <fieldset>
+            <legend>Tops & Zones Scoring</legend>
+            <RankBadge scoring={topsAndZonesScoring} />
+            <hr />
+            <ResultList
+              data={[
+                ["T", topsAndZonesScoring.tops],
+                ["Z", topsAndZonesScoring.zones],
+                ["aT", topsAndZonesScoring.topsAttempts],
+                ["aZ", topsAndZonesScoring.zonesAttempts],
+              ]}
+            />
+          </fieldset>
+        )}
+        {thousandDividedByScoring && (
+          <fieldset>
+            <legend title="Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus.">
+              1000 / Tops Scoring
+            </legend>
+            <RankBadge scoring={thousandDividedByScoring} />
+            <hr />
+            <ResultList
+              data={
+                thousandDividedByScoring.zonesScore
+                  ? [
+                      ["Top Pts", thousandDividedByScoring.topsScore],
+                      ["Zone Pts", thousandDividedByScoring.zonesScore],
+                    ]
+                  : [["Points", thousandDividedByScoring.topsScore]]
+              }
+            />
+          </fieldset>
+        )}
+        {pointsScoring && (
+          <fieldset>
+            <legend title="100 per top, 20 per zone">Points Scoring</legend>
+            <RankBadge scoring={pointsScoring} />
+            <hr />
+            <ResultList data={[["Points", pointsScoring.points]]} />
+          </fieldset>
+        )}
+      </div>
+      <div style={{ display: "flex", marginTop: "5px" }}>
+        {problemByProblem
+          ? problemByProblem.map(({ number, flash, top, zone }) => (
+              <div
+                style={{ flex: 1, margin: "1px" }}
+                key={number}
+                title={`${number}: ${
+                  flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
+                }`}
+              >
+                {flash ? (
+                  <FlashBadge />
+                ) : top ? (
+                  <TopBadge />
+                ) : zone ? (
+                  <ZoneBadge />
+                ) : (
+                  <NoSendBadge />
+                )}
+              </div>
+            ))
+          : null}
+      </div>
+      {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
+    </>
+  );
+}
+
 export default async function Home() {
   const ioPercentiles = await getData();
 
@@ -116,148 +239,16 @@ export default async function Home() {
       <div className="timeline">
         {ioPercentiles
           .filter(({ climbers }) => climbers)
-          .map(
-            (
-              {
-                start,
-                end,
-                venue,
-                event,
-                officialScoring,
-                topsAndZonesScoring,
-                thousandDividedByScoring,
-                pointsScoring,
-                climbers,
-                problems,
-                problemByProblem,
-                category,
-                ...e
-              },
-              i
-            ) => (
-              <div
-                key={String(start)}
-                className={i % 2 ? "container left" : "container right"}
-              >
-                <div className="content">
-                  <small>
-                    {venue},{" "}
-                    {new Intl.DateTimeFormat("en-DK", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    }).formatRange(start, end)}
-                  </small>
-                  <h2 style={{ margin: 0 }}>{event}</h2>
-                  <small>
-                    {problems ? <b>{problems} problems</b> : null}
-                    {problems && climbers ? <> between </> : null}
-                    {climbers ? <b>{climbers} climbers</b> : null}
-                    {climbers && category ? <> in the </> : null}
-                    {category ? (
-                      <b>{category === "male" ? "M" : category} bracket</b>
-                    ) : null}
-                  </small>
-                  <hr />
-                  <div style={{ display: "flex", flexWrap: "wrap" }}>
-                    {officialScoring ? (
-                      <fieldset>
-                        <legend>Official Scoring</legend>
-                        <RankBadge scoring={officialScoring} />
-                        <hr />
-                        <ResultList data={[["Score", officialScoring.score]]} />
-                      </fieldset>
-                    ) : null}
-                    {topsAndZonesScoring && (
-                      <fieldset>
-                        <legend>Tops & Zones Scoring</legend>
-                        <RankBadge scoring={topsAndZonesScoring} />
-                        <hr />
-                        <ResultList
-                          data={[
-                            ["T", topsAndZonesScoring.tops],
-                            ["Z", topsAndZonesScoring.zones],
-                            ["aT", topsAndZonesScoring.topsAttempts],
-                            ["aZ", topsAndZonesScoring.zonesAttempts],
-                          ]}
-                        />
-                      </fieldset>
-                    )}
-                    {thousandDividedByScoring && (
-                      <fieldset>
-                        <legend title="Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus.">
-                          1000 / Tops Scoring
-                        </legend>
-                        <RankBadge scoring={thousandDividedByScoring} />
-                        <hr />
-                        <ResultList
-                          data={
-                            thousandDividedByScoring.zonesScore
-                              ? [
-                                  [
-                                    "Top Pts",
-                                    thousandDividedByScoring.topsScore,
-                                  ],
-                                  [
-                                    "Zone Pts",
-                                    thousandDividedByScoring.zonesScore,
-                                  ],
-                                ]
-                              : [["Points", thousandDividedByScoring.topsScore]]
-                          }
-                        />
-                      </fieldset>
-                    )}
-                    {pointsScoring && (
-                      <fieldset>
-                        <legend title="100 per top, 20 per zone">
-                          Points Scoring
-                        </legend>
-                        <RankBadge scoring={pointsScoring} />
-                        <hr />
-                        <ResultList data={[["Points", pointsScoring.points]]} />
-                      </fieldset>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", marginTop: "5px" }}>
-                    {problemByProblem
-                      ? problemByProblem.map(({ number, flash, top, zone }) => (
-                          <div
-                            style={{ flex: 1, margin: "1px" }}
-                            key={number}
-                            title={`${number}: ${
-                              flash
-                                ? "flash"
-                                : top
-                                ? "top"
-                                : zone
-                                ? "zone"
-                                : "no send"
-                            }`}
-                          >
-                            {flash ? (
-                              <FlashBadge />
-                            ) : top ? (
-                              <TopBadge />
-                            ) : zone ? (
-                              <ZoneBadge />
-                            ) : (
-                              <NoSendBadge />
-                            )}
-                          </div>
-                        ))
-                      : null}
-                  </div>
-                  {Object.keys(e).length ? (
-                    <pre>{JSON.stringify(e, null, 2)}</pre>
-                  ) : null}
-                </div>
+          .map((event, i) => (
+            <div
+              key={String(event.start)}
+              className={i % 2 ? "container left" : "container right"}
+            >
+              <div className="content">
+                <EventContent event={event} />
               </div>
-            )
-          )}
+            </div>
+          ))}
       </div>
     </div>
   );
