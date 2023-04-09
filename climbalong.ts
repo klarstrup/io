@@ -302,6 +302,56 @@ export async function getIoPercentileForClimbalongCompetition(
     category: io && sex ? io.sex : null,
     climbers: noClimbers,
     problems: noProblems,
+    problemByProblem: problems.length
+      ? Array.from(
+          problems
+            .reduce(
+              (memo, problem) => {
+                const ioPerformance =
+                  io &&
+                  performances.find(
+                    ({ athleteId, problemId }) =>
+                      athleteId === io.athleteId &&
+                      problemId === problem.problemId
+                  );
+
+                // More nastiness here because each problem is repeated for each lane
+                memo.set(problem.title, {
+                  number: problem.title,
+                  zone: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) => score.holdScore === HoldScore["ZONE"]
+                    ) || memo.get(problem.title)?.zone
+                  ),
+                  top: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) => score.holdScore === HoldScore["TOP"]
+                    ) || memo.get(problem.title)?.top
+                  ),
+                  flash: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) =>
+                        score.holdScore === HoldScore["TOP"] &&
+                        score.reachedInAttempt === 1
+                    ) || memo.get(problem.title)?.flash
+                  ),
+                });
+
+                return memo;
+              },
+              new Map<
+                string,
+                {
+                  number: string | undefined;
+                  zone: boolean;
+                  top: boolean;
+                  flash: boolean;
+                }
+              >()
+            )
+            .values()
+        )
+      : null,
     officialScoring: null,
     topsAndZonesScoring:
       ioResults && ioTopsAndZonesRank

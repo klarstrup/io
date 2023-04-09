@@ -23,6 +23,7 @@ export default async function Home() {
                 pointsScoring,
                 climbers,
                 problems,
+                problemByProblem,
                 category,
                 ...e
               },
@@ -62,7 +63,7 @@ export default async function Home() {
                           display: "inline-block",
                           flex: 1,
                           borderRadius: "5px",
-                          maxWidth: "200px",
+                          maxWidth: "250px",
                         }}
                       >
                         <legend>Official Scoring</legend>
@@ -101,7 +102,7 @@ export default async function Home() {
                           display: "inline-block",
                           flex: 1,
                           borderRadius: "5px",
-                          maxWidth: "200px",
+                          maxWidth: "250px",
                         }}
                       >
                         <legend>Tops & Zones Scoring</legend>
@@ -146,7 +147,7 @@ export default async function Home() {
                           display: "inline-block",
                           flex: 1,
                           borderRadius: "5px",
-                          maxWidth: "200px",
+                          maxWidth: "250px",
                         }}
                       >
                         <legend
@@ -200,7 +201,7 @@ export default async function Home() {
                           display: "inline-block",
                           flex: 1,
                           borderRadius: "5px",
-                          maxWidth: "200px",
+                          maxWidth: "250px",
                         }}
                       >
                         <legend
@@ -238,10 +239,107 @@ export default async function Home() {
                         </table>
                       </fieldset>
                     )}
-                    {Object.keys(e).length ? (
-                      <pre>{JSON.stringify(e, null, 2)}</pre>
-                    ) : null}
                   </div>
+                  <div style={{ display: "flex", marginTop: "5px" }}>
+                    {problemByProblem
+                      ? problemByProblem.map(({ number, flash, top, zone }) => (
+                          <div
+                            style={{ flex: 1, margin: "1px" }}
+                            key={number}
+                            title={`${number}: ${
+                              flash
+                                ? "flash"
+                                : top
+                                ? "top"
+                                : zone
+                                ? "zone"
+                                : "no send"
+                            }`}
+                          >
+                            {flash ? (
+                              <svg
+                                fill="none"
+                                preserveAspectRatio="xMidYMid meet"
+                                viewBox="0 0 58 116"
+                              >
+                                <rect
+                                  width="50"
+                                  stroke="#ffff00"
+                                  y="4"
+                                  x="4"
+                                  fill="#c84821"
+                                  height="108"
+                                  strokeWidth="8"
+                                ></rect>
+                              </svg>
+                            ) : top ? (
+                              <svg
+                                fill="none"
+                                preserveAspectRatio="xMidYMid meet"
+                                viewBox="0 0 58 116"
+                              >
+                                <rect
+                                  width="50"
+                                  stroke="#c84821"
+                                  y="4"
+                                  x="4"
+                                  fill="#c84821"
+                                  height="108"
+                                  strokeWidth="8"
+                                ></rect>
+                              </svg>
+                            ) : zone ? (
+                              <svg
+                                fill="none"
+                                preserveAspectRatio="xMidYMid meet"
+                                viewBox="0 0 58 116"
+                              >
+                                <rect
+                                  width="50"
+                                  stroke="#c84821"
+                                  y="4"
+                                  x="4"
+                                  fill="none"
+                                  height="108"
+                                  strokeWidth="8"
+                                ></rect>
+                                <rect
+                                  fill="#c84821"
+                                  transform="translate(58,116) rotate(180)"
+                                  width="58"
+                                  height="58"
+                                ></rect>
+                              </svg>
+                            ) : (
+                              <svg
+                                fill="none"
+                                preserveAspectRatio="xMidYMid meet"
+                                viewBox="0 0 58 116"
+                              >
+                                <rect
+                                  width="50"
+                                  stroke="#c84821"
+                                  y="4"
+                                  x="4"
+                                  fill="none"
+                                  height="108"
+                                  strokeWidth="8"
+                                ></rect>
+                                <rect
+                                  fill="#c84821"
+                                  transform="translate(58,116) rotate(180)"
+                                  width="58"
+                                  height="0"
+                                ></rect>
+                              </svg>
+                            )}
+                          </div>
+                        ))
+                      : null}
+                  </div>
+                  {Object.keys(e).length ? (
+                    <pre>{JSON.stringify(e, null, 2)}</pre>
+                  ) : null}
                 </div>
               </div>
             )

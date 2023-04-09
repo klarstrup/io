@@ -458,6 +458,28 @@ export async function getIoPercentileForTopLoggerGroup(
     category: sex ? io.gender : null,
     climbers: noClimbers,
     problems: noProblems,
+    problemByProblem: climbs.length
+      ? climbs
+          .map((climb) => {
+            const ioAscend = ascends.find(
+              (ascend) =>
+                ascend.climb_id === climb.id && ascend.user_id === ioId
+            );
+
+            return {
+              number: climb.number,
+              zone: ioAscend ? ioAscend.checks >= 1 : false,
+              top: ioAscend ? ioAscend.checks >= 1 : false,
+              flash: ioAscend ? ioAscend.checks >= 2 : false,
+            };
+          })
+          .sort((a, b) =>
+            Intl.Collator("en-DK", { numeric: true }).compare(
+              a.number!,
+              b.number!
+            )
+          )
+      : null,
     officialScoring: ioResults
       ? {
           rank: ioResults.officialRank,
