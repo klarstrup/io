@@ -13,8 +13,19 @@ export const Fetch = mongoose.model("Fetch", fetchSchema, undefined, {
   overwriteModels: true,
 });
 
+const fetchCache = new Map<RequestInfo | URL, Promise<any>>();
+const cachedFetch = async <T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<T> => {
+  const key = JSON.stringify({ input, init });
+  if (!fetchCache.has(key)) fetchCache.set(key, fetch(input, init));
+
+  return fetchCache.get(key)!;
+};
+
 // DB-backed fetch function that will return stale stuff
-export const dbFetch = async <T>(
+export const rawDbFetch = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit,
   cacheOptions?: {
@@ -66,7 +77,9 @@ export const dbFetch = async <T>(
       { upsert: true }
     );
     console.info(`DB FETCHING ${input}`);
-    const response = await fetch(input, {
+    const response = await (process.env.NODE_ENV === "development"
+      ? cachedFetch
+      : fetch)(input, {
       ...init,
       next:
         cacheOptions?.maxAge !== undefined
@@ -90,6 +103,20 @@ export const dbFetch = async <T>(
   }
   return resultJson!;
 };
+
+const dbFetchCache = new Map<RequestInfo | URL, Promise<any>>();
+export const cachedDbFetch = async <T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<T> => {
+  const key = JSON.stringify({ input, init });
+  if (!dbFetchCache.has(key)) dbFetchCache.set(key, rawDbFetch(input, init));
+
+  return dbFetchCache.get(key)!;
+};
+
+export const dbFetch =
+  process.env.NODE_ENV === "development" ? cachedDbFetch : rawDbFetch;
 
 export const fetchJson = async <T>(
   input: RequestInfo | URL,
