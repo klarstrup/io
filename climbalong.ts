@@ -1,5 +1,12 @@
 import { dbFetch } from "./fetch";
-import { PointsScore, SCORING_SOURCE, SCORING_SYSTEM, Score } from "./lib";
+import {
+  PointsScore,
+  SCORING_SOURCE,
+  SCORING_SYSTEM,
+  Score,
+  ThousandDivideByScore,
+  TopsAndZonesScore,
+} from "./lib";
 import { percentile } from "./utils";
 
 export namespace Climbalong {
@@ -282,6 +289,38 @@ export async function getIoPercentileForClimbalongCompetition(
   const ioTDBRank = io && atheletesInOrderOfTDBScore.indexOf(io) + 1;
   const ioPointsRank = io && atheletesInOrderOfPTSScore.indexOf(io) + 1;
 
+  const ioPerformanceSum =
+    io &&
+    (
+      await Promise.all(
+        lanes.map((lane) =>
+          dbFetch<{
+            node: string;
+            title: string;
+            athletes: {
+              athleteId: number;
+              performanceSum: {
+                athleteId: number;
+                rank: number;
+                scoreSums: {
+                  holdScore: number;
+                  totalNumberOfTimesReached: number;
+                  totalNumberOfAttemptsUsed: number;
+                }[];
+              } | null;
+            }[];
+            ranked: boolean;
+            processedBy: { nodeId: number; nodeType: number; edge: number }[];
+          }>(
+            `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`
+          )
+        )
+      )
+    )
+      .map(({ athletes }) => athletes)
+      .flat()
+      .find(({ athleteId }) => athleteId === io.athleteId)?.performanceSum;
+
   const competition = await getCompetition(competitionId);
   const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
   const noClimbers = atheletesWithResults.length || NaN;
@@ -353,6 +392,29 @@ export async function getIoPercentileForClimbalongCompetition(
       : null,
 
     scores: [
+      ioPerformanceSum &&
+        ({
+          system: SCORING_SYSTEM["TOPS_AND_ZONES"],
+          source: SCORING_SOURCE["OFFICIAL"],
+          rank: ioPerformanceSum.rank,
+          percentile: percentile(ioPerformanceSum.rank, noClimbers),
+          tops:
+            ioPerformanceSum.scoreSums.find(
+              (sum) => sum.holdScore === HoldScore.TOP
+            )?.totalNumberOfTimesReached || NaN,
+          zones:
+            ioPerformanceSum.scoreSums.find(
+              (sum) => sum.holdScore === HoldScore.ZONE
+            )?.totalNumberOfTimesReached || NaN,
+          topsAttempts:
+            ioPerformanceSum.scoreSums.find(
+              (sum) => sum.holdScore === HoldScore.TOP
+            )?.totalNumberOfAttemptsUsed || NaN,
+          zonesAttempts:
+            ioPerformanceSum.scoreSums.find(
+              (sum) => sum.holdScore === HoldScore.ZONE
+            )?.totalNumberOfAttemptsUsed || NaN,
+        } satisfies TopsAndZonesScore),
       ioResults && ioTopsAndZonesRank
         ? ({
             system: SCORING_SYSTEM["TOPS_AND_ZONES"],
@@ -363,7 +425,7 @@ export async function getIoPercentileForClimbalongCompetition(
             zones: ioResults.zones,
             topsAttempts: ioResults.topsAttempts,
             zonesAttempts: ioResults.zonesAttempts,
-          } as const)
+          } satisfies TopsAndZonesScore)
         : null,
       ioResults && ioTDBRank
         ? ({
@@ -372,7 +434,7 @@ export async function getIoPercentileForClimbalongCompetition(
             rank: ioTDBRank,
             percentile: percentile(ioTDBRank, noClimbers),
             points: Math.round(ioResults.topsTDBScore),
-          } as const)
+          } satisfies ThousandDivideByScore)
         : null,
       ioResults && ioPointsRank
         ? ({
