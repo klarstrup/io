@@ -6,11 +6,6 @@ import { getSportsTimingEventResults } from "../sportstiming";
 import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
 import "./page.css";
 
-type A = Awaited<
-  ReturnType<typeof getIoPercentileForClimbalongCompetition>
->["scores"];
-type B = Awaited<ReturnType<typeof getSportsTimingEventResults>>["scores"];
-type C = Awaited<ReturnType<typeof getIoPercentileForTopLoggerGroup>>["scores"];
 function RankBadge({
   score,
 }: {
