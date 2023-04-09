@@ -1,3 +1,4 @@
+import { SVGProps } from "react";
 import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
 import { getSportsTimingEventResults } from "../sportstiming";
@@ -44,8 +45,17 @@ const ResultList = ({ data }: { data: [string, string | number][] }) => (
   </dl>
 );
 
-const FlashBadge = () => (
-  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+const FlashBadge = ({
+  title,
+  ...props
+}: SVGProps<SVGSVGElement> & { title?: string }) => (
+  <svg
+    fill="none"
+    preserveAspectRatio="xMidYMid meet"
+    viewBox="0 0 58 116"
+    {...props}
+  >
+    <title>{title}</title>
     <rect
       width="50"
       stroke="#ffff00"
@@ -57,8 +67,17 @@ const FlashBadge = () => (
     ></rect>
   </svg>
 );
-const TopBadge = () => (
-  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+const TopBadge = ({
+  title,
+  ...props
+}: SVGProps<SVGSVGElement> & { title?: string }) => (
+  <svg
+    fill="none"
+    preserveAspectRatio="xMidYMid meet"
+    viewBox="0 0 58 116"
+    {...props}
+  >
+    <title>{title}</title>
     <rect
       width="50"
       stroke="#c84821"
@@ -70,8 +89,17 @@ const TopBadge = () => (
     ></rect>
   </svg>
 );
-const ZoneBadge = () => (
-  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+const ZoneBadge = ({
+  title,
+  ...props
+}: SVGProps<SVGSVGElement> & { title?: string }) => (
+  <svg
+    fill="none"
+    preserveAspectRatio="xMidYMid meet"
+    viewBox="0 0 58 116"
+    {...props}
+  >
+    <title>{title}</title>
     <rect
       width="50"
       stroke="#c84821"
@@ -89,8 +117,17 @@ const ZoneBadge = () => (
     ></rect>
   </svg>
 );
-const NoSendBadge = () => (
-  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+const NoSendBadge = ({
+  title,
+  ...props
+}: SVGProps<SVGSVGElement> & { title?: string }) => (
+  <svg
+    fill="none"
+    preserveAspectRatio="xMidYMid meet"
+    viewBox="0 0 58 116"
+    {...props}
+  >
+    <title>{title}</title>
     <rect
       width="50"
       stroke="#c84821"
@@ -133,7 +170,6 @@ function EventContent({
       <small>
         <b>
           {new Intl.DateTimeFormat("en-DK", {
-            weekday: "long",
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -151,7 +187,21 @@ function EventContent({
           ""
         )}
       </small>
-      <h2 style={{ margin: 0 }}>{event}</h2>
+      <h2 style={{ margin: 0 }}>
+        {event
+          .replace(
+            new RegExp(
+              `#${start.toLocaleDateString("da-DK", { month: "long" })}`,
+              "i"
+            ),
+            ""
+          )
+          .replace(
+            `${start.toLocaleDateString("da-DK", { year: "numeric" })}`,
+            ""
+          )
+          .replace(venue || "", "")}
+      </h2>
       <small>
         {problems ? <b>{problems} problems</b> : null}
         {problems && noParticipants ? <> between </> : null}
@@ -235,25 +285,25 @@ function EventContent({
       </div>
       <div style={{ display: "flex", marginTop: "5px" }}>
         {problemByProblem
-          ? problemByProblem.map(({ number, flash, top, zone }) => (
-              <div
-                style={{ flex: 1, margin: "1px" }}
-                key={number}
-                title={`${number}: ${
-                  flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
-                }`}
-              >
-                {flash ? (
-                  <FlashBadge />
-                ) : top ? (
-                  <TopBadge />
-                ) : zone ? (
-                  <ZoneBadge />
-                ) : (
-                  <NoSendBadge />
-                )}
-              </div>
-            ))
+          ? problemByProblem.map(({ number, flash, top, zone }) => {
+              const Badge = flash
+                ? FlashBadge
+                : top
+                ? TopBadge
+                : zone
+                ? ZoneBadge
+                : NoSendBadge;
+
+              return (
+                <Badge
+                  style={{ flex: 1, margin: "0 1px" }}
+                  key={number}
+                  title={`${number}: ${
+                    flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
+                  }`}
+                />
+              );
+            })
           : null}
       </div>
       {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}

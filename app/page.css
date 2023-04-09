@@ -56,7 +56,7 @@ body {
   position: relative;
   border-radius: 10px;
 
-  width: calc(100% - 50px);
+  max-width: calc(100% - 50px);
   padding: 10px;
 
   margin-right: 40px;
@@ -124,7 +124,7 @@ body {
     margin-right: 0;
     padding-right: 10px;
     margin-left: 50px;
-    width: calc(100% - 60px);
+    max-width: calc(100% - 60px);
   }
 
   #timeline article.left div.content:after,
@@ -150,7 +150,9 @@ fieldset {
   border-radius: 5px;
   max-width: 250px;
 }
-
+fieldset > legend {
+  white-space: nowrap;
+}
 fieldset > legend[title] {
   cursor: help;
 }
