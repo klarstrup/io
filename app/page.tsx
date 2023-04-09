@@ -276,7 +276,7 @@ function EventContent({
         )}
         {pointsScoring && (
           <fieldset>
-            <legend title="100 per top, 20 per zone">Points Scoring</legend>
+            <legend title="100 per top, 20 bonus per flash">Points Scoring</legend>
             <RankBadge scoring={pointsScoring} />
             <hr />
             <ResultList data={[["Points", pointsScoring.points]]} />
