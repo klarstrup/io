@@ -3,8 +3,103 @@ import dbConnect from "../dbConnect";
 import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
 import "./page.css";
 
+function RankBadge({
+  scoring,
+}: {
+  scoring:
+    | Awaited<ReturnType<typeof getData>>[number]["officialScoring"]
+    | Awaited<ReturnType<typeof getData>>[number]["pointsScoring"]
+    | Awaited<ReturnType<typeof getData>>[number]["topsAndZonesScoring"]
+    | Awaited<ReturnType<typeof getData>>[number]["thousandDividedByScoring"];
+}) {
+  if (!scoring) return null;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-around",
+        minWidth: "100px",
+        fontSize: "1.2em",
+      }}
+    >
+      <b>
+        <small>#</small>
+        {scoring.rank}
+      </b>
+      <b>{scoring.percentile}</b>
+    </div>
+  );
+}
+
+const FlashBadge = () => (
+  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+    <rect
+      width="50"
+      stroke="#ffff00"
+      y="4"
+      x="4"
+      fill="#c84821"
+      height="108"
+      strokeWidth="8"
+    ></rect>
+  </svg>
+);
+const TopBadge = () => (
+  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+    <rect
+      width="50"
+      stroke="#c84821"
+      y="4"
+      x="4"
+      fill="#c84821"
+      height="108"
+      strokeWidth="8"
+    ></rect>
+  </svg>
+);
+const ZoneBadge = () => (
+  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+    <rect
+      width="50"
+      stroke="#c84821"
+      y="4"
+      x="4"
+      fill="none"
+      height="108"
+      strokeWidth="8"
+    ></rect>
+    <rect
+      fill="#c84821"
+      transform="translate(58,116) rotate(180)"
+      width="58"
+      height="58"
+    ></rect>
+  </svg>
+);
+const NoSendBadge = () => (
+  <svg fill="none" preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 116">
+    <rect
+      width="50"
+      stroke="#c84821"
+      y="4"
+      x="4"
+      fill="none"
+      height="108"
+      strokeWidth="8"
+    ></rect>
+    <rect
+      fill="#c84821"
+      transform="translate(58,116) rotate(180)"
+      width="58"
+      height="0"
+    ></rect>
+  </svg>
+);
+
 export default async function Home() {
   const ioPercentiles = await getData();
+
   return (
     <div>
       <div className="timeline">
@@ -67,20 +162,7 @@ export default async function Home() {
                         }}
                       >
                         <legend>Official Scoring</legend>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-around",
-                            minWidth: "100px",
-                            fontSize: "1.2em",
-                          }}
-                        >
-                          <b>
-                            <small>#</small>
-                            {officialScoring.rank}
-                          </b>
-                          <b>{officialScoring.percentile}</b>
-                        </div>
+                        <RankBadge scoring={officialScoring} />
                         <hr style={{ margin: "4px 0" }} />
                         <table>
                           <thead>
@@ -106,20 +188,7 @@ export default async function Home() {
                         }}
                       >
                         <legend>Tops & Zones Scoring</legend>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-around",
-                            minWidth: "100px",
-                            fontSize: "1.2em",
-                          }}
-                        >
-                          <b>
-                            <small>#</small>
-                            {topsAndZonesScoring.rank}
-                          </b>
-                          <b>{topsAndZonesScoring.percentile}</b>
-                        </div>
+                        <RankBadge scoring={topsAndZonesScoring} />
                         <hr style={{ margin: "4px 0" }} />
                         <table>
                           <thead>
@@ -156,20 +225,7 @@ export default async function Home() {
                         >
                           1000 / Tops Scoring
                         </legend>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-around",
-                            minWidth: "100px",
-                            fontSize: "1.2em",
-                          }}
-                        >
-                          <b>
-                            <small>#</small>
-                            {thousandDividedByScoring.rank}
-                          </b>
-                          <b>{thousandDividedByScoring.percentile}</b>
-                        </div>
+                        <RankBadge scoring={thousandDividedByScoring} />
                         <hr style={{ margin: "4px 0" }} />
                         <table>
                           <thead>
@@ -210,20 +266,7 @@ export default async function Home() {
                         >
                           Points Scoring
                         </legend>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-around",
-                            minWidth: "100px",
-                            fontSize: "1.2em",
-                          }}
-                        >
-                          <b>
-                            <small>#</small>
-                            {pointsScoring.rank}
-                          </b>
-                          <b>{pointsScoring.percentile}</b>
-                        </div>
+                        <RankBadge scoring={pointsScoring} />
                         <hr style={{ margin: "4px 0" }} />
                         <table>
                           <thead>
@@ -257,81 +300,13 @@ export default async function Home() {
                             }`}
                           >
                             {flash ? (
-                              <svg
-                                fill="none"
-                                preserveAspectRatio="xMidYMid meet"
-                                viewBox="0 0 58 116"
-                              >
-                                <rect
-                                  width="50"
-                                  stroke="#ffff00"
-                                  y="4"
-                                  x="4"
-                                  fill="#c84821"
-                                  height="108"
-                                  strokeWidth="8"
-                                ></rect>
-                              </svg>
+                              <FlashBadge />
                             ) : top ? (
-                              <svg
-                                fill="none"
-                                preserveAspectRatio="xMidYMid meet"
-                                viewBox="0 0 58 116"
-                              >
-                                <rect
-                                  width="50"
-                                  stroke="#c84821"
-                                  y="4"
-                                  x="4"
-                                  fill="#c84821"
-                                  height="108"
-                                  strokeWidth="8"
-                                ></rect>
-                              </svg>
+                              <TopBadge />
                             ) : zone ? (
-                              <svg
-                                fill="none"
-                                preserveAspectRatio="xMidYMid meet"
-                                viewBox="0 0 58 116"
-                              >
-                                <rect
-                                  width="50"
-                                  stroke="#c84821"
-                                  y="4"
-                                  x="4"
-                                  fill="none"
-                                  height="108"
-                                  strokeWidth="8"
-                                ></rect>
-                                <rect
-                                  fill="#c84821"
-                                  transform="translate(58,116) rotate(180)"
-                                  width="58"
-                                  height="58"
-                                ></rect>
-                              </svg>
+                              <ZoneBadge />
                             ) : (
-                              <svg
-                                fill="none"
-                                preserveAspectRatio="xMidYMid meet"
-                                viewBox="0 0 58 116"
-                              >
-                                <rect
-                                  width="50"
-                                  stroke="#c84821"
-                                  y="4"
-                                  x="4"
-                                  fill="none"
-                                  height="108"
-                                  strokeWidth="8"
-                                ></rect>
-                                <rect
-                                  fill="#c84821"
-                                  transform="translate(58,116) rotate(180)"
-                                  width="58"
-                                  height="0"
-                                ></rect>
-                              </svg>
+                              <NoSendBadge />
                             )}
                           </div>
                         ))
