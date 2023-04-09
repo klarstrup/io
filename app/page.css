@@ -165,19 +165,19 @@ fieldset > hr {
 
 dl {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   text-align: center;
   margin: 0;
   line-height: 1;
 }
-dl > div {
+dl {
   display: flex;
   flex-direction: column;
 }
-dl > div > dt {
+dl > dt {
   font-weight: bold;
 }
-dl > div > dd {
+dl > dd {
   margin: 0;
 }

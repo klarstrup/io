@@ -21,15 +21,15 @@ function RankBadge({
 
   return (
     <>
-      <b style={{ marginRight: "0.25em", fontVariantNumeric: "tabular-nums" }}>
+      <b style={{ lineHeight: 0.5 }}>
         <small>
-          <small>#</small>
+          <small>
+            <small>#</small>
+          </small>
         </small>
         {score.rank}
       </b>
-      <b style={{ marginRight: "0.25em", fontVariantNumeric: "tabular-nums" }}>
-        {score.percentile}
-      </b>
+      <span style={{ fontSize: "0.75em" }}>{score.percentile}</span>
     </>
   );
 }
@@ -64,24 +64,27 @@ const ResultList = ({
       ? [["Points", score.points]]
       : score.system === "TOPS_AND_ZONES"
       ? [
-          ["T", score.tops],
-          ["Z", score.zones],
-          ["aT", score.topsAttempts],
-          ["aZ", score.zonesAttempts],
+          ["T", score.tops, "Tops"],
+          ["Z", score.zones, "Zones"],
+          ["aT", score.topsAttempts, "Attempts to achieve top"],
+          ["aZ", score.zonesAttempts, "Attempts to achieve zone"],
         ]
       : [];
 
   return (
-    <dl style={style}>
-      {data.map(([label, data], i) => (
-        <div key={label} style={{ marginLeft: i ? "0.25em" : undefined }}>
-          <dt style={{ fontSize: "0.8em", fontWeight: 700 }}>{label}</dt>
-          <dd style={{ fontSize: "1.1em", fontVariantNumeric: "tabular-nums" }}>
-            {data}
-          </dd>
-        </div>
+    <>
+      {data.map(([label, data, title], i) => (
+        <dl key={label} style={style}>
+          <dt
+            style={{ fontSize: "0.8em", fontWeight: 700 }}
+            title={title ? String(title) : undefined}
+          >
+            {label}
+          </dt>
+          <dd style={{ fontSize: "1.1em" }}>{data}</dd>
+        </dl>
       ))}
-    </dl>
+    </>
   );
 };
 
@@ -263,8 +266,11 @@ function EventContent({
               <div
                 key={score.system}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-around",
+                  display: "grid",
+                  alignItems: "center",
+                  gridAutoFlow: "column",
+                  gridAutoColumns: "max-content",
+                  gap: "15px",
                   minWidth: "100px",
                   fontSize: "2.2em",
                 }}
@@ -306,8 +312,11 @@ function EventContent({
                 <div
                   key={score.system}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-around",
+                    display: "grid",
+                    alignItems: "center",
+                    gridAutoFlow: "column",
+                    gridAutoColumns: "max-content",
+                    gap: "15px",
                     minWidth: "100px",
                     fontSize: "1.2em",
                   }}
