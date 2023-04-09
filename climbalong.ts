@@ -293,7 +293,8 @@ export async function getIoPercentileForClimbalongCompetition(
   return {
     start: competition.startTime,
     end: competition.endTime,
-    event: `${competition.facility} ${competition.title}`,
+    venue: competition.facility.trim(),
+    event: competition.title.trim(),
     category: sex ? io.sex : null,
     climbers: noClimbers,
     problems: noProblems,

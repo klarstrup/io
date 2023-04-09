@@ -453,7 +453,8 @@ export async function getIoPercentileForTopLoggerGroup(
   return {
     start: groupStart,
     end: groupEnd,
-    event: `${gyms[0].name} ${group.name}`.trim(),
+    venue: gyms[0].name.trim(),
+    event: group.name.trim(),
     category: sex ? io.gender : null,
     climbers: noClimbers,
     problems: noProblems,
