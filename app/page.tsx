@@ -138,6 +138,7 @@ function EventContent({
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
+          timeZone: "Europe/Copenhagen",
         }).formatRange(start, end)}
       </small>
       <h2 style={{ margin: 0 }}>{event}</h2>
