@@ -68,7 +68,10 @@ export const dbFetch = async <T>(
     console.info(`DB FETCHING ${input}`);
     const response = await fetch(input, {
       ...init,
-      next: { revalidate: cacheOptions?.maxAge },
+      next:
+        cacheOptions?.maxAge !== undefined
+          ? { revalidate: cacheOptions?.maxAge }
+          : undefined,
     });
     if (response.status !== 200) {
       error = await response.text();
