@@ -25,10 +25,11 @@ const cachedFetch = async <T>(
 };
 
 // DB-backed fetch function that will return stale stuff
-const rawDbFetch = async <T>(
+const rawDbFetch = async <T = string>(
   input: RequestInfo | URL,
   init?: RequestInit,
-  cacheOptions?: {
+  options?: {
+    parseJson: boolean;
     /**
      * The given number will be converted to an integer by rounding down.
      * By default, no maximum age is set and the preview session finishes
@@ -46,23 +47,22 @@ const rawDbFetch = async <T>(
   const now = new Date();
   let fetchRow = await Fetch.findOne(filter);
   let result: string | null = null;
-  let resultJson: T;
+  let parsedResult: T;
   let error: unknown;
   if (fetchRow) {
     // In seconds
     let stale = false;
-    if (typeof cacheOptions?.maxAge === "number") {
+    if (typeof options?.maxAge === "number") {
       const rowAge = Math.floor(
         (Number(now) - Number(fetchRow.lastSuccessfulFetchAt)) / 1000
       );
-      if (rowAge > cacheOptions.maxAge) {
-        stale = true;
-      }
+      if (rowAge > options.maxAge) stale = true;
     }
     if (!stale) {
       if (fetchRow.lastResult) {
         result = fetchRow.lastResult;
-        resultJson = JSON.parse(result);
+        parsedResult =
+          options?.parseJson === false ? result : JSON.parse(result);
         console.info(`DB HIT ${input}`);
       }
     } else {
@@ -82,8 +82,8 @@ const rawDbFetch = async <T>(
       : fetch)(input, {
       ...init,
       next:
-        cacheOptions?.maxAge !== undefined
-          ? { revalidate: cacheOptions?.maxAge }
+        options?.maxAge !== undefined
+          ? { revalidate: options.maxAge }
           : undefined,
     });
     if (response.status !== 200) {
@@ -94,21 +94,22 @@ const rawDbFetch = async <T>(
       });
     } else {
       result = await response.text();
-      resultJson = JSON.parse(result);
+      parsedResult = options?.parseJson === false ? result : JSON.parse(result);
       await Fetch.updateOne(filter, {
         lastResult: result,
         lastSuccessfulFetchAt: now,
       });
     }
   }
-  return resultJson!;
+  return parsedResult!;
 };
 
 const dbFetchCache = new Map<RequestInfo | URL, Promise<any>>();
 export const cachedDbFetch = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit,
-  cacheOptions?: {
+  options?: {
+    parseJson: boolean;
     /**
      * The given number will be converted to an integer by rounding down.
      * By default, no maximum age is set and the preview session finishes
@@ -120,7 +121,7 @@ export const cachedDbFetch = async <T>(
   const key = JSON.stringify({ input, init });
   if (!dbFetchCache.has(key)) {
     console.info("cachedDbFetch MISS " + input);
-    dbFetchCache.set(key, rawDbFetch(input, init, cacheOptions));
+    dbFetchCache.set(key, rawDbFetch(input, init, options));
   } else {
     console.info("cachedDbFetch HIT " + input);
   }
