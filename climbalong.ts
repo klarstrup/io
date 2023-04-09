@@ -302,6 +302,7 @@ export async function getIoPercentileForClimbalongCompetition(
     category: io && sex ? io.sex : null,
     climbers: noClimbers,
     problems: noProblems,
+    officialScoring: null,
     topsAndZonesScoring: ioResults &&
       ioTopsAndZonesRank && {
         rank: ioTopsAndZonesRank,

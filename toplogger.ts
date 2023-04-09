@@ -468,7 +468,8 @@ export async function getIoPercentileForTopLoggerGroup(
       ? {
           rank: ioTDBRank,
           percentile: percentile(ioTDBRank, noClimbers),
-          score: Math.round(ioResults.topsTDBScore),
+          topsScore: Math.round(ioResults.topsTDBScore),
+          zonesScore: null,
         }
       : null,
     pointsScoring: ioResults?.topsPTSScore

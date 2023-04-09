@@ -107,10 +107,23 @@ const rawDbFetch = async <T>(
 const dbFetchCache = new Map<RequestInfo | URL, Promise<any>>();
 export const cachedDbFetch = async <T>(
   input: RequestInfo | URL,
-  init?: RequestInit
+  init?: RequestInit,
+  cacheOptions?: {
+    /**
+     * The given number will be converted to an integer by rounding down.
+     * By default, no maximum age is set and the preview session finishes
+     * when the client shuts down (browser is closed).
+     */
+    maxAge?: number;
+  }
 ): Promise<T> => {
   const key = JSON.stringify({ input, init });
-  if (!dbFetchCache.has(key)) dbFetchCache.set(key, rawDbFetch(input, init));
+  if (!dbFetchCache.has(key)) {
+    console.info("cachedDbFetch MISS " + input);
+    dbFetchCache.set(key, rawDbFetch(input, init, cacheOptions));
+  } else {
+    console.info("cachedDbFetch HIT " + input);
+  }
 
   return dbFetchCache.get(key)!;
 };
