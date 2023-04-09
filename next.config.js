@@ -5,6 +5,7 @@ const nextConfig = {
     appDir: true,
     serverComponentsExternalPackages: ["mongoose"],
   },
+  staticPageGenerationTimeout: 600,
 };
 
 module.exports = nextConfig;
