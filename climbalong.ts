@@ -284,7 +284,7 @@ export async function getIoPercentileForClimbalongCompetition(
   const ioPointsRank = io && atheletesInOrderOfPTSScore.indexOf(io) + 1;
 
   const competition = await getCompetition(competitionId);
-  const noProblems = topsByProblemTitle.size;
+  const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
   const noClimbers = atheletesWithResults.length || NaN;
 
   const ioResults =
