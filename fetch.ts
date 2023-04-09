@@ -25,7 +25,7 @@ const cachedFetch = async <T>(
 };
 
 // DB-backed fetch function that will return stale stuff
-export const rawDbFetch = async <T>(
+const rawDbFetch = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit,
   cacheOptions?: {
