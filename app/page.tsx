@@ -153,17 +153,10 @@ export default async function Home() {
                   <hr />
                   <div style={{ display: "flex", flexWrap: "wrap" }}>
                     {officialScoring ? (
-                      <fieldset
-                        style={{
-                          display: "inline-block",
-                          flex: 1,
-                          borderRadius: "5px",
-                          maxWidth: "250px",
-                        }}
-                      >
+                      <fieldset>
                         <legend>Official Scoring</legend>
                         <RankBadge scoring={officialScoring} />
-                        <hr style={{ margin: "4px 0" }} />
+                        <hr />
                         <table>
                           <thead>
                             <tr>
@@ -179,17 +172,10 @@ export default async function Home() {
                       </fieldset>
                     ) : null}
                     {topsAndZonesScoring && (
-                      <fieldset
-                        style={{
-                          display: "inline-block",
-                          flex: 1,
-                          borderRadius: "5px",
-                          maxWidth: "250px",
-                        }}
-                      >
+                      <fieldset>
                         <legend>Tops & Zones Scoring</legend>
                         <RankBadge scoring={topsAndZonesScoring} />
-                        <hr style={{ margin: "4px 0" }} />
+                        <hr />
                         <table>
                           <thead>
                             <tr>
@@ -211,22 +197,12 @@ export default async function Home() {
                       </fieldset>
                     )}
                     {thousandDividedByScoring && (
-                      <fieldset
-                        style={{
-                          display: "inline-block",
-                          flex: 1,
-                          borderRadius: "5px",
-                          maxWidth: "250px",
-                        }}
-                      >
-                        <legend
-                          title="Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
-                          style={{ cursor: "help" }}
-                        >
+                      <fieldset>
+                        <legend title="Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus.">
                           1000 / Tops Scoring
                         </legend>
                         <RankBadge scoring={thousandDividedByScoring} />
-                        <hr style={{ margin: "4px 0" }} />
+                        <hr />
                         <table>
                           <thead>
                             <tr>
@@ -252,22 +228,12 @@ export default async function Home() {
                       </fieldset>
                     )}
                     {pointsScoring && (
-                      <fieldset
-                        style={{
-                          display: "inline-block",
-                          flex: 1,
-                          borderRadius: "5px",
-                          maxWidth: "250px",
-                        }}
-                      >
-                        <legend
-                          title="100 per top, 20 per zone"
-                          style={{ cursor: "help" }}
-                        >
+                      <fieldset>
+                        <legend title="100 per top, 20 per zone">
                           Points Scoring
                         </legend>
                         <RankBadge scoring={pointsScoring} />
-                        <hr style={{ margin: "4px 0" }} />
+                        <hr />
                         <table>
                           <thead>
                             <tr>

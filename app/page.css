@@ -138,3 +138,18 @@ table {
   text-align: center;
   width: 100%;
 }
+
+fieldset {
+  display: inline-block;
+  flex: 1;
+  border-radius: 5px;
+  max-width: 250px;
+}
+
+fieldset > legend[title] {
+  cursor: help;
+}
+
+fieldset > hr {
+  margin: 4px 0;
+}
