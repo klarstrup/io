@@ -1,4 +1,11 @@
 import { dbFetch } from "./fetch";
+import {
+  PointsScore,
+  SCORING_SOURCE,
+  SCORING_SYSTEM,
+  Score,
+  ThousandDivideByScore,
+} from "./lib";
 import { percentile } from "./utils";
 
 export namespace TopLogger {
@@ -12,7 +19,7 @@ export namespace TopLogger {
     date_loggable_start: Date;
     date_loggable_end: Date;
     climbs_type: string;
-    score_system: string;
+    score_system: "points" | "thousand_divide_by";
     score_system_params: ScoreSystemParams;
     approve_participation: boolean;
     split_gender: boolean;
@@ -478,28 +485,43 @@ export async function getIoPercentileForTopLoggerGroup(
             )
           )
       : null,
-    officialScoring: ioResults
-      ? {
-          rank: ioResults.officialRank,
-          percentile: percentile(ioResults.officialRank, noClimbers),
-          score: Number(ioResults.officialScore),
-        }
-      : null,
-    topsAndZonesScoring: null,
-    thousandDividedByScoring: ioResults?.topsTDBScore
-      ? {
-          rank: ioTDBRank,
-          percentile: percentile(ioTDBRank, noClimbers),
-          topsScore: Math.round(ioResults.topsTDBScore),
-          zonesScore: null,
-        }
-      : null,
-    pointsScoring: ioResults?.topsPTSScore
-      ? {
-          rank: ioPointsRank,
-          percentile: percentile(ioPointsRank, noClimbers),
-          points: ioResults.topsPTSScore,
-        }
-      : null,
+    scores: [
+      ioResults && group.score_system === "points"
+        ? ({
+            system: SCORING_SYSTEM.POINTS,
+            source: SCORING_SOURCE.OFFICIAL,
+            rank: ioResults.officialRank,
+            percentile: percentile(ioResults.officialRank, noClimbers),
+            points: Number(ioResults.officialScore),
+          } satisfies PointsScore)
+        : null,
+      ioResults && group.score_system === "thousand_divide_by"
+        ? ({
+            system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+            source: SCORING_SOURCE.OFFICIAL,
+            rank: ioResults.officialRank,
+            percentile: percentile(ioResults.officialRank, noClimbers),
+            points: Number(ioResults.officialScore),
+          } satisfies ThousandDivideByScore)
+        : null,
+      ioResults?.topsTDBScore
+        ? ({
+            system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+            source: SCORING_SOURCE.DERIVED,
+            rank: ioTDBRank,
+            percentile: percentile(ioTDBRank, noClimbers),
+            points: Math.round(ioResults.topsTDBScore),
+          } satisfies ThousandDivideByScore)
+        : null,
+      ioResults?.topsPTSScore
+        ? ({
+            system: SCORING_SYSTEM.POINTS,
+            source: SCORING_SOURCE.DERIVED,
+            rank: ioPointsRank,
+            percentile: percentile(ioPointsRank, noClimbers),
+            points: ioResults.topsPTSScore,
+          } satisfies PointsScore)
+        : null,
+    ].filter(Boolean) as Score[],
   } as const;
 }

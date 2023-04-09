@@ -1,49 +1,94 @@
-import { SVGProps } from "react";
+import { HTMLProps, SVGProps } from "react";
 import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
+import { SCORING_SOURCE } from "../lib";
 import { getSportsTimingEventResults } from "../sportstiming";
 import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
 import "./page.css";
 
+type A = Awaited<
+  ReturnType<typeof getIoPercentileForClimbalongCompetition>
+>["scores"];
+type B = Awaited<ReturnType<typeof getSportsTimingEventResults>>["scores"];
+type C = Awaited<ReturnType<typeof getIoPercentileForTopLoggerGroup>>["scores"];
 function RankBadge({
-  scoring,
+  score,
 }: {
-  scoring:
-    | Awaited<ReturnType<typeof getData>>[number]["officialScoring"]
-    | Awaited<ReturnType<typeof getData>>[number]["pointsScoring"]
-    | Awaited<ReturnType<typeof getData>>[number]["topsAndZonesScoring"]
-    | Awaited<ReturnType<typeof getData>>[number]["thousandDividedByScoring"];
+  score: Awaited<
+    ReturnType<
+      | typeof getIoPercentileForClimbalongCompetition
+      | typeof getSportsTimingEventResults
+      | typeof getIoPercentileForTopLoggerGroup
+    >
+  >["scores"][number];
 }) {
-  if (!scoring) return null;
+  if (!score) return null;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-around",
-        minWidth: "100px",
-        fontSize: "1.2em",
-      }}
-    >
-      <b>
-        <small>#</small>
-        {scoring.rank}
+    <>
+      <b style={{ marginRight: "0.25em", fontVariantNumeric: "tabular-nums" }}>
+        <small>
+          <small>#</small>
+        </small>
+        {score.rank}
       </b>
-      <b>{scoring.percentile}</b>
-    </div>
+      <b style={{ marginRight: "0.25em", fontVariantNumeric: "tabular-nums" }}>
+        {score.percentile}
+      </b>
+    </>
   );
 }
 
-const ResultList = ({ data }: { data: [string, string | number][] }) => (
-  <dl>
-    {data.map(([label, data]) => (
-      <div key={label}>
-        <dt>{label}</dt>
-        <dd>{data}</dd>
-      </div>
-    ))}
-  </dl>
-);
+const ResultList = ({
+  score,
+  style,
+}: {
+  score: Awaited<
+    ReturnType<
+      | typeof getIoPercentileForClimbalongCompetition
+      | typeof getSportsTimingEventResults
+      | typeof getIoPercentileForTopLoggerGroup
+    >
+  >["scores"][number];
+  style?: HTMLProps<HTMLDListElement>["style"];
+}) => {
+  const data =
+    score.system === "DISTANCE_RACE"
+      ? [
+          ["Duration", seconds2time(score.duration)],
+          [
+            "Distance",
+            (score.distance / 1000).toLocaleString("en-DK", {
+              unit: "kilometer",
+            }) + " km",
+          ],
+        ]
+      : score.system === "POINTS"
+      ? [["Points", score.points]]
+      : score.system === "THOUSAND_DIVIDE_BY"
+      ? [["Points", score.points]]
+      : score.system === "TOPS_AND_ZONES"
+      ? [
+          ["T", score.tops],
+          ["Z", score.zones],
+          ["aT", score.topsAttempts],
+          ["aZ", score.zonesAttempts],
+        ]
+      : [];
+
+  return (
+    <dl style={style}>
+      {data.map(([label, data], i) => (
+        <div key={label} style={{ marginLeft: i ? "0.25em" : undefined }}>
+          <dt style={{ fontSize: "0.8em", fontWeight: 700 }}>{label}</dt>
+          <dd style={{ fontSize: "1.1em", fontVariantNumeric: "tabular-nums" }}>
+            {data}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+};
 
 const FlashBadge = ({
   title,
@@ -152,10 +197,7 @@ function EventContent({
     end,
     venue,
     event,
-    officialScoring,
-    topsAndZonesScoring,
-    thousandDividedByScoring,
-    pointsScoring,
+    scores,
     noParticipants,
     problems,
     problemByProblem,
@@ -212,77 +254,77 @@ function EventContent({
         ) : null}
       </small>
       <hr />
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {officialScoring ? (
-          <fieldset>
-            <legend>Official Scoring</legend>
-            <RankBadge scoring={officialScoring} />
-            <hr />
-            <ResultList
-              data={
-                [
-                  "score" in officialScoring && [
-                    "Score",
-                    officialScoring.score,
-                  ],
-                  "duration" in officialScoring && [
-                    "Duration",
-                    seconds2time(officialScoring.duration),
-                  ],
-                  "duration" in officialScoring && [
-                    "Distance",
-                    (officialScoring.distance / 1000).toLocaleString("en-DK", {
-                      unit: "kilometer",
-                    }) + " km",
-                  ],
-                ].filter(Boolean) as any
-              }
-            />
-          </fieldset>
-        ) : null}
-        {topsAndZonesScoring && (
-          <fieldset>
-            <legend>Tops & Zones Scoring</legend>
-            <RankBadge scoring={topsAndZonesScoring} />
-            <hr />
-            <ResultList
-              data={[
-                ["T", topsAndZonesScoring.tops],
-                ["Z", topsAndZonesScoring.zones],
-                ["aT", topsAndZonesScoring.topsAttempts],
-                ["aZ", topsAndZonesScoring.zonesAttempts],
-              ]}
-            />
-          </fieldset>
-        )}
-        {thousandDividedByScoring && (
-          <fieldset>
-            <legend title="Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus.">
-              1000 / Tops Scoring
-            </legend>
-            <RankBadge scoring={thousandDividedByScoring} />
-            <hr />
-            <ResultList
-              data={
-                thousandDividedByScoring.zonesScore
-                  ? [
-                      ["Top Pts", thousandDividedByScoring.topsScore],
-                      ["Zone Pts", thousandDividedByScoring.zonesScore],
-                    ]
-                  : [["Points", thousandDividedByScoring.topsScore]]
-              }
-            />
-          </fieldset>
-        )}
-        {pointsScoring && (
-          <fieldset>
-            <legend title="100 per top, 20 bonus per flash">Points Scoring</legend>
-            <RankBadge scoring={pointsScoring} />
-            <hr />
-            <ResultList data={[["Points", pointsScoring.points]]} />
-          </fieldset>
-        )}
-      </div>
+      {scores.filter(
+        (score: typeof scores[number]) =>
+          score.source === SCORING_SOURCE.OFFICIAL
+      ).length ? (
+        <div>
+          {scores
+            .filter(
+              (score: typeof scores[number]) =>
+                score.source === SCORING_SOURCE.OFFICIAL
+            )
+            .map((score: typeof scores[number]) => (
+              <div
+                key={score.system}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-around",
+                  minWidth: "100px",
+                  fontSize: "2.2em",
+                }}
+              >
+                <RankBadge score={score} />
+                <ResultList score={score} style={{ fontSize: "0.6em" }} />
+              </div>
+            ))}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
+          {scores
+            .filter(
+              (score: typeof scores[number]) =>
+                score.source === SCORING_SOURCE["DERIVED"]
+            )
+            .map((score: typeof scores[number]) => (
+              <fieldset key={score.source + score.system}>
+                <legend
+                  title={
+                    score.system === "POINTS"
+                      ? "100 per top, 20 bonus per flash"
+                      : score.system === "THOUSAND_DIVIDE_BY"
+                      ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
+                      : undefined
+                  }
+                >
+                  {score.system === "TOPS_AND_ZONES"
+                    ? "Tops & Zones"
+                    : score.system === "DISTANCE_RACE"
+                    ? "Race"
+                    : score.system === "POINTS"
+                    ? "Points"
+                    : score.system === "THOUSAND_DIVIDE_BY"
+                    ? "1000 / Tops"
+                    : null}{" "}
+                  Scoring
+                </legend>
+                <div
+                  key={score.system}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-around",
+                    minWidth: "100px",
+                    fontSize: "1.2em",
+                  }}
+                >
+                  <RankBadge score={score} />
+                </div>
+                <hr />
+                <ResultList score={score} />
+              </fieldset>
+            ))}
+        </div>
+      )}
       <div style={{ display: "flex", marginTop: "5px" }}>
         {problemByProblem
           ? problemByProblem.map(({ number, flash, top, zone }) => {

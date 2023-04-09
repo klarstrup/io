@@ -1,4 +1,5 @@
 import { dbFetch } from "./fetch";
+import { PointsScore, SCORING_SOURCE, SCORING_SYSTEM, Score } from "./lib";
 import { percentile } from "./utils";
 
 export namespace Climbalong {
@@ -350,34 +351,38 @@ export async function getIoPercentileForClimbalongCompetition(
             .values()
         )
       : null,
-    officialScoring: null,
-    topsAndZonesScoring:
+
+    scores: [
       ioResults && ioTopsAndZonesRank
-        ? {
+        ? ({
+            system: SCORING_SYSTEM["TOPS_AND_ZONES"],
+            source: SCORING_SOURCE["DERIVED"],
             rank: ioTopsAndZonesRank,
             percentile: percentile(ioTopsAndZonesRank, noClimbers),
             tops: ioResults.tops,
             zones: ioResults.zones,
             topsAttempts: ioResults.topsAttempts,
             zonesAttempts: ioResults.zonesAttempts,
-          }
+          } as const)
         : null,
-    thousandDividedByScoring:
       ioResults && ioTDBRank
-        ? {
+        ? ({
+            system: SCORING_SYSTEM["THOUSAND_DIVIDE_BY"],
+            source: SCORING_SOURCE["DERIVED"],
             rank: ioTDBRank,
             percentile: percentile(ioTDBRank, noClimbers),
-            topsScore: Math.round(ioResults.topsTDBScore),
-            zonesScore: Math.round(ioResults.zonesTDBScore),
-          }
+            points: Math.round(ioResults.topsTDBScore),
+          } as const)
         : null,
-    pointsScoring:
       ioResults && ioPointsRank
-        ? {
+        ? ({
+            system: SCORING_SYSTEM["POINTS"],
+            source: SCORING_SOURCE["DERIVED"],
             rank: ioPointsRank,
             percentile: percentile(ioPointsRank, noClimbers),
             points: ioResults.topsPTSScore,
-          }
+          } satisfies PointsScore)
         : null,
+    ].filter(Boolean) as Score[],
   } as const;
 }

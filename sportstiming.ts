@@ -1,5 +1,11 @@
 import * as cheerio from "cheerio";
 import { dbFetch } from "./fetch";
+import {
+  DistanceRaceScore,
+  SCORING_SOURCE,
+  SCORING_SYSTEM,
+  Score,
+} from "./lib";
 import { percentile } from "./utils";
 
 export namespace SportsTiming {
@@ -147,19 +153,19 @@ export async function getSportsTimingEventResults(
         ? new Date(ioResult.StartTime + ioResult.LastSplitTimeSeconds * 1000)
         : parseSTDate(event.EntryEndDate),
     category: bracket + (sex ? " (Mænd)" : " (Samlet)"),
-    officialScoring: rank
-      ? {
-          rank: rank || NaN,
-          percentile: percentile(rank, noParticipants),
-          duration: ioResult.LastSplitTimeSeconds || NaN,
-          distance,
-        }
-      : null,
-
-    topsAndZonesScoring: null,
-    thousandDividedByScoring: null,
-    pointsScoring: null,
+    scores: (rank
+      ? [
+          {
+            system: SCORING_SYSTEM.DISTANCE_RACE,
+            source: SCORING_SOURCE.OFFICIAL,
+            rank: rank || NaN,
+            percentile: percentile(rank, noParticipants),
+            duration: ioResult.LastSplitTimeSeconds || NaN,
+            distance,
+          } satisfies DistanceRaceScore,
+        ]
+      : []) as Score[],
     problems: null,
     problemByProblem: null,
-  };
+  } as const;
 }

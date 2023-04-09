@@ -6,7 +6,9 @@
 body {
   margin: 0;
   background-color: #edab00;
-  font-family: Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
+    helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial,
+    sans-serif;
 }
 
 #timeline {
@@ -166,6 +168,7 @@ dl {
   justify-content: space-around;
   text-align: center;
   margin: 0;
+  line-height: 1;
 }
 dl > div {
   display: flex;
