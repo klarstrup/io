@@ -297,6 +297,8 @@ interface JSONParams {
   >;
   includes?: string | string[];
 }
+const encodeJSONParams = (jsonParams: JSONParams = {}) =>
+  encodeURI(JSON.stringify(jsonParams));
 
 const getGroup = (id: number) =>
   fetchTopLogger<TopLogger.GroupSingle>(`/v1/groups/${id}.json`);
@@ -311,9 +313,9 @@ const getUser = (id: number, dbFetchOptions?: Parameters<typeof dbFetch>[2]) =>
     dbFetchOptions
   );
 const getAscends = (jsonParams: JSONParams = {}) =>
-  fetchTopLogger<TopLogger.AscendSingle>(
-    `/v1/ascends.json?json_params=${encodeURIComponent(
-      JSON.stringify(jsonParams)
+  fetchTopLogger<TopLogger.AscendSingle[]>(
+    `/v1/ascends.json?json_params=${encodeJSONParams(
+      jsonParams
     )}&serialize_checks=true`
   );
 const getGroupsUsers = (
@@ -321,8 +323,8 @@ const getGroupsUsers = (
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>
   fetchTopLogger<TopLogger.GroupUserMultiple[]>(
-    `/v1/group_users.json?json_params=${encodeURIComponent(
-      JSON.stringify(jsonParams)
+    `/v1/group_users.json?json_params=${encodeJSONParams(
+      jsonParams
     )}&serializeall=false`,
     undefined,
     dbFetchOptions
@@ -369,7 +371,13 @@ export async function getIoPercentileForTopLoggerGroup(
 
   const ascends = (
     await Promise.all(
-      groupUsers.map(({ user_id }) => getAscends({ filters: { user_id } }))
+      groupUsers.map(({ user_id }) =>
+        climbs.length
+          ? getAscends({
+              filters: { user_id, climb_id: climbs.map(({ id }) => id) },
+            })
+          : []
+      )
     )
   )
     .flat()
