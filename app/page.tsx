@@ -370,7 +370,29 @@ export default async function Home() {
     <div>
       <section id="timeline">
         {ioPercentiles
-          //          .filter(({ noParticipants }) => noParticipants)
+          .filter((event) => event.start > new Date())
+          .map((event, i) => (
+            <article
+              key={String(event.start)}
+              className={!(i % 2) ? "left" : "right"}
+            >
+              <div className="content" style={{ opacity: 0.5 }}>
+                <EventContent event={event} />
+              </div>
+            </article>
+          ))}
+      </section>
+      <hr
+        style={{
+          margin: 0,
+          borderColor: "#ff0",
+          borderStyle: "dashed",
+          borderWidth: "3px",
+        }}
+      />
+      <section id="timeline">
+        {ioPercentiles
+          .filter((event) => event.start <= new Date())
           .map((event, i) => (
             <article
               key={String(event.start)}
