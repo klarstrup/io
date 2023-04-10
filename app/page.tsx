@@ -3,7 +3,7 @@ import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
 import { SCORING_SOURCE, Score } from "../lib";
 import { getSportsTimingEventResults } from "../sportstiming";
-import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
+import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../toplogger";
 import "./page.css";
 
 function RankBadge({ score }: { score: Score }) {
@@ -435,7 +435,7 @@ const getData = async () => {
         (
           await getGroupsUsers({ filters: { user_id: 176390 } })
         ).map(({ group_id, user_id }) =>
-          getIoPercentileForTopLoggerGroup(group_id, user_id, sex)
+          getIoTopLoggerGroupEvent(group_id, user_id, sex)
         ),
       ].flat()
     )

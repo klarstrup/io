@@ -343,7 +343,7 @@ const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
 const PTS_FLASH_BONUS = 20;
 
-export async function getIoPercentileForTopLoggerGroup(
+export async function getIoTopLoggerGroupEvent(
   groupId: number,
   ioId: number,
   sex?: boolean
@@ -369,7 +369,6 @@ export async function getIoPercentileForTopLoggerGroup(
   const groupUsers = await getGroupsUsers({
     filters: {
       group_id: groupId,
-      deleted: false,
       user: sex ? { gender: io.gender } : undefined,
     },
     includes: "user",
@@ -410,64 +409,6 @@ export async function getIoPercentileForTopLoggerGroup(
       );
     });
 
-  const topsByClimbId = ascends.reduce((topMemo, ascend) => {
-    if (groupUsers.some(({ user_id }) => user_id === ascend.user_id)) {
-      if (ascend.checks >= 1) {
-        topMemo.set(ascend.climb_id, (topMemo.get(ascend.climb_id) || 0) + 1);
-      }
-    }
-    return topMemo;
-  }, new Map<number, number>());
-
-  const usersWithResults = groupUsers.map(({ user, score, rank }) => {
-    let topsTDBScore = 0;
-    let topsPTSScore = 0;
-    let tops = 0;
-
-    const userAscends = ascends.filter((ascend) => ascend.user_id === user.id);
-    for (const ascend of userAscends) {
-      let problemTopTDBScore =
-        TDB_BASE / (topsByClimbId.get(ascend.climb_id) || 0);
-
-      if (ascend.checks >= 1) {
-        tops += 1;
-        topsPTSScore += PTS_SEND;
-        if (ascend.checks >= 2) {
-          topsPTSScore += PTS_FLASH_BONUS;
-          problemTopTDBScore *= TDB_FLASH_MULTIPLIER;
-        }
-        topsTDBScore += problemTopTDBScore;
-      }
-    }
-
-    return {
-      user,
-      officialScore: score,
-      officialRank: rank,
-      topsPTSScore,
-      topsTDBScore,
-      tops,
-    } as const;
-  });
-
-  const usersInOrderOfTDBScore = Array.from(usersWithResults)
-    .sort((a, b) => b.topsTDBScore - a.topsTDBScore)
-    .map(({ user }) => user);
-  const usersInOrderOfPTSScore = Array.from(usersWithResults)
-    .sort((a, b) => b.topsPTSScore - a.topsPTSScore)
-    .map(({ user }) => user);
-
-  const ioTDBRank =
-    usersInOrderOfTDBScore.findIndex(({ id }) => id === ioId) + 1;
-  const ioPointsRank =
-    usersInOrderOfPTSScore.findIndex(({ id }) => id === ioId) + 1;
-
-  const noProblems = climbs.length;
-  const noClimbers = groupUsers.length || NaN;
-
-  const ioResults =
-    usersWithResults.find(({ user }) => user.id === ioId) ?? null;
-
   const ioAscends = ascends.filter((ascend) => ascend.user_id === ioId);
 
   let firstAscend: Date | null = null;
@@ -475,50 +416,8 @@ export async function getIoPercentileForTopLoggerGroup(
   for (const ascend of ioAscends || []) {
     const date = ascend.date_logged && new Date(ascend.date_logged);
     if (!date) continue;
-    if (!firstAscend || date < firstAscend) {
-      firstAscend = date;
-    }
-    if (!lastAscend || date > lastAscend) {
-      lastAscend = date;
-    }
-  }
-
-  const scores: Score[] = [];
-  if (ioResults && group.score_system === "points") {
-    scores.push({
-      system: SCORING_SYSTEM.POINTS,
-      source: SCORING_SOURCE.OFFICIAL,
-      rank: ioResults.officialRank,
-      percentile: percentile(ioResults.officialRank, noClimbers),
-      points: Number(ioResults.officialScore),
-    } satisfies PointsScore);
-  }
-  if (ioResults && group.score_system === "thousand_divide_by") {
-    scores.push({
-      system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-      source: SCORING_SOURCE.OFFICIAL,
-      rank: ioResults.officialRank,
-      percentile: percentile(ioResults.officialRank, noClimbers),
-      points: Number(ioResults.officialScore),
-    } satisfies ThousandDivideByScore);
-  }
-  if (ioResults?.topsTDBScore) {
-    scores.push({
-      system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-      source: SCORING_SOURCE.DERIVED,
-      rank: ioTDBRank,
-      percentile: percentile(ioTDBRank, noClimbers),
-      points: Math.round(ioResults.topsTDBScore),
-    } satisfies ThousandDivideByScore);
-  }
-  if (ioResults?.topsPTSScore) {
-    scores.push({
-      system: SCORING_SYSTEM.POINTS,
-      source: SCORING_SOURCE.DERIVED,
-      rank: ioPointsRank,
-      percentile: percentile(ioPointsRank, noClimbers),
-      points: ioResults.topsPTSScore,
-    } satisfies PointsScore);
+    if (!firstAscend || date < firstAscend) firstAscend = date;
+    if (!lastAscend || date > lastAscend) lastAscend = date;
   }
 
   return {
@@ -527,8 +426,8 @@ export async function getIoPercentileForTopLoggerGroup(
     venue: gyms[0].name.trim(),
     event: "🧗 " + group.name.trim().replace(" - Qualification", ""),
     category: sex ? io.gender : null,
-    noParticipants: noClimbers,
-    problems: noProblems,
+    noParticipants: groupUsers.length || NaN,
+    problems: climbs.length,
     problemByProblem: climbs.length
       ? climbs
           .map((climb) => {
@@ -539,6 +438,7 @@ export async function getIoPercentileForTopLoggerGroup(
             return {
               number: climb.number || "",
               attempt: true,
+              // TopLogger does not do zones, at least not for Beta Boulders
               zone: ioAscend ? ioAscend.checks >= 1 : false,
               top: ioAscend ? ioAscend.checks >= 1 : false,
               flash: ioAscend ? ioAscend.checks >= 2 : false,
@@ -551,6 +451,156 @@ export async function getIoPercentileForTopLoggerGroup(
             )
           )
       : null,
-    scores,
+    scores: await getIoTopLoggerGroupScores(groupId, ioId, sex),
   } as const;
+}
+
+async function getIoTopLoggerGroupScores(
+  groupId: number,
+  ioId: number,
+  sex?: boolean
+) {
+  const group = await getGroup(groupId);
+  const climbs = (
+    await Promise.all(
+      group.gym_groups.map(({ gym_id }) => getGymClimbs(gym_id))
+    )
+  )
+    .flat()
+    .filter((climb) =>
+      group.climb_groups.some(({ climb_id }) => climb.id === climb_id)
+    );
+  const groupStart = new Date(group.date_loggable_start);
+  const groupEnd = new Date(group.date_loggable_end);
+
+  const io = await getUser(ioId);
+
+  const groupUsers = await getGroupsUsers({
+    filters: {
+      group_id: groupId,
+      user: sex ? { gender: io.gender } : undefined,
+    },
+    includes: "user",
+  });
+
+  const ascends = (
+    await Promise.all(
+      groupUsers.map(({ user_id }) =>
+        climbs.length
+          ? getAscends({
+              filters: { user_id, climb_id: climbs.map((climb) => climb.id) },
+            }).catch((error: unknown) => {
+              if (
+                error instanceof Object &&
+                "errors" in error &&
+                Array.isArray(error.errors) &&
+                typeof error.errors[0] === "string" &&
+                error.errors[0] === "Access denied."
+              ) {
+                // Some toplogger users have privacy enabled for their ascends
+                return [];
+              }
+
+              throw error;
+            })
+          : []
+      )
+    )
+  )
+    .flat()
+    .filter((ascend) => {
+      const date = ascend.date_logged && new Date(ascend.date_logged);
+      return (
+        date &&
+        date >= groupStart &&
+        date <= groupEnd &&
+        climbs.some((climb) => ascend.climb_id === climb.id)
+      );
+    });
+
+  const topsByClimbId = ascends.reduce(
+    (topMemo, { climb_id, user_id, checks }) => {
+      if (groupUsers.some((user) => user.user_id === user_id)) {
+        if (checks) topMemo.set(climb_id, (topMemo.get(climb_id) || 0) + 1);
+      }
+      return topMemo;
+    },
+    new Map<number, number>()
+  );
+
+  const usersWithResults = groupUsers.map(({ user, score, rank }) => {
+    let tdbScore = 0;
+    let ptsScore = 0;
+
+    const userAscends = ascends.filter((ascend) => ascend.user_id === user.id);
+    for (const { climb_id, checks } of userAscends) {
+      let problemTDBScore = TDB_BASE / (topsByClimbId.get(climb_id) || 0);
+
+      if (checks) {
+        ptsScore += PTS_SEND;
+        if (checks >= 2) {
+          ptsScore += PTS_FLASH_BONUS;
+          problemTDBScore *= TDB_FLASH_MULTIPLIER;
+        }
+        tdbScore += problemTDBScore;
+      }
+    }
+
+    return { user, score, rank, ptsScore, tdbScore } as const;
+  });
+
+  const ioResults =
+    usersWithResults.find(({ user }) => user.id === ioId) ?? null;
+
+  const scores: Score[] = [];
+  if (ioResults) {
+    const noClimbers = groupUsers.length || NaN;
+
+    if (group.score_system === "points") {
+      scores.push({
+        system: SCORING_SYSTEM.POINTS,
+        source: SCORING_SOURCE.OFFICIAL,
+        rank: ioResults.rank,
+        percentile: percentile(ioResults.rank, noClimbers),
+        points: Number(ioResults.score),
+      } satisfies PointsScore);
+    }
+    if (group.score_system === "thousand_divide_by") {
+      scores.push({
+        system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+        source: SCORING_SOURCE.OFFICIAL,
+        rank: ioResults.rank,
+        percentile: percentile(ioResults.rank, noClimbers),
+        points: Number(ioResults.score),
+      } satisfies ThousandDivideByScore);
+    }
+    if (ioResults.tdbScore) {
+      const ioTDBRank =
+        Array.from(usersWithResults)
+          .sort((a, b) => b.tdbScore - a.tdbScore)
+          .findIndex(({ user: { id } }) => id === ioId) + 1;
+      scores.push({
+        system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+        source: SCORING_SOURCE.DERIVED,
+        rank: ioTDBRank,
+        percentile: percentile(ioTDBRank, noClimbers),
+        points: Math.round(ioResults.tdbScore),
+      } satisfies ThousandDivideByScore);
+    }
+    if (ioResults.ptsScore) {
+      const ioPointsRank =
+        Array.from(usersWithResults)
+          .sort((a, b) => b.ptsScore - a.ptsScore)
+          .findIndex(({ user: { id } }) => id === ioId) + 1;
+      scores.push({
+        system: SCORING_SYSTEM.POINTS,
+        source: SCORING_SOURCE.DERIVED,
+        rank: ioPointsRank,
+        percentile: percentile(ioPointsRank, noClimbers),
+        points: ioResults.ptsScore,
+      } satisfies PointsScore);
+    }
+  }
+
+  return scores;
 }
