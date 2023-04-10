@@ -56,10 +56,10 @@ body {
   position: relative;
   border-radius: 10px;
 
-  max-width: calc(100% - 50px);
+  max-width: calc(100% - 35px);
   padding: 10px 15px;
 
-  margin-right: 40px;
+  margin-right: 25px;
   margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -67,7 +67,7 @@ body {
   float: left;
 
   margin-right: 0;
-  margin-left: 40px;
+  margin-left: 25px;
 }
 
 #timeline article div.content:after {
@@ -92,19 +92,19 @@ body {
   content: " ";
   display: block;
   position: absolute;
-  top: 18px;
-  right: -18px;
+  top: 25px;
+  right: -10px;
   z-index: 10;
 
-  width: 25px;
-  height: 25px;
+  width: 10px;
+  height: 10px;
 
   border-radius: 100%;
   background-color: #000;
   border: 5px solid #ff0;
 }
 #timeline article.right::after {
-  left: -17px;
+  left: -10px;
 }
 
 /* Media queries - Responsive timeline on screens less than 600px wide */
@@ -123,8 +123,8 @@ body {
 
     margin-right: 0;
     padding-right: 10px;
-    margin-left: 50px;
-    max-width: calc(100% - 60px);
+    margin-left: 45px;
+    max-width: calc(100% - 55px);
   }
 
   #timeline article.left div.content:after,
@@ -136,7 +136,7 @@ body {
   }
   #timeline article.left::after,
   #timeline article.right::after {
-    left: 4px;
+    left: 11.5px;
   }
 }
 table {
