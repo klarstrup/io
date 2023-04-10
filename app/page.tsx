@@ -160,7 +160,7 @@ const ZoneBadge = ({
     ></rect>
   </svg>
 );
-const NoSendBadge = ({
+const AttemptBadge = ({
   title,
   ...props
 }: SVGProps<SVGSVGElement> & { title?: string }) => (
@@ -180,11 +180,27 @@ const NoSendBadge = ({
       height="108"
       strokeWidth="8"
     ></rect>
+  </svg>
+);
+const NoAttemptBadge = ({
+  title,
+  ...props
+}: SVGProps<SVGSVGElement> & { title?: string }) => (
+  <svg
+    fill="none"
+    preserveAspectRatio="xMidYMid meet"
+    viewBox="0 0 58 116"
+    {...props}
+  >
+    <title>{title}</title>
     <rect
-      fill="#c84821"
-      transform="translate(58,116) rotate(180)"
-      width="58"
-      height="0"
+      width="50"
+      stroke="#555"
+      y="4"
+      x="4"
+      fill="none"
+      height="108"
+      strokeWidth="8"
     ></rect>
   </svg>
 );
@@ -337,14 +353,16 @@ function EventContent({
       ) : null}
       {problemByProblem?.length ? (
         <div style={{ display: "flex", marginTop: "5px" }}>
-          {problemByProblem.map(({ number, flash, top, zone }) => {
+          {problemByProblem.map(({ number, flash, top, zone, attempt }) => {
             const Badge = flash
               ? FlashBadge
               : top
               ? TopBadge
               : zone
               ? ZoneBadge
-              : NoSendBadge;
+              : attempt
+              ? AttemptBadge
+              : NoAttemptBadge;
 
             return (
               <Badge

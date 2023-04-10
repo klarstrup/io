@@ -414,6 +414,10 @@ export async function getIoPercentileForClimbalongCompetition(
                 // More nastiness here because each problem is repeated for each lane
                 memo.set(problem.title, {
                   number: problem.title,
+                  attempt: Boolean(
+                    ioPerformance?.numberOfAttempts ||
+                      memo.get(problem.title)?.attempt
+                  ),
                   zone: Boolean(
                     ioPerformance?.scores.some(
                       (score) => score.holdScore === HoldScore["ZONE"]
@@ -439,6 +443,7 @@ export async function getIoPercentileForClimbalongCompetition(
                 string,
                 {
                   number: string | undefined;
+                  attempt: boolean;
                   zone: boolean;
                   top: boolean;
                   flash: boolean;

@@ -487,6 +487,7 @@ export async function getIoPercentileForTopLoggerGroup(
 
             return {
               number: climb.number,
+              attempt: true,
               zone: ioAscend ? ioAscend.checks >= 1 : false,
               top: ioAscend ? ioAscend.checks >= 1 : false,
               flash: ioAscend ? ioAscend.checks >= 2 : false,
