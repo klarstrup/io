@@ -52,14 +52,12 @@ body {
 #timeline article div.content {
   position: relative;
   float: right;
-
-  padding: 10px;
   background-color: white;
   position: relative;
   border-radius: 10px;
 
   max-width: calc(100% - 50px);
-  padding: 10px;
+  padding: 10px 15px;
 
   margin-right: 40px;
   margin-top: 10px;
