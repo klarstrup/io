@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = `mongodb+srv://${
-  process.env.MONGODB_USERNAME
-    ? `${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@`
-    : ""
-}${process.env.MONGODB_URI || "127.0.0.1:27017/self"}`;
+const MONGODB_URI = process.env.MONGODB_URI
+  ? `mongodb+srv://${
+      process.env.MONGODB_USERNAME
+        ? `${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@`
+        : ""
+    }${process.env.MONGODB_URI}`
+  : "mongodb://127.0.0.1:27017/test";
 
 if (!MONGODB_URI) {
   throw new Error(
