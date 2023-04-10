@@ -1,5 +1,5 @@
 import { HTMLProps, SVGProps } from "react";
-import { getIoPercentileForClimbalongCompetition } from "../climbalong";
+import { getIoClimbAlongCompetitionEvent } from "../climbalong";
 import dbConnect from "../dbConnect";
 import { SCORING_SOURCE, Score } from "../lib";
 import { getSportsTimingEventResults } from "../sportstiming";
@@ -427,11 +427,11 @@ const getData = async () => {
         getSportsTimingEventResults(5805, 2697593, true),
         getSportsTimingEventResults(5647, 2619935, true),
         getSportsTimingEventResults(4923, 2047175, true),
-        getIoPercentileForClimbalongCompetition(13, 844, sex),
-        getIoPercentileForClimbalongCompetition(20, 1284, sex),
-        getIoPercentileForClimbalongCompetition(26, 3381, sex),
-        getIoPercentileForClimbalongCompetition(27, 8468, sex),
-        getIoPercentileForClimbalongCompetition(28, undefined, sex),
+        getIoClimbAlongCompetitionEvent(13, 844, sex),
+        getIoClimbAlongCompetitionEvent(20, 1284, sex),
+        getIoClimbAlongCompetitionEvent(26, 3381, sex),
+        getIoClimbAlongCompetitionEvent(27, 8468, sex),
+        getIoClimbAlongCompetitionEvent(28, undefined, sex),
         (
           await getGroupsUsers({ filters: { user_id: 176390 } })
         ).map(({ group_id, user_id }) =>
