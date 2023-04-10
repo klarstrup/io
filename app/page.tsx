@@ -251,35 +251,33 @@ function EventContent({
           <b>{category === "male" ? "M" : category} bracket</b>
         ) : null}
       </small>
-      <hr />
       {scores.filter(
         (score: typeof scores[number]) =>
           score.source === SCORING_SOURCE.OFFICIAL
       ).length ? (
-        <div>
-          {scores
-            .filter(
-              (score: typeof scores[number]) =>
-                score.source === SCORING_SOURCE.OFFICIAL
-            )
-            .map((score: typeof scores[number]) => (
-              <div
-                key={score.system}
-                style={{
-                  display: "grid",
-                  alignItems: "center",
-                  gridAutoFlow: "column",
-                  gridAutoColumns: "max-content",
-                  gap: "15px",
-                  minWidth: "100px",
-                  fontSize: "2.2em",
-                }}
-              >
-                <RankBadge score={score} />
-                <ResultList score={score} style={{ fontSize: "0.6em" }} />
-              </div>
-            ))}
-        </div>
+        scores
+          .filter(
+            (score: typeof scores[number]) =>
+              score.source === SCORING_SOURCE.OFFICIAL
+          )
+          .map((score: typeof scores[number]) => (
+            <div
+              key={score.system}
+              style={{
+                display: "grid",
+                alignItems: "center",
+                gridAutoFlow: "column",
+                gridAutoColumns: "max-content",
+                gap: "15px",
+                minWidth: "100px",
+                fontSize: "2.2em",
+                marginTop: "0.25em",
+              }}
+            >
+              <RankBadge score={score} />
+              <ResultList score={score} style={{ fontSize: "0.6em" }} />
+            </div>
+          ))
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
           {scores
