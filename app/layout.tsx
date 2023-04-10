@@ -1,3 +1,10 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "io of the klarstrups",
+  description: "past and future ioctivities",
+};
+
 export default function RootLayout({
   children,
 }: {
