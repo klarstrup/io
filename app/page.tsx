@@ -92,12 +92,7 @@ const FlashBadge = ({
   title,
   ...props
 }: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg
-    fill="none"
-    preserveAspectRatio="xMidYMid meet"
-    viewBox="0 0 58 116"
-    {...props}
-  >
+  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
       width="50"
@@ -105,7 +100,7 @@ const FlashBadge = ({
       y="4"
       x="4"
       fill="#c84821"
-      height="108"
+      height="50"
       strokeWidth="8"
     ></rect>
   </svg>
@@ -114,12 +109,7 @@ const TopBadge = ({
   title,
   ...props
 }: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg
-    fill="none"
-    preserveAspectRatio="xMidYMid meet"
-    viewBox="0 0 58 116"
-    {...props}
-  >
+  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
       width="50"
@@ -127,7 +117,7 @@ const TopBadge = ({
       y="4"
       x="4"
       fill="#c84821"
-      height="108"
+      height="50"
       strokeWidth="8"
     ></rect>
   </svg>
@@ -136,12 +126,7 @@ const ZoneBadge = ({
   title,
   ...props
 }: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg
-    fill="none"
-    preserveAspectRatio="xMidYMid meet"
-    viewBox="0 0 58 116"
-    {...props}
-  >
+  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
       width="50"
@@ -149,14 +134,14 @@ const ZoneBadge = ({
       y="4"
       x="4"
       fill="none"
-      height="108"
+      height="50"
       strokeWidth="8"
     ></rect>
     <rect
       fill="#c84821"
-      transform="translate(58,116) rotate(180)"
-      width="58"
-      height="58"
+      transform="translate(92,49) rotate(135)"
+      width="60"
+      height="60"
     ></rect>
   </svg>
 );
@@ -164,12 +149,7 @@ const AttemptBadge = ({
   title,
   ...props
 }: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg
-    fill="none"
-    preserveAspectRatio="xMidYMid meet"
-    viewBox="0 0 58 116"
-    {...props}
-  >
+  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
       width="50"
@@ -177,7 +157,7 @@ const AttemptBadge = ({
       y="4"
       x="4"
       fill="none"
-      height="108"
+      height="50"
       strokeWidth="8"
     ></rect>
   </svg>
@@ -186,12 +166,7 @@ const NoAttemptBadge = ({
   title,
   ...props
 }: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg
-    fill="none"
-    preserveAspectRatio="xMidYMid meet"
-    viewBox="0 0 58 116"
-    {...props}
-  >
+  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
       width="50"
@@ -199,7 +174,7 @@ const NoAttemptBadge = ({
       y="4"
       x="4"
       fill="none"
-      height="108"
+      height="50"
       strokeWidth="8"
     ></rect>
   </svg>
