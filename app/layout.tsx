@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "io of the klarstrups",
-  description: "past and future ioctivities",
+  title: "io input/output",
+  description: "what i've done",
 };
 
 export default function RootLayout({
