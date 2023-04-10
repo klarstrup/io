@@ -147,7 +147,8 @@ export async function getSportsTimingEventResults(
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")
-        .replace("Refshaleøen, København", "Refshaleøen") ||
+        .replace("Refshaleøen, København", "Refshaleøen")
+        .replace("København S", "Amager Strandpark") ||
       (event.Name.includes("Strandparken") && "Amager Strandpark") ||
       null,
     noParticipants,
