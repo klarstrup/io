@@ -474,7 +474,7 @@ export async function getIoPercentileForTopLoggerGroup(
     start: firstAscend || groupStart,
     end: lastAscend || groupEnd,
     venue: gyms[0].name.trim(),
-    event: group.name.trim(),
+    event: group.name.trim().replace(" - Qualification", ""),
     category: sex ? io.gender : null,
     noParticipants: noClimbers,
     problems: noProblems,
