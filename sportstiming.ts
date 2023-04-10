@@ -143,6 +143,7 @@ export async function getSportsTimingEventResults(
   return {
     event: event.Name.replace("Copenhagen Urban", "")
       .replace("Copenhagen Beach", "")
+      .replace("Refshaleøen", "")
       .replace("Strandparken", ""),
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
