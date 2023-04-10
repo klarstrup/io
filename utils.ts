@@ -13,7 +13,7 @@ export class RelativeURL extends URL {
 export const percentile = (rank: number, tally: number) =>
   ((1 - rank / tally) * 100).toLocaleString("en-DK", {
     unit: "percent",
-    maximumFractionDigits: 1,
+    maximumSignificantDigits: 2,
   }) + "%";
 
 export function chunk<I extends any>(arr: I[], size: number) {
