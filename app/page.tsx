@@ -103,7 +103,14 @@ const FlashBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
-    <text y="48" x="6" fill="#ffff00" font-size="48px">
+    <text
+      y="50%"
+      x="50%"
+      dominant-baseline="central"
+      text-anchor="middle"
+      fill="#ffff00"
+      font-size="48px"
+    >
       ⚡️
     </text>
   </svg>
