@@ -203,10 +203,10 @@ export async function getIoPercentileForClimbalongCompetition(
       ) {
         const key = problem.title;
         for (const score of performance.scores) {
-          if (score.holdScore === HoldScore["ZONE"]) {
+          if (score.holdScore === HoldScore.ZONE) {
             zoneMemo.set(key, (zoneMemo.get(key) || 0) + 1);
           }
-          if (score.holdScore === HoldScore["TOP"]) {
+          if (score.holdScore === HoldScore.TOP) {
             topMemo.set(key, (topMemo.get(key) || 0) + 1);
           }
         }
@@ -239,7 +239,7 @@ export async function getIoPercentileForClimbalongCompetition(
       let problemZoneTDBScore = TDB_BASE / (zonesByProblemTitle.get(key) || 0);
 
       for (const score of performance.scores) {
-        if (score.holdScore === HoldScore["TOP"]) {
+        if (score.holdScore === HoldScore.TOP) {
           topsAttempts += score.reachedInAttempt;
           tops += 1;
           topsPTSScore += PTS_SEND;
@@ -248,7 +248,7 @@ export async function getIoPercentileForClimbalongCompetition(
             problemTopTDBScore *= TDB_FLASH_MULTIPLIER;
           }
           topsTDBScore += problemTopTDBScore;
-        } else if (score.holdScore === HoldScore["ZONE"]) {
+        } else if (score.holdScore === HoldScore.ZONE) {
           if (score.reachedInAttempt === 1) {
             problemZoneTDBScore *= TDB_FLASH_MULTIPLIER;
           }
@@ -382,6 +382,57 @@ export async function getIoPercentileForClimbalongCompetition(
     }
   }
 
+  const scores: Score[] = [];
+
+  if (ioPerformanceSum) {
+    const ioTopSum = ioPerformanceSum.scoreSums.find(
+      (sum) => sum.holdScore === HoldScore.TOP
+    );
+    const ioZoneSum = ioPerformanceSum.scoreSums.find(
+      (sum) => sum.holdScore === HoldScore.ZONE
+    );
+    scores.push({
+      system: SCORING_SYSTEM.TOPS_AND_ZONES,
+      source: SCORING_SOURCE.OFFICIAL,
+      rank: ioPerformanceSum.rank,
+      percentile: percentile(ioPerformanceSum.rank, noClimbers),
+      tops: ioTopSum?.totalNumberOfTimesReached || NaN,
+      zones: ioZoneSum?.totalNumberOfTimesReached || NaN,
+      topsAttempts: ioTopSum?.totalNumberOfAttemptsUsed || NaN,
+      zonesAttempts: ioZoneSum?.totalNumberOfAttemptsUsed || NaN,
+    } satisfies TopsAndZonesScore);
+  }
+  if (ioResults && ioTopsAndZonesRank) {
+    scores.push({
+      system: SCORING_SYSTEM.TOPS_AND_ZONES,
+      source: SCORING_SOURCE.DERIVED,
+      rank: ioTopsAndZonesRank,
+      percentile: percentile(ioTopsAndZonesRank, noClimbers),
+      tops: ioResults.tops,
+      zones: ioResults.zones,
+      topsAttempts: ioResults.topsAttempts,
+      zonesAttempts: ioResults.zonesAttempts,
+    } satisfies TopsAndZonesScore);
+  }
+  if (ioResults && ioTDBRank) {
+    scores.push({
+      system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+      source: SCORING_SOURCE.DERIVED,
+      rank: ioTDBRank,
+      percentile: percentile(ioTDBRank, noClimbers),
+      points: Math.round(ioResults.topsTDBScore),
+    } satisfies ThousandDivideByScore);
+  }
+  if (ioResults && ioPointsRank) {
+    scores.push({
+      system: SCORING_SYSTEM.POINTS,
+      source: SCORING_SOURCE.DERIVED,
+      rank: ioPointsRank,
+      percentile: percentile(ioPointsRank, noClimbers),
+      points: ioResults.topsPTSScore,
+    } satisfies PointsScore);
+  }
+
   return {
     start: new Date(
       firstPerformance ||
@@ -408,32 +459,32 @@ export async function getIoPercentileForClimbalongCompetition(
             .reduce(
               (memo, problem) => {
                 const ioPerformance = ioPerformances?.find(
-                  ({ problemId }) => problemId === problem.problemId
+                  (performance) => performance.problemId === problem.problemId
                 );
 
                 // More nastiness here because each problem is repeated for each lane
-                memo.set(problem.title, {
+                const key = problem.title;
+                memo.set(key, {
                   number: problem.title,
                   attempt: Boolean(
-                    ioPerformance?.numberOfAttempts ||
-                      memo.get(problem.title)?.attempt
+                    ioPerformance?.numberOfAttempts || memo.get(key)?.attempt
                   ),
                   zone: Boolean(
                     ioPerformance?.scores.some(
-                      (score) => score.holdScore === HoldScore["ZONE"]
-                    ) || memo.get(problem.title)?.zone
+                      (score) => score.holdScore === HoldScore.ZONE
+                    ) || memo.get(key)?.zone
                   ),
                   top: Boolean(
                     ioPerformance?.scores.some(
-                      (score) => score.holdScore === HoldScore["TOP"]
-                    ) || memo.get(problem.title)?.top
+                      (score) => score.holdScore === HoldScore.TOP
+                    ) || memo.get(key)?.top
                   ),
                   flash: Boolean(
                     ioPerformance?.scores.some(
                       (score) =>
-                        score.holdScore === HoldScore["TOP"] &&
+                        score.holdScore === HoldScore.TOP &&
                         score.reachedInAttempt === 1
-                    ) || memo.get(problem.title)?.flash
+                    ) || memo.get(key)?.flash
                   ),
                 });
 
@@ -453,61 +504,6 @@ export async function getIoPercentileForClimbalongCompetition(
             .values()
         )
       : null,
-
-    scores: [
-      ioPerformanceSum &&
-        ({
-          system: SCORING_SYSTEM["TOPS_AND_ZONES"],
-          source: SCORING_SOURCE["OFFICIAL"],
-          rank: ioPerformanceSum.rank,
-          percentile: percentile(ioPerformanceSum.rank, noClimbers),
-          tops:
-            ioPerformanceSum.scoreSums.find(
-              (sum) => sum.holdScore === HoldScore.TOP
-            )?.totalNumberOfTimesReached || NaN,
-          zones:
-            ioPerformanceSum.scoreSums.find(
-              (sum) => sum.holdScore === HoldScore.ZONE
-            )?.totalNumberOfTimesReached || NaN,
-          topsAttempts:
-            ioPerformanceSum.scoreSums.find(
-              (sum) => sum.holdScore === HoldScore.TOP
-            )?.totalNumberOfAttemptsUsed || NaN,
-          zonesAttempts:
-            ioPerformanceSum.scoreSums.find(
-              (sum) => sum.holdScore === HoldScore.ZONE
-            )?.totalNumberOfAttemptsUsed || NaN,
-        } satisfies TopsAndZonesScore),
-      ioResults && ioTopsAndZonesRank
-        ? ({
-            system: SCORING_SYSTEM["TOPS_AND_ZONES"],
-            source: SCORING_SOURCE["DERIVED"],
-            rank: ioTopsAndZonesRank,
-            percentile: percentile(ioTopsAndZonesRank, noClimbers),
-            tops: ioResults.tops,
-            zones: ioResults.zones,
-            topsAttempts: ioResults.topsAttempts,
-            zonesAttempts: ioResults.zonesAttempts,
-          } satisfies TopsAndZonesScore)
-        : null,
-      ioResults && ioTDBRank
-        ? ({
-            system: SCORING_SYSTEM["THOUSAND_DIVIDE_BY"],
-            source: SCORING_SOURCE["DERIVED"],
-            rank: ioTDBRank,
-            percentile: percentile(ioTDBRank, noClimbers),
-            points: Math.round(ioResults.topsTDBScore),
-          } satisfies ThousandDivideByScore)
-        : null,
-      ioResults && ioPointsRank
-        ? ({
-            system: SCORING_SYSTEM["POINTS"],
-            source: SCORING_SOURCE["DERIVED"],
-            rank: ioPointsRank,
-            percentile: percentile(ioPointsRank, noClimbers),
-            points: ioResults.topsPTSScore,
-          } satisfies PointsScore)
-        : null,
-    ].filter(Boolean) as Score[],
+    scores,
   } as const;
 }

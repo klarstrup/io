@@ -176,6 +176,18 @@ export async function getSportsTimingEventResults(
     ) ||
     NaN;
 
+  const scores: Score[] = [];
+  if (rank) {
+    scores.push({
+      system: SCORING_SYSTEM.DISTANCE_RACE,
+      source: SCORING_SOURCE.OFFICIAL,
+      rank: rank || NaN,
+      percentile: percentile(rank, noParticipants),
+      duration,
+      distance,
+    } satisfies DistanceRaceScore);
+  }
+
   return {
     event:
       "🏃 " +
@@ -204,18 +216,7 @@ export async function getSportsTimingEventResults(
         .replace("Strandparken 2018", "Open Race")
         .replace("Refshaleøen ", "")
         .replace("Strandparken ", "") + (sex ? " (M)" : " "),
-    scores: (rank
-      ? [
-          {
-            system: SCORING_SYSTEM.DISTANCE_RACE,
-            source: SCORING_SOURCE.OFFICIAL,
-            rank: rank || NaN,
-            percentile: percentile(rank, noParticipants),
-            duration,
-            distance,
-          } satisfies DistanceRaceScore,
-        ]
-      : []) as Score[],
+    scores,
     problems: null,
     problemByProblem: null,
   } as const;

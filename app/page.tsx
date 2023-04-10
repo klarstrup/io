@@ -1,22 +1,12 @@
 import { HTMLProps, SVGProps } from "react";
 import { getIoPercentileForClimbalongCompetition } from "../climbalong";
 import dbConnect from "../dbConnect";
-import { SCORING_SOURCE } from "../lib";
+import { SCORING_SOURCE, Score } from "../lib";
 import { getSportsTimingEventResults } from "../sportstiming";
 import { getGroupsUsers, getIoPercentileForTopLoggerGroup } from "../toplogger";
 import "./page.css";
 
-function RankBadge({
-  score,
-}: {
-  score: Awaited<
-    ReturnType<
-      | typeof getIoPercentileForClimbalongCompetition
-      | typeof getSportsTimingEventResults
-      | typeof getIoPercentileForTopLoggerGroup
-    >
-  >["scores"][number];
-}) {
+function RankBadge({ score }: { score: Score }) {
   if (!score) return null;
 
   return (
@@ -38,13 +28,7 @@ const ResultList = ({
   score,
   style,
 }: {
-  score: Awaited<
-    ReturnType<
-      | typeof getIoPercentileForClimbalongCompetition
-      | typeof getSportsTimingEventResults
-      | typeof getIoPercentileForTopLoggerGroup
-    >
-  >["scores"][number];
+  score: Score;
   style?: HTMLProps<HTMLDListElement>["style"];
 }) => {
   const data =
@@ -109,10 +93,10 @@ const FlashBadge = ({
     <text
       y="50%"
       x="50%"
-      dominant-baseline="central"
-      text-anchor="middle"
+      dominantBaseline="central"
+      textAnchor="middle"
       fill="#ffff00"
-      font-size="48px"
+      fontSize="48px"
     >
       ⚡️
     </text>
@@ -259,16 +243,11 @@ function EventContent({
           <b>{category === "male" ? "M" : category} bracket</b>
         ) : null}
       </small>
-      {scores.filter(
-        (score: typeof scores[number]) =>
-          score.source === SCORING_SOURCE.OFFICIAL
-      ).length ? (
+      {scores.filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
+        .length ? (
         scores
-          .filter(
-            (score: typeof scores[number]) =>
-              score.source === SCORING_SOURCE.OFFICIAL
-          )
-          .map((score: typeof scores[number]) => (
+          .filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
+          .map((score) => (
             <div
               key={score.system}
               style={{
@@ -286,10 +265,8 @@ function EventContent({
               <ResultList score={score} style={{ fontSize: "0.6em" }} />
             </div>
           ))
-      ) : scores.filter(
-          (score: typeof scores[number]) =>
-            score.source === SCORING_SOURCE.DERIVED
-        ).length ? (
+      ) : scores.filter((score) => score.source === SCORING_SOURCE.DERIVED)
+          .length ? (
         <div
           style={{
             display: "flex",
@@ -298,11 +275,8 @@ function EventContent({
           }}
         >
           {scores
-            .filter(
-              (score: typeof scores[number]) =>
-                score.source === SCORING_SOURCE["DERIVED"]
-            )
-            .map((score: typeof scores[number]) => (
+            .filter((score) => score.source === SCORING_SOURCE.DERIVED)
+            .map((score) => (
               <fieldset key={score.source + score.system}>
                 <legend
                   title={

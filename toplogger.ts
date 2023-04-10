@@ -380,21 +380,33 @@ export async function getIoPercentileForTopLoggerGroup(
       groupUsers.map(({ user_id }) =>
         climbs.length
           ? getAscends({
-              filters: { user_id, climb_id: climbs.map(({ id }) => id) },
+              filters: { user_id, climb_id: climbs.map((climb) => climb.id) },
+            }).catch((error: unknown) => {
+              if (
+                error instanceof Object &&
+                "errors" in error &&
+                Array.isArray(error.errors) &&
+                typeof error.errors[0] === "string" &&
+                error.errors[0] === "Access denied."
+              ) {
+                // Some toplogger users have privacy enabled for their ascends
+                return [];
+              }
+
+              throw error;
             })
           : []
       )
     )
   )
     .flat()
-    .filter(Boolean)
     .filter((ascend) => {
       const date = ascend.date_logged && new Date(ascend.date_logged);
       return (
-        climbs.some((climb) => ascend.climb_id === climb.id) &&
         date &&
         date >= groupStart &&
-        date <= groupEnd
+        date <= groupEnd &&
+        climbs.some((climb) => ascend.climb_id === climb.id)
       );
     });
 
@@ -471,6 +483,44 @@ export async function getIoPercentileForTopLoggerGroup(
     }
   }
 
+  const scores: Score[] = [];
+  if (ioResults && group.score_system === "points") {
+    scores.push({
+      system: SCORING_SYSTEM.POINTS,
+      source: SCORING_SOURCE.OFFICIAL,
+      rank: ioResults.officialRank,
+      percentile: percentile(ioResults.officialRank, noClimbers),
+      points: Number(ioResults.officialScore),
+    } satisfies PointsScore);
+  }
+  if (ioResults && group.score_system === "thousand_divide_by") {
+    scores.push({
+      system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+      source: SCORING_SOURCE.OFFICIAL,
+      rank: ioResults.officialRank,
+      percentile: percentile(ioResults.officialRank, noClimbers),
+      points: Number(ioResults.officialScore),
+    } satisfies ThousandDivideByScore);
+  }
+  if (ioResults?.topsTDBScore) {
+    scores.push({
+      system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+      source: SCORING_SOURCE.DERIVED,
+      rank: ioTDBRank,
+      percentile: percentile(ioTDBRank, noClimbers),
+      points: Math.round(ioResults.topsTDBScore),
+    } satisfies ThousandDivideByScore);
+  }
+  if (ioResults?.topsPTSScore) {
+    scores.push({
+      system: SCORING_SYSTEM.POINTS,
+      source: SCORING_SOURCE.DERIVED,
+      rank: ioPointsRank,
+      percentile: percentile(ioPointsRank, noClimbers),
+      points: ioResults.topsPTSScore,
+    } satisfies PointsScore);
+  }
+
   return {
     start: firstAscend || groupStart,
     end: lastAscend || groupEnd,
@@ -501,43 +551,6 @@ export async function getIoPercentileForTopLoggerGroup(
             )
           )
       : null,
-    scores: [
-      ioResults && group.score_system === "points"
-        ? ({
-            system: SCORING_SYSTEM.POINTS,
-            source: SCORING_SOURCE.OFFICIAL,
-            rank: ioResults.officialRank,
-            percentile: percentile(ioResults.officialRank, noClimbers),
-            points: Number(ioResults.officialScore),
-          } satisfies PointsScore)
-        : null,
-      ioResults && group.score_system === "thousand_divide_by"
-        ? ({
-            system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-            source: SCORING_SOURCE.OFFICIAL,
-            rank: ioResults.officialRank,
-            percentile: percentile(ioResults.officialRank, noClimbers),
-            points: Number(ioResults.officialScore),
-          } satisfies ThousandDivideByScore)
-        : null,
-      ioResults?.topsTDBScore
-        ? ({
-            system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-            source: SCORING_SOURCE.DERIVED,
-            rank: ioTDBRank,
-            percentile: percentile(ioTDBRank, noClimbers),
-            points: Math.round(ioResults.topsTDBScore),
-          } satisfies ThousandDivideByScore)
-        : null,
-      ioResults?.topsPTSScore
-        ? ({
-            system: SCORING_SYSTEM.POINTS,
-            source: SCORING_SOURCE.DERIVED,
-            rank: ioPointsRank,
-            percentile: percentile(ioPointsRank, noClimbers),
-            points: ioResults.topsPTSScore,
-          } satisfies PointsScore)
-        : null,
-    ].filter(Boolean) as Score[],
+    scores,
   } as const;
 }
