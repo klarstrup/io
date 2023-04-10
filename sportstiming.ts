@@ -88,9 +88,13 @@ const getEventParticipantFavoriteUpdate = async (
   (
     await dbFetch<SportsTiming.FavoriteUpdate[]>(
       `https://www.sportstiming.dk/event/${eventId}/favorites/UpdateFavorites`,
-      { headers: { cookie: `favorites_${eventId}=1_${participantId},` } }
+      {
+        headers: {
+          cookie: `cookies_allowed=required,statistics,settings; favorites_${eventId}=1_${participantId},`,
+        },
+      }
     )
-  )[0];
+  ).find(({ Id }) => Id === participantId);
 
 export async function getSportsTimingEventResults(
   eventId: number,
@@ -127,7 +131,7 @@ export async function getSportsTimingEventResults(
   const noParticipants = Number(positionString.split(" af ")[1]);
 
   const distance =
-    ioResult.TotalDistance ||
+    ioResult?.TotalDistance ||
     $("td.splits-valuecol.splits-vertdivide")
       .filter((_, e) => $(e).text().trim().endsWith(" km"))
       .prev()
@@ -156,11 +160,11 @@ export async function getSportsTimingEventResults(
       null,
     noParticipants,
     start:
-      ioResult.StartTime && ioResult.StartTime > 0
+      ioResult?.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime)
         : parseSTDate(event.RawDate),
     end:
-      ioResult.StartTime && ioResult.StartTime > 0
+      ioResult?.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime + ioResult.LastSplitTimeSeconds * 1000)
         : parseSTDate(event.EntryEndDate),
     category:
@@ -175,7 +179,7 @@ export async function getSportsTimingEventResults(
             source: SCORING_SOURCE.OFFICIAL,
             rank: rank || NaN,
             percentile: percentile(rank, noParticipants),
-            duration: ioResult.LastSplitTimeSeconds || NaN,
+            duration: ioResult?.LastSplitTimeSeconds || NaN,
             distance,
           } satisfies DistanceRaceScore,
         ]
