@@ -29,7 +29,7 @@ const rawDbFetch = async <T = string>(
   input: RequestInfo | URL,
   init?: RequestInit,
   options?: {
-    parseJson: boolean;
+    parseJson?: boolean;
     /**
      * The given number will be converted to an integer by rounding down.
      * By default, no maximum age is set and the preview session finishes
@@ -109,7 +109,7 @@ export const cachedDbFetch = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit,
   options?: {
-    parseJson: boolean;
+    parseJson?: boolean;
     /**
      * The given number will be converted to an integer by rounding down.
      * By default, no maximum age is set and the preview session finishes
