@@ -277,8 +277,17 @@ function EventContent({
               <ResultList score={score} style={{ fontSize: "0.6em" }} />
             </div>
           ))
-      ) : (
-        <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
+      ) : scores.filter(
+          (score: typeof scores[number]) =>
+            score.source === SCORING_SOURCE.DERIVED
+        ).length ? (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            marginTop: "0.25em",
+          }}
+        >
           {scores
             .filter(
               (score: typeof scores[number]) =>
@@ -325,30 +334,30 @@ function EventContent({
               </fieldset>
             ))}
         </div>
-      )}
-      <div style={{ display: "flex", marginTop: "5px" }}>
-        {problemByProblem
-          ? problemByProblem.map(({ number, flash, top, zone }) => {
-              const Badge = flash
-                ? FlashBadge
-                : top
-                ? TopBadge
-                : zone
-                ? ZoneBadge
-                : NoSendBadge;
+      ) : null}
+      {problemByProblem?.length ? (
+        <div style={{ display: "flex", marginTop: "5px" }}>
+          {problemByProblem.map(({ number, flash, top, zone }) => {
+            const Badge = flash
+              ? FlashBadge
+              : top
+              ? TopBadge
+              : zone
+              ? ZoneBadge
+              : NoSendBadge;
 
-              return (
-                <Badge
-                  style={{ flex: 1, margin: "0 1px" }}
-                  key={number}
-                  title={`${number}: ${
-                    flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
-                  }`}
-                />
-              );
-            })
-          : null}
-      </div>
+            return (
+              <Badge
+                style={{ flex: 1, margin: "0 1px" }}
+                key={number}
+                title={`${number}: ${
+                  flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
+                }`}
+              />
+            );
+          })}
+        </div>
+      ) : null}
       {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
     </>
   );
