@@ -141,10 +141,12 @@ export async function getSportsTimingEventResults(
     NaN;
 
   return {
-    event: event.Name.replace("Copenhagen Urban", "")
-      .replace("Copenhagen Beach", "")
-      .replace("Refshaleøen", "")
-      .replace("Strandparken", ""),
+    event:
+      "🏃 " +
+      event.Name.replace("Copenhagen Urban", "")
+        .replace("Copenhagen Beach", "")
+        .replace("Refshaleøen", "")
+        .replace("Strandparken", ""),
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")
