@@ -20,15 +20,13 @@ export namespace Climbalong {
     category: null;
     nationality: null;
     club: null;
-    tags: Tags;
+    tags: unknown;
   }
 
   export enum Sex {
     F = "F",
     M = "M",
   }
-
-  export interface Tags {}
 
   export interface Competition {
     competitionId: number;
@@ -129,10 +127,8 @@ enum HoldScore {
   "ZONE" = 1,
 }
 
-const fetchClimbalong = async <T>(
-  input: RequestInfo | URL,
-  init?: RequestInit
-) => dbFetch<T>(`https://comp.climbalong.com/api${input}`, init);
+const fetchClimbalong = async <T>(input: string | URL, init?: RequestInit) =>
+  dbFetch<T>(`https://comp.climbalong.com/api${String(input)}`, init);
 
 const getCompetition = (id: number) =>
   fetchClimbalong<Climbalong.Competition>(`/v0/competitions/${id}`);
@@ -197,18 +193,21 @@ export async function getIoPercentileForClimbalongCompetition(
 
   const [topsByProblemTitle, zonesByProblemTitle] = performances.reduce(
     ([topMemo, zoneMemo], performance) => {
+      const problem = problems.find(
+        (p) => p.problemId === performance.problemId
+      );
+
       if (
+        problem &&
         athletes.some((athlete) => athlete.athleteId === performance.athleteId)
       ) {
-        const problem = problems.find(
-          (p) => p.problemId === performance.problemId
-        )!;
+        const key = problem.title;
         for (const score of performance.scores) {
           if (score.holdScore === HoldScore["ZONE"]) {
-            zoneMemo.set(problem.title, (zoneMemo.get(problem.title) || 0) + 1);
+            zoneMemo.set(key, (zoneMemo.get(key) || 0) + 1);
           }
           if (score.holdScore === HoldScore["TOP"]) {
-            topMemo.set(problem.title, (topMemo.get(problem.title) || 0) + 1);
+            topMemo.set(key, (topMemo.get(key) || 0) + 1);
           }
         }
       }
@@ -232,11 +231,12 @@ export async function getIoPercentileForClimbalongCompetition(
     for (const performance of athletePerformances) {
       const problem = problems.find(
         (p) => p.problemId === performance.problemId
-      )!;
-      let problemTopTDBScore =
-        TDB_BASE / (topsByProblemTitle.get(problem.title) || 0);
-      let problemZoneTDBScore =
-        TDB_BASE / (zonesByProblemTitle.get(problem.title) || 0);
+      );
+      if (!problem) continue;
+
+      const key = problem.title;
+      let problemTopTDBScore = TDB_BASE / (topsByProblemTitle.get(key) || 0);
+      let problemZoneTDBScore = TDB_BASE / (zonesByProblemTitle.get(key) || 0);
 
       for (const score of performance.scores) {
         if (score.holdScore === HoldScore["TOP"]) {
@@ -442,7 +442,7 @@ export async function getIoPercentileForClimbalongCompetition(
               new Map<
                 string,
                 {
-                  number: string | undefined;
+                  number: string;
                   attempt: boolean;
                   zone: boolean;
                   top: boolean;

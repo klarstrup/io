@@ -27,7 +27,7 @@ export namespace TopLogger {
     gym_groups: GymGroup[];
     climb_groups: ClimbGroup[];
     group_users: GroupUser[];
-    poules: any[];
+    poules: unknown[];
   }
 
   export interface ClimbGroup {
@@ -108,7 +108,7 @@ export namespace TopLogger {
     tablets_on: boolean;
     grading_system_routes: string;
     grading_system_boulders: string;
-    grade_distribution_routes: any[];
+    grade_distribution_routes: unknown[];
     grade_distribution_boulders: GradeDistributionBoulder[];
     auto_grade: boolean;
     auto_grade_stable_votes: number;
@@ -284,10 +284,11 @@ export namespace TopLogger {
 }
 
 const fetchTopLogger = async <T>(
-  input: RequestInfo | URL,
+  input: string | URL,
   init?: RequestInit,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) => dbFetch<T>(`https://api.toplogger.nu${input}`, init, dbFetchOptions);
+) =>
+  dbFetch<T>(`https://api.toplogger.nu${String(input)}`, init, dbFetchOptions);
 
 interface JSONParams {
   filters?: Record<
@@ -486,7 +487,7 @@ export async function getIoPercentileForTopLoggerGroup(
             );
 
             return {
-              number: climb.number,
+              number: climb.number || "",
               attempt: true,
               zone: ioAscend ? ioAscend.checks >= 1 : false,
               top: ioAscend ? ioAscend.checks >= 1 : false,
@@ -495,8 +496,8 @@ export async function getIoPercentileForTopLoggerGroup(
           })
           .sort((a, b) =>
             Intl.Collator("en-DK", { numeric: true }).compare(
-              a.number!,
-              b.number!
+              a.number || "",
+              b.number || ""
             )
           )
       : null,

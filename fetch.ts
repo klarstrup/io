@@ -13,20 +13,26 @@ export const Fetch = mongoose.model("Fetch", fetchSchema, undefined, {
   overwriteModels: true,
 });
 
-const fetchCache = new Map<RequestInfo | URL, Promise<any>>();
+const fetchCache = new Map<RequestInfo | URL, Promise<unknown>>();
 const cachedFetch = async <T>(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<T> => {
   const key = JSON.stringify({ input, init });
-  if (!fetchCache.has(key)) fetchCache.set(key, fetch(input, init));
 
-  return fetchCache.get(key)!;
+  let promise = fetchCache.get(key);
+
+  if (!promise) {
+    promise = fetch(input, init);
+    fetchCache.set(key, promise);
+  }
+
+  return promise as Promise<T>;
 };
 
 // DB-backed fetch function that will return stale stuff
 const rawDbFetch = async <T = string>(
-  input: RequestInfo | URL,
+  input: string | URL,
   init?: RequestInit,
   options?: {
     parseJson?: boolean;
@@ -45,9 +51,9 @@ const rawDbFetch = async <T = string>(
   const fetchArgs = JSON.stringify({ input, init: sanitizedInit });
   const filter = { fetchArgs };
   const now = new Date();
-  let fetchRow = await Fetch.findOne(filter);
+  const fetchRow = await Fetch.findOne(filter);
   let result: string | null = null;
-  let parsedResult: T;
+  let parsedResult: T | null = null;
   let error: unknown;
   if (fetchRow) {
     // In seconds
@@ -61,12 +67,13 @@ const rawDbFetch = async <T = string>(
     if (!stale) {
       if (fetchRow.lastResult) {
         result = fetchRow.lastResult;
-        parsedResult =
-          options?.parseJson === false ? result : JSON.parse(result);
-        console.info(`DB HIT ${input}`);
+        parsedResult = (
+          options?.parseJson === false ? result : JSON.parse(result)
+        ) as T;
+        console.info(`DB HIT ${String(input)}`);
       }
     } else {
-      console.info(`DB STALE ${input}`);
+      console.info(`DB STALE ${String(input)}`);
     }
   }
 
@@ -76,7 +83,7 @@ const rawDbFetch = async <T = string>(
       { lastAttemptedFetchAt: now },
       { upsert: true }
     );
-    console.info(`DB FETCHING ${input}`);
+    console.info(`DB FETCHING ${String(input)}`);
     const response = await (process.env.NODE_ENV === "development"
       ? cachedFetch
       : fetch)(input, {
@@ -94,19 +101,23 @@ const rawDbFetch = async <T = string>(
       });
     } else {
       result = await response.text();
-      parsedResult = options?.parseJson === false ? result : JSON.parse(result);
+      parsedResult = (
+        options?.parseJson === false ? result : JSON.parse(result)
+      ) as T;
       await Fetch.updateOne(filter, {
         lastResult: result,
         lastSuccessfulFetchAt: now,
       });
     }
   }
-  return parsedResult!;
+  if (!parsedResult) throw new Error("???");
+
+  return parsedResult;
 };
 
-const dbFetchCache = new Map<RequestInfo | URL, Promise<any>>();
+const dbFetchCache = new Map<RequestInfo | URL, Promise<never>>();
 export const cachedDbFetch = async <T>(
-  input: RequestInfo | URL,
+  input: string | URL,
   init?: RequestInit,
   options?: {
     parseJson?: boolean;
@@ -119,14 +130,16 @@ export const cachedDbFetch = async <T>(
   }
 ): Promise<T> => {
   const key = JSON.stringify({ input, init });
-  if (!dbFetchCache.has(key)) {
-    console.info("cachedDbFetch MISS " + input);
-    dbFetchCache.set(key, rawDbFetch(input, init, options));
+  let promise = dbFetchCache.get(key);
+  if (!promise) {
+    console.info(`cachedDbFetch MISS ${String(input)}`);
+    promise = rawDbFetch(input, init, options);
+    dbFetchCache.set(key, promise);
   } else {
-    console.info("cachedDbFetch HIT " + input);
+    console.info(`cachedDbFetch HIT ${String(input)}`);
   }
 
-  return dbFetchCache.get(key)!;
+  return promise;
 };
 
 export const dbFetch =
@@ -140,8 +153,8 @@ export const fetchJson = async <T>(
     .then((r) => r.text())
     .then((t) => {
       try {
-        return JSON.parse(t);
+        return JSON.parse(t) as T;
       } catch (e) {
-        return t;
+        return t as T;
       }
     });

@@ -103,7 +103,8 @@ export async function getSportsTimingEventResults(
 ) {
   const allNordicRaceEvents = await getAllNordicRaceEvents();
 
-  const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId)!;
+  const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
+  if (!event) throw new Error("???");
 
   const ioResult = await getEventParticipantFavoriteUpdate(eventId, ioId);
 
