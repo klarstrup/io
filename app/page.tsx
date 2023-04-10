@@ -96,13 +96,16 @@ const FlashBadge = ({
     <title>{title}</title>
     <rect
       width="50"
-      stroke="#ffff00"
+      stroke="#c84821"
       y="4"
       x="4"
       fill="#c84821"
       height="50"
       strokeWidth="8"
     ></rect>
+    <text y="48" x="6" fill="#ffff00" font-size="48px">
+      ⚡️
+    </text>
   </svg>
 );
 const TopBadge = ({
