@@ -142,6 +142,37 @@ export async function getSportsTimingEventResults(
         (t) => Number($(t).text().replace(" km", "").replace(",", ".")) * 1000
       )
       .reduce((sum, value) => sum + value, 0) ||
+    Number(
+      $(".panel-primary td")
+        .filter((_, e) => $(e).text().trim() === "Distance")
+        .last()
+        .next()
+        .text()
+        .trim()
+        .replace(" km", "")
+        .replace(",", ".")
+    ) * 1000 ||
+    NaN;
+
+  const duration =
+    ioResult?.LastSplitTimeSeconds ||
+    Number(
+      $(".panel-primary td")
+        .filter((_, e) => $(e).text().trim().startsWith("Nettotid"))
+        .last()
+        .next()
+        .text()
+        .trim()
+        .split(":")
+        .reverse()
+        .reduce((seconds, unit, i) => {
+          const n = Number(unit);
+          return (
+            seconds +
+            (i === 0 ? n : i === 1 ? n * 60 : i === 2 ? n * 60 * 60 : 0)
+          );
+        }, 0)
+    ) ||
     NaN;
 
   return {
@@ -165,7 +196,7 @@ export async function getSportsTimingEventResults(
         : parseSTDate(event.RawDate),
     end:
       ioResult?.StartTime && ioResult.StartTime > 0
-        ? new Date(ioResult.StartTime + ioResult.LastSplitTimeSeconds * 1000)
+        ? new Date(ioResult.StartTime + duration * 1000)
         : parseSTDate(event.EntryEndDate),
     category:
       bracket
@@ -179,7 +210,7 @@ export async function getSportsTimingEventResults(
             source: SCORING_SOURCE.OFFICIAL,
             rank: rank || NaN,
             percentile: percentile(rank, noParticipants),
-            duration: ioResult?.LastSplitTimeSeconds || NaN,
+            duration,
             distance,
           } satisfies DistanceRaceScore,
         ]

@@ -50,7 +50,10 @@ const ResultList = ({
   const data =
     score.system === "DISTANCE_RACE"
       ? [
-          ["Duration", seconds2time(score.duration)],
+          [
+            "Duration",
+            score.duration ? seconds2time(score.duration) : String(NaN),
+          ],
           [
             "Distance",
             (score.distance / 1000).toLocaleString("en-DK", {
@@ -217,7 +220,12 @@ function EventContent({
             hour: "numeric",
             minute: "2-digit",
             timeZone: "Europe/Copenhagen",
-          }).formatRange(start, end)}
+          }).formatRange(
+            ...([start, end].sort((a, b) => Number(a) - Number(b)) as [
+              Date,
+              Date
+            ])
+          )}
         </b>
         {venue ? (
           <>
