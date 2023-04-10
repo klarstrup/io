@@ -141,8 +141,15 @@ export async function getSportsTimingEventResults(
     NaN;
 
   return {
-    event: event.Name,
-    venue: event.Location,
+    event: event.Name.replace("Copenhagen Urban", "")
+      .replace("Copenhagen Beach", "")
+      .replace("Strandparken", ""),
+    venue:
+      event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
+        .replace("Copenhagen Urban", "Refshaleøen")
+        .replace("Refshaleøen, København", "Refshaleøen") ||
+      (event.Name.includes("Strandparken") && "Amager Strandpark") ||
+      null,
     noParticipants,
     start:
       ioResult.StartTime && ioResult.StartTime > 0
@@ -152,7 +159,11 @@ export async function getSportsTimingEventResults(
       ioResult.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime + ioResult.LastSplitTimeSeconds * 1000)
         : parseSTDate(event.EntryEndDate),
-    category: bracket + (sex ? " (Mænd)" : " (Samlet)"),
+    category:
+      bracket
+        .replace("Strandparken 2018", "Open Race")
+        .replace("Refshaleøen ", "")
+        .replace("Strandparken ", "") + (sex ? " (M)" : " "),
     scores: (rank
       ? [
           {

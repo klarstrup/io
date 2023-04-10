@@ -239,8 +239,7 @@ function EventContent({
           .replace(
             `${start.toLocaleDateString("da-DK", { year: "numeric" })}`,
             ""
-          )
-          .replace(venue || "", "")}
+          )}
       </h2>
       <small>
         {problems ? <b>{problems} problems</b> : null}
@@ -362,7 +361,7 @@ export default async function Home() {
     <div>
       <section id="timeline">
         {ioPercentiles
-          .filter(({ noParticipants }) => noParticipants)
+          //          .filter(({ noParticipants }) => noParticipants)
           .map((event, i) => (
             <article
               key={String(event.start)}
