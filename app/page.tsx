@@ -327,7 +327,14 @@ function EventContent({
         </div>
       ) : null}
       {problemByProblem?.length ? (
-        <div style={{ display: "flex", marginTop: "5px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(15, 1fr)",
+            gap: "2px",
+            marginTop: "5px",
+          }}
+        >
           {problemByProblem.map(({ number, flash, top, zone, attempt }) => {
             const Badge = flash
               ? FlashBadge
@@ -341,7 +348,7 @@ function EventContent({
 
             return (
               <Badge
-                style={{ flex: 1, margin: "0 1px" }}
+                style={{ flex: 1 }}
                 key={number}
                 title={`${number}: ${
                   flash ? "flash" : top ? "top" : zone ? "zone" : "no send"

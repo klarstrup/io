@@ -15,3 +15,11 @@ export const percentile = (rank: number, tally: number) =>
     unit: "percent",
     maximumFractionDigits: 1,
   }) + "%";
+
+export function chunk<I extends any>(arr: I[], size: number) {
+  const results: I[][] = [];
+
+  while (arr.length) results.push(arr.splice(0, size));
+
+  return results;
+}
