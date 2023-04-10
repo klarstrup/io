@@ -110,7 +110,19 @@ const rawDbFetch = async <T = string>(
       });
     }
   }
-  if (!parsedResult) throw new Error("???");
+  if (!parsedResult) {
+    if (error instanceof Error) throw error;
+    if (typeof error === "string") {
+      let parsedError: unknown;
+      try {
+        parsedError = JSON.parse(error);
+      } catch { /* empty */ }
+      if (parsedError) throw parsedError;
+
+      throw new Error(error);
+    }
+    throw error || new Error("???");
+  }
 
   return parsedResult;
 };
