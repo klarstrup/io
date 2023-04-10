@@ -321,6 +321,38 @@ export async function getIoPercentileForClimbalongCompetition(
       .flat()
       .find(({ athleteId }) => athleteId === io.athleteId)?.performanceSum;
 
+  const circuitChallengeNodesGroupedByLane = await dbFetch<
+    [
+      number,
+      {
+        nodeId: number;
+        nodeType: number;
+        competitionId: number;
+        inputsFrom: {
+          nodeId: number;
+          edgeId: number;
+        }[];
+        outputEdgeIds: number[];
+        inputTitle: string;
+        nodeOutputType: {
+          scoreSystem: string;
+          numberOfAttemptsCounted: boolean;
+          numberOfScoringHolds: number;
+          ranked: boolean;
+        };
+        circuit: Climbalong.Circuit;
+        selfscoring: boolean;
+        selfscoringOpen: Date | null;
+        selfscoringClose: Date | null;
+        pickTopPerformancesAmount: number;
+        outputRanked: boolean;
+        nodeName: string;
+      }[]
+    ][]
+  >(
+    `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`
+  );
+
   const competition = await getCompetition(competitionId);
   const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
   const noClimbers = atheletesWithResults.length || NaN;
@@ -332,9 +364,39 @@ export async function getIoPercentileForClimbalongCompetition(
       )) ??
     null;
 
+  const ioPerformances =
+    io && performances.filter(({ athleteId }) => athleteId === io.athleteId);
+
+  let firstPerformance: Date | null = null;
+  let lastPerformance: Date | null = null;
+  for (const performance of ioPerformances || []) {
+    const start = new Date(performance.performanceStartedTime);
+    if (!firstPerformance || start < firstPerformance) {
+      firstPerformance = start;
+    }
+    const end = new Date(
+      performance.performanceEndedTime || performance.registrationTime
+    );
+    if (!lastPerformance || end > lastPerformance) {
+      lastPerformance = end;
+    }
+  }
+
   return {
-    start: new Date(competition.startTime),
-    end: new Date(competition.endTime),
+    start: new Date(
+      firstPerformance ||
+        circuitChallengeNodesGroupedByLane.find(
+          ([, [challengeNode]]) => challengeNode?.selfscoringOpen
+        )?.[1][0]?.selfscoringOpen ||
+        competition.startTime
+    ),
+    end: new Date(
+      lastPerformance ||
+        circuitChallengeNodesGroupedByLane.find(
+          ([, [challengeNode]]) => challengeNode?.selfscoringClose
+        )?.[1][0]?.selfscoringClose ||
+        competition.endTime
+    ),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
     category: io && sex ? io.sex : null,
@@ -345,13 +407,9 @@ export async function getIoPercentileForClimbalongCompetition(
           problems
             .reduce(
               (memo, problem) => {
-                const ioPerformance =
-                  io &&
-                  performances.find(
-                    ({ athleteId, problemId }) =>
-                      athleteId === io.athleteId &&
-                      problemId === problem.problemId
-                  );
+                const ioPerformance = ioPerformances?.find(
+                  ({ problemId }) => problemId === problem.problemId
+                );
 
                 // More nastiness here because each problem is repeated for each lane
                 memo.set(problem.title, {

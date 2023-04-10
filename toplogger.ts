@@ -455,9 +455,24 @@ export async function getIoPercentileForTopLoggerGroup(
   const ioResults =
     usersWithResults.find(({ user }) => user.id === ioId) ?? null;
 
+  const ioAscends = ascends.filter((ascend) => ascend.user_id === ioId);
+
+  let firstAscend: Date | null = null;
+  let lastAscend: Date | null = null;
+  for (const ascend of ioAscends || []) {
+    const date = ascend.date_logged && new Date(ascend.date_logged);
+    if (!date) continue;
+    if (!firstAscend || date < firstAscend) {
+      firstAscend = date;
+    }
+    if (!lastAscend || date > lastAscend) {
+      lastAscend = date;
+    }
+  }
+
   return {
-    start: groupStart,
-    end: groupEnd,
+    start: firstAscend || groupStart,
+    end: lastAscend || groupEnd,
     venue: gyms[0].name.trim(),
     event: group.name.trim(),
     category: sex ? io.gender : null,
@@ -466,9 +481,8 @@ export async function getIoPercentileForTopLoggerGroup(
     problemByProblem: climbs.length
       ? climbs
           .map((climb) => {
-            const ioAscend = ascends.find(
-              (ascend) =>
-                ascend.climb_id === climb.id && ascend.user_id === ioId
+            const ioAscend = ioAscends.find(
+              (ascend) => ascend.climb_id === climb.id
             );
 
             return {
