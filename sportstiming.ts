@@ -190,6 +190,7 @@ export async function getSportsTimingEventResults(
 
   return {
     id: eventId,
+    url: `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
     event:
       "🏃 " +
       event.Name.replace("Copenhagen Urban", "")

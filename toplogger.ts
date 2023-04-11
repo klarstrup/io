@@ -422,6 +422,7 @@ export async function getIoTopLoggerGroupEvent(
 
   return {
     id: groupId,
+    url: `https://app.toplogger.nu/en-us/${gyms[0].slug}/comp/${groupId}/details`,
     start: firstAscend || groupStart,
     end: lastAscend || groupEnd,
     venue: gyms[0].name.trim(),

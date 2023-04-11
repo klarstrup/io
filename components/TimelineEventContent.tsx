@@ -210,6 +210,7 @@ export default function TimelineEventContent({
     category,
     team,
     id,
+    url,
     ...e
   },
 }: {
@@ -223,6 +224,19 @@ export default function TimelineEventContent({
 }) {
   return (
     <Fragment key={id}>
+      <a
+        href={url}
+        rel="external noopener"
+        target="_blank"
+        style={{
+          textDecoration: "none",
+          float: "right",
+          display: "inline-block",
+          marginLeft: "4px",
+        }}
+      >
+        🔗
+      </a>
       <small>
         <b>
           {new Intl.DateTimeFormat("en-DK", {
