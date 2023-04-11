@@ -1,3 +1,4 @@
+import Script from "next/script";
 import { getIoClimbAlongCompetitionEvent } from "../climbalong";
 import TimelineEventContent from "../components/TimelineEventContent";
 import dbConnect from "../dbConnect";
@@ -46,8 +47,30 @@ export default async function Home() {
             </article>
           ))}
       </section>
+      <Script id="balanceColumns">
+        {`${String(
+          balanceColumns
+        )};window.addEventListener("resize",balanceColumns);balanceColumns();`}
+      </Script>
     </div>
   );
+}
+
+function balanceColumns() {
+  let leftColumnHeight = 0;
+  let rightColumnHeight = 100;
+  const articles = document.querySelectorAll<HTMLElement>("#timeline article");
+  for (const article of Array.from(articles)) {
+    article.classList.remove("left");
+    article.classList.remove("right");
+    if (leftColumnHeight > rightColumnHeight) {
+      article.classList.add("right");
+      rightColumnHeight += article.offsetHeight;
+    } else {
+      article.classList.add("left");
+      leftColumnHeight += article.offsetHeight;
+    }
+  }
 }
 
 const getData = async () => {
