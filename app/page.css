@@ -117,8 +117,7 @@ body {
     clear: both;
     width: 100%;
   }
-  #timeline article.left div.content,
-  #timeline article.right div.content {
+  #timeline article div.content {
     float: left;
 
     margin-right: 0;
@@ -127,15 +126,13 @@ body {
     max-width: calc(100% - 55px);
   }
 
-  #timeline article.left div.content:after,
-  #timeline article.right div.content:after {
+  #timeline article div.content:after {
     border-left-width: 0;
     border-right-width: 10px;
     left: -10px;
     right: auto;
   }
-  #timeline article.left::after,
-  #timeline article.right::after {
+  #timeline article::after {
     left: 11.5px;
   }
 }
