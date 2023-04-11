@@ -10,6 +10,9 @@ body {
     helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial,
     sans-serif;
 }
+[title] {
+  cursor: help;
+}
 
 #timeline {
   display: block;
@@ -153,10 +156,6 @@ fieldset {
 fieldset > legend {
   white-space: nowrap;
 }
-fieldset > legend[title] {
-  cursor: help;
-}
-
 fieldset > hr {
   margin: 4px 0;
 }
