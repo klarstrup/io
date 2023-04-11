@@ -384,7 +384,7 @@ export default function TimelineEventContent({
 
             return (
               <Badge
-                style={{ flex: 1 }}
+                style={{ flex: 1, maxWidth: "100%" }}
                 key={number}
                 title={`${number}: ${
                   flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
