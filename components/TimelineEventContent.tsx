@@ -304,7 +304,7 @@ export default function TimelineEventContent({
                 display: "flex",
                 flexFlow: "wrap",
                 alignItems: "center",
-                gap: "15px",
+                gap: "10px",
                 marginTop: "0.25em",
               }}
             >
@@ -345,7 +345,7 @@ export default function TimelineEventContent({
                     display: "flex",
                     flexFlow: "wrap",
                     alignItems: "center",
-                    gap: "15px",
+                    gap: "10px",
                     marginTop: "0.25em",
                   }}
                 >
