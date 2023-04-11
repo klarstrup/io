@@ -421,11 +421,13 @@ export async function getIoTopLoggerGroupEvent(
   }
 
   return {
+    id: groupId,
     start: firstAscend || groupStart,
     end: lastAscend || groupEnd,
     venue: gyms[0].name.trim(),
     event: "🧗 " + group.name.trim().replace(" - Qualification", ""),
     category: sex ? io.gender : null,
+    team: null,
     noParticipants: groupUsers.length || NaN,
     problems: climbs.length,
     problemByProblem: climbs.length

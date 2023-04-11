@@ -244,6 +244,7 @@ export async function getIoClimbAlongCompetitionEvent(
   }
 
   return {
+    id: competitionId,
     start: new Date(
       firstPerformance ||
         circuitChallengeNodesGroupedByLane.find(
@@ -261,6 +262,7 @@ export async function getIoClimbAlongCompetitionEvent(
     venue: competition.facility.trim(),
     event: "🧗 " + competition.title.trim(),
     category: io && sex ? io.sex : null,
+    team: null,
     noParticipants: noClimbers,
     problems: noProblems,
     problemByProblem: problems.length

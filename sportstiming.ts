@@ -189,6 +189,7 @@ export async function getSportsTimingEventResults(
   }
 
   return {
+    id: eventId,
     event:
       "🏃 " +
       event.Name.replace("Copenhagen Urban", "")
@@ -202,6 +203,20 @@ export async function getSportsTimingEventResults(
         .replace("København S", "Amager Strandpark") ||
       (event.Name.includes("Strandparken") && "Amager Strandpark") ||
       null,
+    team:
+      eventId === 8962
+        ? "Tjek"
+        : eventId === 8940
+        ? "E & L & S"
+        : eventId === 7913
+        ? "S"
+        : eventId === 5805
+        ? "E & L"
+        : eventId === 5647
+        ? "E & J"
+        : eventId === 4923
+        ? "Tjek"
+        : null,
     noParticipants,
     start:
       ioResult?.StartTime && ioResult.StartTime > 0

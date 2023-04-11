@@ -1,4 +1,4 @@
-import { HTMLProps, SVGProps } from "react";
+import { Fragment, HTMLProps, SVGProps } from "react";
 import { getIoClimbAlongCompetitionEvent } from "../climbalong";
 import { SCORING_SOURCE, Score } from "../lib";
 import { getSportsTimingEventResults } from "../sportstiming";
@@ -208,6 +208,8 @@ export default function TimelineEventContent({
     problems,
     problemByProblem,
     category,
+    team,
+    id,
     ...e
   },
 }: {
@@ -220,7 +222,7 @@ export default function TimelineEventContent({
   >;
 }) {
   return (
-    <>
+    <Fragment key={id}>
       <small>
         <b>
           {new Intl.DateTimeFormat("en-DK", {
@@ -258,7 +260,15 @@ export default function TimelineEventContent({
           .replace(
             `${start.toLocaleDateString("da-DK", { year: "numeric" })}`,
             ""
-          )}
+          )}{" "}
+        {team ? (
+          <span style={{ fontSize: "0.75em" }}>
+            <span style={{ fontSize: "0.75em", fontWeight: "normal" }}>
+              with
+            </span>{" "}
+            {team}
+          </span>
+        ) : null}
       </h2>
       <small>
         {problems ? <b>{problems} problems</b> : null}
@@ -371,7 +381,7 @@ export default function TimelineEventContent({
         </div>
       ) : null}
       {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
-    </>
+    </Fragment>
   );
 }
 
