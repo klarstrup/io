@@ -4,21 +4,42 @@ import { SCORING_SOURCE, Score } from "../lib";
 import { getSportsTimingEventResults } from "../sportstiming";
 import { getIoTopLoggerGroupEvent } from "../toplogger";
 
-function RankBadge({ score }: { score: Score }) {
-  if (!score) return null;
+const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
 
+const suffixes = {
+  one: "st",
+  two: "nd",
+  few: "rd",
+  other: "th",
+} as const;
+
+const formatOrdinals = (n: number) => suffixes[pr.select(n)] as string;
+
+function RankBadge({ score }: { score: Score }) {
   return (
-    <>
-      <b style={{ lineHeight: 0.5 }}>
-        <small>
-          <small>
-            <small>#</small>
-          </small>
-        </small>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateAreas: '"a b" "a c"',
+        lineHeight: 0.75,
+      }}
+    >
+      <div style={{ fontSize: "1.5em", fontWeight: 700, gridArea: "a" }}>
         {score.rank}
-      </b>
-      <span style={{ fontSize: "0.75em" }}>{score.percentile}</span>
-    </>
+      </div>
+      <div
+        style={{ fontSize: "0.5em", lineHeight: 1, gridArea: "b" }}
+        title="Percentile"
+      >
+        {score.percentile}
+        <small style={{ verticalAlign: "top" }}>
+          <small>%</small>
+        </small>
+      </div>
+      <div style={{ fontSize: "0.75em", fontWeight: 600, gridArea: "c" }}>
+        {formatOrdinals(score.rank)}
+      </div>
+    </div>
   );
 }
 
@@ -271,13 +292,7 @@ export default function TimelineEventContent({
           ))
       ) : scores.filter((score) => score.source === SCORING_SOURCE.DERIVED)
           .length ? (
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            marginTop: "0.25em",
-          }}
-        >
+        <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
           {scores
             .filter((score) => score.source === SCORING_SOURCE.DERIVED)
             .map((score) => (
@@ -311,13 +326,13 @@ export default function TimelineEventContent({
                     gridAutoColumns: "max-content",
                     gap: "15px",
                     minWidth: "100px",
-                    fontSize: "1.2em",
+                    fontSize: "2.2em",
+                    marginTop: "0.25em",
                   }}
                 >
                   <RankBadge score={score} />
+                  <ResultList score={score} style={{ fontSize: "0.6em" }} />
                 </div>
-                <hr />
-                <ResultList score={score} />
               </fieldset>
             ))}
         </div>
