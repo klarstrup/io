@@ -22,6 +22,7 @@ function RankBadge({ score }: { score: Score }) {
         display: "grid",
         gridTemplateAreas: '"a b" "a c"',
         lineHeight: 0.75,
+        fontSize: "0.9em",
       }}
     >
       <div style={{ fontSize: "1.5em", fontWeight: 700, gridArea: "a" }}>
