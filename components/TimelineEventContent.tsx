@@ -398,7 +398,7 @@ function seconds2time(seconds: number) {
   const minutes = Math.floor((seconds - hours * 3600) / 60);
   seconds = seconds - hours * 3600 - minutes * 60;
 
-  return `${hours || "0"}:${minutes < 10 ? `0${minutes}` : String(minutes)}:${
-    seconds < 10 ? `0${seconds}` : String(seconds)
-  }`;
+  return `${hours ? `${hours}:` : ""}${
+    minutes < 10 ? `0${minutes}` : String(minutes)
+  }:${seconds < 10 ? `0${seconds}` : String(seconds)}`;
 }
