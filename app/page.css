@@ -161,14 +161,11 @@ fieldset > hr {
 }
 
 dl {
-  display: flex;
   justify-content: space-between;
   align-items: center;
   text-align: center;
   margin: 0;
   line-height: 1;
-}
-dl {
   display: flex;
   flex-direction: column;
 }

@@ -22,7 +22,7 @@ function RankBadge({ score }: { score: Score }) {
         display: "grid",
         gridTemplateAreas: '"a b" "a c"',
         lineHeight: 0.75,
-        fontSize: "0.9em",
+        fontSize: "2em",
       }}
     >
       <div style={{ fontSize: "1.5em", fontWeight: 700, gridArea: "a" }}>
@@ -59,10 +59,10 @@ const ResultList = ({
             score.duration ? seconds2time(score.duration) : String(NaN),
           ],
           [
-            "Distance",
+            "km",
             (score.distance / 1000).toLocaleString("en-DK", {
               unit: "kilometer",
-            }) + " km",
+            }),
           ],
         ]
       : score.system === "POINTS"
@@ -83,12 +83,12 @@ const ResultList = ({
       {data.map(([label, data, title]) => (
         <dl key={label} style={style}>
           <dt
-            style={{ fontSize: "0.8em", fontWeight: 700 }}
+            style={{ fontWeight: 700 }}
             title={title ? String(title) : undefined}
           >
             {label}
           </dt>
-          <dd style={{ fontSize: "1.1em" }}>{data}</dd>
+          <dd style={{ fontSize: "1.5em" }}>{data}</dd>
         </dl>
       ))}
     </>
@@ -301,18 +301,15 @@ export default function TimelineEventContent({
             <div
               key={score.system}
               style={{
-                display: "grid",
+                display: "flex",
+                flexFlow: "wrap",
                 alignItems: "center",
-                gridAutoFlow: "column",
-                gridAutoColumns: "max-content",
                 gap: "15px",
-                minWidth: "100px",
-                fontSize: "2.2em",
                 marginTop: "0.25em",
               }}
             >
               <RankBadge score={score} />
-              <ResultList score={score} style={{ fontSize: "0.6em" }} />
+              <ResultList score={score} />
             </div>
           ))
       ) : scores.filter((score) => score.source === SCORING_SOURCE.DERIVED)
@@ -345,18 +342,15 @@ export default function TimelineEventContent({
                 <div
                   key={score.system}
                   style={{
-                    display: "grid",
+                    display: "flex",
+                    flexFlow: "wrap",
                     alignItems: "center",
-                    gridAutoFlow: "column",
-                    gridAutoColumns: "max-content",
                     gap: "15px",
-                    minWidth: "100px",
-                    fontSize: "2.2em",
                     marginTop: "0.25em",
                   }}
                 >
                   <RankBadge score={score} />
-                  <ResultList score={score} style={{ fontSize: "0.6em" }} />
+                  <ResultList score={score} />
                 </div>
               </fieldset>
             ))}
