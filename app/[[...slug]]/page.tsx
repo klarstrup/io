@@ -7,6 +7,10 @@ import { getSportsTimingEventResults } from "../../sportstiming";
 import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../../toplogger";
 import "../page.css";
 
+export function generateStaticParams() {
+  return ["", "index", "bouldering", "running", "metal"];
+}
+
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
 }: {
