@@ -265,6 +265,7 @@ export async function getIoClimbAlongCompetitionEvent(
     ),
     venue: competition.facility.trim(),
     event: "🧗 " + competition.title.trim(),
+    location: competition.address,
     category: io && sex ? io.sex : null,
     team: null,
     noParticipants: noClimbers,

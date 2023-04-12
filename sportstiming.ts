@@ -204,6 +204,7 @@ export async function getSportsTimingEventResults(
         .replace("København S", "Amager Strandpark") ||
       (event.Name.includes("Strandparken") && "Amager Strandpark") ||
       null,
+    location: null,
     team:
       eventId === 8962
         ? "Tjek"

@@ -203,6 +203,7 @@ export default function TimelineEventContent({
     start,
     end,
     venue,
+    location,
     event,
     scores,
     noParticipants,
@@ -256,10 +257,15 @@ export default function TimelineEventContent({
             ])
           )}
         </b>
-        {venue ? (
+        {venue && !event.includes(venue) ? (
           <>
             {" "}
             at <b>{venue}</b>
+          </>
+        ) : location && !event.includes(location) ? (
+          <>
+            {" "}
+            in <b>{location}</b>
           </>
         ) : (
           ""

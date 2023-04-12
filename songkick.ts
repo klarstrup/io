@@ -138,7 +138,11 @@ export async function getSongkickEvents() {
     id: event.id,
     url: event.uri,
     event: "🤘 " + (event.series?.displayName ?? event.venue.displayName),
-    venue: event.venue.metroArea.displayName,
+    location: event.venue.metroArea.displayName,
+    venue:
+      event.venue.displayName !== "Unknown venue"
+        ? event.venue.displayName
+        : null,
     team:
       event.performance.find(
         ({ artist }) =>

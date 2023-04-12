@@ -426,6 +426,7 @@ export async function getIoTopLoggerGroupEvent(
     start: firstAscend || groupStart,
     end: lastAscend || groupEnd,
     venue: gyms[0].name.trim(),
+    location: gyms[0].address,
     event: "🧗 " + group.name.trim().replace(" - Qualification", ""),
     category: sex ? io.gender : null,
     team: null,
