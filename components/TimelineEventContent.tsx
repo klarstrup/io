@@ -1,6 +1,7 @@
 import { Fragment, HTMLProps, SVGProps } from "react";
 import { getIoClimbAlongCompetitionEvent } from "../climbalong";
 import { SCORING_SOURCE, Score } from "../lib";
+import { getSongkickEvents } from "../songkick";
 import { getSportsTimingEventResults } from "../sportstiming";
 import { getIoTopLoggerGroupEvent } from "../toplogger";
 
@@ -214,13 +215,15 @@ export default function TimelineEventContent({
     ...e
   },
 }: {
-  event: Awaited<
-    ReturnType<
-      | typeof getSportsTimingEventResults
-      | typeof getIoClimbAlongCompetitionEvent
-      | typeof getIoTopLoggerGroupEvent
-    >
-  >;
+  event:
+    | Awaited<
+        ReturnType<
+          | typeof getSportsTimingEventResults
+          | typeof getIoClimbAlongCompetitionEvent
+          | typeof getIoTopLoggerGroupEvent
+        >
+      >
+    | Awaited<ReturnType<typeof getSongkickEvents>>[number];
 }) {
   return (
     <Fragment key={id}>
@@ -262,21 +265,30 @@ export default function TimelineEventContent({
           ""
         )}
       </small>
-      <h2 style={{ margin: 0 }}>
+      <h2 style={{ margin: 0, lineHeight: 1 }}>
         {event
           .replace(
             new RegExp(
-              `#${start.toLocaleDateString("da-DK", { month: "long" })}`,
+              `#${new Date(start).toLocaleDateString("da-DK", {
+                month: "long",
+              })}`,
               "i"
             ),
             ""
           )
           .replace(
-            `${start.toLocaleDateString("da-DK", { year: "numeric" })}`,
+            `${new Date(start).toLocaleDateString("da-DK", {
+              year: "numeric",
+            })}`,
             ""
           )}{" "}
         {team ? (
-          <span style={{ fontSize: "0.75em" }}>
+          <span
+            style={{
+              fontSize: "0.75em",
+              whiteSpace: "nowrap",
+            }}
+          >
             <span style={{ fontSize: "0.75em", fontWeight: "normal" }}>
               with
             </span>{" "}

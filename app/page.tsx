@@ -2,6 +2,7 @@ import Script from "next/script";
 import { getIoClimbAlongCompetitionEvent } from "../climbalong";
 import TimelineEventContent from "../components/TimelineEventContent";
 import dbConnect from "../dbConnect";
+import { getSongkickEvents } from "../songkick";
 import { getSportsTimingEventResults } from "../sportstiming";
 import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../toplogger";
 import "./page.css";
@@ -90,6 +91,7 @@ const getData = async () => {
   );
     */
   const sex = true;
+
   return (
     await Promise.all(
       [
@@ -110,6 +112,7 @@ const getData = async () => {
         ).map(({ group_id, user_id }) =>
           getIoTopLoggerGroupEvent(group_id, user_id, sex)
         ),
+        ...(await getSongkickEvents()),
       ].flat()
     )
   ).sort((a, b) => Number(b.start) - Number(a.start));
