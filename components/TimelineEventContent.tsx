@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Fragment, HTMLProps, SVGProps } from "react";
 import { getIoClimbAlongCompetitionEvent } from "../climbalong";
 import { SCORING_SOURCE, Score } from "../lib";
@@ -217,7 +218,9 @@ export default function TimelineEventContent({
     url,
     ...e
   },
+  urlDisciplines,
 }: {
+  urlDisciplines?: string[];
   event:
     | Awaited<
         ReturnType<
@@ -268,7 +271,11 @@ export default function TimelineEventContent({
           gap: "5px",
         }}
       >
-        <span title={`${discipline} ${type}`}>
+        <Link
+          title={`${discipline} ${type}`}
+          href={urlDisciplines?.includes(discipline) ? "/" : `/${discipline}`}
+          style={{ textDecoration: "none", cursor: "pointer" }}
+        >
           {discipline === "metal"
             ? "🤘"
             : discipline === "bouldering"
@@ -276,7 +283,7 @@ export default function TimelineEventContent({
             : discipline === "running"
             ? "🏃‍♀️"
             : null}
-        </span>
+        </Link>
         <span>
           <a href={url} rel="external noopener" target="_blank">
             {event

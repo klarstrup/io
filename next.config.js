@@ -4,6 +4,7 @@ const nextConfig = {
   experimental: {
     appDir: true,
     serverComponentsExternalPackages: ["mongoose"],
+    typedRoutes: true,
   },
   staticPageGenerationTimeout: 600,
 };

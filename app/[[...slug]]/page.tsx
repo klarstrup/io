@@ -1,27 +1,42 @@
 import Script from "next/script";
-import { getIoClimbAlongCompetitionEvent } from "../climbalong";
-import TimelineEventContent from "../components/TimelineEventContent";
-import dbConnect from "../dbConnect";
-import { getSongkickEvents } from "../songkick";
-import { getSportsTimingEventResults } from "../sportstiming";
-import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../toplogger";
-import "./page.css";
+import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
+import TimelineEventContent from "../../components/TimelineEventContent";
+import dbConnect from "../../dbConnect";
+import { getSongkickEvents } from "../../songkick";
+import { getSportsTimingEventResults } from "../../sportstiming";
+import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../../toplogger";
+import "../page.css";
 
-export default async function Home() {
+export default async function Home({
+  params: { slug: [disciplinesString] = [] },
+}: {
+  params: { slug?: string[] };
+}) {
+  const urlDisciplines: string[] | undefined =
+    (disciplinesString as string | undefined)?.split("+") || undefined;
   const ioPercentiles = await getData();
 
   return (
     <div>
       <section id="timeline">
         {ioPercentiles
-          .filter((event) => event.start > new Date())
+          .filter(
+            (event) =>
+              event.start > new Date() &&
+              (urlDisciplines?.length
+                ? urlDisciplines.includes(event.discipline.toLowerCase())
+                : true)
+          )
           .map((event, i) => (
             <article
               key={String(event.start)}
               className={!(i % 2) ? "left" : "right"}
             >
               <div className="content" style={{ opacity: 0.5 }}>
-                <TimelineEventContent event={event} />
+                <TimelineEventContent
+                  event={event}
+                  urlDisciplines={urlDisciplines}
+                />
               </div>
             </article>
           ))}
@@ -31,14 +46,23 @@ export default async function Home() {
           </div>
         </article>
         {ioPercentiles
-          .filter((event) => event.start <= new Date())
+          .filter(
+            (event) =>
+              event.start <= new Date() &&
+              (urlDisciplines?.length
+                ? urlDisciplines.includes(event.discipline.toLowerCase())
+                : true)
+          )
           .map((event, i) => (
             <article
               key={String(event.start)}
               className={!(i % 2) ? "left" : "right"}
             >
               <div className="content">
-                <TimelineEventContent event={event} />
+                <TimelineEventContent
+                  event={event}
+                  urlDisciplines={urlDisciplines}
+                />
               </div>
             </article>
           ))}
