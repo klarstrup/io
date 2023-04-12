@@ -58,18 +58,23 @@ export default async function Home() {
 }
 
 function balanceColumns() {
-  let leftColumnHeight = 0;
-  let rightColumnHeight = 100;
-  const articles = document.querySelectorAll<HTMLElement>("#timeline article");
-  for (const article of Array.from(articles)) {
-    article.classList.remove("left");
-    article.classList.remove("right");
-    if (leftColumnHeight > rightColumnHeight) {
-      article.classList.add("right");
-      rightColumnHeight += article.offsetHeight;
-    } else {
-      article.classList.add("left");
-      leftColumnHeight += article.offsetHeight;
+  const timelines = document.querySelectorAll<HTMLElement>("#timeline");
+  for (const timeline of Array.from(timelines)) {
+    let leftColumnHeight = 0;
+    let rightColumnHeight = 0;
+    const articles = timeline.querySelectorAll<HTMLElement>(
+      "#timeline > article"
+    );
+    for (const article of Array.from(articles)) {
+      article.classList.remove("left");
+      article.classList.remove("right");
+      if (leftColumnHeight > rightColumnHeight) {
+        article.classList.add("right");
+        rightColumnHeight += article.offsetHeight;
+      } else {
+        article.classList.add("left");
+        leftColumnHeight += article.offsetHeight;
+      }
     }
   }
 }
