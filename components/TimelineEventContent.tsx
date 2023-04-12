@@ -230,7 +230,7 @@ export default function TimelineEventContent({
 }) {
   return (
     <Fragment key={id}>
-      <small>
+      <div style={{ fontSize: "0.75em", marginBottom: "4px" }}>
         <b>
           {new Intl.DateTimeFormat("en-DK", {
             year: "numeric",
@@ -247,60 +247,65 @@ export default function TimelineEventContent({
           )}
         </b>
         {venue && !event.includes(venue) ? (
-          <>
+          <span style={{ whiteSpace: "nowrap" }}>
             {" "}
             at <b>{venue}</b>
-          </>
+          </span>
         ) : location && !event.includes(location) ? (
-          <>
+          <span style={{ whiteSpace: "nowrap" }}>
             {" "}
             in <b>{location}</b>
-          </>
+          </span>
         ) : (
           ""
         )}
-      </small>
-      <h2 style={{ margin: 0, lineHeight: 1 }}>
+      </div>
+      <h2
+        style={{
+          margin: 0,
+          lineHeight: 1,
+          display: "flex",
+          gap: "5px",
+        }}
+      >
         <span title={`${discipline} ${type}`}>
           {discipline === "metal"
-            ? "🤘 "
+            ? "🤘"
             : discipline === "bouldering"
-            ? "🧗‍♀️ "
+            ? "🧗‍♀️"
             : discipline === "running"
-            ? "🏃‍♀️ "
+            ? "🏃‍♀️"
             : null}
         </span>
-        <a href={url} rel="external noopener" target="_blank">
-          {event
-            .replace(
-              new RegExp(
-                `#${new Date(start).toLocaleDateString("da-DK", {
-                  month: "long",
+        <span>
+          <a href={url} rel="external noopener" target="_blank">
+            {event
+              .replace(
+                new RegExp(
+                  `#${new Date(start).toLocaleDateString("da-DK", {
+                    month: "long",
+                  })}`,
+                  "i"
+                ),
+                ""
+              )
+              .replace(
+                `${new Date(start).toLocaleDateString("da-DK", {
+                  year: "numeric",
                 })}`,
-                "i"
-              ),
-              ""
-            )
-            .replace(
-              `${new Date(start).toLocaleDateString("da-DK", {
-                year: "numeric",
-              })}`,
-              ""
-            )}
-        </a>{" "}
-        {team ? (
-          <span
-            style={{
-              fontSize: "0.75em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={{ fontSize: "0.75em", fontWeight: "normal" }}>
-              with
-            </span>{" "}
-            {team}
-          </span>
-        ) : null}
+                ""
+              )
+              .trim()}
+          </a>{" "}
+          {team ? (
+            <span style={{ fontSize: "0.75em", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "0.75em", fontWeight: "normal" }}>
+                with
+              </span>{" "}
+              {team}
+            </span>
+          ) : null}
+        </span>
       </h2>
       <small>
         {problems ? <b>{problems} problems</b> : null}
