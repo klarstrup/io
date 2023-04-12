@@ -189,14 +189,14 @@ export async function getSportsTimingEventResults(
   }
 
   return {
+    type: "competition",
+    discipline: "running",
     id: eventId,
     url: `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
-    event:
-      "🏃 " +
-      event.Name.replace("Copenhagen Urban", "")
-        .replace("Copenhagen Beach", "")
-        .replace("Refshaleøen", "")
-        .replace("Strandparken", ""),
+    event: event.Name.replace("Copenhagen Urban", "")
+      .replace("Copenhagen Beach", "")
+      .replace("Refshaleøen", "")
+      .replace("Strandparken", ""),
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")

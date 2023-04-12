@@ -134,31 +134,36 @@ export async function getSongkickEvents() {
     ...(await getFutureEvents(ETHEREAL_KINGDOMS_ID)),
   ];
 
-  return events.map((event) => ({
-    id: event.id,
-    url: event.uri,
-    event: "🤘 " + (event.series?.displayName ?? event.venue.displayName),
-    location: event.venue.metroArea.displayName,
-    venue:
-      event.venue.displayName !== "Unknown venue"
-        ? event.venue.displayName
-        : null,
-    team:
-      event.performance.find(
-        ({ artist }) =>
-          artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID
-      )?.displayName || null,
-    noParticipants: null,
-    start: new Date(event.start.datetime || event.start.date),
-    end: new Date(
-      event.end?.datetime ||
-        event.end?.date ||
-        event.start.datetime ||
-        event.start.date
-    ),
-    category: null,
-    scores: [] as Score[],
-    problems: null,
-    problemByProblem: null,
-  }));
+  return events.map(
+    (event) =>
+      ({
+        type: "performance",
+        discipline: "metal",
+        id: event.id,
+        url: event.uri,
+        event: event.series?.displayName ?? event.venue.displayName,
+        location: event.venue.metroArea.displayName,
+        venue:
+          event.venue.displayName !== "Unknown venue"
+            ? event.venue.displayName
+            : null,
+        team:
+          event.performance.find(
+            ({ artist }) =>
+              artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID
+          )?.displayName || null,
+        noParticipants: null,
+        start: new Date(event.start.datetime || event.start.date),
+        end: new Date(
+          event.end?.datetime ||
+            event.end?.date ||
+            event.start.datetime ||
+            event.start.date
+        ),
+        category: null,
+        scores: [] as Score[],
+        problems: null,
+        problemByProblem: null,
+      } as const)
+  );
 }

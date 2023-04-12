@@ -421,13 +421,15 @@ export async function getIoTopLoggerGroupEvent(
   }
 
   return {
+    type: "competition",
+    discipline: "bouldering",
     id: groupId,
     url: `https://app.toplogger.nu/en-us/${gyms[0].slug}/comp/${groupId}/details`,
     start: firstAscend || groupStart,
     end: lastAscend || groupEnd,
     venue: gyms[0].name.trim(),
     location: gyms[0].address,
-    event: "🧗 " + group.name.trim().replace(" - Qualification", ""),
+    event: group.name.trim().replace(" - Qualification", ""),
     category: sex ? io.gender : null,
     team: null,
     noParticipants: groupUsers.length || NaN,

@@ -244,6 +244,8 @@ export async function getIoClimbAlongCompetitionEvent(
   }
 
   return {
+    type: "competition",
+    discipline: "bouldering",
     id: competitionId,
     url:
       rounds.length && lanes.length
@@ -264,7 +266,7 @@ export async function getIoClimbAlongCompetitionEvent(
         competition.endTime
     ),
     venue: competition.facility.trim(),
-    event: "🧗 " + competition.title.trim(),
+    event: competition.title.trim(),
     location: competition.address,
     category: io && sex ? io.sex : null,
     team: null,

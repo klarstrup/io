@@ -200,6 +200,8 @@ const NoAttemptBadge = ({
 
 export default function TimelineEventContent({
   event: {
+    type,
+    discipline,
     start,
     end,
     venue,
@@ -228,19 +230,6 @@ export default function TimelineEventContent({
 }) {
   return (
     <Fragment key={id}>
-      <a
-        href={url}
-        rel="external noopener"
-        target="_blank"
-        style={{
-          textDecoration: "none",
-          float: "right",
-          display: "inline-block",
-          marginLeft: "4px",
-        }}
-      >
-        🔗
-      </a>
       <small>
         <b>
           {new Intl.DateTimeFormat("en-DK", {
@@ -272,22 +261,33 @@ export default function TimelineEventContent({
         )}
       </small>
       <h2 style={{ margin: 0, lineHeight: 1 }}>
-        {event
-          .replace(
-            new RegExp(
-              `#${new Date(start).toLocaleDateString("da-DK", {
-                month: "long",
+        <span title={`${discipline} ${type}`}>
+          {discipline === "metal"
+            ? "🤘 "
+            : discipline === "bouldering"
+            ? "🧗‍♀️ "
+            : discipline === "running"
+            ? "🏃‍♀️ "
+            : null}
+        </span>
+        <a href={url} rel="external noopener" target="_blank">
+          {event
+            .replace(
+              new RegExp(
+                `#${new Date(start).toLocaleDateString("da-DK", {
+                  month: "long",
+                })}`,
+                "i"
+              ),
+              ""
+            )
+            .replace(
+              `${new Date(start).toLocaleDateString("da-DK", {
+                year: "numeric",
               })}`,
-              "i"
-            ),
-            ""
-          )
-          .replace(
-            `${new Date(start).toLocaleDateString("da-DK", {
-              year: "numeric",
-            })}`,
-            ""
-          )}{" "}
+              ""
+            )}
+        </a>{" "}
         {team ? (
           <span
             style={{
