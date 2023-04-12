@@ -8,7 +8,9 @@ import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../../toplogger";
 import "../page.css";
 
 export function generateStaticParams() {
-  return ["", "index", "bouldering", "running", "metal"];
+  return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
+    slug: slug ? [slug] : undefined,
+  }));
 }
 
 export default async function Home({
