@@ -68,7 +68,7 @@ function balanceColumns() {
     for (const article of Array.from(articles)) {
       article.classList.remove("left");
       article.classList.remove("right");
-      if (leftColumnHeight > rightColumnHeight) {
+      if (leftColumnHeight - rightColumnHeight > 5) {
         article.classList.add("right");
         rightColumnHeight += article.offsetHeight;
       } else {
