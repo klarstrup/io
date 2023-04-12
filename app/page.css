@@ -111,7 +111,7 @@ body {
   border: 5px solid #ff0;
 }
 #timeline article.now::after {
-  background-color: #00ff00;
+  background-color: #ff0000;
   z-index: 20;
 }
 
