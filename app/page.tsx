@@ -25,16 +25,11 @@ export default async function Home() {
               </div>
             </article>
           ))}
-      </section>
-      <hr
-        style={{
-          margin: 0,
-          borderColor: "#ff0",
-          borderStyle: "dashed",
-          borderWidth: "3px",
-        }}
-      />
-      <section id="timeline">
+        <article key="you" className="now">
+          <div className="content">
+            You are <b>now</b>
+          </div>
+        </article>
         {ioPercentiles
           .filter((event) => event.start <= new Date())
           .map((event, i) => (

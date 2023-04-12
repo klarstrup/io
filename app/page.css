@@ -75,7 +75,7 @@ body {
 
 #timeline article div.content:after {
   position: absolute;
-  top: 15px;
+  top: 10px;
   right: -10px;
   display: inline-block;
   border-top: 10px solid transparent;
@@ -83,6 +83,10 @@ body {
   border-right: 0 solid #fff;
   border-bottom: 10px solid transparent;
   content: " ";
+}
+#timeline article.now div.content:after {
+  border-right-color: #000;
+  border-left-color: #000;
 }
 #timeline article.right div.content:after {
   border-left-width: 0;
@@ -95,7 +99,7 @@ body {
   content: " ";
   display: block;
   position: absolute;
-  top: 25px;
+  top: 20px;
   right: -10px;
   z-index: 10;
 
@@ -105,6 +109,15 @@ body {
   border-radius: 100%;
   background-color: #000;
   border: 5px solid #ff0;
+}
+#timeline article.now::after {
+  background-color: #00ff00;
+  z-index: 20;
+}
+
+#timeline article.now > .content {
+  background-color: #000;
+  color: white;
 }
 #timeline article.right::after {
   left: -10px;
