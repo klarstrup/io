@@ -67,10 +67,10 @@ export default async function Home({
             </article>
           ))}
       </section>
-      <Script id={disciplinesString || "balanceColumns"}>
+      <Script id={String(new Date())}>
         {`${String(
           balanceColumns
-        )};window.addEventListener("resize",balanceColumns);balanceColumns();`}
+        )};window.addEventListener("resize",balanceColumns);balanceColumns();setTimeout(()=>balanceColumns(),200);setTimeout(()=>balanceColumns(),400);setTimeout(()=>balanceColumns(),600);`}
       </Script>
     </div>
   );
