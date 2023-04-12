@@ -162,9 +162,7 @@ table {
 
 fieldset {
   display: inline-block;
-  flex: 1;
   border-radius: 5px;
-  max-width: 250px;
 }
 fieldset > legend {
   white-space: nowrap;

@@ -231,6 +231,21 @@ export default function TimelineEventContent({
       >
     | Awaited<ReturnType<typeof getSongkickEvents>>[number];
 }) {
+  const officialScores = scores.filter(
+    (score) => score.source === SCORING_SOURCE.OFFICIAL
+  );
+  const derivedScores = scores
+    .filter((score) => score.source === SCORING_SOURCE.DERIVED)
+    .filter((derivedScore) => {
+      return !scores
+        .filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
+        .some(
+          (officialScore) =>
+            JSON.stringify({ ...officialScore, source: undefined }) ===
+            JSON.stringify({ ...derivedScore, source: undefined })
+        );
+    });
+
   return (
     <Fragment key={id}>
       <div style={{ fontSize: "0.75em", marginBottom: "4px" }}>
@@ -323,11 +338,8 @@ export default function TimelineEventContent({
           <b>{category === "male" ? "M" : category} bracket</b>
         ) : null}
       </small>
-      {scores.filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
-        .length ? (
-        scores
-          .filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
-          .map((score) => (
+      {officialScores.length
+        ? officialScores.map((score) => (
             <div
               key={score.system}
               style={{
@@ -342,48 +354,47 @@ export default function TimelineEventContent({
               <ResultList score={score} />
             </div>
           ))
-      ) : scores.filter((score) => score.source === SCORING_SOURCE.DERIVED)
-          .length ? (
+        : null}
+      {urlDisciplines?.includes(discipline) && derivedScores.length ? (
         <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
-          {scores
-            .filter((score) => score.source === SCORING_SOURCE.DERIVED)
-            .map((score) => (
-              <fieldset key={score.source + score.system}>
-                <legend
-                  title={
-                    score.system === "POINTS"
-                      ? "100 per top, 20 bonus per flash"
-                      : score.system === "THOUSAND_DIVIDE_BY"
-                      ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
-                      : undefined
-                  }
-                >
-                  {score.system === "TOPS_AND_ZONES"
-                    ? "Tops & Zones"
-                    : score.system === "DISTANCE_RACE"
-                    ? "Race"
-                    : score.system === "POINTS"
-                    ? "Points"
+          {derivedScores.map((score) => (
+            <fieldset key={score.source + score.system}>
+              <legend
+                title={
+                  score.system === "POINTS"
+                    ? "100 per top, 20 bonus per flash"
                     : score.system === "THOUSAND_DIVIDE_BY"
-                    ? "1000 / Tops"
-                    : null}{" "}
-                  Scoring
-                </legend>
-                <div
-                  key={score.system}
-                  style={{
-                    display: "flex",
-                    flexFlow: "wrap",
-                    alignItems: "center",
-                    gap: "10px",
-                    marginTop: "0.25em",
-                  }}
-                >
-                  <RankBadge score={score} />
-                  <ResultList score={score} />
-                </div>
-              </fieldset>
-            ))}
+                    ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
+                    : undefined
+                }
+              >
+                {score.system === "TOPS_AND_ZONES"
+                  ? "Tops & Zones"
+                  : score.system === "DISTANCE_RACE"
+                  ? "Race"
+                  : score.system === "POINTS"
+                  ? "Points"
+                  : score.system === "THOUSAND_DIVIDE_BY"
+                  ? "1000 / Tops"
+                  : null}{" "}
+                Scoring
+              </legend>
+              <div
+                key={score.system}
+                style={{
+                  display: "flex",
+                  flexFlow: "wrap",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginTop: "0.25em",
+                  fontSize: "0.8em",
+                }}
+              >
+                <RankBadge score={score} />
+                <ResultList score={score} />
+              </div>
+            </fieldset>
+          ))}
         </div>
       ) : null}
       {problemByProblem?.length ? (
