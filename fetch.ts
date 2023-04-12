@@ -116,7 +116,9 @@ const rawDbFetch = async <T = string>(
       let parsedError: unknown;
       try {
         parsedError = JSON.parse(error);
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
       if (parsedError) throw parsedError;
 
       throw new Error(error);
@@ -148,7 +150,7 @@ export const cachedDbFetch = async <T>(
     promise = rawDbFetch(input, init, options);
     dbFetchCache.set(key, promise);
   } else {
-    console.info(`cachedDbFetch HIT ${String(input)}`);
+    // console.info(`cachedDbFetch HIT ${String(input)}`);
   }
 
   return promise;
