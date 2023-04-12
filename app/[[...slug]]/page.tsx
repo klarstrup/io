@@ -67,7 +67,7 @@ export default async function Home({
             </article>
           ))}
       </section>
-      <Script id="balanceColumns">
+      <Script id={disciplinesString || "balanceColumns"}>
         {`${String(
           balanceColumns
         )};window.addEventListener("resize",balanceColumns);balanceColumns();`}
