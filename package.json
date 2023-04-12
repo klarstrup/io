@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/analytics": "^0.1.11",
     "cheerio": "^1.0.0-rc.12",
     "eslint-config-next": "13.3.0",
     "mongoose": "^7.0.3",
