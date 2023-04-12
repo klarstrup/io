@@ -242,7 +242,7 @@ export async function getIoClimbAlongCompetitionEvent(
     const end = new Date(performanceEndedTime || registrationTime);
     if (!lastPerformance || end > lastPerformance) lastPerformance = end;
   }
-  console.log(competition);
+
   return {
     id: competitionId,
     url:
