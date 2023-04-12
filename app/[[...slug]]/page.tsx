@@ -13,7 +13,9 @@ export default async function Home({
   params: { slug?: string[] };
 }) {
   const urlDisciplines: string[] | undefined =
-    (disciplinesString as string | undefined)?.split("+") || undefined;
+    (disciplinesString !== "index" &&
+      (disciplinesString as string | undefined)?.split("+")) ||
+    undefined;
   const ioPercentiles = await getData();
 
   return (
