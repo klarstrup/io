@@ -82,7 +82,6 @@ export default async function Home({
               training = (
                 await getTrainingData(trainingPeriod, urlDisciplines)
               ).filter(({ count }) => count);
-              console.log({ training });
             }
             return (
               <>
