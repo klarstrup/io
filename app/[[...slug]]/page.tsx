@@ -13,6 +13,11 @@ export function generateStaticParams() {
   }));
 }
 
+interface Interval {
+  start: Date;
+  end: Date;
+}
+
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
 }: {
@@ -56,19 +61,45 @@ export default async function Home({
             You are <b>now</b>
           </div>
         </article>
-        {pastIoEvents.map((event, i) => (
-          <article
-            key={String(event.start)}
-            className={!(i++ % 2) ? "left" : "right"}
-          >
-            <div className="content">
-              <TimelineEventContent
-                event={event}
-                urlDisciplines={urlDisciplines}
-              />
-            </div>
-          </article>
-        ))}
+        {await Promise.all(
+          pastIoEvents.map(async (event, j) => {
+            const nextEvent =
+              ioEventsFilteredByDiscipline[futureIoEvents.length + j - 1];
+            let training: unknown[] | null = null;
+            if (nextEvent) {
+              const trainingPeriod: Interval = {
+                start: event.start,
+                end: nextEvent.start,
+              };
+              training = await getTrainingData(trainingPeriod);
+            }
+            return (
+              <>
+                {training?.length ? (
+                  <article
+                    key={String(event.start)}
+                    className={!(i++ % 2) ? "left" : "right"}
+                  >
+                    <div className="content" style={{ padding: 0 }}>
+                      <pre>{JSON.stringify(training, null, 2)}</pre>
+                    </div>
+                  </article>
+                ) : null}
+                <article
+                  key={String(event.start)}
+                  className={!(i++ % 2) ? "left" : "right"}
+                >
+                  <div className="content">
+                    <TimelineEventContent
+                      event={event}
+                      urlDisciplines={urlDisciplines}
+                    />
+                  </div>
+                </article>
+              </>
+            );
+          })
+        )}
       </section>
       <Script id={String(new Date())}>
         {`${String(
@@ -100,6 +131,10 @@ function balanceColumns() {
     }
   }
 }
+
+const getTrainingData = async (trainingInterval: Interval) => {
+  return await Promise.all([].filter(() => trainingInterval));
+};
 
 const getData = async (disciplines?: string[]) => {
   await dbConnect();
