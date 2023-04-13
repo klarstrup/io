@@ -283,6 +283,8 @@ export namespace TopLogger {
   }
 }
 
+export const IO_TOPLOGGER_ID = 176390;
+
 const fetchTopLogger = async <T>(
   input: string | URL,
   init?: RequestInit,
@@ -321,11 +323,16 @@ const getUser = (id: number, dbFetchOptions?: Parameters<typeof dbFetch>[2]) =>
     undefined,
     dbFetchOptions
   );
-const getAscends = (jsonParams: JSONParams = {}) =>
+export const getAscends = (
+  jsonParams: JSONParams = {},
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
   fetchTopLogger<TopLogger.AscendSingle[]>(
     `/v1/ascends.json?json_params=${encodeJSONParams(
       jsonParams
-    )}&serialize_checks=true`
+    )}&serialize_checks=true`,
+    undefined,
+    dbFetchOptions
   );
 export const getGroupsUsers = (
   jsonParams: JSONParams = {},

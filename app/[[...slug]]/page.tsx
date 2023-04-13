@@ -1,9 +1,15 @@
 import Script from "next/script";
 import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
 import dbConnect from "../../dbConnect";
+import { IO_FITOCRACY_ID, getUserActivityLogs } from "../../fitocracy";
 import { getSongkickEvents } from "../../songkick";
 import { getSportsTimingEventResults } from "../../sportstiming";
-import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../../toplogger";
+import {
+  IO_TOPLOGGER_ID,
+  getAscends,
+  getGroupsUsers,
+  getIoTopLoggerGroupEvent,
+} from "../../toplogger";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 
@@ -65,23 +71,45 @@ export default async function Home({
           pastIoEvents.map(async (event, j) => {
             const nextEvent =
               ioEventsFilteredByDiscipline[futureIoEvents.length + j - 1];
-            let training: unknown[] | null = null;
+            let training: Awaited<ReturnType<typeof getTrainingData>> | null =
+              null;
             if (nextEvent) {
               const trainingPeriod: Interval = {
-                start: event.start,
+                start: event.end,
                 end: nextEvent.start,
               };
-              training = await getTrainingData(trainingPeriod);
+              training = (
+                await getTrainingData(trainingPeriod, urlDisciplines)
+              ).filter(({ count }) => count);
+              console.log({ training });
             }
             return (
               <>
                 {training?.length ? (
                   <article
-                    key={String(event.start)}
+                    key={String(event.start) + String(nextEvent.start)}
                     className={!(i++ % 2) ? "left" : "right"}
                   >
-                    <div className="content" style={{ padding: 0 }}>
-                      <pre>{JSON.stringify(training, null, 2)}</pre>
+                    <div className="content" style={{ padding: "7px 10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          fontSize: "1.25em",
+                        }}
+                      >
+                        {training.map(({ discipline, count }) => (
+                          <span key={discipline}>
+                            {discipline === "bouldering"
+                              ? `🧗‍♀️×${count}`
+                              : discipline === "lifting"
+                              ? `🏋️‍♀️ ${count}kg`
+                              : discipline === "running"
+                              ? `🏃‍♀️×${count}`
+                              : null}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </article>
                 ) : null}
@@ -136,27 +164,60 @@ const getTrainingData = async (
   trainingInterval: Interval,
   disciplines?: string[]
 ) => {
-  return await Promise.all(
-    [].filter(() => ({ trainingInterval, disciplines }))
-  );
+  await dbConnect();
+  return [
+    !disciplines || disciplines.includes("bouldering")
+      ? {
+          type: "training",
+          discipline: "bouldering",
+          count: (
+            await getAscends(
+              { filters: { user_id: IO_TOPLOGGER_ID } },
+              { maxAge: 86400 }
+            )
+          ).filter((ascend) => {
+            const date = ascend.date_logged && new Date(ascend.date_logged);
+            return (
+              Number(date) < Number(trainingInterval.end) &&
+              Number(date) > Number(trainingInterval.start)
+            );
+          }).length,
+        }
+      : null,
+    !disciplines || disciplines.includes("lifting")
+      ? {
+          type: "training",
+          discipline: "lifting",
+          count: (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: 86400 }))
+            .filter((actionSet) => {
+              return actionSet.actions.some(({ actiondate }) => {
+                const date = actiondate && new Date(actiondate);
+                return (
+                  Number(date) < Number(trainingInterval.end) &&
+                  Number(date) > Number(trainingInterval.start)
+                );
+              });
+            })
+            .reduce(
+              (sum, { actions }) =>
+                sum +
+                actions.reduce(
+                  (zum, action) =>
+                    action.effort0_unit?.abbr === "kg" &&
+                    action.effort1_unit.abbr === "reps"
+                      ? action.effort0_metric * action.effort1_metric + zum
+                      : zum,
+                  0
+                ),
+              0
+            ),
+        }
+      : null,
+  ].filter(Boolean);
 };
 
 const getData = async (disciplines?: string[]) => {
   await dbConnect();
-  /*
-  const activities = await dbFetch<Fitocracy.UserActivity[]>(
-    "https://www.fitocracy.com/get_user_activities/528455/",
-    { headers: { cookie: "sessionid=blahblahblah;" } }
-  );
-  const activityHistories = await Promise.all(
-    activities.map((activity) =>
-      dbFetch(
-        `https://www.fitocracy.com/_get_activity_history_json/?activity-id=${activity.id}`,
-        { headers: { cookie: "sessionid=blahblahblah;" } }
-      )
-    )
-  );
-    */
   const sex = true;
 
   const eventsPromises: (
@@ -176,7 +237,7 @@ const getData = async (disciplines?: string[]) => {
         getIoClimbAlongCompetitionEvent(26, 3381, sex),
         getIoClimbAlongCompetitionEvent(27, 8468, sex),
         getIoClimbAlongCompetitionEvent(28, undefined, sex),
-        (await getGroupsUsers({ filters: { user_id: 176390 } })).map(
+        (await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
           ({ group_id, user_id }) =>
             getIoTopLoggerGroupEvent(group_id, user_id, sex)
         ),
