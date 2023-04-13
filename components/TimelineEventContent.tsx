@@ -84,13 +84,8 @@ const ResultList = ({
     <>
       {data.map(([label, data, title]) => (
         <dl key={label} style={style}>
-          <dt
-            style={{ fontWeight: 700 }}
-            title={title ? String(title) : undefined}
-          >
-            {label}
-          </dt>
-          <dd style={{ fontSize: "1.5em" }}>{data}</dd>
+          <dt title={title ? String(title) : undefined}>{label}</dt>
+          <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>{data}</dd>
         </dl>
       ))}
     </>
@@ -329,15 +324,17 @@ export default function TimelineEventContent({
           ) : null}
         </span>
       </h2>
-      <small>
-        {problems ? <b>{problems} problems</b> : null}
-        {problems && noParticipants ? <> between </> : null}
-        {noParticipants ? <b>{noParticipants} participants</b> : null}
-        {noParticipants && category ? <> in the </> : null}
-        {category ? (
-          <b>{category === "male" ? "M" : category} bracket</b>
-        ) : null}
-      </small>
+      {problems || noParticipants || category ? (
+        <small>
+          {problems ? <b>{problems} problems</b> : null}
+          {problems && noParticipants ? <> between </> : null}
+          {noParticipants ? <b>{noParticipants} participants</b> : null}
+          {noParticipants && category ? <> in the </> : null}
+          {category ? (
+            <b>{category === "male" ? "M" : category} bracket</b>
+          ) : null}
+        </small>
+      ) : null}
       {officialScores.length
         ? officialScores.map((score) => (
             <div
@@ -358,7 +355,12 @@ export default function TimelineEventContent({
       {urlDisciplines?.includes(discipline) && derivedScores.length ? (
         <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
           {derivedScores.map((score) => (
-            <fieldset key={score.source + score.system}>
+            <fieldset
+              key={score.source + score.system}
+              style={{
+                fontSize: "0.75em",
+              }}
+            >
               <legend
                 title={
                   score.system === "POINTS"
@@ -387,7 +389,6 @@ export default function TimelineEventContent({
                   alignItems: "center",
                   gap: "10px",
                   marginTop: "0.25em",
-                  fontSize: "0.8em",
                 }}
               >
                 <RankBadge score={score} />

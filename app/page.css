@@ -180,9 +180,7 @@ dl {
   display: flex;
   flex-direction: column;
 }
-dl > dt {
-  font-weight: bold;
-}
+
 dl > dd {
   margin: 0;
 }
