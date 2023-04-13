@@ -22,58 +22,53 @@ export default async function Home({
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
-  const ioPercentiles = await getData(urlDisciplines);
+  const ioEvents = await getData(urlDisciplines);
+  const ioEventsFilteredByDiscipline = ioEvents.filter((event) =>
+    urlDisciplines?.length
+      ? urlDisciplines.includes(event.discipline.toLowerCase())
+      : true
+  );
+  const futureIoEvents = ioEventsFilteredByDiscipline.filter(
+    (event) => event.start > new Date()
+  );
+  const pastIoEvents = ioEventsFilteredByDiscipline.filter(
+    (event) => event.start <= new Date()
+  );
   let i = 0;
   return (
     <div>
       <section id="timeline">
-        {ioPercentiles
-          .filter(
-            (event) =>
-              event.start > new Date() &&
-              (urlDisciplines?.length
-                ? urlDisciplines.includes(event.discipline.toLowerCase())
-                : true)
-          )
-          .map((event) => (
-            <article
-              key={String(event.start)}
-              className={!(i++ % 2) ? "left" : "right"}
-            >
-              <div className="content" style={{ opacity: 0.5 }}>
-                <TimelineEventContent
-                  event={event}
-                  urlDisciplines={urlDisciplines}
-                />
-              </div>
-            </article>
-          ))}
+        {futureIoEvents.map((event) => (
+          <article
+            key={String(event.start)}
+            className={!(i++ % 2) ? "left" : "right"}
+          >
+            <div className="content" style={{ opacity: 0.5 }}>
+              <TimelineEventContent
+                event={event}
+                urlDisciplines={urlDisciplines}
+              />
+            </div>
+          </article>
+        ))}
         <article key="you" className={"now " + (!(i++ % 2) ? "left" : "right")}>
           <div className="content">
             You are <b>now</b>
           </div>
         </article>
-        {ioPercentiles
-          .filter(
-            (event) =>
-              event.start <= new Date() &&
-              (urlDisciplines?.length
-                ? urlDisciplines.includes(event.discipline.toLowerCase())
-                : true)
-          )
-          .map((event) => (
-            <article
-              key={String(event.start)}
-              className={!(i++ % 2) ? "left" : "right"}
-            >
-              <div className="content">
-                <TimelineEventContent
-                  event={event}
-                  urlDisciplines={urlDisciplines}
-                />
-              </div>
-            </article>
-          ))}
+        {pastIoEvents.map((event, i) => (
+          <article
+            key={String(event.start)}
+            className={!(i++ % 2) ? "left" : "right"}
+          >
+            <div className="content">
+              <TimelineEventContent
+                event={event}
+                urlDisciplines={urlDisciplines}
+              />
+            </div>
+          </article>
+        ))}
       </section>
       <Script id={String(new Date())}>
         {`${String(
