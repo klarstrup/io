@@ -1,11 +1,11 @@
 import Script from "next/script";
 import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
-import TimelineEventContent from "./TimelineEventContent";
 import dbConnect from "../../dbConnect";
 import { getSongkickEvents } from "../../songkick";
 import { getSportsTimingEventResults } from "../../sportstiming";
 import { getGroupsUsers, getIoTopLoggerGroupEvent } from "../../toplogger";
 import "../page.css";
+import TimelineEventContent from "./TimelineEventContent";
 
 export function generateStaticParams() {
   return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
@@ -22,7 +22,7 @@ export default async function Home({
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
-  const ioPercentiles = await getData();
+  const ioPercentiles = await getData(urlDisciplines);
   let i = 0;
   return (
     <div>
@@ -106,7 +106,7 @@ function balanceColumns() {
   }
 }
 
-const getData = async () => {
+const getData = async (disciplines?: string[]) => {
   await dbConnect();
   /*
   const activities = await dbFetch<Fitocracy.UserActivity[]>(
@@ -124,9 +124,33 @@ const getData = async () => {
     */
   const sex = true;
 
-  return (
-    await Promise.all(
-      [
+  const eventsPromises: (
+    | ReturnType<
+        | typeof getSportsTimingEventResults
+        | typeof getIoClimbAlongCompetitionEvent
+        | typeof getIoTopLoggerGroupEvent
+      >
+    | Awaited<ReturnType<typeof getSongkickEvents>>[number]
+  )[] = [];
+
+  if (disciplines?.includes("bouldering") || !disciplines?.length) {
+    eventsPromises.push(
+      ...[
+        getIoClimbAlongCompetitionEvent(13, 844, sex),
+        getIoClimbAlongCompetitionEvent(20, 1284, sex),
+        getIoClimbAlongCompetitionEvent(26, 3381, sex),
+        getIoClimbAlongCompetitionEvent(27, 8468, sex),
+        getIoClimbAlongCompetitionEvent(28, undefined, sex),
+        (await getGroupsUsers({ filters: { user_id: 176390 } })).map(
+          ({ group_id, user_id }) =>
+            getIoTopLoggerGroupEvent(group_id, user_id, sex)
+        ),
+      ].flat()
+    );
+  }
+  if (disciplines?.includes("running") || !disciplines?.length) {
+    eventsPromises.push(
+      ...[
         getSportsTimingEventResults(10694, 5096890, true),
         getSportsTimingEventResults(8962, 4433356, true),
         getSportsTimingEventResults(8940, 3999953, true),
@@ -134,18 +158,14 @@ const getData = async () => {
         getSportsTimingEventResults(5805, 2697593, true),
         getSportsTimingEventResults(5647, 2619935, true),
         getSportsTimingEventResults(4923, 2047175, true),
-        getIoClimbAlongCompetitionEvent(13, 844, sex),
-        getIoClimbAlongCompetitionEvent(20, 1284, sex),
-        getIoClimbAlongCompetitionEvent(26, 3381, sex),
-        getIoClimbAlongCompetitionEvent(27, 8468, sex),
-        getIoClimbAlongCompetitionEvent(28, undefined, sex),
-        (
-          await getGroupsUsers({ filters: { user_id: 176390 } })
-        ).map(({ group_id, user_id }) =>
-          getIoTopLoggerGroupEvent(group_id, user_id, sex)
-        ),
-        ...(await getSongkickEvents()),
-      ].flat()
-    )
-  ).sort((a, b) => Number(b.start) - Number(a.start));
+      ]
+    );
+  }
+  if (disciplines?.includes("metal") || !disciplines?.length) {
+    eventsPromises.push(...(await getSongkickEvents()));
+  }
+
+  return (await Promise.all(eventsPromises)).sort(
+    (a, b) => Number(b.start) - Number(a.start)
+  );
 };
