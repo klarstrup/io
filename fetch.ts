@@ -84,7 +84,8 @@ const rawDbFetch = async <T = string>(
       { upsert: true }
     );
     console.info(`DB FETCHING ${String(input)}`);
-    const response = await (process.env.NODE_ENV === "development"
+    const response = await (process.env.NODE_ENV === "development" ||
+      process.env.CI
       ? cachedFetch
       : fetch)(input, {
       ...init,
@@ -157,7 +158,9 @@ export const cachedDbFetch = async <T>(
 };
 
 export const dbFetch =
-  process.env.NODE_ENV === "development" ? cachedDbFetch : rawDbFetch;
+  process.env.NODE_ENV === "development" || process.env.CI
+    ? cachedDbFetch
+    : rawDbFetch;
 
 export const fetchJson = async <T>(
   input: RequestInfo | URL,
