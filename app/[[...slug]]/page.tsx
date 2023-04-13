@@ -12,6 +12,7 @@ import {
 } from "../../toplogger";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
+import { IO_RUNDOUBLE_ID, getRuns } from "../../rundouble";
 
 export function generateStaticParams() {
   return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
@@ -105,7 +106,7 @@ export default async function Home({
                               : discipline === "lifting"
                               ? `🏋️‍♀️ ${count}kg`
                               : discipline === "running"
-                              ? `🏃‍♀️×${count}`
+                              ? `🏃‍♀️ ${count}km`
                               : null}
                           </span>
                         ))}
@@ -184,33 +185,52 @@ const getTrainingData = async (
           }).length,
         }
       : null,
-    !disciplines || disciplines.includes("lifting")
+    !disciplines || disciplines.includes("running")
       ? {
           type: "training",
-          discipline: "lifting",
-          count: (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: 86400 }))
-            .filter((actionSet) => {
-              return actionSet.actions.some(({ actiondate }) => {
-                const date = actiondate && new Date(actiondate);
+          discipline: "running",
+          count: Math.round(
+            (await getRuns(IO_RUNDOUBLE_ID))
+              .filter((run) => {
+                const date = run.completedLong && new Date(run.completedLong);
                 return (
                   Number(date) < Number(trainingInterval.end) &&
                   Number(date) > Number(trainingInterval.start)
                 );
-              });
-            })
-            .reduce(
-              (sum, { actions }) =>
-                sum +
-                actions.reduce(
-                  (zum, action) =>
-                    action.effort0_unit?.abbr === "kg" &&
-                    action.effort1_unit.abbr === "reps"
-                      ? action.effort0_metric * action.effort1_metric + zum
-                      : zum,
-                  0
-                ),
-              0
-            ),
+              })
+              .reduce((sum, run) => run.runDistance + sum, 0) / 1000
+          ),
+        }
+      : null,
+    !disciplines || disciplines.includes("lifting")
+      ? {
+          type: "training",
+          discipline: "lifting",
+          count: Math.round(
+            (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: 86400 }))
+              .filter((actionSet) => {
+                return actionSet.actions.some(({ actiondate }) => {
+                  const date = actiondate && new Date(actiondate);
+                  return (
+                    Number(date) < Number(trainingInterval.end) &&
+                    Number(date) > Number(trainingInterval.start)
+                  );
+                });
+              })
+              .reduce(
+                (sum, { actions }) =>
+                  sum +
+                  actions.reduce(
+                    (zum, action) =>
+                      action.effort0_unit?.abbr === "kg" &&
+                      action.effort1_unit.abbr === "reps"
+                        ? action.effort0_metric * action.effort1_metric + zum
+                        : zum,
+                    0
+                  ),
+                0
+              )
+          ),
         }
       : null,
   ].filter(Boolean);
