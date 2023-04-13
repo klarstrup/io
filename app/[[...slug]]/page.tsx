@@ -1,6 +1,6 @@
 import Script from "next/script";
 import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
-import TimelineEventContent from "../../components/TimelineEventContent";
+import TimelineEventContent from "./TimelineEventContent";
 import dbConnect from "../../dbConnect";
 import { getSongkickEvents } from "../../songkick";
 import { getSportsTimingEventResults } from "../../sportstiming";
