@@ -132,8 +132,13 @@ function balanceColumns() {
   }
 }
 
-const getTrainingData = async (trainingInterval: Interval) => {
-  return await Promise.all([].filter(() => trainingInterval));
+const getTrainingData = async (
+  trainingInterval: Interval,
+  disciplines?: string[]
+) => {
+  return await Promise.all(
+    [].filter(() => ({ trainingInterval, disciplines }))
+  );
 };
 
 const getData = async (disciplines?: string[]) => {
