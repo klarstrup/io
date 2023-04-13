@@ -1,7 +1,9 @@
+import Link from "next/link";
 import Script from "next/script";
 import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
 import dbConnect from "../../dbConnect";
 import { IO_FITOCRACY_ID, getUserActivityLogs } from "../../fitocracy";
+import { IO_RUNDOUBLE_ID, getRuns } from "../../rundouble";
 import { getSongkickEvents } from "../../songkick";
 import { getSportsTimingEventResults } from "../../sportstiming";
 import {
@@ -12,7 +14,6 @@ import {
 } from "../../toplogger";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
-import { IO_RUNDOUBLE_ID, getRuns } from "../../rundouble";
 
 export function generateStaticParams() {
   return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
@@ -74,21 +75,21 @@ export default async function Home({
               ioEventsFilteredByDiscipline[futureIoEvents.length + j - 1];
             let training: Awaited<ReturnType<typeof getTrainingData>> | null =
               null;
-            if (nextEvent) {
-              const trainingPeriod: Interval = {
-                start: event.end,
-                end: nextEvent.start,
-              };
-              training = (
-                await getTrainingData(trainingPeriod, urlDisciplines)
-              ).filter(({ count }) => count);
-            }
+            const now = new Date();
+            const trainingPeriod: Interval = {
+              start: event.end,
+              end: nextEvent.start || now,
+            };
+            training = (
+              await getTrainingData(trainingPeriod, urlDisciplines)
+            ).filter(({ count }) => count);
+
             const side = !(i++ % 2) ? "left" : "right";
             return (
               <>
                 {training?.length ? (
                   <article
-                    key={String(event.start) + String(nextEvent.start)}
+                    key={String(event.start) + String(now)}
                     className={side}
                   >
                     <div className="content" style={{ padding: "7px 10px" }}>
@@ -99,14 +100,34 @@ export default async function Home({
                           fontSize: "1.25em",
                         }}
                       >
-                        {training.map(({ discipline, count }) => (
+                        {training.map(({ type, discipline, count }) => (
                           <span key={discipline}>
+                            <Link
+                              title={`${discipline} ${type}`}
+                              href={
+                                urlDisciplines?.includes(discipline)
+                                  ? "/"
+                                  : `/${discipline}`
+                              }
+                              style={{
+                                textDecoration: "none",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {discipline === "bouldering"
+                                ? `🧗‍♀️`
+                                : discipline === "lifting"
+                                ? `🏋️‍♀️`
+                                : discipline === "running"
+                                ? `🏃‍♀️`
+                                : null}
+                            </Link>
                             {discipline === "bouldering"
-                              ? `🧗‍♀️×${count}`
+                              ? `×${count}`
                               : discipline === "lifting"
-                              ? `🏋️‍♀️ ${count}kg`
+                              ? ` ${count}kg`
                               : discipline === "running"
-                              ? `🏃‍♀️ ${count}km`
+                              ? ` ${count}km`
                               : null}
                           </span>
                         ))}
