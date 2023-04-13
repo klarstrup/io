@@ -83,12 +83,13 @@ export default async function Home({
                 await getTrainingData(trainingPeriod, urlDisciplines)
               ).filter(({ count }) => count);
             }
+            const side = !(i++ % 2) ? "left" : "right";
             return (
               <>
                 {training?.length ? (
                   <article
                     key={String(event.start) + String(nextEvent.start)}
-                    className={!(i++ % 2) ? "left" : "right"}
+                    className={side}
                   >
                     <div className="content" style={{ padding: "7px 10px" }}>
                       <div
@@ -113,10 +114,7 @@ export default async function Home({
                     </div>
                   </article>
                 ) : null}
-                <article
-                  key={String(event.start)}
-                  className={!(i++ % 2) ? "left" : "right"}
-                >
+                <article key={String(event.start)} className={side}>
                   <div className="content">
                     <TimelineEventContent
                       event={event}
