@@ -23,7 +23,7 @@ export default async function Home({
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
   const ioPercentiles = await getData();
-
+  let i = 0;
   return (
     <div>
       <section id="timeline">
@@ -35,10 +35,10 @@ export default async function Home({
                 ? urlDisciplines.includes(event.discipline.toLowerCase())
                 : true)
           )
-          .map((event, i) => (
+          .map((event) => (
             <article
               key={String(event.start)}
-              className={!(i % 2) ? "left" : "right"}
+              className={!(i++ % 2) ? "left" : "right"}
             >
               <div className="content" style={{ opacity: 0.5 }}>
                 <TimelineEventContent
@@ -48,7 +48,7 @@ export default async function Home({
               </div>
             </article>
           ))}
-        <article key="you" className="now">
+        <article key="you" className={"now " + (!(i++ % 2) ? "left" : "right")}>
           <div className="content">
             You are <b>now</b>
           </div>
@@ -61,10 +61,10 @@ export default async function Home({
                 ? urlDisciplines.includes(event.discipline.toLowerCase())
                 : true)
           )
-          .map((event, i) => (
+          .map((event) => (
             <article
               key={String(event.start)}
-              className={!(i % 2) ? "left" : "right"}
+              className={!(i++ % 2) ? "left" : "right"}
             >
               <div className="content">
                 <TimelineEventContent
