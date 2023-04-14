@@ -148,10 +148,32 @@ export default async function Home({
           })
         )}
       </section>
-      <Script id={String(new Date())}>
-        {`${String(
-          balanceColumns
-        )};window.addEventListener("resize",balanceColumns);balanceColumns();setTimeout(()=>balanceColumns(),200);setTimeout(()=>balanceColumns(),400);setTimeout(()=>balanceColumns(),600);`}
+      <Script key={String(new Date())} id={String(new Date())}>
+        {`
+        ${String(balanceColumns)};
+        window.addEventListener("resize", () => {
+          balanceColumns();
+          setTimeout(() => balanceColumns(), 200);
+          setTimeout(() => balanceColumns(), 400);
+          setTimeout(() => balanceColumns(), 600);
+        });
+        window.addEventListener("popstate", () => {
+          balanceColumns();
+          setTimeout(() => balanceColumns(), 200);
+          setTimeout(() => balanceColumns(), 400);
+          setTimeout(() => balanceColumns(), 600);
+        });
+        window.addEventListener("navigate", () => {
+          balanceColumns();
+          setTimeout(() => balanceColumns(), 200);
+          setTimeout(() => balanceColumns(), 400);
+          setTimeout(() => balanceColumns(), 600);
+        });
+        balanceColumns();
+        setTimeout(() => balanceColumns(), 200);
+        setTimeout(() => balanceColumns(), 400);
+        setTimeout(() => balanceColumns(), 600);
+        `}
       </Script>
     </div>
   );
