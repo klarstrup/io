@@ -185,7 +185,7 @@ const getTrainingData = async (
 ) => {
   await dbConnect();
   return [
-    !disciplines || disciplines.includes("bouldering")
+    disciplines?.includes("bouldering")
       ? {
           type: "training",
           discipline: "bouldering",
@@ -203,7 +203,7 @@ const getTrainingData = async (
           }).length,
         }
       : null,
-    !disciplines || disciplines.includes("running")
+    disciplines?.includes("running")
       ? {
           type: "training",
           discipline: "running",
@@ -220,7 +220,7 @@ const getTrainingData = async (
           ),
         }
       : null,
-    !disciplines || disciplines.includes("lifting")
+    disciplines?.includes("bouldering") || disciplines?.includes("running")
       ? {
           type: "training",
           discipline: "lifting",
