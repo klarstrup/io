@@ -450,9 +450,10 @@ export async function getIoTopLoggerGroupEvent(
   )
     .flat()
     .filter(Boolean);
-  const groupStart = new Date(group.date_loggable_start);
-  const groupEnd = new Date(group.date_loggable_end);
-  const groupInterval: Interval = { start: groupStart, end: groupEnd } as const;
+  const groupInterval: Interval = {
+    start: new Date(group.date_loggable_start),
+    end: new Date(group.date_loggable_end),
+  } as const;
 
   const io = await getUser(ioId);
 
@@ -524,8 +525,8 @@ export async function getIoTopLoggerGroupEvent(
     discipline: "bouldering",
     id: groupId,
     url: `https://app.toplogger.nu/en-us/${gyms[0].slug}/comp/${groupId}/details`,
-    start: firstAscend || groupStart,
-    end: lastAscend || groupEnd,
+    start: firstAscend || groupInterval.start,
+    end: lastAscend || groupInterval.end,
     venue: gyms[0].name.trim(),
     location: gyms[0].address,
     event: group.name.trim().replace(" - Qualification", ""),
@@ -595,8 +596,10 @@ async function getIoTopLoggerGroupScores(
   )
     .flat()
     .filter(Boolean);
-  const groupStart = new Date(group.date_loggable_start);
-  const groupEnd = new Date(group.date_loggable_end);
+  const groupInterval: Interval = {
+    start: new Date(group.date_loggable_start),
+    end: new Date(group.date_loggable_end),
+  } as const;
 
   const io = await getUser(ioId);
 
@@ -637,8 +640,7 @@ async function getIoTopLoggerGroupScores(
       const date = ascend.date_logged && new Date(ascend.date_logged);
       return (
         date &&
-        date >= groupStart &&
-        date <= groupEnd &&
+        isWithinInterval(date, groupInterval) &&
         climbs.some((climb) => ascend.climb_id === climb.id)
       );
     });
