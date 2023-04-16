@@ -1,3 +1,4 @@
+import { Interval, isFuture, isPast, isWithinInterval } from "date-fns";
 import Link from "next/link";
 import Script from "next/script";
 import dbConnect from "../../dbConnect";
@@ -21,11 +22,6 @@ export function generateStaticParams() {
   }));
 }
 
-interface Interval {
-  start: Date;
-  end: Date;
-}
-
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
 }: {
@@ -41,11 +37,11 @@ export default async function Home({
       ? urlDisciplines.includes(event.discipline.toLowerCase())
       : true
   );
-  const futureIoEvents = ioEventsFilteredByDiscipline.filter(
-    (event) => event.start > new Date()
+  const futureIoEvents = ioEventsFilteredByDiscipline.filter((event) =>
+    isFuture(event.start)
   );
-  const pastIoEvents = ioEventsFilteredByDiscipline.filter(
-    (event) => event.start <= new Date()
+  const pastIoEvents = ioEventsFilteredByDiscipline.filter((event) =>
+    isPast(event.start)
   );
   let i = 0;
   return (
@@ -77,9 +73,9 @@ export default async function Home({
               null;
             const now = new Date();
             const trainingPeriod: Interval = {
-              start: event.end,
-              end: nextEvent.start || now,
-            };
+              start: new Date(event.end),
+              end: new Date(nextEvent.start || now),
+            } as const;
             training = (
               await getTrainingData(trainingPeriod, urlDisciplines)
             ).filter(({ count }) => count);
@@ -218,10 +214,7 @@ const getTrainingData = async (
             )
           ).filter((ascend) => {
             const date = ascend.date_logged && new Date(ascend.date_logged);
-            return (
-              Number(date) < Number(trainingInterval.end) &&
-              Number(date) > Number(trainingInterval.start)
-            );
+            return date && isWithinInterval(date, trainingInterval);
           }).length,
         }
       : null,
@@ -233,10 +226,7 @@ const getTrainingData = async (
             (await getRuns(IO_RUNDOUBLE_ID))
               .filter((run) => {
                 const date = run.completedLong && new Date(run.completedLong);
-                return (
-                  Number(date) < Number(trainingInterval.end) &&
-                  Number(date) > Number(trainingInterval.start)
-                );
+                return date && isWithinInterval(date, trainingInterval);
               })
               .reduce((sum, run) => run.runDistance + sum, 0) / 1000
           ),
@@ -251,10 +241,7 @@ const getTrainingData = async (
               .filter((actionSet) => {
                 return actionSet.actions.some(({ actiondate }) => {
                   const date = actiondate && new Date(actiondate);
-                  return (
-                    Number(date) < Number(trainingInterval.end) &&
-                    Number(date) > Number(trainingInterval.start)
-                  );
+                  return date && isWithinInterval(date, trainingInterval);
                 });
               })
               .reduce(

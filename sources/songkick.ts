@@ -1,3 +1,4 @@
+import { isAfter } from "date-fns";
 import { dbFetch } from "../fetch";
 import { Score } from "../lib";
 
@@ -128,8 +129,8 @@ export async function getSongkickEvents() {
   const events = [
     ...(await getPastEvents(EXELERATE_ID)),
     ...(await getFutureEvents(EXELERATE_ID)),
-    ...(await getPastEvents(ETHEREAL_KINGDOMS_ID)).filter(
-      (event) => Number(new Date(event.start.date)) > Number(new Date(2021, 0))
+    ...(await getPastEvents(ETHEREAL_KINGDOMS_ID)).filter((event) =>
+      isAfter(new Date(event.start.date), new Date(2021, 0))
     ),
     ...(await getFutureEvents(ETHEREAL_KINGDOMS_ID)),
   ];

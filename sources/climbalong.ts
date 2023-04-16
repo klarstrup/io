@@ -1,3 +1,4 @@
+import { isAfter, isBefore } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   PointsScore,
@@ -237,10 +238,14 @@ export async function getIoClimbAlongCompetitionEvent(
     registrationTime,
   } of ioPerformances || []) {
     const start = new Date(performanceStartedTime);
-    if (!firstPerformance || start < firstPerformance) firstPerformance = start;
+    if (!firstPerformance || isBefore(start, firstPerformance)) {
+      firstPerformance = start;
+    }
 
     const end = new Date(performanceEndedTime || registrationTime);
-    if (!lastPerformance || end > lastPerformance) lastPerformance = end;
+    if (!lastPerformance || isAfter(end, lastPerformance)) {
+      lastPerformance = end;
+    }
   }
 
   return {
