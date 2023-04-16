@@ -1,3 +1,4 @@
+import { Interval, isAfter, isBefore, isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   PointsScore,
@@ -370,6 +371,7 @@ export async function getIoTopLoggerGroupEvent(
     );
   const groupStart = new Date(group.date_loggable_start);
   const groupEnd = new Date(group.date_loggable_end);
+  const groupInterval: Interval = { start: groupStart, end: groupEnd };
 
   const io = await getUser(ioId);
 
@@ -410,21 +412,30 @@ export async function getIoTopLoggerGroupEvent(
       const date = ascend.date_logged && new Date(ascend.date_logged);
       return (
         date &&
-        date >= groupStart &&
-        date <= groupEnd &&
+        isWithinInterval(date, groupInterval) &&
         climbs.some((climb) => ascend.climb_id === climb.id)
       );
     });
 
-  const ioAscends = ascends.filter((ascend) => ascend.user_id === ioId);
+  const ioAscends = climbs.length
+    ? ascends.filter((ascend) => ascend.user_id === ioId)
+    : (
+        await getAscends(
+          { filters: { user_id: IO_TOPLOGGER_ID } },
+          { maxAge: 86400 }
+        )
+      ).filter((ascend) => {
+        const date = ascend.date_logged && new Date(ascend.date_logged);
+        return date && isWithinInterval(date, groupInterval);
+      });
 
   let firstAscend: Date | null = null;
   let lastAscend: Date | null = null;
   for (const ascend of ioAscends || []) {
     const date = ascend.date_logged && new Date(ascend.date_logged);
     if (!date) continue;
-    if (!firstAscend || date < firstAscend) firstAscend = date;
-    if (!lastAscend || date > lastAscend) lastAscend = date;
+    if (!firstAscend || isBefore(date, firstAscend)) firstAscend = date;
+    if (!lastAscend || isAfter(date, lastAscend)) lastAscend = date;
   }
 
   return {
@@ -463,7 +474,16 @@ export async function getIoTopLoggerGroupEvent(
               b.number || ""
             )
           )
-      : null,
+      : ioAscends.map((ascend) => {
+          return {
+            number: ascend.climb_id,
+            attempt: true,
+            // TopLogger does not do zones, at least not for Beta Boulders
+            zone: ascend ? ascend.checks >= 1 : false,
+            top: ascend ? ascend.checks >= 1 : false,
+            flash: ascend ? ascend.checks >= 2 : false,
+          };
+        }),
     scores: await getIoTopLoggerGroupScores(groupId, ioId, sex),
   } as const;
 }
