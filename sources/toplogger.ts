@@ -1,3 +1,4 @@
+import DataLoader from "dataloader";
 import { Interval, isAfter, isBefore, isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
@@ -136,6 +137,46 @@ export namespace TopLogger {
     time_zone: string;
     serializer: string;
     gym_resources: GymResource[];
+  }
+
+  export interface GymMultiple {
+    id: number;
+    id_name: string;
+    slug: string;
+    name: string;
+    name_short: string;
+    live?: boolean;
+    latitude?: string;
+    longitude?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    country: string;
+    url_website?: string;
+    url_facebook?: string;
+    phone_number?: string;
+    nr_of_climbs: number;
+    nr_of_routes: number;
+    nr_of_boulders: number;
+    my_ascends_count: number;
+    local_device_pwd: string;
+    serializer: Serializer;
+    scale_collapse_climbs?: string;
+    scale_collapse_walls?: string;
+    gym_resources: GymResource[];
+    url_google_plus?: string;
+  }
+
+  export interface GymResource {
+    id: number;
+    gym_id: number;
+    resource_type: ResourceType;
+    url: string;
+    order?: number;
+  }
+
+  export enum Serializer {
+    List = "list",
   }
 
   export interface GradeDistributionBoulder {
@@ -314,10 +355,48 @@ const encodeJSONParams = (jsonParams: JSONParams = {}) =>
 
 const getGroup = (id: number) =>
   fetchTopLogger<TopLogger.GroupSingle>(`/v1/groups/${id}.json`);
-const getGym = (id: number) =>
-  fetchTopLogger<TopLogger.GymSingle>(`/v1/gyms/${id}.json`);
-const getGymClimbs = (id: number) =>
-  fetchTopLogger<TopLogger.ClimbMultiple[]>(`/v1/gyms/${id}/climbs.json`);
+const fetchGyms = (
+  jsonParams: JSONParams = {},
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchTopLogger<TopLogger.GymMultiple[]>(
+    `/v1/gyms.json?json_params=${encodeJSONParams(jsonParams)}`,
+    undefined,
+    dbFetchOptions
+  );
+const gymLoader = new DataLoader((ids: number[]) =>
+  fetchGyms({ filters: { id: ids } }).then((items) =>
+    ids.map((id) => items.find((item) => item.id === id) || null)
+  )
+);
+
+const getGymClimbs = (
+  gymId: number,
+  jsonParams: JSONParams = {},
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchTopLogger<TopLogger.ClimbMultiple[]>(
+    `/v1/gyms/${gymId}/climbs.json?json_params=${encodeJSONParams(jsonParams)}`,
+    undefined,
+    dbFetchOptions
+  );
+
+const gymClimbByIdLoadersByGym: Record<
+  number,
+  DataLoader<number, TopLogger.ClimbMultiple | null, number>
+> = {};
+
+const getGymClimbById = (gymId: number, climbId: number) => {
+  if (!gymClimbByIdLoadersByGym[gymId]) {
+    gymClimbByIdLoadersByGym[gymId] = new DataLoader((ids: number[]) =>
+      getGymClimbs(gymId, { filters: { id: ids } }).then((items) =>
+        ids.map((id) => items.find((item) => item.id === id) || null)
+      )
+    );
+  }
+  return gymClimbByIdLoadersByGym[gymId].load(climbId);
+};
+
 const getUser = (id: number, dbFetchOptions?: Parameters<typeof dbFetch>[2]) =>
   fetchTopLogger<TopLogger.UserSingle>(
     `/v1/users/${id}.json`,
@@ -357,21 +436,23 @@ export async function getIoTopLoggerGroupEvent(
   sex?: boolean
 ) {
   const group = await getGroup(groupId);
-  const gyms = await Promise.all(
-    group.gym_groups.map(({ gym_id }) => getGym(gym_id))
-  );
+  const gyms = (
+    await Promise.all(
+      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
+    )
+  ).filter(Boolean);
   const climbs = (
     await Promise.all(
-      group.gym_groups.map(({ gym_id }) => getGymClimbs(gym_id))
+      group.climb_groups.map(({ climb_id }) =>
+        Promise.all(gyms.map((gym) => getGymClimbById(gym.id, climb_id)))
+      )
     )
   )
     .flat()
-    .filter((climb) =>
-      group.climb_groups.some(({ climb_id }) => climb.id === climb_id)
-    );
+    .filter(Boolean);
   const groupStart = new Date(group.date_loggable_start);
   const groupEnd = new Date(group.date_loggable_end);
-  const groupInterval: Interval = { start: groupStart, end: groupEnd };
+  const groupInterval: Interval = { start: groupStart, end: groupEnd } as const;
 
   const io = await getUser(ioId);
 
@@ -474,16 +555,22 @@ export async function getIoTopLoggerGroupEvent(
               b.number || ""
             )
           )
-      : ioAscends.map((ascend) => {
-          return {
-            number: ascend.climb_id,
-            attempt: true,
-            // TopLogger does not do zones, at least not for Beta Boulders
-            zone: ascend ? ascend.checks >= 1 : false,
-            top: ascend ? ascend.checks >= 1 : false,
-            flash: ascend ? ascend.checks >= 2 : false,
-          };
-        }),
+      : await Promise.all(
+          ioAscends.map(async (ascend) => {
+            let climb: TopLogger.ClimbMultiple | null = null;
+            for (const gym of gyms) {
+              climb = climb || (await getGymClimbById(gym.id, ascend.climb_id));
+            }
+            return {
+              number: climb?.name || "",
+              attempt: true,
+              // TopLogger does not do zones, at least not for Beta Boulders
+              zone: ascend ? ascend.checks >= 1 : false,
+              top: ascend ? ascend.checks >= 1 : false,
+              flash: ascend ? ascend.checks >= 2 : false,
+            };
+          })
+        ),
     scores: await getIoTopLoggerGroupScores(groupId, ioId, sex),
   } as const;
 }
@@ -494,15 +581,20 @@ async function getIoTopLoggerGroupScores(
   sex?: boolean
 ) {
   const group = await getGroup(groupId);
+  const gyms = (
+    await Promise.all(
+      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
+    )
+  ).filter(Boolean);
   const climbs = (
     await Promise.all(
-      group.gym_groups.map(({ gym_id }) => getGymClimbs(gym_id))
+      group.climb_groups.map(({ climb_id }) =>
+        Promise.all(gyms.map((gym) => getGymClimbById(gym.id, climb_id)))
+      )
     )
   )
     .flat()
-    .filter((climb) =>
-      group.climb_groups.some(({ climb_id }) => climb.id === climb_id)
-    );
+    .filter(Boolean);
   const groupStart = new Date(group.date_loggable_start);
   const groupEnd = new Date(group.date_loggable_end);
 
