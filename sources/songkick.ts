@@ -1,5 +1,5 @@
-import { dbFetch } from "./fetch";
-import { Score } from "./lib";
+import { dbFetch } from "../fetch";
+import { Score } from "../lib";
 
 export namespace Songkick {
   export interface Event {

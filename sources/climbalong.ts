@@ -1,4 +1,4 @@
-import { dbFetch } from "./fetch";
+import { dbFetch } from "../fetch";
 import {
   PointsScore,
   SCORING_SOURCE,
@@ -6,8 +6,8 @@ import {
   Score,
   ThousandDivideByScore,
   TopsAndZonesScore,
-} from "./lib";
-import { percentile } from "./utils";
+} from "../lib";
+import { percentile } from "../utils";
 
 export namespace Climbalong {
   export interface Athlete {

@@ -1,12 +1,12 @@
-import { dbFetch } from "./fetch";
+import { dbFetch } from "../fetch";
 import {
   PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
   Score,
   ThousandDivideByScore,
-} from "./lib";
-import { percentile } from "./utils";
+} from "../lib";
+import { percentile } from "../utils";
 
 export namespace TopLogger {
   export interface GroupSingle {

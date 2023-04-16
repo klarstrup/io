@@ -1,12 +1,12 @@
 import * as cheerio from "cheerio";
-import { dbFetch } from "./fetch";
+import { dbFetch } from "../fetch";
 import {
   DistanceRaceScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
   Score,
-} from "./lib";
-import { percentile } from "./utils";
+} from "../lib";
+import { percentile } from "../utils";
 
 export namespace SportsTiming {
   export interface Event {

@@ -1,17 +1,17 @@
 import Link from "next/link";
 import Script from "next/script";
-import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
 import dbConnect from "../../dbConnect";
-import { IO_FITOCRACY_ID, getUserActivityLogs } from "../../fitocracy";
-import { IO_RUNDOUBLE_ID, getRuns } from "../../rundouble";
-import { getSongkickEvents } from "../../songkick";
-import { getSportsTimingEventResults } from "../../sportstiming";
+import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
+import { IO_FITOCRACY_ID, getUserActivityLogs } from "../../sources/fitocracy";
+import { IO_RUNDOUBLE_ID, getRuns } from "../../sources/rundouble";
+import { getSongkickEvents } from "../../sources/songkick";
+import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import {
   IO_TOPLOGGER_ID,
   getAscends,
   getGroupsUsers,
   getIoTopLoggerGroupEvent,
-} from "../../toplogger";
+} from "../../sources/toplogger";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 

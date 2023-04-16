@@ -1,4 +1,4 @@
-import { dbFetch } from "./fetch";
+import { dbFetch } from "../fetch";
 
 export namespace Fitocracy {
   export interface ActivityHistoryItem {

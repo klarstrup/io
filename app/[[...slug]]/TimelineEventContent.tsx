@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Fragment, HTMLProps, SVGProps } from "react";
-import { getIoClimbAlongCompetitionEvent } from "../../climbalong";
 import { SCORING_SOURCE, Score } from "../../lib";
-import { getSongkickEvents } from "../../songkick";
-import { getSportsTimingEventResults } from "../../sportstiming";
-import { getIoTopLoggerGroupEvent } from "../../toplogger";
+import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
+import { getSongkickEvents } from "../../sources/songkick";
+import { getSportsTimingEventResults } from "../../sources/sportstiming";
+import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
 
 const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
 

@@ -1,5 +1,5 @@
-import { dbFetch } from "./fetch";
-import { RelativeURL } from "./utils";
+import { dbFetch } from "../fetch";
+import { RelativeURL } from "../utils";
 
 export namespace RunDouble {
   export interface HistoryResponse {
