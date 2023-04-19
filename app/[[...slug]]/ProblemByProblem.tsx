@@ -202,7 +202,15 @@ export default function ProblemByProblem({
               title={`${number}${
                 number && grade ? `(${new Grade(grade).name})` : ""
               }${!number && grade ? new Grade(grade).name : ""}: ${
-                flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
+                flash
+                  ? "flash"
+                  : top
+                  ? "top"
+                  : zone
+                  ? "zone"
+                  : attempt
+                  ? "no send"
+                  : "no attempt"
               }`}
             />
           );
