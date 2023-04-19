@@ -407,27 +407,32 @@ export default function TimelineEventContent({
             marginTop: "5px",
           }}
         >
-          {problemByProblem.map(({ number, flash, top, zone, attempt }) => {
-            const Badge = flash
-              ? FlashBadge
-              : top
-              ? TopBadge
-              : zone
-              ? ZoneBadge
-              : attempt
-              ? AttemptBadge
-              : NoAttemptBadge;
+          {Array.from(problemByProblem)
+            .sort((a, b) => Number(b.attempt) - Number(a.attempt))
+            .sort((a, b) => Number(b.zone) - Number(a.zone))
+            .sort((a, b) => Number(b.top) - Number(a.top))
+            .sort((a, b) => Number(b.flash) - Number(a.flash))
+            .map(({ number, flash, top, zone, attempt }) => {
+              const Badge = flash
+                ? FlashBadge
+                : top
+                ? TopBadge
+                : zone
+                ? ZoneBadge
+                : attempt
+                ? AttemptBadge
+                : NoAttemptBadge;
 
-            return (
-              <Badge
-                style={{ flex: 1, maxWidth: "100%" }}
-                key={number}
-                title={`${number}: ${
-                  flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
-                }`}
-              />
-            );
-          })}
+              return (
+                <Badge
+                  style={{ flex: 1, maxWidth: "100%" }}
+                  key={number}
+                  title={`${number}: ${
+                    flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
+                  }`}
+                />
+              );
+            })}
         </div>
       ) : null}
       {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
