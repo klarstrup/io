@@ -3,10 +3,12 @@ import Grade from "../../grades";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
 
-const FlashBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
+type ProblemBadgeProps = SVGProps<SVGSVGElement> & {
+  title?: string;
+  grade?: string;
+};
+
+const FlashBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -19,21 +21,30 @@ const FlashBadge = ({
       strokeWidth="8"
     ></rect>
     <text
-      y="50%"
-      x="50%"
+      y="30%"
+      x="70%"
       dominantBaseline="central"
       textAnchor="middle"
       fill="#ffff00"
-      fontSize="48px"
+      fontSize="28px"
     >
       ⚡️
     </text>
+    {grade ? (
+      <text
+        y="38"
+        x="8"
+        dominantBaseline="central"
+        textAnchor="start"
+        fill="#fff"
+        fontSize="28px"
+      >
+        {grade}
+      </text>
+    ) : null}
   </svg>
 );
-const TopBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
+const TopBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -45,12 +56,21 @@ const TopBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    {grade ? (
+      <text
+        y="38"
+        x="8"
+        dominantBaseline="central"
+        textAnchor="start"
+        fill="#fff"
+        fontSize="28px"
+      >
+        {grade}
+      </text>
+    ) : null}
   </svg>
 );
-const ZoneBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
+const ZoneBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -64,16 +84,25 @@ const ZoneBadge = ({
     ></rect>
     <rect
       fill="currentColor"
-      transform="translate(92,49) rotate(135)"
+      transform="translate(8,9) rotate(45)"
       width="60"
       height="60"
     ></rect>
+    {grade ? (
+      <text
+        y="38"
+        x="8"
+        dominantBaseline="central"
+        textAnchor="start"
+        fill="#fff"
+        fontSize="28px"
+      >
+        {grade}
+      </text>
+    ) : null}
   </svg>
 );
-const AttemptBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
+const AttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -85,12 +114,21 @@ const AttemptBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    {grade ? (
+      <text
+        y="38"
+        x="8"
+        dominantBaseline="central"
+        textAnchor="start"
+        fill="#000"
+        fontSize="28px"
+      >
+        {grade}
+      </text>
+    ) : null}
   </svg>
 );
-const NoAttemptBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
+const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -103,6 +141,18 @@ const NoAttemptBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    {grade ? (
+      <text
+        y="38"
+        x="8"
+        dominantBaseline="central"
+        textAnchor="start"
+        fill="#000"
+        fontSize="28px"
+      >
+        {grade}
+      </text>
+    ) : null}
   </svg>
 );
 
@@ -148,6 +198,7 @@ export default function ProblemByProblem({
             <Badge
               style={{ flex: 1, maxWidth: "100%", color: color || "#c84821" }}
               key={number}
+              grade={grade ? new Grade(grade).name : undefined}
               title={`${number}${
                 number && grade ? `(${new Grade(grade).name})` : ""
               }${!number && grade ? new Grade(grade).name : ""}: ${
