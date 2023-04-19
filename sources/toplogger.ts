@@ -329,6 +329,14 @@ export namespace TopLogger {
     Male = "male",
     Other = "other",
   }
+
+  export interface HoldMultiple {
+    id: number;
+    gym_id: number;
+    color: string;
+    brand: string;
+    order?: number;
+  }
 }
 
 export const IO_TOPLOGGER_ID = 176390;
@@ -387,12 +395,36 @@ const getGymClimbs = (
     dbFetchOptions
   );
 
+export const getGymHolds = (
+  gymId: number,
+  jsonParams: JSONParams = {},
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchTopLogger<TopLogger.HoldMultiple[]>(
+    `/v1/gyms/${gymId}/holds.json?json_params=${encodeJSONParams(jsonParams)}`,
+    undefined,
+    dbFetchOptions
+  );
+export const getGymHold = (
+  gymId: number,
+  holdId: number,
+  jsonParams: JSONParams = {},
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchTopLogger<TopLogger.HoldMultiple>(
+    `/v1/gyms/${gymId}/holds/${holdId}.json?json_params=${encodeJSONParams(
+      jsonParams
+    )}`,
+    undefined,
+    dbFetchOptions
+  );
+
 const gymClimbByIdLoadersByGym: Record<
   number,
   DataLoader<number, TopLogger.ClimbMultiple | null, number>
 > = {};
 
-const getGymClimbById = (gymId: number, climbId: number) => {
+export const getGymClimbById = (gymId: number, climbId: number) => {
   if (!gymClimbByIdLoadersByGym[gymId]) {
     gymClimbByIdLoadersByGym[gymId] = new DataLoader((ids: number[]) =>
       getGymClimbs(gymId, { filters: { id: ids } }).then((items) =>
@@ -562,27 +594,31 @@ export async function getIoTopLoggerGroupEvent(
     team: null,
     noParticipants: groupUsers.length || NaN,
     problems: climbs.length,
-    problemByProblem: climbs
-      .map((climb) => {
-        const ioAscend = ioAscends.find(
-          (ascend) => ascend.climb_id === climb.id
-        );
-
-        return {
-          number: climb.number || climb.name || "",
-          attempt: true,
-          // TopLogger does not do zones, at least not for Beta Boulders
-          zone: ioAscend ? ioAscend.checks >= 1 : false,
-          top: ioAscend ? ioAscend.checks >= 1 : false,
-          flash: ioAscend ? ioAscend.checks >= 2 : false,
-        };
-      })
-      .sort((a, b) =>
-        Intl.Collator("en-DK", { numeric: true }).compare(
-          a.number || "",
-          b.number || ""
-        )
-      ),
+    problemByProblem: (
+      await Promise.all(
+        climbs.map(async (climb) => {
+          const ioAscend = ioAscends.find(
+            (ascend) => ascend.climb_id === climb.id
+          );
+          const hold = await getGymHold(climb.gym_id, climb.hold_id);
+          return {
+            number: climb.number || climb.name || "",
+            color: hold.color || undefined,
+            grade: climb.grade ? Number(climb.grade) : undefined,
+            attempt: true,
+            // TopLogger does not do zones, at least not for Beta Boulders
+            zone: ioAscend ? ioAscend.checks >= 1 : false,
+            top: ioAscend ? ioAscend.checks >= 1 : false,
+            flash: ioAscend ? ioAscend.checks >= 2 : false,
+          };
+        })
+      )
+    ).sort((a, b) =>
+      Intl.Collator("en-DK", { numeric: true }).compare(
+        a.number || "",
+        b.number || ""
+      )
+    ),
     scores: await getIoTopLoggerGroupScores(groupId, ioId, sex),
   } as const;
 }

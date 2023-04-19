@@ -9,11 +9,14 @@ import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import {
   IO_TOPLOGGER_ID,
+  TopLogger,
   getAscends,
   getGroupsUsers,
+  getGymHold,
   getIoTopLoggerGroupEvent,
 } from "../../sources/toplogger";
 import "../page.css";
+import ProblemByProblem from "./ProblemByProblem";
 import TimelineEventContent from "./TimelineEventContent";
 
 export function generateStaticParams() {
@@ -93,40 +96,51 @@ export default async function Home({
                         style={{
                           display: "flex",
                           gap: "10px",
+                          flexDirection: "column",
                           fontSize: "1.25em",
                         }}
                       >
-                        {training.map(({ type, discipline, count }) => (
-                          <span key={discipline}>
-                            <Link
-                              title={`${discipline} ${type}`}
-                              href={
-                                urlDisciplines?.includes(discipline)
-                                  ? "/"
-                                  : `/${discipline}`
-                              }
-                              style={{
-                                textDecoration: "none",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {discipline === "bouldering"
-                                ? `🧗‍♀️`
-                                : discipline === "lifting"
-                                ? `🏋️‍♀️`
-                                : discipline === "running"
-                                ? `🏃‍♀️`
-                                : null}
-                            </Link>
-                            {discipline === "bouldering"
-                              ? `×${count}`
-                              : discipline === "lifting"
-                              ? ` ${count}kg`
-                              : discipline === "running"
-                              ? ` ${count}km`
-                              : null}
-                          </span>
-                        ))}
+                        {training.map(
+                          ({ type, discipline, count, ...restOfTraining }) => (
+                            <div key={discipline} style={{ display: "flex" }}>
+                              <Link
+                                title={`${discipline} ${type}`}
+                                href={
+                                  urlDisciplines?.includes(discipline)
+                                    ? "/"
+                                    : `/${discipline}`
+                                }
+                                style={{
+                                  textDecoration: "none",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {discipline === "bouldering"
+                                  ? `🧗‍♀️`
+                                  : discipline === "lifting"
+                                  ? `🏋️‍♀️`
+                                  : discipline === "running"
+                                  ? `🏃‍♀️`
+                                  : null}
+                              </Link>
+                              {discipline === "bouldering" ? (
+                                "problemByProblem" in restOfTraining ? (
+                                  <ProblemByProblem
+                                    problemByProblem={
+                                      restOfTraining.problemByProblem
+                                    }
+                                  />
+                                ) : (
+                                  `×${count}`
+                                )
+                              ) : discipline === "lifting" ? (
+                                ` ${count}kg`
+                              ) : discipline === "running" ? (
+                                ` ${count}km`
+                              ) : null}
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   </article>
@@ -197,6 +211,42 @@ function balanceColumns() {
   }
 }
 
+const getBoulderingTrainingData = async (trainingInterval: Interval) => {
+  const ascends = (
+    (await getAscends(
+      { filters: { user_id: IO_TOPLOGGER_ID }, includes: ["climb"] },
+      { maxAge: 86400 }
+    )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
+  ).filter((ascend) => {
+    const date = ascend.date_logged && new Date(ascend.date_logged);
+    return date && isWithinInterval(date, trainingInterval);
+  });
+
+  return {
+    type: "training",
+    discipline: "bouldering",
+    count: ascends.length,
+    problemByProblem: await Promise.all(
+      ascends.map(async (ascend) => {
+        const hold = await getGymHold(
+          ascend.climb.gym_id,
+          ascend.climb.hold_id
+        );
+        return {
+          number: "",
+          color: hold.color || undefined,
+          grade: ascend.climb.grade ? Number(ascend.climb.grade) : undefined,
+          attempt: true,
+          // TopLogger does not do zones, at least not for Beta Boulders
+          zone: ascend ? ascend.checks >= 1 : false,
+          top: ascend ? ascend.checks >= 1 : false,
+          flash: ascend ? ascend.checks >= 2 : false,
+        };
+      })
+    ),
+  };
+};
+
 const getTrainingData = async (
   trainingInterval: Interval,
   disciplines?: string[]
@@ -204,19 +254,7 @@ const getTrainingData = async (
   await dbConnect();
   return [
     disciplines?.includes("bouldering")
-      ? {
-          type: "training",
-          discipline: "bouldering",
-          count: (
-            await getAscends(
-              { filters: { user_id: IO_TOPLOGGER_ID } },
-              { maxAge: 86400 }
-            )
-          ).filter((ascend) => {
-            const date = ascend.date_logged && new Date(ascend.date_logged);
-            return date && isWithinInterval(date, trainingInterval);
-          }).length,
-        }
+      ? await getBoulderingTrainingData(trainingInterval)
       : null,
     disciplines?.includes("running")
       ? {

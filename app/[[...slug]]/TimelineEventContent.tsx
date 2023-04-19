@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Fragment, HTMLProps, SVGProps } from "react";
+import { Fragment, HTMLProps } from "react";
 import { SCORING_SOURCE, Score } from "../../lib";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
+import ProblemByProblem from "./ProblemByProblem";
 
 const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
 
@@ -91,108 +92,6 @@ const ResultList = ({
     </>
   );
 };
-
-const FlashBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
-    <title>{title}</title>
-    <rect
-      width="50"
-      stroke="#c84821"
-      y="4"
-      x="4"
-      fill="#c84821"
-      height="50"
-      strokeWidth="8"
-    ></rect>
-    <text
-      y="50%"
-      x="50%"
-      dominantBaseline="central"
-      textAnchor="middle"
-      fill="#ffff00"
-      fontSize="48px"
-    >
-      ⚡️
-    </text>
-  </svg>
-);
-const TopBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
-    <title>{title}</title>
-    <rect
-      width="50"
-      stroke="#c84821"
-      y="4"
-      x="4"
-      fill="#c84821"
-      height="50"
-      strokeWidth="8"
-    ></rect>
-  </svg>
-);
-const ZoneBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
-    <title>{title}</title>
-    <rect
-      width="50"
-      stroke="#c84821"
-      y="4"
-      x="4"
-      fill="none"
-      height="50"
-      strokeWidth="8"
-    ></rect>
-    <rect
-      fill="#c84821"
-      transform="translate(92,49) rotate(135)"
-      width="60"
-      height="60"
-    ></rect>
-  </svg>
-);
-const AttemptBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
-    <title>{title}</title>
-    <rect
-      width="50"
-      stroke="#c84821"
-      y="4"
-      x="4"
-      fill="none"
-      height="50"
-      strokeWidth="8"
-    ></rect>
-  </svg>
-);
-const NoAttemptBadge = ({
-  title,
-  ...props
-}: SVGProps<SVGSVGElement> & { title?: string }) => (
-  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
-    <title>{title}</title>
-    <rect
-      width="50"
-      stroke="#555"
-      y="4"
-      x="4"
-      fill="none"
-      height="50"
-      strokeWidth="8"
-    ></rect>
-  </svg>
-);
 
 export default function TimelineEventContent({
   event: {
@@ -399,41 +298,7 @@ export default function TimelineEventContent({
         </div>
       ) : null}
       {problemByProblem?.length ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(15, 1fr)",
-            gap: "2px",
-            marginTop: "5px",
-          }}
-        >
-          {Array.from(problemByProblem)
-            .sort((a, b) => Number(b.attempt) - Number(a.attempt))
-            .sort((a, b) => Number(b.zone) - Number(a.zone))
-            .sort((a, b) => Number(b.top) - Number(a.top))
-            .sort((a, b) => Number(b.flash) - Number(a.flash))
-            .map(({ number, flash, top, zone, attempt }) => {
-              const Badge = flash
-                ? FlashBadge
-                : top
-                ? TopBadge
-                : zone
-                ? ZoneBadge
-                : attempt
-                ? AttemptBadge
-                : NoAttemptBadge;
-
-              return (
-                <Badge
-                  style={{ flex: 1, maxWidth: "100%" }}
-                  key={number}
-                  title={`${number}: ${
-                    flash ? "flash" : top ? "top" : zone ? "zone" : "no send"
-                  }`}
-                />
-              );
-            })}
-        </div>
+        <ProblemByProblem problemByProblem={problemByProblem} />
       ) : null}
       {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
     </Fragment>

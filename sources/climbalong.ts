@@ -289,6 +289,8 @@ export async function getIoClimbAlongCompetitionEvent(
               const key = problem.title;
               memo.set(key, {
                 number: problem.title,
+                color: undefined,
+                grade: undefined,
                 attempt: Boolean(
                   ioPerformance?.numberOfAttempts || memo.get(key)?.attempt
                 ),
@@ -312,7 +314,7 @@ export async function getIoClimbAlongCompetitionEvent(
               });
 
               return memo;
-            }, new Map<string, { number: string; attempt: boolean; zone: boolean; top: boolean; flash: boolean }>())
+            }, new Map<string, { number: string; color?: string; grade?: number; attempt: boolean; zone: boolean; top: boolean; flash: boolean }>())
             .values()
         )
       : null,
