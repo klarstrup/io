@@ -72,14 +72,26 @@ export const getRuns = async (
 const type = "training";
 const discipline = "running";
 export const getRunningTrainingData = async (trainingInterval: Interval) => {
+  const runs = (await getRuns(IO_RUNDOUBLE_ID, { maxAge: 86400 })).filter(
+    (run) => {
+      const date = run.completedLong && new Date(run.completedLong);
+      return (
+        run.runDistance && date && isWithinInterval(date, trainingInterval)
+      );
+    }
+  );
   const count = Math.round(
-    (await getRuns(IO_RUNDOUBLE_ID))
-      .filter((run) => {
-        const date = run.completedLong && new Date(run.completedLong);
-        return date && isWithinInterval(date, trainingInterval);
-      })
-      .reduce((sum, run) => run.runDistance + sum, 0) / 1000
+    runs.reduce((sum, run) => run.runDistance + sum, 0) / 1000
+  );
+  const runByRun = runs.map(
+    (run) =>
+      ({
+        date: new Date(run.completedLong),
+        distance: run.runDistance,
+        duration: run.runTime,
+        pace: run.runPace,
+      } as const)
   );
 
-  return { type, discipline, count } as const;
+  return { type, discipline, count, runByRun } as const;
 };

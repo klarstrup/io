@@ -5,6 +5,7 @@ import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
+import { seconds2time } from "../../utils";
 import ProblemByProblem from "./ProblemByProblem";
 
 const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
@@ -303,14 +304,4 @@ export default function TimelineEventContent({
       {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
     </Fragment>
   );
-}
-
-function seconds2time(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds - hours * 3600) / 60);
-  seconds = seconds - hours * 3600 - minutes * 60;
-
-  return `${hours ? `${hours}:` : ""}${
-    minutes < 10 ? `0${minutes}` : String(minutes)
-  }:${seconds < 10 ? `0${seconds}` : String(seconds)}`;
 }
