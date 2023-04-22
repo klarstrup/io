@@ -1,23 +1,20 @@
-import { Interval, isFuture, isPast, isWithinInterval } from "date-fns";
-import Link from "next/link";
+import { Interval, isFuture, isPast } from "date-fns";
 import Script from "next/script";
 import dbConnect from "../../dbConnect";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
-import { IO_FITOCRACY_ID, getUserActivityLogs } from "../../sources/fitocracy";
-import { IO_RUNDOUBLE_ID, getRuns } from "../../sources/rundouble";
+import { getLiftingTrainingData } from "../../sources/fitocracy";
+import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import {
   IO_TOPLOGGER_ID,
-  TopLogger,
-  getAscends,
+  getBoulderingTrainingData,
   getGroupsUsers,
-  getGymHold,
   getIoTopLoggerGroupEvent,
 } from "../../sources/toplogger";
 import "../page.css";
-import ProblemByProblem from "./ProblemByProblem";
 import TimelineEventContent from "./TimelineEventContent";
+import TimelineTrainingContent from "./TimelineTrainingContent";
 
 export function generateStaticParams() {
   return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
@@ -72,21 +69,21 @@ export default async function Home({
           pastIoEvents.map(async (event, j) => {
             const nextEvent =
               ioEventsFilteredByDiscipline[futureIoEvents.length + j - 1];
-            let training: Awaited<ReturnType<typeof getTrainingData>> | null =
+            let trainings: Awaited<ReturnType<typeof getTrainingData>> | null =
               null;
             const now = new Date();
             const trainingPeriod: Interval = {
               start: new Date(event.end),
               end: new Date(nextEvent.start || now),
             } as const;
-            training = (
+            trainings = (
               await getTrainingData(trainingPeriod, urlDisciplines)
             ).filter(({ count }) => count);
 
             const side = !(i++ % 2) ? "left" : "right";
             return (
               <>
-                {training?.length ? (
+                {trainings?.length ? (
                   <article
                     key={String(event.start) + String(now)}
                     className={side}
@@ -100,47 +97,13 @@ export default async function Home({
                           fontSize: "1.25em",
                         }}
                       >
-                        {training.map(
-                          ({ type, discipline, count, ...restOfTraining }) => (
-                            <div key={discipline} style={{ display: "flex" }}>
-                              <Link
-                                title={`${discipline} ${type}`}
-                                href={
-                                  urlDisciplines?.includes(discipline)
-                                    ? "/"
-                                    : `/${discipline}`
-                                }
-                                style={{
-                                  textDecoration: "none",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {discipline === "bouldering"
-                                  ? `🧗‍♀️`
-                                  : discipline === "lifting"
-                                  ? `🏋️‍♀️`
-                                  : discipline === "running"
-                                  ? `🏃‍♀️`
-                                  : null}
-                              </Link>
-                              {discipline === "bouldering" ? (
-                                "problemByProblem" in restOfTraining ? (
-                                  <ProblemByProblem
-                                    problemByProblem={
-                                      restOfTraining.problemByProblem
-                                    }
-                                  />
-                                ) : (
-                                  `×${count}`
-                                )
-                              ) : discipline === "lifting" ? (
-                                ` ${count}kg`
-                              ) : discipline === "running" ? (
-                                ` ${count}km`
-                              ) : null}
-                            </div>
-                          )
-                        )}
+                        {trainings.map((training) => (
+                          <TimelineTrainingContent
+                            key={training.type + training.discipline}
+                            training={training}
+                            urlDisciplines={urlDisciplines}
+                          />
+                        ))}
                       </div>
                     </div>
                   </article>
@@ -211,42 +174,6 @@ function balanceColumns() {
   }
 }
 
-const getBoulderingTrainingData = async (trainingInterval: Interval) => {
-  const ascends = (
-    (await getAscends(
-      { filters: { user_id: IO_TOPLOGGER_ID }, includes: ["climb"] },
-      { maxAge: 86400 }
-    )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
-  ).filter((ascend) => {
-    const date = ascend.date_logged && new Date(ascend.date_logged);
-    return date && isWithinInterval(date, trainingInterval);
-  });
-
-  return {
-    type: "training",
-    discipline: "bouldering",
-    count: ascends.length,
-    problemByProblem: await Promise.all(
-      ascends.map(async (ascend) => {
-        const hold = await getGymHold(
-          ascend.climb.gym_id,
-          ascend.climb.hold_id
-        );
-        return {
-          number: "",
-          color: hold.color || undefined,
-          grade: ascend.climb.grade ? Number(ascend.climb.grade) : undefined,
-          attempt: true,
-          // TopLogger does not do zones, at least not for Beta Boulders
-          zone: ascend ? ascend.checks >= 1 : false,
-          top: ascend ? ascend.checks >= 1 : false,
-          flash: ascend ? ascend.checks >= 2 : false,
-        };
-      })
-    ),
-  };
-};
-
 const getTrainingData = async (
   trainingInterval: Interval,
   disciplines?: string[]
@@ -257,46 +184,10 @@ const getTrainingData = async (
       ? await getBoulderingTrainingData(trainingInterval)
       : null,
     disciplines?.includes("running")
-      ? {
-          type: "training",
-          discipline: "running",
-          count: Math.round(
-            (await getRuns(IO_RUNDOUBLE_ID))
-              .filter((run) => {
-                const date = run.completedLong && new Date(run.completedLong);
-                return date && isWithinInterval(date, trainingInterval);
-              })
-              .reduce((sum, run) => run.runDistance + sum, 0) / 1000
-          ),
-        }
+      ? await getRunningTrainingData(trainingInterval)
       : null,
     disciplines?.includes("bouldering") || disciplines?.includes("running")
-      ? {
-          type: "training",
-          discipline: "lifting",
-          count: Math.round(
-            (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: 86400 }))
-              .filter((actionSet) => {
-                return actionSet.actions.some(({ actiondate }) => {
-                  const date = actiondate && new Date(actiondate);
-                  return date && isWithinInterval(date, trainingInterval);
-                });
-              })
-              .reduce(
-                (sum, { actions }) =>
-                  sum +
-                  actions.reduce(
-                    (zum, action) =>
-                      action.effort0_unit?.abbr === "kg" &&
-                      action.effort1_unit.abbr === "reps"
-                        ? action.effort0_metric * action.effort1_metric + zum
-                        : zum,
-                    0
-                  ),
-                0
-              )
-          ),
-        }
+      ? await getLiftingTrainingData(trainingInterval)
       : null,
   ].filter(Boolean);
 };

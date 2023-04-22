@@ -765,3 +765,37 @@ async function getIoTopLoggerGroupScores(
 
   return scores;
 }
+
+const type = "training";
+const discipline = "bouldering";
+export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
+  const ascends = (
+    (await getAscends(
+      { filters: { user_id: IO_TOPLOGGER_ID }, includes: ["climb"] },
+      { maxAge: 86400 }
+    )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
+  ).filter((ascend) => {
+    const date = ascend.date_logged && new Date(ascend.date_logged);
+    return date && isWithinInterval(date, trainingInterval);
+  });
+
+  const problemByProblem = await Promise.all(
+    ascends.map(async (ascend) => {
+      const hold = await getGymHold(ascend.climb.gym_id, ascend.climb.hold_id);
+      return {
+        number: "",
+        color: hold.color || undefined,
+        grade: ascend.climb.grade ? Number(ascend.climb.grade) : undefined,
+        attempt: true,
+        // TopLogger does not do zones, at least not for Beta Boulders
+        zone: ascend ? ascend.checks >= 1 : false,
+        top: ascend ? ascend.checks >= 1 : false,
+        flash: ascend ? ascend.checks >= 2 : false,
+      };
+    })
+  );
+
+  const count = ascends.length;
+
+  return { type, discipline, count, problemByProblem } as const;
+};

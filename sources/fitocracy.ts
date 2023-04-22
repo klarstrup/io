@@ -1,3 +1,4 @@
+import { isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
 
 export namespace Fitocracy {
@@ -238,3 +239,32 @@ export const getUserActivityLogs = async (
       ).map((activity) => getActivityHistory(activity.id, dbFetchOptions))
     )
   ).flat();
+
+const type = "training";
+const discipline = "lifting";
+export const getLiftingTrainingData = async (trainingInterval: Interval) => {
+  const count = Math.round(
+    (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: 86400 }))
+      .filter((actionSet) => {
+        return actionSet.actions.some(({ actiondate }) => {
+          const date = actiondate && new Date(actiondate);
+          return date && isWithinInterval(date, trainingInterval);
+        });
+      })
+      .reduce(
+        (sum, { actions }) =>
+          sum +
+          actions.reduce(
+            (zum, action) =>
+              action.effort0_unit?.abbr === "kg" &&
+              action.effort1_unit.abbr === "reps"
+                ? action.effort0_metric * action.effort1_metric + zum
+                : zum,
+            0
+          ),
+        0
+      )
+  );
+
+  return { type, discipline, count } as const;
+};

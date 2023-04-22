@@ -1,3 +1,4 @@
+import { isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
 import { RelativeURL } from "../utils";
 
@@ -66,4 +67,19 @@ export const getRuns = async (
     runs.push(...response.history);
   } while (cursor);
   return runs;
+};
+
+const type = "training";
+const discipline = "running";
+export const getRunningTrainingData = async (trainingInterval: Interval) => {
+  const count = Math.round(
+    (await getRuns(IO_RUNDOUBLE_ID))
+      .filter((run) => {
+        const date = run.completedLong && new Date(run.completedLong);
+        return date && isWithinInterval(date, trainingInterval);
+      })
+      .reduce((sum, run) => run.runDistance + sum, 0) / 1000
+  );
+
+  return { type, discipline, count } as const;
 };
