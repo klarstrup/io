@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
 import { getBoulderingTrainingData } from "../../sources/toplogger";
-import { seconds2time } from "../../utils";
 import ProblemByProblem from "./ProblemByProblem";
 import RunByRun from "./RunByRun";
 
