@@ -772,7 +772,7 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
   const ascends = (
     (await getAscends(
       { filters: { user_id: IO_TOPLOGGER_ID }, includes: ["climb"] },
-      { maxAge: 86400 }
+      { maxAge: 3600 }
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
   ).filter((ascend) => {
     const date = ascend.date_logged && new Date(ascend.date_logged);
