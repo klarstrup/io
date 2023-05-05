@@ -16,7 +16,12 @@ import {
   ThousandDivideByScore,
   TopsAndZonesScore,
 } from "../lib";
-import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, percentile } from "../utils";
+import {
+  HOUR_IN_SECONDS,
+  MINUTE_IN_SECONDS,
+  WEEK_IN_SECONDS,
+  percentile,
+} from "../utils";
 
 export namespace Climbalong {
   export interface Athlete {
@@ -251,7 +256,7 @@ export async function getIoClimbAlongCompetitionEvent(
           start: subHours(new Date(competition.startTime), 3),
           end: addHours(new Date(competition.endTime), 3),
         })
-      ? HOUR_IN_SECONDS
+      ? MINUTE_IN_SECONDS
       : competitionTime === "past"
       ? undefined
       : WEEK_IN_SECONDS;
@@ -443,7 +448,7 @@ async function getIoClimbAlongCompetitionScores(
           start: subHours(new Date(competition.startTime), 3),
           end: addHours(new Date(competition.endTime), 3),
         })
-      ? HOUR_IN_SECONDS
+      ? MINUTE_IN_SECONDS
       : competitionTime === "past"
       ? undefined
       : WEEK_IN_SECONDS;
