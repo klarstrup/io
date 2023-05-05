@@ -77,7 +77,7 @@ export default async function Home({
               end: new Date(nextEvent?.start || now),
             } as const;
             trainings = (
-              await getTrainingData(trainingPeriod, urlDisciplines)
+              [] || (await getTrainingData(trainingPeriod, urlDisciplines))
             ).filter(({ count }) => count);
 
             const side = !(i++ % 2) ? "left" : "right";
