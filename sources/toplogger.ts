@@ -378,10 +378,12 @@ const fetchGyms = (
     undefined,
     dbFetchOptions
   );
-const gymLoader = new DataLoader((ids: number[]) =>
-  fetchGyms({ filters: { id: ids } }).then((items) =>
-    ids.map((id) => items.find((item) => item.id === id) || null)
-  )
+const gymLoader = new DataLoader(
+  (ids: number[]) =>
+    fetchGyms({ filters: { id: ids } }).then((items) =>
+      ids.map((id) => items.find((item) => item.id === id) || null)
+    ),
+  { cache: false }
 );
 
 const getGymClimbs = (
@@ -426,10 +428,12 @@ const gymClimbByIdLoadersByGym: Record<
 
 export const getGymClimbById = (gymId: number, climbId: number) => {
   if (!gymClimbByIdLoadersByGym[gymId]) {
-    gymClimbByIdLoadersByGym[gymId] = new DataLoader((ids: number[]) =>
-      getGymClimbs(gymId, { filters: { id: ids } }).then((items) =>
-        ids.map((id) => items.find((item) => item.id === id) || null)
-      )
+    gymClimbByIdLoadersByGym[gymId] = new DataLoader(
+      (ids: number[]) =>
+        getGymClimbs(gymId, { filters: { id: ids } }).then((items) =>
+          ids.map((id) => items.find((item) => item.id === id) || null)
+        ),
+      { cache: false }
     );
   }
   return gymClimbByIdLoadersByGym[gymId].load(climbId);
