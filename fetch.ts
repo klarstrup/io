@@ -92,7 +92,15 @@ const rawDbFetch = async <T = string>(
           ? { revalidate: options.maxAge }
           : undefined,
     });
-    if (response.status !== 200) {
+    if (
+      response.status !== 200 &&
+      // Don't consider 401s from the toplogger ascends endpoint as errors because
+      // some users have their accounts set up to not allow access
+      !(
+        String(input).includes("api.toplogger.nu/v1/ascends.json") &&
+        response.status === 401
+      )
+    ) {
       error = await response.text();
       await Fetch.updateOne(filter, {
         lastError: error,
