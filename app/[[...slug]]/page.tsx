@@ -77,7 +77,7 @@ export default async function Home({
               end: new Date(nextEvent?.start || now),
             } as const;
             trainings = (
-              [] || (await getTrainingData(trainingPeriod, urlDisciplines))
+              await getTrainingData(trainingPeriod, urlDisciplines)
             ).filter(({ count }) => count);
 
             const side = !(i++ % 2) ? "left" : "right";
@@ -237,11 +237,10 @@ const getData = async (disciplines?: string[]) => {
         getIoClimbAlongCompetitionEvent(26, 3381, sex),
         getIoClimbAlongCompetitionEvent(27, 8468, sex),
         getIoClimbAlongCompetitionEvent(28, 10770, sex),
-        [] ||
-          (await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
-            ({ group_id, user_id }) =>
-              getIoTopLoggerGroupEvent(group_id, user_id, sex)
-          ),
+        (await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
+          ({ group_id, user_id }) =>
+            getIoTopLoggerGroupEvent(group_id, user_id, sex)
+        ),
       ].flat()
     );
   }
