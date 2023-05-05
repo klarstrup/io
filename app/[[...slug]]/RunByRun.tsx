@@ -9,7 +9,7 @@ function pad(i: number, width: number, z = "0") {
 function decimalAsTime(dec: number) {
   const minutes = Math.floor(dec);
   const sec = Math.floor(60 * (dec - minutes));
-  return "" + String(minutes) + ":" + pad(sec, 2);
+  return String(minutes) + ":" + pad(sec, 2);
 }
 function formatPace(pace: number) {
   return decimalAsTime(0.6215 / pace);
