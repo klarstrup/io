@@ -191,30 +191,26 @@ const getData = async (disciplines?: string[]) => {
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
-      ...[
-        getIoClimbAlongCompetitionEvent(13, 844, sex),
-        getIoClimbAlongCompetitionEvent(20, 1284, sex),
-        getIoClimbAlongCompetitionEvent(26, 3381, sex),
-        getIoClimbAlongCompetitionEvent(27, 8468, sex),
-        getIoClimbAlongCompetitionEvent(28, 10770, sex),
-        (await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
-          ({ group_id, user_id }) =>
-            getIoTopLoggerGroupEvent(group_id, user_id, sex)
-        ),
-      ].flat()
+      getIoClimbAlongCompetitionEvent(13, 844, sex),
+      getIoClimbAlongCompetitionEvent(20, 1284, sex),
+      getIoClimbAlongCompetitionEvent(26, 3381, sex),
+      getIoClimbAlongCompetitionEvent(27, 8468, sex),
+      getIoClimbAlongCompetitionEvent(28, 10770, sex),
+      ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
+        ({ group_id, user_id }) =>
+          getIoTopLoggerGroupEvent(group_id, user_id, sex)
+      )
     );
   }
   if (disciplines?.includes("running") || !disciplines?.length) {
     eventsPromises.push(
-      ...[
-        getSportsTimingEventResults(10694, 5096890, true),
-        getSportsTimingEventResults(8962, 4433356, true),
-        getSportsTimingEventResults(8940, 3999953, true),
-        getSportsTimingEventResults(7913, 3825124, true),
-        getSportsTimingEventResults(5805, 2697593, true),
-        getSportsTimingEventResults(5647, 2619935, true),
-        getSportsTimingEventResults(4923, 2047175, true),
-      ]
+      getSportsTimingEventResults(10694, 5096890, true),
+      getSportsTimingEventResults(8962, 4433356, true),
+      getSportsTimingEventResults(8940, 3999953, true),
+      getSportsTimingEventResults(7913, 3825124, true),
+      getSportsTimingEventResults(5805, 2697593, true),
+      getSportsTimingEventResults(5647, 2619935, true),
+      getSportsTimingEventResults(4923, 2047175, true)
     );
   }
   if (disciplines?.includes("metal") || !disciplines?.length) {
