@@ -251,9 +251,9 @@ export async function getIoClimbAlongCompetitionEvent(
     : "past";
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
     competitionId === 28
-      ? 1
+      ? 30
       : competitionTime === "present"
-      ? 0
+      ? 30
       : isWithinInterval(
           new Date(
             new Date().toLocaleString("en", { timeZone: "Europe/Copenhagen" })
