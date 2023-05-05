@@ -80,7 +80,7 @@ export default async function Home({
             };
             const trainingPeriod: Interval = {
               start: new Date(event.end),
-              end: new Date(nextEvent.start || now),
+              end: new Date(nextEvent?.start || now),
             } as const;
             trainings = (
               await getTrainingData(trainingPeriod, urlDisciplines)
