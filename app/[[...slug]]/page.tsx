@@ -1,4 +1,10 @@
-import { Interval, isFuture, isPast, isWithinInterval } from "date-fns";
+import {
+  Interval,
+  isBefore,
+  isFuture,
+  isPast,
+  isWithinInterval,
+} from "date-fns";
 import Script from "next/script";
 import dbConnect from "../../dbConnect";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
@@ -26,62 +32,47 @@ export default async function Home({
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
   const ioEvents = await getData(urlDisciplines);
-  const ioEventsFilteredByDiscipline = ioEvents.filter((event) =>
-    urlDisciplines?.length
-      ? urlDisciplines.includes(event.discipline.toLowerCase())
-      : true
-  );
-  const futureIoEvents = ioEventsFilteredByDiscipline.filter((event) =>
-    isFuture(event.start)
-  );
-  const pastIoEvents = ioEventsFilteredByDiscipline.filter((event) =>
-    isPast(event.start)
-  );
+
   let i = 0;
   return (
     <div>
       <section id="timeline">
-        {futureIoEvents.map((event) => (
-          <article
-            key={String(event.start)}
-            className={!(i++ % 2) ? "left" : "right"}
-          >
-            <div className="content" style={{ opacity: 0.5 }}>
-              <TimelineEventContent
-                event={event}
-                urlDisciplines={urlDisciplines}
-              />
-            </div>
-          </article>
-        ))}
-        <article key="you" className={"now " + (!(i++ % 2) ? "left" : "right")}>
-          <div className="content">
-            You are <b>now</b>
-          </div>
-        </article>
         {await Promise.all(
-          pastIoEvents.map(async (event, j) => {
-            const nextEvent =
-              ioEventsFilteredByDiscipline[futureIoEvents.length + j - 1];
-            let trainings: Awaited<ReturnType<typeof getTrainingData>> | null =
-              null;
+          ioEvents.map(async (event, j) => {
+            const nextEvent = ioEvents[j - 1];
+
             const now = new Date();
             const eventInterval: Interval = {
               start: new Date(event.start),
               end: new Date(event.end),
             };
-            const trainingPeriod: Interval = {
-              start: new Date(event.end),
-              end: new Date(nextEvent?.start || now),
-            } as const;
-            trainings = (
-              await getTrainingData(trainingPeriod, urlDisciplines)
+            const trainings: Awaited<ReturnType<typeof getTrainingData>> = (
+              nextEvent
+                ? await getTrainingData(
+                    {
+                      start: new Date(event.end),
+                      end: new Date(nextEvent.start),
+                    },
+                    urlDisciplines
+                  )
+                : []
             ).filter(({ count }) => count);
 
             const side = !(i++ % 2) ? "left" : "right";
             return (
               <>
-                {trainings?.length ? (
+                {(!nextEvent || isFuture(nextEvent.start)) &&
+                isPast(event.start) ? (
+                  <article
+                    key="you"
+                    className={"now " + (!(i++ % 2) ? "left" : "right")}
+                  >
+                    <div className="content">
+                      You are <b>now</b>
+                    </div>
+                  </article>
+                ) : null}
+                {trainings.length ? (
                   <article
                     key={String(event.start) + String(now)}
                     className={side}
@@ -111,7 +102,9 @@ export default async function Home({
                     className={`content ${
                       isWithinInterval(new Date(), eventInterval)
                         ? "current"
-                        : ""
+                        : isBefore(new Date(), eventInterval.start)
+                        ? "future"
+                        : "past"
                     }`}
                   >
                     <TimelineEventContent
