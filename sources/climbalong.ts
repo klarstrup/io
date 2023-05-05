@@ -16,12 +16,7 @@ import {
   ThousandDivideByScore,
   TopsAndZonesScore,
 } from "../lib";
-import {
-  HOUR_IN_SECONDS,
-  MINUTE_IN_SECONDS,
-  WEEK_IN_SECONDS,
-  percentile,
-} from "../utils";
+import { MINUTE_IN_SECONDS, WEEK_IN_SECONDS, percentile } from "../utils";
 
 export namespace Climbalong {
   export interface Athlete {
