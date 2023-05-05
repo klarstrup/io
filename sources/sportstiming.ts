@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { setHours, setMinutes } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   DistanceRaceScore,
@@ -223,11 +224,11 @@ export async function getSportsTimingEventResults(
     start:
       ioResult?.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime)
-        : parseSTDate(event.RawDate),
+        : setMinutes(setHours(parseSTDate(event.RawDate), 8), 30),
     end:
       ioResult?.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime + duration * 1000)
-        : parseSTDate(event.EntryEndDate),
+        : setHours(parseSTDate(event.EntryEndDate), 16),
     category:
       bracket
         .replace("Strandparken 2018", "Open Race")
