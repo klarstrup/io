@@ -1,4 +1,4 @@
-import { Interval, isFuture, isPast } from "date-fns";
+import { Interval, isFuture, isPast, isWithinInterval } from "date-fns";
 import Script from "next/script";
 import dbConnect from "../../dbConnect";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
@@ -72,6 +72,10 @@ export default async function Home({
             let trainings: Awaited<ReturnType<typeof getTrainingData>> | null =
               null;
             const now = new Date();
+            const eventInterval: Interval = {
+              start: new Date(event.start),
+              end: new Date(event.end),
+            };
             const trainingPeriod: Interval = {
               start: new Date(event.end),
               end: new Date(nextEvent.start || now),
@@ -109,7 +113,13 @@ export default async function Home({
                   </article>
                 ) : null}
                 <article key={String(event.start)} className={side}>
-                  <div className="content">
+                  <div
+                    className={`content ${
+                      isWithinInterval(new Date(), eventInterval)
+                        ? "current"
+                        : ""
+                    }`}
+                  >
                     <TimelineEventContent
                       event={event}
                       urlDisciplines={urlDisciplines}
