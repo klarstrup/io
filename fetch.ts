@@ -147,7 +147,7 @@ export const cachedDbFetch = async <T>(
   const key = JSON.stringify({ input, init });
   let promise = dbFetchCache.get(key);
   if (!promise) {
-    console.info(`cachedDbFetch MISS ${String(input)}`);
+    // console.info(`cachedDbFetch MISS ${String(input)}`);
     promise = rawDbFetch(input, init, options);
     dbFetchCache.set(key, promise);
   } else {
