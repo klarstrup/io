@@ -3,7 +3,6 @@ import {
   isAfter,
   isBefore,
   isFuture,
-  isPast,
   isWithinInterval,
   subHours,
 } from "date-fns";
@@ -16,7 +15,12 @@ import {
   ThousandDivideByScore,
   TopsAndZonesScore,
 } from "../lib";
-import { MINUTE_IN_SECONDS, WEEK_IN_SECONDS, percentile } from "../utils";
+import {
+  MINUTE_IN_SECONDS,
+  WEEK_IN_SECONDS,
+  cotemporality,
+  percentile,
+} from "../utils";
 
 export namespace Climbalong {
   export interface Athlete {
@@ -239,13 +243,13 @@ export async function getIoClimbAlongCompetitionEvent(
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
   });
-  const competitionTime = isFuture(new Date(competition.endTime))
-    ? isPast(new Date(competition.startTime))
-      ? "present"
-      : "future"
-    : "past";
+  const competitionTime = cotemporality({
+    start: new Date(competition.startTime),
+    end: new Date(competition.endTime),
+  });
+
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "present"
+    competitionTime === "current"
       ? 30
       : isWithinInterval(new Date(), {
           start: subHours(new Date(competition.startTime), 3),
@@ -433,13 +437,13 @@ async function getIoClimbAlongCompetitionScores(
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
   });
-  const competitionTime = isFuture(new Date(competition.endTime))
-    ? isPast(new Date(competition.startTime))
-      ? "present"
-      : "future"
-    : "past";
+  const competitionTime = cotemporality({
+    start: new Date(competition.startTime),
+    end: new Date(competition.endTime),
+  });
+
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "present"
+    competitionTime === "current"
       ? 30
       : isWithinInterval(new Date(), {
           start: subHours(new Date(competition.startTime), 3),

@@ -1,10 +1,4 @@
-import {
-  Interval,
-  isBefore,
-  isFuture,
-  isPast,
-  isWithinInterval,
-} from "date-fns";
+import { Interval, isFuture, isPast } from "date-fns";
 import Script from "next/script";
 import dbConnect from "../../dbConnect";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
@@ -18,6 +12,7 @@ import {
   getGroupsUsers,
   getIoTopLoggerGroupEvent,
 } from "../../sources/toplogger";
+import { cotemporality } from "../../utils";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
@@ -98,15 +93,7 @@ export default async function Home({
                   </article>
                 ) : null}
                 <article key={String(event.start)} className={side}>
-                  <div
-                    className={`content ${
-                      isWithinInterval(new Date(), eventInterval)
-                        ? "current"
-                        : isBefore(new Date(), eventInterval.start)
-                        ? "future"
-                        : "past"
-                    }`}
-                  >
+                  <div className={`content ${cotemporality(eventInterval)}`}>
                     <TimelineEventContent
                       event={event}
                       urlDisciplines={urlDisciplines}
