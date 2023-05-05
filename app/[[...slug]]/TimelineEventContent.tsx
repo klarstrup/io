@@ -207,6 +207,15 @@ export default function TimelineEventContent({
                 ""
               )
               .replace(
+                new RegExp(
+                  `#\\d ${new Date(start).toLocaleDateString("da-DK", {
+                    month: "long",
+                  })}`,
+                  "i"
+                ),
+                ""
+              )
+              .replace(
                 `${new Date(start).toLocaleDateString("da-DK", {
                   year: "numeric",
                 })}`,
