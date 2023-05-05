@@ -1,4 +1,4 @@
-import { isAfter, isBefore } from "date-fns";
+import { isAfter, isBefore, isFuture } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   PointsScore,
@@ -8,7 +8,7 @@ import {
   ThousandDivideByScore,
   TopsAndZonesScore,
 } from "../lib";
-import { percentile } from "../utils";
+import { WEEK_IN_SECONDS, percentile } from "../utils";
 
 export namespace Climbalong {
   export interface Athlete {
@@ -128,32 +128,95 @@ enum HoldScore {
   "ZONE" = 1,
 }
 
-const fetchClimbalong = async <T>(input: string | URL, init?: RequestInit) =>
-  dbFetch<T>(`https://comp.climbalong.com/api${String(input)}`, init);
+const fetchClimbalong = async <T>(
+  input: string | URL,
+  init?: RequestInit,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  dbFetch<T>(
+    `https://comp.climbalong.com/api${String(input)}`,
+    init,
+    dbFetchOptions
+  );
 
-const getCompetition = (id: number) =>
-  fetchClimbalong<Climbalong.Competition>(`/v0/competitions/${id}`);
-const getCompetitionAthletes = (id: number) =>
-  fetchClimbalong<Climbalong.Athlete[]>(`/v0/competitions/${id}/athletes`);
-const getCompetitionRounds = (id: number) =>
-  fetchClimbalong<Climbalong.Round[]>(`/v1/competitions/${id}/rounds`);
-const getCompetitionLanes = (id: number) =>
-  fetchClimbalong<Climbalong.Lane[]>(`/v1/competitions/${id}/lanes`);
+const getCompetition = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Competition>(
+    `/v0/competitions/${id}`,
+    undefined,
+    dbFetchOptions
+  );
+const getCompetitionAthletes = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Athlete[]>(
+    `/v0/competitions/${id}/athletes`,
+    undefined,
+    dbFetchOptions
+  );
+const getCompetitionRounds = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Round[]>(
+    `/v1/competitions/${id}/rounds`,
+    undefined,
+    dbFetchOptions
+  );
+const getCompetitionLanes = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Lane[]>(
+    `/v1/competitions/${id}/lanes`,
+    undefined,
+    dbFetchOptions
+  );
 
-const getLaneCircuits = (id: number) =>
-  fetchClimbalong<Climbalong.Circuit[]>(`/v0/lanes/${id}/circuits`);
-const getLanesCircuits = (ids: number[]) =>
-  Promise.all(ids.map((id) => getLaneCircuits(id)));
+const getLaneCircuits = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Circuit[]>(
+    `/v0/lanes/${id}/circuits`,
+    undefined,
+    dbFetchOptions
+  );
+const getLanesCircuits = (
+  ids: number[],
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) => Promise.all(ids.map((id) => getLaneCircuits(id, dbFetchOptions)));
 
-const getCircuitPerformances = (id: number) =>
-  fetchClimbalong<Climbalong.Performance[]>(`/v0/circuits/${id}/performances`);
-const getCircuitsPerformances = (ids: number[]) =>
-  Promise.all(ids.map((id) => getCircuitPerformances(id)));
+const getCircuitPerformances = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Performance[]>(
+    `/v0/circuits/${id}/performances`,
+    undefined,
+    dbFetchOptions
+  );
+const getCircuitsPerformances = (
+  ids: number[],
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) => Promise.all(ids.map((id) => getCircuitPerformances(id, dbFetchOptions)));
 
-const getCircuitProblems = (id: number) =>
-  fetchClimbalong<Climbalong.Problem[]>(`/v0/circuits/${id}/problems`);
-const getCircuitsProblems = (ids: number[]) =>
-  Promise.all(ids.map((id) => getCircuitProblems(id)));
+const getCircuitProblems = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  fetchClimbalong<Climbalong.Problem[]>(
+    `/v0/circuits/${id}/problems`,
+    undefined,
+    dbFetchOptions
+  );
+const getCircuitsProblems = (
+  ids: number[],
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) => Promise.all(ids.map((id) => getCircuitProblems(id, dbFetchOptions)));
 
 const TDB_BASE = 1000;
 const TDB_FLASH_MULTIPLIER = 1.1;
@@ -165,7 +228,22 @@ export async function getIoClimbAlongCompetitionEvent(
   ioId?: number,
   sex?: boolean
 ) {
-  let athletes = await getCompetitionAthletes(competitionId);
+  const competition = await getCompetition(competitionId, {
+    maxAge: WEEK_IN_SECONDS,
+  });
+  const competitionTime = isFuture(new Date(competition.startTime))
+    ? isFuture(new Date(competition.endTime))
+      ? "present"
+      : "future"
+    : "past";
+  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
+    competitionTime === "past"
+      ? undefined
+      : competitionTime === "present"
+      ? 0
+      : WEEK_IN_SECONDS;
+
+  let athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>
     ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
@@ -175,20 +253,29 @@ export async function getIoClimbAlongCompetitionEvent(
     athletes = athletes.filter((athlete) => athlete.sex === io.sex);
   }
 
-  const rounds = (await getCompetitionRounds(competitionId)).filter(
+  const rounds = (await getCompetitionRounds(competitionId, { maxAge })).filter(
     ({ title }) => !title.match(/final/gi) // Only score quals
   );
-  const lanes = (await getCompetitionLanes(competitionId)).filter((lane) =>
-    rounds.some(({ roundId }) => lane.roundId === roundId)
+  const lanes = (await getCompetitionLanes(competitionId, { maxAge })).filter(
+    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId)
   );
   const circuits = (
-    await getLanesCircuits(lanes.map(({ laneId }) => laneId))
+    await getLanesCircuits(
+      lanes.map(({ laneId }) => laneId),
+      { maxAge }
+    )
   ).flat();
   const performances = (
-    await getCircuitsPerformances(circuits.map(({ circuitId }) => circuitId))
+    await getCircuitsPerformances(
+      circuits.map(({ circuitId }) => circuitId),
+      { maxAge }
+    )
   ).flat();
   const problems = (
-    await getCircuitsProblems(circuits.map(({ circuitId }) => circuitId))
+    await getCircuitsProblems(
+      circuits.map(({ circuitId }) => circuitId),
+      { maxAge }
+    )
   ).flat();
 
   const circuitChallengeNodesGroupedByLane = await dbFetch<
@@ -220,10 +307,11 @@ export async function getIoClimbAlongCompetitionEvent(
       }[]
     ][]
   >(
-    `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`
+    `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
+    undefined,
+    { maxAge }
   );
 
-  const competition = await getCompetition(competitionId);
   const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
   const noClimbers = athletes.length || NaN;
 
@@ -327,7 +415,22 @@ async function getIoClimbAlongCompetitionScores(
   ioId?: number,
   sex?: boolean
 ) {
-  let athletes = await getCompetitionAthletes(competitionId);
+  const competition = await getCompetition(competitionId, {
+    maxAge: WEEK_IN_SECONDS,
+  });
+  const competitionTime = isFuture(new Date(competition.startTime))
+    ? isFuture(new Date(competition.endTime))
+      ? "present"
+      : "future"
+    : "past";
+  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
+    competitionTime === "past"
+      ? undefined
+      : competitionTime === "present"
+      ? 0
+      : WEEK_IN_SECONDS;
+
+  let athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>
     ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
@@ -337,20 +440,29 @@ async function getIoClimbAlongCompetitionScores(
     athletes = athletes.filter((athlete) => athlete.sex === io.sex);
   }
 
-  const rounds = (await getCompetitionRounds(competitionId)).filter(
+  const rounds = (await getCompetitionRounds(competitionId, { maxAge })).filter(
     ({ title }) => !title.match(/final/gi) // Only score quals
   );
-  const lanes = (await getCompetitionLanes(competitionId)).filter((lane) =>
-    rounds.some(({ roundId }) => lane.roundId === roundId)
+  const lanes = (await getCompetitionLanes(competitionId, { maxAge })).filter(
+    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId)
   );
   const circuits = (
-    await getLanesCircuits(lanes.map(({ laneId }) => laneId))
+    await getLanesCircuits(
+      lanes.map(({ laneId }) => laneId),
+      { maxAge }
+    )
   ).flat();
   const performances = (
-    await getCircuitsPerformances(circuits.map(({ circuitId }) => circuitId))
+    await getCircuitsPerformances(
+      circuits.map(({ circuitId }) => circuitId),
+      { maxAge }
+    )
   ).flat();
   const problems = (
-    await getCircuitsProblems(circuits.map(({ circuitId }) => circuitId))
+    await getCircuitsProblems(
+      circuits.map(({ circuitId }) => circuitId),
+      { maxAge }
+    )
   ).flat();
 
   const [topsByProblemTitle, zonesByProblemTitle] = performances.reduce(

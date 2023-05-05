@@ -24,6 +24,11 @@ export function chunk<I>(arr: I[], size: number) {
   return results;
 }
 
+export const MINUTE_IN_SECONDS = 60;
+export const HOUR_IN_SECONDS = MINUTE_IN_SECONDS * 60;
+export const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24;
+export const WEEK_IN_SECONDS = DAY_IN_SECONDS * 7;
+
 export function seconds2time(seconds: number) {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds - hours * 3600) / 60);

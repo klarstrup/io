@@ -62,7 +62,7 @@ const rawDbFetch = async <T = string>(
       const rowAge = Math.floor(
         (Number(now) - Number(fetchRow.lastSuccessfulFetchAt)) / 1000
       );
-      if (rowAge > options.maxAge) stale = true;
+      if (rowAge > options.maxAge || options.maxAge === 0) stale = true;
     }
     if (!stale) {
       if (fetchRow.lastResult) {
