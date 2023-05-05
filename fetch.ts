@@ -50,9 +50,7 @@ const rawDbFetch = async <T = string>(
   };
   const fetchArgs = JSON.stringify({ input, init: sanitizedInit });
   const filter = { fetchArgs };
-  const now = new Date(
-    new Date().toLocaleString("en", { timeZone: "Europe/Copenhagen" })
-  );
+  const now = new Date();
 
   const fetchRow = await Fetch.findOne(filter);
   let result: string | null = null;
