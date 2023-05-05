@@ -249,7 +249,7 @@ export async function getIoClimbAlongCompetitionEvent(
       ? 30
       : isWithinInterval(new Date(), {
           start: subHours(new Date(competition.startTime), 3),
-          end: addHours(new Date(competition.endTime), 3),
+          end: addHours(new Date(competition.endTime), 1),
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
