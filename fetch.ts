@@ -13,11 +13,8 @@ export const Fetch = mongoose.model("Fetch", fetchSchema, undefined, {
   overwriteModels: true,
 });
 
-const fetchCache = new Map<RequestInfo | URL, Promise<unknown>>();
-const cachedFetch = async <T>(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<T> => {
+const fetchCache = new Map<RequestInfo | URL, Promise<Response>>();
+const cachedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const key = JSON.stringify({ input, init });
 
   let promise = fetchCache.get(key);
@@ -27,7 +24,7 @@ const cachedFetch = async <T>(
     fetchCache.set(key, promise);
   }
 
-  return promise as Promise<T>;
+  return promise.then((r) => r.clone());
 };
 
 // DB-backed fetch function that will return stale stuff
