@@ -65,9 +65,7 @@ export default async function Home({
               ioEventsFilteredByDiscipline[futureIoEvents.length + j - 1];
             let trainings: Awaited<ReturnType<typeof getTrainingData>> | null =
               null;
-            const now = new Date(
-              new Date().toLocaleString("en", { timeZone: "Europe/Copenhagen" })
-            );
+            const now = new Date();
             const eventInterval: Interval = {
               start: new Date(event.start),
               end: new Date(event.end),
@@ -111,14 +109,7 @@ export default async function Home({
                 <article key={String(event.start)} className={side}>
                   <div
                     className={`content ${
-                      isWithinInterval(
-                        new Date(
-                          new Date().toLocaleString("en", {
-                            timeZone: "Europe/Copenhagen",
-                          })
-                        ),
-                        eventInterval
-                      )
+                      isWithinInterval(new Date(), eventInterval)
                         ? "current"
                         : ""
                     }`}
@@ -134,18 +125,7 @@ export default async function Home({
           })
         )}
       </section>
-      <Script
-        key={String(
-          new Date(
-            new Date().toLocaleString("en", { timeZone: "Europe/Copenhagen" })
-          )
-        )}
-        id={String(
-          new Date(
-            new Date().toLocaleString("en", { timeZone: "Europe/Copenhagen" })
-          )
-        )}
-      >
+      <Script key={String(new Date())} id={String(new Date())}>
         {`
         ${String(balanceColumns)};
         window.addEventListener("resize", () => {
