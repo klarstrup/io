@@ -16,6 +16,8 @@ import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
 
+export const revalidate = 60; // revalidate this page every 60 seconds
+
 export function generateStaticParams() {
   return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
     slug: slug ? [slug] : undefined,
