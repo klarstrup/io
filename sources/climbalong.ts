@@ -1,4 +1,12 @@
-import { isAfter, isBefore, isFuture } from "date-fns";
+import {
+  addHours,
+  isAfter,
+  isBefore,
+  isFuture,
+  isPast,
+  isWithinInterval,
+  subHours,
+} from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   PointsScore,
@@ -8,7 +16,7 @@ import {
   ThousandDivideByScore,
   TopsAndZonesScore,
 } from "../lib";
-import { WEEK_IN_SECONDS, percentile } from "../utils";
+import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, percentile } from "../utils";
 
 export namespace Climbalong {
   export interface Athlete {
@@ -231,16 +239,21 @@ export async function getIoClimbAlongCompetitionEvent(
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
   });
-  const competitionTime = isFuture(new Date(competition.startTime))
-    ? isFuture(new Date(competition.endTime))
+  const competitionTime = isFuture(new Date(competition.endTime))
+    ? isPast(new Date(competition.startTime))
       ? "present"
       : "future"
     : "past";
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "past"
-      ? undefined
-      : competitionTime === "present"
+    competitionTime === "present"
       ? 0
+      : isWithinInterval(new Date(), {
+          start: subHours(new Date(competition.startTime), 3),
+          end: addHours(new Date(competition.endTime), 3),
+        })
+      ? HOUR_IN_SECONDS
+      : competitionTime === "past"
+      ? undefined
       : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
@@ -418,16 +431,21 @@ async function getIoClimbAlongCompetitionScores(
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
   });
-  const competitionTime = isFuture(new Date(competition.startTime))
-    ? isFuture(new Date(competition.endTime))
+  const competitionTime = isFuture(new Date(competition.endTime))
+    ? isPast(new Date(competition.startTime))
       ? "present"
       : "future"
     : "past";
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "past"
-      ? undefined
-      : competitionTime === "present"
+    competitionTime === "present"
       ? 0
+      : isWithinInterval(new Date(), {
+          start: subHours(new Date(competition.startTime), 3),
+          end: addHours(new Date(competition.endTime), 3),
+        })
+      ? HOUR_IN_SECONDS
+      : competitionTime === "past"
+      ? undefined
       : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
