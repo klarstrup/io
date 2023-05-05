@@ -376,13 +376,15 @@ export async function getIoClimbAlongCompetitionEvent(
         )?.[1][0]?.selfscoringOpen ||
         competition.startTime
     ),
-    end: new Date(
-      lastPerformance ||
-        circuitChallengeNodesGroupedByLane.find(
-          ([, [challengeNode]]) => challengeNode?.selfscoringClose
-        )?.[1][0]?.selfscoringClose ||
-        competition.endTime
-    ),
+    end: isFuture(new Date(competition.endTime))
+      ? new Date(competition.endTime)
+      : new Date(
+          lastPerformance ||
+            circuitChallengeNodesGroupedByLane.find(
+              ([, [challengeNode]]) => challengeNode?.selfscoringClose
+            )?.[1][0]?.selfscoringClose ||
+            competition.endTime
+        ),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
     location: competition.address,
