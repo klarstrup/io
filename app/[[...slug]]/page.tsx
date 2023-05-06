@@ -1,25 +1,25 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Interval, differenceInMilliseconds, isFuture, isPast } from "date-fns";
+import {
+  Interval,
+  differenceInMilliseconds,
+  isFuture,
+  isPast,
+  max,
+  min,
+} from "date-fns";
 import Script from "next/script";
 import { Fragment } from "react";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
-import {
-  getIoClimbAlongCompetitionEvent,
-  getIoClimbAlongCompetitionEventEntry,
-} from "../../sources/climbalong";
+import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
-import {
-  getSportsTimingEventEntry,
-  getSportsTimingEventResults,
-} from "../../sources/sportstiming";
+import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
   IO_TOPLOGGER_ID,
   getBoulderingTrainingData,
   getGroupsUsers,
-  getIoTopLoggerGroupEvent,
   getIoTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
 import { cotemporality } from "../../utils";
@@ -37,7 +37,10 @@ async function TimelineTrainingArticle({
   urlDisciplines: string[] | undefined;
 }) {
   const trainings: Awaited<ReturnType<typeof getTrainingData>> = (
-    await getTrainingData({ start: from, end: to }, urlDisciplines)
+    await getTrainingData(
+      { start: min([from, to]), end: max([from, to]) },
+      urlDisciplines
+    )
   ).filter(({ count }) => count);
 
   return trainings.length ? (
@@ -79,66 +82,41 @@ export default async function Home({
   return (
     <div>
       <section id="timeline">
-        {await Promise.all(
-          events.map(async (event, j) => {
-            const nextEvent = events[j - 1];
+        {events.map((event, j) => {
+          const nextEvent = events[j - 1];
 
-            return (
-              <Fragment key={event.id}>
-                {(!nextEvent || isFuture(nextEvent.start)) &&
-                isPast(event.start) ? (
-                  <article className="now">
-                    <div className="content">
-                      You are <b>now</b>
-                    </div>
-                  </article>
-                ) : null}
-                {urlDisciplines?.length ? (
-                  /* @ts-expect-error Async Server Component */
-                  <TimelineTrainingArticle
-                    from={event.end}
-                    to={nextEvent?.start || now}
-                    urlDisciplines={urlDisciplines}
-                  />
-                ) : null}
-                <article>
-                  <div className={`content ${cotemporality(event)}`}>
-                    {event.source ? (
-                      <TimelineEventContent
-                        event={
-                          await (event.source === "climbalong"
-                            ? getIoClimbAlongCompetitionEvent(
-                                event.id,
-                                event.ioId,
-                                sex
-                              )
-                            : event.source === "toplogger"
-                            ? getIoTopLoggerGroupEvent(
-                                event.id,
-                                event.ioId,
-                                sex
-                              )
-                            : event.source === "sportstiming"
-                            ? getSportsTimingEventResults(
-                                event.id,
-                                event.ioId,
-                                sex
-                              )
-                            : event.source === "songkick"
-                            ? (
-                                await getSongkickEvents()
-                              ).find(({ id }) => event.id === id)!
-                            : undefined)!
-                        }
-                        urlDisciplines={urlDisciplines}
-                      />
-                    ) : null}
+          return (
+            <Fragment key={event.id}>
+              {(!nextEvent || isFuture(nextEvent.start)) &&
+              isPast(event.start) ? (
+                <article className="now">
+                  <div className="content">
+                    You are <b>now</b>
                   </div>
                 </article>
-              </Fragment>
-            );
-          })
-        )}
+              ) : null}
+              {urlDisciplines?.length ? (
+                /* @ts-expect-error Async Server Component */
+                <TimelineTrainingArticle
+                  from={event.end}
+                  to={nextEvent?.start || now}
+                  urlDisciplines={urlDisciplines}
+                />
+              ) : null}
+              <article>
+                <div className={`content ${cotemporality(event)}`}>
+                  {event.source ? (
+                    /* @ts-expect-error Async Server Component */
+                    <TimelineEventContent
+                      eventEntry={event}
+                      urlDisciplines={urlDisciplines}
+                    />
+                  ) : null}
+                </div>
+              </article>
+            </Fragment>
+          );
+        })}
       </section>
       <Script key={String(new Date())} id={String(new Date())}>
         {`
@@ -211,7 +189,6 @@ const getTrainingData = async (
   ].filter(Boolean);
 };
 
-const sex = true;
 const getData = async (disciplines?: string[]) => {
   await dbConnect();
 
@@ -219,11 +196,11 @@ const getData = async (disciplines?: string[]) => {
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
-      getIoClimbAlongCompetitionEventEntry(13, 844, sex),
-      getIoClimbAlongCompetitionEventEntry(20, 1284, sex),
-      getIoClimbAlongCompetitionEventEntry(26, 3381, sex),
-      getIoClimbAlongCompetitionEventEntry(27, 8468, sex),
-      getIoClimbAlongCompetitionEventEntry(28, 10770, sex),
+      getIoClimbAlongCompetitionEventEntry(13, 844),
+      getIoClimbAlongCompetitionEventEntry(20, 1284),
+      getIoClimbAlongCompetitionEventEntry(26, 3381),
+      getIoClimbAlongCompetitionEventEntry(27, 8468),
+      getIoClimbAlongCompetitionEventEntry(28, 10770),
       ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
         ({ group_id, user_id }) =>
           getIoTopLoggerGroupEventEntry(group_id, user_id)

@@ -1,12 +1,15 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
-import { SCORING_SOURCE, Score } from "../../lib";
+import { EventEntry, SCORING_SOURCE, Score } from "../../lib";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
 import { seconds2time } from "../../utils";
 import ProblemByProblem from "./ProblemByProblem";
+
+const sex = true;
 
 const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
 
@@ -94,8 +97,14 @@ const ResultList = ({
   );
 };
 
-export default function TimelineEventContent({
-  event: {
+export default async function TimelineEventContent({
+  eventEntry,
+  urlDisciplines,
+}: {
+  eventEntry: EventEntry;
+  urlDisciplines: string[] | undefined;
+}) {
+  const {
     source,
     type,
     discipline,
@@ -112,20 +121,16 @@ export default function TimelineEventContent({
     team,
     id,
     url,
-  },
-  urlDisciplines,
-}: {
-  urlDisciplines: string[] | undefined;
-  event:
-    | Awaited<
-        ReturnType<
-          | typeof getSportsTimingEventResults
-          | typeof getIoClimbAlongCompetitionEvent
-          | typeof getIoTopLoggerGroupEvent
-        >
-      >
-    | Awaited<ReturnType<typeof getSongkickEvents>>[number];
-}) {
+  } = await (eventEntry.source === "climbalong"
+    ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId, sex)
+    : eventEntry.source === "toplogger"
+    ? getIoTopLoggerGroupEvent(eventEntry.id, eventEntry.ioId, sex)
+    : eventEntry.source === "sportstiming"
+    ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
+    : eventEntry.source === "songkick"
+    ? (await getSongkickEvents()).find(({ id }) => eventEntry.id === id)!
+    : undefined)!;
+
   const officialScores = scores.filter(
     (score) => score.source === SCORING_SOURCE.OFFICIAL
   );
