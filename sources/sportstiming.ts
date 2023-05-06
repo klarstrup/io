@@ -110,7 +110,7 @@ export async function getSportsTimingEventResults(
   const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
   if (!event) throw new Error("???");
 
-  const maxAge = event.EventId === 10694 ? 60 : undefined;
+  const maxAge = undefined;
 
   const ioResult = await getEventParticipantFavoriteUpdate(eventId, ioId, {
     maxAge,
