@@ -85,7 +85,8 @@ const getAllNordicRaceEvents = async () =>
 
 const getEventParticipantFavoriteUpdate = async (
   eventId: number,
-  participantId: number
+  participantId: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>
   (
     await dbFetch<SportsTiming.FavoriteUpdate[]>(
@@ -94,7 +95,8 @@ const getEventParticipantFavoriteUpdate = async (
         headers: {
           cookie: `cookies_allowed=required,statistics,settings; favorites_${eventId}=1_${participantId},`,
         },
-      }
+      },
+      dbFetchOptions
     )
   ).find(({ Id }) => Id === participantId);
 
@@ -108,13 +110,17 @@ export async function getSportsTimingEventResults(
   const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
   if (!event) throw new Error("???");
 
-  const ioResult = await getEventParticipantFavoriteUpdate(eventId, ioId);
+  const maxAge = event.EventId === 10694 ? 60 : undefined;
+
+  const ioResult = await getEventParticipantFavoriteUpdate(eventId, ioId, {
+    maxAge,
+  });
 
   const $ = cheerio.load(
     await dbFetch(
       `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
       undefined,
-      { parseJson: false }
+      { parseJson: false, maxAge }
     )
   );
 
