@@ -181,10 +181,10 @@ const getTrainingData = async (
       ? await getBoulderingTrainingData(trainingInterval)
       : null,
     disciplines?.includes("running")
-      ? [] || (await getRunningTrainingData(trainingInterval))
+      ? null && (await getRunningTrainingData(trainingInterval))
       : null,
     disciplines?.includes("bouldering") || disciplines?.includes("running")
-      ? [] || (await getLiftingTrainingData(trainingInterval))
+      ? null && (await getLiftingTrainingData(trainingInterval))
       : null,
   ].filter(Boolean);
 };
