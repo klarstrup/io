@@ -136,7 +136,10 @@ const rawDbFetch = async <T = string>(
   return parsedResult;
 };
 
-const dbFetchCache = new Map<RequestInfo | URL, Promise<never>>();
+const dbFetchCache = new Map<
+  RequestInfo | URL,
+  { promise: Promise<never>; date: Date }
+>();
 export const cachedDbFetch = async <T>(
   input: string | URL,
   init?: RequestInit,
@@ -151,22 +154,27 @@ export const cachedDbFetch = async <T>(
   }
 ): Promise<T> => {
   const key = JSON.stringify({ input, init });
-  let promise = dbFetchCache.get(key);
-  if (!promise) {
+  let entry = dbFetchCache.get(key);
+
+  if (
+    !entry ||
+    (typeof options?.maxAge !== "undefined" &&
+      (options.maxAge === 0 ||
+        Math.floor((Number(new Date()) - Number(entry.date)) / 1000) >
+          options.maxAge))
+  ) {
     // console.info(`cachedDbFetch MISS ${String(input)}`);
-    promise = rawDbFetch(input, init, options);
-    dbFetchCache.set(key, promise);
+    const promise = rawDbFetch<never>(input, init, options);
+    entry = { promise, date: new Date() };
+    dbFetchCache.set(key, entry);
   } else {
     // console.info(`cachedDbFetch HIT ${String(input)}`);
   }
 
-  return promise;
+  return entry.promise;
 };
 
-export const dbFetch =
-  process.env.NODE_ENV === "development" || process.env.CI
-    ? cachedDbFetch
-    : rawDbFetch;
+export const dbFetch = cachedDbFetch;
 
 export const fetchJson = async <T>(
   input: RequestInfo | URL,
