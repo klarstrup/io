@@ -427,16 +427,18 @@ const gymClimbByIdLoadersByGym: Record<
 > = {};
 
 export const getGymClimbById = (gymId: number, climbId: number) => {
-  if (!gymClimbByIdLoadersByGym[gymId]) {
-    gymClimbByIdLoadersByGym[gymId] = new DataLoader(
+  let gymClimbByIdLoader = gymClimbByIdLoadersByGym[gymId];
+  if (!gymClimbByIdLoader) {
+    gymClimbByIdLoader = new DataLoader(
       (ids: number[]) =>
         getGymClimbs(gymId, { filters: { id: ids } }).then((items) =>
           ids.map((id) => items.find((item) => item.id === id) || null)
         ),
       { cache: false }
     );
+    gymClimbByIdLoadersByGym[gymId] = gymClimbByIdLoader;
   }
-  return gymClimbByIdLoadersByGym[gymId].load(climbId);
+  return gymClimbByIdLoader.load(climbId);
 };
 
 const getUser = (id: number, dbFetchOptions?: Parameters<typeof dbFetch>[2]) =>
@@ -584,15 +586,17 @@ export async function getIoTopLoggerGroupEvent(
     if (!lastAscend || isAfter(date, lastAscend)) lastAscend = date;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const gym = gyms[0]!;
   return {
     type: "competition",
     discipline: "bouldering",
     id: groupId,
-    url: `https://app.toplogger.nu/en-us/${gyms[0].slug}/comp/${groupId}/details`,
+    url: `https://app.toplogger.nu/en-us/${gym.slug}/comp/${groupId}/details`,
     start: firstAscend || new Date(groupInterval.start),
     end: lastAscend || new Date(groupInterval.end),
-    venue: gyms[0].name.trim(),
-    location: gyms[0].address,
+    venue: gym.name.trim(),
+    location: gym.address,
     event: group.name.trim().replace(" - Qualification", ""),
     category: sex ? io.gender : null,
     team: null,

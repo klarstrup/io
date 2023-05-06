@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 const frenchRounded = {
   key: "french_rounded",
   name: "Font.`",
@@ -81,13 +82,13 @@ export default class Grade {
 
   // System grades
   get roundedGrade() {
-    return this.system.data[this.idxRound];
+    return this.system.data[this.idxRound]!;
   }
   get floorGrade() {
-    return this.system.data[this.idxFloor];
+    return this.system.data[this.idxFloor]!;
   }
   get ceilGrade() {
-    return this.system.data[this.idxCeil];
+    return this.system.data[this.idxCeil]!;
   }
 
   // Names
@@ -97,7 +98,7 @@ export default class Grade {
   get nameOrQ() {
     const index = this.idxRound;
     if (index == 0) return "?";
-    return this.system.data[index].name;
+    return this.system.data[index]!.name;
   }
   get nameFloor() {
     return this.floorGrade.name;
@@ -105,7 +106,7 @@ export default class Grade {
   get nameFloorOrQ() {
     const index = this.idxFloor;
     if (index == 0) return "?";
-    return this.system.data[index].name;
+    return this.system.data[index]!.name;
   }
   get nameCeil() {
     return this.ceilGrade.name;
