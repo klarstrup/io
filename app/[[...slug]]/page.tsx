@@ -4,7 +4,10 @@ import Script from "next/script";
 import { Fragment } from "react";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
-import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
+import {
+  getIoClimbAlongCompetitionEvent,
+  getIoClimbAlongCompetitionEventEntry,
+} from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
@@ -215,11 +218,11 @@ const getData = async (disciplines?: string[]) => {
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
-      getIoClimbAlongCompetitionEvent(13, 844, sex),
-      getIoClimbAlongCompetitionEvent(20, 1284, sex),
-      getIoClimbAlongCompetitionEvent(26, 3381, sex),
-      getIoClimbAlongCompetitionEvent(27, 8468, sex),
-      getIoClimbAlongCompetitionEvent(28, 10770, sex),
+      getIoClimbAlongCompetitionEventEntry(13, 844, sex),
+      getIoClimbAlongCompetitionEventEntry(20, 1284, sex),
+      getIoClimbAlongCompetitionEventEntry(26, 3381, sex),
+      getIoClimbAlongCompetitionEventEntry(27, 8468, sex),
+      getIoClimbAlongCompetitionEventEntry(28, 10770, sex),
       ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
         ({ group_id, user_id }) =>
           getIoTopLoggerGroupEvent(group_id, user_id, sex)

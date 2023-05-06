@@ -8,6 +8,7 @@ import {
 } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
+  EventEntry,
   PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
@@ -684,4 +685,51 @@ async function getIoClimbAlongCompetitionScores(
   }
 
   return scores;
+}
+
+export async function getIoClimbAlongCompetitionEventEntry(
+  competitionId: number,
+  ioId?: number,
+  sex?: boolean
+): Promise<EventEntry> {
+  const competition = await getCompetition(competitionId, {
+    maxAge: WEEK_IN_SECONDS,
+  });
+  const competitionTime = cotemporality({
+    start: new Date(competition.startTime),
+    end: new Date(competition.endTime),
+  });
+
+  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
+    competitionTime === "current"
+      ? 30
+      : isWithinInterval(new Date(), {
+          start: subHours(new Date(competition.startTime), 3),
+          end: addHours(new Date(competition.endTime), 1),
+        })
+      ? MINUTE_IN_SECONDS
+      : competitionTime === "past"
+      ? undefined
+      : WEEK_IN_SECONDS;
+
+  let athletes = await getCompetitionAthletes(competitionId, { maxAge });
+
+  const io = athletes.find(({ athleteId, name }) =>
+    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
+  );
+
+  if (io && sex) {
+    athletes = athletes.filter((athlete) => athlete.sex === io.sex);
+  }
+
+  return {
+    source: "climbalong",
+    type: "competition",
+    discipline: "bouldering",
+    id: competitionId,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+    ioId: io?.athleteId!,
+    start: new Date(competition.startTime),
+    end: new Date(competition.endTime),
+  } as const;
 }
