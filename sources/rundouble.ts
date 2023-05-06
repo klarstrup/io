@@ -93,5 +93,11 @@ export const getRunningTrainingData = async (trainingInterval: Interval) => {
       } as const)
   );
 
-  return { type, discipline, count, runByRun } as const;
+  return {
+    source: "rundouble",
+    type,
+    discipline,
+    count,
+    runByRun,
+  } as const;
 };

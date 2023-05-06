@@ -266,5 +266,5 @@ export const getLiftingTrainingData = async (trainingInterval: Interval) => {
       )
   );
 
-  return { type, discipline, count } as const;
+  return { source: "fitocracy", type, discipline, count } as const;
 };

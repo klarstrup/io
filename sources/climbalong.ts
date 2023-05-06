@@ -354,6 +354,7 @@ export async function getIoClimbAlongCompetitionEvent(
   }
 
   return {
+    source: "climbalong",
     type: "competition",
     discipline: "bouldering",
     id: competitionId,

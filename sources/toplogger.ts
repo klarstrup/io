@@ -589,6 +589,7 @@ export async function getIoTopLoggerGroupEvent(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
   return {
+    source: "toplogger",
     type: "competition",
     discipline: "bouldering",
     id: groupId,
@@ -805,5 +806,11 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
 
   const count = ascends.length;
 
-  return { type, discipline, count, problemByProblem } as const;
+  return {
+    source: "toplogger",
+    type,
+    discipline,
+    count,
+    problemByProblem,
+  } as const;
 };

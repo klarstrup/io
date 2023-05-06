@@ -190,6 +190,7 @@ export async function getSportsTimingEventResults(
   }
 
   return {
+    source: "sportstiming",
     type: "competition",
     discipline: "running",
     id: eventId,

@@ -138,6 +138,7 @@ export async function getSongkickEvents() {
   return events.map(
     (event) =>
       ({
+        source: "songkick",
         type: "performance",
         discipline: "metal",
         id: event.id,

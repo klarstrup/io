@@ -18,7 +18,7 @@ export default function TimelineTrainingContent({
   const { type, discipline, count } = training;
 
   return (
-    <div key={discipline} style={{ display: "flex" }}>
+    <div style={{ display: "flex" }} data-via={training.source}>
       <Link
         title={`${discipline} ${type}`}
         href={urlDisciplines?.includes(discipline) ? "/" : `/${discipline}`}

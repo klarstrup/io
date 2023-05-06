@@ -96,6 +96,7 @@ const ResultList = ({
 
 export default function TimelineEventContent({
   event: {
+    source,
     type,
     discipline,
     start,
@@ -144,7 +145,10 @@ export default function TimelineEventContent({
 
   return (
     <Fragment key={id}>
-      <div style={{ fontSize: "0.75em", marginBottom: "4px" }}>
+      <div
+        style={{ fontSize: "0.75em", marginBottom: "4px" }}
+        data-via={source}
+      >
         <b>
           {new Intl.DateTimeFormat("en-DK", {
             year: "numeric",
