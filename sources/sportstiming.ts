@@ -3,6 +3,7 @@ import { addHours, addMinutes } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   DistanceRaceScore,
+  EventEntry,
   SCORING_SOURCE,
   SCORING_SYSTEM,
   Score,
@@ -239,5 +240,25 @@ export async function getSportsTimingEventResults(
     scores,
     problems: null,
     problemByProblem: null,
+  } as const;
+}
+
+export async function getSportsTimingEventEntry(
+  eventId: number,
+  ioId: number
+): Promise<EventEntry> {
+  const allNordicRaceEvents = await getAllNordicRaceEvents();
+
+  const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
+  if (!event) throw new Error("???");
+
+  return {
+    source: "sportstiming",
+    type: "competition",
+    discipline: "running",
+    id: eventId,
+    ioId,
+    start: addMinutes(addHours(parseSTDate(event.RawDate), 8), 30),
+    end: addHours(parseSTDate(event.RawDate), 16),
   } as const;
 }

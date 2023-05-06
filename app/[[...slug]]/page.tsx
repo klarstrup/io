@@ -8,7 +8,10 @@ import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
-import { getSportsTimingEventResults } from "../../sources/sportstiming";
+import {
+  getSportsTimingEventEntry,
+  getSportsTimingEventResults,
+} from "../../sources/sportstiming";
 import {
   IO_TOPLOGGER_ID,
   getBoulderingTrainingData,
@@ -225,13 +228,13 @@ const getData = async (disciplines?: string[]) => {
   }
   if (disciplines?.includes("running") || !disciplines?.length) {
     eventsPromises.push(
-      getSportsTimingEventResults(10694, 5096890, sex),
-      getSportsTimingEventResults(8962, 4433356, sex),
-      getSportsTimingEventResults(8940, 3999953, sex),
-      getSportsTimingEventResults(7913, 3825124, sex),
-      getSportsTimingEventResults(5805, 2697593, sex),
-      getSportsTimingEventResults(5647, 2619935, sex),
-      getSportsTimingEventResults(4923, 2047175, sex)
+      getSportsTimingEventEntry(10694, 5096890),
+      getSportsTimingEventEntry(8962, 4433356),
+      getSportsTimingEventEntry(8940, 3999953),
+      getSportsTimingEventEntry(7913, 3825124),
+      getSportsTimingEventEntry(5805, 2697593),
+      getSportsTimingEventEntry(5647, 2619935),
+      getSportsTimingEventEntry(4923, 2047175)
     );
   }
   if (disciplines?.includes("metal") || !disciplines?.length) {
