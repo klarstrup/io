@@ -209,6 +209,7 @@ const getData = async (disciplines?: string[]) => {
   }
   if (disciplines?.includes("running") || !disciplines?.length) {
     eventsPromises.push(
+      getSportsTimingEventEntry(11107, 5177996),
       getSportsTimingEventEntry(10694, 5096890),
       getSportsTimingEventEntry(8962, 4433356),
       getSportsTimingEventEntry(8940, 3999953),
