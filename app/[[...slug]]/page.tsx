@@ -20,6 +20,7 @@ import {
   getBoulderingTrainingData,
   getGroupsUsers,
   getIoTopLoggerGroupEvent,
+  getIoTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
 import { cotemporality } from "../../utils";
 import "../page.css";
@@ -225,7 +226,7 @@ const getData = async (disciplines?: string[]) => {
       getIoClimbAlongCompetitionEventEntry(28, 10770, sex),
       ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
         ({ group_id, user_id }) =>
-          getIoTopLoggerGroupEvent(group_id, user_id, sex)
+          getIoTopLoggerGroupEventEntry(group_id, user_id)
       )
     );
   }

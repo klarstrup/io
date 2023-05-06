@@ -8,6 +8,7 @@ import {
 } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
+  EventEntry,
   PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
@@ -589,9 +590,9 @@ export async function getIoTopLoggerGroupEvent(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
   return {
-    source: "toplogger",
+    source,
+    discipline,
     type: "competition",
-    discipline: "bouldering",
     id: groupId,
     ioId,
     url: `https://app.toplogger.nu/en-us/${gym.slug}/comp/${groupId}/details`,
@@ -776,6 +777,24 @@ async function getIoTopLoggerGroupScores(
   return scores;
 }
 
+export async function getIoTopLoggerGroupEventEntry(
+  groupId: number,
+  ioId: number
+): Promise<EventEntry> {
+  const group = await getGroup(groupId);
+
+  return {
+    source,
+    type: "competition",
+    discipline,
+    id: groupId,
+    ioId,
+    start: new Date(group.date_loggable_start),
+    end: new Date(group.date_loggable_end),
+  } as const;
+}
+
+const source = "toplogger";
 const type = "training";
 const discipline = "bouldering";
 export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
@@ -807,11 +826,5 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
 
   const count = ascends.length;
 
-  return {
-    source: "toplogger",
-    type,
-    discipline,
-    count,
-    problemByProblem,
-  } as const;
+  return { source, type, discipline, count, problemByProblem } as const;
 };
