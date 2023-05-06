@@ -181,7 +181,7 @@ const getTrainingData = async (
       ? await getBoulderingTrainingData(trainingInterval)
       : null,
     disciplines?.includes("running")
-      ? await getRunningTrainingData(trainingInterval)
+      ? [] || (await getRunningTrainingData(trainingInterval))
       : null,
     disciplines?.includes("bouldering") || disciplines?.includes("running")
       ? await getLiftingTrainingData(trainingInterval)
