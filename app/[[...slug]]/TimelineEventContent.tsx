@@ -115,7 +115,7 @@ export default function TimelineEventContent({
   },
   urlDisciplines,
 }: {
-  urlDisciplines?: string[];
+  urlDisciplines: string[] | undefined;
   event:
     | Awaited<
         ReturnType<
@@ -131,15 +131,16 @@ export default function TimelineEventContent({
   );
   const derivedScores = scores
     .filter((score) => score.source === SCORING_SOURCE.DERIVED)
-    .filter((derivedScore) => {
-      return !scores
-        .filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
-        .some(
-          (officialScore) =>
-            JSON.stringify({ ...officialScore, source: undefined }) ===
-            JSON.stringify({ ...derivedScore, source: undefined })
-        );
-    });
+    .filter(
+      (derivedScore) =>
+        !scores
+          .filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
+          .some(
+            (officialScore) =>
+              JSON.stringify({ ...officialScore, source: undefined }) ===
+              JSON.stringify({ ...derivedScore, source: undefined })
+          )
+    );
 
   return (
     <Fragment key={id}>

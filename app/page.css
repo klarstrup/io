@@ -26,7 +26,8 @@ body {
   clear: left;
   width: 50%;
 }
-#timeline article.right {
+#timeline article.right,
+#timeline article:not(.right):not(.left):nth-child(even) {
   float: right;
   clear: right;
 }
@@ -72,7 +73,8 @@ body {
 #timeline article div.content.current {
   box-shadow: rgba(28, 28, 30, 0.75) 0px 0px 20px;
 }
-#timeline article.right div.content {
+#timeline article.right div.content,
+#timeline article:not(.right):not(.left):nth-child(even) div.content {
   float: left;
 
   margin-right: 0;
@@ -94,7 +96,8 @@ body {
   border-right-color: #000;
   border-left-color: #000;
 }
-#timeline article.right div.content:after {
+#timeline article.right div.content:after,
+#timeline article:not(.right):not(.left):nth-child(even) div.content:after {
   border-left-width: 0;
   border-right-width: 10px;
   left: -10px;
@@ -125,7 +128,8 @@ body {
   background-color: #000;
   color: white;
 }
-#timeline article.right::after {
+#timeline article.right::after,
+#timeline article:not(.right):not(.left):nth-child(even)::after {
   left: -10px;
 }
 
@@ -140,7 +144,8 @@ body {
     width: 100%;
   }
   #timeline article div.content,
-  #timeline article.right div.content {
+  #timeline article.right div.content,
+  #timeline article:not(.right):not(.left):nth-child(even) div.content {
     float: left;
 
     margin-right: 0;
@@ -150,14 +155,16 @@ body {
   }
 
   #timeline article div.content:after,
-  #timeline article.right div.content:after {
+  #timeline article.right div.content:after,
+  #timeline article:not(.right):not(.left):nth-child(even) div.content:after {
     border-left-width: 0;
     border-right-width: 10px;
     left: -10px;
     right: auto;
   }
   #timeline article::after,
-  #timeline article.right::after {
+  #timeline article.right::after,
+  #timeline article:not(.right):not(.left):nth-child(even) div.content::after {
     left: 11.5px;
   }
 }
