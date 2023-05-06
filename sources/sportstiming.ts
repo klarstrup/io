@@ -194,6 +194,7 @@ export async function getSportsTimingEventResults(
     type: "competition",
     discipline: "running",
     id: eventId,
+    ioId,
     url: `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
     event: event.Name.replace("Copenhagen Urban", "")
       .replace("Copenhagen Beach", "")

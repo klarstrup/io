@@ -112,7 +112,6 @@ export default function TimelineEventContent({
     team,
     id,
     url,
-    ...e
   },
   urlDisciplines,
 }: {
@@ -315,7 +314,6 @@ export default function TimelineEventContent({
       {problemByProblem?.length ? (
         <ProblemByProblem problemByProblem={problemByProblem} />
       ) : null}
-      {Object.keys(e).length ? <pre>{JSON.stringify(e, null, 2)}</pre> : null}
     </Fragment>
   );
 }

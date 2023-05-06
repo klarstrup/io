@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Interval, differenceInMilliseconds, isFuture, isPast } from "date-fns";
 import Script from "next/script";
 import { Fragment } from "react";
 import dbConnect from "../../dbConnect";
+import type { EventEntry } from "../../lib";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
@@ -70,38 +72,66 @@ export default async function Home({
   return (
     <div>
       <section id="timeline">
-        {events.map((event, j) => {
-          const nextEvent = events[j - 1];
+        {await Promise.all(
+          events.map(async (event, j) => {
+            const nextEvent = events[j - 1];
 
-          return (
-            <Fragment key={event.id}>
-              {(!nextEvent || isFuture(nextEvent.start)) &&
-              isPast(event.start) ? (
-                <article className="now">
-                  <div className="content">
-                    You are <b>now</b>
-                  </div>
-                </article>
-              ) : null}
-              {urlDisciplines?.length ? (
-                /* @ts-expect-error Async Server Component */
-                <TimelineTrainingArticle
-                  from={event.end}
-                  to={nextEvent?.start || now}
-                  urlDisciplines={urlDisciplines}
-                />
-              ) : null}
-              <article>
-                <div className={`content ${cotemporality(event)}`}>
-                  <TimelineEventContent
-                    event={event}
+            return (
+              <Fragment key={event.id}>
+                {(!nextEvent || isFuture(nextEvent.start)) &&
+                isPast(event.start) ? (
+                  <article className="now">
+                    <div className="content">
+                      You are <b>now</b>
+                    </div>
+                  </article>
+                ) : null}
+                {urlDisciplines?.length ? (
+                  /* @ts-expect-error Async Server Component */
+                  <TimelineTrainingArticle
+                    from={event.end}
+                    to={nextEvent?.start || now}
                     urlDisciplines={urlDisciplines}
                   />
-                </div>
-              </article>
-            </Fragment>
-          );
-        })}
+                ) : null}
+                <article>
+                  <div className={`content ${cotemporality(event)}`}>
+                    {event.source ? (
+                      <TimelineEventContent
+                        event={
+                          await (event.source === "climbalong"
+                            ? getIoClimbAlongCompetitionEvent(
+                                event.id,
+                                event.ioId,
+                                sex
+                              )
+                            : event.source === "toplogger"
+                            ? getIoTopLoggerGroupEvent(
+                                event.id,
+                                event.ioId,
+                                sex
+                              )
+                            : event.source === "sportstiming"
+                            ? getSportsTimingEventResults(
+                                event.id,
+                                event.ioId,
+                                sex
+                              )
+                            : event.source === "songkick"
+                            ? (
+                                await getSongkickEvents()
+                              ).find(({ id }) => event.id === id)!
+                            : undefined)!
+                        }
+                        urlDisciplines={urlDisciplines}
+                      />
+                    ) : null}
+                  </div>
+                </article>
+              </Fragment>
+            );
+          })
+        )}
       </section>
       <Script key={String(new Date())} id={String(new Date())}>
         {`
@@ -174,18 +204,11 @@ const getTrainingData = async (
   ].filter(Boolean);
 };
 
+const sex = true;
 const getData = async (disciplines?: string[]) => {
   await dbConnect();
-  const sex = true;
 
-  const eventsPromises: (
-    | ReturnType<
-        | typeof getSportsTimingEventResults
-        | typeof getIoClimbAlongCompetitionEvent
-        | typeof getIoTopLoggerGroupEvent
-      >
-    | Awaited<ReturnType<typeof getSongkickEvents>>[number]
-  )[] = [];
+  const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
@@ -202,13 +225,13 @@ const getData = async (disciplines?: string[]) => {
   }
   if (disciplines?.includes("running") || !disciplines?.length) {
     eventsPromises.push(
-      getSportsTimingEventResults(10694, 5096890, true),
-      getSportsTimingEventResults(8962, 4433356, true),
-      getSportsTimingEventResults(8940, 3999953, true),
-      getSportsTimingEventResults(7913, 3825124, true),
-      getSportsTimingEventResults(5805, 2697593, true),
-      getSportsTimingEventResults(5647, 2619935, true),
-      getSportsTimingEventResults(4923, 2047175, true)
+      getSportsTimingEventResults(10694, 5096890, sex),
+      getSportsTimingEventResults(8962, 4433356, sex),
+      getSportsTimingEventResults(8940, 3999953, sex),
+      getSportsTimingEventResults(7913, 3825124, sex),
+      getSportsTimingEventResults(5805, 2697593, sex),
+      getSportsTimingEventResults(5647, 2619935, sex),
+      getSportsTimingEventResults(4923, 2047175, sex)
     );
   }
   if (disciplines?.includes("metal") || !disciplines?.length) {

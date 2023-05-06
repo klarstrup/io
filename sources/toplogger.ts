@@ -593,6 +593,7 @@ export async function getIoTopLoggerGroupEvent(
     type: "competition",
     discipline: "bouldering",
     id: groupId,
+    ioId,
     url: `https://app.toplogger.nu/en-us/${gym.slug}/comp/${groupId}/details`,
     start: firstAscend || new Date(groupInterval.start),
     end: lastAscend || new Date(groupInterval.end),

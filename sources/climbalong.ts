@@ -358,6 +358,8 @@ export async function getIoClimbAlongCompetitionEvent(
     type: "competition",
     discipline: "bouldering",
     id: competitionId,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+    ioId: io?.athleteId!,
     url:
       rounds.length && lanes.length
         ? `https://climbalong.com/competition/${competitionId}/results/${rounds[0]?.roundId}/${lanes[0]?.laneId}`

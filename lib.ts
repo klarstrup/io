@@ -43,3 +43,40 @@ export type Score =
   | PointsScore
   | TopsAndZonesScore
   | ThousandDivideByScore;
+
+export type EventEntry =
+  | {
+      id: number;
+      ioId: number;
+      source: "toplogger";
+      type: "competition";
+      discipline: "bouldering";
+      start: Date;
+      end: Date;
+    }
+  | {
+      id: number;
+      ioId: number;
+      source: "climbalong";
+      type: "competition";
+      discipline: "bouldering";
+      start: Date;
+      end: Date;
+    }
+  | {
+      id: number;
+      ioId: number;
+      source: "sportstiming";
+      type: "competition";
+      discipline: "running";
+      start: Date;
+      end: Date;
+    }
+  | {
+      id: number;
+      source: "songkick";
+      type: "performance";
+      discipline: "metal";
+      start: Date;
+      end: Date;
+    };
