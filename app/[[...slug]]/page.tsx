@@ -1,5 +1,6 @@
 import { Interval, differenceInMilliseconds, isFuture, isPast } from "date-fns";
 import Script from "next/script";
+import { Fragment } from "react";
 import dbConnect from "../../dbConnect";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
@@ -73,7 +74,7 @@ export default async function Home({
           const nextEvent = events[j - 1];
 
           return (
-            <>
+            <Fragment key={event.id}>
               {(!nextEvent || isFuture(nextEvent.start)) &&
               isPast(event.start) ? (
                 <article className="now">
@@ -98,7 +99,7 @@ export default async function Home({
                   />
                 </div>
               </article>
-            </>
+            </Fragment>
           );
         })}
       </section>
