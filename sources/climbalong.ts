@@ -689,8 +689,7 @@ async function getIoClimbAlongCompetitionScores(
 
 export async function getIoClimbAlongCompetitionEventEntry(
   competitionId: number,
-  ioId?: number,
-  sex?: boolean
+  ioId?: number
 ): Promise<EventEntry> {
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
@@ -712,15 +711,11 @@ export async function getIoClimbAlongCompetitionEventEntry(
       ? undefined
       : WEEK_IN_SECONDS;
 
-  let athletes = await getCompetitionAthletes(competitionId, { maxAge });
+  const athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>
     ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
   );
-
-  if (io && sex) {
-    athletes = athletes.filter((athlete) => athlete.sex === io.sex);
-  }
 
   return {
     source: "climbalong",
