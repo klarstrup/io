@@ -1,5 +1,6 @@
 import { isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
+import { DAY_IN_SECONDS } from "../utils";
 
 export namespace Fitocracy {
   export interface ActivityHistoryItem {
@@ -244,7 +245,7 @@ const type = "training";
 const discipline = "lifting";
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   const count = Math.round(
-    (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: 86400 }))
+    (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: DAY_IN_SECONDS }))
       .filter((actionSet) => {
         return actionSet.actions.some(({ actiondate }) => {
           const date = actiondate && new Date(actiondate);

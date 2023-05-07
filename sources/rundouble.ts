@@ -1,6 +1,6 @@
 import { isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
-import { RelativeURL } from "../utils";
+import { DAY_IN_SECONDS, RelativeURL } from "../utils";
 
 export namespace RunDouble {
   export interface HistoryResponse {
@@ -72,13 +72,11 @@ export const getRuns = async (
 const type = "training";
 const discipline = "running";
 export const getRunningTrainingData = async (trainingInterval: Interval) => {
-  const runs = (await getRuns(IO_RUNDOUBLE_ID, { maxAge: 86400 })).filter(
-    (run) => {
-      const date = run.completedLong && new Date(run.completedLong);
-      return (
-        run.runDistance && date && isWithinInterval(date, trainingInterval)
-      );
-    }
+  const runs = (
+    await getRuns(IO_RUNDOUBLE_ID, { maxAge: DAY_IN_SECONDS })
+  ).filter(
+    ({ runDistance, completedLong }) =>
+      runDistance && isWithinInterval(new Date(completedLong), trainingInterval)
   );
   const count = Math.round(
     runs.reduce((sum, run) => run.runDistance + sum, 0) / 1000

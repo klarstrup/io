@@ -15,7 +15,7 @@ import {
   Score,
   ThousandDivideByScore,
 } from "../lib";
-import { percentile } from "../utils";
+import { DAY_IN_SECONDS, HOUR_IN_SECONDS, percentile } from "../utils";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -571,7 +571,7 @@ export async function getIoTopLoggerGroupEvent(
     : (
         await getAscends(
           { filters: { user_id: IO_TOPLOGGER_ID } },
-          { maxAge: 86400 }
+          { maxAge: DAY_IN_SECONDS }
         )
       ).filter((ascend) => {
         const date = ascend.date_logged && new Date(ascend.date_logged);
@@ -801,7 +801,7 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
   const ascends = (
     (await getAscends(
       { filters: { user_id: IO_TOPLOGGER_ID }, includes: ["climb"] },
-      { maxAge: 3600 }
+      { maxAge: HOUR_IN_SECONDS }
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
   ).filter((ascend) => {
     const date = ascend.date_logged && new Date(ascend.date_logged);
