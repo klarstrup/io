@@ -27,6 +27,12 @@ import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
 
+export function generateStaticParams() {
+  return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
+    slug: slug ? [slug] : undefined,
+  }));
+}
+
 async function TimelineTrainingArticle({
   from,
   to,
