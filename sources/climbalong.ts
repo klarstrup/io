@@ -258,7 +258,7 @@ export async function getIoClimbAlongCompetitionEvent(
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
-      ? undefined
+      ? WEEK_IN_SECONDS * 2
       : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
@@ -429,7 +429,11 @@ export async function getIoClimbAlongCompetitionEvent(
             .values()
         )
       : null,
-    scores: await getIoClimbAlongCompetitionScores(competitionId, ioId, sex),
+    scores: await getIoClimbAlongCompetitionScores(
+      competitionId,
+      io?.athleteId || ioId,
+      sex
+    ),
   } as const;
 }
 
@@ -455,7 +459,7 @@ async function getIoClimbAlongCompetitionScores(
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
-      ? undefined
+      ? WEEK_IN_SECONDS * 2
       : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
@@ -591,12 +595,15 @@ async function getIoClimbAlongCompetitionScores(
                   totalNumberOfTimesReached: number;
                   totalNumberOfAttemptsUsed: number;
                 }[];
+                prevRank: null;
               } | null;
             }[];
             ranked: boolean;
             processedBy: { nodeId: number; nodeType: number; edge: number }[];
           }>(
-            `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`
+            `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`,
+            undefined,
+            { maxAge }
           )
         )
       )
@@ -708,7 +715,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
-      ? undefined
+      ? WEEK_IN_SECONDS * 2
       : WEEK_IN_SECONDS;
 
   const athletes = await getCompetitionAthletes(competitionId, { maxAge });
@@ -726,7 +733,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
     event: competition.title.trim(),
     location: competition.address,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
-    ioId: io?.athleteId!,
+    ioId: io?.athleteId || ioId!,
     start: new Date(competition.startTime),
     end: new Date(competition.endTime),
   } as const;
