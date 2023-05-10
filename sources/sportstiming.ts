@@ -263,6 +263,18 @@ export async function getSportsTimingEventEntry(
     type: "competition",
     discipline: "running",
     id: eventId,
+    event: event.Name.replace("Copenhagen Urban", "")
+      .replace("Copenhagen Beach", "")
+      .replace("Refshaleøen", "")
+      .replace("Strandparken", ""),
+    venue:
+      event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
+        .replace("Copenhagen Urban", "Refshaleøen")
+        .replace("Refshaleøen, København", "Refshaleøen")
+        .replace("København S", "Amager Strandpark") ||
+      (event.Name.includes("Strandparken") && "Amager Strandpark") ||
+      null,
+    location: null,
     ioId,
     start: addMinutes(addHours(parseSTDate(event.RawDate), 8), 30),
     end: addHours(parseSTDate(event.RawDate), 16),
