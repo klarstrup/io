@@ -4,6 +4,7 @@ import {
   ICalCategory,
   ICalEventBusyStatus,
 } from "ical-generator";
+import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
 import dbConnect from "../../dbConnect";
 import { EventEntry } from "../../lib";
@@ -54,15 +55,18 @@ export async function GET() {
   const calendar = new ICalCalendar({
     name: "ioCal",
     ttl: MINUTE_IN_SECONDS,
-    timezone: "Europe/Copenhagen",
   });
   for (const event of events) {
     calendar.createEvent({
-      timezone: "UTC",
       id: event.id,
       busystatus: ICalEventBusyStatus.BUSY,
-      start: event.start,
-      end: event.end,
+      timezone: "Europe/Copenhagen",
+      start: DateTime.fromJSDate(event.start, { zone: "UTC" }).setZone(
+        "Europe/Copenhagen"
+      ),
+      end: DateTime.fromJSDate(event.end, { zone: "UTC" }).setZone(
+        "Europe/Copenhagen"
+      ),
       summary: event.event,
       categories: [
         new ICalCategory({ name: event.discipline }),
