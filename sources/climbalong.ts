@@ -1,5 +1,6 @@
 import {
   addHours,
+  addWeeks,
   isAfter,
   isBefore,
   isFuture,
@@ -17,6 +18,7 @@ import {
   TopsAndZonesScore,
 } from "../lib";
 import {
+  DAY_IN_SECONDS,
   MINUTE_IN_SECONDS,
   WEEK_IN_SECONDS,
   cotemporality,
@@ -258,7 +260,12 @@ export async function getIoClimbAlongCompetitionEvent(
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
-      ? WEEK_IN_SECONDS * 2
+      ? isWithinInterval(new Date(), {
+          start: new Date(competition.startTime),
+          end: addWeeks(new Date(competition.endTime), 1),
+        })
+        ? DAY_IN_SECONDS
+        : undefined
       : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
@@ -455,11 +462,16 @@ async function getIoClimbAlongCompetitionScores(
       ? 30
       : isWithinInterval(new Date(), {
           start: subHours(new Date(competition.startTime), 3),
-          end: addHours(new Date(competition.endTime), 3),
+          end: addHours(new Date(competition.endTime), 1),
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
-      ? WEEK_IN_SECONDS * 2
+      ? isWithinInterval(new Date(), {
+          start: new Date(competition.startTime),
+          end: addWeeks(new Date(competition.endTime), 1),
+        })
+        ? DAY_IN_SECONDS
+        : undefined
       : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
@@ -715,7 +727,12 @@ export async function getIoClimbAlongCompetitionEventEntry(
         })
       ? MINUTE_IN_SECONDS
       : competitionTime === "past"
-      ? WEEK_IN_SECONDS * 2
+      ? isWithinInterval(new Date(), {
+          start: new Date(competition.startTime),
+          end: addWeeks(new Date(competition.endTime), 1),
+        })
+        ? DAY_IN_SECONDS
+        : undefined
       : WEEK_IN_SECONDS;
 
   const athletes = await getCompetitionAthletes(competitionId, { maxAge });
