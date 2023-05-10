@@ -73,6 +73,6 @@ export async function GET() {
   }
 
   return new NextResponse(calendar.toString(), {
-    headers: { "Content-Type": "text/plaintext" || "text/calendar" },
+    headers: { "Content-Type": "text/calendar" },
   });
 }
