@@ -77,6 +77,6 @@ export async function GET() {
   }
 
   return new NextResponse(calendar.toString(), {
-    headers: { "Content-Type": "text/string" || "text/calendar" },
+    headers: { "Content-Type": "text/calendar" },
   });
 }
