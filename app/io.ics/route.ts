@@ -55,6 +55,7 @@ export async function GET() {
   const calendar = new ICalCalendar({
     name: "ioCal",
     ttl: MINUTE_IN_SECONDS,
+    url: "https://io.klarstrup.dk/io.ics",
   });
   for (const event of events) {
     calendar.createEvent({
