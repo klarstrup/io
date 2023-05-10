@@ -54,11 +54,11 @@ export async function GET() {
   const calendar = new ICalCalendar({
     name: "ioCal",
     ttl: MINUTE_IN_SECONDS,
-    timezone: "Europe/Copenhagen",
+    timezone: "UTC",
   });
   for (const event of events) {
     calendar.createEvent({
-      timezone: "Europe/Copenhagen",
+      timezone: "UTC",
       id: event.id,
       busystatus: ICalEventBusyStatus.BUSY,
       start: event.start,
@@ -73,6 +73,6 @@ export async function GET() {
   }
 
   return new NextResponse(calendar.toString(), {
-    headers: { "Content-Type": "text/calendar" },
+    headers: { "Content-Type": "text/string" || "text/calendar" },
   });
 }
