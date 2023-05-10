@@ -159,7 +159,7 @@ export async function getSongkickEvents() {
           event.id === 41027597
             ? new Date("2023-08-26T14:15:00.000Z")
             : event.id === 40830303
-            ? new Date("2023-05-11T16:30:00.000Z")
+            ? new Date("2023-05-11T17:30:00.000Z")
             : new Date(event.start.datetime || event.start.date),
         end:
           event.id === 41027597
