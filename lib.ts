@@ -51,6 +51,9 @@ export type EventEntry =
       source: "toplogger";
       type: "competition";
       discipline: "bouldering";
+      event: string;
+      venue: string | null;
+      location: string | null;
       start: Date;
       end: Date;
     }
@@ -60,6 +63,9 @@ export type EventEntry =
       source: "climbalong";
       type: "competition";
       discipline: "bouldering";
+      event: string;
+      venue: string | null;
+      location: string | null;
       start: Date;
       end: Date;
     }
@@ -69,6 +75,9 @@ export type EventEntry =
       source: "sportstiming";
       type: "competition";
       discipline: "running";
+      event: string;
+      venue: string | null;
+      location: string | null;
       start: Date;
       end: Date;
     }
@@ -77,6 +86,9 @@ export type EventEntry =
       source: "songkick";
       type: "performance";
       discipline: "metal";
+      event: string;
+      venue: string | null;
+      location: string | null;
       start: Date;
       end: Date;
     };

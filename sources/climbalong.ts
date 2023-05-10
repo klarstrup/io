@@ -362,7 +362,7 @@ export async function getIoClimbAlongCompetitionEvent(
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
     ioId: io?.athleteId!,
     url:
-      rounds.length && lanes.length
+      rounds[0] && lanes[0]
         ? `https://climbalong.com/competition/${competitionId}/results/${rounds[0]?.roundId}/${lanes[0]?.laneId}`
         : `https://climbalong.com/competition/${competitionId}/info`,
     start: new Date(
@@ -722,6 +722,9 @@ export async function getIoClimbAlongCompetitionEventEntry(
     type: "competition",
     discipline: "bouldering",
     id: competitionId,
+    venue: competition.facility.trim(),
+    event: competition.title.trim(),
+    location: competition.address,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
     ioId: io?.athleteId!,
     start: new Date(competition.startTime),

@@ -266,7 +266,8 @@ export async function getSportsTimingEventEntry(
     event: event.Name.replace("Copenhagen Urban", "")
       .replace("Copenhagen Beach", "")
       .replace("Refshaleøen", "")
-      .replace("Strandparken", ""),
+      .replace("Strandparken", "")
+      .replace("  ", " "),
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")

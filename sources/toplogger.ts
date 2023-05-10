@@ -782,12 +782,22 @@ export async function getIoTopLoggerGroupEventEntry(
   ioId: number
 ): Promise<EventEntry> {
   const group = await getGroup(groupId);
+  const gyms = (
+    await Promise.all(
+      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
+    )
+  ).filter(Boolean);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const gym = gyms[0]!;
 
   return {
     source,
     type: "competition",
     discipline,
     id: groupId,
+    venue: gym.name.trim(),
+    location: gym.address || null,
+    event: group.name.trim().replace(" - Qualification", ""),
     ioId,
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
