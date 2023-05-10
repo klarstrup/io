@@ -155,13 +155,23 @@ export async function getSongkickEvents() {
               artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID
           )?.displayName || null,
         noParticipants: null,
-        start: new Date(event.start.datetime || event.start.date),
-        end: new Date(
-          event.end?.datetime ||
-            event.end?.date ||
-            event.start.datetime ||
-            event.start.date
-        ),
+        start:
+          event.id === 41027597
+            ? new Date("2023-08-24T14:15:00.000Z")
+            : event.id === 40830303
+            ? new Date("2023-05-11T16:30:00.000Z")
+            : new Date(event.start.datetime || event.start.date),
+        end:
+          event.id === 41027597
+            ? new Date("2023-08-24T14:45:00.000Z")
+            : event.id === 40830303
+            ? new Date("2023-05-11T18:00:00.000Z")
+            : new Date(
+                event.end?.datetime ||
+                  event.end?.date ||
+                  event.start.datetime ||
+                  event.start.date
+              ),
         category: null,
         scores: [] as Score[],
         problems: null,
