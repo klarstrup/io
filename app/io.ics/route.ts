@@ -54,7 +54,7 @@ export async function GET() {
   const calendar = new ICalCalendar({
     name: "ioCal",
     ttl: MINUTE_IN_SECONDS,
-    timezone: "UTC",
+    timezone: "Europe/Copenhagen",
   });
   for (const event of events) {
     calendar.createEvent({
