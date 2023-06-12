@@ -8,7 +8,7 @@ import {
   SCORING_SYSTEM,
   Score,
 } from "../lib";
-import { percentile } from "../utils";
+import { WEEK_IN_SECONDS, percentile } from "../utils";
 
 export namespace SportsTiming {
   export interface Event {
@@ -75,10 +75,14 @@ const getAllNordicRaceEvents = async () =>
   (
     await Promise.all([
       dbFetch<{ Events: SportsTiming.Event[] }>(
-        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race"
+        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race",
+        undefined,
+        { maxAge: WEEK_IN_SECONDS }
       ).then(({ Events }) => Events),
       dbFetch<{ Events: SportsTiming.Event[] }>(
-        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race"
+        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race",
+        undefined,
+        { maxAge: WEEK_IN_SECONDS }
       ).then(({ Events }) => Events),
     ])
   ).flat();

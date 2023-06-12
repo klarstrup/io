@@ -102,7 +102,6 @@ export default async function Home({
                 </article>
               ) : null}
               {urlDisciplines?.length ? (
-                /* @ts-expect-error Async Server Component */
                 <TimelineTrainingArticle
                   from={event.end}
                   to={nextEvent?.start || now}
@@ -112,7 +111,6 @@ export default async function Home({
               <article>
                 <div className={`content ${cotemporality(event)}`}>
                   {event.source ? (
-                    /* @ts-expect-error Async Server Component */
                     <TimelineEventContent
                       eventEntry={event}
                       urlDisciplines={urlDisciplines}

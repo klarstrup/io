@@ -13,22 +13,22 @@
     "cheerio": "^1.0.0-rc.12",
     "dataloader": "^2.2.2",
     "date-fns": "^2.30.0",
-    "eslint-config-next": "13.4.3",
+    "eslint-config-next": "13.4.5",
     "ical-generator": "^4.1.0",
     "luxon": "^3.3.0",
-    "mongoose": "^7.2.0",
-    "next": "13.4.3",
+    "mongoose": "^7.2.4",
+    "next": "13.4.5",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@types/luxon": "^3.3.0",
     "@types/node": "^18.16.3",
-    "@types/react": "18.2.6",
-    "@typescript-eslint/eslint-plugin": "^5.59.6",
-    "@typescript-eslint/parser": "^5.59.6",
-    "dayjs": "^1.11.7",
-    "eslint": "^8.41.0",
-    "typescript": "^5.0.4"
+    "@types/react": "18.2.12",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
+    "@typescript-eslint/parser": "^5.59.11",
+    "dayjs": "^1.11.8",
+    "eslint": "^8.42.0",
+    "typescript": "^5.1.3"
   }
 }
