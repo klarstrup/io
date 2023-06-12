@@ -37,6 +37,7 @@ export async function GET() {
   );
 
   eventsPromises.push(
+    getSportsTimingEventEntry(12576, 5298030),
     getSportsTimingEventEntry(11107, 5177996),
     getSportsTimingEventEntry(10694, 5096890),
     getSportsTimingEventEntry(8962, 4433356),
