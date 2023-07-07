@@ -27,11 +27,13 @@ import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
 
+/*
 export function generateStaticParams() {
   return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
     slug: slug ? [slug] : undefined,
   }));
 }
+*/
 
 async function TimelineTrainingArticle({
   from,
@@ -190,7 +192,9 @@ const getTrainingData = async (
     disciplines?.includes("bouldering") || disciplines?.includes("running")
       ? await getLiftingTrainingData(trainingInterval)
       : null,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .filter(() => false);
 };
 
 const getData = async (disciplines?: string[]) => {
@@ -205,7 +209,7 @@ const getData = async (disciplines?: string[]) => {
       getIoClimbAlongCompetitionEventEntry(26, 3381),
       getIoClimbAlongCompetitionEventEntry(27, 8468),
       getIoClimbAlongCompetitionEventEntry(28, 10770),
-      getIoClimbAlongCompetitionEventEntry(30),
+      getIoClimbAlongCompetitionEventEntry(30, 11951),
       ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
         ({ group_id, user_id }) =>
           getIoTopLoggerGroupEventEntry(group_id, user_id)
