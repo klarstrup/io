@@ -370,8 +370,8 @@ export async function getIoClimbAlongCompetitionEvent(
     ioId: io?.athleteId!,
     url:
       rounds[0] && lanes[0]
-        ? `https://climbalong.com/competition/${competitionId}/results/${rounds[0]?.roundId}/${lanes[0]?.laneId}`
-        : `https://climbalong.com/competition/${competitionId}/info`,
+        ? `https://climbalong.com/competitions/${competitionId}/results`
+        : `https://climbalong.com/competitions/${competitionId}/info`,
     start: new Date(
       firstPerformance ||
         circuitChallengeNodesGroupedByLane.find(
