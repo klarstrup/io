@@ -818,7 +818,7 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
     return date && isWithinInterval(date, trainingInterval);
   });
 
-  const problemByProblem = await Promise.all(
+  let problemByProblem = await Promise.all(
     ascends.map(async (ascend) => {
       const hold = await getGymHold(ascend.climb.gym_id, ascend.climb.hold_id);
       return {
@@ -833,6 +833,18 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
       };
     })
   );
+  const grades = Array.from(
+    problemByProblem.reduce((set, problem) => {
+      if (problem.grade) set.add(problem.grade);
+      return set;
+    }, new Set<number>())
+  )
+    .sort()
+    .reverse()
+    .slice(0, 3);
+  problemByProblem = problemByProblem.filter((problem) => {
+    if (problem.grade) return grades.includes(problem.grade);
+  });
 
   const count = ascends.length;
 
