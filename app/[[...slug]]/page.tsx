@@ -192,9 +192,7 @@ const getTrainingData = async (
     disciplines?.includes("bouldering") || disciplines?.includes("running")
       ? await getLiftingTrainingData(trainingInterval)
       : null,
-  ]
-    .filter(Boolean)
-    .filter(() => false);
+  ].filter(Boolean);
 };
 
 const getData = async (disciplines?: string[]) => {
