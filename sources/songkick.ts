@@ -1,6 +1,7 @@
 import { isAfter } from "date-fns";
 import { dbFetch } from "../fetch";
 import { Score } from "../lib";
+import { DAY_IN_SECONDS } from "../utils";
 
 export namespace Songkick {
   export interface Event {
@@ -103,7 +104,9 @@ const getFutureEvents = (artistId: number) =>
       page: number;
       totalEntries: number;
     };
-  }>(`/artists/${artistId}/calendar.json`).then((response) =>
+  }>(`/artists/${artistId}/calendar.json`, undefined, {
+    maxAge: DAY_IN_SECONDS,
+  }).then((response) =>
     response.resultsPage.totalEntries ? response.resultsPage.results.event : []
   );
 
@@ -118,7 +121,9 @@ const getPastEvents = (artistId: number) =>
       page: number;
       totalEntries: number;
     };
-  }>(`/artists/${artistId}/gigography.json`).then((response) =>
+  }>(`/artists/${artistId}/gigography.json`, undefined, {
+    maxAge: DAY_IN_SECONDS,
+  }).then((response) =>
     response.resultsPage.totalEntries ? response.resultsPage.results.event : []
   );
 
