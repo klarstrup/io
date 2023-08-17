@@ -208,6 +208,9 @@ const getData = async (disciplines?: string[]) => {
       getIoClimbAlongCompetitionEventEntry(27, 8468),
       getIoClimbAlongCompetitionEventEntry(28, 10770),
       getIoClimbAlongCompetitionEventEntry(30, 11951),
+      getIoClimbAlongCompetitionEventEntry(32),
+      getIoClimbAlongCompetitionEventEntry(33),
+      getIoClimbAlongCompetitionEventEntry(34),
       ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
         ({ group_id, user_id }) =>
           getIoTopLoggerGroupEventEntry(group_id, user_id)
