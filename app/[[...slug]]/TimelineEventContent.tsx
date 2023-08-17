@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
-import { EventEntry, SCORING_SOURCE, Score } from "../../lib";
+import { EventEntry, SCORING_SOURCE, SCORING_SYSTEM, Score } from "../../lib";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
@@ -59,7 +59,7 @@ const ResultList = ({
   style?: HTMLProps<HTMLDListElement>["style"];
 }) => {
   const data =
-    score.system === "DISTANCE_RACE"
+    score.system === SCORING_SYSTEM.DISTANCE_RACE
       ? [
           [
             "Duration",
@@ -72,11 +72,11 @@ const ResultList = ({
             }),
           ],
         ]
-      : score.system === "POINTS"
+      : score.system === SCORING_SYSTEM.POINTS
       ? [["Points", score.points]]
-      : score.system === "THOUSAND_DIVIDE_BY"
+      : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
       ? [["Points", score.points]]
-      : score.system === "TOPS_AND_ZONES"
+      : score.system === SCORING_SYSTEM.TOPS_AND_ZONES
       ? [
           ["T", score.tops, "Tops"],
           ["Z", score.zones, "Zones"],
@@ -281,20 +281,20 @@ export default async function TimelineEventContent({
             >
               <legend
                 title={
-                  score.system === "POINTS"
+                  score.system === SCORING_SYSTEM.POINTS
                     ? "100 per top, 20 bonus per flash"
-                    : score.system === "THOUSAND_DIVIDE_BY"
+                    : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
                     ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
                     : undefined
                 }
               >
-                {score.system === "TOPS_AND_ZONES"
+                {score.system === SCORING_SYSTEM.TOPS_AND_ZONES
                   ? "Tops & Zones"
-                  : score.system === "DISTANCE_RACE"
+                  : score.system === SCORING_SYSTEM.DISTANCE_RACE
                   ? "Race"
-                  : score.system === "POINTS"
+                  : score.system === SCORING_SYSTEM.POINTS
                   ? "Points"
-                  : score.system === "THOUSAND_DIVIDE_BY"
+                  : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
                   ? "1000 / Tops"
                   : null}{" "}
                 Scoring
