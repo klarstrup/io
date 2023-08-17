@@ -217,7 +217,7 @@ export default async function TimelineEventContent({
               )
               .replace(
                 new RegExp(
-                  `#\\d ${new Date(start).toLocaleDateString("da-DK", {
+                  `#(\\d+) ${new Date(start).toLocaleDateString("da-DK", {
                     month: "long",
                   })}`,
                   "i"
