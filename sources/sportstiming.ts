@@ -220,7 +220,9 @@ export async function getSportsTimingEventResults(
       null,
     location: null,
     team:
-      eventId === 8962
+      eventId === 11107
+        ? "L"
+        : eventId === 8962
         ? "Tjek"
         : eventId === 8940
         ? "E & L & S"
