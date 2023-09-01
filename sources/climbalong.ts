@@ -534,60 +534,66 @@ async function getIoClimbAlongCompetitionScores(
     [new Map<string, number>(), new Map<string, number>()]
   );
 
-  const atheletesWithResults = athletes.map((athlete) => {
-    let topsTDBScore = 0;
-    let zonesTDBScore = 0;
-    let ptsScore = 0;
-    let tops = 0;
-    let zones = 0;
-    let topsAttempts = 0;
-    let zonesAttempts = 0;
+  const atheletesWithResults = athletes
+    .map((athlete) => {
+      let topsTDBScore = 0;
+      let zonesTDBScore = 0;
+      let ptsScore = 0;
+      let tops = 0;
+      let zones = 0;
+      let topsAttempts = 0;
+      let zonesAttempts = 0;
 
-    const athletePerformances = performances.filter(
-      (performance) => performance.athleteId === athlete.athleteId
-    );
-    for (const performance of athletePerformances) {
-      const problem = problems.find(
-        (p) => p.problemId === performance.problemId
+      const athletePerformances = performances.filter(
+        (performance) => performance.athleteId === athlete.athleteId
       );
-      if (!problem) continue;
+      for (const performance of athletePerformances) {
+        const problem = problems.find(
+          (p) => p.problemId === performance.problemId
+        );
+        if (!problem) continue;
 
-      const key = problem.title;
-      let problemTopTDBScore = TDB_BASE / (topsByProblemTitle.get(key) || 0);
-      let problemZoneTDBScore = TDB_BASE / (zonesByProblemTitle.get(key) || 0);
+        const key = problem.title;
+        let problemTopTDBScore = TDB_BASE / (topsByProblemTitle.get(key) || 0);
+        let problemZoneTDBScore =
+          TDB_BASE / (zonesByProblemTitle.get(key) || 0);
 
-      for (const score of performance.scores) {
-        if (score.holdScore === HoldScore.TOP) {
-          topsAttempts += score.reachedInAttempt;
-          tops += 1;
-          ptsScore += PTS_SEND;
-          if (score.reachedInAttempt === 1) {
-            ptsScore += PTS_FLASH_BONUS;
-            problemTopTDBScore *= TDB_FLASH_MULTIPLIER;
+        for (const score of performance.scores) {
+          if (score.holdScore === HoldScore.TOP) {
+            topsAttempts += score.reachedInAttempt;
+            tops += 1;
+            ptsScore += PTS_SEND;
+            if (score.reachedInAttempt === 1) {
+              ptsScore += PTS_FLASH_BONUS;
+              problemTopTDBScore *= TDB_FLASH_MULTIPLIER;
+            }
+            topsTDBScore += problemTopTDBScore;
+          } else if (score.holdScore === HoldScore.ZONE) {
+            if (score.reachedInAttempt === 1) {
+              problemZoneTDBScore *= TDB_FLASH_MULTIPLIER;
+            }
+            zonesAttempts += score.reachedInAttempt;
+            zones += 1;
+            zonesTDBScore += problemZoneTDBScore;
           }
-          topsTDBScore += problemTopTDBScore;
-        } else if (score.holdScore === HoldScore.ZONE) {
-          if (score.reachedInAttempt === 1) {
-            problemZoneTDBScore *= TDB_FLASH_MULTIPLIER;
-          }
-          zonesAttempts += score.reachedInAttempt;
-          zones += 1;
-          zonesTDBScore += problemZoneTDBScore;
         }
       }
-    }
 
-    return {
-      athlete,
-      ptsScore,
-      topsTDBScore,
-      zonesTDBScore,
-      tops,
-      zones,
-      topsAttempts,
-      zonesAttempts,
-    } as const;
-  });
+      return {
+        athlete,
+        ptsScore,
+        topsTDBScore,
+        zonesTDBScore,
+        tops,
+        zones,
+        topsAttempts,
+        zonesAttempts,
+      } as const;
+    })
+    .filter(
+      ({ tops, zones, topsAttempts, zonesAttempts }) =>
+        tops + zones + topsAttempts + zonesAttempts
+    );
 
   const ioPerformanceSum =
     io &&
