@@ -92,7 +92,7 @@ export namespace Climbalong {
 
   export interface Score {
     holdId: number;
-    holdScore: number;
+    holdScore: HoldScore;
     reachedInAttempt: number;
     reachedTime: Date | null;
   }
@@ -609,7 +609,7 @@ async function getIoClimbAlongCompetitionScores(
                 athleteId: number;
                 rank: number;
                 scoreSums: {
-                  holdScore: number;
+                  holdScore: HoldScore;
                   totalNumberOfTimesReached: number;
                   totalNumberOfAttemptsUsed: number;
                 }[];
