@@ -1,5 +1,11 @@
 import * as cheerio from "cheerio";
-import { addHours, addMinutes } from "date-fns";
+import {
+  addHours,
+  addMinutes,
+  addWeeks,
+  isWithinInterval,
+  subHours,
+} from "date-fns";
 import { dbFetch } from "../fetch";
 import {
   DistanceRaceScore,
@@ -8,7 +14,13 @@ import {
   SCORING_SYSTEM,
   Score,
 } from "../lib";
-import { WEEK_IN_SECONDS, percentile } from "../utils";
+import {
+  DAY_IN_SECONDS,
+  MINUTE_IN_SECONDS,
+  WEEK_IN_SECONDS,
+  cotemporality,
+  percentile,
+} from "../utils";
 
 export namespace SportsTiming {
   export interface Event {
@@ -91,18 +103,17 @@ const getEventParticipantFavoriteUpdate = async (
   eventId: number,
   participantId: number,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  (
+) => {
+  const cookie = `cookies_allowed=required,statistics,settings; favorites_${eventId}=1_${participantId},`;
+
+  return (
     await dbFetch<SportsTiming.FavoriteUpdate[]>(
       `https://www.sportstiming.dk/event/${eventId}/favorites/UpdateFavorites`,
-      {
-        headers: {
-          cookie: `cookies_allowed=required,statistics,settings; favorites_${eventId}=1_${participantId},`,
-        },
-      },
+      { headers: { cookie } },
       dbFetchOptions
     )
   ).find(({ Id }) => Id === participantId);
+};
 
 export async function getSportsTimingEventResults(
   eventId: number,
@@ -114,7 +125,23 @@ export async function getSportsTimingEventResults(
   const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
   if (!event) throw new Error("???");
 
-  const maxAge = undefined;
+  const start = addMinutes(addHours(parseSTDate(event.RawDate), 8), 30);
+  const end = addHours(parseSTDate(event.RawDate), 16);
+  const competitionTime = cotemporality({ start, end });
+
+  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
+    competitionTime === "current"
+      ? 30
+      : isWithinInterval(new Date(), {
+          start: subHours(start, 3),
+          end: addHours(end, 1),
+        })
+      ? MINUTE_IN_SECONDS
+      : competitionTime === "past"
+      ? isWithinInterval(new Date(), { start, end: addWeeks(end, 1) })
+        ? DAY_IN_SECONDS
+        : undefined
+      : WEEK_IN_SECONDS;
 
   const ioResult = await getEventParticipantFavoriteUpdate(eventId, ioId, {
     maxAge,

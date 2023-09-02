@@ -39,10 +39,9 @@ export function seconds2time(seconds: number) {
   }:${seconds < 10 ? `0${seconds}` : String(seconds)}`;
 }
 
-export function cotemporality(interval: Interval) {
-  const now = Date.now();
-  const start = new Date(interval.start).getTime();
-  const end = new Date(interval.end).getTime();
-
-  return start < now ? (now < end ? "current" : "past") : "future";
-}
+export const cotemporality = (interval: Interval, now = Date.now()) =>
+  new Date(interval.start).getTime() < now
+    ? now < new Date(interval.end).getTime()
+      ? "current"
+      : "past"
+    : "future";
