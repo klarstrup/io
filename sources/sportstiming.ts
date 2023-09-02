@@ -256,7 +256,7 @@ export async function getSportsTimingEventResults(
         : eventId === 7913
         ? "S"
         : eventId === 5805
-        ? "E & L"
+        ? "E & L & C & J"
         : eventId === 5647
         ? "E & J"
         : eventId === 4923
