@@ -148,7 +148,9 @@ export async function getSongkickEvents() {
         discipline: "metal",
         id: event.id,
         url: event.uri,
-        event: event.series?.displayName ?? event.venue.displayName,
+        event:
+          event.series?.displayName?.replace(" - A Decade Of Noise", "") ??
+          event.venue.displayName,
         location: event.venue.metroArea.displayName,
         venue:
           event.venue.displayName !== "Unknown venue"
