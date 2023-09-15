@@ -530,13 +530,16 @@ export async function getIoTopLoggerGroupEvent(
 
   const io = await getUser(ioId);
 
-  const groupUsers = await getGroupsUsers({
-    filters: {
-      group_id: groupId,
-      user: sex ? { gender: io.gender } : undefined,
+  const groupUsers = await getGroupsUsers(
+    {
+      filters: {
+        group_id: groupId,
+        user: sex ? { gender: io.gender } : undefined,
+      },
+      includes: "user",
     },
-    includes: "user",
-  });
+    { maxAge: MINUTE_IN_SECONDS * 15 }
+  );
 
   const ascends = (
     await Promise.all(
