@@ -3,6 +3,7 @@ import {
   Interval,
   isAfter,
   isBefore,
+  isPast,
   isWithinInterval,
   startOfDay,
 } from "date-fns";
@@ -15,7 +16,12 @@ import {
   Score,
   ThousandDivideByScore,
 } from "../lib";
-import { DAY_IN_SECONDS, HOUR_IN_SECONDS, percentile } from "../utils";
+import {
+  DAY_IN_SECONDS,
+  HOUR_IN_SECONDS,
+  MINUTE_IN_SECONDS,
+  percentile,
+} from "../utils";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -600,7 +606,10 @@ export async function getIoTopLoggerGroupEvent(
     end: lastAscend || new Date(groupInterval.end),
     venue: gym.name.trim(),
     location: gym.address,
-    event: group.name.trim().replace(" - Qualification", ""),
+    event: group.name
+      .replace("- Qualification", "")
+      .replace("(Qualification)", "")
+      .trim(),
     category: sex ? io.gender : null,
     team: null,
     noParticipants: groupUsers.length || NaN,
@@ -612,10 +621,14 @@ export async function getIoTopLoggerGroupEvent(
             (ascend) => ascend.climb_id === climb.id
           );
           const hold = await getGymHold(climb.gym_id, climb.hold_id);
+
           return {
             number: climb.number || climb.name || "",
             color: hold.color || undefined,
-            grade: climb.grade ? Number(climb.grade) : undefined,
+            grade:
+              climb.grade && Number(climb.grade_stability) > 0
+                ? Number(climb.grade)
+                : undefined,
             attempt: true,
             // TopLogger does not do zones, at least not for Beta Boulders
             zone: ioAscend ? ioAscend.checks >= 1 : false,
@@ -660,9 +673,10 @@ async function getIoTopLoggerGroupScores(
     await Promise.all(
       groupUsers.map(({ user_id }) =>
         climbs.length
-          ? getAscends({
-              filters: { user_id, climb_id: climbs.map((climb) => climb.id) },
-            }).catch((error: unknown) => {
+          ? getAscends(
+              { filters: { user_id, climb_id: climbs.map(({ id }) => id) } },
+              { maxAge: MINUTE_IN_SECONDS }
+            ).catch((error: unknown) => {
               if (
                 error instanceof Object &&
                 "errors" in error &&
@@ -681,19 +695,17 @@ async function getIoTopLoggerGroupScores(
     )
   )
     .flat()
-    .filter((ascend) => {
-      const date = ascend.date_logged && new Date(ascend.date_logged);
-      return (
-        date &&
-        isWithinInterval(date, groupInterval) &&
-        climbs.some((climb) => ascend.climb_id === climb.id)
-      );
-    });
+    .filter(
+      ({ climb_id, date_logged }) =>
+        date_logged &&
+        isWithinInterval(new Date(date_logged), groupInterval) &&
+        climbs.some(({ id }) => climb_id === id)
+    );
 
   const topsByClimbId = ascends.reduce(
     (topMemo, { climb_id, user_id, checks }) => {
-      if (groupUsers.some((user) => user.user_id === user_id)) {
-        if (checks) topMemo.set(climb_id, (topMemo.get(climb_id) || 0) + 1);
+      if (groupUsers.some((user) => user.user_id === user_id) && checks) {
+        topMemo.set(climb_id, (topMemo.get(climb_id) || 0) + 1);
       }
       return topMemo;
     },
@@ -704,7 +716,7 @@ async function getIoTopLoggerGroupScores(
     let tdbScore = 0;
     let ptsScore = 0;
 
-    const userAscends = ascends.filter((ascend) => ascend.user_id === user.id);
+    const userAscends = ascends.filter(({ user_id }) => user_id === user.id);
     for (const { climb_id, checks } of userAscends) {
       let problemTDBScore = TDB_BASE / (topsByClimbId.get(climb_id) || 0);
 
@@ -725,7 +737,7 @@ async function getIoTopLoggerGroupScores(
     usersWithResults.find(({ user }) => user.id === ioId) ?? null;
 
   const scores: Score[] = [];
-  if (ioResults) {
+  if (ioResults && isPast(groupInterval.start)) {
     const noClimbers = groupUsers.length || NaN;
 
     if (group.score_system === "points") {
@@ -797,7 +809,10 @@ export async function getIoTopLoggerGroupEventEntry(
     id: groupId,
     venue: gym.name.trim(),
     location: gym.address || null,
-    event: group.name.trim().replace(" - Qualification", ""),
+    event: group.name
+      .replace("- Qualification", "")
+      .replace("(Qualification)", "")
+      .trim(),
     ioId,
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
@@ -819,31 +834,28 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
   });
 
   let problemByProblem = await Promise.all(
-    ascends.map(async (ascend) => {
-      const hold = await getGymHold(ascend.climb.gym_id, ascend.climb.hold_id);
-      return {
-        number: "",
-        color: hold.color || undefined,
-        grade: ascend.climb.grade ? Number(ascend.climb.grade) : undefined,
-        attempt: true,
-        // TopLogger does not do zones, at least not for Beta Boulders
-        zone: ascend ? ascend.checks >= 1 : false,
-        top: ascend ? ascend.checks >= 1 : false,
-        flash: ascend ? ascend.checks >= 2 : false,
-      };
-    })
+    ascends.map(async ({ climb: { grade, gym_id, hold_id }, checks }) => ({
+      number: "",
+      color: (await getGymHold(gym_id, hold_id)).color || undefined,
+      grade: Number(grade) || undefined,
+      attempt: true,
+      // TopLogger does not do zones, at least not for Beta Boulders
+      zone: checks >= 1,
+      top: checks >= 1,
+      flash: checks >= 2,
+    }))
   );
   const grades = Array.from(
-    problemByProblem.reduce((set, problem) => {
-      if (problem.grade) set.add(problem.grade);
+    problemByProblem.reduce((set, { grade }) => {
+      if (grade) set.add(grade);
       return set;
     }, new Set<number>())
   )
     .sort()
     .reverse()
     .slice(0, 3);
-  problemByProblem = problemByProblem.filter((problem) => {
-    if (problem.grade) return grades.includes(problem.grade);
+  problemByProblem = problemByProblem.filter(({ grade }) => {
+    if (grade) return grades.includes(grade);
   });
 
   const count = ascends.length;
