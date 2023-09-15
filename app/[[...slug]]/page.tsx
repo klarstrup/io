@@ -22,7 +22,7 @@ import {
   getGroupsUsers,
   getIoTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
-import { cotemporality } from "../../utils";
+import { WEEK_IN_SECONDS, cotemporality } from "../../utils";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
@@ -213,9 +213,13 @@ const getData = async (disciplines?: string[]) => {
       getIoClimbAlongCompetitionEventEntry(32),
       getIoClimbAlongCompetitionEventEntry(33),
       getIoClimbAlongCompetitionEventEntry(34),
-      ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
-        ({ group_id, user_id }) =>
-          getIoTopLoggerGroupEventEntry(group_id, user_id)
+      ...(
+        await getGroupsUsers(
+          { filters: { user_id: IO_TOPLOGGER_ID } },
+          { maxAge: WEEK_IN_SECONDS }
+        )
+      ).map(({ group_id, user_id }) =>
+        getIoTopLoggerGroupEventEntry(group_id, user_id)
       )
     );
   }

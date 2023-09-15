@@ -16,7 +16,7 @@ import {
   getGroupsUsers,
   getIoTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
-import { MINUTE_IN_SECONDS } from "../../utils";
+import { MINUTE_IN_SECONDS, WEEK_IN_SECONDS } from "../../utils";
 
 export async function GET() {
   await dbConnect();
@@ -33,9 +33,13 @@ export async function GET() {
     getIoClimbAlongCompetitionEventEntry(32),
     getIoClimbAlongCompetitionEventEntry(33),
     getIoClimbAlongCompetitionEventEntry(34),
-    ...(await getGroupsUsers({ filters: { user_id: IO_TOPLOGGER_ID } })).map(
-      ({ group_id, user_id }) =>
-        getIoTopLoggerGroupEventEntry(group_id, user_id)
+    ...(
+      await getGroupsUsers(
+        { filters: { user_id: IO_TOPLOGGER_ID } },
+        { maxAge: WEEK_IN_SECONDS }
+      )
+    ).map(({ group_id, user_id }) =>
+      getIoTopLoggerGroupEventEntry(group_id, user_id)
     )
   );
 
