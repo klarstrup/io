@@ -16,12 +16,7 @@ import {
   Score,
   ThousandDivideByScore,
 } from "../lib";
-import {
-  DAY_IN_SECONDS,
-  HOUR_IN_SECONDS,
-  MINUTE_IN_SECONDS,
-  percentile,
-} from "../utils";
+import { HOUR_IN_SECONDS, MINUTE_IN_SECONDS, percentile } from "../utils";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -433,13 +428,18 @@ const gymClimbByIdLoadersByGym: Record<
   DataLoader<number, TopLogger.ClimbMultiple | null, number>
 > = {};
 
-export const getGymClimbById = (gymId: number, climbId: number) => {
+export const getGymClimbById = (
+  gymId: number,
+  climbId: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) => {
   let gymClimbByIdLoader = gymClimbByIdLoadersByGym[gymId];
   if (!gymClimbByIdLoader) {
     gymClimbByIdLoader = new DataLoader(
       (ids: number[]) =>
-        getGymClimbs(gymId, { filters: { id: ids } }).then((items) =>
-          ids.map((id) => items.find((item) => item.id === id) || null)
+        getGymClimbs(gymId, { filters: { id: ids } }, dbFetchOptions).then(
+          (items) =>
+            ids.map((id) => items.find((item) => item.id === id) || null)
         ),
       { cache: false }
     );
@@ -476,7 +476,10 @@ export const getGroupsUsers = (
     undefined,
     dbFetchOptions
   );
-const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
+const getGroupClimbs = async (
+  group: TopLogger.GroupSingle,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) => {
   const gyms = (
     await Promise.all(
       group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
@@ -487,7 +490,11 @@ const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
     ? (
         await Promise.all(
           group.climb_groups.map(({ climb_id }) =>
-            Promise.all(gyms.map((gym) => getGymClimbById(gym.id, climb_id)))
+            Promise.all(
+              gyms.map((gym) =>
+                getGymClimbById(gym.id, climb_id, dbFetchOptions)
+              )
+            )
           )
         )
       )
@@ -522,7 +529,7 @@ export async function getIoTopLoggerGroupEvent(
       group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
     )
   ).filter(Boolean);
-  const climbs = await getGroupClimbs(group);
+  const climbs = await getGroupClimbs(group, { maxAge: MINUTE_IN_SECONDS });
   const groupInterval: Interval = {
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
@@ -580,7 +587,7 @@ export async function getIoTopLoggerGroupEvent(
     : (
         await getAscends(
           { filters: { user_id: IO_TOPLOGGER_ID } },
-          { maxAge: DAY_IN_SECONDS }
+          { maxAge: MINUTE_IN_SECONDS }
         )
       ).filter((ascend) => {
         const date = ascend.date_logged && new Date(ascend.date_logged);
@@ -656,7 +663,7 @@ async function getIoTopLoggerGroupScores(
   sex?: boolean
 ) {
   const group = await getGroup(groupId);
-  const climbs = await getGroupClimbs(group);
+  const climbs = await getGroupClimbs(group, { maxAge: MINUTE_IN_SECONDS });
   const groupInterval: Interval = {
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
