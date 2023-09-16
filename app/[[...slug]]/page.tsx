@@ -2,6 +2,8 @@
 import {
   Interval,
   differenceInMilliseconds,
+  isAfter,
+  isBefore,
   isFuture,
   isPast,
   max,
@@ -77,15 +79,20 @@ async function TimelineTrainingArticle({
 
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
+  searchParams,
 }: {
   params: { slug?: string[] };
+  searchParams: { [key: string]: string };
 }) {
   const now = new Date();
   const urlDisciplines: string[] | undefined =
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
-  const events = await getData(urlDisciplines);
+  const events = await getData(urlDisciplines, {
+    from: new Date(searchParams.from as unknown as string) || undefined,
+    to: new Date(searchParams.to as unknown as string) || undefined,
+  });
 
   return (
     <div>
@@ -97,11 +104,15 @@ export default async function Home({
             <Fragment key={event.id}>
               {(!nextEvent || isFuture(nextEvent.start)) &&
               isPast(event.start) ? (
-                <article className="now">
-                  <div className="content">
-                    You are <b>now</b>
-                  </div>
-                </article>
+                (searchParams.to && isPast(new Date(searchParams.to))) ||
+                (searchParams.from &&
+                  isFuture(new Date(searchParams.from))) ? null : (
+                  <article className="now">
+                    <div className="content">
+                      You are <b>now</b>
+                    </div>
+                  </article>
+                )
               ) : null}
               {urlDisciplines?.length
                 ? null && (
@@ -197,7 +208,10 @@ const getTrainingData = async (
   ].filter(Boolean);
 };
 
-const getData = async (disciplines?: string[]) => {
+const getData = async (
+  disciplines?: string[],
+  { from, to }: { from?: Date; to?: Date } | undefined = {}
+) => {
   await dbConnect();
 
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
@@ -241,6 +255,14 @@ const getData = async (disciplines?: string[]) => {
   }
 
   return Promise.all(eventsPromises).then((events) =>
-    events.sort((a, b) => differenceInMilliseconds(b.start, a.start))
+    events
+      .sort((a, b) => differenceInMilliseconds(b.start, a.start))
+      .filter((event) => {
+        if (from && isBefore(event.end, from)) return false;
+
+        if (to && isAfter(event.start, to)) return false;
+
+        return true;
+      })
   );
 };
