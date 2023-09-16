@@ -552,9 +552,13 @@ export async function getIoTopLoggerGroupEvent(
     await Promise.all(
       groupUsers.map(({ user_id }) =>
         climbs.length
-          ? getAscends({
-              filters: { user_id, climb_id: climbs.map((climb) => climb.id) },
-            }).catch((error: unknown) => {
+          ? getAscends(
+              { filters: { user_id, climb_id: climbs.map(({ id }) => id) } },
+              {
+                maxAge:
+                  user_id === ioId ? MINUTE_IN_SECONDS : MINUTE_IN_SECONDS * 15,
+              }
+            ).catch((error: unknown) => {
               if (
                 error instanceof Object &&
                 "errors" in error &&
@@ -630,7 +634,12 @@ export async function getIoTopLoggerGroupEvent(
           const ioAscend = ioAscends.find(
             (ascend) => ascend.climb_id === climb.id
           );
-          const hold = await getGymHold(climb.gym_id, climb.hold_id);
+          const hold = await getGymHold(
+            climb.gym_id,
+            climb.hold_id,
+            undefined,
+            { maxAge: MINUTE_IN_SECONDS * 10 }
+          );
 
           return {
             number: climb.number || climb.name || "",
