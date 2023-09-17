@@ -238,6 +238,7 @@ export async function getSportsTimingEventResults(
       .replace("Copenhagen Beach", "")
       .replace("Refshaleøen", "")
       .replace("Strandparken", ""),
+    subEvent: null,
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")
@@ -301,6 +302,7 @@ export async function getSportsTimingEventEntry(
       .replace("Refshaleøen", "")
       .replace("Strandparken", "")
       .replace("  ", " "),
+    subEvent: null,
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")

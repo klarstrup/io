@@ -623,7 +623,15 @@ export async function getIoTopLoggerGroupEvent(
     event: group.name
       .replace("- Qualification", "")
       .replace("(Qualification)", "")
+      .replace("(Mini-Comp)", "")
       .trim(),
+    subEvent: group.name.includes("- Qualification")
+      ? "Qualification"
+      : group.name.includes("(Qualification)")
+      ? "Qualification"
+      : group.name.includes("(Mini-Comp)")
+      ? "Mini-Comp"
+      : null,
     category: sex ? io.gender : null,
     team: null,
     noParticipants: groupUsers.length || NaN,
@@ -814,10 +822,10 @@ export async function getIoTopLoggerGroupEventEntry(
 ): Promise<EventEntry> {
   const group = await getGroup(groupId);
   const gyms = (
-    await Promise.all(
-      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
-    )
-  ).filter(Boolean);
+    await gymLoader.loadMany(group.gym_groups.map(({ gym_id }) => gym_id))
+  ).filter((gymOrError): gymOrError is TopLogger.GymMultiple =>
+    Boolean(gymOrError && !(gymOrError instanceof Error))
+  );
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
@@ -832,6 +840,7 @@ export async function getIoTopLoggerGroupEventEntry(
       .replace("- Qualification", "")
       .replace("(Qualification)", "")
       .trim(),
+    subEvent: null,
     ioId,
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),

@@ -52,6 +52,7 @@ export type EventEntry =
       type: "competition";
       discipline: "bouldering";
       event: string;
+      subEvent: string | null;
       venue: string | null;
       location: string | null;
       start: Date;
@@ -64,6 +65,7 @@ export type EventEntry =
       type: "competition";
       discipline: "bouldering";
       event: string;
+      subEvent: string | null;
       venue: string | null;
       location: string | null;
       start: Date;
@@ -76,6 +78,7 @@ export type EventEntry =
       type: "competition";
       discipline: "running";
       event: string;
+      subEvent: string | null;
       venue: string | null;
       location: string | null;
       start: Date;
@@ -87,6 +90,7 @@ export type EventEntry =
       type: "performance";
       discipline: "metal";
       event: string;
+      subEvent: string | null;
       venue: string | null;
       location: string | null;
       start: Date;

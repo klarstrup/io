@@ -113,6 +113,7 @@ export default async function TimelineEventContent({
     venue,
     location,
     event,
+    subEvent,
     scores,
     noParticipants,
     problems,
@@ -242,8 +243,9 @@ export default async function TimelineEventContent({
           ) : null}
         </span>
       </h2>
-      {problems || noParticipants || category ? (
+      {subEvent || problems || noParticipants || category ? (
         <small>
+          {subEvent ? <>{subEvent}, </> : null}
           {problems ? <b>{problems} problems</b> : null}
           {problems && noParticipants ? <> between </> : null}
           {noParticipants ? <b>{noParticipants} participants</b> : null}

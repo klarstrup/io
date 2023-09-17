@@ -257,8 +257,8 @@ export const getLiftingTrainingData = async (trainingInterval: Interval) => {
           sum +
           actions.reduce(
             (zum, action) =>
-              action.effort0_unit?.abbr === "kg" &&
-              action.effort1_unit.abbr === "reps"
+              action.effort0_unit?.abbr === Fitocracy.Abbr.Kg &&
+              action.effort1_unit.abbr === Fitocracy.Abbr.Reps
                 ? action.effort0_metric * action.effort1_metric + zum
                 : zum,
             0

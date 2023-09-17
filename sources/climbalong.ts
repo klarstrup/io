@@ -390,6 +390,7 @@ export async function getIoClimbAlongCompetitionEvent(
         ),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
+    subEvent: null,
     location: competition.address,
     category: io && sex ? io.sex : null,
     team: null,
@@ -754,6 +755,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
     id: competitionId,
     venue: competition.facility.trim(),
     event: competition.title.trim(),
+    subEvent: null,
     location: competition.address,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
     ioId: io?.athleteId || ioId!,

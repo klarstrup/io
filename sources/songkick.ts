@@ -156,6 +156,7 @@ export async function getSongkickEvents() {
           event.venue.displayName !== "Unknown venue"
             ? event.venue.displayName
             : null,
+        subEvent: null,
         team:
           event.performance.find(
             ({ artist }) =>
