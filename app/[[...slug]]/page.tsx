@@ -8,6 +8,7 @@ import {
   isPast,
   max,
   min,
+  startOfMonth,
 } from "date-fns";
 import Script from "next/script";
 import { Fragment } from "react";
@@ -28,6 +29,7 @@ import { HOUR_IN_SECONDS, cotemporality } from "../../utils";
 import "../page.css";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
+import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
 
 /*
 export function generateStaticParams() {
@@ -89,10 +91,13 @@ export default async function Home({
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
-  const events = await getData(urlDisciplines, {
-    from: new Date(searchParams.from as unknown as string) || undefined,
-    to: new Date(searchParams.to as unknown as string) || undefined,
-  });
+  const from = searchParams.from
+    ? new Date(searchParams.from as unknown as string)
+    : startOfMonth(new Date());
+  const to = searchParams.to
+    ? new Date(searchParams.to as unknown as string)
+    : undefined;
+  const events = await getData(urlDisciplines, { from, to });
 
   return (
     <div>
@@ -137,6 +142,7 @@ export default async function Home({
           );
         })}
       </section>
+      <LoadPreviousMonthWhenYouSeeThisAlright from={from} />
       <Script key={String(new Date())} id={String(new Date())}>
         {`
         ${String(balanceColumns)};
