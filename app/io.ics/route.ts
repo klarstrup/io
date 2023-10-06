@@ -30,8 +30,8 @@ export async function GET() {
     getIoClimbAlongCompetitionEventEntry(27, 8468),
     getIoClimbAlongCompetitionEventEntry(28, 10770),
     getIoClimbAlongCompetitionEventEntry(30, 11951),
-    getIoClimbAlongCompetitionEventEntry(32),
-    getIoClimbAlongCompetitionEventEntry(33),
+    getIoClimbAlongCompetitionEventEntry(32, 12091),
+    getIoClimbAlongCompetitionEventEntry(33, 12477),
     getIoClimbAlongCompetitionEventEntry(34),
     ...(
       await getGroupsUsers(
