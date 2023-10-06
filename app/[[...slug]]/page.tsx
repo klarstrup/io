@@ -141,8 +141,8 @@ export default async function Home({
             </Fragment>
           );
         })}
+        <LoadPreviousMonthWhenYouSeeThisAlright from={from} />
       </section>
-      <LoadPreviousMonthWhenYouSeeThisAlright from={from} />
       <Script key={String(new Date())} id={String(new Date())}>
         {`
         ${String(balanceColumns)};

@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useInView } from "../../hooks";
 
-export function LoadPreviousMonthWhenYouSeeThisAlright({ from }: { from: Date }) {
+export function LoadPreviousMonthWhenYouSeeThisAlright({
+  from,
+}: {
+  from: Date;
+}) {
   const { ref, inView } = useInView();
   const router = useRouter();
 
@@ -16,9 +20,15 @@ export function LoadPreviousMonthWhenYouSeeThisAlright({ from }: { from: Date })
       const url = new URL(window.location.href);
       url.searchParams.set("from", prevMonth.toISOString().split("T")[0]!);
 
-      router.replace(url.href as unknown as "/");
+      router.replace(url.href as unknown as "/", { scroll: false });
     }
   }, [inView, prevMonth, router]);
 
-  return <div ref={ref}>...</div>;
+  return (
+    <article className="now" ref={ref}>
+      <div className="content">
+        We are <b>loading</b>
+      </div>
+    </article>
+  );
 }
