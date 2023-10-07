@@ -243,6 +243,10 @@ export const getUserActivityLogs = async (
 
 const type = "training";
 const discipline = "lifting";
+
+// preheat cache
+void getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: DAY_IN_SECONDS });
+
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   const count = Math.round(
     (await getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: DAY_IN_SECONDS }))
