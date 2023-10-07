@@ -27,9 +27,9 @@ import {
 } from "../../sources/toplogger";
 import { HOUR_IN_SECONDS, cotemporality } from "../../utils";
 import "../page.css";
+import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
 import TimelineEventContent from "./TimelineEventContent";
 import TimelineTrainingContent from "./TimelineTrainingContent";
-import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
 
 /*
 export function generateStaticParams() {
@@ -119,13 +119,15 @@ export default async function Home({
                   </article>
                 )
               ) : null}
-              {urlDisciplines?.length ? (
-                <TimelineTrainingArticle
-                  from={event.end}
-                  to={nextEvent?.start || now}
-                  urlDisciplines={urlDisciplines}
-                />
-              ) : null}
+              {urlDisciplines?.length
+                ? null && (
+                    <TimelineTrainingArticle
+                      from={event.end}
+                      to={nextEvent?.start || now}
+                      urlDisciplines={urlDisciplines}
+                    />
+                  )
+                : null}
               <article>
                 <div className={`content ${cotemporality(event)}`}>
                   {event.source ? (
