@@ -245,7 +245,9 @@ const type = "training";
 const discipline = "lifting";
 
 // preheat cache
-void getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: DAY_IN_SECONDS });
+void getUserActivityLogs(IO_FITOCRACY_ID, { maxAge: DAY_IN_SECONDS }).catch(
+  (err) => console.error(err)
+);
 
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   const count = Math.round(
