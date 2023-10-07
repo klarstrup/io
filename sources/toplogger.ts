@@ -535,7 +535,7 @@ export async function getIoTopLoggerGroupEvent(
     end: new Date(group.date_loggable_end),
   } as const;
 
-  const io = await getUser(ioId);
+  const io = await getUser(ioId, { maxAge: MINUTE_IN_SECONDS });
 
   const groupUsers = await getGroupsUsers(
     {
@@ -686,7 +686,7 @@ async function getIoTopLoggerGroupScores(
     end: new Date(group.date_loggable_end),
   } as const;
 
-  const io = await getUser(ioId);
+  const io = await getUser(ioId, { maxAge: MINUTE_IN_SECONDS });
 
   const groupUsers = await getGroupsUsers({
     filters: {

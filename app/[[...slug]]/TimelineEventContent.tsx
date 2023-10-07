@@ -251,7 +251,7 @@ export default async function TimelineEventContent({
           {noParticipants ? <b>{noParticipants} participants</b> : null}
           {noParticipants && category ? <> in the </> : null}
           {category ? (
-            <b>{category === "male" ? "M" : category} bracket</b>
+            <b>{category === "male" ? "M" : category === "female" ? "F" : category} bracket</b>
           ) : null}
         </small>
       ) : null}
