@@ -258,15 +258,13 @@ const getData = async (
     eventsPromises.push(...(await getSongkickEvents()));
   }
 
-  return Promise.all(eventsPromises).then((events) =>
-    events
-      .sort((a, b) => differenceInMilliseconds(b.start, a.start))
-      .filter((event) => {
-        if (from && isBefore(event.end, from)) return false;
+  return (await Promise.all(eventsPromises))
+    .filter((event) => {
+      if (from && isBefore(event.end, from)) return false;
 
-        if (to && isAfter(event.start, to)) return false;
+      if (to && isAfter(event.start, to)) return false;
 
-        return true;
-      })
-  );
+      return true;
+    })
+    .sort((a, b) => differenceInMilliseconds(b.start, a.start));
 };
