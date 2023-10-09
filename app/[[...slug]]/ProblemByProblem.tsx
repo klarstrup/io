@@ -183,7 +183,7 @@ export default function ProblemByProblem({
         .sort((a, b) => Number(b.flash) - Number(a.flash))
         .sort((a, b) => Number(b.grade) - Number(a.grade))
         .sort((a, b) => Number(b.top) - Number(a.top))
-        .map(({ number, flash, top, zone, attempt, color, grade }) => {
+        .map(({ number, flash, top, zone, attempt, grade }) => {
           const Badge = flash
             ? FlashBadge
             : top
@@ -196,7 +196,11 @@ export default function ProblemByProblem({
 
           return (
             <Badge
-              style={{ flex: 1, maxWidth: "100%", color: color || "#c84821" }}
+              style={{
+                flex: 1,
+                maxWidth: "100%",
+                color: "#c84821",
+              }}
               key={number}
               grade={grade ? new Grade(grade).name : undefined}
               title={`${number}${
