@@ -1,4 +1,4 @@
-import { isWithinInterval } from "date-fns";
+import { isWithinInterval, type Interval } from "date-fns";
 import { dbFetch } from "../fetch";
 import { DAY_IN_SECONDS, RelativeURL } from "../utils";
 

@@ -1,3 +1,5 @@
+import { type Interval } from "date-fns";
+
 export class RelativeURL extends URL {
   constructor(url: string | URL) {
     super(url, "http://n");
