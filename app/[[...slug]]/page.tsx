@@ -10,8 +10,10 @@ import {
   min,
   startOfMonth,
 } from "date-fns";
+import { getServerSession } from "next-auth";
 import Script from "next/script";
 import { Fragment } from "react";
+import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
 import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
@@ -101,6 +103,8 @@ export default async function Home({
 
   return (
     <div>
+      <pre>{JSON.stringify(await getServerSession(authOptions), null, 2)}</pre>
+      <a href="/api/auth/signin">Sign in</a>
       <section id="timeline">
         {events.map((event, j) => {
           const nextEvent = events[j - 1];
