@@ -16,6 +16,7 @@ import { Fragment } from "react";
 import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
+import { User } from "../../models/user";
 import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
@@ -101,10 +102,39 @@ export default async function Home({
     : undefined;
   const events = await getData(urlDisciplines, { from, to });
 
+  const session = await getServerSession(authOptions);
+
   return (
     <div>
-      <pre>{JSON.stringify(await getServerSession(authOptions), null, 2)}</pre>
-      <a href="/api/auth/signin">Sign in</a>
+      {session?.user.name ? (
+        <div>
+          <span>
+            Hello, <strong>{session?.user?.name}</strong>
+            <small>({session?.user.email})</small>!
+            {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+            <img
+              src={session?.user.image || ""}
+              width={50}
+              height={50}
+              style={{ borderRadius: "100%" }}
+            />
+          </span>
+          <p>
+            <a href="/api/auth/signout">Sign out</a>
+          </p>
+          <pre>{JSON.stringify(session, null, 2)}</pre>
+          <pre>
+            {JSON.stringify(await User.findById(session.user.id), null, 2)}
+          </pre>
+        </div>
+      ) : (
+        <div>
+          <span>Hello, stranger!</span>
+          <p>
+            <a href="/api/auth/signin">Sign in</a>
+          </p>
+        </div>
+      )}
       <section id="timeline">
         {events.map((event, j) => {
           const nextEvent = events[j - 1];
