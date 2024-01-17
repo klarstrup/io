@@ -105,19 +105,21 @@ export default async function Home({
 
   const session = await getServerSession(authOptions);
 
-  const currentUser = await User.findOne({ _id: session?.user.id });
+  const currentUser = (await User.findOne({ _id: session?.user.id }))?.toJSON();
 
   async function setFitocracySessionId(formData: FormData) {
     "use server";
+    await dbConnect();
 
-    if (!currentUser) throw new Error("No user found");
+    const userModel = await User.findOne({ _id: session?.user.id });
+    if (!userModel) throw new Error("No user found");
 
     const fitocracySessionId = formData.get("fitocracySessionId");
     if (typeof fitocracySessionId === "string") {
-      currentUser.fitocracySessionId = fitocracySessionId;
+      userModel.fitocracySessionId = fitocracySessionId;
     }
 
-    await currentUser.save();
+    await userModel.save();
 
     // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
     // calling it at all will make the page rerender with the new data.
