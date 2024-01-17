@@ -207,7 +207,7 @@ export default async function Home({
       </section>
       <Script key={String(new Date())} id={String(new Date())}>
         {`
-        ${String(balanceColumns)};
+        const balanceColumns = ${String(balanceColumns)};
         window.addEventListener("resize", () => {
           balanceColumns();
           setTimeout(() => balanceColumns(), 200);
