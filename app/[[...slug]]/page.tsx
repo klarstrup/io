@@ -11,6 +11,7 @@ import {
   startOfMonth,
 } from "date-fns";
 import { getServerSession } from "next-auth";
+import { revalidateTag } from "next/cache";
 import Script from "next/script";
 import { Fragment } from "react";
 import { authOptions } from "../../auth";
@@ -104,16 +105,35 @@ export default async function Home({
 
   const session = await getServerSession(authOptions);
 
+  const currentUser = await User.findOne({ _id: session?.user.id });
+
+  async function setFitocracySessionId(formData: FormData) {
+    "use server";
+
+    if (!currentUser) throw new Error("No user found");
+
+    const fitocracySessionId = formData.get("fitocracySessionId");
+    if (typeof fitocracySessionId === "string") {
+      currentUser.fitocracySessionId = fitocracySessionId;
+    }
+
+    await currentUser.save();
+
+    // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
+    // calling it at all will make the page rerender with the new data.
+    revalidateTag("");
+  }
+
   return (
     <div>
-      {session?.user.name ? (
+      {currentUser ? (
         <div>
           <span>
-            Hello, <strong>{session?.user?.name}</strong>
-            <small>({session?.user.email})</small>!
+            Hello, <strong>{currentUser.name}</strong>
+            <small>({currentUser.email})</small>!
             {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
             <img
-              src={session?.user.image || ""}
+              src={currentUser.image || ""}
               width={50}
               height={50}
               style={{ borderRadius: "100%" }}
@@ -122,10 +142,16 @@ export default async function Home({
           <p>
             <a href="/api/auth/signout">Sign out</a>
           </p>
+          {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+          <form action={setFitocracySessionId}>
+            <input
+              name="fitocracySessionId"
+              defaultValue={currentUser.fitocracySessionId || ""}
+            />
+            <input type="submit" value="Set Fitocracy session ID" />
+          </form>
           <pre>{JSON.stringify(session, null, 2)}</pre>
-          <pre>
-            {JSON.stringify(await User.findById(session.user.id), null, 2)}
-          </pre>
+          <pre>{JSON.stringify(currentUser, null, 2)}</pre>
         </div>
       ) : (
         <div>
