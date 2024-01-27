@@ -20,6 +20,8 @@ import {
 } from "../../sources/toplogger";
 import { MINUTE_IN_SECONDS, WEEK_IN_SECONDS } from "../../utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   await dbConnect();
 
