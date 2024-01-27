@@ -99,6 +99,13 @@ const rawDbFetch = async <T = string>(
       !(
         String(input).includes("api.toplogger.nu/v1/ascends.json") &&
         response.status === 401
+      ) &&
+      // Don't consider 404s from the toplogger holds endpoint as errors because
+      // sometimes holds are removed from the database and i don't know
+      // what i can do about it
+      !(
+        String(input).match(/\/holds\//) &&
+        response.status === 404
       )
     ) {
       error = await response.text();
