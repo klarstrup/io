@@ -243,7 +243,7 @@ export async function* getUserWorkouts(
       `/api/v2/user/${userId}/workouts/?start_date=${format(
         interval.start,
         "yyyy-MM-dd"
-      )} &end_date=${format(interval.end, "yyyy-MM-dd")}`,
+      )}&end_date=${format(interval.end, "yyyy-MM-dd")}`,
       undefined,
       dbFetchOptions
     )
@@ -252,7 +252,9 @@ export async function* getUserWorkouts(
   const workouts: Fitocracy.WorkoutData[] = [];
   for (const workoutId of workoutIds) {
     yield await fetchFitocracy<Fitocracy.WorkoutData>(
-      `/api/v2/user/${userId}/workout/${workoutId}/`
+      `/api/v2/user/${userId}/workout/${workoutId}/`,
+      undefined,
+      dbFetchOptions
     );
   }
 

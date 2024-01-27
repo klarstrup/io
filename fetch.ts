@@ -103,10 +103,7 @@ const rawDbFetch = async <T = string>(
       // Don't consider 404s from the toplogger holds endpoint as errors because
       // sometimes holds are removed from the database and i don't know
       // what i can do about it
-      !(
-        String(input).match(/\/holds\//) &&
-        response.status === 404
-      )
+      !(String(input).match(/\/holds\//) && response.status === 404)
     ) {
       error = await response.text();
       await Fetch.updateOne(filter, {
@@ -118,10 +115,25 @@ const rawDbFetch = async <T = string>(
       parsedResult = (
         options?.parseJson === false ? result : JSON.parse(result)
       ) as T;
-      await Fetch.updateOne(filter, {
-        lastResult: result,
-        lastSuccessfulFetchAt: now,
-      });
+      if (
+        String(input).includes("www.fitocracy.com") &&
+        // @ts-expect-error - don't know how to fix this
+        "success" in parsedResult &&
+        "error" in parsedResult &&
+        parsedResult.success === false
+      ) {
+        error = parsedResult.error;
+        parsedResult = null;
+        await Fetch.updateOne(filter, {
+          lastError: error,
+          lastFailedFetchAt: now,
+        });
+      } else {
+        await Fetch.updateOne(filter, {
+          lastResult: result,
+          lastSuccessfulFetchAt: now,
+        });
+      }
     }
   }
   if (!parsedResult) {
