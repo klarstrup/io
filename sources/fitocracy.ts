@@ -1,6 +1,6 @@
 import { format, type Interval } from "date-fns";
 import { dbFetch } from "../fetch";
-import { arrayFromAsyncIterable, DAY_IN_SECONDS } from "../utils";
+import { DAY_IN_SECONDS } from "../utils";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -265,38 +265,35 @@ const type = "training";
 const discipline = "lifting";
 
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
-  const workouts = await arrayFromAsyncIterable(
-    getUserWorkouts(IO_FITOCRACY_ID, trainingInterval, {
-      maxAge: DAY_IN_SECONDS,
-    })
-  );
-  const count = workouts.reduce(
-    (sum, workoutData) =>
-      sum +
-      workoutData.root_group.children.reduce(
-        (zum, child) =>
-          zum +
-          child.exercise.sets.reduce((xum, set) => {
-            let reps: number | undefined, weight: number | undefined;
-            for (const input of set.inputs) {
-              switch (input.unit) {
-                case Fitocracy.Unit.Reps: {
-                  reps = input.value;
-                  break;
-                }
-                case Fitocracy.Unit.Kg: {
-                  weight = input.value;
-                  break;
-                }
+  let count = 0;
+  for await (const workout of getUserWorkouts(
+    IO_FITOCRACY_ID,
+    trainingInterval,
+    { maxAge: DAY_IN_SECONDS }
+  )) {
+    count += workout.root_group.children.reduce(
+      (zum, child) =>
+        zum +
+        child.exercise.sets.reduce((xum, set) => {
+          let reps: number | undefined, weight: number | undefined;
+          for (const input of set.inputs) {
+            switch (input.unit) {
+              case Fitocracy.Unit.Reps: {
+                reps = input.value;
+                break;
+              }
+              case Fitocracy.Unit.Kg: {
+                weight = input.value;
+                break;
               }
             }
+          }
 
-            return reps && weight ? reps * weight + xum : xum;
-          }, 0),
-        0
-      ),
-    0
-  );
+          return reps && weight ? reps * weight + xum : xum;
+        }, 0),
+      0
+    );
+  }
 
   return { source: "fitocracy", type, discipline, count } as const;
 };

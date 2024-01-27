@@ -42,7 +42,7 @@ export default function TimelineTrainingContent({
           `×${count}`
         )
       ) : discipline === "lifting" ? (
-        ` ${count}kg`
+        ` ${count.toLocaleString("en-US", { minimumFractionDigits: 2 })}kg`
       ) : discipline === "running" ? (
         "runByRun" in training &&
         training.runByRun &&
