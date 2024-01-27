@@ -16,7 +16,12 @@ import {
   Score,
   ThousandDivideByScore,
 } from "../lib";
-import { HOUR_IN_SECONDS, MINUTE_IN_SECONDS, percentile } from "../utils";
+import {
+  DAY_IN_SECONDS,
+  HOUR_IN_SECONDS,
+  MINUTE_IN_SECONDS,
+  percentile,
+} from "../utils";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -864,7 +869,12 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
   let problemByProblem = await Promise.all(
     ascends.map(async ({ climb: { grade, gym_id, hold_id }, checks }) => ({
       number: "",
-      color: (await getGymHold(gym_id, hold_id)).color || undefined,
+      color:
+        (
+          await getGymHold(gym_id, hold_id, undefined, {
+            maxAge: DAY_IN_SECONDS,
+          })
+        ).color || undefined,
       grade: Number(grade) || undefined,
       attempt: true,
       // TopLogger does not do zones, at least not for Beta Boulders
@@ -880,11 +890,18 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
     }, new Set<number>())
   )
     .sort()
-    .reverse()
-    .slice(0, 3);
-  problemByProblem = problemByProblem.filter(({ grade }) => {
-    if (grade) return grades.includes(grade);
-  });
+    .reverse();
+
+  problemByProblem = problemByProblem
+    .sort((a, b) => {
+      const gradeA = a.grade || 0;
+      const gradeB = b.grade || 0;
+      return gradeB - gradeA;
+    })
+    .filter(({ grade }) => {
+      if (grade) return grades.includes(grade);
+    })
+    .slice(0, 15);
 
   const count = ascends.length;
 
