@@ -75,69 +75,88 @@ const rawDbFetch = async <T = string>(
     }
   }
 
-  if (!result) {
-    await Fetch.updateOne(
-      filter,
-      { lastAttemptedFetchAt: now },
-      { upsert: true }
-    );
-    console.info(`DB FETCHING ${String(input)}`);
-    const response = await (process.env.NODE_ENV === "development" ||
-      process.env.CI
-      ? cachedFetch
-      : fetch)(input, {
-      ...init,
-      next:
-        options?.maxAge !== undefined
-          ? { revalidate: options.maxAge }
-          : undefined,
-    });
-    if (
-      response.status !== 200 &&
-      // Don't consider 401s from the toplogger ascends endpoint as errors because
-      // some users have their accounts set up to not allow access
-      !(
-        String(input).includes("api.toplogger.nu/v1/ascends.json") &&
-        response.status === 401
-      ) &&
-      // Don't consider 404s from the toplogger holds endpoint as errors because
-      // sometimes holds are removed from the database and i don't know
-      // what i can do about it
-      !(String(input).match(/\/holds\//) && response.status === 404)
-    ) {
-      error = await response.text();
-      await Fetch.updateOne(filter, {
-        lastError: error,
-        lastFailedFetchAt: now,
+  try {
+    if (!result) {
+      await Fetch.updateOne(
+        filter,
+        { lastAttemptedFetchAt: now },
+        { upsert: true }
+      );
+      console.info(`DB FETCHING ${String(input)}`);
+
+      const response = await (process.env.NODE_ENV === "development" ||
+        process.env.CI
+        ? cachedFetch
+        : fetch)(input, {
+        signal: AbortSignal.timeout(5000),
+        ...init,
+        next:
+          options?.maxAge !== undefined
+            ? { revalidate: options.maxAge }
+            : undefined,
       });
-    } else {
-      result = await response.text();
-      parsedResult = (
-        options?.parseJson === false ? result : JSON.parse(result)
-      ) as T;
       if (
-        String(input).includes("www.fitocracy.com") &&
-        // @ts-expect-error - don't know how to fix this
-        (("success" in parsedResult &&
-          "error" in parsedResult &&
-          parsedResult.success === false) ||
-          // @ts-expect-error - don't know how to fix this
-          ("error" in parsedResult && parsedResult.error))
+        response.status !== 200 &&
+        // Don't consider 401s from the toplogger ascends endpoint as errors because
+        // some users have their accounts set up to not allow access
+        !(
+          String(input).includes("api.toplogger.nu/v1/ascends.json") &&
+          response.status === 401
+        ) &&
+        // Don't consider 404s from the toplogger holds endpoint as errors because
+        // sometimes holds are removed from the database and i don't know
+        // what i can do about it
+        !(String(input).match(/\/holds\//) && response.status === 404)
       ) {
-        error = parsedResult.error;
-        parsedResult = null;
+        error = await response.text();
         await Fetch.updateOne(filter, {
           lastError: error,
           lastFailedFetchAt: now,
         });
       } else {
-        await Fetch.updateOne(filter, {
-          lastResult: result,
-          lastSuccessfulFetchAt: now,
-        });
+        result = await response.text();
+        parsedResult = (
+          options?.parseJson === false ? result : JSON.parse(result)
+        ) as T;
+        if (
+          String(input).includes("www.fitocracy.com") &&
+          // @ts-expect-error - don't know how to fix this
+          (("success" in parsedResult &&
+            "error" in parsedResult &&
+            parsedResult.success === false) ||
+            // @ts-expect-error - don't know how to fix this
+            ("error" in parsedResult && parsedResult.error))
+        ) {
+          error = parsedResult.error;
+          parsedResult = null;
+          await Fetch.updateOne(filter, {
+            lastError: error,
+            lastFailedFetchAt: now,
+          });
+        } else {
+          await Fetch.updateOne(filter, {
+            lastResult: result,
+            lastSuccessfulFetchAt: now,
+          });
+        }
       }
     }
+  } catch (err: unknown) {
+    error = err;
   }
+  if (error) {
+    if (fetchRow && fetchRow.lastResult) {
+      result = fetchRow.lastResult;
+      parsedResult = (
+        options?.parseJson === false ? result : JSON.parse(result)
+      ) as T;
+      console.warn(`DB FETCH FAILED, USED STALE DATA ${String(input)}`);
+    } else {
+      console.warn(`DB FETCH FAILED, NO STALE DATA ${String(input)}`);
+    }
+    console.error(error);
+  }
+
   if (!parsedResult) {
     if (error instanceof Error) throw error;
     if (typeof error === "string") {
@@ -196,17 +215,3 @@ export const cachedDbFetch = async <T>(
 };
 
 export const dbFetch = cachedDbFetch;
-
-export const fetchJson = async <T>(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<T> =>
-  fetch(input, init)
-    .then((r) => r.text())
-    .then((t) => {
-      try {
-        return JSON.parse(t) as T;
-      } catch (e) {
-        return t as T;
-      }
-    });
