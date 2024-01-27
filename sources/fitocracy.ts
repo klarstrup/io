@@ -270,34 +270,32 @@ export const getLiftingTrainingData = async (trainingInterval: Interval) => {
       maxAge: DAY_IN_SECONDS,
     })
   );
-  const count = Math.round(
-    workouts.reduce(
-      (sum, workoutData) =>
-        sum +
-        workoutData.root_group.children.reduce(
-          (zum, child) =>
-            zum +
-            child.exercise.sets.reduce((xum, set) => {
-              let reps: number | undefined, weight: number | undefined;
-              for (const input of set.inputs) {
-                switch (input.unit) {
-                  case Fitocracy.Unit.Reps: {
-                    reps = input.value;
-                    break;
-                  }
-                  case Fitocracy.Unit.Kg: {
-                    weight = input.value;
-                    break;
-                  }
+  const count = workouts.reduce(
+    (sum, workoutData) =>
+      sum +
+      workoutData.root_group.children.reduce(
+        (zum, child) =>
+          zum +
+          child.exercise.sets.reduce((xum, set) => {
+            let reps: number | undefined, weight: number | undefined;
+            for (const input of set.inputs) {
+              switch (input.unit) {
+                case Fitocracy.Unit.Reps: {
+                  reps = input.value;
+                  break;
+                }
+                case Fitocracy.Unit.Kg: {
+                  weight = input.value;
+                  break;
                 }
               }
+            }
 
-              return reps && weight ? reps * weight + xum : xum;
-            }, 0),
-          0
-        ),
-      0
-    )
+            return reps && weight ? reps * weight + xum : xum;
+          }, 0),
+        0
+      ),
+    0
   );
 
   return { source: "fitocracy", type, discipline, count } as const;
