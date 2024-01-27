@@ -181,15 +181,13 @@ export default async function Home({
                   </article>
                 )
               ) : null}
-              {urlDisciplines?.length
-                ? null && (
-                    <TimelineTrainingArticle
-                      from={event.end}
-                      to={nextEvent?.start || now}
-                      urlDisciplines={urlDisciplines}
-                    />
-                  )
-                : null}
+              {urlDisciplines?.length ? (
+                <TimelineTrainingArticle
+                  from={event.end}
+                  to={nextEvent?.start || now}
+                  urlDisciplines={urlDisciplines}
+                />
+              ) : null}
               <article>
                 <div className={`content ${cotemporality(event)}`}>
                   {event.source ? (
