@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   image: String,
   emailVerified: Boolean,
   fitocracySessionId: String,
+  topLoggerId: Number,
 });
 
 export const User = mongoose.model("User", userSchema, undefined, {

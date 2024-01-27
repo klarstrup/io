@@ -8,18 +8,31 @@ import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
 import dbConnect from "../../dbConnect";
 import { EventEntry } from "../../lib";
+import { User } from "../../models/user";
 import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
-  IO_TOPLOGGER_ID,
+  TopLogger,
   getGroupsUsers,
-  getIoTopLoggerGroupEventEntry,
+  getTopLoggerGroupEventEntry,
+  getUser,
 } from "../../sources/toplogger";
 import { MINUTE_IN_SECONDS, WEEK_IN_SECONDS } from "../../utils";
 
 export async function GET() {
   await dbConnect();
+
+  // Io is the only user in the database,
+  const user = await User.findOne();
+
+  let topLoggerUser: TopLogger.UserSingle | null = null;
+  try {
+    topLoggerUser = user?.topLoggerId ? await getUser(user.topLoggerId) : null;
+  } catch (e) {
+    /* */
+  }
+  const topLoggerUserId = topLoggerUser?.id;
 
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
@@ -35,11 +48,11 @@ export async function GET() {
     getIoClimbAlongCompetitionEventEntry(34),
     ...(
       await getGroupsUsers(
-        { filters: { user_id: IO_TOPLOGGER_ID } },
+        { filters: { user_id: topLoggerUserId } },
         { maxAge: WEEK_IN_SECONDS }
       )
     ).map(({ group_id, user_id }) =>
-      getIoTopLoggerGroupEventEntry(group_id, user_id)
+      getTopLoggerGroupEventEntry(group_id, user_id)
     )
   );
 

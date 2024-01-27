@@ -27,10 +27,11 @@ import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
-  IO_TOPLOGGER_ID,
+  TopLogger,
   getBoulderingTrainingData,
   getGroupsUsers,
-  getIoTopLoggerGroupEventEntry,
+  getTopLoggerGroupEventEntry,
+  getUser,
 } from "../../sources/toplogger";
 import { HOUR_IN_SECONDS, cotemporality } from "../../utils";
 import "../page.css";
@@ -119,7 +120,7 @@ export default async function Home({
 
     const fitocracySessionId = formData.get("fitocracySessionId");
     if (typeof fitocracySessionId === "string") {
-      userModel.fitocracySessionId = fitocracySessionId;
+      userModel.fitocracySessionId = fitocracySessionId.trim() || null;
     }
 
     await userModel.save();
@@ -140,6 +141,36 @@ export default async function Home({
     }
   } catch {
     fitocracyProfile = null;
+  }
+
+  async function setTopLoggerId(formData: FormData) {
+    "use server";
+    await dbConnect();
+
+    const userModel = await User.findOne({ _id: session?.user.id });
+    if (!userModel) throw new Error("No user found");
+
+    const topLoggerId = formData.get("topLoggerId");
+    if (typeof topLoggerId === "string") {
+      userModel.topLoggerId = topLoggerId.trim()
+        ? Number(topLoggerId.trim())
+        : null;
+    }
+
+    await userModel.save();
+
+    // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
+    // calling it at all will make the page rerender with the new data.
+    revalidateTag("");
+  }
+
+  let topLoggerUser: Awaited<ReturnType<typeof getUser>> | null = null;
+  try {
+    if (currentUser?.topLoggerId) {
+      topLoggerUser = await getUser(currentUser.topLoggerId);
+    }
+  } catch {
+    topLoggerUser = null;
   }
 
   return (
@@ -168,6 +199,15 @@ export default async function Home({
             />
             <input type="submit" value="Set Fitocracy session ID" />
             {fitocracyProfile ? "✅" : "❌"}
+          </form>
+          {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+          <form action={setTopLoggerId}>
+            <input
+              name="topLoggerId"
+              defaultValue={currentUser.topLoggerId || ""}
+            />
+            <input type="submit" value="Set TopLogger ID" />
+            {topLoggerUser ? "✅" : "❌"}
           </form>
           <pre>{JSON.stringify(session, null, 2)}</pre>
           <pre>{JSON.stringify(currentUser, null, 2)}</pre>
@@ -297,6 +337,16 @@ const getData = async (
 ) => {
   await dbConnect();
 
+  // Io is the only user in the database,
+  const user = await User.findOne();
+  let topLoggerUser: TopLogger.UserSingle | null = null;
+  try {
+    topLoggerUser = user?.topLoggerId ? await getUser(user.topLoggerId) : null;
+  } catch (e) {
+    /* */
+  }
+  const topLoggerUserId = topLoggerUser?.id;
+
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
@@ -312,11 +362,11 @@ const getData = async (
       getIoClimbAlongCompetitionEventEntry(34),
       ...(
         await getGroupsUsers(
-          { filters: { user_id: IO_TOPLOGGER_ID } },
+          { filters: { user_id: topLoggerUserId } },
           { maxAge: HOUR_IN_SECONDS }
         )
       ).map(({ group_id, user_id }) =>
-        getIoTopLoggerGroupEventEntry(group_id, user_id)
+        getTopLoggerGroupEventEntry(group_id, user_id)
       )
     );
   }

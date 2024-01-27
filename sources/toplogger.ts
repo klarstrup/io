@@ -22,6 +22,7 @@ import {
   MINUTE_IN_SECONDS,
   percentile,
 } from "../utils";
+import { User } from "../models/user";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -346,8 +347,6 @@ export namespace TopLogger {
   }
 }
 
-export const IO_TOPLOGGER_ID = 176390;
-
 const fetchTopLogger = async <T>(
   input: string | URL,
   init?: RequestInit,
@@ -453,7 +452,10 @@ export const getGymClimbById = (
   return gymClimbByIdLoader.load(climbId);
 };
 
-const getUser = (id: number, dbFetchOptions?: Parameters<typeof dbFetch>[2]) =>
+export const getUser = (
+  id: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
   fetchTopLogger<TopLogger.UserSingle>(
     `/v1/users/${id}.json`,
     undefined,
@@ -534,13 +536,13 @@ export async function getIoTopLoggerGroupEvent(
       group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
     )
   ).filter(Boolean);
-  const climbs = await getGroupClimbs(group, { maxAge: MINUTE_IN_SECONDS });
+  const climbs = await getGroupClimbs(group, { maxAge: HOUR_IN_SECONDS });
   const groupInterval: Interval = {
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
   } as const;
 
-  const io = await getUser(ioId, { maxAge: MINUTE_IN_SECONDS });
+  const io = await getUser(ioId, { maxAge: HOUR_IN_SECONDS });
 
   const groupUsers = await getGroupsUsers(
     {
@@ -595,8 +597,8 @@ export async function getIoTopLoggerGroupEvent(
     ? ascends.filter((ascend) => ascend.user_id === ioId)
     : (
         await getAscends(
-          { filters: { user_id: IO_TOPLOGGER_ID } },
-          { maxAge: MINUTE_IN_SECONDS }
+          { filters: { user_id: ioId } },
+          { maxAge: HOUR_IN_SECONDS }
         )
       ).filter((ascend) => {
         const date = ascend.date_logged && new Date(ascend.date_logged);
@@ -685,21 +687,24 @@ async function getIoTopLoggerGroupScores(
   sex?: boolean
 ) {
   const group = await getGroup(groupId);
-  const climbs = await getGroupClimbs(group, { maxAge: MINUTE_IN_SECONDS });
+  const climbs = await getGroupClimbs(group, { maxAge: HOUR_IN_SECONDS });
   const groupInterval: Interval = {
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
   } as const;
 
-  const io = await getUser(ioId, { maxAge: MINUTE_IN_SECONDS });
+  const io = await getUser(ioId, { maxAge: HOUR_IN_SECONDS });
 
-  const groupUsers = await getGroupsUsers({
-    filters: {
-      group_id: groupId,
-      user: sex ? { gender: io.gender } : undefined,
+  const groupUsers = await getGroupsUsers(
+    {
+      filters: {
+        group_id: groupId,
+        user: sex ? { gender: io.gender } : undefined,
+      },
+      includes: "user",
     },
-    includes: "user",
-  });
+    { maxAge: MINUTE_IN_SECONDS * 15 }
+  );
 
   const ascends = (
     await Promise.all(
@@ -821,9 +826,9 @@ async function getIoTopLoggerGroupScores(
   return scores;
 }
 
-export async function getIoTopLoggerGroupEventEntry(
+export async function getTopLoggerGroupEventEntry(
   groupId: number,
-  ioId: number
+  userId: number
 ): Promise<EventEntry> {
   const group = await getGroup(groupId);
   const gyms = (
@@ -846,7 +851,7 @@ export async function getIoTopLoggerGroupEventEntry(
       .replace("(Qualification)", "")
       .trim(),
     subEvent: null,
-    ioId,
+    ioId: userId,
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
   } as const;
@@ -856,9 +861,20 @@ const source = "toplogger";
 const type = "training";
 const discipline = "bouldering";
 export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
+  // Io is the only user in the database,
+  const user = await User.findOne();
+  const topLoggerId = user?.topLoggerId;
+  let topLoggerUser: TopLogger.UserSingle | null = null;
+  try {
+    topLoggerUser = topLoggerId ? await getUser(topLoggerId) : null;
+  } catch (e) {
+    /* */
+  }
+  const topLoggerUserId = topLoggerUser?.id;
+
   const ascends = (
     (await getAscends(
-      { filters: { user_id: IO_TOPLOGGER_ID }, includes: ["climb"] },
+      { filters: { user_id: topLoggerUserId }, includes: ["climb"] },
       { maxAge: HOUR_IN_SECONDS }
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
   ).filter((ascend) => {
