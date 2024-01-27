@@ -331,7 +331,7 @@ export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
   >(
     `https://www.fitocracy.com/api/user/profile/?sessionid=${fitocracySessionId}`,
     { headers: { cookie: `sessionid=${fitocracySessionId}` } },
-    { maxAge: 0 }
+    { maxAge: 1 }
   );
 
   if ("error" in result) throw new Error(result.error);
