@@ -9,10 +9,11 @@ export default function TimelineTrainingContent({
   training,
   urlDisciplines,
 }: {
-  training:
+  training: NonNullable<
     | Awaited<ReturnType<typeof getLiftingTrainingData>>
     | Awaited<ReturnType<typeof getRunningTrainingData>>
-    | Awaited<ReturnType<typeof getBoulderingTrainingData>>;
+    | Awaited<ReturnType<typeof getBoulderingTrainingData>>
+  >;
   urlDisciplines?: string[];
 }) {
   const { type, discipline, count } = training;
