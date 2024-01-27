@@ -251,9 +251,6 @@ export async function* getUserWorkouts(
 
   const workouts: Fitocracy.WorkoutData[] = [];
   for (const workoutId of workoutIds) {
-    console.log(
-      `https://www.fitocracy.com/api/v2/user/${userId}/workout/${workoutId}/`
-    );
     yield await fetchFitocracy<Fitocracy.WorkoutData>(
       `/api/v2/user/${userId}/workout/${workoutId}/`
     );
