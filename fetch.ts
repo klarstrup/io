@@ -118,9 +118,11 @@ const rawDbFetch = async <T = string>(
       if (
         String(input).includes("www.fitocracy.com") &&
         // @ts-expect-error - don't know how to fix this
-        "success" in parsedResult &&
-        "error" in parsedResult &&
-        parsedResult.success === false
+        (("success" in parsedResult &&
+          "error" in parsedResult &&
+          parsedResult.success === false) ||
+          // @ts-expect-error - don't know how to fix this
+          ("error" in parsedResult && parsedResult.error))
       ) {
         error = parsedResult.error;
         parsedResult = null;

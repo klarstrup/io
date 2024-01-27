@@ -1,5 +1,6 @@
 import { format, type Interval } from "date-fns";
 import { dbFetch } from "../fetch";
+import { User } from "../models/user";
 import { DAY_IN_SECONDS } from "../utils";
 
 export namespace Fitocracy {
@@ -208,11 +209,75 @@ export namespace Fitocracy {
   export enum RootGroupType {
     Group = "group",
   }
+
+  export interface ProfileResult {
+    [id: number]: ProfileData;
+  }
+
+  export interface ProfileData {
+    points_overall: number;
+    workouts_30day: number;
+    points_levelup: number;
+    pic: string;
+    points_90day: number;
+    need_email_update: boolean;
+    height_imperial_string: string;
+    id: number;
+    badges: {
+      milestones: Milestone[];
+      z_index: number;
+      description: string;
+      pic: string;
+      badgegroup: number;
+      id: number;
+      name: string;
+    }[];
+    date_joined: Date;
+    weight_metric_string: string;
+    workouts_7day: number;
+    title: null;
+    live_challenge_count: number;
+    points_level: number;
+    imperial: boolean;
+    following_count: number;
+    days_on_fitocracy: number;
+    follower_count: number;
+    height_metric_string: string;
+    username: string;
+    points_30day: number;
+    hero: boolean;
+    tags: { is_hidden: boolean; id: number; name: string }[];
+    workouts_90day: number;
+    group_count: number;
+    points_7day: number;
+    workouts_overall: number;
+    info: string;
+    level: number;
+    gender: string;
+    age: number;
+    weight_imperial_string: string;
+    prop_count: number;
+    show_bota_promotion: boolean;
+    quests: {
+      milestones: Milestone[];
+      description: string;
+      name: string;
+      parent_quest: null;
+      id: number;
+      points: number;
+    }[];
+    referral: string;
+  }
+
+  export interface Milestone {
+    description: null | string;
+    id: number;
+    name: null | string;
+  }
 }
 
-export const IO_FITOCRACY_ID = 528455;
-
 const fetchFitocracy = async <T>(
+  fitocracySessionId: string,
   input: string | URL,
   init?: RequestInit,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
@@ -221,10 +286,7 @@ const fetchFitocracy = async <T>(
     `https://www.fitocracy.com${String(input)}`,
     {
       ...init,
-      headers: {
-        cookie: `sessionid=${process.env.FITOCRACY_SESSION_ID};`,
-        ...init?.headers,
-      },
+      headers: { cookie: `sessionid=${fitocracySessionId}`, ...init?.headers },
     },
     dbFetchOptions
   );
@@ -234,12 +296,14 @@ const fetchFitocracy = async <T>(
 };
 
 export async function* getUserWorkouts(
+  fitocracySessionId: string,
   userId: number,
   interval: Interval,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) {
   const workoutIds = Object.values(
     await fetchFitocracy<{ [date: string]: number[] }>(
+      fitocracySessionId,
       `/api/v2/user/${userId}/workouts/?start_date=${format(
         interval.start,
         "yyyy-MM-dd"
@@ -252,6 +316,7 @@ export async function* getUserWorkouts(
   const workouts: Fitocracy.WorkoutData[] = [];
   for (const workoutId of workoutIds) {
     yield await fetchFitocracy<Fitocracy.WorkoutData>(
+      fitocracySessionId,
       `/api/v2/user/${userId}/workout/${workoutId}/`,
       undefined,
       dbFetchOptions
@@ -260,14 +325,40 @@ export async function* getUserWorkouts(
 
   return workouts;
 }
+export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
+  const result = await dbFetch<
+    Fitocracy.ProfileResult | { error: "missing source credentials" }
+  >(
+    `https://www.fitocracy.com/api/user/profile/?sessionid=${fitocracySessionId}`,
+    { headers: { cookie: `sessionid=${fitocracySessionId}` } },
+    { maxAge: 0 }
+  );
+
+  if ("error" in result) throw new Error(result.error);
+
+  return Object.values(result)[0] as Fitocracy.ProfileData;
+};
 
 const type = "training";
 const discipline = "lifting";
 
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
+  // Io is the only user in the database,
+  const user = await User.findOne();
+  const fitocracySessionId = user?.fitocracySessionId;
+  if (!fitocracySessionId) return null;
+  let fitocracyProfile: Fitocracy.ProfileData;
+  try {
+    fitocracyProfile = await getUserProfileBySessionId(fitocracySessionId);
+  } catch (e) {
+    return null;
+  }
+  const fitocracyUserId = fitocracyProfile.id;
+
   let count = 0;
   for await (const workout of getUserWorkouts(
-    IO_FITOCRACY_ID,
+    fitocracySessionId,
+    fitocracyUserId,
     trainingInterval,
     { maxAge: DAY_IN_SECONDS }
   )) {

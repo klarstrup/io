@@ -19,7 +19,10 @@ import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
 import { User } from "../../models/user";
 import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
-import { getLiftingTrainingData } from "../../sources/fitocracy";
+import {
+  getLiftingTrainingData,
+  getUserProfileBySessionId,
+} from "../../sources/fitocracy";
 import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
@@ -126,6 +129,19 @@ export default async function Home({
     revalidateTag("");
   }
 
+  let fitocracyProfile: Awaited<
+    ReturnType<typeof getUserProfileBySessionId>
+  > | null = null;
+  try {
+    if (currentUser?.fitocracySessionId) {
+      fitocracyProfile = await getUserProfileBySessionId(
+        currentUser.fitocracySessionId
+      );
+    }
+  } catch {
+    fitocracyProfile = null;
+  }
+
   return (
     <div>
       {currentUser ? (
@@ -151,6 +167,7 @@ export default async function Home({
               defaultValue={currentUser.fitocracySessionId || ""}
             />
             <input type="submit" value="Set Fitocracy session ID" />
+            {fitocracyProfile ? "✅" : "❌"}
           </form>
           <pre>{JSON.stringify(session, null, 2)}</pre>
           <pre>{JSON.stringify(currentUser, null, 2)}</pre>
