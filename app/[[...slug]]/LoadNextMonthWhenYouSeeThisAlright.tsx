@@ -14,7 +14,7 @@ export function LoadPreviousMonthWhenYouSeeThisAlright({
   const router = useRouter();
 
   const prevMonth = useMemo(() => startOfMonth(subMonths(from, 1)), [from]);
-  const isAtLimit = isAfter(new Date(2013, 10), prevMonth);
+  const isAtLimit = isAfter(new Date(2013, 9), prevMonth);
 
   useEffect(() => {
     if (inView && !isAtLimit) {
