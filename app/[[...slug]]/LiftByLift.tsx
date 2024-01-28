@@ -17,6 +17,7 @@ export default function LiftByLift({
           gridTemplateColumns: "1fr 1fr",
           columnGap: "4px",
           fontSize: "0.75em",
+          alignItems: "center",
         }}
       >
         {liftByLift.map(([exercise, set]) => (
