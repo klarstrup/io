@@ -40,18 +40,27 @@ export default function TimelineTrainingContent({
       </Link>
       {discipline === "bouldering" ? (
         "problemByProblem" in training ? (
-          <ProblemByProblem problemByProblem={training.problemByProblem} />
+          <div style={{ width: "100%" }}>
+            <header>Top sends:</header>
+            <ProblemByProblem problemByProblem={training.problemByProblem} />
+          </div>
         ) : (
           `×${count}`
         )
       ) : discipline === "lifting" ? (
-        <LiftByLift liftByLift={training.liftByLift} />
+        <div style={{ width: "100%" }}>
+          <header>Top lifts:</header>
+          <LiftByLift liftByLift={training.liftByLift} />
+        </div>
       ) : discipline === "running" ? (
         "runByRun" in training &&
         training.runByRun &&
         Array.isArray(training.runByRun) &&
         training.runByRun.length ? (
-          <RunByRun runByRun={training.runByRun} />
+          <div style={{ width: "100%" }}>
+            <header>Top runs:</header>
+            <RunByRun runByRun={training.runByRun} />
+          </div>
         ) : (
           ` ${count}km`
         )
