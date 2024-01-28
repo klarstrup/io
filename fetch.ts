@@ -13,22 +13,8 @@ export const Fetch = mongoose.model("Fetch", fetchSchema, undefined, {
   overwriteModels: true,
 });
 
-const fetchCache = new Map<RequestInfo | URL, Promise<Response>>();
-const cachedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const key = JSON.stringify({ input, init });
-
-  let promise = fetchCache.get(key);
-
-  if (!promise) {
-    promise = fetch(input, init);
-    fetchCache.set(key, promise);
-  }
-
-  return promise.then((r) => r.clone());
-};
-
 // DB-backed fetch function that will return stale stuff
-const rawDbFetch = async <T = string>(
+export const dbFetch = async <T = string>(
   input: string | URL,
   init?: RequestInit,
   options?: {
@@ -84,10 +70,7 @@ const rawDbFetch = async <T = string>(
       );
       console.info(`DB FETCHING ${String(input)}`);
 
-      const response = await (process.env.NODE_ENV === "development" ||
-        process.env.CI
-        ? cachedFetch
-        : fetch)(input, {
+      const response = await fetch(input, {
         signal: AbortSignal.timeout(5000),
         ...init,
         next:
@@ -175,43 +158,3 @@ const rawDbFetch = async <T = string>(
 
   return parsedResult;
 };
-
-const dbFetchCache = new Map<
-  RequestInfo | URL,
-  { promise: Promise<never>; date: Date }
->();
-export const cachedDbFetch = async <T>(
-  input: string | URL,
-  init?: RequestInit,
-  options?: {
-    parseJson?: boolean;
-    /**
-     * The given number will be converted to an integer by rounding down.
-     * By default, no maximum age is set and the preview session finishes
-     * when the client shuts down (browser is closed).
-     */
-    maxAge?: number;
-  }
-): Promise<T> => {
-  const key = JSON.stringify({ input, init });
-  let entry = dbFetchCache.get(key);
-
-  if (
-    !entry ||
-    (typeof options?.maxAge !== "undefined" &&
-      (options.maxAge === 0 ||
-        Math.floor((Number(new Date()) - Number(entry.date)) / 1000) >
-          options.maxAge))
-  ) {
-    // console.info(`cachedDbFetch MISS ${String(input)}`);
-    const promise = rawDbFetch<never>(input, init, options);
-    entry = { promise, date: new Date() };
-    dbFetchCache.set(key, entry);
-  } else {
-    // console.info(`cachedDbFetch HIT ${String(input)}`);
-  }
-
-  return entry.promise;
-};
-
-export const dbFetch = cachedDbFetch;
