@@ -27,6 +27,7 @@ export default function TimelineTrainingContent({
         style={{
           textDecoration: "none",
           cursor: "pointer",
+          fontSize: "24px",
         }}
       >
         {discipline === "bouldering"
