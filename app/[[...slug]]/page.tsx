@@ -51,18 +51,28 @@ async function TimelineTrainingArticle({
   to: Date;
   urlDisciplines: string[] | undefined;
 }) {
+  const trainingInterval = { start: min([from, to]), end: max([from, to]) };
   const trainings: Awaited<ReturnType<typeof getTrainingData>> = (
-    await getTrainingData(
-      { start: min([from, to]), end: max([from, to]) },
-      urlDisciplines
-    )
+    await getTrainingData(trainingInterval, urlDisciplines)
   ).filter(({ count }) => count);
 
   return trainings.length ? (
     <article>
       <div className="content" style={{ padding: "7px 10px" }}>
         <div style={{ fontSize: "0.75em", marginBottom: "1px" }}>
-          <b>Training</b>
+          <b>
+            {new Intl.DateTimeFormat("en-DK", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              timeZone: "Europe/Copenhagen",
+            }).formatRange(
+              ...([trainingInterval.start, trainingInterval.end].sort(
+                (a, b) => Number(a) - Number(b)
+              ) as [Date, Date])
+            )}
+          </b>{" "}
+          in <b>Training</b>
         </div>
         <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
           {trainings.map((training) => (
