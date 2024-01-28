@@ -66,14 +66,10 @@ async function TimelineTrainingArticle({
   return trainings.length ? (
     <article>
       <div className="content" style={{ padding: "7px 10px" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexDirection: "column",
-            fontSize: "1.25em",
-          }}
-        >
+        <div style={{ fontSize: "0.75em", marginBottom: "1px" }}>
+          <b>Training</b>
+        </div>
+        <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
           {trainings.map((training) => (
             <TimelineTrainingContent
               key={training.type + training.discipline}
@@ -238,13 +234,11 @@ export default async function Home({
                   </article>
                 )
               ) : null}
-              {urlDisciplines?.length ? (
-                <TimelineTrainingArticle
-                  from={event.end}
-                  to={nextEvent?.start || now}
-                  urlDisciplines={urlDisciplines}
-                />
-              ) : null}
+              <TimelineTrainingArticle
+                from={event.end}
+                to={nextEvent?.start || now}
+                urlDisciplines={urlDisciplines}
+              />
               <article>
                 <div className={`content ${cotemporality(event)}`}>
                   {event.source ? (

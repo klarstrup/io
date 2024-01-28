@@ -21,53 +21,53 @@ export default function RunByRun({
   runByRun: Awaited<ReturnType<typeof getRunningTrainingData>>["runByRun"];
 }) {
   return (
-    <table>
-      <tbody>
-        {runByRun.map((run) => (
-          <tr
-            key={String(run.date)}
-            style={{
-              textAlign: "center",
-              fontSize: "0.5em",
-            }}
-          >
-            <td>
-              <dl>
-                <dt>km</dt>
-                <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                  {(run.distance / 1000).toLocaleString("en-DK", {
-                    unit: "kilometer",
-                    maximumSignificantDigits: 2,
-                  })}
-                </dd>
-              </dl>
-            </td>
-            <td>
-              <dl>
-                <dt>Duration</dt>
-                <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                  {seconds2time(Math.round(run.duration / 1000))}
-                </dd>
-              </dl>
-            </td>
-            <td>
-              <dl>
-                <dt>Pace</dt>
-                <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                  {run.pace ? (
-                    <>
-                      {formatPace(run.pace)}
-                      <small>
-                        <small>min/km</small>
-                      </small>
-                    </>
-                  ) : null}
-                </dd>
-              </dl>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div style={{ width: "100%" }}>
+      <header>Top runs:</header>
+      <table>
+        <tbody>
+          {runByRun.map((run) => (
+            <tr
+              key={String(run.date)}
+              style={{ textAlign: "center", fontSize: "0.5em" }}
+            >
+              <td>
+                <dl>
+                  <dt>km</dt>
+                  <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
+                    {(run.distance / 1000).toLocaleString("en-DK", {
+                      unit: "kilometer",
+                      maximumSignificantDigits: 2,
+                    })}
+                  </dd>
+                </dl>
+              </td>
+              <td>
+                <dl>
+                  <dt>Duration</dt>
+                  <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
+                    {seconds2time(Math.round(run.duration / 1000))}
+                  </dd>
+                </dl>
+              </td>
+              <td>
+                <dl>
+                  <dt>Pace</dt>
+                  <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
+                    {run.pace ? (
+                      <>
+                        {formatPace(run.pace)}
+                        <small>
+                          <small>min/km</small>
+                        </small>
+                      </>
+                    ) : null}
+                  </dd>
+                </dl>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -168,57 +168,60 @@ export default function ProblemByProblem({
   if (!problemByProblem?.length) return null;
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(15, 1fr)",
-        gap: "2px",
-        marginTop: "2px",
-        minWidth: "280px",
-      }}
-    >
-      {Array.from(problemByProblem)
-        .sort((a, b) => Number(b.attempt) - Number(a.attempt))
-        .sort((a, b) => Number(b.zone) - Number(a.zone))
-        .sort((a, b) => Number(b.flash) - Number(a.flash))
-        .sort((a, b) => Number(b.grade) - Number(a.grade))
-        .sort((a, b) => Number(b.top) - Number(a.top))
-        .map(({ number, flash, top, zone, attempt, grade }) => {
-          const Badge = flash
-            ? FlashBadge
-            : top
-            ? TopBadge
-            : zone
-            ? ZoneBadge
-            : attempt
-            ? AttemptBadge
-            : NoAttemptBadge;
+    <div>
+      <header>Top sends:</header>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(15, 1fr)",
+          gap: "2px",
+          marginTop: "2px",
+          minWidth: "280px",
+        }}
+      >
+        {Array.from(problemByProblem)
+          .sort((a, b) => Number(b.attempt) - Number(a.attempt))
+          .sort((a, b) => Number(b.zone) - Number(a.zone))
+          .sort((a, b) => Number(b.flash) - Number(a.flash))
+          .sort((a, b) => Number(b.grade) - Number(a.grade))
+          .sort((a, b) => Number(b.top) - Number(a.top))
+          .map(({ number, flash, top, zone, attempt, grade }) => {
+            const Badge = flash
+              ? FlashBadge
+              : top
+              ? TopBadge
+              : zone
+              ? ZoneBadge
+              : attempt
+              ? AttemptBadge
+              : NoAttemptBadge;
 
-          return (
-            <Badge
-              style={{
-                flex: 1,
-                maxWidth: "100%",
-                color: "#c84821",
-              }}
-              key={number}
-              grade={grade ? new Grade(grade).name : undefined}
-              title={`${number}${
-                number && grade ? `(${new Grade(grade).name})` : ""
-              }${!number && grade ? new Grade(grade).name : ""}: ${
-                flash
-                  ? "flash"
-                  : top
-                  ? "top"
-                  : zone
-                  ? "zone"
-                  : attempt
-                  ? "no send"
-                  : "no attempt"
-              }`}
-            />
-          );
-        })}
+            return (
+              <Badge
+                style={{
+                  flex: 1,
+                  maxWidth: "100%",
+                  color: "#c84821",
+                }}
+                key={number}
+                grade={grade ? new Grade(grade).name : undefined}
+                title={`${number}${
+                  number && grade ? `(${new Grade(grade).name})` : ""
+                }${!number && grade ? new Grade(grade).name : ""}: ${
+                  flash
+                    ? "flash"
+                    : top
+                    ? "top"
+                    : zone
+                    ? "zone"
+                    : attempt
+                    ? "no send"
+                    : "no attempt"
+                }`}
+              />
+            );
+          })}
+      </div>
     </div>
   );
 }

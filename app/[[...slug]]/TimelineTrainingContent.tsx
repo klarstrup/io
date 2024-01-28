@@ -4,6 +4,7 @@ import { getRunningTrainingData } from "../../sources/rundouble";
 import { getBoulderingTrainingData } from "../../sources/toplogger";
 import ProblemByProblem from "./ProblemByProblem";
 import RunByRun from "./RunByRun";
+import LiftByLift from "./LiftByLift";
 
 export default function TimelineTrainingContent({
   training,
@@ -19,7 +20,7 @@ export default function TimelineTrainingContent({
   const { type, discipline, count } = training;
 
   return (
-    <div style={{ display: "flex" }} data-via={training.source}>
+    <div style={{ display: "flex", gap: "4px" }} data-via={training.source}>
       <Link
         title={`${discipline} ${type}`}
         href={urlDisciplines?.includes(discipline) ? "/" : `/${discipline}`}
@@ -43,11 +44,12 @@ export default function TimelineTrainingContent({
           `×${count}`
         )
       ) : discipline === "lifting" ? (
-        ` ${count.toLocaleString("en-US", { minimumFractionDigits: 2 })}kg`
+        <LiftByLift liftByLift={training.liftByLift} />
       ) : discipline === "running" ? (
         "runByRun" in training &&
         training.runByRun &&
-        Array.isArray(training.runByRun) ? (
+        Array.isArray(training.runByRun) &&
+        training.runByRun.length ? (
           <RunByRun runByRun={training.runByRun} />
         ) : (
           ` ${count}km`

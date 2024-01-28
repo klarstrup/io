@@ -81,15 +81,19 @@ export const getRunningTrainingData = async (trainingInterval: Interval) => {
   const count = Math.round(
     runs.reduce((sum, run) => run.runDistance + sum, 0) / 1000
   );
-  const runByRun = runs.map(
-    (run) =>
-      ({
-        date: new Date(run.completedLong),
-        distance: run.runDistance,
-        duration: run.runTime,
-        pace: run.runPace,
-      } as const)
-  );
+  const runByRun = runs
+    .map(
+      (run) =>
+        ({
+          date: new Date(run.completedLong),
+          distance: run.runDistance,
+          duration: run.runTime,
+          pace: run.runPace,
+        } as const)
+    )
+    .filter(({ distance }) => distance >= 5000)
+    .sort((a, b) => b.pace - a.pace)
+    .slice(0, 5);
 
   return {
     source: "rundouble",
