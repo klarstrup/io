@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { differenceInDays } from "date-fns";
+import { differenceInDays, isPast, subDays } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
 import { EventEntry, SCORING_SOURCE, SCORING_SYSTEM, Score } from "../../lib";
@@ -247,8 +247,12 @@ export default async function TimelineEventContent({
       {subEvent || problems || noParticipants || category ? (
         <small>
           {subEvent ? <>{subEvent}, </> : null}
-          {problems ? <b>{problems} problems</b> : null}
-          {problems && noParticipants ? <> between </> : null}
+          {isPast(subDays(start, 1)) && problems ? (
+            <b>{problems} problems</b>
+          ) : null}
+          {isPast(subDays(start, 1)) && problems && noParticipants ? (
+            <> between </>
+          ) : null}
           {noParticipants ? <b>{noParticipants} participants</b> : null}
           {noParticipants && category ? <> in the </> : null}
           {category ? (
@@ -326,7 +330,7 @@ export default async function TimelineEventContent({
           ))}
         </div>
       ) : null}
-      {problemByProblem?.length ? (
+      {problemByProblem?.length && isPast(start) ? (
         <ProblemByProblem problemByProblem={problemByProblem} />
       ) : null}
     </Fragment>
