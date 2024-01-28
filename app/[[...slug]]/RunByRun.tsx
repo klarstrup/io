@@ -28,13 +28,13 @@ export default function RunByRun({
           {runByRun.map((run) => (
             <tr
               key={String(run.date)}
-              style={{ textAlign: "center", fontSize: "0.5em" }}
+              style={{ textAlign: "center", fontSize: "0.75em" }}
             >
               <td>
                 <dl>
                   <dt>km</dt>
                   <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                    {(run.distance / 1000).toLocaleString("en-DK", {
+                    {(run.distance / 1000).toLocaleString("en-US", {
                       unit: "kilometer",
                       maximumSignificantDigits: 2,
                     })}
