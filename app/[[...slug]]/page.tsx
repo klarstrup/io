@@ -107,7 +107,7 @@ export default async function Home({
 
   const currentUser = (await User.findOne({ _id: session?.user.id }))?.toJSON();
 
-  async function setFitocracySessionId(formData: FormData) {
+  async function updateUser(formData: FormData) {
     "use server";
     await dbConnect();
 
@@ -117,6 +117,13 @@ export default async function Home({
     const fitocracySessionId = formData.get("fitocracySessionId");
     if (typeof fitocracySessionId === "string") {
       userModel.fitocracySessionId = fitocracySessionId.trim() || null;
+    }
+
+    const topLoggerId = formData.get("topLoggerId");
+    if (typeof topLoggerId === "string") {
+      userModel.topLoggerId = topLoggerId.trim()
+        ? Number(topLoggerId.trim())
+        : null;
     }
 
     await userModel.save();
@@ -137,27 +144,6 @@ export default async function Home({
     }
   } catch {
     fitocracyProfile = null;
-  }
-
-  async function setTopLoggerId(formData: FormData) {
-    "use server";
-    await dbConnect();
-
-    const userModel = await User.findOne({ _id: session?.user.id });
-    if (!userModel) throw new Error("No user found");
-
-    const topLoggerId = formData.get("topLoggerId");
-    if (typeof topLoggerId === "string") {
-      userModel.topLoggerId = topLoggerId.trim()
-        ? Number(topLoggerId.trim())
-        : null;
-    }
-
-    await userModel.save();
-
-    // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
-    // calling it at all will make the page rerender with the new data.
-    revalidateTag("");
   }
 
   let topLoggerUser: Awaited<ReturnType<typeof getUser>> | null = null;
@@ -188,22 +174,24 @@ export default async function Home({
             <a href="/api/auth/signout">Sign out</a>
           </p>
           {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-          <form action={setFitocracySessionId}>
-            <input
-              name="fitocracySessionId"
-              defaultValue={currentUser.fitocracySessionId || ""}
-            />
-            <input type="submit" value="Set Fitocracy session ID" />
-            {fitocracyProfile ? "✅" : "❌"}
-          </form>
-          {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-          <form action={setTopLoggerId}>
-            <input
-              name="topLoggerId"
-              defaultValue={currentUser.topLoggerId || ""}
-            />
-            <input type="submit" value="Set TopLogger ID" />
-            {topLoggerUser ? "✅" : "❌"}
+          <form action={updateUser}>
+            <fieldset>
+              <legend>Fitocracy Session ID</legend>
+              <input
+                name="fitocracySessionId"
+                defaultValue={currentUser.fitocracySessionId || ""}
+              />
+              {fitocracyProfile ? "✅" : "❌"}
+            </fieldset>
+            <fieldset>
+              <legend>TopLogger ID</legend>
+              <input
+                name="topLoggerId"
+                defaultValue={currentUser.topLoggerId || ""}
+              />
+              {topLoggerUser ? "✅" : "❌"}
+            </fieldset>
+            <input type="submit" value="Update" />
           </form>
         </div>
       ) : (
