@@ -205,8 +205,6 @@ export default async function Home({
             <input type="submit" value="Set TopLogger ID" />
             {topLoggerUser ? "✅" : "❌"}
           </form>
-          <pre>{JSON.stringify(session, null, 2)}</pre>
-          <pre>{JSON.stringify(currentUser, null, 2)}</pre>
         </div>
       ) : (
         <div>
