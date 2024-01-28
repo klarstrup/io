@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { differenceInDays } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
 import { EventEntry, SCORING_SOURCE, SCORING_SYSTEM, Score } from "../../lib";
@@ -159,8 +160,8 @@ export default async function TimelineEventContent({
             year: "numeric",
             month: "long",
             day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
+            hour: differenceInDays(start, end) ? undefined : "numeric",
+            minute: differenceInDays(start, end) ? undefined : "2-digit",
             timeZone: "Europe/Copenhagen",
           }).formatRange(
             ...([start, end].sort((a, b) => Number(a) - Number(b)) as [
@@ -251,7 +252,14 @@ export default async function TimelineEventContent({
           {noParticipants ? <b>{noParticipants} participants</b> : null}
           {noParticipants && category ? <> in the </> : null}
           {category ? (
-            <b>{category === "male" ? "M" : category === "female" ? "F" : category} bracket</b>
+            <b>
+              {category === "male"
+                ? "M"
+                : category === "female"
+                ? "F"
+                : category}{" "}
+              bracket
+            </b>
           ) : null}
         </small>
       ) : null}

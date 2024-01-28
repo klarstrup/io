@@ -3,6 +3,7 @@ import {
   Interval,
   isAfter,
   isBefore,
+  isFuture,
   isPast,
   isWithinInterval,
   startOfDay,
@@ -624,7 +625,9 @@ export async function getIoTopLoggerGroupEvent(
     ioId,
     url: `https://app.toplogger.nu/en-us/${gym.slug}/comp/${groupId}/details`,
     start: firstAscend || new Date(groupInterval.start),
-    end: lastAscend || new Date(groupInterval.end),
+    end: isFuture(new Date(groupInterval.end))
+      ? new Date(groupInterval.end)
+      : lastAscend || new Date(groupInterval.end),
     venue: gym.name.trim(),
     location: gym.address,
     event: group.name
