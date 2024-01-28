@@ -248,7 +248,15 @@ const getData = async (
       getIoClimbAlongCompetitionEventEntry(30, 11951),
       getIoClimbAlongCompetitionEventEntry(32, 12091),
       getIoClimbAlongCompetitionEventEntry(33, 12477),
-      getIoClimbAlongCompetitionEventEntry(34),
+      getIoClimbAlongCompetitionEventEntry(34, 14063),
+      getIoClimbAlongCompetitionEventEntry(147),
+      getIoClimbAlongCompetitionEventEntry(148),
+      getIoClimbAlongCompetitionEventEntry(149),
+      getIoClimbAlongCompetitionEventEntry(150),
+      getIoClimbAlongCompetitionEventEntry(151),
+      getIoClimbAlongCompetitionEventEntry(152),
+      getIoClimbAlongCompetitionEventEntry(153),
+      getIoClimbAlongCompetitionEventEntry(154),
       ...(topLoggerUserId
         ? await getGroupsUsers(
             { filters: { user_id: topLoggerUserId } },
