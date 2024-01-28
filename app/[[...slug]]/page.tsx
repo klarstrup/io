@@ -340,11 +340,12 @@ const getData = async (
       getIoClimbAlongCompetitionEventEntry(32, 12091),
       getIoClimbAlongCompetitionEventEntry(33, 12477),
       getIoClimbAlongCompetitionEventEntry(34),
-      ...(
-        await getGroupsUsers(
-          { filters: { user_id: topLoggerUserId } },
-          { maxAge: HOUR_IN_SECONDS }
-        )
+      ...(topLoggerUserId
+        ? await getGroupsUsers(
+            { filters: { user_id: topLoggerUserId } },
+            { maxAge: HOUR_IN_SECONDS }
+          )
+        : []
       ).map(({ group_id, user_id }) =>
         getTopLoggerGroupEventEntry(group_id, user_id)
       )
