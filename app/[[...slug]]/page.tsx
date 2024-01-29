@@ -51,6 +51,8 @@ async function TimelineTrainingArticle({
   to: Date;
   urlDisciplines: string[] | undefined;
 }) {
+  if (isFuture(from)) return null;
+
   const trainingInterval = { start: min([from, to]), end: max([from, to]) };
   const trainings: Awaited<ReturnType<typeof getTrainingData>> = (
     await getTrainingData(trainingInterval, urlDisciplines)
