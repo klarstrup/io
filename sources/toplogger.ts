@@ -21,6 +21,7 @@ import {
   DAY_IN_SECONDS,
   HOUR_IN_SECONDS,
   MINUTE_IN_SECONDS,
+  RelativeURL,
   percentile,
 } from "../utils";
 import { User } from "../models/user";
@@ -350,10 +351,10 @@ export namespace TopLogger {
 
 const fetchTopLogger = async <T>(
   input: string | URL,
-  init?: RequestInit,
+  init?: RequestInit | null,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>
-  dbFetch<T>(`https://api.toplogger.nu${String(input)}`, init, dbFetchOptions);
+  dbFetch<T>(new URL(input, "https://api.toplogger.nu/"), init, dbFetchOptions);
 
 interface JSONParams {
   filters?: Record<
@@ -395,38 +396,39 @@ const gymLoader = new DataLoader(
 
 const getGymClimbs = (
   gymId: number,
-  jsonParams: JSONParams = {},
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  fetchTopLogger<TopLogger.ClimbMultiple[]>(
-    `/v1/gyms/${gymId}/climbs.json?json_params=${encodeJSONParams(jsonParams)}`,
-    undefined,
-    dbFetchOptions
-  );
+  jsonParams?: JSONParams,
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL(`/v1/gyms/${gymId}/climbs.json`);
+  if (jsonParams) {
+    url.searchParams.set("json_params", JSON.stringify(jsonParams));
+  }
+  return fetchTopLogger<TopLogger.ClimbMultiple[]>(url, null, dbOptions);
+};
 
 export const getGymHolds = (
   gymId: number,
-  jsonParams: JSONParams = {},
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  fetchTopLogger<TopLogger.HoldMultiple[]>(
-    `/v1/gyms/${gymId}/holds.json?json_params=${encodeJSONParams(jsonParams)}`,
-    undefined,
-    dbFetchOptions
-  );
+  jsonParams?: JSONParams,
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL(`/v1/gyms/${gymId}/holds.json`);
+  if (jsonParams) {
+    url.searchParams.set("json_params", JSON.stringify(jsonParams));
+  }
+  return fetchTopLogger<TopLogger.HoldMultiple[]>(url, null, dbOptions);
+};
 export const getGymHold = (
   gymId: number,
   holdId: number,
-  jsonParams: JSONParams = {},
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  fetchTopLogger<TopLogger.HoldMultiple>(
-    `/v1/gyms/${gymId}/holds/${holdId}.json?json_params=${encodeJSONParams(
-      jsonParams
-    )}`,
-    undefined,
-    dbFetchOptions
-  );
+  jsonParams?: JSONParams,
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL(`/v1/gyms/${gymId}/holds/${holdId}.json`);
+  if (jsonParams) {
+    url.searchParams.set("json_params", JSON.stringify(jsonParams));
+  }
+  return fetchTopLogger<TopLogger.HoldMultiple>(url, null, dbOptions);
+};
 
 const gymClimbByIdLoadersByGym: Record<
   number,
@@ -455,38 +457,34 @@ export const getGymClimbById = (
 
 export const getUser = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2]
 ) =>
-  fetchTopLogger<TopLogger.UserSingle>(
-    `/v1/users/${id}.json`,
-    undefined,
-    dbFetchOptions
-  );
+  fetchTopLogger<TopLogger.UserSingle>(`/v1/users/${id}.json`, null, dbOptions);
 export const getAscends = (
   jsonParams: JSONParams = {},
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  fetchTopLogger<TopLogger.AscendSingle[]>(
-    `/v1/ascends.json?json_params=${encodeJSONParams(
-      jsonParams
-    )}&serialize_checks=true`,
-    undefined,
-    dbFetchOptions
-  );
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL(`/v1/ascends.json`);
+  url.searchParams.set("serialize_checks", "true");
+  if (jsonParams) {
+    url.searchParams.set("json_params", JSON.stringify(jsonParams));
+  }
+  return fetchTopLogger<TopLogger.AscendSingle[]>(url, null, dbOptions);
+};
 export const getGroupsUsers = (
   jsonParams: JSONParams = {},
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  fetchTopLogger<TopLogger.GroupUserMultiple[]>(
-    `/v1/group_users.json?json_params=${encodeJSONParams(
-      jsonParams
-    )}&serializeall=false`,
-    undefined,
-    dbFetchOptions
-  );
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL("/v1/group_users.json");
+  url.searchParams.set("serializeall", "false");
+  if (jsonParams) {
+    url.searchParams.set("json_params", JSON.stringify(jsonParams));
+  }
+  return fetchTopLogger<TopLogger.GroupUserMultiple[]>(url, null, dbOptions);
+};
 const getGroupClimbs = async (
   group: TopLogger.GroupSingle,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
   const gyms = (
     await Promise.all(
@@ -499,9 +497,7 @@ const getGroupClimbs = async (
         await Promise.all(
           group.climb_groups.map(({ climb_id }) =>
             Promise.all(
-              gyms.map((gym) =>
-                getGymClimbById(gym.id, climb_id, dbFetchOptions)
-              )
+              gyms.map((gym) => getGymClimbById(gym.id, climb_id, dbOptions))
             )
           )
         )

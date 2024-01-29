@@ -16,7 +16,7 @@ export const Fetch = mongoose.model("Fetch", fetchSchema, undefined, {
 // DB-backed fetch function that will return stale stuff
 const rawDbFetch = async <T = string>(
   input: string | URL,
-  init?: RequestInit,
+  init?: RequestInit | null,
   options?: {
     parseJson?: boolean;
     /**
@@ -165,7 +165,7 @@ const dbFetchCache = new Map<
 >();
 export const cachedDbFetch = async <T>(
   input: string | URL,
-  init?: RequestInit,
+  init?: RequestInit | null,
   options?: {
     parseJson?: boolean;
     /**
