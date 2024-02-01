@@ -373,11 +373,10 @@ interface JSONParams {
 }
 
 const getGroup = (id: number, dbOptions?: Parameters<typeof dbFetch>[2]) =>
-  fetchTopLogger<TopLogger.GroupSingle>(
-    `/v1/groups/${id}.json`,
-    null,
-    dbOptions
-  );
+  fetchTopLogger<TopLogger.GroupSingle>(`/v1/groups/${id}.json`, null, {
+    ...dbOptions,
+    maxAge: 0,
+  });
 const fetchGyms = (
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
@@ -837,7 +836,7 @@ export async function getTopLoggerGroupEventEntry(
   groupId: number,
   userId: number
 ): Promise<EventEntry> {
-  const group = await getGroup(groupId);
+  const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
   const gyms = (
     await gymLoader.loadMany(group.gym_groups.map(({ gym_id }) => gym_id))
   ).filter((gymOrError): gymOrError is TopLogger.GymMultiple =>
