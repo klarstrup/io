@@ -373,10 +373,11 @@ interface JSONParams {
 }
 
 const getGroup = (id: number, dbOptions?: Parameters<typeof dbFetch>[2]) =>
-  fetchTopLogger<TopLogger.GroupSingle>(`/v1/groups/${id}.json`, null, {
-    ...dbOptions,
-    maxAge: 0,
-  });
+  fetchTopLogger<TopLogger.GroupSingle>(
+    `/v1/groups/${id}.json`,
+    null,
+    dbOptions
+  );
 const fetchGyms = (
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
