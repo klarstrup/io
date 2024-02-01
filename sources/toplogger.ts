@@ -372,8 +372,12 @@ interface JSONParams {
   includes?: string | string[];
 }
 
-const getGroup = (id: number) =>
-  fetchTopLogger<TopLogger.GroupSingle>(`/v1/groups/${id}.json`);
+const getGroup = (id: number, dbOptions?: Parameters<typeof dbFetch>[2]) =>
+  fetchTopLogger<TopLogger.GroupSingle>(
+    `/v1/groups/${id}.json`,
+    null,
+    dbOptions
+  );
 const fetchGyms = (
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
@@ -531,7 +535,7 @@ export async function getIoTopLoggerGroupEvent(
   ioId: number,
   sex?: boolean
 ) {
-  const group = await getGroup(groupId);
+  const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
   const gyms = (
     await Promise.all(
       group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
@@ -689,7 +693,7 @@ async function getIoTopLoggerGroupScores(
   ioId: number,
   sex?: boolean
 ) {
-  const group = await getGroup(groupId);
+  const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
   const climbs = await getGroupClimbs(group, { maxAge: HOUR_IN_SECONDS });
   const groupInterval: Interval = {
     start: new Date(group.date_loggable_start),
