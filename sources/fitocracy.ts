@@ -306,35 +306,50 @@ export const getExercises = async (
     { maxAge: WEEK_IN_SECONDS, ...dbFetchOptions }
   );
 
-export async function* getUserWorkouts(
+export const getUserWorkoutIds = async (
   fitocracySessionId: string,
   userId: number,
-  interval: Interval,
+  interval?: Interval,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) {
-  const workoutIds = Object.values(
+) =>
+  Object.values(
     await fetchFitocracy<{ [date: string]: number[] }>(
       fitocracySessionId,
       `/api/v2/user/${userId}/workouts/?start_date=${format(
-        interval.start,
+        interval?.start || new Date(2001, 9, 11),
         "yyyy-MM-dd"
-      )}&end_date=${format(interval.end, "yyyy-MM-dd")}`,
+      )}&end_date=${format(interval?.end || new Date(), "yyyy-MM-dd")}`,
       undefined,
       dbFetchOptions
     )
   ).flat();
+export const getUserWorkout = async (
+  fitocracySessionId: string,
+  userId: number,
+  workoutId: number,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  await fetchFitocracy<Fitocracy.WorkoutData>(
+    fitocracySessionId,
+    `/api/v2/user/${userId}/workout/${workoutId}/`,
+    undefined,
+    dbFetchOptions
+  );
 
-  const workouts: Fitocracy.WorkoutData[] = [];
-  for (const workoutId of workoutIds) {
-    yield await fetchFitocracy<Fitocracy.WorkoutData>(
-      fitocracySessionId,
-      `/api/v2/user/${userId}/workout/${workoutId}/`,
-      undefined,
-      dbFetchOptions
-    );
+export async function* getUserWorkouts(
+  sessionId: string,
+  userId: number,
+  interval?: Interval,
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) {
+  for (const workoutId of await getUserWorkoutIds(
+    sessionId,
+    userId,
+    interval,
+    dbOptions
+  )) {
+    yield await getUserWorkout(sessionId, userId, workoutId, dbOptions);
   }
-
-  return workouts;
 }
 export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
   const result = await dbFetch<
