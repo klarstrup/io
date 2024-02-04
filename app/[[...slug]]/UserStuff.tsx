@@ -110,8 +110,8 @@ export default async function UserStuff() {
               {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
               <img
                 src={currentUser.image || ""}
-                width={50}
-                height={50}
+                width={48}
+                height={48}
                 style={{ borderRadius: "100%" }}
               />
             </span>
@@ -120,21 +120,45 @@ export default async function UserStuff() {
             </p>
             {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <form action={updateUser}>
-              <fieldset>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>Fitocracy Session ID</legend>
                 <input
                   name="fitocracySessionId"
                   defaultValue={currentUser.fitocracySessionId || ""}
+                  style={{ flex: 1 }}
                 />
-                {fitocracyProfile ? "✅" : "❌"}
+                {fitocracyProfile ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="Fitocracy Avatar"
+                    src={`https://s3.amazonaws.com/static.fitocracy.com/site_media/${fitocracyProfile.pic}`}
+                    width={24}
+                    height={24}
+                    style={{ borderRadius: "100%" }}
+                  />
+                ) : (
+                  "❌"
+                )}
               </fieldset>
-              <fieldset>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>TopLogger ID</legend>
                 <input
                   name="topLoggerId"
                   defaultValue={currentUser.topLoggerId || ""}
+                  style={{ flex: 1 }}
                 />
-                {topLoggerUser ? "✅" : "❌"}
+                {topLoggerUser ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="TopLogger Avatar"
+                    src={topLoggerUser.avatar}
+                    width={24}
+                    height={24}
+                    style={{ borderRadius: "100%" }}
+                  />
+                ) : (
+                  "❌"
+                )}
               </fieldset>
               <input type="submit" value="Update" />
             </form>
