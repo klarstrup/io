@@ -48,8 +48,35 @@ export const cotemporality = (interval: Interval, now = Date.now()) =>
       : "past"
     : "future";
 
-export async function arrayFromAsyncIterable<T>(gen: AsyncIterable<T>): Promise<T[]> {
+export async function arrayFromAsyncIterable<T>(
+  gen: AsyncIterable<T>
+): Promise<T[]> {
   const out: T[] = [];
   for await (const x of gen) out.push(x);
   return out;
+}
+export function jsonReadableStreamFromAsyncIterable<T>(
+  iterable: AsyncGenerator<T, T[]>
+) {
+  const responseStream = new TransformStream<Uint8Array, string>();
+  const writer = responseStream.writable.getWriter();
+  (async () => {
+    const encoder = new TextEncoder();
+
+    await writer.write(encoder.encode("["));
+    let first = true;
+    for await (const object of iterable) {
+      if (first) {
+        first = false;
+      } else {
+        await writer.write(encoder.encode(","));
+      }
+      await writer.write(encoder.encode(JSON.stringify(object)));
+    }
+    await writer.write(encoder.encode("]"));
+
+    await writer.close();
+  })().catch(() => {});
+
+  return responseStream.readable;
 }

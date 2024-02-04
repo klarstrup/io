@@ -4,6 +4,7 @@ import {
   getUserProfileBySessionId,
   getUserWorkouts,
 } from "../../../sources/fitocracy";
+import { jsonReadableStreamFromAsyncIterable } from "../../../utils";
 
 export const dynamic = "force-dynamic";
 
@@ -22,34 +23,15 @@ export async function GET() {
   }
   const fitocracyUserId = fitocracyProfile?.id;
 
-  const responseStream = new TransformStream();
-  const writer = responseStream.writable.getWriter();
-  (async () => {
-    const encoder = new TextEncoder();
-
-    await writer.write(encoder.encode("["));
-    let first = true;
-    for await (const workout of getUserWorkouts(
-      fitocracySessionId!,
-      fitocracyUserId!,
-      {
+  return new Response(
+    jsonReadableStreamFromAsyncIterable(
+      getUserWorkouts(fitocracySessionId!, fitocracyUserId!, {
         start: new Date(2001, 9, 11),
         end: new Date(2012, 9, 11),
-      }
-    )) {
-      if (first) {
-        first = false;
-      } else {
-        await writer.write(encoder.encode(","));
-      }
-      await writer.write(encoder.encode(JSON.stringify(workout)));
+      })
+    ),
+    {
+      headers: { "Content-Type": "application/json" },
     }
-    await writer.write(encoder.encode("]"));
-
-    await writer.close();
-  })().catch(() => {});
-
-  return new Response(responseStream.readable, {
-    headers: { "Content-Type": "application/json" },
-  });
+  );
 }
