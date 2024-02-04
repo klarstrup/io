@@ -161,7 +161,7 @@ const rawDbFetch = async <T = string>(
 
 const dbFetchCache = new Map<
   RequestInfo | URL,
-  { promise: Promise<never>; date: Date }
+  { promise: Promise<unknown>; date: Date }
 >();
 export const cachedDbFetch = async <T>(
   input: string | URL,
@@ -187,14 +187,16 @@ export const cachedDbFetch = async <T>(
           options.maxAge))
   ) {
     // console.info(`cachedDbFetch MISS ${String(input)}`);
-    const promise = rawDbFetch<never>(input, init, options);
+    const promise = rawDbFetch<T>(input, init, options).catch(() =>
+      dbFetchCache.delete(key)
+    );
     entry = { promise, date: new Date() };
     dbFetchCache.set(key, entry);
   } else {
     // console.info(`cachedDbFetch HIT ${String(input)}`);
   }
 
-  return entry.promise;
+  return entry.promise as Promise<T>;
 };
 
 export const dbFetch = cachedDbFetch;
