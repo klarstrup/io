@@ -1,7 +1,7 @@
 import { format, type Interval } from "date-fns";
 import { dbFetch } from "../fetch";
 import { User } from "../models/user";
-import { DAY_IN_SECONDS, WEEK_IN_SECONDS } from "../utils";
+import { DAY_IN_SECONDS, HOUR_IN_SECONDS, WEEK_IN_SECONDS } from "../utils";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -295,6 +295,17 @@ const fetchFitocracy = async <T>(
   return result.data;
 };
 
+export const getExercises = async (
+  fitocracySessionId: string,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) =>
+  await fetchFitocracy<Fitocracy.ExerciseData[]>(
+    fitocracySessionId,
+    "/api/v2/exercises/",
+    undefined,
+    { maxAge: WEEK_IN_SECONDS, ...dbFetchOptions }
+  );
+
 export async function* getUserWorkouts(
   fitocracySessionId: string,
   userId: number,
@@ -331,7 +342,7 @@ export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
   >(
     `https://www.fitocracy.com/api/user/profile/?sessionid=${fitocracySessionId}`,
     { headers: { cookie: `sessionid=${fitocracySessionId}` } },
-    { maxAge: 1 }
+    { maxAge: HOUR_IN_SECONDS }
   );
 
   if ("error" in result) throw new Error(result.error);
@@ -358,12 +369,7 @@ export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   const fitocracyUserId = fitocracyProfile.id;
 
   if (!exercises) {
-    exercises = await fetchFitocracy<Fitocracy.ExerciseData[]>(
-      fitocracySessionId,
-      "/api/v2/exercises/",
-      undefined,
-      { maxAge: WEEK_IN_SECONDS }
-    );
+    exercises = await getExercises(fitocracySessionId);
   }
 
   const biggestLifts: Record<
