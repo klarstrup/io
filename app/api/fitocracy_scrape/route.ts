@@ -4,6 +4,8 @@ import { User } from "../../../models/user";
 import {
   Fitocracy,
   getUserProfileBySessionId,
+  getUserWorkout,
+  getUserWorkoutIds,
   getUserWorkouts,
 } from "../../../sources/fitocracy";
 import { DAY_IN_SECONDS } from "../../../utils";
@@ -60,12 +62,23 @@ export async function GET(/* request: NextRequest */) {
 
     await writer.write(encoder.encode("["));
     let first = true;
-    for await (const workout of getUserWorkouts(
+    for (const workoutId of await getUserWorkoutIds(
       fitocracySessionId!,
       fitocracyUserId!,
       undefined,
       { maxAge: DAY_IN_SECONDS }
     )) {
+      const dbWorkout = await workouts.findOne({ id: workoutId });
+      if (dbWorkout) {
+        continue;
+      }
+      const workout = await getUserWorkout(
+        fitocracySessionId!,
+        fitocracyUserId!,
+        workoutId,
+        { maxAge: DAY_IN_SECONDS }
+      );
+
       const updateResult = await workouts.updateOne(
         { id: workout.id },
         { $set: workout },
