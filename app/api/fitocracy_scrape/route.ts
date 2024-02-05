@@ -8,11 +8,12 @@ import {
   getUserWorkouts,
 } from "../../../sources/fitocracy";
 import { DAY_IN_SECONDS } from "../../../utils";
-import { NextRequest } from "next/server";
+// import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET(/* request: NextRequest */) {
+  /*
   if (process.env.VERCEL) {
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
       });
     }
   }
+  */
 
   await dbConnect();
 

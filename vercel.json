@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/fitocracy_scrape",
-      "schedule": "0 */3 * * *"
-    }
-  ]
-}
