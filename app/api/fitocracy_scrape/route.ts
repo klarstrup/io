@@ -1,7 +1,6 @@
 import { UpdateResult } from "mongodb";
 import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
-import { clientPromise } from "../../../mongodb";
 import {
   Fitocracy,
   getUserProfileBySessionId,
@@ -43,9 +42,9 @@ export async function GET(/* request: NextRequest */) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
 
-  const workouts = (await clientPromise)
-    .db("test")
-    .collection<Fitocracy.WorkoutData>("fitocracy_workouts");
+  const workouts = (await dbConnect()).connection.db.collection(
+    "fitocracy_workouts"
+  );
 
   (async () => {
     const workoutsSynchronized: Pick<
