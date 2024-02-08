@@ -71,13 +71,12 @@ export async function GET(/* request: NextRequest */) {
       .find<WithId<Fitocracy.WorkoutData>>({ id: { $in: allWorkoutIds } })
       .toArray();
 
-    const filteredWorkoutIds = allWorkoutIds.filter(
-      (workoutId) =>
-        !workoutsThatAlreadyExist.some(({ id }) => id === workoutId)
-    );
-    workoutsSynchronized.skippedCount += workoutsThatAlreadyExist.length;
+    for (const workoutId of allWorkoutIds) {
+      if (workoutsThatAlreadyExist.some(({ id }) => id === workoutId)) {
+        workoutsSynchronized.skippedCount += 1;
+        continue;
+      }
 
-    for (const workoutId of filteredWorkoutIds) {
       const workout = await getUserWorkout(
         fitocracySessionId!,
         fitocracyUserId!,
