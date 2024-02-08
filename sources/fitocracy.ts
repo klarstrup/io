@@ -1,7 +1,8 @@
 import { format, type Interval } from "date-fns";
+import dbConnect from "../dbConnect";
 import { dbFetch } from "../fetch";
 import { User } from "../models/user";
-import { DAY_IN_SECONDS, HOUR_IN_SECONDS, WEEK_IN_SECONDS } from "../utils";
+import { HOUR_IN_SECONDS, WEEK_IN_SECONDS } from "../utils";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -394,17 +395,24 @@ export const getLiftingTrainingData = async (trainingInterval: Interval) => {
     exercises = await getExercises(fitocracySessionId);
   }
 
+  const workoutsCollection = (
+    await dbConnect()
+  ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
+
+  const workoutsCursor = workoutsCollection.find({
+    user_id: fitocracyUserId,
+    workout_timestamp: {
+      $gte: new Date(trainingInterval["start"]),
+      $lt: new Date(trainingInterval["end"]),
+    },
+  });
+
   const biggestLifts: Record<
     string,
     Fitocracy.WorkoutData["root_group"]["children"][number]["exercise"]["sets"][number]
   > = {};
   let count = 0;
-  for await (const workout of getUserWorkouts(
-    fitocracySessionId,
-    fitocracyUserId,
-    trainingInterval,
-    { maxAge: DAY_IN_SECONDS }
-  )) {
+  for await (const workout of workoutsCursor) {
     for (const child of workout.root_group.children) {
       for (const set of child.exercise.sets) {
         let reps: number | undefined, weight: number | undefined;
