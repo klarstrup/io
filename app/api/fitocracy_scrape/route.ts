@@ -1,4 +1,4 @@
-import { UpdateResult } from "mongodb";
+import { UpdateResult, WithId } from "mongodb";
 import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
@@ -61,32 +61,24 @@ export async function GET(/* request: NextRequest */) {
 
     await writer.write(encoder.encode("["));
     let first = true;
-    console.info("filtering workouts");
-    const filteredWorkoutIds: number[] = [];
-    for (const workoutId of shuffle(
-      await getUserWorkoutIds(
-        fitocracySessionId!,
-        fitocracyUserId!,
-        undefined,
-        { maxAge: DAY_IN_SECONDS }
-      )
-    )) {
-      console.log(`filtering workout: ${workoutId}`);
-      if (!(await workouts.findOne({ id: workoutId }))) {
-        filteredWorkoutIds.push(workoutId);
-      }
-      console.log(`filtered workout: ${workoutId}`);
-    }
-    console.info(String(filteredWorkoutIds));
-    for (const workoutId of filteredWorkoutIds) {
-      if (first) {
-        first = false;
-      } else {
-        await writer.write(encoder.encode(","));
-      }
-      await writer.write(encoder.encode(JSON.stringify(workoutId)));
-    }
-    for (const workoutId of filteredWorkoutIds) {
+
+    const allWorkoutIds = await getUserWorkoutIds(
+      fitocracySessionId!,
+      fitocracyUserId!,
+      undefined,
+      { maxAge: DAY_IN_SECONDS }
+    );
+
+    const workoutsThatAlreadyExist = await workouts
+      .find<WithId<Fitocracy.WorkoutData>>({ id: { $in: allWorkoutIds } })
+      .toArray();
+
+    const filteredWorkoutIds = allWorkoutIds.filter(
+      (workoutId) =>
+        !workoutsThatAlreadyExist.some(({ id }) => id === workoutId)
+    );
+
+    for (const workoutId of shuffle(filteredWorkoutIds)) {
       const workout = await getUserWorkout(
         fitocracySessionId!,
         fitocracyUserId!,
