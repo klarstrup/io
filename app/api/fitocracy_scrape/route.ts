@@ -61,6 +61,7 @@ export async function GET(/* request: NextRequest */) {
 
     await writer.write(encoder.encode("["));
     let first = true;
+    console.info("filtering workouts");
     const filteredWorkoutIds: number[] = [];
     for (const workoutId of shuffle(
       await getUserWorkoutIds(
@@ -70,6 +71,7 @@ export async function GET(/* request: NextRequest */) {
         { maxAge: DAY_IN_SECONDS }
       )
     )) {
+      console.count("filtering workouts");
       if (!(await workouts.findOne({ id: workoutId }))) {
         filteredWorkoutIds.push(workoutId);
       }
