@@ -74,7 +74,7 @@ export async function GET(/* request: NextRequest */) {
         filteredWorkoutIds.push(workoutId);
       }
     }
-    console.log({ filteredWorkoutIds });
+    console.info(String(filteredWorkoutIds));
     for (const workoutId of filteredWorkoutIds) {
       if (first) {
         first = false;
