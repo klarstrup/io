@@ -1,4 +1,3 @@
-import { WithId } from "mongodb";
 import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
@@ -43,9 +42,9 @@ export async function GET(/* request: NextRequest */) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
 
-  const workouts = (await dbConnect()).connection.db.collection(
-    "fitocracy_workouts"
-  );
+  const workouts = (
+    await dbConnect()
+  ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   (async () => {
     const workoutsSynchronized = {
@@ -68,7 +67,7 @@ export async function GET(/* request: NextRequest */) {
     );
 
     const workoutsThatAlreadyExist = await workouts
-      .find<WithId<Fitocracy.WorkoutData>>({ id: { $in: allWorkoutIds } })
+      .find({ id: { $in: allWorkoutIds } })
       .toArray();
 
     for (const workoutId of allWorkoutIds) {
@@ -86,7 +85,7 @@ export async function GET(/* request: NextRequest */) {
 
       const updateResult = await workouts.updateOne(
         { id: workout.id },
-        { $set: workout },
+        { $set: { ...workout, user_id: fitocracyUserId } },
         { upsert: true }
       );
       workoutsSynchronized.matchedCount += updateResult.matchedCount;

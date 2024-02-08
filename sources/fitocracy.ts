@@ -144,6 +144,8 @@ export namespace Fitocracy {
     routine_id?: number;
   }
 
+  export type MongoWorkout = WorkoutData & { user_id: number };
+
   export interface Achievement {
     comment_count: number;
     description: string;
