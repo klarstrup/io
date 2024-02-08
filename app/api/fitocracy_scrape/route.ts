@@ -75,7 +75,7 @@ export async function GET(/* request: NextRequest */) {
       (workoutId) =>
         !workoutsThatAlreadyExist.some(({ id }) => id === workoutId)
     );
-    workoutsSynchronized.matchedCount += workoutsThatAlreadyExist.length;
+    workoutsSynchronized.skippedCount += workoutsThatAlreadyExist.length;
 
     for (const workoutId of filteredWorkoutIds) {
       const workout = await getUserWorkout(
