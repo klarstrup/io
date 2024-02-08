@@ -85,7 +85,14 @@ export async function GET(/* request: NextRequest */) {
 
       const updateResult = await workouts.updateOne(
         { id: workout.id },
-        { $set: { ...workout, user_id: fitocracyUserId } },
+        {
+          $set: {
+            ...workout,
+            user_id: fitocracyUserId,
+            updated_timestamp: new Date(workout.updated_timestamp),
+            workout_timestamp: new Date(workout.workout_timestamp),
+          },
+        },
         { upsert: true }
       );
       workoutsSynchronized.matchedCount += updateResult.matchedCount;

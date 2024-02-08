@@ -139,12 +139,17 @@ export namespace Fitocracy {
     };
     share_url: string;
     submitted: boolean;
-    updated_timestamp: Date;
-    workout_timestamp: Date;
+    updated_timestamp: string;
+    workout_timestamp: string;
     routine_id?: number;
   }
 
-  export type MongoWorkout = WorkoutData & { user_id: number };
+  export interface MongoWorkout
+    extends Omit<WorkoutData, "updated_timestamp" | "workout_timestamp"> {
+    user_id: number;
+    updated_timestamp: Date;
+    workout_timestamp: Date;
+  }
 
   export interface Achievement {
     comment_count: number;
