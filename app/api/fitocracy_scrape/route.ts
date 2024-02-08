@@ -71,10 +71,11 @@ export async function GET(/* request: NextRequest */) {
         { maxAge: DAY_IN_SECONDS }
       )
     )) {
-      console.count("filtering workouts");
+      console.log(`filtering workout: ${workoutId}`);
       if (!(await workouts.findOne({ id: workoutId }))) {
         filteredWorkoutIds.push(workoutId);
       }
+      console.log(`filtered workout: ${workoutId}`);
     }
     console.info(String(filteredWorkoutIds));
     for (const workoutId of filteredWorkoutIds) {
