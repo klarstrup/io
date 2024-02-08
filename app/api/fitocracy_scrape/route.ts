@@ -8,7 +8,7 @@ import {
   getUserWorkoutIds,
   getUserWorkouts,
 } from "../../../sources/fitocracy";
-import { DAY_IN_SECONDS } from "../../../utils";
+import { DAY_IN_SECONDS, shuffle } from "../../../utils";
 // import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -62,11 +62,13 @@ export async function GET(/* request: NextRequest */) {
 
     await writer.write(encoder.encode("["));
     let first = true;
-    for (const workoutId of await getUserWorkoutIds(
-      fitocracySessionId!,
-      fitocracyUserId!,
-      undefined,
-      { maxAge: DAY_IN_SECONDS }
+    for (const workoutId of shuffle(
+      await getUserWorkoutIds(
+        fitocracySessionId!,
+        fitocracyUserId!,
+        undefined,
+        { maxAge: DAY_IN_SECONDS }
+      )
     )) {
       const dbWorkout = await workouts.findOne({ id: workoutId });
       if (dbWorkout) {
