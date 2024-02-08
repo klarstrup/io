@@ -48,10 +48,8 @@ export async function GET(/* request: NextRequest */) {
   );
 
   (async () => {
-    const workoutsSynchronized: Pick<
-      UpdateResult,
-      "matchedCount" | "modifiedCount" | "upsertedCount"
-    > = {
+    const workoutsSynchronized = {
+      skippedCount: 0,
       matchedCount: 0,
       modifiedCount: 0,
       upsertedCount: 0,
@@ -77,6 +75,7 @@ export async function GET(/* request: NextRequest */) {
       (workoutId) =>
         !workoutsThatAlreadyExist.some(({ id }) => id === workoutId)
     );
+    workoutsSynchronized.matchedCount += workoutsThatAlreadyExist.length;
 
     for (const workoutId of shuffle(filteredWorkoutIds)) {
       const workout = await getUserWorkout(
