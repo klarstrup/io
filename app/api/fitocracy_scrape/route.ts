@@ -1,4 +1,4 @@
-import { UpdateResult, WithId } from "mongodb";
+import { WithId } from "mongodb";
 import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
@@ -7,7 +7,7 @@ import {
   getUserWorkout,
   getUserWorkoutIds,
 } from "../../../sources/fitocracy";
-import { DAY_IN_SECONDS, shuffle } from "../../../utils";
+import { DAY_IN_SECONDS } from "../../../utils";
 // import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
