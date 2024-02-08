@@ -380,16 +380,24 @@ let exercises: Fitocracy.ExerciseData[] | null = null;
 
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   // Io is the only user in the database,
-  const user = await User.findOne();
+  const user = (await User.findOne())!;
+
   const fitocracySessionId = user?.fitocracySessionId;
   if (!fitocracySessionId) return null;
-  let fitocracyProfile: Fitocracy.ProfileData;
-  try {
-    fitocracyProfile = await getUserProfileBySessionId(fitocracySessionId);
-  } catch (e) {
-    return null;
+
+  let fitocracyUserId = user.fitocracyUserId;
+  if (!fitocracyUserId) {
+    const fitocracySessionId = user?.fitocracySessionId;
+    if (!fitocracySessionId) return null;
+    let fitocracyProfile: Fitocracy.ProfileData;
+    try {
+      fitocracyProfile = await getUserProfileBySessionId(fitocracySessionId);
+    } catch (e) {
+      return null;
+    }
+    fitocracyUserId = fitocracyProfile.id;
+    await user.updateOne({ fitocracyUserId });
   }
-  const fitocracyUserId = fitocracyProfile.id;
 
   if (!exercises) {
     exercises = await getExercises(fitocracySessionId);

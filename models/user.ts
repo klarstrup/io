@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   image: String,
   emailVerified: Boolean,
   fitocracySessionId: String,
+  fitocracyUserId: Number,
   topLoggerId: Number,
 });
 
