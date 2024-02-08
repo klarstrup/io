@@ -6,7 +6,6 @@ import {
   getUserProfileBySessionId,
   getUserWorkout,
   getUserWorkoutIds,
-  getUserWorkouts,
 } from "../../../sources/fitocracy";
 import { DAY_IN_SECONDS, shuffle } from "../../../utils";
 // import { NextRequest } from "next/server";
