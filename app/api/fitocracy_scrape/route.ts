@@ -61,6 +61,7 @@ export async function GET(/* request: NextRequest */) {
 
     await writer.write(encoder.encode("["));
     let first = true;
+    const filteredWorkoutIds: number[] = [];
     for (const workoutId of shuffle(
       await getUserWorkoutIds(
         fitocracySessionId!,
@@ -69,10 +70,20 @@ export async function GET(/* request: NextRequest */) {
         { maxAge: DAY_IN_SECONDS }
       )
     )) {
-      const dbWorkout = await workouts.findOne({ id: workoutId });
-      if (dbWorkout) {
-        continue;
+      if (!(await workouts.findOne({ id: workoutId }))) {
+        filteredWorkoutIds.push(workoutId);
       }
+    }
+
+    for (const workoutId of filteredWorkoutIds) {
+      if (first) {
+        first = false;
+      } else {
+        await writer.write(encoder.encode(","));
+      }
+      await writer.write(encoder.encode(JSON.stringify(workoutId)));
+    }
+    for (const workoutId of filteredWorkoutIds) {
       const workout = await getUserWorkout(
         fitocracySessionId!,
         fitocracyUserId!,
