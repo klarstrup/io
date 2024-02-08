@@ -77,7 +77,7 @@ export async function GET(/* request: NextRequest */) {
     );
     workoutsSynchronized.matchedCount += workoutsThatAlreadyExist.length;
 
-    for (const workoutId of shuffle(filteredWorkoutIds)) {
+    for (const workoutId of filteredWorkoutIds) {
       const workout = await getUserWorkout(
         fitocracySessionId!,
         fitocracyUserId!,
