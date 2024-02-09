@@ -1,4 +1,4 @@
-import { type Interval } from "date-fns";
+import { differenceInDays, isWithinInterval, type Interval } from "date-fns";
 
 export class RelativeURL extends URL {
   constructor(url: string | URL) {
@@ -17,6 +17,10 @@ export const percentile = (rank: number, tally: number) =>
     unit: "percent",
     maximumSignificantDigits: 2,
   });
+
+export function unique<T>(arr: T[]): T[] {
+  return Array.from(new Set(arr));
+}
 
 export function chunk<I>(arr: I[], size: number) {
   const results: I[][] = [];
@@ -88,3 +92,11 @@ export const shuffle = <A>(arrRaw: A[]): A[] => {
     return acc;
   }, []);
 };
+
+export const getMaxAgeFactor = (eventInterval: Interval, now = Date.now()) =>
+  isWithinInterval(new Date(), eventInterval)
+    ? 1
+    : Math.max(
+        Math.abs(differenceInDays(now, eventInterval.start)),
+        Math.abs(differenceInDays(now, eventInterval.end))
+      ) * 10;
