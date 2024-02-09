@@ -134,7 +134,7 @@ export namespace Fitocracy {
     root_group: {
       children: { exercise: Exercise; id: number; type: ChildType }[];
       id: number;
-      name: Name;
+      name: string;
       notes: string;
       type: RootGroupType;
     };
@@ -197,21 +197,6 @@ export namespace Fitocracy {
 
   export enum ChildType {
     Exercise = "exercise",
-  }
-
-  export enum Name {
-    Aaaaa = "aaaaa",
-    ButtAndCoreBlast = "Butt and Core Blast",
-    Empty = "",
-    Ggbg = "ggbg",
-    Ggggg = "ggggg",
-    Gslp3B = "GSLP 3B",
-    Hbbb = "hbbb",
-    Hhgh = "hhgh",
-    Workout = "Workout",
-    WorkoutA = "Workout A",
-    WorkoutB = "Workout B",
-    Workoutfcuk = "Workoutfcuk",
   }
 
   export enum RootGroupType {
@@ -303,7 +288,7 @@ const fetchFitocracy = async <T>(
   return result.data;
 };
 
-export const getExercises = async (
+const getExercises = async (
   fitocracySessionId: string,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>
@@ -344,21 +329,6 @@ export const getUserWorkout = async (
     dbFetchOptions
   );
 
-export async function* getUserWorkouts(
-  sessionId: string,
-  userId: number,
-  interval?: Interval,
-  dbOptions?: Parameters<typeof dbFetch>[2]
-) {
-  for (const workoutId of await getUserWorkoutIds(
-    sessionId,
-    userId,
-    interval,
-    dbOptions
-  )) {
-    yield await getUserWorkout(sessionId, userId, workoutId, dbOptions);
-  }
-}
 export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
   const result = await dbFetch<
     Fitocracy.ProfileResult | { error: "missing source credentials" }
