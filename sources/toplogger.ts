@@ -1,12 +1,13 @@
 import DataLoader from "dataloader";
 import {
   Interval,
+  addHours,
   isAfter,
   isBefore,
   isFuture,
   isPast,
   isWithinInterval,
-  startOfDay,
+  subHours,
 } from "date-fns";
 import { dbFetch } from "../fetch";
 import {
@@ -497,34 +498,40 @@ const getGroupClimbs = async (
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
   const gyms = (
-    await Promise.all(
-      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
-    )
-  ).filter(Boolean);
+    await gymLoader.loadMany(group.gym_groups.map(({ gym_id }) => gym_id))
+  ).filter((gym): gym is TopLogger.GymMultiple =>
+    Boolean(gym && !(gym instanceof Error))
+  );
 
-  return group.climb_groups.length
-    ? (
-        await Promise.all(
-          group.climb_groups.map(({ climb_id }) =>
-            Promise.all(
-              gyms.map((gym) => getGymClimbById(gym.id, climb_id, dbOptions))
-            )
-          )
-        )
-      )
-        .flat()
-        .filter(Boolean)
-    : (await Promise.all(gyms.map((gym) => getGymClimbs(gym.id))))
-        .flat()
-        .filter(
-          (climb) =>
-            (climb.name || climb.number) &&
-            climb.date_live_start &&
-            isWithinInterval(new Date(climb.date_live_start), {
-              start: startOfDay(new Date(group.date_loggable_start)),
-              end: new Date(group.date_loggable_end),
-            })
-        );
+  if (group.climb_groups.length) {
+    const climbPromises: Promise<TopLogger.ClimbMultiple | null>[] = [];
+
+    for (const { climb_id } of group.climb_groups) {
+      for (const gym of gyms) {
+        climbPromises.push(getGymClimbById(gym.id, climb_id, dbOptions));
+      }
+    }
+
+    return (await Promise.all(climbPromises)).filter(Boolean);
+  }
+
+  const climbs: TopLogger.ClimbMultiple[] = [];
+  for (const gym of gyms) {
+    for (const climb of await getGymClimbs(gym.id, undefined, dbOptions)) {
+      if (
+        (climb.name || climb.number) &&
+        climb.date_live_start &&
+        isWithinInterval(new Date(climb.date_live_start), {
+          start: subHours(new Date(group.date_loggable_start), 16),
+          end: addHours(new Date(group.date_loggable_end), 21),
+        })
+      ) {
+        climbs.push(climb);
+      }
+    }
+  }
+
+  return climbs;
 };
 
 const TDB_BASE = 1000;
@@ -706,13 +713,16 @@ async function getIoTopLoggerGroupScores(
   sex?: boolean
 ) {
   const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
-  const climbs = await getGroupClimbs(group, { maxAge: HOUR_IN_SECONDS });
   const groupInterval: Interval = {
     start: new Date(group.date_loggable_start),
     end: new Date(group.date_loggable_end),
   } as const;
+  const maxAgeFactor = getMaxAgeFactor(groupInterval);
+  const climbs = await getGroupClimbs(group, {
+    maxAge: HOUR_IN_SECONDS * maxAgeFactor,
+  });
 
-  const io = await getUser(ioId, { maxAge: HOUR_IN_SECONDS });
+  const io = await getUser(ioId, { maxAge: HOUR_IN_SECONDS * maxAgeFactor });
 
   const groupUsers = await getGroupsUsers(
     {
@@ -722,7 +732,7 @@ async function getIoTopLoggerGroupScores(
       },
       includes: "user",
     },
-    { maxAge: MINUTE_IN_SECONDS * 15 }
+    { maxAge: MINUTE_IN_SECONDS * 15 * maxAgeFactor }
   );
 
   const ascends = (
@@ -731,7 +741,7 @@ async function getIoTopLoggerGroupScores(
         climbs.length
           ? getAscends(
               { filters: { user_id, climb_id: climbs.map(({ id }) => id) } },
-              { maxAge: MINUTE_IN_SECONDS }
+              { maxAge: MINUTE_IN_SECONDS * maxAgeFactor }
             ).catch((error: unknown) => {
               if (
                 error instanceof Object &&
@@ -814,31 +824,36 @@ async function getIoTopLoggerGroupScores(
         points: Number(ioResults.score),
       } satisfies ThousandDivideByScore);
     }
-    if (ioResults.tdbScore) {
-      const ioTDBRank =
-        Array.from(usersWithResults)
-          .sort((a, b) => b.tdbScore - a.tdbScore)
-          .findIndex(({ user: { id } }) => id === ioId) + 1;
-      scores.push({
-        system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-        source: SCORING_SOURCE.DERIVED,
-        rank: ioTDBRank,
-        percentile: percentile(ioTDBRank, noClimbers),
-        points: Math.round(ioResults.tdbScore),
-      } satisfies ThousandDivideByScore);
-    }
-    if (ioResults.ptsScore) {
-      const ioPointsRank =
-        Array.from(usersWithResults)
-          .sort((a, b) => b.ptsScore - a.ptsScore)
-          .findIndex(({ user: { id } }) => id === ioId) + 1;
-      scores.push({
-        system: SCORING_SYSTEM.POINTS,
-        source: SCORING_SOURCE.DERIVED,
-        rank: ioPointsRank,
-        percentile: percentile(ioPointsRank, noClimbers),
-        points: ioResults.ptsScore,
-      } satisfies PointsScore);
+    // If the group has climbs explicitly associated, we can calculate derived scores
+    // in other scoring systems. These disappear on old competitions, so we can't
+    // use them for all past events regrettably.
+    if (group.climb_groups.length) {
+      if (ioResults.tdbScore) {
+        const ioTDBRank =
+          Array.from(usersWithResults)
+            .sort((a, b) => b.tdbScore - a.tdbScore)
+            .findIndex(({ user: { id } }) => id === ioId) + 1;
+        scores.push({
+          system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+          source: SCORING_SOURCE.DERIVED,
+          rank: ioTDBRank,
+          percentile: percentile(ioTDBRank, noClimbers),
+          points: Math.round(ioResults.tdbScore),
+        } satisfies ThousandDivideByScore);
+      }
+      if (ioResults.ptsScore) {
+        const ioPointsRank =
+          Array.from(usersWithResults)
+            .sort((a, b) => b.ptsScore - a.ptsScore)
+            .findIndex(({ user: { id } }) => id === ioId) + 1;
+        scores.push({
+          system: SCORING_SYSTEM.POINTS,
+          source: SCORING_SOURCE.DERIVED,
+          rank: ioPointsRank,
+          percentile: percentile(ioPointsRank, noClimbers),
+          points: ioResults.ptsScore,
+        } satisfies PointsScore);
+      }
     }
   }
 

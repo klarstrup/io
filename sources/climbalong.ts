@@ -22,6 +22,7 @@ import {
   MINUTE_IN_SECONDS,
   WEEK_IN_SECONDS,
   cotemporality,
+  getMaxAgeFactor,
   percentile,
 } from "../utils";
 
@@ -720,28 +721,13 @@ export async function getIoClimbAlongCompetitionEventEntry(
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
   });
-  const competitionTime = cotemporality({
-    start: new Date(competition.startTime),
-    end: new Date(competition.endTime),
-  });
 
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "current"
-      ? 30
-      : isWithinInterval(new Date(), {
-          start: subHours(new Date(competition.startTime), 3),
-          end: addHours(new Date(competition.endTime), 1),
-        })
-      ? MINUTE_IN_SECONDS
-      : competitionTime === "past"
-      ? isWithinInterval(new Date(), {
-          start: new Date(competition.startTime),
-          end: addWeeks(new Date(competition.endTime), 1),
-        })
-        ? DAY_IN_SECONDS
-        : undefined
-      : WEEK_IN_SECONDS;
-
+    MINUTE_IN_SECONDS *
+    getMaxAgeFactor({
+      start: new Date(competition.startTime),
+      end: new Date(competition.endTime),
+    });
   const athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>

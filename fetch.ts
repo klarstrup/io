@@ -69,6 +69,22 @@ const rawDbFetch = async <T = string>(
         { upsert: true }
       );
       console.info(`DB FETCHING ${String(input)}`);
+      console.info(
+        `DB FETCHING ${String(input)} ${
+          process.env.NODE_ENV === "production"
+            ? ""
+            : new Error("").stack
+                ?.trim()
+                .replace(
+                  /at process.processTicksAndRejections \(node:internal\/process\/task_queues:95:5\)/g,
+                  ""
+                )
+                .replace(/^Error/g, "")
+                .replace(/webpack-internal:\/\/\/\(rsc\)\//g, "")
+                .replace(/:\d+:\d+/g, "")
+                .trim() || ""
+        } `.trim()
+      );
 
       const response = await fetch(input, {
         signal: AbortSignal.timeout(5000),
