@@ -138,12 +138,10 @@ export default async function Home({
               />
               <article>
                 <div className={`content ${cotemporality(event)}`}>
-                  {event.source ? (
-                    <TimelineEventContent
-                      eventEntry={event}
-                      urlDisciplines={urlDisciplines}
-                    />
-                  ) : null}
+                  <TimelineEventContent
+                    eventEntry={event}
+                    urlDisciplines={urlDisciplines}
+                  />
                 </div>
               </article>
             </Fragment>
