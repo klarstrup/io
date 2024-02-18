@@ -89,6 +89,7 @@ const rawDbFetch = async <T = string>(
       const response = await fetch(input, {
         signal: AbortSignal.timeout(5000),
         ...init,
+        next: { revalidate: 0 },
       });
       if (
         response.status !== 200 &&
