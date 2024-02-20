@@ -83,7 +83,7 @@ body {
 
 #timeline article div.content:after {
   position: absolute;
-  top: 10px;
+  top: 9.25px;
   right: -9px;
   display: inline-block;
   border-top: 10px solid transparent;
