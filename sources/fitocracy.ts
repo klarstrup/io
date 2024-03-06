@@ -296,7 +296,10 @@ const getExercises = async (
     fitocracySessionId,
     "/api/v2/exercises/",
     undefined,
-    { maxAge: WEEK_IN_SECONDS, ...dbFetchOptions }
+    {
+      maxAge: Infinity, // I don't think fitocracy will live much longer
+      ...dbFetchOptions,
+    }
   );
 
 export const getUserWorkoutIds = async (
