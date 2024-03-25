@@ -24,6 +24,10 @@ export namespace MyFitnessPal {
     food_entries: FoodEntry[];
   }
 
+  export interface MongoFoodEntry extends FoodEntry {
+    user_id: string;
+  }
+
   export interface FoodEntry {
     id: string;
     type: FoodEntryType;

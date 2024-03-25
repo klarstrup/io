@@ -11,10 +11,10 @@ import {
 } from "../../sources/fitocracy";
 import {
   MyFitnessPal,
-  getMyFitnessPalReport,
+  getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
 import { RunDouble, getRuns } from "../../sources/rundouble";
-import { TopLogger, getAscends, getUser } from "../../sources/toplogger";
+import { TopLogger, getAscends } from "../../sources/toplogger";
 import { HOUR_IN_SECONDS } from "../../utils";
 
 let exercisesById = exercises;
@@ -22,6 +22,18 @@ let exercisesById = exercises;
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
+  const dbClient = await dbConnect();
+
+  const workoutsCollection =
+    dbClient.connection.db.collection<Fitocracy.MongoWorkout>(
+      "fitocracy_workouts"
+    );
+
+  const foodEntriesCollection =
+    dbClient.connection.db.collection<MyFitnessPal.MongoFoodEntry>(
+      "myfitnesspal_food_entries"
+    );
+
   const session = await getServerSession(authOptions);
 
   const user = await User.findOne({ _id: session?.user.id });
@@ -46,19 +58,6 @@ export default async function Page() {
   if (!exercisesById) {
     exercisesById = await getExercises(fitocracySessionId);
   }
-
-  const topLoggerId = user?.topLoggerId;
-  let topLoggerUser: TopLogger.UserSingle | null = null;
-  try {
-    topLoggerUser = topLoggerId ? await getUser(topLoggerId) : null;
-  } catch (e) {
-    /* */
-  }
-  const topLoggerUserId = topLoggerUser?.id;
-
-  const workoutsCollection = (
-    await dbConnect()
-  ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   const diary: Record<
     `${number}-${number}-${number}`,
@@ -91,36 +90,39 @@ export default async function Page() {
 
     diary[dayStr] = day;
   }
-  for await (const workout of workoutsCollection.find(
-    { user_id: fitocracyUserId },
-    { sort: { workout_timestamp: -1 } }
-  )) {
-    addDiaryEntry(workout.workout_timestamp, "workouts", workout);
-  }
 
-  for (const year of [2024, 2023, 2022, 2021, 2020, 2019, 2018]) {
-    for (const entry of await getMyFitnessPalReport(
-      user.myFitnessPalToken!,
-      year
+  if (user.fitocracyUserId) {
+    for await (const workout of workoutsCollection.find(
+      { user_id: fitocracyUserId },
+      { sort: { workout_timestamp: -1 } }
     )) {
-      for (const foodEntry of entry.food_entries) {
-        addDiaryEntry(new Date(entry.date), "food", foodEntry);
-      }
+      addDiaryEntry(workout.workout_timestamp, "workouts", workout);
     }
   }
 
-  for (const ascend of (await getAscends(
-    { filters: { user_id: topLoggerUserId }, includes: ["climb"] },
-    { maxAge: HOUR_IN_SECONDS }
-  )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]) {
-    if (!ascend.date_logged) continue;
-    addDiaryEntry(new Date(ascend.date_logged), "ascends", ascend);
+  if (user.myFitnessPalToken) {
+    for await (const foodEntry of foodEntriesCollection.find({
+      user_id: (await getMyFitnessPalSession(user.myFitnessPalToken)).userId,
+    })) {
+      addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
+    }
   }
 
-  for (const run of await getRuns(user.runDoubleId!)) {
-    addDiaryEntry(new Date(run.completed), "runs", run);
+  if (user.topLoggerId) {
+    for (const ascend of (await getAscends(
+      { filters: { user_id: user.topLoggerId }, includes: ["climb"] },
+      { maxAge: HOUR_IN_SECONDS }
+    )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]) {
+      if (!ascend.date_logged) continue;
+      addDiaryEntry(new Date(ascend.date_logged), "ascends", ascend);
+    }
   }
 
+  if (user.runDoubleId) {
+    for (const run of await getRuns(user.runDoubleId)) {
+      addDiaryEntry(new Date(run.completed), "runs", run);
+    }
+  }
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>
       new Date(
