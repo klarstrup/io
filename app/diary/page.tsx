@@ -1,3 +1,5 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import Grade from "../../grades";
 import { User } from "../../models/user";
@@ -19,8 +21,9 @@ let exercisesById = exercises;
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  // Io is the only user in the database,
-  const user = (await User.findOne())!;
+  const session = await getServerSession(authOptions);
+
+  const user = await User.findOne({ _id: session?.user.id });
 
   const fitocracySessionId = user?.fitocracySessionId;
   if (!fitocracySessionId) return null;
@@ -43,7 +46,6 @@ export default async function Page() {
     exercisesById = await getExercises(fitocracySessionId);
   }
 
-  // Io is the only user in the database,
   const topLoggerId = user?.topLoggerId;
   let topLoggerUser: TopLogger.UserSingle | null = null;
   try {
