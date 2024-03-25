@@ -9,6 +9,8 @@ import {
 
 let exercisesById = exercises;
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   // Io is the only user in the database,
   const user = (await User.findOne())!;
