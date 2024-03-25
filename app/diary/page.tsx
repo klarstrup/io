@@ -9,7 +9,6 @@ import {
 import {
   MyFitnessPal,
   getMyFitnessPalReport,
-  getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
 
 let exercisesById = exercises;
@@ -44,9 +43,6 @@ export default async function Page() {
   const workoutsCollection = (
     await dbConnect()
   ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
-
-  console.log(await getMyFitnessPalReport(user.myFitnessPalToken!, 2024));
-  console.log(await getMyFitnessPalSession(user.myFitnessPalToken!));
 
   const diary: Record<
     `${number}-${number}-${number}`,
