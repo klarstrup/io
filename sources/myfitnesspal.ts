@@ -147,7 +147,7 @@ export const getMyFitnessPalReport = async (
     {
       method: "POST",
       body: JSON.stringify({
-        username: session.user.name,
+        username: session.user?.name,
         show_food_diary: 1,
         from: `${year}-01-01`,
         to: `${year}-12-31`,
