@@ -6,6 +6,11 @@ import {
   getExercises,
   getUserProfileBySessionId,
 } from "../../sources/fitocracy";
+import {
+  MyFitnessPal,
+  getMyFitnessPalReport,
+  getMyFitnessPalSession,
+} from "../../sources/myfitnesspal";
 
 let exercisesById = exercises;
 
@@ -40,42 +45,130 @@ export default async function Page() {
     await dbConnect()
   ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
+  console.log(await getMyFitnessPalReport(user.myFitnessPalToken!, 2024));
+  console.log(await getMyFitnessPalSession(user.myFitnessPalToken!));
+
+  const diary: Record<
+    `${number}-${number}-${number}`,
+    {
+      workouts?: Fitocracy.MongoWorkout[];
+      food?: MyFitnessPal.FoodEntry[];
+    }
+  > = {};
+  function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
+    date: Date,
+    key: K,
+    entry: NonNullable<(typeof diary)[keyof typeof diary][K]>[number]
+  ) {
+    const dayStr: `${number}-${number}-${number}` = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+    let day = diary[dayStr];
+    if (!day) {
+      day = {};
+    }
+    let dayEntries = day[key];
+    if (!dayEntries) {
+      dayEntries = [];
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+    dayEntries.push(entry as any);
+    day[key] = dayEntries;
+
+    diary[dayStr] = day;
+  }
+  for await (const workout of workoutsCollection.find(
+    { user_id: fitocracyUserId },
+    { sort: { workout_timestamp: -1 } }
+  )) {
+    addDiaryEntry(workout.workout_timestamp, "workouts", workout);
+  }
+
+  for (const year of [
+    2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013,
+    2012, 2011,
+  ]) {
+    for (const entry of await getMyFitnessPalReport(
+      user.myFitnessPalToken!,
+      year
+    )) {
+      for (const foodEntry of entry.food_entries) {
+        addDiaryEntry(new Date(entry.date), "food", foodEntry);
+      }
+    }
+  }
+
+  const diaryEntries = Object.entries(diary).sort(
+    ([a], [b]) =>
+      new Date(
+        Number(b.split("-")[0]),
+        Number(b.split("-")[1]) - 1,
+        Number(b.split("-")[2])
+      ).getTime() -
+      new Date(
+        Number(a.split("-")[0]),
+        Number(a.split("-")[1]) - 1,
+        Number(a.split("-")[2])
+      ).getTime()
+  );
+
   return (
     <div>
-      <ul>
-        {(
-          await workoutsCollection
-            .find(
-              { user_id: fitocracyUserId },
-              { sort: { workout_timestamp: -1 } }
-            )
-            .toArray()
-        ).map((workout) => (
-          <li key={workout.id}>
-            <h3>{String(workout.workout_timestamp)}</h3>
-            <ul style={{ display: "flex", gap: "4em" }}>
+      {diaryEntries.map(([date, { food, workouts }]) => (
+        <div key={date}>
+          <h3>{date}</h3>
+          {food?.length ? (
+            <ol>
+              {[
+                MyFitnessPal.MealName.Breakfast,
+                MyFitnessPal.MealName.Lunch,
+                MyFitnessPal.MealName.Dinner,
+                MyFitnessPal.MealName.Snacks,
+              ]
+                .filter((mealName) =>
+                  food.some((foodEntry) => foodEntry.meal_name === mealName)
+                )
+                .map((mealName) => (
+                  <li key={mealName}>
+                    <b>{mealName}</b>
+                    <ul>
+                      {food
+                        .filter((foodEntry) => foodEntry.meal_name === mealName)
+                        .map((foodEntry) => (
+                          <li key={foodEntry.id}>
+                            {foodEntry.food.description}{" "}
+                            {foodEntry.nutritional_contents.energy.value}kcal
+                          </li>
+                        ))}
+                    </ul>
+                  </li>
+                ))}
+            </ol>
+          ) : null}
+          {workouts?.map((workout) => (
+            <ol key={workout.id} style={{ display: "flex", gap: "4em" }}>
               {workout.root_group.children.map((exercise) => (
                 <li key={exercise.id}>
-                  <h4>
+                  <b>
                     {
                       exercisesById?.find(
                         ({ id }) => exercise.exercise.exercise_id === id
                       )?.name
                     }
-                  </h4>
-                  <ul>
+                  </b>
+                  <ol>
                     {exercise.exercise.sets.map((set) => (
                       <li key={set.id}>
                         {set.description_string} {set.points}pts
                       </li>
                     ))}
-                  </ul>
+                  </ol>
                 </li>
               ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+            </ol>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

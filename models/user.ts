@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
   fitocracySessionId: String,
   fitocracyUserId: Number,
   topLoggerId: Number,
+  myFitnessPalToken: String,
+  myFitnessPalUsername: String,
 });
 
 export const User = mongoose.model("User", userSchema, undefined, {

@@ -4,7 +4,11 @@ import { User } from "../../models/user";
 import dbConnect from "../../dbConnect";
 import { revalidateTag } from "next/cache";
 import { getUserProfileBySessionId } from "../../sources/fitocracy";
-import { getUser } from "../../sources/toplogger";
+import { TopLogger, getUser } from "../../sources/toplogger";
+import {
+  MyFitnessPal,
+  getMyFitnessPalSession,
+} from "../../sources/myfitnesspal";
 
 export default async function UserStuff() {
   const session = await getServerSession(authOptions);
@@ -30,6 +34,13 @@ export default async function UserStuff() {
         : null;
     }
 
+    const myFitnessPalToken = formData.get("myFitnessPalToken");
+    if (typeof myFitnessPalToken === "string") {
+      userModel.myFitnessPalToken = myFitnessPalToken.trim()
+        ? myFitnessPalToken.trim()
+        : null;
+    }
+
     await userModel.save();
 
     // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
@@ -50,13 +61,24 @@ export default async function UserStuff() {
     fitocracyProfile = null;
   }
 
-  let topLoggerUser: Awaited<ReturnType<typeof getUser>> | null = null;
+  let topLoggerUser: TopLogger.UserSingle | null = null;
   try {
     if (currentUser?.topLoggerId) {
       topLoggerUser = await getUser(currentUser.topLoggerId);
     }
   } catch {
     topLoggerUser = null;
+  }
+
+  let myFitnessPalUser: MyFitnessPal.User | null = null;
+  try {
+    if (currentUser?.myFitnessPalToken) {
+      myFitnessPalUser = (
+        await getMyFitnessPalSession(currentUser.myFitnessPalToken)
+      ).user;
+    }
+  } catch {
+    myFitnessPalUser = null;
   }
 
   return (
@@ -152,6 +174,26 @@ export default async function UserStuff() {
                   <img
                     alt="TopLogger Avatar"
                     src={topLoggerUser.avatar}
+                    width={24}
+                    height={24}
+                    style={{ borderRadius: "100%" }}
+                  />
+                ) : (
+                  "❌"
+                )}
+              </fieldset>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
+                <legend>MyFitnessPal Token</legend>
+                <input
+                  name="myFitnessPalToken"
+                  defaultValue={currentUser.myFitnessPalToken || ""}
+                  style={{ flex: 1 }}
+                />
+                {myFitnessPalUser ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="MyFitnessPal Avatar"
+                    src={myFitnessPalUser.image}
                     width={24}
                     height={24}
                     style={{ borderRadius: "100%" }}
