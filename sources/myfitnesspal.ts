@@ -141,25 +141,13 @@ export const getMyFitnessPalReport = async (
   year: number
 ) => {
   const session = await getMyFitnessPalSession(myFitnessPalToken);
-  console.log(session);
-  console.log("services/diary/report", {
-    method: "POST",
-    body: JSON.stringify({
-      username: session.user?.name || "klarstrup",
-      show_food_diary: 1,
-      from: `${year}-01-01`,
-      to: `${year}-12-31`,
-    }),
-    headers: {
-      cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,
-    },
-  });
+
   return await fetchMyFitnessPal<MyFitnessPal.ReportEntry[]>(
     "services/diary/report",
     {
       method: "POST",
       body: JSON.stringify({
-        username: session.user?.name || "klarstrup",
+        username: session.user?.name,
         show_food_diary: 1,
         from: `${year}-01-01`,
         to: `${year}-12-31`,
