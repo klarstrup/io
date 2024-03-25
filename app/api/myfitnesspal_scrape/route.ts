@@ -56,7 +56,7 @@ export async function GET(/* request: NextRequest */) {
     await writer.write(encoder.encode("["));
     let first = true;
 
-    for (const year of [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017]) {
+    for (const year of [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
       for (const reportEntry of await getMyFitnessPalReport(
         myFitnessPalToken,
         year
