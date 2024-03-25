@@ -207,12 +207,13 @@ const getTrainingData = async (
   disciplines?: string[]
 ) => {
   await dbConnect();
+  const user = await User.findOne();
   return [
     disciplines?.includes("bouldering")
       ? await getBoulderingTrainingData(trainingInterval)
       : null,
-    disciplines?.includes("running")
-      ? await getRunningTrainingData(trainingInterval)
+    disciplines?.includes("running") && user?.runDoubleId
+      ? await getRunningTrainingData(user.runDoubleId, trainingInterval)
       : null,
     disciplines?.includes("bouldering") || disciplines?.includes("running")
       ? await getLiftingTrainingData(trainingInterval)

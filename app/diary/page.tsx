@@ -13,6 +13,7 @@ import {
   MyFitnessPal,
   getMyFitnessPalReport,
 } from "../../sources/myfitnesspal";
+import { RunDouble, getRuns } from "../../sources/rundouble";
 import { TopLogger, getAscends, getUser } from "../../sources/toplogger";
 import { HOUR_IN_SECONDS } from "../../utils";
 
@@ -55,15 +56,6 @@ export default async function Page() {
   }
   const topLoggerUserId = topLoggerUser?.id;
 
-  const ascends = (
-    topLoggerUserId
-      ? await getAscends(
-          { filters: { user_id: topLoggerUserId }, includes: ["climb"] },
-          { maxAge: HOUR_IN_SECONDS }
-        )
-      : []
-  ) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
-
   const workoutsCollection = (
     await dbConnect()
   ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
@@ -74,6 +66,7 @@ export default async function Page() {
       workouts?: Fitocracy.MongoWorkout[];
       food?: MyFitnessPal.FoodEntry[];
       ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
+      runs?: RunDouble.HistoryItem[];
     }
   > = {};
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
@@ -116,9 +109,16 @@ export default async function Page() {
     }
   }
 
-  for (const ascend of ascends) {
+  for (const ascend of (await getAscends(
+    { filters: { user_id: topLoggerUserId }, includes: ["climb"] },
+    { maxAge: HOUR_IN_SECONDS }
+  )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]) {
     if (!ascend.date_logged) continue;
     addDiaryEntry(new Date(ascend.date_logged), "ascends", ascend);
+  }
+
+  for (const run of await getRuns(user.runDoubleId!)) {
+    addDiaryEntry(new Date(run.completed), "runs", run);
   }
 
   const diaryEntries = Object.entries(diary).sort(
@@ -137,7 +137,7 @@ export default async function Page() {
 
   return (
     <div>
-      {diaryEntries.map(([date, { food, workouts, ascends }]) => (
+      {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => (
         <div key={date}>
           <h3>{date}</h3>
           {food?.length ? (
@@ -195,6 +195,15 @@ export default async function Page() {
               {ascends.map((ascend) => (
                 <li key={ascend.climb.id}>
                   <b>{new Grade(Number(ascend.climb.grade)).name}</b>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+          {runs?.length ? (
+            <ol>
+              {runs.map((run) => (
+                <li key={run.key}>
+                  {run.runDistance}m {run.runTime}ms
                 </li>
               ))}
             </ol>

@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   topLoggerId: Number,
   myFitnessPalToken: String,
   myFitnessPalUsername: String,
+  runDoubleId: String,
 });
 
 export const User = mongoose.model("User", userSchema, undefined, {

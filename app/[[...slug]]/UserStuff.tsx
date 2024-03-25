@@ -1,14 +1,15 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth";
-import { User } from "../../models/user";
-import dbConnect from "../../dbConnect";
 import { revalidateTag } from "next/cache";
+import { authOptions } from "../../auth";
+import dbConnect from "../../dbConnect";
+import { User } from "../../models/user";
 import { getUserProfileBySessionId } from "../../sources/fitocracy";
-import { TopLogger, getUser } from "../../sources/toplogger";
 import {
   MyFitnessPal,
   getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
+import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
+import { TopLogger, getUser } from "../../sources/toplogger";
 
 export default async function UserStuff() {
   const session = await getServerSession(authOptions);
@@ -36,9 +37,11 @@ export default async function UserStuff() {
 
     const myFitnessPalToken = formData.get("myFitnessPalToken");
     if (typeof myFitnessPalToken === "string") {
-      userModel.myFitnessPalToken = myFitnessPalToken.trim()
-        ? myFitnessPalToken.trim()
-        : null;
+      userModel.myFitnessPalToken = myFitnessPalToken.trim() || null;
+    }
+    const runDoubleId = formData.get("runDoubleId");
+    if (typeof runDoubleId === "string") {
+      userModel.runDoubleId = runDoubleId.trim() || null;
     }
 
     await userModel.save();
@@ -80,6 +83,16 @@ export default async function UserStuff() {
   } catch {
     myFitnessPalUser = null;
   }
+
+  let runDoubleUser: RunDouble.User | null = null;
+  try {
+    if (currentUser?.runDoubleId) {
+      runDoubleUser = await getRunDoubleUser(currentUser.runDoubleId);
+    }
+  } catch {
+    runDoubleUser = null;
+  }
+  getRunDoubleUser;
 
   return (
     <div
@@ -194,6 +207,26 @@ export default async function UserStuff() {
                   <img
                     alt="MyFitnessPal Avatar"
                     src={myFitnessPalUser.image}
+                    width={24}
+                    height={24}
+                    style={{ borderRadius: "100%" }}
+                  />
+                ) : (
+                  "❌"
+                )}
+              </fieldset>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
+                <legend>RunDouble ID</legend>
+                <input
+                  name="runDoubleId"
+                  defaultValue={currentUser.runDoubleId || ""}
+                  style={{ flex: 1 }}
+                />
+                {runDoubleUser ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt="MyFitnessPal Avatar"
+                    src={`https://gravatar.com/avatar/${runDoubleUser.gravatarHash}`}
                     width={24}
                     height={24}
                     style={{ borderRadius: "100%" }}

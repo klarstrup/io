@@ -34,8 +34,6 @@ export namespace RunDouble {
   }
 }
 
-export const IO_RUNDOUBLE_ID = "100997097081180358967";
-
 const fetchRunDouble = async <T>(
   input: string | URL,
   init?: RequestInit,
@@ -68,13 +66,29 @@ export const getRuns = async (
   } while (cursor);
   return runs;
 };
+export const getRunDoubleUser = async (
+  userId: string,
+  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL("/history");
+  url.searchParams.set("user", userId);
+
+  return (
+    await fetchRunDouble<RunDouble.HistoryResponse>(
+      url,
+      undefined,
+      dbFetchOptions
+    )
+  ).user;
+};
 
 const type = "training";
 const discipline = "running";
-export const getRunningTrainingData = async (trainingInterval: Interval) => {
-  const runs = (
-    await getRuns(IO_RUNDOUBLE_ID, { maxAge: DAY_IN_SECONDS })
-  ).filter(
+export const getRunningTrainingData = async (
+  runDoubleId: string,
+  trainingInterval: Interval
+) => {
+  const runs = (await getRuns(runDoubleId, { maxAge: DAY_IN_SECONDS })).filter(
     ({ runDistance, completedLong }) =>
       runDistance && isWithinInterval(new Date(completedLong), trainingInterval)
   );
