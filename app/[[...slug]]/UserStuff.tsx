@@ -48,7 +48,11 @@ export default async function UserStuff() {
 
     // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
     // calling it at all will make the page rerender with the new data.
-    revalidateTag("");
+    try {
+      revalidateTag("");
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   let fitocracyProfile: Awaited<
