@@ -68,7 +68,6 @@ const rawDbFetch = async <T = string>(
         { lastAttemptedFetchAt: now },
         { upsert: true }
       );
-      console.info(`DB FETCHING ${String(input)}`);
       console.info(
         `DB FETCHING ${String(input)} ${
           process.env.NODE_ENV === "production"
