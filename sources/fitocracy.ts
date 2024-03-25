@@ -288,7 +288,7 @@ const fetchFitocracy = async <T>(
   return result.data;
 };
 
-const getExercises = async (
+export const getExercises = async (
   fitocracySessionId: string,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>
@@ -349,7 +349,7 @@ export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
 const type = "training";
 const discipline = "lifting";
 
-let exercises: Fitocracy.ExerciseData[] | null = null;
+export let exercises: Fitocracy.ExerciseData[] | null = null;
 
 export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   // Io is the only user in the database,
