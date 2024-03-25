@@ -141,6 +141,7 @@ export const getMyFitnessPalReport = async (
   year: number
 ) => {
   const session = await getMyFitnessPalSession(myFitnessPalToken);
+  console.log(session);
 
   return await fetchMyFitnessPal<MyFitnessPal.ReportEntry[]>(
     "services/diary/report",
