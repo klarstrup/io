@@ -1,4 +1,5 @@
 import dbConnect from "../../dbConnect";
+import Grade from "../../grades";
 import { User } from "../../models/user";
 import {
   Fitocracy,
@@ -10,6 +11,8 @@ import {
   MyFitnessPal,
   getMyFitnessPalReport,
 } from "../../sources/myfitnesspal";
+import { TopLogger, getAscends, getUser } from "../../sources/toplogger";
+import { HOUR_IN_SECONDS } from "../../utils";
 
 let exercisesById = exercises;
 
@@ -40,6 +43,25 @@ export default async function Page() {
     exercisesById = await getExercises(fitocracySessionId);
   }
 
+  // Io is the only user in the database,
+  const topLoggerId = user?.topLoggerId;
+  let topLoggerUser: TopLogger.UserSingle | null = null;
+  try {
+    topLoggerUser = topLoggerId ? await getUser(topLoggerId) : null;
+  } catch (e) {
+    /* */
+  }
+  const topLoggerUserId = topLoggerUser?.id;
+
+  const ascends = (
+    topLoggerUserId
+      ? await getAscends(
+          { filters: { user_id: topLoggerUserId }, includes: ["climb"] },
+          { maxAge: HOUR_IN_SECONDS }
+        )
+      : []
+  ) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
+
   const workoutsCollection = (
     await dbConnect()
   ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
@@ -49,6 +71,7 @@ export default async function Page() {
     {
       workouts?: Fitocracy.MongoWorkout[];
       food?: MyFitnessPal.FoodEntry[];
+      ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
     }
   > = {};
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
@@ -91,6 +114,11 @@ export default async function Page() {
     }
   }
 
+  for (const ascend of ascends) {
+    if (!ascend.date_logged) continue;
+    addDiaryEntry(new Date(ascend.date_logged), "ascends", ascend);
+  }
+
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>
       new Date(
@@ -107,7 +135,7 @@ export default async function Page() {
 
   return (
     <div>
-      {diaryEntries.map(([date, { food, workouts }]) => (
+      {diaryEntries.map(([date, { food, workouts, ascends }]) => (
         <div key={date}>
           <h3>{date}</h3>
           {food?.length ? (
@@ -160,6 +188,15 @@ export default async function Page() {
               ))}
             </ol>
           ))}
+          {ascends?.length ? (
+            <ol>
+              {ascends.map((ascend) => (
+                <li key={ascend.climb.id}>
+                  <b>{new Grade(Number(ascend.climb.grade)).name}</b>
+                </li>
+              ))}
+            </ol>
+          ) : null}
         </div>
       ))}
     </div>
