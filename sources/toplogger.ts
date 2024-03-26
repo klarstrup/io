@@ -392,7 +392,7 @@ const fetchGyms = (
 
   return fetchTopLogger<TopLogger.GymMultiple[]>(url, undefined, dbOptions);
 };
-const gymLoader = new DataLoader(
+export const gymLoader = new DataLoader(
   (ids: number[]) =>
     fetchGyms({ filters: { id: ids } }).then((items) =>
       ids.map((id) => items.find((item) => item.id === id) || null)
