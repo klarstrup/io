@@ -76,7 +76,7 @@ export async function GET(/* request: NextRequest */) {
     let first = true;
 
     const now = new Date();
-    for (const year of years) {
+    yearLoop: for (const year of years) {
       for (const month of months) {
         if (differenceInMonths(now, new Date(year, Number(month) - 1)) > 3) {
           const entriesForMonth = await foodEntries.countDocuments({
@@ -115,9 +115,9 @@ export async function GET(/* request: NextRequest */) {
             await writer.write(
               encoder.encode(JSON.stringify(reportEntry.date))
             );
-            break;
           }
         }
+        break yearLoop;
       }
     }
     await writer.write(encoder.encode("]"));
