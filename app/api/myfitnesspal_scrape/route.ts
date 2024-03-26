@@ -86,11 +86,13 @@ export async function GET(/* request: NextRequest */) {
 
           if (entriesForMonth > 0) continue;
         }
-        for (const reportEntry of await getMyFitnessPalReport(
+        const reportEntries = await getMyFitnessPalReport(
           myFitnessPalToken,
           year,
           month
-        )) {
+        );
+        if (!reportEntries.length) continue;
+        for (const reportEntry of reportEntries) {
           if (reportEntry.food_entries) {
             for (const foodEntry of reportEntry.food_entries) {
               await foodEntries.updateOne(
