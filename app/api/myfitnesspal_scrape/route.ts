@@ -112,10 +112,10 @@ export async function GET(/* request: NextRequest */) {
             } else {
               await writer.write(encoder.encode(","));
             }
-
             await writer.write(
               encoder.encode(JSON.stringify(reportEntry.date))
             );
+            break;
           }
         }
       }
