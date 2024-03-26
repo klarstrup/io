@@ -170,11 +170,10 @@ export default function ProblemByProblem({
   return (
     <div
       style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(15, 1fr)",
+        display: "flex",
+        flexWrap: "wrap",
         gap: "2px",
         marginTop: "2px",
-        minWidth: "280px",
       }}
     >
       {Array.from(problemByProblem)
@@ -197,8 +196,8 @@ export default function ProblemByProblem({
           return (
             <Badge
               style={{
-                flex: 1,
                 maxWidth: "100%",
+                width: "1.33em",
                 color: color || "#c84821",
               }}
               key={number}
