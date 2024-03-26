@@ -299,7 +299,7 @@ export default async function Page() {
                                 workoutGroup.exercise.exercise_id === id
                             )!;
                             return (
-                              <div key={workoutGroup.id} style={{ flex: 1 }}>
+                              <div key={workoutGroup.id}>
                                 <b style={{ whiteSpace: "nowrap" }}>
                                   {(
                                     exercise.aliases[1] || exercise.name
