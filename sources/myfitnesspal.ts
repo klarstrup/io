@@ -1,4 +1,4 @@
-import { endOfYear, startOfYear } from "date-fns";
+import { endOfYear, getDaysInMonth, startOfYear } from "date-fns";
 import { dbFetch } from "../fetch";
 import { HOUR_IN_SECONDS, getMaxAgeFactor } from "../utils";
 
@@ -20,11 +20,12 @@ export namespace MyFitnessPal {
   }
 
   export interface ReportEntry {
-    date: Date;
+    date: string;
     food_entries: FoodEntry[];
   }
 
   export interface MongoFoodEntry extends FoodEntry {
+    datetime: Date;
     user_id: string;
   }
 
@@ -32,7 +33,7 @@ export namespace MyFitnessPal {
     id: string;
     type: FoodEntryType;
     client_id: null;
-    date: Date;
+    date: string;
     meal_name: MealName;
     meal_position: number;
     food: Food;
@@ -142,7 +143,20 @@ export const getMyFitnessPalSession = async (myFitnessPalToken: string) =>
 
 export const getMyFitnessPalReport = async (
   myFitnessPalToken: string,
-  year: number
+  year: number,
+  month:
+    | "01"
+    | "02"
+    | "03"
+    | "04"
+    | "05"
+    | "06"
+    | "07"
+    | "08"
+    | "09"
+    | "10"
+    | "11"
+    | "12"
 ) => {
   const session = await getMyFitnessPalSession(myFitnessPalToken);
 
@@ -153,8 +167,10 @@ export const getMyFitnessPalReport = async (
       body: JSON.stringify({
         username: session.user?.name,
         show_food_diary: 1,
-        from: `${year}-01-01`,
-        to: `${year}-12-31`,
+        from: `${year}-${month}-01`,
+        to: `${year}-${month}-${getDaysInMonth(
+          new Date(year, Number(month) - 1)
+        )}`,
       }),
       headers: {
         cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,

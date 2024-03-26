@@ -1,3 +1,5 @@
+import { differenceInMonths } from "date-fns";
+import { DateTime } from "luxon";
 import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
@@ -6,6 +8,23 @@ import {
   getMyFitnessPalSession,
 } from "../../../sources/myfitnesspal";
 // import { NextRequest } from "next/server";
+
+const months = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
+] as const;
+
+const years = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] as const;
 
 export const dynamic = "force-dynamic";
 
@@ -56,25 +75,48 @@ export async function GET(/* request: NextRequest */) {
     await writer.write(encoder.encode("["));
     let first = true;
 
-    for (const year of [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
-      for (const reportEntry of await getMyFitnessPalReport(
-        myFitnessPalToken,
-        year
-      )) {
-        if (reportEntry.food_entries) {
-          for (const foodEntry of reportEntry.food_entries) {
-            await foodEntries.updateOne(
-              { id: foodEntry.id },
-              { $set: { ...foodEntry, user_id: myFitnessPalUserId } },
-              { upsert: true }
+    const now = new Date();
+    for (const year of years) {
+      for (const month of months) {
+        if (differenceInMonths(now, new Date(year, Number(month) - 1)) > 3) {
+          const entriesForMonth = await foodEntries.countDocuments({
+            user_id: myFitnessPalUserId,
+            date: { $regex: new RegExp(`^${year}-${month}-`) },
+          });
+
+          if (entriesForMonth > 0) continue;
+        }
+        for (const reportEntry of await getMyFitnessPalReport(
+          myFitnessPalToken,
+          year,
+          month
+        )) {
+          if (reportEntry.food_entries) {
+            for (const foodEntry of reportEntry.food_entries) {
+              await foodEntries.updateOne(
+                { id: foodEntry.id },
+                {
+                  $set: {
+                    ...foodEntry,
+                    user_id: myFitnessPalUserId,
+                    datetime: DateTime.fromISO(foodEntry.date, {
+                      zone: "utc",
+                    }).toJSDate(),
+                  },
+                },
+                { upsert: true }
+              );
+            }
+            if (first) {
+              first = false;
+            } else {
+              await writer.write(encoder.encode(","));
+            }
+
+            await writer.write(
+              encoder.encode(JSON.stringify(reportEntry.date))
             );
           }
-          if (first) {
-            first = false;
-          } else {
-            await writer.write(encoder.encode(","));
-          }
-          await writer.write(encoder.encode(JSON.stringify(reportEntry.date)));
         }
       }
     }
