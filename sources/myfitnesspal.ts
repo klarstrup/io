@@ -130,8 +130,10 @@ const fetchMyFitnessPal = async <T>(
     dbOptions
   );
 
-export const getMyFitnessPalSession = async (myFitnessPalToken: string) =>
-  await fetchMyFitnessPal<MyFitnessPal.Session>(
+export const getMyFitnessPalSession = async (myFitnessPalToken: string) => {
+  const session = await fetchMyFitnessPal<
+    MyFitnessPal.Session | Record<string, never>
+  >(
     "auth/session",
     {
       headers: {
@@ -141,8 +143,13 @@ export const getMyFitnessPalSession = async (myFitnessPalToken: string) =>
     { maxAge: HOUR_IN_SECONDS }
   );
 
+  if (!session.user) throw new Error("myFitnessPalToken is not valid");
+
+  return session as MyFitnessPal.Session;
+};
+
 export const getMyFitnessPalReport = async (
-  myFitnessPalToken: string,
+  myFitnessPalUserName: string,
   year: number,
   month:
     | "01"
@@ -158,23 +165,19 @@ export const getMyFitnessPalReport = async (
     | "11"
     | "12"
 ) => {
-  const session = await getMyFitnessPalSession(myFitnessPalToken);
-
-  return await fetchMyFitnessPal<MyFitnessPal.ReportEntry[]>(
+  const reportEntries = await fetchMyFitnessPal<MyFitnessPal.ReportEntry[]>(
     "services/diary/report",
     {
       method: "POST",
       body: JSON.stringify({
-        username: session.user?.name,
+        username: myFitnessPalUserName,
         show_food_diary: 1,
         from: `${year}-${month}-01`,
         to: `${year}-${month}-${getDaysInMonth(
           new Date(year, Number(month) - 1)
         )}`,
       }),
-      headers: {
-        cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,
-      },
+      headers: { cookie: "__Secure-next-auth.session-token=" },
     },
     {
       maxAge:
@@ -185,4 +188,10 @@ export const getMyFitnessPalReport = async (
         }),
     }
   );
+
+  if (!Array.isArray(reportEntries)) {
+    throw new Error(reportEntries);
+  }
+
+  return reportEntries;
 };

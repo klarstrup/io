@@ -5,7 +5,6 @@ import { User } from "../../../models/user";
 import {
   MyFitnessPal,
   getMyFitnessPalReport,
-  getMyFitnessPalSession,
 } from "../../../sources/myfitnesspal";
 // import { NextRequest } from "next/server";
 
@@ -44,21 +43,20 @@ export async function GET(/* request: NextRequest */) {
 
   // Io is the only user in the database,
   const user = await User.findOne();
-  const myFitnessPalToken = user?.myFitnessPalToken;
-  if (!myFitnessPalToken) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
-  const myFitnessPalSession = await getMyFitnessPalSession(myFitnessPalToken);
-
-  if (!myFitnessPalSession) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+  const myFitnessPalUserId = user.myFitnessPalUserId;
+  if (!myFitnessPalUserId) {
+    return new Response("No myFitnessPalUserId", { status: 401 });
   }
-  const myFitnessPalUserId = myFitnessPalSession.userId;
+
+  const myFitnessPalUserName = user.myFitnessPalUserName;
+  if (!myFitnessPalUserName) {
+    return new Response("No myFitnessPalUserName", { status: 401 });
+  }
 
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
@@ -87,7 +85,7 @@ export async function GET(/* request: NextRequest */) {
           if (entriesForMonth > 0) continue;
         }
         const reportEntries = await getMyFitnessPalReport(
-          myFitnessPalToken,
+          myFitnessPalUserName,
           year,
           month
         );

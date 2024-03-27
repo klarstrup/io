@@ -10,7 +10,8 @@ const userSchema = new mongoose.Schema({
   fitocracyUserId: Number,
   topLoggerId: Number,
   myFitnessPalToken: String,
-  myFitnessPalUsername: String,
+  myFitnessPalUserName: String,
+  myFitnessPalUserId: String,
   runDoubleId: String,
 });
 

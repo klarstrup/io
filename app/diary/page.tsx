@@ -1,5 +1,4 @@
 import { getServerSession } from "next-auth";
-import { Fragment } from "react";
 import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import { User } from "../../models/user";
@@ -20,9 +19,9 @@ import {
   getGymHolds,
   gymLoader,
 } from "../../sources/toplogger";
-import "../page.css";
 import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
+import "../page.css";
 
 let exercisesById = exercises;
 
@@ -45,8 +44,7 @@ export default async function Page() {
 
   const user = await User.findOne({ _id: session?.user.id });
 
-  const fitocracySessionId = user?.fitocracySessionId;
-  if (!fitocracySessionId) return null;
+  if (!user) return null;
 
   let fitocracyUserId = user.fitocracyUserId;
   if (!fitocracyUserId) {
@@ -62,8 +60,25 @@ export default async function Page() {
     await user.updateOne({ fitocracyUserId });
   }
 
-  if (!exercisesById) {
-    exercisesById = await getExercises(fitocracySessionId);
+  if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+    const myFitnessPalToken = user?.myFitnessPalToken;
+    if (!myFitnessPalToken) return null;
+    let session: MyFitnessPal.Session;
+    try {
+      session = await getMyFitnessPalSession(myFitnessPalToken);
+    } catch (e) {
+      return null;
+    }
+    if (session) {
+      await user.updateOne({
+        myFitnessPalUserId: session.userId,
+        myFitnessPalUserName: session.user.name,
+      });
+    }
+  }
+
+  if (!exercisesById && user.fitocracySessionId) {
+    exercisesById = await getExercises(user.fitocracySessionId);
   }
 
   const diary: Record<
@@ -107,9 +122,9 @@ export default async function Page() {
     }
   }
 
-  if (user.myFitnessPalToken) {
+  if (user.myFitnessPalUserId) {
     for await (const foodEntry of foodEntriesCollection.find({
-      user_id: (await getMyFitnessPalSession(user.myFitnessPalToken)).userId,
+      user_id: user.myFitnessPalUserId,
     })) {
       addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
     }

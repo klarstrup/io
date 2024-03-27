@@ -2,7 +2,6 @@ import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
   Fitocracy,
-  getUserProfileBySessionId,
   getUserWorkout,
   getUserWorkoutIds,
 } from "../../../sources/fitocracy";
@@ -27,17 +26,17 @@ export async function GET(/* request: NextRequest */) {
 
   // Io is the only user in the database,
   const user = await User.findOne();
-  const fitocracySessionId = user?.fitocracySessionId;
 
-  let fitocracyProfile: Fitocracy.ProfileData | null = null;
-  try {
-    fitocracyProfile = user?.fitocracySessionId
-      ? await getUserProfileBySessionId(user.fitocracySessionId)
-      : null;
-  } catch (e) {
-    /* */
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
   }
-  const fitocracyUserId = fitocracyProfile?.id;
+
+  const fitocracySessionId = user.fitocracySessionId;
+  const fitocracyUserId = user.fitocracyUserId;
+
+  if (!fitocracySessionId || !fitocracyUserId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
@@ -60,8 +59,8 @@ export async function GET(/* request: NextRequest */) {
     let first = true;
 
     const allWorkoutIds = await getUserWorkoutIds(
-      fitocracySessionId!,
-      fitocracyUserId!,
+      fitocracySessionId,
+      fitocracyUserId,
       undefined,
       { maxAge: DAY_IN_SECONDS }
     );
@@ -77,8 +76,8 @@ export async function GET(/* request: NextRequest */) {
       }
 
       const workout = await getUserWorkout(
-        fitocracySessionId!,
-        fitocracyUserId!,
+        fitocracySessionId,
+        fitocracyUserId,
         workoutId,
         { maxAge: DAY_IN_SECONDS }
       );
