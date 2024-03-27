@@ -5,7 +5,7 @@ import {
   getUserWorkout,
   getUserWorkoutIds,
 } from "../../../sources/fitocracy";
-import { DAY_IN_SECONDS } from "../../../utils";
+import { DAY_IN_SECONDS, HOUR_IN_SECONDS } from "../../../utils";
 // import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +62,7 @@ export async function GET(/* request: NextRequest */) {
       fitocracySessionId,
       fitocracyUserId,
       undefined,
-      { maxAge: DAY_IN_SECONDS }
+      { maxAge: HOUR_IN_SECONDS }
     );
 
     const workoutsThatAlreadyExist = await workouts
