@@ -95,6 +95,13 @@ export async function GET(/* request: NextRequest */) {
           year,
           month
         );
+        if (Array.isArray(reportEntries)) {
+          // Wipe the month to be replaced with the new data
+          await foodEntries.deleteMany({
+            user_id: myFitnessPalUserId,
+            date: { $regex: new RegExp(`^${year}-${month}-`) },
+          });
+        }
         if (!reportEntries.length) continue;
         for (const reportEntry of reportEntries) {
           if (reportEntry.food_entries) {
