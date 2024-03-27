@@ -1,4 +1,4 @@
-import { endOfYear, getDaysInMonth, startOfYear } from "date-fns";
+import { endOfMonth, getDaysInMonth, startOfMonth } from "date-fns";
 import { dbFetch } from "../fetch";
 import { HOUR_IN_SECONDS, getMaxAgeFactor } from "../utils";
 
@@ -149,9 +149,10 @@ export const getMyFitnessPalSession = async (myFitnessPalToken: string) => {
 };
 
 export const getMyFitnessPalReport = async (
+  myFitnessPalToken: string,
   myFitnessPalUserName: string,
   year: number,
-  month:
+  monthStr:
     | "01"
     | "02"
     | "03"
@@ -165,6 +166,7 @@ export const getMyFitnessPalReport = async (
     | "11"
     | "12"
 ) => {
+  const month = new Date(year, Number(monthStr) - 1);
   const reportEntries = await fetchMyFitnessPal<MyFitnessPal.ReportEntry[]>(
     "services/diary/report",
     {
@@ -172,23 +174,19 @@ export const getMyFitnessPalReport = async (
       body: JSON.stringify({
         username: myFitnessPalUserName,
         show_food_diary: 1,
-        from: `${year}-${month}-01`,
-        to: `${year}-${month}-${getDaysInMonth(
-          new Date(year, Number(month) - 1)
-        )}`,
+        from: `${year}-${monthStr}-01`,
+        to: `${year}-${monthStr}-${getDaysInMonth(month)}`,
       }),
-      headers: { cookie: "__Secure-next-auth.session-token=" },
+      headers: {
+        cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,
+      },
     },
     {
       maxAge:
         HOUR_IN_SECONDS *
-        getMaxAgeFactor({
-          start: startOfYear(new Date(year, 0, 1)),
-          end: endOfYear(new Date(year, 11, 31)),
-        }),
+        getMaxAgeFactor({ start: startOfMonth(month), end: endOfMonth(month) }),
     }
   );
-
   if (!Array.isArray(reportEntries)) {
     throw new Error(reportEntries);
   }

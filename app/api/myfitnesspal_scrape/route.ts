@@ -48,6 +48,11 @@ export async function GET(/* request: NextRequest */) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const myFitnessPalToken = user.myFitnessPalToken;
+  if (!myFitnessPalToken) {
+    return new Response("No myFitnessPalToken", { status: 401 });
+  }
+
   const myFitnessPalUserId = user.myFitnessPalUserId;
   if (!myFitnessPalUserId) {
     return new Response("No myFitnessPalUserId", { status: 401 });
@@ -85,6 +90,7 @@ export async function GET(/* request: NextRequest */) {
           if (entriesForMonth > 0) continue;
         }
         const reportEntries = await getMyFitnessPalReport(
+          myFitnessPalToken,
           myFitnessPalUserName,
           year,
           month
