@@ -78,9 +78,14 @@ export namespace TopLogger {
   }
 
   export interface ScoreSystemParams {
-    bonus_percent_fl: string;
-    bonus_percent_os: number;
+    bonus_percent_fl?: string;
+    bonus_percent_os?: BonusPercentOS;
+    points?: string;
+    points_flash?: string;
+    points_onsight?: string;
   }
+
+  export type BonusPercentOS = number | string;
 
   export interface GymSingle {
     id: number;
@@ -155,7 +160,6 @@ export namespace TopLogger {
     reservations_open_slots_at_time: Date;
     time_zone: string;
     serializer: string;
-    gym_resources: GymResource[];
   }
 
   export interface GymMultiple {
@@ -182,7 +186,6 @@ export namespace TopLogger {
     serializer: Serializer;
     scale_collapse_climbs?: string;
     scale_collapse_walls?: string;
-    gym_resources: GymResource[];
     url_google_plus?: string;
   }
 
@@ -278,6 +281,7 @@ export namespace TopLogger {
 
   export enum ClimbType {
     Boulder = "boulder",
+    Route = "route",
   }
 
   export enum Remarks {
@@ -375,7 +379,10 @@ interface JSONParams {
   includes?: string | string[];
 }
 
-const getGroup = (id: number, dbOptions?: Parameters<typeof dbFetch>[2]) =>
+export const getGroup = (
+  id: number,
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) =>
   fetchTopLogger<TopLogger.GroupSingle>(
     `/v1/groups/${id}.json`,
     null,
@@ -493,6 +500,23 @@ export const getGroupsUsers = (
 
   return fetchTopLogger<TopLogger.GroupUserMultiple[]>(url, null, dbOptions);
 };
+
+export const getGymGymGroups = (
+  gymId: number,
+  jsonParams?: JSONParams,
+  dbOptions?: Parameters<typeof dbFetch>[2]
+) => {
+  const url = new RelativeURL(`/v1/gyms/${gymId}/gym_groups.json`);
+  url.searchParams.set("serializeall", "false");
+
+  url.searchParams.set(
+    "json_params",
+    JSON.stringify({ deleted: false, live: true, ...jsonParams })
+  );
+
+  return fetchTopLogger<TopLogger.GymGroup[]>(url, null, dbOptions);
+};
+
 const getGroupClimbs = async (
   group: TopLogger.GroupSingle,
   dbOptions?: Parameters<typeof dbFetch>[2]
