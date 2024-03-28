@@ -78,8 +78,10 @@ export async function GET(/* request: NextRequest */) {
     const dbGyms = await gymsCollection.find().toArray();
     const dbGroups = await groupsCollection.find().toArray();
     const dbGroupUsers = await groupUsersCollection.find().toArray();
+    /*
     const dbClimbs = await climbsCollection.find().toArray();
     const dbAscends = await ascendsCollection.find().toArray();
+    */
     const dbGymGroups = await gymGroupsCollection.find().toArray();
     const dbHolds = await holdsCollection.find().toArray();
     console.timeEnd("Preloading DB data");
