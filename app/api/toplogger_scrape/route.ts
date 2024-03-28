@@ -4,6 +4,7 @@ import {
   TopLogger,
   getAscends,
   getGroup,
+  getGroupClimbs,
   getGroupsUsers,
   getGymGymGroups,
   getGymHolds,
@@ -65,7 +66,6 @@ export async function GET(/* request: NextRequest */) {
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
 
     const gymIds = new Set<number>();
-    const holdsIds = new Set<number>();
     const wallIds = new Set<number>();
     for (const { climb, ...ascend } of ascends) {
       await DB.collection<TopLogger.AscendSingle>(
@@ -105,7 +105,6 @@ export async function GET(/* request: NextRequest */) {
         { upsert: true }
       );
       gymIds.add(climb.gym_id);
-      holdsIds.add(climb.hold_id);
       if (climb.wall_id) wallIds.add(climb.wall_id);
       await writer.write(encoder.encode(",\n"));
       await writer.write(encoder.encode(JSON.stringify(climb)));
@@ -154,19 +153,16 @@ export async function GET(/* request: NextRequest */) {
         /**
          * User Gym Groups Group
          */
-        const group = await getGroup(gymGroup.group_id);
+        const { climb_groups, ...group } = await getGroup(gymGroup.group_id, {
+          maxAge: HOUR_IN_SECONDS,
+        });
         await DB.collection<TopLogger.GroupSingle>(
           "toplogger_groups"
         ).updateOne(
-          { id: gymGroup.group_id },
+          { id: group.id },
           {
             $set: {
               ...group,
-              // This array gets wiped when the group(competition) ends
-              // so we don't want to overwrite it with an empty array
-              climb_groups: group.climb_groups.length
-                ? group.climb_groups
-                : undefined,
               date_live_start: new Date(group.date_live_start),
               date_loggable_start: new Date(group.date_loggable_start),
               date_loggable_end: new Date(group.date_loggable_end),
@@ -174,16 +170,163 @@ export async function GET(/* request: NextRequest */) {
           },
           { upsert: true }
         );
+        const dbGroup = (await DB.collection<TopLogger.GroupSingle>(
+          "toplogger_groups"
+        ).findOne({ id: group.id }))!;
+        if (!dbGroup.climb_groups || !dbGroup.climb_groups.length) {
+          await DB.collection<TopLogger.GroupSingle>(
+            "toplogger_groups"
+          ).updateOne(
+            { id: group.id },
+            { $set: { climb_groups } },
+            { upsert: true }
+          );
+
+          /**
+           * User Gym Groups Group Climbs
+           */
+          const climbs = await getGroupClimbs(
+            { climb_groups, ...group },
+            { maxAge: HOUR_IN_SECONDS }
+          );
+          for (const climb of climbs) {
+            await DB.collection<TopLogger.ClimbMultiple>(
+              "toplogger_climbs"
+            ).updateOne(
+              { id: climb.id },
+              {
+                $set: {
+                  ...climb,
+                  date_live_start:
+                    climb.date_live_start && new Date(climb.date_live_start),
+                  date_live_end:
+                    climb.date_live_end && new Date(climb.date_live_end),
+                  date_deleted:
+                    climb.date_deleted && new Date(climb.date_deleted),
+                  date_set: climb.date_set && new Date(climb.date_set),
+                  created_at: climb.created_at && new Date(climb.created_at),
+                  date_removed:
+                    climb.date_removed && new Date(climb.date_removed),
+                },
+              },
+              { upsert: true }
+            );
+            await writer.write(encoder.encode(",\n"));
+            await writer.write(encoder.encode(JSON.stringify(climb)));
+          }
+
+          /**
+           * User Gym Groups Group Users
+           */
+          for (const { user, ...groupUser } of await getGroupsUsers(
+            {
+              filters: { group_id: group.id },
+              includes: "user",
+            },
+            { maxAge: HOUR_IN_SECONDS }
+          )) {
+            await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
+              "toplogger_group_users"
+            ).updateOne(
+              { id: groupUser.id },
+              { $set: groupUser },
+              { upsert: true }
+            );
+            await writer.write(encoder.encode(",\n"));
+            await writer.write(encoder.encode(JSON.stringify(groupUser)));
+
+            /**
+             * User Groups Group
+             */
+            const { climb_groups, ...group } = await getGroup(
+              groupUser.group_id,
+              { maxAge: HOUR_IN_SECONDS }
+            );
+            await DB.collection<TopLogger.GroupSingle>(
+              "toplogger_groups"
+            ).updateOne(
+              { id: group.id },
+              {
+                $set: {
+                  ...group,
+                  date_live_start: new Date(group.date_live_start),
+                  date_loggable_start: new Date(group.date_loggable_start),
+                  date_loggable_end: new Date(group.date_loggable_end),
+                },
+              },
+              { upsert: true }
+            );
+            const dbGroup = (await DB.collection<TopLogger.GroupSingle>(
+              "toplogger_groups"
+            ).findOne({ id: group.id }))!;
+            if (!dbGroup.climb_groups || !dbGroup.climb_groups.length) {
+              await DB.collection<TopLogger.GroupSingle>(
+                "toplogger_groups"
+              ).updateOne(
+                { id: group.id },
+                { $set: { climb_groups } },
+                { upsert: true }
+              );
+            }
+
+            /**
+             * Group User
+             */
+            await DB.collection<TopLogger.UserSingle>(
+              "toplogger_users"
+            ).updateOne({ id: user.id }, { $set: user }, { upsert: true });
+            await writer.write(encoder.encode(",\n"));
+            await writer.write(encoder.encode(JSON.stringify(user)));
+
+            /**
+             * Group User Ascends
+             */
+            /*
+            const ascends = climbs.length
+              ? await getAscends(
+                  {
+                    filters: {
+                      user_id: user.id,
+                      climb_id: climbs.map(({ id }) => id),
+                    },
+                  },
+                  { maxAge: HOUR_IN_SECONDS }
+                )
+              : [];
+
+            for (const ascend of ascends) {
+              await DB.collection<TopLogger.AscendSingle>(
+                "toplogger_ascends"
+              ).updateOne(
+                { id: ascend.id },
+                {
+                  $set: {
+                    ...ascend,
+                    date_logged:
+                      ascend.date_logged && new Date(ascend.date_logged),
+                  },
+                },
+                { upsert: true }
+              );
+              await writer.write(encoder.encode(",\n"));
+              await writer.write(encoder.encode(JSON.stringify(ascend)));
+            }
+            */
+          }
+        }
       }
     }
 
     /**
      * User Groups
      */
-    for (const { user, ...groupUser } of await getGroupsUsers({
-      filters: { user_id: topLoggerId },
-      includes: "user",
-    })) {
+    for (const { user, ...groupUser } of await getGroupsUsers(
+      {
+        filters: { user_id: topLoggerId },
+        includes: "user",
+      },
+      { maxAge: HOUR_IN_SECONDS }
+    )) {
       await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
         "toplogger_group_users"
       ).updateOne({ id: groupUser.id }, { $set: groupUser }, { upsert: true });
@@ -193,17 +336,14 @@ export async function GET(/* request: NextRequest */) {
       /**
        * User Groups Group
        */
-      const group = await getGroup(groupUser.group_id);
+      const { climb_groups, ...group } = await getGroup(groupUser.group_id, {
+        maxAge: HOUR_IN_SECONDS,
+      });
       await DB.collection<TopLogger.GroupSingle>("toplogger_groups").updateOne(
         { id: group.id },
         {
           $set: {
             ...group,
-            // This array gets wiped when the group(competition) ends
-            // so we don't want to overwrite it with an empty array
-            climb_groups: group.climb_groups.length
-              ? group.climb_groups
-              : undefined,
             date_live_start: new Date(group.date_live_start),
             date_loggable_start: new Date(group.date_loggable_start),
             date_loggable_end: new Date(group.date_loggable_end),
@@ -211,6 +351,18 @@ export async function GET(/* request: NextRequest */) {
         },
         { upsert: true }
       );
+      const dbGroup = (await DB.collection<TopLogger.GroupSingle>(
+        "toplogger_groups"
+      ).findOne({ id: group.id }))!;
+      if (!dbGroup.climb_groups || !dbGroup.climb_groups.length) {
+        await DB.collection<TopLogger.GroupSingle>(
+          "toplogger_groups"
+        ).updateOne(
+          { id: group.id },
+          { $set: { climb_groups } },
+          { upsert: true }
+        );
+      }
 
       /**
        * Group User
@@ -270,7 +422,6 @@ export async function GET(/* request: NextRequest */) {
           { upsert: true }
         );
         gymIds.add(climb.gym_id);
-        holdsIds.add(climb.hold_id);
         if (climb.wall_id) wallIds.add(climb.wall_id);
         await writer.write(encoder.encode(",\n"));
         await writer.write(encoder.encode(JSON.stringify(climb)));

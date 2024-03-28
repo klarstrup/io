@@ -9,6 +9,7 @@ import {
   isWithinInterval,
   subHours,
 } from "date-fns";
+import dbConnect from "../dbConnect";
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
@@ -19,15 +20,7 @@ import {
   ThousandDivideByScore,
 } from "../lib";
 import { User } from "../models/user";
-import {
-  HOUR_IN_SECONDS,
-  MINUTE_IN_SECONDS,
-  RelativeURL,
-  WEEK_IN_SECONDS,
-  getMaxAgeFactor,
-  percentile,
-  unique,
-} from "../utils";
+import { RelativeURL, percentile } from "../utils";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -517,7 +510,7 @@ export const getGymGymGroups = (
   return fetchTopLogger<TopLogger.GymGroup[]>(url, null, dbOptions);
 };
 
-const getGroupClimbs = async (
+export const getGroupClimbs = async (
   group: TopLogger.GroupSingle,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
@@ -568,91 +561,92 @@ export async function getIoTopLoggerGroupEvent(
   ioId: number,
   sex?: boolean
 ) {
-  const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
+  const DB = (await dbConnect()).connection.db;
+
+  const group = await DB.collection<TopLogger.GroupSingle>(
+    "toplogger_groups"
+  ).findOne({ id: groupId });
+  if (!group) throw new Error("Group not found");
+
   const groupInterval: Interval = {
-    start: new Date(group.date_loggable_start),
-    end: new Date(group.date_loggable_end),
+    start: group.date_loggable_start,
+    end: group.date_loggable_end,
   } as const;
-  const maxAgeFactor = getMaxAgeFactor(groupInterval);
 
   const gyms = (
     await Promise.all(
       group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
     )
   ).filter(Boolean);
-  const climbs = await getGroupClimbs(group, {
-    maxAge: HOUR_IN_SECONDS * maxAgeFactor,
-  });
 
-  const io = await getUser(ioId, { maxAge: HOUR_IN_SECONDS * maxAgeFactor });
+  let climbs: TopLogger.ClimbMultiple[] = [];
+  if (group.climb_groups.length) {
+    climbs = await DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs")
+      .find({ id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) } })
+      .toArray();
+  } else {
+    for (const { gym_id } of group.gym_groups) {
+      for (const climb of await DB.collection<TopLogger.ClimbMultiple>(
+        "toplogger_climbs"
+      )
+        .find({ gym_id })
+        .toArray()) {
+        if (
+          (climb.name || climb.number) &&
+          climb.date_live_start &&
+          isWithinInterval(climb.date_live_start, {
+            start: subHours(group.date_loggable_start, 16),
+            end: addHours(group.date_loggable_end, 21),
+          })
+        ) {
+          climbs.push(climb);
+        }
+      }
+    }
+  }
 
-  const groupUsers = await getGroupsUsers(
-    {
-      filters: {
-        group_id: groupId,
-        user: sex ? { gender: io.gender } : undefined,
-      },
-      includes: "user",
-    },
-    { maxAge: MINUTE_IN_SECONDS * 15 * maxAgeFactor }
-  );
+  const io = await DB.collection<TopLogger.UserSingle>(
+    "toplogger_users"
+  ).findOne({ id: ioId });
+
+  if (!io) throw new Error("io not found");
+
+  const groupUsers = await DB.collection<
+    Omit<TopLogger.GroupUserMultiple, "user">
+  >("toplogger_group_users")
+    .find({ group_id: groupId })
+    .toArray();
 
   const ascends = (
-    await Promise.all(
-      groupUsers.map(({ user_id }) =>
-        climbs.length
-          ? getAscends(
-              { filters: { user_id, climb_id: climbs.map(({ id }) => id) } },
-              {
-                maxAge:
-                  (user_id === ioId
-                    ? MINUTE_IN_SECONDS
-                    : MINUTE_IN_SECONDS * 15) * maxAgeFactor,
-              }
-            ).catch((error: unknown) => {
-              if (
-                error instanceof Object &&
-                "errors" in error &&
-                Array.isArray(error.errors) &&
-                typeof error.errors[0] === "string" &&
-                error.errors[0] === "Access denied."
-              ) {
-                // Some toplogger users have privacy enabled for their ascends
-                return [];
-              }
-
-              throw error;
-            })
-          : []
-      )
-    )
-  )
-    .flat()
-    .filter((ascend) => {
-      const date = ascend.date_logged && new Date(ascend.date_logged);
-      return (
-        date &&
-        isWithinInterval(date, groupInterval) &&
-        climbs.some((climb) => ascend.climb_id === climb.id)
-      );
-    });
+    await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
+      .find({
+        user_id: { $in: groupUsers.map(({ user_id }) => user_id) },
+        climb_id: { $in: climbs.map(({ id }) => id) },
+      })
+      .toArray()
+  ).filter(
+    (ascend) =>
+      ascend.date_logged &&
+      isWithinInterval(ascend.date_logged, groupInterval) &&
+      climbs.some((climb) => ascend.climb_id === climb.id)
+  );
 
   const ioAscends = climbs.length
     ? ascends.filter((ascend) => ascend.user_id === ioId)
     : (
-        await getAscends(
-          { filters: { user_id: ioId } },
-          { maxAge: HOUR_IN_SECONDS * maxAgeFactor }
-        )
-      ).filter((ascend) => {
-        const date = ascend.date_logged && new Date(ascend.date_logged);
-        return date && isWithinInterval(date, groupInterval);
-      });
+        await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
+          .find({ user_id: ioId })
+          .toArray()
+      ).filter(
+        (ascend) =>
+          ascend.date_logged &&
+          isWithinInterval(ascend.date_logged, groupInterval)
+      );
 
   let firstAscend: Date | null = null;
   let lastAscend: Date | null = null;
   for (const ascend of ioAscends || []) {
-    const date = ascend.date_logged && new Date(ascend.date_logged);
+    const date = ascend.date_logged;
     if (!date) continue;
     if (!firstAscend || isBefore(date, firstAscend)) firstAscend = date;
     if (!lastAscend || isAfter(date, lastAscend)) lastAscend = date;
@@ -661,15 +655,9 @@ export async function getIoTopLoggerGroupEvent(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
-  const holds = (
-    await Promise.all(
-      unique(climbs.map((climb) => climb.gym_id)).map((gymId) =>
-        getGymHolds(gymId, undefined, {
-          maxAge: WEEK_IN_SECONDS * maxAgeFactor,
-        })
-      )
-    )
-  ).flat();
+  const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
+    .find({ gym_id: { $in: climbs.map(({ gym_id }) => gym_id) } })
+    .toArray();
 
   return {
     source,
@@ -698,7 +686,13 @@ export async function getIoTopLoggerGroupEvent(
       : null,
     category: sex ? io.gender : null,
     team: null,
-    noParticipants: groupUsers.length || NaN,
+    noParticipants:
+      (await DB.collection<TopLogger.UserSingle>(
+        "toplogger_users"
+      ).countDocuments({
+        id: { $in: groupUsers.map(({ user_id }) => user_id) },
+        gender: sex ? io.gender : undefined,
+      })) || NaN,
     problems: climbs.length,
     problemByProblem: climbs
       .map((climb) => {
@@ -736,50 +730,62 @@ async function getIoTopLoggerGroupScores(
   ioId: number,
   sex?: boolean
 ) {
-  const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
+  const DB = (await dbConnect()).connection.db;
+
+  const group = await DB.collection<TopLogger.GroupSingle>(
+    "toplogger_groups"
+  ).findOne({ id: groupId });
+  if (!group) throw new Error("Group not found");
   const groupInterval: Interval = {
-    start: new Date(group.date_loggable_start),
-    end: new Date(group.date_loggable_end),
+    start: group.date_loggable_start,
+    end: group.date_loggable_end,
   } as const;
-  const maxAgeFactor = getMaxAgeFactor(groupInterval);
-  const climbs = await getGroupClimbs(group, {
-    maxAge: HOUR_IN_SECONDS * maxAgeFactor,
-  });
 
-  const io = await getUser(ioId, { maxAge: HOUR_IN_SECONDS * maxAgeFactor });
+  let climbs: TopLogger.ClimbMultiple[] = [];
+  if (group.climb_groups.length) {
+    climbs = await DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs")
+      .find({ id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) } })
+      .toArray();
+  } else {
+    for (const { gym_id } of group.gym_groups) {
+      for (const climb of await DB.collection<TopLogger.ClimbMultiple>(
+        "toplogger_climbs"
+      )
+        .find({ gym_id })
+        .toArray()) {
+        if (
+          (climb.name || climb.number) &&
+          climb.date_live_start &&
+          isWithinInterval(climb.date_live_start, {
+            start: subHours(group.date_loggable_start, 16),
+            end: addHours(group.date_loggable_end, 21),
+          })
+        ) {
+          climbs.push(climb);
+        }
+      }
+    }
+  }
 
-  const groupUsers = await getGroupsUsers(
-    {
-      filters: {
-        group_id: groupId,
-        user: sex ? { gender: io.gender } : undefined,
-      },
-      includes: "user",
-    },
-    { maxAge: MINUTE_IN_SECONDS * 15 * maxAgeFactor }
-  );
+  const io = await DB.collection<TopLogger.UserSingle>(
+    "toplogger_users"
+  ).findOne({ id: ioId });
+
+  if (!io) throw new Error("io not found");
+
+  const groupUsers = await DB.collection<
+    Omit<TopLogger.GroupUserMultiple, "user">
+  >("toplogger_group_users")
+    .find({ group_id: groupId })
+    .toArray();
 
   const ascends = (
     await Promise.all(
       groupUsers.map(({ user_id }) =>
         climbs.length
-          ? getAscends(
-              { filters: { user_id, climb_id: climbs.map(({ id }) => id) } },
-              { maxAge: MINUTE_IN_SECONDS * maxAgeFactor }
-            ).catch((error: unknown) => {
-              if (
-                error instanceof Object &&
-                "errors" in error &&
-                Array.isArray(error.errors) &&
-                typeof error.errors[0] === "string" &&
-                error.errors[0] === "Access denied."
-              ) {
-                // Some toplogger users have privacy enabled for their ascends
-                return [];
-              }
-
-              throw error;
-            })
+          ? DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
+              .find({ user_id, climb_id: { $in: climbs.map(({ id }) => id) } })
+              .toArray()
           : []
       )
     )
@@ -788,7 +794,7 @@ async function getIoTopLoggerGroupScores(
     .filter(
       ({ climb_id, date_logged }) =>
         date_logged &&
-        isWithinInterval(new Date(date_logged), groupInterval) &&
+        isWithinInterval(date_logged, groupInterval) &&
         climbs.some(({ id }) => climb_id === id)
     );
 
@@ -802,40 +808,59 @@ async function getIoTopLoggerGroupScores(
     new Map<number, number>()
   );
 
-  const usersWithResults = groupUsers.map(({ user, score, rank }) => {
-    let tdbScore = 0;
-    let ptsScore = 0;
+  const usersWithResults = await Promise.all(
+    groupUsers.map(async ({ user_id, score, rank }) => {
+      const user = (await DB.collection<TopLogger.UserSingle>(
+        "toplogger_users"
+      ).findOne({ id: user_id }))!;
+      let tdbScore = 0;
+      let ptsScore = 0;
 
-    const userAscends = ascends.filter(({ user_id }) => user_id === user.id);
-    for (const { climb_id, checks } of userAscends) {
-      let problemTDBScore = TDB_BASE / (topsByClimbId.get(climb_id) || 0);
+      const userAscends = ascends.filter(
+        (ascend) => ascend.user_id === user_id
+      );
+      for (const { climb_id, checks } of userAscends) {
+        let problemTDBScore = TDB_BASE / (topsByClimbId.get(climb_id) || 0);
 
-      if (checks) {
-        ptsScore += PTS_SEND;
-        if (checks >= 2) {
-          ptsScore += PTS_FLASH_BONUS;
-          problemTDBScore *= TDB_FLASH_MULTIPLIER;
+        if (checks) {
+          ptsScore += PTS_SEND;
+          if (checks >= 2) {
+            ptsScore += PTS_FLASH_BONUS;
+            problemTDBScore *= TDB_FLASH_MULTIPLIER;
+          }
+          tdbScore += problemTDBScore;
         }
-        tdbScore += problemTDBScore;
       }
-    }
 
-    return { user, score, rank, ptsScore, tdbScore } as const;
-  });
+      return { user_id, user, score, rank, ptsScore, tdbScore } as const;
+    })
+  );
 
   const ioResults =
-    usersWithResults.find(({ user }) => user.id === ioId) ?? null;
+    usersWithResults.find(({ user_id }) => user_id === ioId) ?? null;
 
   const scores: Score[] = [];
   if (ioResults && isPast(groupInterval.start)) {
-    const noClimbers = groupUsers.length || NaN;
+    const noClimbers =
+      (await DB.collection<TopLogger.UserSingle>(
+        "toplogger_users"
+      ).countDocuments({
+        id: { $in: groupUsers.map(({ user_id }) => user_id) },
+        gender: sex ? io.gender : undefined,
+      })) || NaN;
+
+    const ioRank =
+      Array.from(usersWithResults)
+        .filter(({ user }) => (sex ? user.gender === io.gender : true))
+        .sort((a, b) => Number(b.score) - Number(a.score))
+        .findIndex(({ user_id }) => user_id === ioId) + 1;
 
     if (group.score_system === "points") {
       scores.push({
         system: SCORING_SYSTEM.POINTS,
         source: SCORING_SOURCE.OFFICIAL,
-        rank: ioResults.rank,
-        percentile: percentile(ioResults.rank, noClimbers),
+        rank: ioRank,
+        percentile: percentile(ioRank, noClimbers),
         points: Number(ioResults.score),
       } satisfies PointsScore);
     }
@@ -843,8 +868,8 @@ async function getIoTopLoggerGroupScores(
       scores.push({
         system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
         source: SCORING_SOURCE.OFFICIAL,
-        rank: ioResults.rank,
-        percentile: percentile(ioResults.rank, noClimbers),
+        rank: ioRank,
+        percentile: percentile(ioRank, noClimbers),
         points: Number(ioResults.score),
       } satisfies ThousandDivideByScore);
     }
@@ -855,8 +880,9 @@ async function getIoTopLoggerGroupScores(
       if (ioResults.tdbScore) {
         const ioTDBRank =
           Array.from(usersWithResults)
+            .filter(({ user }) => (sex ? user.gender === io.gender : true))
             .sort((a, b) => b.tdbScore - a.tdbScore)
-            .findIndex(({ user: { id } }) => id === ioId) + 1;
+            .findIndex(({ user_id }) => user_id === ioId) + 1;
         scores.push({
           system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
           source: SCORING_SOURCE.DERIVED,
@@ -868,8 +894,9 @@ async function getIoTopLoggerGroupScores(
       if (ioResults.ptsScore) {
         const ioPointsRank =
           Array.from(usersWithResults)
+            .filter(({ user }) => (sex ? user.gender === io.gender : true))
             .sort((a, b) => b.ptsScore - a.ptsScore)
-            .findIndex(({ user: { id } }) => id === ioId) + 1;
+            .findIndex(({ user_id }) => user_id === ioId) + 1;
         scores.push({
           system: SCORING_SYSTEM.POINTS,
           source: SCORING_SOURCE.DERIVED,
@@ -888,12 +915,16 @@ export async function getTopLoggerGroupEventEntry(
   groupId: number,
   userId: number
 ): Promise<EventEntry> {
-  const group = await getGroup(groupId, { maxAge: HOUR_IN_SECONDS });
-  const gyms = (
-    await gymLoader.loadMany(group.gym_groups.map(({ gym_id }) => gym_id))
-  ).filter((gymOrError): gymOrError is TopLogger.GymMultiple =>
-    Boolean(gymOrError && !(gymOrError instanceof Error))
-  );
+  const DB = (await dbConnect()).connection.db;
+
+  const group = await DB.collection<TopLogger.GroupSingle>(
+    "toplogger_groups"
+  ).findOne({ id: groupId });
+  if (!group) throw new Error("Group not found");
+
+  const gyms = await DB.collection<TopLogger.GymSingle>("toplogger_gyms")
+    .find({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } })
+    .toArray();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
@@ -910,8 +941,8 @@ export async function getTopLoggerGroupEventEntry(
       .trim(),
     subEvent: null,
     ioId: userId,
-    start: new Date(group.date_loggable_start),
-    end: new Date(group.date_loggable_end),
+    start: group.date_loggable_start,
+    end: group.date_loggable_end,
   } as const;
 }
 
@@ -919,47 +950,42 @@ const source = "toplogger";
 const type = "training";
 const discipline = "bouldering";
 export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
+  const DB = (await dbConnect()).connection.db;
+
   // Io is the only user in the database,
-  const user = await User.findOne();
-  const topLoggerId = user?.topLoggerId;
-  let topLoggerUser: TopLogger.UserSingle | null = null;
-  try {
-    topLoggerUser = topLoggerId ? await getUser(topLoggerId) : null;
-  } catch (e) {
-    /* */
-  }
-  const topLoggerUserId = topLoggerUser?.id;
+  const user = (await User.findOne())!;
+  const topLoggerId = user.topLoggerId!;
 
   const ascends = (
-    (topLoggerUserId
-      ? await getAscends(
-          { filters: { user_id: topLoggerUserId }, includes: ["climb"] },
-          { maxAge: HOUR_IN_SECONDS }
-        )
-      : []) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
-  ).filter((ascend) => {
-    const date = ascend.date_logged && new Date(ascend.date_logged);
-    return date && isWithinInterval(date, trainingInterval);
-  });
+    await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
+      .find({ user_id: topLoggerId })
+      .toArray()
+  ).filter(
+    (ascend) =>
+      ascend.date_logged &&
+      isWithinInterval(ascend.date_logged, trainingInterval)
+  );
 
-  const holds = (
-    await Promise.all(
-      unique(ascends.map(({ climb }) => climb.gym_id)).map((gymId) =>
-        getGymHolds(gymId, undefined, { maxAge: WEEK_IN_SECONDS })
-      )
-    )
-  ).flat();
+  const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
+    .find()
+    .toArray();
 
-  let problemByProblem = ascends.map(
-    ({ climb: { grade, hold_id }, checks }) => ({
-      number: "",
-      color: holds.find((hold) => hold.id === hold_id)?.color || undefined,
-      grade: Number(grade) || undefined,
-      attempt: true,
-      // TopLogger does not do zones, at least not for Beta Boulders
-      zone: checks >= 1,
-      top: checks >= 1,
-      flash: checks >= 2,
+  let problemByProblem = await Promise.all(
+    ascends.map(async ({ climb_id, checks }) => {
+      const { hold_id, grade } = (await DB.collection<TopLogger.ClimbMultiple>(
+        "toplogger_climbs"
+      ).findOne({ id: climb_id }))!;
+
+      return {
+        number: "",
+        color: holds.find((hold) => hold.id === hold_id)?.color || undefined,
+        grade: Number(grade) || undefined,
+        attempt: true,
+        // TopLogger does not do zones, at least not for Beta Boulders
+        zone: checks >= 1,
+        top: checks >= 1,
+        flash: checks >= 2,
+      };
     })
   );
   const grades = Array.from(

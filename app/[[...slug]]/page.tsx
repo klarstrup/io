@@ -23,11 +23,10 @@ import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
   TopLogger,
   getBoulderingTrainingData,
-  getGroupsUsers,
   getTopLoggerGroupEventEntry,
   getUser,
 } from "../../sources/toplogger";
-import { HOUR_IN_SECONDS, cotemporality } from "../../utils";
+import { cotemporality } from "../../utils";
 import "../page.css";
 import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
 import TimelineEventContent from "./TimelineEventContent";
@@ -225,7 +224,7 @@ const getData = async (
   disciplines?: string[],
   { from, to }: { from?: Date; to?: Date } | undefined = {}
 ) => {
-  await dbConnect();
+  const DB = (await dbConnect()).connection.db;
 
   // Io is the only user in the database,
   const user = await User.findOne();
@@ -259,10 +258,11 @@ const getData = async (
       getIoClimbAlongCompetitionEventEntry(153),
       getIoClimbAlongCompetitionEventEntry(154),
       ...(topLoggerUserId
-        ? await getGroupsUsers(
-            { filters: { user_id: topLoggerUserId } },
-            { maxAge: HOUR_IN_SECONDS }
+        ? await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
+            "toplogger_group_users"
           )
+            .find({ user_id: topLoggerUserId })
+            .toArray()
         : []
       ).map(({ group_id, user_id }) =>
         getTopLoggerGroupEventEntry(group_id, user_id)

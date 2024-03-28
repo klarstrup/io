@@ -14,16 +14,15 @@ import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
   TopLogger,
-  getGroupsUsers,
   getTopLoggerGroupEventEntry,
   getUser,
 } from "../../sources/toplogger";
-import { MINUTE_IN_SECONDS, WEEK_IN_SECONDS } from "../../utils";
+import { MINUTE_IN_SECONDS } from "../../utils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  await dbConnect();
+  const DB = (await dbConnect()).connection.db;
 
   // Io is the only user in the database,
   const user = await User.findOne();
@@ -57,10 +56,11 @@ export async function GET() {
     getIoClimbAlongCompetitionEventEntry(153),
     getIoClimbAlongCompetitionEventEntry(154),
     ...(
-      await getGroupsUsers(
-        { filters: { user_id: topLoggerUserId } },
-        { maxAge: WEEK_IN_SECONDS }
+      await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
+        "toplogger_group_users"
       )
+        .find({ user_id: topLoggerUserId })
+        .toArray()
     ).map(({ group_id, user_id }) =>
       getTopLoggerGroupEventEntry(group_id, user_id)
     )

@@ -54,7 +54,7 @@ const rawDbFetch = async <T = string>(
         parsedResult = (
           options?.parseJson === false ? result : JSON.parse(result)
         ) as T;
-        // console.info(`DB HIT ${String(input)}`);
+        console.info(`DB HIT ${String(input)}`);
       }
     } else {
       console.info(`DB STALE ${String(input)}`);
