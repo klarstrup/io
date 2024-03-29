@@ -3,23 +3,17 @@ import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import { User } from "../../models/user";
 import {
-  Fitocracy,
   exercises,
   getExercises,
   getUserProfileBySessionId,
+  type Fitocracy,
 } from "../../sources/fitocracy";
 import {
   MyFitnessPal,
   getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
-import { RunDouble, getRuns } from "../../sources/rundouble";
-import {
-  TopLogger,
-  getAscends,
-  getGymHolds,
-  gymLoader,
-} from "../../sources/toplogger";
-import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, unique } from "../../utils";
+import { getRuns, type RunDouble } from "../../sources/rundouble";
+import { type TopLogger } from "../../sources/toplogger";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
 
@@ -28,17 +22,14 @@ let exercisesById = exercises;
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  const dbClient = await dbConnect();
+  const DB = (await dbConnect()).connection.db;
 
   const workoutsCollection =
-    dbClient.connection.db.collection<Fitocracy.MongoWorkout>(
-      "fitocracy_workouts"
-    );
+    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
-  const foodEntriesCollection =
-    dbClient.connection.db.collection<MyFitnessPal.MongoFoodEntry>(
-      "myfitnesspal_food_entries"
-    );
+  const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
+    "myfitnesspal_food_entries"
+  );
 
   const session = await getServerSession(authOptions);
 
@@ -132,22 +123,29 @@ export default async function Page() {
 
   let holds: TopLogger.Hold[] = [];
   if (user.topLoggerId) {
-    const ascends = (await getAscends(
-      { filters: { user_id: user.topLoggerId }, includes: ["climb"] },
-      { maxAge: HOUR_IN_SECONDS }
-    )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
+    const ascends = await DB.collection<TopLogger.AscendSingle>(
+      "toplogger_ascends"
+    )
+      .find({ user_id: user.topLoggerId })
+      .toArray();
+
+    holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
+      .find()
+      .toArray();
+
+    const climbs = await DB.collection<TopLogger.ClimbMultiple>(
+      "toplogger_climbs"
+    )
+      .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
+      .toArray();
+
     for (const ascend of ascends) {
       if (!ascend.date_logged) continue;
-      addDiaryEntry(new Date(ascend.date_logged), "ascends", ascend);
+      addDiaryEntry(new Date(ascend.date_logged), "ascends", {
+        ...ascend,
+        climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+      });
     }
-
-    holds = (
-      await Promise.all(
-        unique(ascends.map(({ climb }) => climb.gym_id)).map((gymId) =>
-          getGymHolds(gymId, undefined, { maxAge: WEEK_IN_SECONDS })
-        )
-      )
-    ).flat();
   }
 
   if (user.runDoubleId) {
@@ -338,45 +336,47 @@ export default async function Page() {
                     : null}
                   {ascends?.length
                     ? (
-                        await gymLoader.loadMany(
-                          unique(ascends.map(({ climb }) => climb.gym_id))
+                        await DB.collection<TopLogger.GymSingle>(
+                          "toplogger_gyms"
                         )
-                      )
-                        .filter((gym): gym is TopLogger.GymMultiple =>
-                          Boolean(gym && "id" in gym)
-                        )
-                        .map((gym) => {
-                          const gymAscends = ascends.filter(
-                            ({ climb }) => climb.gym_id === gym.id
-                          );
-                          if (!gymAscends.length) return null;
-                          return (
-                            <div
-                              key={gym.id}
-                              style={{
-                                marginTop: "1em",
-                              }}
-                            >
-                              <b>{gym.name}</b>
-                              <ProblemByProblem
-                                problemByProblem={gymAscends.map(
-                                  ({ climb: { grade, hold_id }, checks }) => ({
-                                    number: "",
-                                    color:
-                                      holds.find((hold) => hold.id === hold_id)
-                                        ?.color || undefined,
-                                    grade: Number(grade) || undefined,
-                                    attempt: true,
-                                    // TopLogger does not do zones, at least not for Beta Boulders
-                                    zone: checks >= 1,
-                                    top: checks >= 1,
-                                    flash: checks >= 2,
-                                  })
-                                )}
-                              />
-                            </div>
-                          );
-                        })
+                          .find({
+                            id: {
+                              $in: ascends.map(({ climb }) => climb.gym_id),
+                            },
+                          })
+                          .toArray()
+                      ).map((gym) => {
+                        const gymAscends = ascends.filter(
+                          ({ climb }) => climb.gym_id === gym.id
+                        );
+                        if (!gymAscends.length) return null;
+                        return (
+                          <div
+                            key={gym.id}
+                            style={{
+                              marginTop: "1em",
+                            }}
+                          >
+                            <b>{gym.name}</b>
+                            <ProblemByProblem
+                              problemByProblem={gymAscends.map(
+                                ({ climb: { grade, hold_id }, checks }) => ({
+                                  number: "",
+                                  color:
+                                    holds.find((hold) => hold.id === hold_id)
+                                      ?.color || undefined,
+                                  grade: Number(grade) || undefined,
+                                  attempt: true,
+                                  // TopLogger does not do zones, at least not for Beta Boulders
+                                  zone: checks >= 1,
+                                  top: checks >= 1,
+                                  flash: checks >= 2,
+                                })
+                              )}
+                            />
+                          </div>
+                        );
+                      })
                     : null}
                   {runs?.length ? (
                     <ol>
