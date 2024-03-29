@@ -207,12 +207,11 @@ export async function GET(/* request: NextRequest */) {
       { filters: { user_id: topLoggerId }, includes: ["climb"] },
       { maxAge: HOUR_IN_SECONDS }
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
-    console.log({ ascends });
-    console.log(randomSlice(ascends, 16));
+
     const gymIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
-      randomSlice(ascends, 16).flatMap(({ climb, ...ascend }) => {
+      randomSlice(ascends, 1).flatMap(({ climb, ...ascend }) => {
         gymIds.add(climb.gym_id);
 
         return [
@@ -338,7 +337,7 @@ export async function GET(/* request: NextRequest */) {
               `Upserting ${groupUsers.length} group users for group ${groupUser.group_id}`
             );
             await Promise.all(
-              randomSlice(groupUsers, 16).map(({ user, ...groupUser }) =>
+              randomSlice(groupUsers, 1).map(({ user, ...groupUser }) =>
                 Promise.all([
                   upsertGroupUser(groupUser).then(() =>
                     flushJSON("group_user:" + groupUser.id)
