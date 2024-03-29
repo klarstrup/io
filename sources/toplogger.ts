@@ -11,13 +11,13 @@ import {
 import dbConnect from "../dbConnect";
 import { dbFetch } from "../fetch";
 import {
-  type DateInterval,
   EventEntry,
   PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
   Score,
   ThousandDivideByScore,
+  type DateInterval,
 } from "../lib";
 import { User } from "../models/user";
 import { RelativeURL, percentile } from "../utils";
@@ -893,11 +893,7 @@ export const getBoulderingTrainingData = async (
   trainingInterval: DateInterval
 ) => {
   console.time(
-    `getBoulderingTrainingData for ${trainingInterval.start
-      .toISOString()
-      .replace(":00:00.000Z", "")} to ${trainingInterval.end
-      .toISOString()
-      .replace(":00:00.000Z", "")}`
+    `getBoulderingTrainingData for ${trainingInterval.start.toLocaleDateString()} to ${trainingInterval.end.toLocaleDateString()}`
   );
   const DB = (await dbConnect()).connection.db;
 
@@ -910,10 +906,7 @@ export const getBoulderingTrainingData = async (
   )
     .find({
       user_id: topLoggerId,
-      date_logged: {
-        $gte: trainingInterval.start,
-        $lte: trainingInterval.end,
-      },
+      date_logged: { $gte: trainingInterval.start, $lte: trainingInterval.end },
     })
     .toArray();
 
@@ -921,26 +914,28 @@ export const getBoulderingTrainingData = async (
     .find()
     .toArray();
 
-  let problemByProblem = await Promise.all(
-    ascends.map(async ({ climb_id, checks }) => {
-      const climb = await DB.collection<TopLogger.ClimbMultiple>(
-        "toplogger_climbs"
-      ).findOne({ id: climb_id });
+  const climbs = await DB.collection<TopLogger.ClimbMultiple>(
+    "toplogger_climbs"
+  )
+    .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
+    .toArray();
 
-      return {
-        number: "",
-        color:
-          (climb && holds.find((hold) => hold.id === climb.hold_id)?.color) ||
-          undefined,
-        grade: (climb && Number(climb.grade)) || undefined,
-        attempt: true,
-        // TopLogger does not do zones, at least not for Beta Boulders
-        zone: checks >= 1,
-        top: checks >= 1,
-        flash: checks >= 2,
-      };
-    })
-  );
+  let problemByProblem = ascends.map(({ climb_id, checks }) => {
+    const climb = climbs.find(({ id }) => id === climb_id);
+
+    return {
+      number: "",
+      color:
+        (climb && holds.find((hold) => hold.id === climb.hold_id)?.color) ||
+        undefined,
+      grade: (climb && Number(climb.grade)) || undefined,
+      attempt: true,
+      // TopLogger does not do zones, at least not for Beta Boulders
+      zone: checks >= 1,
+      top: checks >= 1,
+      flash: checks >= 2,
+    };
+  });
   const grades = Array.from(
     problemByProblem.reduce((set, { grade }) => {
       if (grade) set.add(grade);
@@ -958,11 +953,7 @@ export const getBoulderingTrainingData = async (
   const count = ascends.length;
 
   console.timeEnd(
-    `getBoulderingTrainingData for ${trainingInterval.start
-      .toISOString()
-      .replace(":00:00.000Z", "")} to ${trainingInterval.end
-      .toISOString()
-      .replace(":00:00.000Z", "")}`
+    `getBoulderingTrainingData for ${trainingInterval.start.toLocaleDateString()} to ${trainingInterval.end.toLocaleDateString()}`
   );
   return { source, type, discipline, count, problemByProblem } as const;
 };
