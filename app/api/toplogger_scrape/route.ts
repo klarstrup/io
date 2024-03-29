@@ -376,37 +376,39 @@ export async function GET(/* request: NextRequest */) {
                   /**
                    * Group User Ascends
                    */
-                  /*
-            const ascends = climbs.length
-              ? await getAscends(
-                  {
-                    filters: {
-                      user_id: user.id,
-                      climb_id: climbs.map(({ id }) => id),
-                    },
-                  },
-                  { maxAge: HOUR_IN_SECONDS }
-                )
-              : [];
 
-            for (const ascend of ascends) {
-              await DB.collection<TopLogger.AscendSingle>(
-                "toplogger_ascends"
-              ).updateOne(
-                { id: ascend.id },
-                {
-                  $set: {
-                    ...ascend,
-                    date_logged:
-                      ascend.date_logged && new Date(ascend.date_logged),
-                  },
-                },
-                { upsert: true }
-              );
+                  const ascends = climbs.length
+                    ? await getAscends(
+                        {
+                          filters: {
+                            user_id: user.id,
+                            climb_id: climbs.map(({ id }) => id),
+                          },
+                        },
+                        { maxAge: HOUR_IN_SECONDS }
+                      )
+                    : [];
 
-              await flushJSON(ascend);
-            }
-            */
+                  await Promise.all(
+                    shuffle(ascends).map(async (ascend) => {
+                      await DB.collection<TopLogger.AscendSingle>(
+                        "toplogger_ascends"
+                      ).updateOne(
+                        { id: ascend.id },
+                        {
+                          $set: {
+                            ...ascend,
+                            date_logged:
+                              ascend.date_logged &&
+                              new Date(ascend.date_logged),
+                          },
+                        },
+                        { upsert: true }
+                      );
+
+                      await flushJSON(ascend);
+                    })
+                  );
                 })
               );
             })
