@@ -130,6 +130,7 @@ export async function GET(/* request: NextRequest */) {
 
     const gymIds = new Set<number>();
     const wallIds = new Set<number>();
+    console.info(`Upserting Io ascends ${ascends.length}`);
     for (const { climb, ...ascend } of shuffle(ascends)) {
       console.time("Upserting Io ascend " + ascend.id);
       console.info(`Updating Io ascend ${ascend.id}`);
