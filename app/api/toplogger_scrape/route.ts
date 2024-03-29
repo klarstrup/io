@@ -209,20 +209,17 @@ export async function GET(/* request: NextRequest */) {
     const gymIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
-      shuffle(ascends)
-        // Eventual consistency
-        .slice(0, Math.ceil(ascends.length / 16))
-        .flatMap(({ climb, ...ascend }) => {
-          gymIds.add(climb.gym_id);
+      shuffle(ascends).flatMap(({ climb, ...ascend }) => {
+        gymIds.add(climb.gym_id);
 
-          return [
-            upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
-            /**
-             * User Climbs
-             */
-            upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
-          ];
-        })
+        return [
+          upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
+          /**
+           * User Climbs
+           */
+          upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
+        ];
+      })
     );
     console.info(`Upserted ${ascends.length} Io ascends`);
     console.timeEnd("Io ascends");
@@ -295,7 +292,9 @@ export async function GET(/* request: NextRequest */) {
            * User Groups Group
            */
           const dbGroup = dbGroups.find(({ id }) => id === groupUser.group_id);
-
+          console.info(
+            `Scraping Io group ${groupUser.group_id} for user ${topLoggerId}`
+          );
           if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
             const group = await getGroup(groupUser.group_id, {
               maxAge: HOUR_IN_SECONDS,
@@ -305,9 +304,15 @@ export async function GET(/* request: NextRequest */) {
             /**
              * User Groups Group  Climbs
              */
+            console.info(
+              `Scraping group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
+            );
             const climbs = await getGroupClimbs(group, {
               maxAge: HOUR_IN_SECONDS,
             });
+            console.info(
+              `Upserting ${climbs.length} group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
+            );
             await Promise.all(
               shuffle(climbs).map((climb) =>
                 upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
@@ -317,33 +322,35 @@ export async function GET(/* request: NextRequest */) {
             /**
              * User Gym Groups Group Users
              */
+            console.info(
+              `Scraping group users for group ${groupUser.group_id}`
+            );
             const groupUsers = await getGroupsUsers<
               TopLogger.GroupUserMultiple & { user: TopLogger.User }
             >(
               { filters: { group_id: group.id }, includes: "user" },
               { maxAge: HOUR_IN_SECONDS }
             );
+            console.info(
+              `Upserting ${groupUsers.length} group users for group ${groupUser.group_id}`
+            );
             await Promise.all(
-              shuffle(groupUsers)
-                .slice(0, Math.ceil(groupUsers.length / 10))
-                .map(async ({ user, ...groupUser }) => {
-                  await upsertGroupUser(groupUser).then(() =>
+              shuffle(groupUsers).map(({ user, ...groupUser }) =>
+                Promise.all([
+                  upsertGroupUser(groupUser).then(() =>
                     flushJSON("group_user:" + groupUser.id)
-                  );
+                  ),
 
                   /**
                    * Group User
                    */
-                  await upsertUser(user).then(() =>
-                    flushJSON("user:" + user.id)
-                  );
+                  upsertUser(user).then(() => flushJSON("user:" + user.id)),
 
                   /**
                    * Group User Ascends
                    */
-
-                  const ascends = climbs.length
-                    ? await getAscends(
+                  (climbs.length
+                    ? getAscends(
                         {
                           filters: {
                             user_id: user.id,
@@ -352,16 +359,18 @@ export async function GET(/* request: NextRequest */) {
                         },
                         { maxAge: HOUR_IN_SECONDS }
                       )
-                    : [];
-
-                  await Promise.all(
-                    ascends.map((ascend) =>
-                      upsertAscend(ascend).then(() =>
-                        flushJSON("ascend:" + ascend.id)
+                    : Promise.resolve([])
+                  ).then((ascends) =>
+                    Promise.all(
+                      ascends.map((ascend) =>
+                        upsertAscend(ascend).then(() =>
+                          flushJSON("ascend:" + ascend.id)
+                        )
                       )
                     )
-                  );
-                })
+                  ),
+                ])
+              )
             );
           } else {
             console.info(
