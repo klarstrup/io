@@ -131,55 +131,46 @@ export async function GET(/* request: NextRequest */) {
     const wallIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
-      shuffle(ascends).map(async ({ climb, ...ascend }) => {
-        console.time("Upserting Io ascend " + ascend.id);
-        await Promise.all([
-          ascendsCollection
-            .updateOne(
-              { id: ascend.id },
-              {
-                $set: {
-                  ...ascend,
-                  date_logged:
-                    ascend.date_logged && new Date(ascend.date_logged),
-                  _io_scrapedAt: new Date(),
-                },
+      shuffle(ascends).flatMap(({ climb, ...ascend }) => [
+        ascendsCollection
+          .updateOne(
+            { id: ascend.id },
+            {
+              $set: {
+                ...ascend,
+                date_logged: ascend.date_logged && new Date(ascend.date_logged),
+                _io_scrapedAt: new Date(),
               },
-              { upsert: true }
-            )
-            .then(() => flushJSON(ascend)),
-          /**
-           * User Climbs
-           */
-          climbsCollection
-            .updateOne(
-              { id: climb.id },
-              {
-                $set: {
-                  ...climb,
-                  date_live_start:
-                    climb.date_live_start && new Date(climb.date_live_start),
-                  date_live_end:
-                    climb.date_live_end && new Date(climb.date_live_end),
-                  date_deleted:
-                    climb.date_deleted && new Date(climb.date_deleted),
-                  date_set: climb.date_set && new Date(climb.date_set),
-                  created_at: climb.created_at && new Date(climb.created_at),
-                  date_removed:
-                    climb.date_removed && new Date(climb.date_removed),
-                  _io_scrapedAt: new Date(),
-                },
+            },
+            { upsert: true }
+          )
+          .then(() => flushJSON(ascend)),
+        /**
+         * User Climbs
+         */
+        climbsCollection
+          .updateOne(
+            { id: climb.id },
+            {
+              $set: {
+                ...climb,
+                date_live_start:
+                  climb.date_live_start && new Date(climb.date_live_start),
+                date_live_end:
+                  climb.date_live_end && new Date(climb.date_live_end),
+                date_deleted:
+                  climb.date_deleted && new Date(climb.date_deleted),
+                date_set: climb.date_set && new Date(climb.date_set),
+                created_at: climb.created_at && new Date(climb.created_at),
+                date_removed:
+                  climb.date_removed && new Date(climb.date_removed),
+                _io_scrapedAt: new Date(),
               },
-              { upsert: true }
-            )
-            .then(() => flushJSON(climb)),
-        ]);
-
-        gymIds.add(climb.gym_id);
-        if (climb.wall_id) wallIds.add(climb.wall_id);
-
-        console.timeEnd("Upserting Io ascend " + ascend.id);
-      })
+            },
+            { upsert: true }
+          )
+          .then(() => flushJSON(climb)),
+      ])
     );
     console.info(`Upserted ${ascends.length} Io ascends`);
     /**
