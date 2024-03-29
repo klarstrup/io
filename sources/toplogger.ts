@@ -567,19 +567,16 @@ export async function getIoTopLoggerGroupEvent(
       .toArray();
   } else {
     for (const { gym_id } of group.gym_groups) {
-      for (const climb of await DB.collection<TopLogger.ClimbMultiple>(
+      for await (const climb of DB.collection<TopLogger.ClimbMultiple>(
         "toplogger_climbs"
-      )
-        .find({ gym_id })
-        .toArray()) {
-        if (
-          (climb.name || climb.number) &&
-          climb.date_live_start &&
-          isWithinInterval(climb.date_live_start, {
-            start: subHours(group.date_loggable_start, 16),
-            end: addHours(group.date_loggable_end, 21),
-          })
-        ) {
+      ).find({
+        gym_id,
+        date_live_start: {
+          $gte: subHours(group.date_loggable_start, 16),
+          $lte: addHours(group.date_loggable_end, 21),
+        },
+      })) {
+        if (climb.name || climb.number) {
           climbs.push(climb);
         }
       }
@@ -603,26 +600,25 @@ export async function getIoTopLoggerGroupEvent(
       .find({
         user_id: { $in: groupUsers.map(({ user_id }) => user_id) },
         climb_id: { $in: climbs.map(({ id }) => id) },
+        date_logged: {
+          $gte: new Date(groupInterval.start),
+          $lte: new Date(groupInterval.end),
+        },
       })
       .toArray()
-  ).filter(
-    (ascend) =>
-      ascend.date_logged &&
-      isWithinInterval(ascend.date_logged, groupInterval) &&
-      climbs.some((climb) => ascend.climb_id === climb.id)
-  );
+  ).filter((ascend) => climbs.some((climb) => ascend.climb_id === climb.id));
 
   const ioAscends = climbs.length
     ? ascends.filter((ascend) => ascend.user_id === ioId)
-    : (
-        await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-          .find({ user_id: ioId })
-          .toArray()
-      ).filter(
-        (ascend) =>
-          ascend.date_logged &&
-          isWithinInterval(ascend.date_logged, groupInterval)
-      );
+    : await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
+        .find({
+          user_id: ioId,
+          date_logged: {
+            $gte: new Date(groupInterval.start),
+            $lte: new Date(groupInterval.end),
+          },
+        })
+        .toArray();
 
   let firstAscend: Date | null = null;
   let lastAscend: Date | null = null;
@@ -730,16 +726,15 @@ async function getIoTopLoggerGroupScores(
       for (const climb of await DB.collection<TopLogger.ClimbMultiple>(
         "toplogger_climbs"
       )
-        .find({ gym_id })
+        .find({
+          gym_id,
+          date_live_start: {
+            $gte: subHours(group.date_loggable_start, 16),
+            $lte: addHours(group.date_loggable_end, 21),
+          },
+        })
         .toArray()) {
-        if (
-          (climb.name || climb.number) &&
-          climb.date_live_start &&
-          isWithinInterval(climb.date_live_start, {
-            start: subHours(group.date_loggable_start, 16),
-            end: addHours(group.date_loggable_end, 21),
-          })
-        ) {
+        if (climb.name || climb.number) {
           climbs.push(climb);
         }
       }
@@ -763,19 +758,21 @@ async function getIoTopLoggerGroupScores(
       groupUsers.map(({ user_id }) =>
         climbs.length
           ? DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-              .find({ user_id, climb_id: { $in: climbs.map(({ id }) => id) } })
+              .find({
+                user_id,
+                climb_id: { $in: climbs.map(({ id }) => id) },
+                date_logged: {
+                  $gte: new Date(groupInterval.start),
+                  $lte: new Date(groupInterval.end),
+                },
+              })
               .toArray()
           : []
       )
     )
   )
     .flat()
-    .filter(
-      ({ climb_id, date_logged }) =>
-        date_logged &&
-        isWithinInterval(date_logged, groupInterval) &&
-        climbs.some(({ id }) => climb_id === id)
-    );
+    .filter(({ climb_id }) => climbs.some(({ id }) => climb_id === id));
 
   const topsByClimbId = ascends.reduce(
     (topMemo, { climb_id, user_id, checks }) => {
@@ -933,15 +930,17 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
   const user = (await User.findOne())!;
   const topLoggerId = user.topLoggerId!;
 
-  const ascends = (
-    await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-      .find({ user_id: topLoggerId })
-      .toArray()
-  ).filter(
-    (ascend) =>
-      ascend.date_logged &&
-      isWithinInterval(ascend.date_logged, trainingInterval)
-  );
+  const ascends = await DB.collection<TopLogger.AscendSingle>(
+    "toplogger_ascends"
+  )
+    .find({
+      user_id: topLoggerId,
+      date_logged: {
+        $gte: new Date(trainingInterval.start),
+        $lte: new Date(trainingInterval.end),
+      },
+    })
+    .toArray();
 
   const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
     .find()
