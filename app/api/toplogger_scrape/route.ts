@@ -421,7 +421,7 @@ export async function GET(/* request: NextRequest */) {
     );
 
     /**
-     * Io User-Groups
+     * Io Group-Users
      */
     const userGroupUsers = dbGroupUsers.filter(
       ({ user_id }) => user_id === topLoggerId
@@ -439,6 +439,7 @@ export async function GET(/* request: NextRequest */) {
         },
         { maxAge: HOUR_IN_SECONDS }
       );
+      console.info(`Upserting ${groupsUsers.length} Group-Users`);
       await Promise.all(
         shuffle(groupsUsers).map(async ({ user, ...groupUser }) => {
           await groupUsersCollection.updateOne(
