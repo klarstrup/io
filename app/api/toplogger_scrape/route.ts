@@ -91,6 +91,11 @@ export async function GET(/* request: NextRequest */) {
     await writer.write(encoder.encode("["));
 
     let first = true;
+    const flushJSON = async (data: unknown) => {
+      first ? (first = false) : await writer.write(encoder.encode(",\n"));
+      await writer.write(encoder.encode(JSON.stringify(data)));
+    };
+
     /**
      * User
      */
@@ -108,8 +113,7 @@ export async function GET(/* request: NextRequest */) {
         { upsert: true }
       );
 
-      first ? (first = false) : await writer.write(encoder.encode(",\n"));
-      await writer.write(encoder.encode(JSON.stringify(user)));
+      await flushJSON(user);
     } else {
       console.info(`Skipping scraping Io ${topLoggerId}`);
     }
@@ -136,8 +140,8 @@ export async function GET(/* request: NextRequest */) {
         },
         { upsert: true }
       );
-      first ? (first = false) : await writer.write(encoder.encode(",\n"));
-      await writer.write(encoder.encode(JSON.stringify(ascend)));
+
+      await flushJSON(ascend);
 
       /**
        * User Climbs
@@ -161,8 +165,8 @@ export async function GET(/* request: NextRequest */) {
       );
       gymIds.add(climb.gym_id);
       if (climb.wall_id) wallIds.add(climb.wall_id);
-      first ? (first = false) : await writer.write(encoder.encode(",\n"));
-      await writer.write(encoder.encode(JSON.stringify(climb)));
+
+      await flushJSON(climb);
     }
     /**
      * User Gyms
@@ -177,8 +181,8 @@ export async function GET(/* request: NextRequest */) {
             { $set: { ...gym, _io_scrapedAt: new Date() } },
             { upsert: true }
           );
-          first ? (first = false) : await writer.write(encoder.encode(",\n"));
-          await writer.write(encoder.encode(JSON.stringify(gym)));
+
+          await flushJSON(gym);
         }
       } else {
         console.info(`Skipping scraping gym ${gymId}`);
@@ -207,8 +211,8 @@ export async function GET(/* request: NextRequest */) {
             },
             { upsert: true }
           );
-          first ? (first = false) : await writer.write(encoder.encode(",\n"));
-          await writer.write(encoder.encode(JSON.stringify(hold)));
+
+          await flushJSON(hold);
         }
       } else {
         console.info(`Skipping scraping holds for gym ${gymId}`);
@@ -237,8 +241,8 @@ export async function GET(/* request: NextRequest */) {
             },
             { upsert: true }
           );
-          first ? (first = false) : await writer.write(encoder.encode(",\n"));
-          await writer.write(encoder.encode(JSON.stringify(gymGroup)));
+
+          await flushJSON(gymGroup);
 
           /**
            * User Gym Groups Group
@@ -319,8 +323,8 @@ export async function GET(/* request: NextRequest */) {
               },
               { upsert: true }
             );
-            first ? (first = false) : await writer.write(encoder.encode(",\n"));
-            await writer.write(encoder.encode(JSON.stringify(climb)));
+
+            await flushJSON(climb);
           }
 
           /**
@@ -342,8 +346,8 @@ export async function GET(/* request: NextRequest */) {
               },
               { upsert: true }
             );
-            first ? (first = false) : await writer.write(encoder.encode(",\n"));
-            await writer.write(encoder.encode(JSON.stringify(groupUser)));
+
+            await flushJSON(groupUser);
 
             /**
              * Group User
@@ -353,8 +357,8 @@ export async function GET(/* request: NextRequest */) {
               { $set: { ...user, _io_scrapedAt: new Date() } },
               { upsert: true }
             );
-            first ? (first = false) : await writer.write(encoder.encode(",\n"));
-            await writer.write(encoder.encode(JSON.stringify(user)));
+
+            await flushJSON(user);
 
             /**
              * Group User Ascends
@@ -386,8 +390,8 @@ export async function GET(/* request: NextRequest */) {
                 },
                 { upsert: true }
               );
-              await writer.write(encoder.encode(",\n"));
-              await writer.write(encoder.encode(JSON.stringify(ascend)));
+
+              await flushJSON(ascend);
             }
             */
           }
@@ -425,8 +429,8 @@ export async function GET(/* request: NextRequest */) {
           },
           { upsert: true }
         );
-        first ? (first = false) : await writer.write(encoder.encode(",\n"));
-        await writer.write(encoder.encode(JSON.stringify(groupUser)));
+
+        await flushJSON(groupUser);
 
         /**
          * User Groups Group
@@ -478,8 +482,8 @@ export async function GET(/* request: NextRequest */) {
           { $set: { ...user, _io_scrapedAt: new Date() } },
           { upsert: true }
         );
-        first ? (first = false) : await writer.write(encoder.encode(",\n"));
-        await writer.write(encoder.encode(JSON.stringify(user)));
+
+        await flushJSON(user);
 
         /**
          * Group User Ascends
@@ -501,8 +505,8 @@ export async function GET(/* request: NextRequest */) {
             },
             { upsert: true }
           );
-          first ? (first = false) : await writer.write(encoder.encode(",\n"));
-          await writer.write(encoder.encode(JSON.stringify(ascend)));
+
+          await flushJSON(ascend);
 
           /**
            * Group User Ascend Climb
@@ -529,8 +533,8 @@ export async function GET(/* request: NextRequest */) {
           );
           gymIds.add(climb.gym_id);
           if (climb.wall_id) wallIds.add(climb.wall_id);
-          first ? (first = false) : await writer.write(encoder.encode(",\n"));
-          await writer.write(encoder.encode(JSON.stringify(climb)));
+
+          await flushJSON(climb);
         }
       }
     }
