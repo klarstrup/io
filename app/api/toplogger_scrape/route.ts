@@ -2,12 +2,12 @@ import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
   TopLogger,
-  getAscends,
-  getGroup,
-  getGroupClimbs,
-  getGroupsUsers,
-  getGymGymGroups,
-  getGymHolds,
+  fetchAscends,
+  fetchGroup,
+  fetchGroupClimbs,
+  fetchGroupsUsers,
+  fetchGymGymGroups,
+  fetchGymHolds,
   gymLoader,
 } from "../../../sources/toplogger";
 import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
@@ -207,7 +207,7 @@ export async function GET(/* request: NextRequest */) {
     console.time("Io ascends");
     await Promise.all([
       ...randomSlice(
-        (await getAscends(
+        (await fetchAscends(
           { filters: { user_id: topLoggerId }, includes: ["climb"] },
           { maxAge: HOUR_IN_SECONDS }
         )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
@@ -226,7 +226,7 @@ export async function GET(/* request: NextRequest */) {
                   (gym) =>
                     gym && upsertGym(gym).then(() => flushJSON("gym:" + gym.id))
                 ),
-              getGymHolds(gymId, undefined, { maxAge: HOUR_IN_SECONDS }).then(
+              fetchGymHolds(gymId, undefined, { maxAge: HOUR_IN_SECONDS }).then(
                 (holds) =>
                   Promise.all(
                     holds.map((hold) =>
@@ -234,7 +234,7 @@ export async function GET(/* request: NextRequest */) {
                     )
                   )
               ),
-              getGymGymGroups(gymId, void 0, {
+              fetchGymGymGroups(gymId, void 0, {
                 maxAge: HOUR_IN_SECONDS,
               }).then((gymGroups) =>
                 Promise.all(
@@ -249,7 +249,7 @@ export async function GET(/* request: NextRequest */) {
           )
         )
       ),
-      getGroupsUsers(
+      fetchGroupsUsers(
         { filters: { user_id: topLoggerId } },
         { maxAge: HOUR_IN_SECONDS }
       ).then((groupUsers) =>
@@ -259,19 +259,19 @@ export async function GET(/* request: NextRequest */) {
               flushJSON("group_user:" + groupUser.id)
             );
 
-            const group = await getGroup(groupUser.group_id, {
+            const group = await fetchGroup(groupUser.group_id, {
               maxAge: HOUR_IN_SECONDS,
             });
             await upsertGroup(group).then(() => flushJSON("group:" + group.id));
 
-            const climbs = await getGroupClimbs(group, {
+            const climbs = await fetchGroupClimbs(group, {
               maxAge: HOUR_IN_SECONDS,
             });
             await Promise.all([
               ...climbs.map((climb) =>
                 upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
               ),
-              getGroupsUsers<
+              fetchGroupsUsers<
                 TopLogger.GroupUserMultiple & { user: TopLogger.User }
               >(
                 { filters: { group_id: groupUser.group_id }, includes: "user" },
@@ -293,7 +293,7 @@ export async function GET(/* request: NextRequest */) {
                        * Group User Ascends
                        */
                       (climbs.length
-                        ? getAscends(
+                        ? fetchAscends(
                             {
                               filters: {
                                 user_id: user.id,

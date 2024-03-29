@@ -23,8 +23,8 @@ import {
 import { RunDouble, getRuns } from "../../sources/rundouble";
 import {
   TopLogger,
-  getAscends,
-  getGymHolds,
+  fetchAscends,
+  fetchGymHolds,
   gymLoader,
 } from "../../sources/toplogger";
 import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, unique } from "../../utils";
@@ -145,7 +145,7 @@ export default async function Page() {
   let holds: TopLogger.Hold[] = [];
   if (user.topLoggerId) {
     const ascends = (
-      await getAscends(
+      await fetchAscends(
         { filters: { user_id: user.topLoggerId }, includes: ["climb"] },
         { maxAge: HOUR_IN_SECONDS }
       )
@@ -161,7 +161,7 @@ export default async function Page() {
     holds = (
       await Promise.all(
         unique(ascends.map(({ climb }) => climb.gym_id)).map((gymId) =>
-          getGymHolds(gymId, undefined, { maxAge: WEEK_IN_SECONDS })
+          fetchGymHolds(gymId, undefined, { maxAge: WEEK_IN_SECONDS })
         )
       )
     ).flat();

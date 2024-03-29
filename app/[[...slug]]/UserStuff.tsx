@@ -9,7 +9,7 @@ import {
   getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
-import { TopLogger, getUser } from "../../sources/toplogger";
+import { TopLogger, fetchUser } from "../../sources/toplogger";
 
 export default async function UserStuff() {
   const session = await getServerSession(authOptions);
@@ -71,7 +71,7 @@ export default async function UserStuff() {
   let topLoggerUser: TopLogger.User | null = null;
   try {
     if (currentUser?.topLoggerId) {
-      topLoggerUser = await getUser(currentUser.topLoggerId);
+      topLoggerUser = await fetchUser(currentUser.topLoggerId);
     }
   } catch {
     topLoggerUser = null;

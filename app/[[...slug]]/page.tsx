@@ -21,9 +21,9 @@ import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
   TopLogger,
+  fetchUser,
   getBoulderingTrainingData,
   getTopLoggerGroupEventEntry,
-  getUser,
 } from "../../sources/toplogger";
 import { cotemporality } from "../../utils";
 import "../page.css";
@@ -229,7 +229,9 @@ const getData = async (
   const user = await User.findOne();
   let topLoggerUser: TopLogger.User | null = null;
   try {
-    topLoggerUser = user?.topLoggerId ? await getUser(user.topLoggerId) : null;
+    topLoggerUser = user?.topLoggerId
+      ? await fetchUser(user.topLoggerId)
+      : null;
   } catch (e) {
     /* */
   }

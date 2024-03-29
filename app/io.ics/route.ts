@@ -14,8 +14,8 @@ import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
   TopLogger,
+  fetchUser,
   getTopLoggerGroupEventEntry,
-  getUser,
 } from "../../sources/toplogger";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
@@ -29,7 +29,9 @@ export async function GET() {
 
   let topLoggerUser: TopLogger.User | null = null;
   try {
-    topLoggerUser = user?.topLoggerId ? await getUser(user.topLoggerId) : null;
+    topLoggerUser = user?.topLoggerId
+      ? await fetchUser(user.topLoggerId)
+      : null;
   } catch (e) {
     /* */
   }

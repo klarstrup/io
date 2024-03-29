@@ -354,7 +354,7 @@ interface JSONParams {
   includes?: string | string[];
 }
 
-export const getGroup = (
+export const fetchGroup = (
   id: number,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) =>
@@ -382,7 +382,7 @@ export const gymLoader = new DataLoader(
   { cache: false }
 );
 
-const getGymClimbs = (
+const fetchGymClimbs = (
   gymId: number,
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
@@ -395,7 +395,7 @@ const getGymClimbs = (
   return fetchTopLogger<TopLogger.ClimbMultiple[]>(url, null, dbOptions);
 };
 
-export const getGymHolds = (
+export const fetchGymHolds = (
   gymId: number,
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
@@ -407,7 +407,7 @@ export const getGymHolds = (
 
   return fetchTopLogger<TopLogger.Hold[]>(url, null, dbOptions);
 };
-export const getGymHold = (
+export const fetchGymHold = (
   gymId: number,
   holdId: number,
   jsonParams?: JSONParams,
@@ -426,7 +426,7 @@ const gymClimbByIdLoadersByGym: Record<
   DataLoader<number, TopLogger.ClimbMultiple | null, number>
 > = {};
 
-export const getGymClimbById = (
+export const fetchGymClimbById = (
   gymId: number,
   climbId: number,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
@@ -435,7 +435,7 @@ export const getGymClimbById = (
   if (!gymClimbByIdLoader) {
     gymClimbByIdLoader = new DataLoader(
       (ids: number[]) =>
-        getGymClimbs(gymId, { filters: { id: ids } }, dbFetchOptions).then(
+        fetchGymClimbs(gymId, { filters: { id: ids } }, dbFetchOptions).then(
           (items) =>
             ids.map((id) => items.find((item) => item.id === id) || null)
         ),
@@ -446,11 +446,11 @@ export const getGymClimbById = (
   return gymClimbByIdLoader.load(climbId);
 };
 
-export const getUser = (
+export const fetchUser = (
   id: number,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => fetchTopLogger<TopLogger.User>(`/v1/users/${id}.json`, null, dbOptions);
-export const getAscends = (
+export const fetchAscends = (
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
@@ -462,7 +462,7 @@ export const getAscends = (
 
   return fetchTopLogger<TopLogger.AscendSingle[]>(url, null, dbOptions);
 };
-export const getGroupsUsers = <T = TopLogger.GroupUserMultiple>(
+export const fetchGroupsUsers = <T = TopLogger.GroupUserMultiple>(
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
@@ -475,7 +475,7 @@ export const getGroupsUsers = <T = TopLogger.GroupUserMultiple>(
   return fetchTopLogger<T[]>(url, null, dbOptions);
 };
 
-export const getGymGymGroups = (
+export const fetchGymGymGroups = (
   gymId: number,
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
@@ -491,7 +491,7 @@ export const getGymGymGroups = (
   return fetchTopLogger<TopLogger.GymGroup[]>(url, null, dbOptions);
 };
 
-export const getGroupClimbs = async (
+export const fetchGroupClimbs = async (
   group: TopLogger.GroupSingle,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
@@ -506,7 +506,7 @@ export const getGroupClimbs = async (
 
     for (const { climb_id } of group.climb_groups) {
       for (const gym of gyms) {
-        climbPromises.push(getGymClimbById(gym.id, climb_id, dbOptions));
+        climbPromises.push(fetchGymClimbById(gym.id, climb_id, dbOptions));
       }
     }
 
@@ -515,7 +515,7 @@ export const getGroupClimbs = async (
 
   const climbs: TopLogger.ClimbMultiple[] = [];
   for (const gym of gyms) {
-    for (const climb of await getGymClimbs(gym.id, undefined, dbOptions)) {
+    for (const climb of await fetchGymClimbs(gym.id, undefined, dbOptions)) {
       if (
         (climb.name || climb.number) &&
         climb.date_live_start &&
@@ -563,7 +563,7 @@ export async function getIoTopLoggerGroupEvent(
     )
   ).filter(Boolean);
 
-  const climbs = await getGroupClimbs(group);
+  const climbs = await fetchGroupClimbs(group);
 
   const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
     id: ioId,
