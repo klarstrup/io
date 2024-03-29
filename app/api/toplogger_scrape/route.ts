@@ -12,7 +12,6 @@ import {
   gymLoader,
 } from "../../../sources/toplogger";
 import { HOUR_IN_SECONDS, shuffle } from "../../../utils";
-// import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -134,7 +133,6 @@ export async function GET(/* request: NextRequest */) {
     await Promise.all(
       shuffle(ascends).map(async ({ climb, ...ascend }) => {
         console.time("Upserting Io ascend " + ascend.id);
-        console.info(`Updating Io ascend ${ascend.id}`);
         await ascendsCollection.updateOne(
           { id: ascend.id },
           {
@@ -152,7 +150,6 @@ export async function GET(/* request: NextRequest */) {
         /**
          * User Climbs
          */
-        console.info(`Updating Io climb ${climb.id} gym ${climb.gym_id}`);
         await climbsCollection.updateOne(
           { id: climb.id },
           {
