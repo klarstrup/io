@@ -362,15 +362,26 @@ export async function GET(/* request: NextRequest */) {
                         { maxAge: HOUR_IN_SECONDS }
                       )
                     : Promise.resolve([])
-                  ).then((ascends) =>
-                    Promise.all(
+                  ).then((ascends) => {
+                    if (
+                      ascends instanceof Object &&
+                      "errors" in ascends &&
+                      Array.isArray(ascends.errors) &&
+                      typeof ascends.errors[0] === "string" &&
+                      ascends.errors[0] === "Access denied."
+                    ) {
+                      // Some toplogger users have privacy enabled for their ascends
+                      return [];
+                    }
+
+                    return Promise.all(
                       ascends.map((ascend) =>
                         upsertAscend(ascend).then(() =>
                           flushJSON("ascend:" + ascend.id)
                         )
                       )
-                    )
-                  ),
+                    );
+                  }),
                 ])
               )
             );
