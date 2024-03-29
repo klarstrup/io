@@ -433,14 +433,12 @@ export async function GET(/* request: NextRequest */) {
       userGroupUsers.some((dbGroupUser) => shouldRevalidate(dbGroupUser))
     ) {
       const groupsUsers = await getGroupsUsers(
-        {
-          filters: { user_id: topLoggerId },
-          includes: "user",
-        },
+        { filters: { user_id: topLoggerId } },
         { maxAge: HOUR_IN_SECONDS }
       );
       console.info(`Upserting ${groupsUsers.length} Group-Users`);
       await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         shuffle(groupsUsers).map(async ({ user, ...groupUser }) => {
           await groupUsersCollection.updateOne(
             { id: groupUser.id },
