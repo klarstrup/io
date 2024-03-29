@@ -8,7 +8,6 @@ import {
   getGroupsUsers,
   getGymGymGroups,
   getGymHolds,
-  getUser,
   gymLoader,
 } from "../../../sources/toplogger";
 import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
@@ -21,11 +20,6 @@ interface ScrapedAt {
 
 const randomSlice = <T>(array: T[], slices: number) =>
   shuffle(chunk(array, Math.ceil(array.length / slices)))[0] || [];
-
-const shouldRevalidate = (document?: ScrapedAt | null) =>
-  !document ||
-  !document._io_scrapedAt ||
-  Date.now() - document._io_scrapedAt.valueOf() > HOUR_IN_SECONDS * 1000;
 
 export async function GET(/* request: NextRequest */) {
   /*
@@ -198,14 +192,6 @@ export async function GET(/* request: NextRequest */) {
   const encoder = new TextEncoder();
 
   (async () => {
-    console.time("Preloading DB data");
-    const [dbUsers, dbGroups, dbGroupUsers] = await Promise.all([
-      usersCollection.find().toArray(),
-      groupsCollection.find().toArray(),
-      groupUsersCollection.find().toArray(),
-    ]);
-    console.timeEnd("Preloading DB data");
-
     await writer.write(encoder.encode("[\n"));
 
     let first = true;
@@ -213,18 +199,6 @@ export async function GET(/* request: NextRequest */) {
       first ? (first = false) : await writer.write(encoder.encode(",\n"));
       await writer.write(encoder.encode(JSON.stringify(data)));
     };
-
-    /**
-     * User
-     */
-    console.info(`Scraping Io ${topLoggerId}`);
-    const dbUser = dbUsers.find(({ id }) => id === topLoggerId);
-    if ("true" + "" || shouldRevalidate(dbUser)) {
-      const user = await getUser(topLoggerId, { maxAge: HOUR_IN_SECONDS });
-      await upsertUser(user).then(() => flushJSON("user:" + user.id));
-    } else {
-      console.info(`Skipping scraping Io ${topLoggerId}`);
-    }
 
     /**
      * Io Ascends
@@ -262,167 +236,128 @@ export async function GET(/* request: NextRequest */) {
 
     await Promise.all(
       Array.from(gymIds).map(async (gymId) => {
-        const gym = await gymLoader.load(gymId);
-        if (gym) {
-          await upsertGym(gym).then(() => flushJSON("gym:" + gym.id));
-        }
-
-        /**
-         * User Gym Holds
-         */
-        console.info(`Scraping Io holds for gym ${gymId}`);
-        await Promise.all(
-          (
-            await getGymHolds(gymId, undefined, { maxAge: HOUR_IN_SECONDS })
-          ).map((hold) =>
-            upsertHold(hold).then(() => flushJSON("hold:" + hold.id))
-          )
-        );
-
-        /**
-         * Io Gym Groups
-         */
-        console.info(`Scraping Io Gym-Groups for gym ${gymId}`);
-        await Promise.all(
-          (
-            await getGymGymGroups(gymId, void 0, { maxAge: HOUR_IN_SECONDS })
-          ).map((gymGroup) =>
-            upsertGymGroup(gymGroup).then(() =>
-              flushJSON("gym_group:" + gymGroup.id)
-            )
-          )
-        );
+        await Promise.all([
+          gymLoader
+            .load(gymId)
+            .then(
+              (gym) =>
+                gym && upsertGym(gym).then(() => flushJSON("gym:" + gym.id))
+            ),
+          getGymHolds(gymId, undefined, { maxAge: HOUR_IN_SECONDS }).then(
+            (holds) =>
+              holds.map((hold) =>
+                upsertHold(hold).then(() => flushJSON("hold:" + hold.id))
+              )
+          ),
+          getGymGymGroups(gymId, void 0, { maxAge: HOUR_IN_SECONDS }).then(
+            (gymGroups) =>
+              gymGroups.map((gymGroup) =>
+                upsertGymGroup(gymGroup).then(() =>
+                  flushJSON("gym_group:" + gymGroup.id)
+                )
+              )
+          ),
+        ]);
       })
     );
 
     /**
      * Io Group-Users
      */
-    const userGroupUsers = dbGroupUsers.filter(
-      ({ user_id }) => user_id === topLoggerId
-    );
     console.info(`Scraping Group-Users for user ${topLoggerId}`);
-    if (
-      "true" + "" ||
-      !userGroupUsers.length ||
-      userGroupUsers.some((dbGroupUser) => shouldRevalidate(dbGroupUser))
-    ) {
-      const groupsUsers = await getGroupsUsers(
-        { filters: { user_id: topLoggerId } },
-        { maxAge: HOUR_IN_SECONDS }
-      );
-      console.info(`Upserting ${groupsUsers.length} Io Group-Users`);
-      await Promise.all(
-        groupsUsers.map(async (groupUser) => {
-          await upsertGroupUser(groupUser).then(() =>
-            flushJSON("group_user:" + groupUser.id)
-          );
+    const groupsUsers = await getGroupsUsers(
+      { filters: { user_id: topLoggerId } },
+      { maxAge: HOUR_IN_SECONDS }
+    );
+    console.info(`Upserting ${groupsUsers.length} Io Group-Users`);
+    await Promise.all(
+      groupsUsers.map(async (groupUser) => {
+        await upsertGroupUser(groupUser).then(() =>
+          flushJSON("group_user:" + groupUser.id)
+        );
 
-          /**
-           * User Groups Group
-           */
-          const dbGroup = dbGroups.find(({ id }) => id === groupUser.group_id);
-          console.info(
-            `Scraping Io group ${groupUser.group_id} for user ${topLoggerId}`
-          );
-          if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
-            const group = await getGroup(groupUser.group_id, {
-              maxAge: HOUR_IN_SECONDS,
-            });
-            await upsertGroup(group).then(() => flushJSON("group:" + group.id));
+        /**
+         * User Groups Group
+         */
+        const group = await getGroup(groupUser.group_id, {
+          maxAge: HOUR_IN_SECONDS,
+        });
+        await upsertGroup(group).then(() => flushJSON("group:" + group.id));
 
-            /**
-             * User Groups Group  Climbs
-             */
-            console.info(
-              `Scraping group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
-            );
-            const climbs = await getGroupClimbs(group, {
-              maxAge: HOUR_IN_SECONDS,
-            });
-            console.info(
-              `Upserting ${climbs.length} group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
-            );
-            await Promise.all(
-              climbs.map((climb) =>
-                upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
-              )
-            );
+        /**
+         * User Groups Group  Climbs
+         */
+        console.info(
+          `Scraping group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
+        );
+        const climbs = await getGroupClimbs(group, {
+          maxAge: HOUR_IN_SECONDS,
+        });
+        console.info(
+          `Upserting ${climbs.length} group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
+        );
+        await Promise.all(
+          climbs.map((climb) =>
+            upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
+          )
+        );
 
-            /**
-             * User Gym Groups Group Users
-             */
-            console.info(
-              `Scraping group users for group ${groupUser.group_id}`
-            );
-            const groupUsers = await getGroupsUsers<
-              TopLogger.GroupUserMultiple & { user: TopLogger.User }
-            >(
-              { filters: { group_id: group.id }, includes: "user" },
-              { maxAge: HOUR_IN_SECONDS }
-            );
-            console.info(
-              `Upserting ${groupUsers.length} group users for group ${groupUser.group_id}`
-            );
-            await Promise.all(
-              randomSlice(groupUsers, 8).map(({ user, ...groupUser }) =>
-                Promise.all([
-                  upsertGroupUser(groupUser).then(() =>
-                    flushJSON("group_user:" + groupUser.id)
-                  ),
+        /**
+         * User Gym Groups Group Users
+         */
+        console.info(`Scraping group users for group ${groupUser.group_id}`);
+        const groupUsers = await getGroupsUsers<
+          TopLogger.GroupUserMultiple & { user: TopLogger.User }
+        >(
+          { filters: { group_id: group.id }, includes: "user" },
+          { maxAge: HOUR_IN_SECONDS }
+        );
+        console.info(
+          `Upserting ${groupUsers.length} group users for group ${groupUser.group_id}`
+        );
+        await Promise.all(
+          randomSlice(groupUsers, 8).map(({ user, ...groupUser }) =>
+            Promise.all([
+              upsertGroupUser(groupUser).then(() =>
+                flushJSON("group_user:" + groupUser.id)
+              ),
 
-                  /**
-                   * Group User
-                   */
-                  upsertUser(user).then(() => flushJSON("user:" + user.id)),
+              /**
+               * Group User
+               */
+              upsertUser(user).then(() => flushJSON("user:" + user.id)),
 
-                  /**
-                   * Group User Ascends
-                   */
-                  (climbs.length
-                    ? getAscends(
-                        {
-                          filters: {
-                            user_id: user.id,
-                            climb_id: climbs.map(({ id }) => id),
-                          },
-                        },
-                        { maxAge: HOUR_IN_SECONDS }
-                      )
-                    : Promise.resolve([])
-                  ).then((ascends) => {
-                    if (
-                      ascends instanceof Object &&
-                      "errors" in ascends &&
-                      Array.isArray(ascends.errors) &&
-                      typeof ascends.errors[0] === "string" &&
-                      ascends.errors[0] === "Access denied."
-                    ) {
-                      // Some toplogger users have privacy enabled for their ascends
-                      return [];
-                    }
-
-                    return Promise.all(
-                      ascends.map((ascend) =>
-                        upsertAscend(ascend).then(() =>
-                          flushJSON("ascend:" + ascend.id)
+              /**
+               * Group User Ascends
+               */
+              (climbs.length
+                ? getAscends(
+                    {
+                      filters: {
+                        user_id: user.id,
+                        climb_id: climbs.map(({ id }) => id),
+                      },
+                    },
+                    { maxAge: HOUR_IN_SECONDS }
+                  )
+                : Promise.resolve([])
+              ).then(
+                (ascends) =>
+                  Array.isArray(ascends)
+                    ? Promise.all(
+                        ascends.map((ascend) =>
+                          upsertAscend(ascend).then(() =>
+                            flushJSON("ascend:" + ascend.id)
+                          )
                         )
                       )
-                    );
-                  }),
-                ])
-              )
-            );
-          } else {
-            console.info(
-              `User Groups Group: Skipping scraping group ${groupUser.group_id}`
-            );
-          }
-        })
-      );
-    } else {
-      console.info(`Skipping scraping Io groups`);
-    }
+                    : [] // Some toplogger users have privacy enabled for their ascends
+              ),
+            ])
+          )
+        );
+      })
+    );
 
     await writer.write(encoder.encode("]"));
     await writer.close();
