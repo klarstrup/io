@@ -20,7 +20,7 @@ interface ScrapedAt {
 }
 
 const randomSlice = <T>(array: T[], slices: number) =>
-  shuffle(chunk(array, Math.ceil(array.length / slices)))[0]!;
+  shuffle(chunk(array, Math.ceil(array.length / slices)))[0] || [];
 
 const shouldRevalidate = (document?: ScrapedAt | null) =>
   !document ||
@@ -169,6 +169,7 @@ export async function GET(/* request: NextRequest */) {
   }
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
+  const encoder = new TextEncoder();
 
   (async () => {
     console.time("Preloading DB data");
@@ -176,8 +177,6 @@ export async function GET(/* request: NextRequest */) {
     const dbGroups = await groupsCollection.find().toArray();
     const dbGroupUsers = await groupUsersCollection.find().toArray();
     console.timeEnd("Preloading DB data");
-
-    const encoder = new TextEncoder();
 
     await writer.write(encoder.encode("[\n"));
 
@@ -208,7 +207,8 @@ export async function GET(/* request: NextRequest */) {
       { filters: { user_id: topLoggerId }, includes: ["climb"] },
       { maxAge: HOUR_IN_SECONDS }
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
-
+    console.log({ ascends });
+    console.log(randomSlice(ascends, 16));
     const gymIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
@@ -388,7 +388,12 @@ export async function GET(/* request: NextRequest */) {
 
     await writer.write(encoder.encode("]"));
     await writer.close();
-  })().catch(() => {});
+  })().catch(async (error) => {
+    console.error(error);
+
+    await writer.write(encoder.encode("]"));
+    await writer.close();
+  });
 
   return new Response(responseStream.readable, {
     headers: { "Content-Type": "application/json" },
