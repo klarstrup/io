@@ -235,8 +235,8 @@ export async function GET(/* request: NextRequest */) {
     );
 
     await Promise.all(
-      Array.from(gymIds).map(async (gymId) => {
-        await Promise.all([
+      Array.from(gymIds).map((gymId) =>
+        Promise.all([
           gymLoader
             .load(gymId)
             .then(
@@ -257,8 +257,8 @@ export async function GET(/* request: NextRequest */) {
                 )
               )
           ),
-        ]);
-      })
+        ])
+      )
     );
 
     /**
