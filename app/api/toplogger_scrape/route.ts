@@ -237,6 +237,7 @@ export async function GET(/* request: NextRequest */) {
           ({ gym_id }) => gym_id === gymId
         );
         if (
+          true ||
           !gymGymGroups.length ||
           gymGymGroups.some((dbGymGroup) => shouldRevalidate(dbGymGroup))
         ) {
