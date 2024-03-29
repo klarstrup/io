@@ -228,7 +228,7 @@ const getData = async (
 
   // Io is the only user in the database,
   const user = await User.findOne();
-  let topLoggerUser: TopLogger.UserSingle | null = null;
+  let topLoggerUser: TopLogger.User | null = null;
   try {
     topLoggerUser = user?.topLoggerId ? await getUser(user.topLoggerId) : null;
   } catch (e) {

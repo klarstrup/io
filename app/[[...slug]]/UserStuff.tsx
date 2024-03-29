@@ -68,7 +68,7 @@ export default async function UserStuff() {
     fitocracyProfile = null;
   }
 
-  let topLoggerUser: TopLogger.UserSingle | null = null;
+  let topLoggerUser: TopLogger.User | null = null;
   try {
     if (currentUser?.topLoggerId) {
       topLoggerUser = await getUser(currentUser.topLoggerId);

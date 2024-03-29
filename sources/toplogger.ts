@@ -284,23 +284,6 @@ export namespace TopLogger {
     WithoutArete = "Without arete",
   }
 
-  export interface UserSingle {
-    id: number;
-    uid: number;
-    first_name: string;
-    last_name: string;
-    avatar: string;
-    anonymous: boolean;
-    gender: Gender;
-    score_count_gym: number;
-    score_count_gym_routes: number;
-    score_count_gym_boulders: number;
-    score_grade_routes: string;
-    score_grade_routes_count: number;
-    score_grade_boulders: string;
-    score_grade_boulders_count: number;
-  }
-
   export interface AscendSingle {
     id: number;
     user_id: number;
@@ -321,7 +304,6 @@ export namespace TopLogger {
     score: string;
     rank: number;
     deleted: boolean;
-    user: User;
   }
 
   export interface User {
@@ -467,8 +449,7 @@ export const getGymClimbById = (
 export const getUser = (
   id: number,
   dbOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  fetchTopLogger<TopLogger.UserSingle>(`/v1/users/${id}.json`, null, dbOptions);
+) => fetchTopLogger<TopLogger.User>(`/v1/users/${id}.json`, null, dbOptions);
 export const getAscends = (
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
@@ -481,7 +462,7 @@ export const getAscends = (
 
   return fetchTopLogger<TopLogger.AscendSingle[]>(url, null, dbOptions);
 };
-export const getGroupsUsers = (
+export const getGroupsUsers = <T = TopLogger.GroupUserMultiple>(
   jsonParams?: JSONParams,
   dbOptions?: Parameters<typeof dbFetch>[2]
 ) => {
@@ -491,7 +472,7 @@ export const getGroupsUsers = (
     url.searchParams.set("json_params", JSON.stringify(jsonParams));
   }
 
-  return fetchTopLogger<TopLogger.GroupUserMultiple[]>(url, null, dbOptions);
+  return fetchTopLogger<T[]>(url, null, dbOptions);
 };
 
 export const getGymGymGroups = (
@@ -605,9 +586,9 @@ export async function getIoTopLoggerGroupEvent(
     }
   }
 
-  const io = await DB.collection<TopLogger.UserSingle>(
-    "toplogger_users"
-  ).findOne({ id: ioId });
+  const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
+    id: ioId,
+  });
 
   if (!io) throw new Error("io not found");
 
@@ -687,9 +668,7 @@ export async function getIoTopLoggerGroupEvent(
     category: sex ? io.gender : null,
     team: null,
     noParticipants:
-      (await DB.collection<TopLogger.UserSingle>(
-        "toplogger_users"
-      ).countDocuments({
+      (await DB.collection<TopLogger.User>("toplogger_users").countDocuments({
         id: { $in: groupUsers.map(({ user_id }) => user_id) },
         gender: sex ? io.gender : undefined,
       })) || NaN,
@@ -767,9 +746,9 @@ async function getIoTopLoggerGroupScores(
     }
   }
 
-  const io = await DB.collection<TopLogger.UserSingle>(
-    "toplogger_users"
-  ).findOne({ id: ioId });
+  const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
+    id: ioId,
+  });
 
   if (!io) throw new Error("io not found");
 
@@ -810,7 +789,7 @@ async function getIoTopLoggerGroupScores(
 
   const usersWithResults = await Promise.all(
     groupUsers.map(async ({ user_id, score, rank }) => {
-      const user = (await DB.collection<TopLogger.UserSingle>(
+      const user = (await DB.collection<TopLogger.User>(
         "toplogger_users"
       ).findOne({ id: user_id }))!;
       let tdbScore = 0;
@@ -842,9 +821,7 @@ async function getIoTopLoggerGroupScores(
   const scores: Score[] = [];
   if (ioResults && isPast(groupInterval.start)) {
     const noClimbers =
-      (await DB.collection<TopLogger.UserSingle>(
-        "toplogger_users"
-      ).countDocuments({
+      (await DB.collection<TopLogger.User>("toplogger_users").countDocuments({
         id: { $in: groupUsers.map(({ user_id }) => user_id) },
         gender: sex ? io.gender : undefined,
       })) || NaN;

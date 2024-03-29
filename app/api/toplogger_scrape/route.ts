@@ -37,7 +37,7 @@ export async function GET(/* request: NextRequest */) {
   */
 
   const DB = (await dbConnect()).connection.db;
-  const usersCollection = DB.collection<TopLogger.UserSingle & ScrapedAt>(
+  const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
     "toplogger_users"
   );
   const gymsCollection = DB.collection<TopLogger.GymSingle & ScrapedAt>(
@@ -47,7 +47,7 @@ export async function GET(/* request: NextRequest */) {
     "toplogger_groups"
   );
   const groupUsersCollection = DB.collection<
-    TopLogger.GroupUserMultiple & ScrapedAt
+    Omit<TopLogger.GroupUserMultiple, "user"> & ScrapedAt
   >("toplogger_group_users");
   const climbsCollection = DB.collection<TopLogger.ClimbMultiple & ScrapedAt>(
     "toplogger_climbs"
@@ -61,6 +61,102 @@ export async function GET(/* request: NextRequest */) {
   const holdsCollection = DB.collection<TopLogger.Hold & ScrapedAt>(
     "toplogger_holds"
   );
+
+  /*
+   * Upserters
+   */
+
+  const upsertAscend = (ascend: TopLogger.AscendSingle) =>
+    ascendsCollection.updateOne(
+      { id: ascend.id },
+      {
+        $set: {
+          ...ascend,
+          date_logged: ascend.date_logged && new Date(ascend.date_logged),
+          _io_scrapedAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+  const upsertClimb = (climb: TopLogger.ClimbMultiple) =>
+    climbsCollection.updateOne(
+      { id: climb.id },
+      {
+        $set: {
+          ...climb,
+          date_live_start:
+            climb.date_live_start && new Date(climb.date_live_start),
+          date_live_end: climb.date_live_end && new Date(climb.date_live_end),
+          date_deleted: climb.date_deleted && new Date(climb.date_deleted),
+          date_set: climb.date_set && new Date(climb.date_set),
+          created_at: climb.created_at && new Date(climb.created_at),
+          date_removed: climb.date_removed && new Date(climb.date_removed),
+          _io_scrapedAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+  const upsertGym = (gym: TopLogger.GymMultiple) =>
+    gymsCollection.updateOne(
+      { id: gym.id },
+      { $set: { ...gym, _io_scrapedAt: new Date() } },
+      { upsert: true }
+    );
+  const upsertHold = (hold: TopLogger.Hold) =>
+    holdsCollection.updateOne(
+      { id: hold.id },
+      { $set: { ...hold, _io_scrapedAt: new Date() } },
+      { upsert: true }
+    );
+  const upsertGymGroup = (gymGroup: TopLogger.GymGroup) =>
+    gymGroupsCollection.updateOne(
+      { id: gymGroup.id },
+      { $set: { ...gymGroup, _io_scrapedAt: new Date() } },
+      { upsert: true }
+    );
+  const upsertGroup = async ({
+    climb_groups,
+    ...group
+  }: TopLogger.GroupSingle) => {
+    await groupsCollection.updateOne(
+      { id: group.id },
+      {
+        $set: {
+          ...group,
+          date_live_start: new Date(group.date_live_start),
+          date_loggable_start: new Date(group.date_loggable_start),
+          date_loggable_end: new Date(group.date_loggable_end),
+          _io_scrapedAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+    const dbGroup = (await groupsCollection.findOne({ id: group.id }))!;
+    if (
+      !dbGroup.climb_groups ||
+      dbGroup.climb_groups.length < climb_groups.length
+    ) {
+      await groupsCollection.updateOne(
+        { id: group.id },
+        { $set: { climb_groups, _io_scrapedAt: new Date() } },
+        { upsert: true }
+      );
+    }
+  };
+  const upsertUser = (user: TopLogger.User) =>
+    usersCollection.updateOne(
+      { id: user.id },
+      { $set: { ...user, _io_scrapedAt: new Date() } },
+      { upsert: true }
+    );
+  const upsertGroupUser = (
+    groupUser: Omit<TopLogger.GroupUserMultiple, "user">
+  ) =>
+    groupUsersCollection.updateOne(
+      { id: groupUser.id },
+      { $set: { ...groupUser, _io_scrapedAt: new Date() } },
+      { upsert: true }
+    );
 
   // Io is the only user in the database,
   const { topLoggerId } = (await User.findOne())!;
@@ -102,18 +198,7 @@ export async function GET(/* request: NextRequest */) {
     const dbUser = dbUsers.find(({ id }) => id === topLoggerId);
     if ("true" + "" || shouldRevalidate(dbUser)) {
       const user = await getUser(topLoggerId, { maxAge: HOUR_IN_SECONDS });
-      await usersCollection.updateOne(
-        { id: user.id },
-        {
-          $set: {
-            ...user,
-            _io_scrapedAt: new Date(),
-          },
-        },
-        { upsert: true }
-      );
-
-      await flushJSON("user:" + user.id);
+      await upsertUser(user).then(() => flushJSON("user:" + user.id));
     } else {
       console.info(`Skipping scraping Io ${topLoggerId}`);
     }
@@ -134,67 +219,34 @@ export async function GET(/* request: NextRequest */) {
       shuffle(ascends)
         // Eventual consistency
         .slice(0, Math.ceil(ascends.length / 16))
-        .flatMap(({ climb, ...ascend }) => [
-          ascendsCollection
-            .updateOne(
-              { id: ascend.id },
-              {
-                $set: {
-                  ...ascend,
-                  date_logged:
-                    ascend.date_logged && new Date(ascend.date_logged),
-                  _io_scrapedAt: new Date(),
-                },
-              },
-              { upsert: true }
-            )
-            .then(() => flushJSON("ascend:" + ascend.id)),
-          /**
-           * User Climbs
-           */
-          climbsCollection
-            .updateOne(
-              { id: climb.id },
-              {
-                $set: {
-                  ...climb,
-                  date_live_start:
-                    climb.date_live_start && new Date(climb.date_live_start),
-                  date_live_end:
-                    climb.date_live_end && new Date(climb.date_live_end),
-                  date_deleted:
-                    climb.date_deleted && new Date(climb.date_deleted),
-                  date_set: climb.date_set && new Date(climb.date_set),
-                  created_at: climb.created_at && new Date(climb.created_at),
-                  date_removed:
-                    climb.date_removed && new Date(climb.date_removed),
-                  _io_scrapedAt: new Date(),
-                },
-              },
-              { upsert: true }
-            )
-            .then(() => flushJSON("climb:" + climb.id)),
-        ])
+        .flatMap(({ climb, ...ascend }) => {
+          gymIds.add(climb.gym_id);
+
+          return [
+            upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
+            /**
+             * User Climbs
+             */
+            upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
+          ];
+        })
     );
     console.info(`Upserted ${ascends.length} Io ascends`);
     console.timeEnd("Io ascends");
     /**
      * User Gyms
      */
-    console.info(`Scraping Io gyms ${Array.from(gymIds).join(", ")}`);
+    console.info(
+      `Scraping ${gymIds.size} Io gyms ${Array.from(gymIds).join(", ")}`
+    );
+
     await Promise.all(
       shuffle(Array.from(gymIds)).map(async (gymId) => {
         const dbGym = dbGyms.find(({ id }) => id === gymId);
         if ("true" + "" || shouldRevalidate(dbGym)) {
           const gym = await gymLoader.load(gymId);
           if (gym) {
-            await gymsCollection.updateOne(
-              { id: gymId },
-              { $set: { ...gym, _io_scrapedAt: new Date() } },
-              { upsert: true }
-            );
-
-            await flushJSON("gym:" + gymId);
+            await upsertGym(gym).then(() => flushJSON("gym:" + gym.id));
           }
         } else {
           console.info(`Skipping scraping gym ${gymId}`);
@@ -215,15 +267,9 @@ export async function GET(/* request: NextRequest */) {
             maxAge: HOUR_IN_SECONDS,
           });
           await Promise.all(
-            shuffle(holds).map(async (hold) => {
-              await holdsCollection.updateOne(
-                { id: hold.id },
-                { $set: { ...hold, _io_scrapedAt: new Date() } },
-                { upsert: true }
-              );
-
-              await flushJSON("hold:" + hold.id);
-            })
+            holds.map((hold) =>
+              upsertHold(hold).then(() => flushJSON("hold:" + hold.id))
+            )
           );
         } else {
           console.info(`Skipping scraping holds for gym ${gymId}`);
@@ -247,13 +293,9 @@ export async function GET(/* request: NextRequest */) {
                 maxAge: HOUR_IN_SECONDS,
               })
             ).map(async (gymGroup) => {
-              await gymGroupsCollection.updateOne(
-                { id: gymGroup.id },
-                { $set: { ...gymGroup, _io_scrapedAt: new Date() } },
-                { upsert: true }
+              await upsertGymGroup(gymGroup).then(() =>
+                flushJSON("gym_group:" + gymGroup.id)
               );
-
-              await flushJSON("gym_group:" + gymGroup.id);
 
               /**
                * Io Gym Groups Group
@@ -265,42 +307,12 @@ export async function GET(/* request: NextRequest */) {
                 ({ id }) => id === gymGroup.group_id
               );
               if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
-                const { climb_groups, ...group } = await getGroup(
-                  gymGroup.group_id,
-                  { maxAge: HOUR_IN_SECONDS }
-                );
-
-                await groupsCollection.updateOne(
-                  { id: group.id },
-                  {
-                    $set: {
-                      ...group,
-                      date_live_start: new Date(group.date_live_start),
-                      date_loggable_start: new Date(group.date_loggable_start),
-                      date_loggable_end: new Date(group.date_loggable_end),
-                      _io_scrapedAt: new Date(),
-                    },
-                  },
-                  { upsert: true }
-                );
-
-                const dbGroup = await groupsCollection.findOne({
-                  id: gymGroup.group_id,
+                const group = await getGroup(gymGroup.group_id, {
+                  maxAge: HOUR_IN_SECONDS,
                 });
-                if (
-                  !dbGroup ||
-                  !dbGroup.climb_groups ||
-                  dbGroup.climb_groups.length <= climb_groups.length
-                ) {
-                  const group = (await groupsCollection.findOne({
-                    id: gymGroup.group_id,
-                  }))!;
-                  await groupsCollection.updateOne(
-                    { id: group.id },
-                    { $set: { climb_groups, _io_scrapedAt: new Date() } },
-                    { upsert: true }
-                  );
-                }
+                await upsertGroup(group).then(() =>
+                  flushJSON("group:" + group.id)
+                );
               } else {
                 console.info(
                   `User Gym Groups Group: Skipping scraping group ${gymGroup.group_id}`
@@ -317,32 +329,9 @@ export async function GET(/* request: NextRequest */) {
                 maxAge: HOUR_IN_SECONDS,
               });
               await Promise.all(
-                shuffle(climbs).map(async (climb) => {
-                  await climbsCollection.updateOne(
-                    { id: climb.id },
-                    {
-                      $set: {
-                        ...climb,
-                        date_live_start:
-                          climb.date_live_start &&
-                          new Date(climb.date_live_start),
-                        date_live_end:
-                          climb.date_live_end && new Date(climb.date_live_end),
-                        date_deleted:
-                          climb.date_deleted && new Date(climb.date_deleted),
-                        date_set: climb.date_set && new Date(climb.date_set),
-                        created_at:
-                          climb.created_at && new Date(climb.created_at),
-                        date_removed:
-                          climb.date_removed && new Date(climb.date_removed),
-                        _io_scrapedAt: new Date(),
-                      },
-                    },
-                    { upsert: true }
-                  );
-
-                  await flushJSON("climb:" + climb.id);
-                })
+                shuffle(climbs).map((climb) =>
+                  upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
+                )
               );
 
               /**
@@ -350,29 +339,23 @@ export async function GET(/* request: NextRequest */) {
                */
               await Promise.all(
                 shuffle(
-                  await getGroupsUsers(
+                  await getGroupsUsers<
+                    TopLogger.GroupUserMultiple & { user: TopLogger.User }
+                  >(
                     { filters: { group_id: group.id }, includes: "user" },
                     { maxAge: HOUR_IN_SECONDS }
                   )
                 ).map(async ({ user, ...groupUser }) => {
-                  await groupUsersCollection.updateOne(
-                    { id: groupUser.id },
-                    { $set: { ...groupUser, _io_scrapedAt: new Date() } },
-                    { upsert: true }
+                  await upsertGroupUser(groupUser).then(() =>
+                    flushJSON("group_user:" + groupUser.id)
                   );
-
-                  await flushJSON("group_user:" + groupUser.id);
 
                   /**
                    * Group User
                    */
-                  await usersCollection.updateOne(
-                    { id: user.id },
-                    { $set: { ...user, _io_scrapedAt: new Date() } },
-                    { upsert: true }
+                  await upsertUser(user).then(() =>
+                    flushJSON("user:" + user.id)
                   );
-
-                  await flushJSON("user:" + user.id);
 
                   /**
                    * Group User Ascends
@@ -391,24 +374,13 @@ export async function GET(/* request: NextRequest */) {
                     : [];
 
                   await Promise.all(
-                    shuffle(ascends).map(async (ascend) => {
-                      await DB.collection<TopLogger.AscendSingle>(
-                        "toplogger_ascends"
-                      ).updateOne(
-                        { id: ascend.id },
-                        {
-                          $set: {
-                            ...ascend,
-                            date_logged:
-                              ascend.date_logged &&
-                              new Date(ascend.date_logged),
-                          },
-                        },
-                        { upsert: true }
-                      );
-
-                      await flushJSON("ascend:" + ascend.id);
-                    })
+                    shuffle(ascends)
+                      .slice(0, Math.ceil(ascends.length / 4))
+                      .map(async (ascend) =>
+                        upsertAscend(ascend).then(() =>
+                          flushJSON("ascend:" + ascend.id)
+                        )
+                      )
                   );
                 })
               );
@@ -436,17 +408,12 @@ export async function GET(/* request: NextRequest */) {
         { filters: { user_id: topLoggerId } },
         { maxAge: HOUR_IN_SECONDS }
       );
-      console.info(`Upserting ${groupsUsers.length} Group-Users`);
+      console.info(`Upserting ${groupsUsers.length} Io Group-Users`);
       await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        shuffle(groupsUsers).map(async ({ user, ...groupUser }) => {
-          await groupUsersCollection.updateOne(
-            { id: groupUser.id },
-            { $set: { ...groupUser, _io_scrapedAt: new Date() } },
-            { upsert: true }
+        groupsUsers.map(async (groupUser) => {
+          await upsertGroupUser(groupUser).then(() =>
+            flushJSON("group_user:" + groupUser.id)
           );
-
-          await flushJSON("group_user:" + groupUser.id);
 
           /**
            * User Groups Group
@@ -454,36 +421,10 @@ export async function GET(/* request: NextRequest */) {
           const dbGroup = dbGroups.find(({ id }) => id === groupUser.group_id);
 
           if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
-            const { climb_groups, ...group } = await getGroup(
-              groupUser.group_id,
-              {
-                maxAge: HOUR_IN_SECONDS,
-              }
-            );
-            await groupsCollection.updateOne(
-              { id: group.id },
-              {
-                $set: {
-                  ...group,
-                  date_live_start: new Date(group.date_live_start),
-                  date_loggable_start: new Date(group.date_loggable_start),
-                  date_loggable_end: new Date(group.date_loggable_end),
-                  _io_scrapedAt: new Date(),
-                },
-              },
-              { upsert: true }
-            );
-            const dbGroup = (await groupsCollection.findOne({ id: group.id }))!;
-            if (
-              !dbGroup.climb_groups ||
-              dbGroup.climb_groups.length < climb_groups.length
-            ) {
-              await groupsCollection.updateOne(
-                { id: group.id },
-                { $set: { climb_groups, _io_scrapedAt: new Date() } },
-                { upsert: true }
-              );
-            }
+            const group = await getGroup(groupUser.group_id, {
+              maxAge: HOUR_IN_SECONDS,
+            });
+            await upsertGroup(group).then(() => flushJSON("group:" + group.id));
           } else {
             console.info(
               `User Groups Group: Skipping scraping group ${groupUser.group_id}`
