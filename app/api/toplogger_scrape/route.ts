@@ -131,6 +131,7 @@ export async function GET(/* request: NextRequest */) {
     const gymIds = new Set<number>();
     const wallIds = new Set<number>();
     for (const { climb, ...ascend } of shuffle(ascends)) {
+      console.time("Upserting Io ascend " + ascend.id);
       console.info(`Updating Io ascend ${ascend.id}`);
       await ascendsCollection.updateOne(
         { id: ascend.id },
@@ -170,7 +171,10 @@ export async function GET(/* request: NextRequest */) {
       gymIds.add(climb.gym_id);
       if (climb.wall_id) wallIds.add(climb.wall_id);
 
+      console.timeEnd("Upserting Io ascend " + ascend.id);
+      console.time("Flushing Io ascend " + ascend.id);
       await flushJSON(climb);
+      console.timeEnd("Flushing Io ascend " + ascend.id);
     }
     /**
      * User Gyms
