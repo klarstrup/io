@@ -972,15 +972,16 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
 
   let problemByProblem = await Promise.all(
     ascends.map(async ({ climb_id, checks }) => {
-      const climb = (await DB.collection<TopLogger.ClimbMultiple>(
+      const climb = await DB.collection<TopLogger.ClimbMultiple>(
         "toplogger_climbs"
-      ).findOne({ id: climb_id }))!;
+      ).findOne({ id: climb_id });
 
       return {
         number: "",
         color:
-          holds.find((hold) => hold.id === climb.hold_id)?.color || undefined,
-        grade: Number(climb.grade) || undefined,
+          (climb && holds.find((hold) => hold.id === climb.hold_id)?.color) ||
+          undefined,
+        grade: (climb && Number(climb.grade)) || undefined,
         attempt: true,
         // TopLogger does not do zones, at least not for Beta Boulders
         zone: checks >= 1,
