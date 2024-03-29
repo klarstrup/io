@@ -225,7 +225,7 @@ export async function GET(/* request: NextRequest */) {
       }
 
       /**
-       * User Gym Groups
+       * Io Gym Groups
        */
       console.info(`Scraping Io gym groups for gym ${gymId}`);
       const gymGymGroups = dbGymGroups.filter(({ gym_id }) => gym_id === gymId);
@@ -252,10 +252,10 @@ export async function GET(/* request: NextRequest */) {
           await flushJSON(gymGroup);
 
           /**
-           * User Gym Groups Group
+           * Io Gym Groups Group
            */
           console.info(
-            `User Gym Groups Group: Scraping group ${gymGroup.group_id}`
+            `Io Gym Groups Group: Scraping group ${gymGroup.group_id}`
           );
           const dbGroup = dbGroups.find(({ id }) => id === gymGroup.group_id);
           if (!dbGroup || shouldRevalidate(dbGroup)) {
