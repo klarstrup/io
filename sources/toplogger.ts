@@ -563,28 +563,7 @@ export async function getIoTopLoggerGroupEvent(
     )
   ).filter(Boolean);
 
-  let climbs: TopLogger.ClimbMultiple[] = [];
-  if (group.climb_groups.length) {
-    climbs = await DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs")
-      .find({ id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) } })
-      .toArray();
-  } else {
-    for (const { gym_id } of group.gym_groups) {
-      for await (const climb of DB.collection<TopLogger.ClimbMultiple>(
-        "toplogger_climbs"
-      ).find({
-        gym_id,
-        date_live_start: {
-          $gte: subHours(group.date_loggable_start, 16),
-          $lte: addHours(group.date_loggable_end, 21),
-        },
-      })) {
-        if (climb.name || climb.number) {
-          climbs.push(climb);
-        }
-      }
-    }
-  }
+  const climbs = await getGroupClimbs(group);
 
   const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
     id: ioId,
@@ -639,6 +618,12 @@ export async function getIoTopLoggerGroupEvent(
     .find({ gym_id: { $in: climbs.map(({ gym_id }) => gym_id) } })
     .toArray();
 
+  const noParticipants =
+    (await DB.collection<TopLogger.User>("toplogger_users").countDocuments({
+      id: { $in: groupUsers.map(({ user_id }) => user_id) },
+      gender: sex ? io.gender : undefined,
+    })) || NaN;
+
   const r = {
     source,
     discipline,
@@ -666,11 +651,7 @@ export async function getIoTopLoggerGroupEvent(
       : null,
     category: sex ? io.gender : null,
     team: null,
-    noParticipants:
-      (await DB.collection<TopLogger.User>("toplogger_users").countDocuments({
-        id: { $in: groupUsers.map(({ user_id }) => user_id) },
-        gender: sex ? io.gender : undefined,
-      })) || NaN,
+    noParticipants,
     problems: climbs.length,
     problemByProblem: climbs
       .map((climb) => {
@@ -699,7 +680,7 @@ export async function getIoTopLoggerGroupEvent(
           b.number || ""
         )
       ),
-    scores: await getIoTopLoggerGroupScores(groupId, ioId, sex),
+    scores: await getIoTopLoggerGroupScores(groupId, ioId, noParticipants, sex),
   } as const;
 
   console.timeEnd(
@@ -712,6 +693,7 @@ export async function getIoTopLoggerGroupEvent(
 async function getIoTopLoggerGroupScores(
   groupId: number,
   ioId: number,
+  noParticipants: number,
   sex?: boolean
 ) {
   const DB = (await dbConnect()).connection.db;
@@ -725,30 +707,7 @@ async function getIoTopLoggerGroupScores(
     end: group.date_loggable_end,
   } as const;
 
-  let climbs: TopLogger.ClimbMultiple[] = [];
-  if (group.climb_groups.length) {
-    climbs = await DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs")
-      .find({ id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) } })
-      .toArray();
-  } else {
-    for (const { gym_id } of group.gym_groups) {
-      for (const climb of await DB.collection<TopLogger.ClimbMultiple>(
-        "toplogger_climbs"
-      )
-        .find({
-          gym_id,
-          date_live_start: {
-            $gte: subHours(group.date_loggable_start, 16),
-            $lte: addHours(group.date_loggable_end, 21),
-          },
-        })
-        .toArray()) {
-        if (climb.name || climb.number) {
-          climbs.push(climb);
-        }
-      }
-    }
-  }
+  const climbs = await getGroupClimbs(group);
 
   const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
     id: ioId,
@@ -826,12 +785,6 @@ async function getIoTopLoggerGroupScores(
 
   const scores: Score[] = [];
   if (ioResults && isPast(groupInterval.start)) {
-    const noClimbers =
-      (await DB.collection<TopLogger.User>("toplogger_users").countDocuments({
-        id: { $in: groupUsers.map(({ user_id }) => user_id) },
-        gender: sex ? io.gender : undefined,
-      })) || NaN;
-
     const ioRank =
       Array.from(usersWithResults)
         .filter(({ user }) => (sex ? user?.gender === io.gender : true))
@@ -843,7 +796,7 @@ async function getIoTopLoggerGroupScores(
         system: SCORING_SYSTEM.POINTS,
         source: SCORING_SOURCE.OFFICIAL,
         rank: ioRank,
-        percentile: percentile(ioRank, noClimbers),
+        percentile: percentile(ioRank, noParticipants),
         points: Number(ioResults.score),
       } satisfies PointsScore);
     }
@@ -852,7 +805,7 @@ async function getIoTopLoggerGroupScores(
         system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
         source: SCORING_SOURCE.OFFICIAL,
         rank: ioRank,
-        percentile: percentile(ioRank, noClimbers),
+        percentile: percentile(ioRank, noParticipants),
         points: Number(ioResults.score),
       } satisfies ThousandDivideByScore);
     }
@@ -870,7 +823,7 @@ async function getIoTopLoggerGroupScores(
           system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
           source: SCORING_SOURCE.DERIVED,
           rank: ioTDBRank,
-          percentile: percentile(ioTDBRank, noClimbers),
+          percentile: percentile(ioTDBRank, noParticipants),
           points: Math.round(ioResults.tdbScore),
         } satisfies ThousandDivideByScore);
       }
@@ -884,7 +837,7 @@ async function getIoTopLoggerGroupScores(
           system: SCORING_SYSTEM.POINTS,
           source: SCORING_SOURCE.DERIVED,
           rank: ioPointsRank,
-          percentile: percentile(ioPointsRank, noClimbers),
+          percentile: percentile(ioPointsRank, noParticipants),
           points: ioResults.ptsScore,
         } satisfies PointsScore);
       }
@@ -908,11 +861,9 @@ export async function getTopLoggerGroupEventEntry(
   ).findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
 
-  const gyms = await DB.collection<TopLogger.GymSingle>("toplogger_gyms")
-    .find({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } })
-    .toArray();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const gym = gyms[0]!;
+  const gym = (await DB.collection<TopLogger.GymSingle>(
+    "toplogger_gyms"
+  ).findOne({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } }))!;
 
   console.timeEnd(
     `getTopLoggerGroupEventEntry for groupId ${groupId} and userId ${userId}`
@@ -939,6 +890,13 @@ const source = "toplogger";
 const type = "training";
 const discipline = "bouldering";
 export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
+  console.time(
+    `getBoulderingTrainingData for ${new Date(trainingInterval.start)
+      .toISOString()
+      .replace(":00:00.000Z", "")} to ${new Date(trainingInterval.end)
+      .toISOString()
+      .replace(":00:00.000Z", "")}`
+  );
   const DB = (await dbConnect()).connection.db;
 
   // Io is the only user in the database,
@@ -991,17 +949,18 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
     .reverse();
 
   problemByProblem = problemByProblem
-    .sort((a, b) => {
-      const gradeA = a.grade || 0;
-      const gradeB = b.grade || 0;
-      return gradeB - gradeA;
-    })
-    .filter(({ grade }) => {
-      if (grade) return grades.includes(grade);
-    })
+    .sort((a, b) => (b.grade || 0) - (a.grade || 0))
+    .filter(({ grade }) => grade && grades.includes(grade))
     .slice(0, 15);
 
   const count = ascends.length;
 
+  console.timeEnd(
+    `getBoulderingTrainingData for ${new Date(trainingInterval.start)
+      .toISOString()
+      .replace(":00:00.000Z", "")} to ${new Date(trainingInterval.end)
+      .toISOString()
+      .replace(":00:00.000Z", "")}`
+  );
   return { source, type, discipline, count, problemByProblem } as const;
 };

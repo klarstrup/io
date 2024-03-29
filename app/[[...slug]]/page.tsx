@@ -240,6 +240,7 @@ const getData = async (
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
+      /*
       getIoClimbAlongCompetitionEventEntry(13, 844),
       getIoClimbAlongCompetitionEventEntry(20, 1284),
       getIoClimbAlongCompetitionEventEntry(26, 3381),
@@ -257,6 +258,7 @@ const getData = async (
       getIoClimbAlongCompetitionEventEntry(152),
       getIoClimbAlongCompetitionEventEntry(153),
       getIoClimbAlongCompetitionEventEntry(154),
+      */
       ...(topLoggerUserId
         ? await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
             "toplogger_group_users"
