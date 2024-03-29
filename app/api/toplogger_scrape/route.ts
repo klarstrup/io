@@ -170,15 +170,8 @@ export async function GET(/* request: NextRequest */) {
   (async () => {
     console.time("Preloading DB data");
     const dbUsers = await usersCollection.find().toArray();
-    const dbGyms = await gymsCollection.find().toArray();
     const dbGroups = await groupsCollection.find().toArray();
     const dbGroupUsers = await groupUsersCollection.find().toArray();
-    /*
-    const dbClimbs = await climbsCollection.find().toArray();
-    const dbAscends = await ascendsCollection.find().toArray();
-    */
-    const dbGymGroups = await gymGroupsCollection.find().toArray();
-    const dbHolds = await holdsCollection.find().toArray();
     console.timeEnd("Preloading DB data");
 
     const encoder = new TextEncoder();
@@ -241,154 +234,37 @@ export async function GET(/* request: NextRequest */) {
     );
 
     await Promise.all(
-      shuffle(Array.from(gymIds)).map(async (gymId) => {
-        const dbGym = dbGyms.find(({ id }) => id === gymId);
-        if ("true" + "" || shouldRevalidate(dbGym)) {
-          const gym = await gymLoader.load(gymId);
-          if (gym) {
-            await upsertGym(gym).then(() => flushJSON("gym:" + gym.id));
-          }
-        } else {
-          console.info(`Skipping scraping gym ${gymId}`);
+      Array.from(gymIds).map(async (gymId) => {
+        const gym = await gymLoader.load(gymId);
+        if (gym) {
+          await upsertGym(gym).then(() => flushJSON("gym:" + gym.id));
         }
 
         /**
          * User Gym Holds
          */
         console.info(`Scraping Io holds for gym ${gymId}`);
-        const dbGymHolds = dbHolds.filter(({ gym_id }) => gym_id === gymId);
-
-        if (
-          "true" + "" ||
-          !dbGymHolds.length ||
-          dbGymHolds.some((dbHold) => shouldRevalidate(dbHold))
-        ) {
-          const holds = await getGymHolds(gymId, undefined, {
-            maxAge: HOUR_IN_SECONDS,
-          });
-          await Promise.all(
-            holds.map((hold) =>
-              upsertHold(hold).then(() => flushJSON("hold:" + hold.id))
-            )
-          );
-        } else {
-          console.info(`Skipping scraping holds for gym ${gymId}`);
-        }
+        await Promise.all(
+          (
+            await getGymHolds(gymId, undefined, { maxAge: HOUR_IN_SECONDS })
+          ).map((hold) =>
+            upsertHold(hold).then(() => flushJSON("hold:" + hold.id))
+          )
+        );
 
         /**
          * Io Gym Groups
          */
         console.info(`Scraping Io Gym-Groups for gym ${gymId}`);
-        const gymGymGroups = dbGymGroups.filter(
-          ({ gym_id }) => gym_id === gymId
+        await Promise.all(
+          (
+            await getGymGymGroups(gymId, void 0, { maxAge: HOUR_IN_SECONDS })
+          ).map((gymGroup) =>
+            upsertGymGroup(gymGroup).then(() =>
+              flushJSON("gym_group:" + gymGroup.id)
+            )
+          )
         );
-        if (
-          "true" + "" ||
-          !gymGymGroups.length ||
-          gymGymGroups.some((dbGymGroup) => shouldRevalidate(dbGymGroup))
-        ) {
-          await Promise.all(
-            shuffle(
-              await getGymGymGroups(gymId, undefined, {
-                maxAge: HOUR_IN_SECONDS,
-              })
-            ).map(async (gymGroup) => {
-              await upsertGymGroup(gymGroup).then(() =>
-                flushJSON("gym_group:" + gymGroup.id)
-              );
-
-              /**
-               * Io Gym Groups Group
-               */
-              console.info(
-                `Io Gym-Groups Group: Scraping Group ${gymGroup.group_id}`
-              );
-              const dbGroup = dbGroups.find(
-                ({ id }) => id === gymGroup.group_id
-              );
-              if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
-                const group = await getGroup(gymGroup.group_id, {
-                  maxAge: HOUR_IN_SECONDS,
-                });
-                await upsertGroup(group).then(() =>
-                  flushJSON("group:" + group.id)
-                );
-              } else {
-                console.info(
-                  `User Gym Groups Group: Skipping scraping group ${gymGroup.group_id}`
-                );
-              }
-
-              /**
-               * User Gym Groups Group Climbs
-               */
-              const group = (await groupsCollection.findOne({
-                id: gymGroup.group_id,
-              }))!;
-              const climbs = await getGroupClimbs(group, {
-                maxAge: HOUR_IN_SECONDS,
-              });
-              await Promise.all(
-                shuffle(climbs).map((climb) =>
-                  upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
-                )
-              );
-
-              /**
-               * User Gym Groups Group Users
-               */
-              await Promise.all(
-                shuffle(
-                  await getGroupsUsers<
-                    TopLogger.GroupUserMultiple & { user: TopLogger.User }
-                  >(
-                    { filters: { group_id: group.id }, includes: "user" },
-                    { maxAge: HOUR_IN_SECONDS }
-                  )
-                ).map(async ({ user, ...groupUser }) => {
-                  await upsertGroupUser(groupUser).then(() =>
-                    flushJSON("group_user:" + groupUser.id)
-                  );
-
-                  /**
-                   * Group User
-                   */
-                  await upsertUser(user).then(() =>
-                    flushJSON("user:" + user.id)
-                  );
-
-                  /**
-                   * Group User Ascends
-                   */
-
-                  const ascends = climbs.length
-                    ? await getAscends(
-                        {
-                          filters: {
-                            user_id: user.id,
-                            climb_id: climbs.map(({ id }) => id),
-                          },
-                        },
-                        { maxAge: HOUR_IN_SECONDS }
-                      )
-                    : [];
-
-                  await Promise.all(
-                    shuffle(ascends)
-                      .slice(0, Math.ceil(ascends.length / 4))
-                      .map(async (ascend) =>
-                        upsertAscend(ascend).then(() =>
-                          flushJSON("ascend:" + ascend.id)
-                        )
-                      )
-                  );
-                })
-              );
-            })
-          );
-        } else {
-          console.info(`Skipping scraping gym groups for gym ${gymId}`);
-        }
       })
     );
 
@@ -425,6 +301,68 @@ export async function GET(/* request: NextRequest */) {
               maxAge: HOUR_IN_SECONDS,
             });
             await upsertGroup(group).then(() => flushJSON("group:" + group.id));
+
+            /**
+             * User Groups Group  Climbs
+             */
+            const climbs = await getGroupClimbs(group, {
+              maxAge: HOUR_IN_SECONDS,
+            });
+            await Promise.all(
+              shuffle(climbs).map((climb) =>
+                upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
+              )
+            );
+
+            /**
+             * User Gym Groups Group Users
+             */
+            const groupUsers = await getGroupsUsers<
+              TopLogger.GroupUserMultiple & { user: TopLogger.User }
+            >(
+              { filters: { group_id: group.id }, includes: "user" },
+              { maxAge: HOUR_IN_SECONDS }
+            );
+            await Promise.all(
+              shuffle(groupUsers)
+                .slice(0, Math.ceil(groupUsers.length / 10))
+                .map(async ({ user, ...groupUser }) => {
+                  await upsertGroupUser(groupUser).then(() =>
+                    flushJSON("group_user:" + groupUser.id)
+                  );
+
+                  /**
+                   * Group User
+                   */
+                  await upsertUser(user).then(() =>
+                    flushJSON("user:" + user.id)
+                  );
+
+                  /**
+                   * Group User Ascends
+                   */
+
+                  const ascends = climbs.length
+                    ? await getAscends(
+                        {
+                          filters: {
+                            user_id: user.id,
+                            climb_id: climbs.map(({ id }) => id),
+                          },
+                        },
+                        { maxAge: HOUR_IN_SECONDS }
+                      )
+                    : [];
+
+                  await Promise.all(
+                    ascends.map((ascend) =>
+                      upsertAscend(ascend).then(() =>
+                        flushJSON("ascend:" + ascend.id)
+                      )
+                    )
+                  );
+                })
+            );
           } else {
             console.info(
               `User Groups Group: Skipping scraping group ${groupUser.group_id}`
