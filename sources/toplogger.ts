@@ -542,6 +542,9 @@ export async function getIoTopLoggerGroupEvent(
   ioId: number,
   sex?: boolean
 ) {
+  console.time(
+    `getIoTopLoggerGroupEvent for groupId ${groupId} and userId ${ioId}`
+  );
   const DB = (await dbConnect()).connection.db;
 
   const group = await DB.collection<TopLogger.GroupSingle>(
@@ -636,7 +639,7 @@ export async function getIoTopLoggerGroupEvent(
     .find({ gym_id: { $in: climbs.map(({ gym_id }) => gym_id) } })
     .toArray();
 
-  return {
+  const r = {
     source,
     discipline,
     type: "competition",
@@ -698,6 +701,12 @@ export async function getIoTopLoggerGroupEvent(
       ),
     scores: await getIoTopLoggerGroupScores(groupId, ioId, sex),
   } as const;
+
+  console.timeEnd(
+    `getIoTopLoggerGroupEvent for groupId ${groupId} and userId ${ioId}`
+  );
+
+  return r;
 }
 
 async function getIoTopLoggerGroupScores(
@@ -889,6 +898,9 @@ export async function getTopLoggerGroupEventEntry(
   groupId: number,
   userId: number
 ): Promise<EventEntry> {
+  console.time(
+    `getTopLoggerGroupEventEntry for groupId ${groupId} and userId ${userId}`
+  );
   const DB = (await dbConnect()).connection.db;
 
   const group = await DB.collection<TopLogger.GroupSingle>(
@@ -902,6 +914,9 @@ export async function getTopLoggerGroupEventEntry(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
+  console.timeEnd(
+    `getTopLoggerGroupEventEntry for groupId ${groupId} and userId ${userId}`
+  );
   return {
     source,
     type: "competition",
