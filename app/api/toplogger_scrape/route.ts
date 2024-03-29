@@ -122,6 +122,7 @@ export async function GET(/* request: NextRequest */) {
      * Io Ascends
      */
     console.info(`Scraping Io ascends ${topLoggerId}`);
+    console.time("Io ascends");
     const ascends = (await getAscends(
       { filters: { user_id: topLoggerId }, includes: ["climb"] },
       { maxAge: HOUR_IN_SECONDS }
@@ -173,6 +174,7 @@ export async function GET(/* request: NextRequest */) {
       ])
     );
     console.info(`Upserted ${ascends.length} Io ascends`);
+    console.timeEnd("Io ascends");
     /**
      * User Gyms
      */
