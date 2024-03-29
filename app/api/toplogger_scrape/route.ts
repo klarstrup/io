@@ -99,6 +99,7 @@ export async function GET(/* request: NextRequest */) {
     /**
      * User
      */
+    console.info(`Scraping Io ${topLoggerId}`);
     const dbUser = dbUsers.find(({ id }) => id === topLoggerId);
     if (shouldRevalidate(dbUser)) {
       const user = await getUser(topLoggerId, { maxAge: HOUR_IN_SECONDS });
@@ -121,6 +122,7 @@ export async function GET(/* request: NextRequest */) {
     /**
      * Io Ascends
      */
+    console.info(`Scraping Io ascends ${topLoggerId}`);
     const ascends = (await getAscends(
       { filters: { user_id: topLoggerId }, includes: ["climb"] },
       { maxAge: HOUR_IN_SECONDS }
@@ -129,6 +131,7 @@ export async function GET(/* request: NextRequest */) {
     const gymIds = new Set<number>();
     const wallIds = new Set<number>();
     for (const { climb, ...ascend } of shuffle(ascends)) {
+      console.info(`Updating Io ascend ${ascend.id}`);
       await ascendsCollection.updateOne(
         { id: ascend.id },
         {
@@ -146,6 +149,7 @@ export async function GET(/* request: NextRequest */) {
       /**
        * User Climbs
        */
+      console.info(`Updating Io climb ${climb.id} gym ${climb.gym_id}`);
       await climbsCollection.updateOne(
         { id: climb.id },
         {
@@ -171,6 +175,7 @@ export async function GET(/* request: NextRequest */) {
     /**
      * User Gyms
      */
+    console.info(`Scraping Io gyms ${Array.from(gymIds).join(", ")}`);
     for (const gymId of shuffle(Array.from(gymIds))) {
       const dbGym = dbGyms.find(({ id }) => id === gymId);
       if (shouldRevalidate(dbGym)) {
@@ -191,6 +196,7 @@ export async function GET(/* request: NextRequest */) {
       /**
        * User Gym Holds
        */
+      console.info(`Scraping Io holds for gym ${gymId}`);
       const dbGymHolds = dbHolds.filter(({ gym_id }) => gym_id === gymId);
 
       if (
@@ -221,6 +227,7 @@ export async function GET(/* request: NextRequest */) {
       /**
        * User Gym Groups
        */
+      console.info(`Scraping Io gym groups for gym ${gymId}`);
       const gymGymGroups = dbGymGroups.filter(({ gym_id }) => gym_id === gymId);
       if (
         !gymGymGroups.length ||
@@ -247,6 +254,9 @@ export async function GET(/* request: NextRequest */) {
           /**
            * User Gym Groups Group
            */
+          console.info(
+            `User Gym Groups Group: Scraping group ${gymGroup.group_id}`
+          );
           const dbGroup = dbGroups.find(({ id }) => id === gymGroup.group_id);
           if (!dbGroup || shouldRevalidate(dbGroup)) {
             const { climb_groups, ...group } = await getGroup(
