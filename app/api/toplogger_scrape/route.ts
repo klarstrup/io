@@ -43,27 +43,53 @@ export async function GET(/* request: NextRequest */) {
   const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
     "toplogger_users"
   );
+  await usersCollection.createIndexes([{ key: { id: 1 } }]);
+
   const gymsCollection = DB.collection<TopLogger.GymSingle & ScrapedAt>(
     "toplogger_gyms"
   );
+  await gymsCollection.createIndexes([{ key: { id: 1 } }]);
+
   const groupsCollection = DB.collection<TopLogger.GroupSingle & ScrapedAt>(
     "toplogger_groups"
   );
-  const groupUsersCollection = DB.collection<
-    Omit<TopLogger.GroupUserMultiple, "user"> & ScrapedAt
-  >("toplogger_group_users");
-  const climbsCollection = DB.collection<TopLogger.ClimbMultiple & ScrapedAt>(
-    "toplogger_climbs"
-  );
-  const ascendsCollection = DB.collection<TopLogger.AscendSingle & ScrapedAt>(
-    "toplogger_ascends"
-  );
-  const gymGroupsCollection = DB.collection<TopLogger.GymGroup & ScrapedAt>(
-    "toplogger_gym_groups"
-  );
+  await groupsCollection.createIndexes([{ key: { id: 1 } }]);
+
   const holdsCollection = DB.collection<TopLogger.Hold & ScrapedAt>(
     "toplogger_holds"
   );
+  await holdsCollection.createIndexes([{ key: { gym_id: 1 } }]);
+
+  const climbsCollection = DB.collection<TopLogger.ClimbMultiple & ScrapedAt>(
+    "toplogger_climbs"
+  );
+  await climbsCollection.createIndexes([
+    { key: { id: 1 } },
+    { key: { gym_id: 1 } },
+    { key: { date_live_start: 1 } },
+  ]);
+
+  const ascendsCollection = DB.collection<TopLogger.AscendSingle & ScrapedAt>(
+    "toplogger_ascends"
+  );
+  await ascendsCollection.createIndexes([
+    { key: { user_id: 1 } },
+    { key: { climb_id: 1 } },
+    { key: { date_logged: 1 } },
+  ]);
+
+  const gymGroupsCollection = DB.collection<TopLogger.GymGroup & ScrapedAt>(
+    "toplogger_gym_groups"
+  );
+  await gymGroupsCollection.createIndexes([{ key: { gym_id: 1 } }]);
+
+  const groupUsersCollection = DB.collection<
+    Omit<TopLogger.GroupUserMultiple, "user"> & ScrapedAt
+  >("toplogger_group_users");
+  await groupUsersCollection.createIndexes([
+    { key: { user_id: 1 } },
+    { key: { group_id: 1 } },
+  ]);
 
   /*
    * Upserters
