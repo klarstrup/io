@@ -317,7 +317,7 @@ export async function GET(/* request: NextRequest */) {
               `Upserting ${climbs.length} group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
             );
             await Promise.all(
-              randomSlice(climbs, 8).map((climb) =>
+              climbs.map((climb) =>
                 upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
               )
             );
@@ -338,7 +338,7 @@ export async function GET(/* request: NextRequest */) {
               `Upserting ${groupUsers.length} group users for group ${groupUser.group_id}`
             );
             await Promise.all(
-              randomSlice(groupUsers, 8).map(({ user, ...groupUser }) =>
+              randomSlice(groupUsers, 16).map(({ user, ...groupUser }) =>
                 Promise.all([
                   upsertGroupUser(groupUser).then(() =>
                     flushJSON("group_user:" + groupUser.id)
