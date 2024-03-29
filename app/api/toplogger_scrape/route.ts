@@ -100,7 +100,7 @@ export async function GET(/* request: NextRequest */) {
      */
     console.info(`Scraping Io ${topLoggerId}`);
     const dbUser = dbUsers.find(({ id }) => id === topLoggerId);
-    if (shouldRevalidate(dbUser)) {
+    if ("true" + "" || shouldRevalidate(dbUser)) {
       const user = await getUser(topLoggerId, { maxAge: HOUR_IN_SECONDS });
       await usersCollection.updateOne(
         { id: user.id },
@@ -129,7 +129,6 @@ export async function GET(/* request: NextRequest */) {
     )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
 
     const gymIds = new Set<number>();
-    const wallIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
       shuffle(ascends)
@@ -186,7 +185,7 @@ export async function GET(/* request: NextRequest */) {
     await Promise.all(
       shuffle(Array.from(gymIds)).map(async (gymId) => {
         const dbGym = dbGyms.find(({ id }) => id === gymId);
-        if (shouldRevalidate(dbGym)) {
+        if ("true" + "" || shouldRevalidate(dbGym)) {
           const gym = await gymLoader.load(gymId);
           if (gym) {
             await gymsCollection.updateOne(
@@ -208,6 +207,7 @@ export async function GET(/* request: NextRequest */) {
         const dbGymHolds = dbHolds.filter(({ gym_id }) => gym_id === gymId);
 
         if (
+          "true" + "" ||
           !dbGymHolds.length ||
           dbGymHolds.some((dbHold) => shouldRevalidate(dbHold))
         ) {
@@ -264,7 +264,7 @@ export async function GET(/* request: NextRequest */) {
               const dbGroup = dbGroups.find(
                 ({ id }) => id === gymGroup.group_id
               );
-              if (!dbGroup || shouldRevalidate(dbGroup)) {
+              if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
                 const { climb_groups, ...group } = await getGroup(
                   gymGroup.group_id,
                   { maxAge: HOUR_IN_SECONDS }
@@ -453,7 +453,7 @@ export async function GET(/* request: NextRequest */) {
            */
           const dbGroup = dbGroups.find(({ id }) => id === groupUser.group_id);
 
-          if (!dbGroup || shouldRevalidate(dbGroup)) {
+          if ("true" + "" || !dbGroup || shouldRevalidate(dbGroup)) {
             const { climb_groups, ...group } = await getGroup(
               groupUser.group_id,
               {
