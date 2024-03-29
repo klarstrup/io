@@ -133,6 +133,7 @@ export async function GET(/* request: NextRequest */) {
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
       shuffle(ascends)
+        // Eventual consistency
         .slice(0, Math.ceil(ascends.length / 2))
         .flatMap(({ climb, ...ascend }) => [
           ascendsCollection
