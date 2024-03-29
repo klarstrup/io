@@ -212,7 +212,7 @@ export async function GET(/* request: NextRequest */) {
     const gymIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
-      randomSlice(ascends, 8).flatMap(({ climb, ...ascend }) => {
+      randomSlice(ascends, 16).flatMap(({ climb, ...ascend }) => {
         gymIds.add(climb.gym_id);
 
         return [
