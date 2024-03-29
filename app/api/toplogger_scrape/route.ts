@@ -134,7 +134,7 @@ export async function GET(/* request: NextRequest */) {
     await Promise.all(
       shuffle(ascends)
         // Eventual consistency
-        .slice(0, Math.ceil(ascends.length / 2))
+        .slice(0, Math.ceil(ascends.length / 4))
         .flatMap(({ climb, ...ascend }) => [
           ascendsCollection
             .updateOne(
