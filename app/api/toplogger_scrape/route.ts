@@ -199,9 +199,11 @@ export async function GET(/* request: NextRequest */) {
 
   (async () => {
     console.time("Preloading DB data");
-    const dbUsers = await usersCollection.find().toArray();
-    const dbGroups = await groupsCollection.find().toArray();
-    const dbGroupUsers = await groupUsersCollection.find().toArray();
+    const [dbUsers, dbGroups, dbGroupUsers] = await Promise.all([
+      usersCollection.find().toArray(),
+      groupsCollection.find().toArray(),
+      groupUsersCollection.find().toArray(),
+    ]);
     console.timeEnd("Preloading DB data");
 
     await writer.write(encoder.encode("[\n"));
