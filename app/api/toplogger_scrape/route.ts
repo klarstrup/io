@@ -232,7 +232,7 @@ export async function GET(/* request: NextRequest */) {
         /**
          * Io Gym Groups
          */
-        console.info(`Scraping Io gym groups for gym ${gymId}`);
+        console.info(`Scraping Io Gym-Groups for gym ${gymId}`);
         const gymGymGroups = dbGymGroups.filter(
           ({ gym_id }) => gym_id === gymId
         );
@@ -259,7 +259,7 @@ export async function GET(/* request: NextRequest */) {
                * Io Gym Groups Group
                */
               console.info(
-                `Io Gym Groups Group: Scraping group ${gymGroup.group_id}`
+                `Io Gym-Groups Group: Scraping Group ${gymGroup.group_id}`
               );
               const dbGroup = dbGroups.find(
                 ({ id }) => id === gymGroup.group_id
@@ -426,7 +426,7 @@ export async function GET(/* request: NextRequest */) {
     const userGroupUsers = dbGroupUsers.filter(
       ({ user_id }) => user_id === topLoggerId
     );
-    console.info(`Scraping Io groups for user ${topLoggerId}`);
+    console.info(`Scraping Group-Users for user ${topLoggerId}`);
     if (
       "true" + "" ||
       !userGroupUsers.length ||
