@@ -789,9 +789,9 @@ async function getIoTopLoggerGroupScores(
 
   const usersWithResults = await Promise.all(
     groupUsers.map(async ({ user_id, score, rank }) => {
-      const user = (await DB.collection<TopLogger.User>(
+      const user = await DB.collection<TopLogger.User>(
         "toplogger_users"
-      ).findOne({ id: user_id }))!;
+      ).findOne({ id: user_id });
       let tdbScore = 0;
       let ptsScore = 0;
 
@@ -828,7 +828,7 @@ async function getIoTopLoggerGroupScores(
 
     const ioRank =
       Array.from(usersWithResults)
-        .filter(({ user }) => (sex ? user.gender === io.gender : true))
+        .filter(({ user }) => (sex ? user?.gender === io.gender : true))
         .sort((a, b) => Number(b.score) - Number(a.score))
         .findIndex(({ user_id }) => user_id === ioId) + 1;
 
@@ -857,7 +857,7 @@ async function getIoTopLoggerGroupScores(
       if (ioResults.tdbScore) {
         const ioTDBRank =
           Array.from(usersWithResults)
-            .filter(({ user }) => (sex ? user.gender === io.gender : true))
+            .filter(({ user }) => (sex ? user?.gender === io.gender : true))
             .sort((a, b) => b.tdbScore - a.tdbScore)
             .findIndex(({ user_id }) => user_id === ioId) + 1;
         scores.push({
@@ -871,7 +871,7 @@ async function getIoTopLoggerGroupScores(
       if (ioResults.ptsScore) {
         const ioPointsRank =
           Array.from(usersWithResults)
-            .filter(({ user }) => (sex ? user.gender === io.gender : true))
+            .filter(({ user }) => (sex ? user?.gender === io.gender : true))
             .sort((a, b) => b.ptsScore - a.ptsScore)
             .findIndex(({ user_id }) => user_id === ioId) + 1;
         scores.push({
