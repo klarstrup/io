@@ -1,7 +1,7 @@
 import { SVGProps } from "react";
 import Grade from "../../grades";
-import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
-import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
+import { type getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
+import { type getIoTopLoggerGroupEvent } from "../../sources/toplogger";
 
 type ProblemBadgeProps = SVGProps<SVGSVGElement> & {
   title?: string;

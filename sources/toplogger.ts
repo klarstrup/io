@@ -618,11 +618,12 @@ export async function getIoTopLoggerGroupEvent(
     .find({ gym_id: { $in: climbs.map(({ gym_id }) => gym_id) } })
     .toArray();
 
-  const noParticipants =
-    (await DB.collection<TopLogger.User>("toplogger_users").countDocuments({
+  const participants = await DB.collection<TopLogger.User>("toplogger_users")
+    .find({
       id: { $in: groupUsers.map(({ user_id }) => user_id) },
       gender: sex ? io.gender : undefined,
-    })) || NaN;
+    })
+    .toArray();
 
   const r = {
     source,
@@ -651,7 +652,7 @@ export async function getIoTopLoggerGroupEvent(
       : null,
     category: sex ? io.gender : null,
     team: null,
-    noParticipants,
+    noParticipants: participants.length || NaN,
     problems: climbs.length,
     problemByProblem: climbs
       .map((climb) => {
@@ -680,7 +681,14 @@ export async function getIoTopLoggerGroupEvent(
           b.number || ""
         )
       ),
-    scores: await getIoTopLoggerGroupScores(groupId, ioId, noParticipants, sex),
+    scores: getIoTopLoggerGroupScores(
+      group,
+      io,
+      groupUsers,
+      participants,
+      ascends,
+      sex
+    ),
   } as const;
 
   console.timeEnd(
@@ -690,57 +698,18 @@ export async function getIoTopLoggerGroupEvent(
   return r;
 }
 
-async function getIoTopLoggerGroupScores(
-  groupId: number,
-  ioId: number,
-  noParticipants: number,
+function getIoTopLoggerGroupScores(
+  group: TopLogger.GroupSingle,
+  io: TopLogger.User,
+  groupUsers: Omit<TopLogger.GroupUserMultiple, "user">[],
+  participants: TopLogger.User[],
+  ascends: TopLogger.AscendSingle[],
   sex?: boolean
 ) {
-  const DB = (await dbConnect()).connection.db;
-
-  const group = await DB.collection<TopLogger.GroupSingle>(
-    "toplogger_groups"
-  ).findOne({ id: groupId });
-  if (!group) throw new Error("Group not found");
   const groupInterval: DateInterval = {
     start: group.date_loggable_start,
     end: group.date_loggable_end,
   } as const;
-
-  const climbs = await getGroupClimbs(group);
-
-  const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
-    id: ioId,
-  });
-
-  if (!io) throw new Error("io not found");
-
-  const groupUsers = await DB.collection<
-    Omit<TopLogger.GroupUserMultiple, "user">
-  >("toplogger_group_users")
-    .find({ group_id: groupId })
-    .toArray();
-
-  const ascends = (
-    await Promise.all(
-      groupUsers.map(({ user_id }) =>
-        climbs.length
-          ? DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-              .find({
-                user_id,
-                climb_id: { $in: climbs.map(({ id }) => id) },
-                date_logged: {
-                  $gte: groupInterval.start,
-                  $lte: groupInterval.end,
-                },
-              })
-              .toArray()
-          : []
-      )
-    )
-  )
-    .flat()
-    .filter(({ climb_id }) => climbs.some(({ id }) => climb_id === id));
 
   const topsByClimbId = ascends.reduce(
     (topMemo, { climb_id, user_id, checks }) => {
@@ -752,36 +721,32 @@ async function getIoTopLoggerGroupScores(
     new Map<number, number>()
   );
 
-  const usersWithResults = await Promise.all(
-    groupUsers.map(async ({ user_id, score, rank }) => {
-      const user = await DB.collection<TopLogger.User>(
-        "toplogger_users"
-      ).findOne({ id: user_id });
-      let tdbScore = 0;
-      let ptsScore = 0;
+  const usersWithResults = groupUsers.map(({ user_id, score, rank }) => {
+    const user = participants.find(({ id }) => id === user_id);
+    let tdbScore = 0;
+    let ptsScore = 0;
 
-      const userAscends = ascends.filter(
-        (ascend) => ascend.user_id === user_id
-      );
-      for (const { climb_id, checks } of userAscends) {
-        let problemTDBScore = TDB_BASE / (topsByClimbId.get(climb_id) || 0);
+    const userAscends = ascends.filter((ascend) => ascend.user_id === user_id);
+    for (const { climb_id, checks } of userAscends) {
+      let problemTDBScore = TDB_BASE / (topsByClimbId.get(climb_id) || 0);
 
-        if (checks) {
-          ptsScore += PTS_SEND;
-          if (checks >= 2) {
-            ptsScore += PTS_FLASH_BONUS;
-            problemTDBScore *= TDB_FLASH_MULTIPLIER;
-          }
-          tdbScore += problemTDBScore;
+      if (checks) {
+        ptsScore += PTS_SEND;
+        if (checks >= 2) {
+          ptsScore += PTS_FLASH_BONUS;
+          problemTDBScore *= TDB_FLASH_MULTIPLIER;
         }
+        tdbScore += problemTDBScore;
       }
+    }
 
-      return { user_id, user, score, rank, ptsScore, tdbScore } as const;
-    })
-  );
+    return { user_id, user, score, rank, ptsScore, tdbScore } as const;
+  });
 
   const ioResults =
-    usersWithResults.find(({ user_id }) => user_id === ioId) ?? null;
+    usersWithResults.find(({ user_id }) => user_id === io.id) ?? null;
+
+  const noParticipants = participants.length || NaN;
 
   const scores: Score[] = [];
   if (ioResults && isPast(groupInterval.start)) {
@@ -789,7 +754,7 @@ async function getIoTopLoggerGroupScores(
       Array.from(usersWithResults)
         .filter(({ user }) => (sex ? user?.gender === io.gender : true))
         .sort((a, b) => Number(b.score) - Number(a.score))
-        .findIndex(({ user_id }) => user_id === ioId) + 1;
+        .findIndex(({ user_id }) => user_id === io.id) + 1;
 
     if (group.score_system === "points") {
       scores.push({
@@ -818,7 +783,7 @@ async function getIoTopLoggerGroupScores(
           Array.from(usersWithResults)
             .filter(({ user }) => (sex ? user?.gender === io.gender : true))
             .sort((a, b) => b.tdbScore - a.tdbScore)
-            .findIndex(({ user_id }) => user_id === ioId) + 1;
+            .findIndex(({ user_id }) => user_id === io.id) + 1;
         scores.push({
           system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
           source: SCORING_SOURCE.DERIVED,
@@ -832,7 +797,7 @@ async function getIoTopLoggerGroupScores(
           Array.from(usersWithResults)
             .filter(({ user }) => (sex ? user?.gender === io.gender : true))
             .sort((a, b) => b.ptsScore - a.ptsScore)
-            .findIndex(({ user_id }) => user_id === ioId) + 1;
+            .findIndex(({ user_id }) => user_id === io.id) + 1;
         scores.push({
           system: SCORING_SYSTEM.POINTS,
           source: SCORING_SOURCE.DERIVED,
