@@ -15,6 +15,7 @@ import { HOUR_IN_SECONDS, shuffle } from "../../../utils";
 // import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 interface ScrapedAt {
   _io_scrapedAt?: Date;
