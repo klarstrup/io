@@ -413,12 +413,14 @@ export async function GET(/* request: NextRequest */) {
               );
             })
           );
+        } else {
+          console.info(`Skipping scraping gym groups for gym ${gymId}`);
         }
       })
     );
 
     /**
-     * User Groups
+     * Io User-Groups
      */
     const userGroupUsers = dbGroupUsers.filter(
       ({ user_id }) => user_id === topLoggerId
@@ -553,6 +555,8 @@ export async function GET(/* request: NextRequest */) {
           );
         })
       );
+    } else {
+      console.info(`Skipping scraping Io groups`);
     }
 
     await writer.write(encoder.encode("]"));
