@@ -706,11 +706,6 @@ function getIoTopLoggerGroupScores(
   ascends: TopLogger.AscendSingle[],
   sex?: boolean
 ) {
-  const groupInterval: DateInterval = {
-    start: group.date_loggable_start,
-    end: group.date_loggable_end,
-  } as const;
-
   const topsByClimbId = ascends.reduce(
     (topMemo, { climb_id, user_id, checks }) => {
       if (groupUsers.some((user) => user.user_id === user_id) && checks) {
@@ -749,7 +744,7 @@ function getIoTopLoggerGroupScores(
   const noParticipants = participants.length || NaN;
 
   const scores: Score[] = [];
-  if (ioResults && isPast(groupInterval.start)) {
+  if (ioResults && isPast(group.date_loggable_start)) {
     const ioRank =
       Array.from(usersWithResults)
         .filter(({ user }) => (sex ? user?.gender === io.gender : true))
