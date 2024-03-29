@@ -22,7 +22,8 @@ export function unique<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-export function chunk<I>(arr: I[], size: number) {
+export function chunk<I>(rawArr: I[], size: number) {
+  const arr = Array.from(rawArr);
   const results: I[][] = [];
 
   while (arr.length) results.push(arr.splice(0, size));
