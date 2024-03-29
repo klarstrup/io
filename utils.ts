@@ -1,4 +1,5 @@
 import { differenceInDays, isWithinInterval, type Interval } from "date-fns";
+import type { DateInterval } from "./lib";
 
 export class RelativeURL extends URL {
   constructor(url: string | URL) {
@@ -46,9 +47,9 @@ export function seconds2time(seconds: number) {
   }:${seconds < 10 ? `0${seconds}` : String(seconds)}`;
 }
 
-export const cotemporality = (interval: Interval, now = Date.now()) =>
-  new Date(interval.start).getTime() < now
-    ? now < new Date(interval.end).getTime()
+export const cotemporality = (interval: DateInterval, now = Date.now()) =>
+  interval.start.getTime() < now
+    ? now < interval.end.getTime()
       ? "current"
       : "past"
     : "future";

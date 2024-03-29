@@ -1,5 +1,6 @@
-import { isWithinInterval, type Interval } from "date-fns";
+import { isWithinInterval } from "date-fns";
 import { dbFetch } from "../fetch";
+import type { DateInterval } from "../lib";
 import { DAY_IN_SECONDS, RelativeURL } from "../utils";
 
 export namespace RunDouble {
@@ -86,7 +87,7 @@ const type = "training";
 const discipline = "running";
 export const getRunningTrainingData = async (
   runDoubleId: string,
-  trainingInterval: Interval
+  trainingInterval: DateInterval
 ) => {
   const runs = (await getRuns(runDoubleId, { maxAge: DAY_IN_SECONDS })).filter(
     ({ runDistance, completedLong }) =>

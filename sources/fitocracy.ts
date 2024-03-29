@@ -1,8 +1,9 @@
-import { format, type Interval } from "date-fns";
+import { format } from "date-fns";
 import dbConnect from "../dbConnect";
 import { dbFetch } from "../fetch";
+import type { DateInterval } from "../lib";
 import { User } from "../models/user";
-import { HOUR_IN_SECONDS, WEEK_IN_SECONDS } from "../utils";
+import { HOUR_IN_SECONDS } from "../utils";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -305,7 +306,7 @@ export const getExercises = async (
 export const getUserWorkoutIds = async (
   fitocracySessionId: string,
   userId: number,
-  interval?: Interval,
+  interval?: DateInterval,
   dbFetchOptions?: Parameters<typeof dbFetch>[2]
 ) =>
   Object.values(
@@ -351,7 +352,9 @@ const discipline = "lifting";
 
 export let exercises: Fitocracy.ExerciseData[] | null = null;
 
-export const getLiftingTrainingData = async (trainingInterval: Interval) => {
+export const getLiftingTrainingData = async (
+  trainingInterval: DateInterval
+) => {
   // Io is the only user in the database,
   const user = (await User.findOne())!;
 
@@ -383,8 +386,8 @@ export const getLiftingTrainingData = async (trainingInterval: Interval) => {
   const workoutsCursor = workoutsCollection.find({
     user_id: fitocracyUserId,
     workout_timestamp: {
-      $gte: new Date(trainingInterval["start"]),
-      $lt: new Date(trainingInterval["end"]),
+      $gte: trainingInterval.start,
+      $lt: trainingInterval.end,
     },
   });
 

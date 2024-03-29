@@ -1,6 +1,5 @@
 import DataLoader from "dataloader";
 import {
-  Interval,
   addHours,
   isAfter,
   isBefore,
@@ -12,6 +11,7 @@ import {
 import dbConnect from "../dbConnect";
 import { dbFetch } from "../fetch";
 import {
+  type DateInterval,
   EventEntry,
   PointsScore,
   SCORING_SOURCE,
@@ -552,7 +552,7 @@ export async function getIoTopLoggerGroupEvent(
   ).findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
 
-  const groupInterval: Interval = {
+  const groupInterval: DateInterval = {
     start: group.date_loggable_start,
     end: group.date_loggable_end,
   } as const;
@@ -583,8 +583,8 @@ export async function getIoTopLoggerGroupEvent(
         user_id: { $in: groupUsers.map(({ user_id }) => user_id) },
         climb_id: { $in: climbs.map(({ id }) => id) },
         date_logged: {
-          $gte: new Date(groupInterval.start),
-          $lte: new Date(groupInterval.end),
+          $gte: groupInterval.start,
+          $lte: groupInterval.end,
         },
       })
       .toArray()
@@ -596,8 +596,8 @@ export async function getIoTopLoggerGroupEvent(
         .find({
           user_id: ioId,
           date_logged: {
-            $gte: new Date(groupInterval.start),
-            $lte: new Date(groupInterval.end),
+            $gte: groupInterval.start,
+            $lte: groupInterval.end,
           },
         })
         .toArray();
@@ -631,10 +631,10 @@ export async function getIoTopLoggerGroupEvent(
     id: groupId,
     ioId,
     url: `https://app.toplogger.nu/en-us/${gym.slug}/comp/${groupId}/details`,
-    start: firstAscend || new Date(groupInterval.start),
-    end: isFuture(new Date(groupInterval.end))
-      ? new Date(groupInterval.end)
-      : lastAscend || new Date(groupInterval.end),
+    start: firstAscend || groupInterval.start,
+    end: isFuture(groupInterval.end)
+      ? groupInterval.end
+      : lastAscend || groupInterval.end,
     venue: gym.name.trim(),
     location: gym.address,
     event: group.name
@@ -702,7 +702,7 @@ async function getIoTopLoggerGroupScores(
     "toplogger_groups"
   ).findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
-  const groupInterval: Interval = {
+  const groupInterval: DateInterval = {
     start: group.date_loggable_start,
     end: group.date_loggable_end,
   } as const;
@@ -730,8 +730,8 @@ async function getIoTopLoggerGroupScores(
                 user_id,
                 climb_id: { $in: climbs.map(({ id }) => id) },
                 date_logged: {
-                  $gte: new Date(groupInterval.start),
-                  $lte: new Date(groupInterval.end),
+                  $gte: groupInterval.start,
+                  $lte: groupInterval.end,
                 },
               })
               .toArray()
@@ -889,11 +889,13 @@ export async function getTopLoggerGroupEventEntry(
 const source = "toplogger";
 const type = "training";
 const discipline = "bouldering";
-export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
+export const getBoulderingTrainingData = async (
+  trainingInterval: DateInterval
+) => {
   console.time(
-    `getBoulderingTrainingData for ${new Date(trainingInterval.start)
+    `getBoulderingTrainingData for ${trainingInterval.start
       .toISOString()
-      .replace(":00:00.000Z", "")} to ${new Date(trainingInterval.end)
+      .replace(":00:00.000Z", "")} to ${trainingInterval.end
       .toISOString()
       .replace(":00:00.000Z", "")}`
   );
@@ -909,8 +911,8 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
     .find({
       user_id: topLoggerId,
       date_logged: {
-        $gte: new Date(trainingInterval.start),
-        $lte: new Date(trainingInterval.end),
+        $gte: trainingInterval.start,
+        $lte: trainingInterval.end,
       },
     })
     .toArray();
@@ -956,9 +958,9 @@ export const getBoulderingTrainingData = async (trainingInterval: Interval) => {
   const count = ascends.length;
 
   console.timeEnd(
-    `getBoulderingTrainingData for ${new Date(trainingInterval.start)
+    `getBoulderingTrainingData for ${trainingInterval.start
       .toISOString()
-      .replace(":00:00.000Z", "")} to ${new Date(trainingInterval.end)
+      .replace(":00:00.000Z", "")} to ${trainingInterval.end
       .toISOString()
       .replace(":00:00.000Z", "")}`
   );

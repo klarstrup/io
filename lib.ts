@@ -1,3 +1,8 @@
+export interface DateInterval {
+  start: Date;
+  end: Date;
+}
+
 export enum SCORING_SYSTEM {
   TOPS_AND_ZONES = "TOPS_AND_ZONES",
   THOUSAND_DIVIDE_BY = "THOUSAND_DIVIDE_BY",

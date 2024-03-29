@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
-  Interval,
   differenceInMilliseconds,
   isAfter,
   isBefore,
@@ -13,7 +12,7 @@ import {
 import Script from "next/script";
 import { Fragment } from "react";
 import dbConnect from "../../dbConnect";
-import type { EventEntry } from "../../lib";
+import type { DateInterval, EventEntry } from "../../lib";
 import { User } from "../../models/user";
 import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
 import { getLiftingTrainingData } from "../../sources/fitocracy";
@@ -202,7 +201,7 @@ function balanceColumns() {
 }
 
 const getTrainingData = async (
-  trainingInterval: Interval,
+  trainingInterval: DateInterval,
   disciplines?: string[]
 ) => {
   await dbConnect();
@@ -240,7 +239,6 @@ const getData = async (
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
-      /*
       getIoClimbAlongCompetitionEventEntry(13, 844),
       getIoClimbAlongCompetitionEventEntry(20, 1284),
       getIoClimbAlongCompetitionEventEntry(26, 3381),
@@ -258,7 +256,6 @@ const getData = async (
       getIoClimbAlongCompetitionEventEntry(152),
       getIoClimbAlongCompetitionEventEntry(153),
       getIoClimbAlongCompetitionEventEntry(154),
-      */
       ...(topLoggerUserId
         ? await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
             "toplogger_group_users"
