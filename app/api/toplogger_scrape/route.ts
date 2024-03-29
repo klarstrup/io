@@ -425,7 +425,7 @@ export async function GET(/* request: NextRequest */) {
     const userGroupUsers = dbGroupUsers.filter(
       ({ user_id }) => user_id === topLoggerId
     );
-
+    console.info(`Scraping Io groups for user ${topLoggerId}`);
     if (
       true ||
       !userGroupUsers.length ||
