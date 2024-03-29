@@ -90,7 +90,7 @@ export async function GET(/* request: NextRequest */) {
     await writer.write(encoder.encode("[\n"));
 
     let first = true;
-    const flushJSON = async (data: unknown) => {
+    const flushJSON = async (data: string) => {
       first ? (first = false) : await writer.write(encoder.encode(",\n"));
       await writer.write(encoder.encode(JSON.stringify(data)));
     };
@@ -113,7 +113,7 @@ export async function GET(/* request: NextRequest */) {
         { upsert: true }
       );
 
-      await flushJSON(user);
+      await flushJSON("user:" + user.id);
     } else {
       console.info(`Skipping scraping Io ${topLoggerId}`);
     }
@@ -149,7 +149,7 @@ export async function GET(/* request: NextRequest */) {
               },
               { upsert: true }
             )
-            .then(() => flushJSON(ascend)),
+            .then(() => flushJSON("ascend:" + ascend.id)),
           /**
            * User Climbs
            */
@@ -174,7 +174,7 @@ export async function GET(/* request: NextRequest */) {
               },
               { upsert: true }
             )
-            .then(() => flushJSON(climb)),
+            .then(() => flushJSON("climb:" + climb.id)),
         ])
     );
     console.info(`Upserted ${ascends.length} Io ascends`);
@@ -195,7 +195,7 @@ export async function GET(/* request: NextRequest */) {
               { upsert: true }
             );
 
-            await flushJSON(gym);
+            await flushJSON("gym:" + gymId);
           }
         } else {
           console.info(`Skipping scraping gym ${gymId}`);
@@ -222,7 +222,7 @@ export async function GET(/* request: NextRequest */) {
                 { upsert: true }
               );
 
-              await flushJSON(hold);
+              await flushJSON("hold:" + hold.id);
             })
           );
         } else {
@@ -252,7 +252,7 @@ export async function GET(/* request: NextRequest */) {
                 { upsert: true }
               );
 
-              await flushJSON(gymGroup);
+              await flushJSON("gym_group:" + gymGroup.id);
 
               /**
                * Io Gym Groups Group
@@ -340,7 +340,7 @@ export async function GET(/* request: NextRequest */) {
                     { upsert: true }
                   );
 
-                  await flushJSON(climb);
+                  await flushJSON("climb:" + climb.id);
                 })
               );
 
@@ -360,7 +360,7 @@ export async function GET(/* request: NextRequest */) {
                     { upsert: true }
                   );
 
-                  await flushJSON(groupUser);
+                  await flushJSON("group_user:" + groupUser.id);
 
                   /**
                    * Group User
@@ -371,7 +371,7 @@ export async function GET(/* request: NextRequest */) {
                     { upsert: true }
                   );
 
-                  await flushJSON(user);
+                  await flushJSON("user:" + user.id);
 
                   /**
                    * Group User Ascends
@@ -406,7 +406,7 @@ export async function GET(/* request: NextRequest */) {
                         { upsert: true }
                       );
 
-                      await flushJSON(ascend);
+                      await flushJSON("ascend:" + ascend.id);
                     })
                   );
                 })
@@ -446,7 +446,7 @@ export async function GET(/* request: NextRequest */) {
             { upsert: true }
           );
 
-          await flushJSON(groupUser);
+          await flushJSON("group_user:" + groupUser.id);
 
           /**
            * User Groups Group
@@ -499,7 +499,7 @@ export async function GET(/* request: NextRequest */) {
             { upsert: true }
           );
 
-          await flushJSON(user);
+          await flushJSON("user:" + user.id);
 
           /**
            * Group User Ascends
@@ -523,7 +523,7 @@ export async function GET(/* request: NextRequest */) {
                 { upsert: true }
               );
 
-              await flushJSON(ascend);
+              await flushJSON("ascend:" + ascend.id);
 
               /**
                * Group User Ascend Climb
@@ -551,7 +551,7 @@ export async function GET(/* request: NextRequest */) {
               gymIds.add(climb.gym_id);
               if (climb.wall_id) wallIds.add(climb.wall_id);
 
-              await flushJSON(climb);
+              await flushJSON("climb:" + climb.id);
             })
           );
         })
