@@ -303,17 +303,16 @@ export async function GET(/* request: NextRequest */) {
                             { maxAge: HOUR_IN_SECONDS }
                           )
                         : Promise.resolve([])
-                      ).then(
-                        (ascends) =>
-                          Array.isArray(ascends)
-                            ? Promise.all(
-                                ascends.map((ascend) =>
-                                  upsertAscend(ascend).then(() =>
-                                    flushJSON("ascend:" + ascend.id)
-                                  )
+                      ).then((ascends) =>
+                        Array.isArray(ascends)
+                          ? Promise.all(
+                              ascends.map((ascend) =>
+                                upsertAscend(ascend).then(() =>
+                                  flushJSON("ascend:" + ascend.id)
                                 )
                               )
-                            : [] // Some toplogger users have privacy enabled for their ascends
+                            ) // Some toplogger users have privacy enabled for their ascends
+                          : []
                       ),
                     ])
                   )
