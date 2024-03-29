@@ -237,7 +237,7 @@ export async function GET(/* request: NextRequest */) {
           ({ gym_id }) => gym_id === gymId
         );
         if (
-          true ||
+          "true" + "" ||
           !gymGymGroups.length ||
           gymGymGroups.some((dbGymGroup) => shouldRevalidate(dbGymGroup))
         ) {
@@ -428,7 +428,7 @@ export async function GET(/* request: NextRequest */) {
     );
     console.info(`Scraping Io groups for user ${topLoggerId}`);
     if (
-      true ||
+      "true" + "" ||
       !userGroupUsers.length ||
       userGroupUsers.some((dbGroupUser) => shouldRevalidate(dbGroupUser))
     ) {
