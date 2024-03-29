@@ -427,6 +427,7 @@ export async function GET(/* request: NextRequest */) {
     );
 
     if (
+      true ||
       !userGroupUsers.length ||
       userGroupUsers.some((dbGroupUser) => shouldRevalidate(dbGroupUser))
     ) {
