@@ -130,7 +130,7 @@ export async function GET(/* request: NextRequest */) {
 
     const gymIds = new Set<number>();
     const wallIds = new Set<number>();
-    console.info(`Upserting Io ascends ${ascends.length}`);
+    console.info(`Upserting ${ascends.length} Io ascends`);
     for (const { climb, ...ascend } of shuffle(ascends)) {
       console.time("Upserting Io ascend " + ascend.id);
       console.info(`Updating Io ascend ${ascend.id}`);
@@ -177,6 +177,7 @@ export async function GET(/* request: NextRequest */) {
       await flushJSON(climb);
       console.timeEnd("Flushing Io ascend " + ascend.id);
     }
+    console.info(`Upserted ${ascends.length} Io ascends`);
     /**
      * User Gyms
      */
