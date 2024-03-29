@@ -11,13 +11,16 @@ import {
   getUser,
   gymLoader,
 } from "../../../sources/toplogger";
-import { HOUR_IN_SECONDS, shuffle } from "../../../utils";
+import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
 
 export const dynamic = "force-dynamic";
 
 interface ScrapedAt {
   _io_scrapedAt?: Date;
 }
+
+const randomSlice = <T>(array: T[], slices: number) =>
+  shuffle(chunk(array, Math.ceil(array.length / slices)))[0]!;
 
 const shouldRevalidate = (document?: ScrapedAt | null) =>
   !document ||
@@ -209,7 +212,7 @@ export async function GET(/* request: NextRequest */) {
     const gymIds = new Set<number>();
     console.info(`Upserting ${ascends.length} Io ascends`);
     await Promise.all(
-      shuffle(ascends).flatMap(({ climb, ...ascend }) => {
+      randomSlice(ascends, 8).flatMap(({ climb, ...ascend }) => {
         gymIds.add(climb.gym_id);
 
         return [
@@ -314,7 +317,7 @@ export async function GET(/* request: NextRequest */) {
               `Upserting ${climbs.length} group climbs for group ${groupUser.group_id} for user ${topLoggerId}`
             );
             await Promise.all(
-              shuffle(climbs).map((climb) =>
+              randomSlice(climbs, 8).map((climb) =>
                 upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
               )
             );
@@ -335,7 +338,7 @@ export async function GET(/* request: NextRequest */) {
               `Upserting ${groupUsers.length} group users for group ${groupUser.group_id}`
             );
             await Promise.all(
-              shuffle(groupUsers).map(({ user, ...groupUser }) =>
+              randomSlice(groupUsers, 8).map(({ user, ...groupUser }) =>
                 Promise.all([
                   upsertGroupUser(groupUser).then(() =>
                     flushJSON("group_user:" + groupUser.id)
