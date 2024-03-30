@@ -106,10 +106,9 @@ export default async function Page() {
   await Promise.all([
     (async () => {
       if (user.fitocracyUserId) {
-        for await (const workout of workoutsCollection.find(
-          { user_id: fitocracyUserId },
-          { sort: { workout_timestamp: -1 } }
-        )) {
+        for await (const workout of workoutsCollection.find({
+          user_id: fitocracyUserId,
+        })) {
           addDiaryEntry(workout.workout_timestamp, "workouts", workout);
         }
       }
