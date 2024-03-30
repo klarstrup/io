@@ -532,6 +532,49 @@ export const fetchGroupClimbs = async (
   return climbs;
 };
 
+const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
+  const DB = (await dbConnect()).connection.db;
+  const climbsCollection =
+    DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs");
+
+  if (group.climb_groups.length) {
+    return await climbsCollection
+      .find({ id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) } })
+      .toArray();
+  }
+
+  const groupInterval: DateInterval = {
+    start: subHours(group.date_loggable_start, 16),
+    end: addHours(group.date_loggable_end, 21),
+  };
+  const climbs: TopLogger.ClimbMultiple[] = [];
+  await DB.collection<TopLogger.GymSingle>("toplogger_gyms")
+    .find({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } })
+    .toArray()
+    .then((gyms) =>
+      Promise.all(
+        gyms.map((gym) =>
+          climbsCollection
+            .find({ gym_id: gym.id })
+            .toArray()
+            .then((gymClimbs) =>
+              gymClimbs.forEach((climb) => {
+                if (
+                  (climb.name || climb.number) &&
+                  climb.date_live_start &&
+                  isWithinInterval(climb.date_live_start, groupInterval)
+                ) {
+                  climbs.push(climb);
+                }
+              })
+            )
+        )
+      )
+    );
+
+  return climbs;
+};
+
 const TDB_BASE = 1000;
 const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
@@ -555,7 +598,7 @@ export async function getIoTopLoggerGroupEvent(
   const groupInterval: DateInterval = {
     start: group.date_loggable_start,
     end: group.date_loggable_end,
-  } as const;
+  };
 
   const gyms = (
     await Promise.all(
@@ -563,7 +606,7 @@ export async function getIoTopLoggerGroupEvent(
     )
   ).filter(Boolean);
 
-  const climbs = await fetchGroupClimbs(group);
+  const climbs = await getGroupClimbs(group);
 
   const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
     id: ioId,
