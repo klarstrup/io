@@ -15,6 +15,7 @@ import { getRuns, type RunDouble } from "../../sources/rundouble";
 import { type TopLogger } from "../../sources/toplogger";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
+import { unique } from "../../utils";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,8 @@ export default async function Page() {
     .find()
     .toArray();
 
-  await Promise.all([
+  const [gyms] = await Promise.all([
+    DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
     (async () => {
       if (user.fitocracyUserId) {
         console.time("workouts");
@@ -178,182 +180,175 @@ export default async function Page() {
 
   return (
     <div>
-      {await Promise.all(
-        diaryEntries.map(async ([date, { food, workouts, ascends, runs }]) => {
-          const dayTotalEnergy = food?.reduce(
-            (acc, foodEntry) =>
-              acc + foodEntry.nutritional_contents.energy.value,
-            0
-          );
-          const dayTotalProtein = food?.reduce(
-            (acc, foodEntry) =>
-              acc + (foodEntry.nutritional_contents.protein || 0),
-            0
-          );
+      {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
+        const dayTotalEnergy = food?.reduce(
+          (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
+          0
+        );
+        const dayTotalProtein = food?.reduce(
+          (acc, foodEntry) =>
+            acc + (foodEntry.nutritional_contents.protein || 0),
+          0
+        );
 
-          return (
-            <div
-              key={date}
-              style={{
-                boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
-                borderRadius: "2em",
-                padding: "2em",
-                margin: "1em",
-                background: "white",
-              }}
-            >
+        return (
+          <div
+            key={date}
+            style={{
+              boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
+              borderRadius: "2em",
+              padding: "2em",
+              margin: "1em",
+              background: "white",
+            }}
+          >
+            <div>
+              <big>{date}</big>{" "}
+              {dayTotalEnergy && dayTotalProtein ? (
+                <small>
+                  {Math.round(dayTotalEnergy)} kcal,{" "}
+                  {Math.round(dayTotalProtein)}g protein
+                </small>
+              ) : null}
+            </div>
+            <div>
               <div>
-                <big>{date}</big>{" "}
-                {dayTotalEnergy && dayTotalProtein ? (
-                  <small>
-                    {Math.round(dayTotalEnergy)} kcal,{" "}
-                    {Math.round(dayTotalProtein)}g protein
-                  </small>
+                {food ? (
+                  <ol style={{ padding: 0 }}>
+                    {[
+                      MyFitnessPal.MealName.Breakfast,
+                      MyFitnessPal.MealName.Lunch,
+                      MyFitnessPal.MealName.Dinner,
+                      MyFitnessPal.MealName.Snacks,
+                    ]
+                      .filter((mealName) =>
+                        food?.some(
+                          (foodEntry) => foodEntry.meal_name === mealName
+                        )
+                      )
+                      .map((mealName) => {
+                        const mealTotalEnergy = food
+                          ?.filter(
+                            (foodEntry) => foodEntry.meal_name === mealName
+                          )
+                          .reduce(
+                            (acc, foodEntry) =>
+                              acc + foodEntry.nutritional_contents.energy.value,
+                            0
+                          );
+                        const mealTotalProtein = food
+                          ?.filter(
+                            (foodEntry) => foodEntry.meal_name === mealName
+                          )
+                          .reduce(
+                            (acc, foodEntry) =>
+                              acc +
+                              (foodEntry.nutritional_contents.protein || 0),
+                            0
+                          );
+
+                        return (
+                          <li key={mealName}>
+                            <div>
+                              <b>{mealName}</b>{" "}
+                              {mealTotalEnergy && mealTotalProtein ? (
+                                <small>
+                                  {Math.round(mealTotalEnergy)} kcal,{" "}
+                                  {Math.round(mealTotalProtein)}g protein
+                                </small>
+                              ) : null}
+                            </div>
+                            <ul style={{ padding: 0 }}>
+                              {food
+                                ?.filter(
+                                  (foodEntry) =>
+                                    foodEntry.meal_name === mealName
+                                )
+                                .map((foodEntry) => (
+                                  <li
+                                    key={foodEntry.id}
+                                    style={{ listStyle: "none" }}
+                                  >
+                                    {foodEntry.food.description}
+                                    <small>
+                                      {" "}
+                                      {foodEntry.servings *
+                                        foodEntry.serving_size.value !==
+                                      1 ? (
+                                        <>
+                                          {foodEntry.servings *
+                                            foodEntry.serving_size.value}{" "}
+                                          {foodEntry.serving_size.unit.match(
+                                            /container/i
+                                          )
+                                            ? "x "
+                                            : null}
+                                        </>
+                                      ) : null}
+                                      {foodEntry.serving_size.unit.match(
+                                        /container/i
+                                      )
+                                        ? foodEntry.serving_size.unit.replace(
+                                            /(container \((.+)\))/i,
+                                            "$2"
+                                          )
+                                        : foodEntry.serving_size.unit}
+                                    </small>
+                                  </li>
+                                ))}
+                            </ul>
+                          </li>
+                        );
+                      })}
+                  </ol>
                 ) : null}
               </div>
               <div>
-                <div>
-                  {food ? (
-                    <ol style={{ padding: 0 }}>
-                      {[
-                        MyFitnessPal.MealName.Breakfast,
-                        MyFitnessPal.MealName.Lunch,
-                        MyFitnessPal.MealName.Dinner,
-                        MyFitnessPal.MealName.Snacks,
-                      ]
-                        .filter((mealName) =>
-                          food?.some(
-                            (foodEntry) => foodEntry.meal_name === mealName
-                          )
-                        )
-                        .map((mealName) => {
-                          const mealTotalEnergy = food
-                            ?.filter(
-                              (foodEntry) => foodEntry.meal_name === mealName
-                            )
-                            .reduce(
-                              (acc, foodEntry) =>
-                                acc +
-                                foodEntry.nutritional_contents.energy.value,
-                              0
-                            );
-                          const mealTotalProtein = food
-                            ?.filter(
-                              (foodEntry) => foodEntry.meal_name === mealName
-                            )
-                            .reduce(
-                              (acc, foodEntry) =>
-                                acc +
-                                (foodEntry.nutritional_contents.protein || 0),
-                              0
-                            );
-
+                {workouts?.length
+                  ? workouts?.map((workout) => (
+                      <div
+                        key={workout.id}
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {workout.root_group.children.map((workoutGroup) => {
+                          const exercise = exercises.find(
+                            ({ id }) => workoutGroup.exercise.exercise_id === id
+                          )!;
                           return (
-                            <li key={mealName}>
-                              <div>
-                                <b>{mealName}</b>{" "}
-                                {mealTotalEnergy && mealTotalProtein ? (
-                                  <small>
-                                    {Math.round(mealTotalEnergy)} kcal,{" "}
-                                    {Math.round(mealTotalProtein)}g protein
-                                  </small>
-                                ) : null}
-                              </div>
-                              <ul style={{ padding: 0 }}>
-                                {food
-                                  ?.filter(
-                                    (foodEntry) =>
-                                      foodEntry.meal_name === mealName
-                                  )
-                                  .map((foodEntry) => (
-                                    <li
-                                      key={foodEntry.id}
-                                      style={{ listStyle: "none" }}
-                                    >
-                                      {foodEntry.food.description}
-                                      <small>
-                                        {" "}
-                                        {foodEntry.servings *
-                                          foodEntry.serving_size.value !==
-                                        1 ? (
-                                          <>
-                                            {foodEntry.servings *
-                                              foodEntry.serving_size.value}{" "}
-                                            {foodEntry.serving_size.unit.match(
-                                              /container/i
-                                            )
-                                              ? "x "
-                                              : null}
-                                          </>
-                                        ) : null}
-                                        {foodEntry.serving_size.unit.match(
-                                          /container/i
-                                        )
-                                          ? foodEntry.serving_size.unit.replace(
-                                              /(container \((.+)\))/i,
-                                              "$2"
-                                            )
-                                          : foodEntry.serving_size.unit}
-                                      </small>
-                                    </li>
-                                  ))}
-                              </ul>
-                            </li>
+                            <div key={workoutGroup.id}>
+                              <b style={{ whiteSpace: "nowrap" }}>
+                                {(exercise.aliases[1] || exercise.name).replace(
+                                  "Barbell",
+                                  ""
+                                )}
+                              </b>
+                              <ol style={{ padding: 0, margin: 0 }}>
+                                {workoutGroup.exercise.sets.map((set) => (
+                                  <li
+                                    key={set.id}
+                                    style={{ whiteSpace: "nowrap" }}
+                                  >
+                                    {set.description_string}
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
                           );
                         })}
-                    </ol>
-                  ) : null}
-                </div>
-                <div>
-                  {workouts?.length
-                    ? workouts?.map((workout) => (
-                        <div
-                          key={workout.id}
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {workout.root_group.children.map((workoutGroup) => {
-                            const exercise = exercises.find(
-                              ({ id }) =>
-                                workoutGroup.exercise.exercise_id === id
-                            )!;
-                            return (
-                              <div key={workoutGroup.id}>
-                                <b style={{ whiteSpace: "nowrap" }}>
-                                  {(
-                                    exercise.aliases[1] || exercise.name
-                                  ).replace("Barbell", "")}
-                                </b>
-                                <ol style={{ padding: 0, margin: 0 }}>
-                                  {workoutGroup.exercise.sets.map((set) => (
-                                    <li
-                                      key={set.id}
-                                      style={{ whiteSpace: "nowrap" }}
-                                    >
-                                      {set.description_string}
-                                    </li>
-                                  ))}
-                                </ol>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))
-                    : null}
-                  {ascends?.length
-                    ? (
-                        await DB.collection<TopLogger.GymSingle>(
-                          "toplogger_gyms"
+                      </div>
+                    ))
+                  : null}
+                {ascends?.length
+                  ? gyms
+                      .filter((gym) =>
+                        unique(ascends.map(({ climb }) => climb.gym_id)).some(
+                          (gym_id) => gym_id === gym.id
                         )
-                          .find({
-                            id: {
-                              $in: ascends.map(({ climb }) => climb.gym_id),
-                            },
-                          })
-                          .toArray()
-                      ).map((gym) => {
+                      )
+                      .map((gym) => {
                         const gymAscends = ascends.filter(
                           ({ climb }) => climb.gym_id === gym.id
                         );
@@ -385,35 +380,34 @@ export default async function Page() {
                           </div>
                         );
                       })
-                    : null}
-                  {runs?.length ? (
-                    <ol>
-                      {runs.map((run) => (
-                        <li key={run.key}>
-                          {run.runDistance}m {run.runTime}ms
-                        </li>
-                      ))}
-                    </ol>
-                  ) : null}
-                </div>
+                  : null}
+                {runs?.length ? (
+                  <ol>
+                    {runs.map((run) => (
+                      <li key={run.key}>
+                        {run.runDistance}m {run.runTime}ms
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
               </div>
-              <hr />
-              {!food?.length ? (
-                <i style={{ display: "block" }}>No meals logged</i>
-              ) : null}
-              {!workouts?.length ? (
-                <i style={{ display: "block" }}>No lifts logged</i>
-              ) : null}
-              {!ascends?.length ? (
-                <i style={{ display: "block" }}>No climbs logged</i>
-              ) : null}
-              {!runs?.length ? (
-                <i style={{ display: "block" }}>No runs logged</i>
-              ) : null}
             </div>
-          );
-        })
-      )}
+            <hr />
+            {!food?.length ? (
+              <i style={{ display: "block" }}>No meals logged</i>
+            ) : null}
+            {!workouts?.length ? (
+              <i style={{ display: "block" }}>No lifts logged</i>
+            ) : null}
+            {!ascends?.length ? (
+              <i style={{ display: "block" }}>No climbs logged</i>
+            ) : null}
+            {!runs?.length ? (
+              <i style={{ display: "block" }}>No runs logged</i>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
