@@ -97,49 +97,56 @@ export default async function Page() {
     diary[dayStr] = day;
   }
 
-  if (user.fitocracyUserId) {
-    for await (const workout of workoutsCollection.find(
-      { user_id: fitocracyUserId },
-      { sort: { workout_timestamp: -1 } }
-    )) {
-      addDiaryEntry(workout.workout_timestamp, "workouts", workout);
-    }
-  }
+  const holds: TopLogger.Hold[] = await DB.collection<TopLogger.Hold>(
+    "toplogger_holds"
+  )
+    .find()
+    .toArray();
 
-  if (user.myFitnessPalUserId) {
-    for await (const foodEntry of foodEntriesCollection.find({
-      user_id: user.myFitnessPalUserId,
-    })) {
-      addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
-    }
-  }
+  await Promise.all([
+    (async () => {
+      if (user.fitocracyUserId) {
+        for await (const workout of workoutsCollection.find(
+          { user_id: fitocracyUserId },
+          { sort: { workout_timestamp: -1 } }
+        )) {
+          addDiaryEntry(workout.workout_timestamp, "workouts", workout);
+        }
+      }
+    })(),
+    (async () => {
+      if (user.myFitnessPalUserId) {
+        for await (const foodEntry of foodEntriesCollection.find({
+          user_id: user.myFitnessPalUserId,
+        })) {
+          addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
+        }
+      }
+    })(),
+    (async () => {
+      if (user.topLoggerId) {
+        const ascends = await DB.collection<TopLogger.AscendSingle>(
+          "toplogger_ascends"
+        )
+          .find({ user_id: user.topLoggerId })
+          .toArray();
 
-  let holds: TopLogger.Hold[] = [];
-  if (user.topLoggerId) {
-    const ascends = await DB.collection<TopLogger.AscendSingle>(
-      "toplogger_ascends"
-    )
-      .find({ user_id: user.topLoggerId })
-      .toArray();
+        const climbs = await DB.collection<TopLogger.ClimbMultiple>(
+          "toplogger_climbs"
+        )
+          .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
+          .toArray();
 
-    holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
-      .find()
-      .toArray();
-
-    const climbs = await DB.collection<TopLogger.ClimbMultiple>(
-      "toplogger_climbs"
-    )
-      .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
-      .toArray();
-
-    for (const ascend of ascends) {
-      if (!ascend.date_logged) continue;
-      addDiaryEntry(new Date(ascend.date_logged), "ascends", {
-        ...ascend,
-        climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-      });
-    }
-  }
+        for (const ascend of ascends) {
+          if (!ascend.date_logged) continue;
+          addDiaryEntry(new Date(ascend.date_logged), "ascends", {
+            ...ascend,
+            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+          });
+        }
+      }
+    })(),
+  ]);
 
   if (user.runDoubleId) {
     for (const run of await getRuns(user.runDoubleId)) {
