@@ -121,7 +121,7 @@ export default async function Page() {
         for await (const foodEntry of foodEntriesCollection.find({
           user_id: user.myFitnessPalUserId,
         })) {
-          addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
+          addDiaryEntry(foodEntry.datetime, "food", foodEntry);
         }
         console.timeEnd("food");
       }
