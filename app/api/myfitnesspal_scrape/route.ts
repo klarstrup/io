@@ -75,7 +75,7 @@ export async function GET(/* request: NextRequest */) {
   (async () => {
     const encoder = new TextEncoder();
 
-    await writer.write(encoder.encode("["));
+    await writer.write(encoder.encode("[\n"));
     let first = true;
 
     const now = new Date();
@@ -123,7 +123,7 @@ export async function GET(/* request: NextRequest */) {
             if (first) {
               first = false;
             } else {
-              await writer.write(encoder.encode(","));
+              await writer.write(encoder.encode(",\n"));
             }
             await writer.write(
               encoder.encode(JSON.stringify(reportEntry.date))
@@ -133,7 +133,7 @@ export async function GET(/* request: NextRequest */) {
         break yearLoop;
       }
     }
-    await writer.write(encoder.encode("]"));
+    await writer.write(encoder.encode("\n]"));
 
     await writer.close();
   })().catch(() => {});
