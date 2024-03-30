@@ -13,7 +13,6 @@ import { User } from "../../models/user";
 import {
   Fitocracy,
   exercises,
-  getExercises,
   getUserProfileBySessionId,
 } from "../../sources/fitocracy";
 import {
@@ -30,8 +29,6 @@ import {
 import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
-
-let exercisesById = exercises;
 
 export const dynamic = "force-dynamic";
 
@@ -77,10 +74,6 @@ export default async function Page() {
     }
     fitocracyUserId = fitocracyProfile.id;
     await user.updateOne({ fitocracyUserId });
-  }
-
-  if (!exercisesById) {
-    exercisesById = await getExercises(fitocracySessionId);
   }
 
   const diary: Record<
@@ -338,7 +331,7 @@ export default async function Page() {
                             }}
                           >
                             {workout.root_group.children.map((workoutGroup) => {
-                              const exercise = exercisesById!.find(
+                              const exercise = exercises.find(
                                 ({ id }) =>
                                   workoutGroup.exercise.exercise_id === id
                               )!;

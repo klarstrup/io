@@ -4,6 +4,7 @@ import { dbFetch } from "../fetch";
 import type { DateInterval } from "../lib";
 import { User } from "../models/user";
 import { HOUR_IN_SECONDS } from "../utils";
+import exercicez from "./fitocracy.exercises.json" assert { type: "json" };
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -270,6 +271,8 @@ export namespace Fitocracy {
   }
 }
 
+export const exercises = exercicez as Fitocracy.ExerciseData[];
+
 const fetchFitocracy = async <T>(
   fitocracySessionId: string,
   input: string | URL,
@@ -288,20 +291,6 @@ const fetchFitocracy = async <T>(
 
   return result.data;
 };
-
-export const getExercises = async (
-  fitocracySessionId: string,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  await fetchFitocracy<Fitocracy.ExerciseData[]>(
-    fitocracySessionId,
-    "/api/v2/exercises/",
-    undefined,
-    {
-      maxAge: Infinity, // I don't think fitocracy will live much longer
-      ...dbFetchOptions,
-    }
-  );
 
 export const getUserWorkoutIds = async (
   fitocracySessionId: string,
@@ -350,8 +339,6 @@ export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
 const type = "training";
 const discipline = "lifting";
 
-export let exercises: Fitocracy.ExerciseData[] | null = null;
-
 export const getLiftingTrainingData = async (
   trainingInterval: DateInterval
 ) => {
@@ -373,10 +360,6 @@ export const getLiftingTrainingData = async (
     }
     fitocracyUserId = fitocracyProfile.id;
     await user.updateOne({ fitocracyUserId });
-  }
-
-  if (!exercises) {
-    exercises = await getExercises(fitocracySessionId);
   }
 
   const workoutsCollection = (
@@ -445,10 +428,7 @@ export const getLiftingTrainingData = async (
     liftByLift: Object.entries(biggestLifts)
       .map(
         ([exerciseId, set]) =>
-          [
-            exercises!.find(({ id }) => id === Number(exerciseId))!,
-            set,
-          ] as const
+          [exercises.find(({ id }) => id === Number(exerciseId))!, set] as const
       )
       .filter(([exercise]) => exerciseIdsThatICareAbout.includes(exercise.id)),
   } as const;

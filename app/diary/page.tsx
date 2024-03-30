@@ -4,7 +4,6 @@ import dbConnect from "../../dbConnect";
 import { User } from "../../models/user";
 import {
   exercises,
-  getExercises,
   getUserProfileBySessionId,
   type Fitocracy,
 } from "../../sources/fitocracy";
@@ -16,8 +15,6 @@ import { getRuns, type RunDouble } from "../../sources/rundouble";
 import { type TopLogger } from "../../sources/toplogger";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
-
-let exercisesById = exercises;
 
 export const dynamic = "force-dynamic";
 
@@ -66,10 +63,6 @@ export default async function Page() {
         myFitnessPalUserName: session.user.name,
       });
     }
-  }
-
-  if (!exercisesById && user.fitocracySessionId) {
-    exercisesById = await getExercises(user.fitocracySessionId);
   }
 
   const diary: Record<
@@ -307,7 +300,7 @@ export default async function Page() {
                           }}
                         >
                           {workout.root_group.children.map((workoutGroup) => {
-                            const exercise = exercisesById!.find(
+                            const exercise = exercises.find(
                               ({ id }) =>
                                 workoutGroup.exercise.exercise_id === id
                             )!;
