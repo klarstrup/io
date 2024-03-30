@@ -434,7 +434,7 @@ export async function getIoClimbAlongCompetitionEvent(
               });
 
               return memo;
-            }, new Map<string, { number: string; color?: string; grade?: number; attempt: boolean; zone: boolean; top: boolean; flash: boolean }>())
+            }, new Map<string, { number: string; color: string | undefined; grade: number | undefined; attempt: boolean; zone: boolean; top: boolean; flash: boolean }>())
             .values()
         )
       : null,
