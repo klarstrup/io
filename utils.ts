@@ -102,3 +102,21 @@ export const getMaxAgeFactor = (eventInterval: Interval, now = Date.now()) =>
         Math.abs(differenceInDays(now, eventInterval.start)),
         Math.abs(differenceInDays(now, eventInterval.end))
       ) * 10;
+
+export function allPromises<
+  T extends readonly ((() => Promise<unknown>) | Promise<unknown>)[]
+>(
+  ...values: T
+): Promise<{
+  -readonly [P in keyof T]: Awaited<
+    T[P] extends () => Promise<unknown> ? ReturnType<T[P]> : T[P]
+  >;
+}> {
+  return Promise.all(
+    values.map((value) => (typeof value === "function" ? value() : value))
+  ) as Promise<{
+    -readonly [P in keyof T]: Awaited<
+      T[P] extends () => Promise<unknown> ? ReturnType<T[P]> : T[P]
+    >;
+  }>;
+}

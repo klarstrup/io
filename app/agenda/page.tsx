@@ -21,7 +21,7 @@ import {
 } from "../../sources/myfitnesspal";
 import { getRuns, type RunDouble } from "../../sources/rundouble";
 import { type TopLogger } from "../../sources/toplogger";
-import { unique } from "../../utils";
+import { allPromises, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
 
@@ -125,7 +125,7 @@ export default async function Page() {
     .find()
     .toArray();
 
-  const [gyms] = await Promise.all([
+  const [gyms] = await allPromises(
     DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
     (async () => {
       if (user.fitocracyUserId) {
@@ -142,7 +142,7 @@ export default async function Page() {
         console.timeEnd("workouts");
       }
     })(),
-    (async () => {
+    async () => {
       if (user.myFitnessPalUserId) {
         console.time("food");
         for await (const foodEntry of foodEntriesCollection.find({
@@ -156,8 +156,8 @@ export default async function Page() {
         }
         console.timeEnd("food");
       }
-    })(),
-    (async () => {
+    },
+    async () => {
       if (user.topLoggerId) {
         console.time("ascends");
         const ascends = await DB.collection<TopLogger.AscendSingle>(
@@ -187,8 +187,8 @@ export default async function Page() {
         }
         console.timeEnd("ascends");
       }
-    })(),
-    (async () => {
+    },
+    async () => {
       if (user.runDoubleId) {
         console.time("runs");
         for (const run of await getRuns(user.runDoubleId)) {
@@ -200,8 +200,8 @@ export default async function Page() {
         }
         console.timeEnd("runs");
       }
-    })(),
-  ]);
+    }
+  );
 
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>
