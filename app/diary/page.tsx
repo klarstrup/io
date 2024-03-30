@@ -143,7 +143,7 @@ export default async function Page() {
 
         for (const ascend of ascends) {
           if (!ascend.date_logged) continue;
-          addDiaryEntry(new Date(ascend.date_logged), "ascends", {
+          addDiaryEntry(ascend.date_logged, "ascends", {
             ...ascend,
             climb: climbs.find(({ id }) => id === ascend.climb_id)!,
           });
