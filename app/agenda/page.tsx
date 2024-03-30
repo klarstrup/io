@@ -2,65 +2,59 @@ import {
   addDays,
   eachDayOfInterval,
   endOfDay,
-  interval,
   isWithinInterval,
   startOfDay,
 } from "date-fns";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
+import type { DateInterval } from "../../lib";
 import { User } from "../../models/user";
 import {
-  Fitocracy,
   exercises,
   getUserProfileBySessionId,
+  type Fitocracy,
 } from "../../sources/fitocracy";
 import {
   MyFitnessPal,
   getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
-import { RunDouble, getRuns } from "../../sources/rundouble";
-import {
-  TopLogger,
-  fetchAscends,
-  fetchGymHolds,
-  gymLoader,
-} from "../../sources/toplogger";
-import { HOUR_IN_SECONDS, WEEK_IN_SECONDS, unique } from "../../utils";
+import { getRuns, type RunDouble } from "../../sources/rundouble";
+import { type TopLogger } from "../../sources/toplogger";
+import { unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  const dbClient = await dbConnect();
+  const DB = (await dbConnect()).connection.db;
 
-  const allDayToday = interval(startOfDay(new Date()), endOfDay(new Date()));
-  const allDayTomorrow = interval(
-    startOfDay(addDays(new Date(), 1)),
-    endOfDay(addDays(new Date(), 1))
-  );
-  const allDayTodayAndTomorrow = interval(
-    allDayToday.start,
-    allDayTomorrow.end
-  );
+  const allDayToday: DateInterval = {
+    start: startOfDay(new Date()),
+    end: endOfDay(new Date()),
+  };
+  const allDayTomorrow: DateInterval = {
+    start: startOfDay(addDays(new Date(), 1)),
+    end: endOfDay(addDays(new Date(), 1)),
+  };
+  const allDayTodayAndTomorrow: DateInterval = {
+    start: allDayToday.start,
+    end: allDayTomorrow.end,
+  };
 
   const workoutsCollection =
-    dbClient.connection.db.collection<Fitocracy.MongoWorkout>(
-      "fitocracy_workouts"
-    );
+    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
-  const foodEntriesCollection =
-    dbClient.connection.db.collection<MyFitnessPal.MongoFoodEntry>(
-      "myfitnesspal_food_entries"
-    );
+  const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
+    "myfitnesspal_food_entries"
+  );
 
   const session = await getServerSession(authOptions);
 
   const user = await User.findOne({ _id: session?.user.id });
 
-  const fitocracySessionId = user?.fitocracySessionId;
-  if (!fitocracySessionId) return null;
+  if (!user) return null;
 
   let fitocracyUserId = user.fitocracyUserId;
   if (!fitocracyUserId) {
@@ -74,6 +68,23 @@ export default async function Page() {
     }
     fitocracyUserId = fitocracyProfile.id;
     await user.updateOne({ fitocracyUserId });
+  }
+
+  if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+    const myFitnessPalToken = user?.myFitnessPalToken;
+    if (!myFitnessPalToken) return null;
+    let session: MyFitnessPal.Session;
+    try {
+      session = await getMyFitnessPalSession(myFitnessPalToken);
+    } catch (e) {
+      return null;
+    }
+    if (session) {
+      await user.updateOne({
+        myFitnessPalUserId: session.userId,
+        myFitnessPalUserName: session.user.name,
+      });
+    }
   }
 
   const diary: Record<
@@ -108,65 +119,89 @@ export default async function Page() {
     diary[dayStr] = day;
   }
 
-  if (user.fitocracyUserId) {
-    for await (const workout of workoutsCollection.find(
-      {
-        user_id: fitocracyUserId,
-        workout_timestamp: {
-          $gte: allDayTodayAndTomorrow.start,
-          $lt: allDayTodayAndTomorrow.end,
-        },
-      },
-      { sort: { workout_timestamp: -1 } }
-    )) {
-      addDiaryEntry(workout.workout_timestamp, "workouts", workout);
-    }
-  }
+  const holds: TopLogger.Hold[] = await DB.collection<TopLogger.Hold>(
+    "toplogger_holds"
+  )
+    .find()
+    .toArray();
 
-  if (user.myFitnessPalToken) {
-    for await (const foodEntry of foodEntriesCollection.find({
-      user_id: (await getMyFitnessPalSession(user.myFitnessPalToken)).userId,
-      datetime: {
-        $gte: allDayTodayAndTomorrow.start,
-        $lt: allDayTodayAndTomorrow.end,
-      },
-    })) {
-      addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
-    }
-  }
-
-  let holds: TopLogger.Hold[] = [];
-  if (user.topLoggerId) {
-    const ascends = (
-      await fetchAscends(
-        { filters: { user_id: user.topLoggerId }, includes: ["climb"] },
-        { maxAge: HOUR_IN_SECONDS }
-      )
-    ).filter((ascend) => {
-      const date = ascend.date_logged && new Date(ascend.date_logged);
-      return date && isWithinInterval(date, allDayTodayAndTomorrow);
-    }) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
-    for (const ascend of ascends) {
-      if (!ascend.date_logged) continue;
-      addDiaryEntry(new Date(ascend.date_logged), "ascends", ascend);
-    }
-
-    holds = (
-      await Promise.all(
-        unique(ascends.map(({ climb }) => climb.gym_id)).map((gymId) =>
-          fetchGymHolds(gymId, undefined, { maxAge: WEEK_IN_SECONDS })
-        )
-      )
-    ).flat();
-  }
-
-  if (user.runDoubleId) {
-    for (const run of await getRuns(user.runDoubleId)) {
-      if (isWithinInterval(new Date(run.completed), allDayTodayAndTomorrow)) {
-        addDiaryEntry(new Date(run.completed), "runs", run);
+  const [gyms] = await Promise.all([
+    DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
+    (async () => {
+      if (user.fitocracyUserId) {
+        console.time("workouts");
+        for await (const workout of workoutsCollection.find({
+          user_id: fitocracyUserId,
+          workout_timestamp: {
+            $gte: allDayTodayAndTomorrow.start,
+            $lt: allDayTodayAndTomorrow.end,
+          },
+        })) {
+          addDiaryEntry(workout.workout_timestamp, "workouts", workout);
+        }
+        console.timeEnd("workouts");
       }
-    }
-  }
+    })(),
+    (async () => {
+      if (user.myFitnessPalUserId) {
+        console.time("food");
+        for await (const foodEntry of foodEntriesCollection.find({
+          user_id: user.myFitnessPalUserId,
+          datetime: {
+            $gte: allDayTodayAndTomorrow.start,
+            $lt: allDayTodayAndTomorrow.end,
+          },
+        })) {
+          addDiaryEntry(foodEntry.datetime, "food", foodEntry);
+        }
+        console.timeEnd("food");
+      }
+    })(),
+    (async () => {
+      if (user.topLoggerId) {
+        console.time("ascends");
+        const ascends = await DB.collection<TopLogger.AscendSingle>(
+          "toplogger_ascends"
+        )
+          .find({
+            user_id: user.topLoggerId,
+            date_logged: {
+              $gte: allDayTodayAndTomorrow.start,
+              $lt: allDayTodayAndTomorrow.end,
+            },
+          })
+          .toArray();
+
+        const climbs = await DB.collection<TopLogger.ClimbMultiple>(
+          "toplogger_climbs"
+        )
+          .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
+          .toArray();
+
+        for (const ascend of ascends) {
+          if (!ascend.date_logged) continue;
+          addDiaryEntry(ascend.date_logged, "ascends", {
+            ...ascend,
+            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+          });
+        }
+        console.timeEnd("ascends");
+      }
+    })(),
+    (async () => {
+      if (user.runDoubleId) {
+        console.time("runs");
+        for (const run of await getRuns(user.runDoubleId)) {
+          if (
+            isWithinInterval(new Date(run.completed), allDayTodayAndTomorrow)
+          ) {
+            addDiaryEntry(new Date(run.completed), "runs", run);
+          }
+        }
+        console.timeEnd("runs");
+      }
+    })(),
+  ]);
 
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>
@@ -184,256 +219,245 @@ export default async function Page() {
 
   return (
     <div>
-      {await Promise.all(
-        eachDayOfInterval(allDayTodayAndTomorrow)
-          .reverse()
-          .map(async (day) => {
-            const dayStr = `${day.getFullYear()}-${
-              day.getMonth() + 1
-            }-${day.getDate()}`;
-            const [date, { food, workouts, ascends, runs }] = diaryEntries.find(
-              ([entryDate]) => entryDate === dayStr
-            ) || [dayStr, {} as (typeof diaryEntries)[number][1]];
+      {eachDayOfInterval(allDayTodayAndTomorrow)
+        .reverse()
+        .map((day) => {
+          const dayStr = `${day.getFullYear()}-${
+            day.getMonth() + 1
+          }-${day.getDate()}`;
+          const [date, { food, workouts, ascends, runs }] = diaryEntries.find(
+            ([entryDate]) => entryDate === dayStr
+          ) || [dayStr, {} as (typeof diaryEntries)[number][1]];
 
-            const dayTotalEnergy = food?.reduce(
-              (acc, foodEntry) =>
-                acc + foodEntry.nutritional_contents.energy.value,
-              0
-            );
-            const dayTotalProtein = food?.reduce(
-              (acc, foodEntry) =>
-                acc + (foodEntry.nutritional_contents.protein || 0),
-              0
-            );
+          const dayTotalEnergy = food?.reduce(
+            (acc, foodEntry) =>
+              acc + foodEntry.nutritional_contents.energy.value,
+            0
+          );
+          const dayTotalProtein = food?.reduce(
+            (acc, foodEntry) =>
+              acc + (foodEntry.nutritional_contents.protein || 0),
+            0
+          );
 
-            return (
-              <div
-                key={date}
-                style={{
-                  boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
-                  borderRadius: "2em",
-                  padding: "2em",
-                  margin: "1em",
-                  background: "white",
-                }}
-              >
+          return (
+            <div
+              key={date}
+              style={{
+                boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
+                borderRadius: "2em",
+                padding: "2em",
+                margin: "1em",
+                background: "white",
+              }}
+            >
+              <div>
+                <big>{date}</big>{" "}
+                {dayTotalEnergy && dayTotalProtein ? (
+                  <small>
+                    {Math.round(dayTotalEnergy)} kcal,{" "}
+                    {Math.round(dayTotalProtein)}g protein
+                  </small>
+                ) : null}
+              </div>
+              <div>
                 <div>
-                  <big>{date}</big>{" "}
-                  {dayTotalEnergy && dayTotalProtein ? (
-                    <small>
-                      {Math.round(dayTotalEnergy)} kcal,{" "}
-                      {Math.round(dayTotalProtein)}g protein
-                    </small>
+                  {food ? (
+                    <ol style={{ padding: 0 }}>
+                      {[
+                        MyFitnessPal.MealName.Breakfast,
+                        MyFitnessPal.MealName.Lunch,
+                        MyFitnessPal.MealName.Dinner,
+                        MyFitnessPal.MealName.Snacks,
+                      ]
+                        .filter((mealName) =>
+                          food?.some(
+                            (foodEntry) => foodEntry.meal_name === mealName
+                          )
+                        )
+                        .map((mealName) => {
+                          const mealTotalEnergy = food
+                            ?.filter(
+                              (foodEntry) => foodEntry.meal_name === mealName
+                            )
+                            .reduce(
+                              (acc, foodEntry) =>
+                                acc +
+                                foodEntry.nutritional_contents.energy.value,
+                              0
+                            );
+                          const mealTotalProtein = food
+                            ?.filter(
+                              (foodEntry) => foodEntry.meal_name === mealName
+                            )
+                            .reduce(
+                              (acc, foodEntry) =>
+                                acc +
+                                (foodEntry.nutritional_contents.protein || 0),
+                              0
+                            );
+
+                          return (
+                            <li key={mealName}>
+                              <div>
+                                <b>{mealName}</b>{" "}
+                                {mealTotalEnergy && mealTotalProtein ? (
+                                  <small>
+                                    {Math.round(mealTotalEnergy)} kcal,{" "}
+                                    {Math.round(mealTotalProtein)}g protein
+                                  </small>
+                                ) : null}
+                              </div>
+                              <ul style={{ padding: 0 }}>
+                                {food
+                                  ?.filter(
+                                    (foodEntry) =>
+                                      foodEntry.meal_name === mealName
+                                  )
+                                  .map((foodEntry) => (
+                                    <li
+                                      key={foodEntry.id}
+                                      style={{ listStyle: "none" }}
+                                    >
+                                      {foodEntry.food.description}
+                                      <small>
+                                        {" "}
+                                        {foodEntry.servings *
+                                          foodEntry.serving_size.value !==
+                                        1 ? (
+                                          <>
+                                            {foodEntry.servings *
+                                              foodEntry.serving_size.value}{" "}
+                                            {foodEntry.serving_size.unit.match(
+                                              /container/i
+                                            )
+                                              ? "x "
+                                              : null}
+                                          </>
+                                        ) : null}
+                                        {foodEntry.serving_size.unit.match(
+                                          /container/i
+                                        )
+                                          ? foodEntry.serving_size.unit.replace(
+                                              /(container \((.+)\))/i,
+                                              "$2"
+                                            )
+                                          : foodEntry.serving_size.unit}
+                                      </small>
+                                    </li>
+                                  ))}
+                              </ul>
+                            </li>
+                          );
+                        })}
+                    </ol>
                   ) : null}
                 </div>
                 <div>
-                  <div>
-                    {food ? (
-                      <ol style={{ padding: 0 }}>
-                        {[
-                          MyFitnessPal.MealName.Breakfast,
-                          MyFitnessPal.MealName.Lunch,
-                          MyFitnessPal.MealName.Dinner,
-                          MyFitnessPal.MealName.Snacks,
-                        ]
-                          .filter((mealName) =>
-                            food?.some(
-                              (foodEntry) => foodEntry.meal_name === mealName
-                            )
-                          )
-                          .map((mealName) => {
-                            const mealTotalEnergy = food
-                              ?.filter(
-                                (foodEntry) => foodEntry.meal_name === mealName
-                              )
-                              .reduce(
-                                (acc, foodEntry) =>
-                                  acc +
-                                  foodEntry.nutritional_contents.energy.value,
-                                0
-                              );
-                            const mealTotalProtein = food
-                              ?.filter(
-                                (foodEntry) => foodEntry.meal_name === mealName
-                              )
-                              .reduce(
-                                (acc, foodEntry) =>
-                                  acc +
-                                  (foodEntry.nutritional_contents.protein || 0),
-                                0
-                              );
-
+                  {workouts?.length
+                    ? workouts?.map((workout) => (
+                        <div
+                          key={workout.id}
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {workout.root_group.children.map((workoutGroup) => {
+                            const exercise = exercises.find(
+                              ({ id }) =>
+                                workoutGroup.exercise.exercise_id === id
+                            )!;
                             return (
-                              <li key={mealName}>
-                                <div>
-                                  <b>{mealName}</b>{" "}
-                                  {mealTotalEnergy && mealTotalProtein ? (
-                                    <small>
-                                      {Math.round(mealTotalEnergy)} kcal,{" "}
-                                      {Math.round(mealTotalProtein)}g protein
-                                    </small>
-                                  ) : null}
-                                </div>
-                                <ul style={{ padding: 0 }}>
-                                  {food
-                                    ?.filter(
-                                      (foodEntry) =>
-                                        foodEntry.meal_name === mealName
-                                    )
-                                    .map((foodEntry) => (
-                                      <li
-                                        key={foodEntry.id}
-                                        style={{ listStyle: "none" }}
-                                      >
-                                        {foodEntry.food.description}
-                                        <small>
-                                          {" "}
-                                          {foodEntry.servings *
-                                            foodEntry.serving_size.value !==
-                                          1 ? (
-                                            <>
-                                              {foodEntry.servings *
-                                                foodEntry.serving_size
-                                                  .value}{" "}
-                                              {foodEntry.serving_size.unit.match(
-                                                /container/i
-                                              )
-                                                ? "x "
-                                                : null}
-                                            </>
-                                          ) : null}
-                                          {foodEntry.serving_size.unit.match(
-                                            /container/i
-                                          )
-                                            ? foodEntry.serving_size.unit.replace(
-                                                /(container \((.+)\))/i,
-                                                "$2"
-                                              )
-                                            : foodEntry.serving_size.unit}
-                                        </small>
-                                      </li>
-                                    ))}
-                                </ul>
-                              </li>
-                            );
-                          })}
-                      </ol>
-                    ) : null}
-                  </div>
-                  <div>
-                    {workouts?.length
-                      ? workouts?.map((workout) => (
-                          <div
-                            key={workout.id}
-                            style={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            {workout.root_group.children.map((workoutGroup) => {
-                              const exercise = exercises.find(
-                                ({ id }) =>
-                                  workoutGroup.exercise.exercise_id === id
-                              )!;
-                              return (
-                                <div key={workoutGroup.id}>
-                                  <b style={{ whiteSpace: "nowrap" }}>
-                                    {(
-                                      exercise.aliases[1] || exercise.name
-                                    ).replace("Barbell", "")}
-                                  </b>
-                                  <ol style={{ padding: 0, margin: 0 }}>
-                                    {workoutGroup.exercise.sets.map((set) => (
-                                      <li
-                                        key={set.id}
-                                        style={{ whiteSpace: "nowrap" }}
-                                      >
-                                        {set.description_string}
-                                      </li>
-                                    ))}
-                                  </ol>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ))
-                      : null}
-                    {ascends?.length
-                      ? (
-                          await gymLoader.loadMany(
-                            unique(ascends.map(({ climb }) => climb.gym_id))
-                          )
-                        )
-                          .filter((gym): gym is TopLogger.GymMultiple =>
-                            Boolean(
-                              gym && typeof gym === "object" && "id" in gym
-                            )
-                          )
-                          .map((gym) => {
-                            const gymAscends = ascends.filter(
-                              ({ climb }) => climb.gym_id === gym.id
-                            );
-                            if (!gymAscends.length) return null;
-                            return (
-                              <div
-                                key={gym.id}
-                                style={{
-                                  marginTop: "1em",
-                                }}
-                              >
-                                <b>{gym.name}</b>
-                                <ProblemByProblem
-                                  problemByProblem={gymAscends.map(
-                                    ({
-                                      climb: { grade, hold_id },
-                                      checks,
-                                    }) => ({
-                                      number: "",
-                                      color:
-                                        holds.find(
-                                          (hold) => hold.id === hold_id
-                                        )?.color || undefined,
-                                      grade: Number(grade) || undefined,
-                                      attempt: true,
-                                      // TopLogger does not do zones, at least not for Beta Boulders
-                                      zone: checks >= 1,
-                                      top: checks >= 1,
-                                      flash: checks >= 2,
-                                    })
-                                  )}
-                                />
+                              <div key={workoutGroup.id}>
+                                <b style={{ whiteSpace: "nowrap" }}>
+                                  {(
+                                    exercise.aliases[1] || exercise.name
+                                  ).replace("Barbell", "")}
+                                </b>
+                                <ol style={{ padding: 0, margin: 0 }}>
+                                  {workoutGroup.exercise.sets.map((set) => (
+                                    <li
+                                      key={set.id}
+                                      style={{ whiteSpace: "nowrap" }}
+                                    >
+                                      {set.description_string}
+                                    </li>
+                                  ))}
+                                </ol>
                               </div>
                             );
-                          })
-                      : null}
-                    {runs?.length ? (
-                      <ol>
-                        {runs.map((run) => (
-                          <li key={run.key}>
-                            {run.runDistance}m {run.runTime}ms
-                          </li>
-                        ))}
-                      </ol>
-                    ) : null}
-                  </div>
+                          })}
+                        </div>
+                      ))
+                    : null}
+                  {ascends?.length
+                    ? gyms
+                        .filter((gym) =>
+                          unique(ascends.map(({ climb }) => climb.gym_id)).some(
+                            (gym_id) => gym_id === gym.id
+                          )
+                        )
+                        .map((gym) => {
+                          const gymAscends = ascends.filter(
+                            ({ climb }) => climb.gym_id === gym.id
+                          );
+                          if (!gymAscends.length) return null;
+                          return (
+                            <div
+                              key={gym.id}
+                              style={{
+                                marginTop: "1em",
+                              }}
+                            >
+                              <b>{gym.name}</b>
+                              <ProblemByProblem
+                                problemByProblem={gymAscends.map(
+                                  ({ climb: { grade, hold_id }, checks }) => ({
+                                    number: "",
+                                    color:
+                                      holds.find((hold) => hold.id === hold_id)
+                                        ?.color || undefined,
+                                    grade: Number(grade) || undefined,
+                                    attempt: true,
+                                    // TopLogger does not do zones, at least not for Beta Boulders
+                                    zone: checks >= 1,
+                                    top: checks >= 1,
+                                    flash: checks >= 2,
+                                  })
+                                )}
+                              />
+                            </div>
+                          );
+                        })
+                    : null}
+                  {runs?.length ? (
+                    <ol>
+                      {runs.map((run) => (
+                        <li key={run.key}>
+                          {run.runDistance}m {run.runTime}ms
+                        </li>
+                      ))}
+                    </ol>
+                  ) : null}
                 </div>
-                <hr />
-                {!food?.length ? (
-                  <i style={{ display: "block" }}>No meals logged</i>
-                ) : null}
-                {!workouts?.length ? (
-                  <i style={{ display: "block" }}>No lifts logged</i>
-                ) : null}
-                {!ascends?.length ? (
-                  <i style={{ display: "block" }}>No climbs logged</i>
-                ) : null}
-                {!runs?.length ? (
-                  <i style={{ display: "block" }}>No runs logged</i>
-                ) : null}
               </div>
-            );
-          })
-      )}
+              <hr />
+              {!food?.length ? (
+                <i style={{ display: "block" }}>No meals logged</i>
+              ) : null}
+              {!workouts?.length ? (
+                <i style={{ display: "block" }}>No lifts logged</i>
+              ) : null}
+              {!ascends?.length ? (
+                <i style={{ display: "block" }}>No climbs logged</i>
+              ) : null}
+              {!runs?.length ? (
+                <i style={{ display: "block" }}>No runs logged</i>
+              ) : null}
+            </div>
+          );
+        })}
     </div>
   );
 }
