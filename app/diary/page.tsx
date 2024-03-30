@@ -106,24 +106,29 @@ export default async function Page() {
   await Promise.all([
     (async () => {
       if (user.fitocracyUserId) {
+        console.time("workouts");
         for await (const workout of workoutsCollection.find({
           user_id: fitocracyUserId,
         })) {
           addDiaryEntry(workout.workout_timestamp, "workouts", workout);
         }
+        console.timeEnd("workouts");
       }
     })(),
     (async () => {
       if (user.myFitnessPalUserId) {
+        console.time("food");
         for await (const foodEntry of foodEntriesCollection.find({
           user_id: user.myFitnessPalUserId,
         })) {
           addDiaryEntry(new Date(foodEntry.date), "food", foodEntry);
         }
+        console.timeEnd("food");
       }
     })(),
     (async () => {
       if (user.topLoggerId) {
+        console.time("ascends");
         const ascends = await DB.collection<TopLogger.AscendSingle>(
           "toplogger_ascends"
         )
@@ -143,15 +148,19 @@ export default async function Page() {
             climb: climbs.find(({ id }) => id === ascend.climb_id)!,
           });
         }
+        console.timeEnd("ascends");
+      }
+    })(),
+    (async () => {
+      if (user.runDoubleId) {
+        console.time("runs");
+        for (const run of await getRuns(user.runDoubleId)) {
+          addDiaryEntry(new Date(run.completed), "runs", run);
+        }
+        console.timeEnd("runs");
       }
     })(),
   ]);
-
-  if (user.runDoubleId) {
-    for (const run of await getRuns(user.runDoubleId)) {
-      addDiaryEntry(new Date(run.completed), "runs", run);
-    }
-  }
 
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>
