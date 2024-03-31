@@ -100,7 +100,7 @@ export namespace Fitocracy {
     WallPushUPS = "wall push ups",
   }
 
-  enum InputType {
+  export enum InputType {
     Distance = "distance",
     Heartrate = "heartrate",
     Options = "options",
@@ -433,4 +433,5 @@ export const getLiftingTrainingData = async (
       .filter(([exercise]) => exerciseIdsThatICareAbout.includes(exercise.id)),
   } as const;
 };
-const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];
+
+export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];

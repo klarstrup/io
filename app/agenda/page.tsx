@@ -11,9 +11,10 @@ import dbConnect from "../../dbConnect";
 import type { DateInterval } from "../../lib";
 import { User } from "../../models/user";
 import {
+  Fitocracy,
+  exerciseIdsThatICareAbout,
   exercises,
   getUserProfileBySessionId,
-  type Fitocracy,
 } from "../../sources/fitocracy";
 import {
   MyFitnessPal,
@@ -124,6 +125,91 @@ export default async function Page() {
   )
     .find()
     .toArray();
+
+  const nextSets = (
+    await Promise.all(
+      exerciseIdsThatICareAbout.map(
+        async (id) =>
+          [
+            id,
+            (await workoutsCollection.findOne(
+              { "root_group.children.exercise.exercise_id": id },
+              { sort: { workout_timestamp: -1 } }
+            ))!,
+          ] as const
+      )
+    )
+  )
+    .map(([id, workout]) => {
+      const { workout_timestamp } = workout;
+      const { exercise } = workout.root_group.children.find(
+        ({ exercise: { exercise_id } }) => exercise_id === id
+      )!;
+
+      const heaviestSet = exercise.sets.reduce((acc, set) => {
+        const setWeight = set.inputs.find(
+          (input) => input.type === Fitocracy.InputType.Weight
+        )?.value;
+        const accWeight = acc?.inputs.find(
+          (input) => input.type === Fitocracy.InputType.Weight
+        )?.value;
+        return setWeight && accWeight && setWeight > accWeight ? set : acc;
+      }, exercise.sets[0]);
+
+      const workingSets = exercise.sets.filter(
+        (set) =>
+          set.inputs.find((input) => input.type === Fitocracy.InputType.Weight)
+            ?.value ===
+          heaviestSet?.inputs.find(
+            (input) => input.type === Fitocracy.InputType.Weight
+          )?.value
+      );
+
+      let successful = true;
+      if (
+        workingSets.length >= 3 ||
+        (exercise.exercise_id === 3 && workingSets.length >= 1)
+      ) {
+        if (
+          workingSets.every(
+            ({ inputs }) =>
+              inputs.find(({ type }) => type === Fitocracy.InputType.Reps)!
+                .value < 5
+          )
+        ) {
+          successful = false;
+        }
+      } else {
+        successful = false;
+      }
+
+      const nextWorkingSet = successful
+        ? ([1, 183, 532].includes(exercise.exercise_id) ? 1.25 : 2.5) +
+          (heaviestSet?.inputs.find(
+            (input) => input.type === Fitocracy.InputType.Weight
+          )?.value || 0)
+        : 0.9 *
+          (heaviestSet?.inputs.find(
+            (input) => input.type === Fitocracy.InputType.Weight
+          )?.value || 0);
+
+      return {
+        workout_timestamp,
+        exercise_id: exercise.exercise_id,
+        exercise: exercises.find(({ id }) => id === exercise.exercise_id)!,
+        successful,
+        nextWorkingSet: String(nextWorkingSet).endsWith(".25")
+          ? nextWorkingSet - 0.25
+          : nextWorkingSet,
+      };
+    })
+    .sort(
+      (a, b) =>
+        (a?.workout_timestamp.getTime() || 0) -
+        (b?.workout_timestamp.getTime() || 0)
+    );
+
+  console.log(nextSets);
 
   const [gyms] = await allPromises(
     DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
@@ -354,6 +440,33 @@ export default async function Page() {
                   ) : null}
                 </div>
                 <div>
+                  <div>
+                    <b>Next Sets</b>
+                    <ol>
+                      {nextSets.map(
+                        ({
+                          exercise,
+                          successful,
+                          nextWorkingSet,
+                          workout_timestamp,
+                        }) => (
+                          <li key={exercise.id}>
+                            <b>
+                              {(exercise.aliases[1] || exercise.name).replace(
+                                "Barbell",
+                                ""
+                              )}{" "}
+                              {successful ? null : " (failed)"}
+                            </b>{" "}
+                            {nextWorkingSet}kg Last set{" "}
+                            {String(
+                              workout_timestamp.toLocaleDateString("da-DK")
+                            )}
+                          </li>
+                        )
+                      )}
+                    </ol>
+                  </div>
                   {workouts?.length
                     ? workouts?.map((workout) => (
                         <div
