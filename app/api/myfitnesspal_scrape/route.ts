@@ -1,4 +1,4 @@
-import { differenceInMonths } from "date-fns";
+import { differenceInMonths, isFuture } from "date-fns";
 import { DateTime } from "luxon";
 import dbConnect from "../../../dbConnect";
 import { User } from "../../../models/user";
@@ -81,7 +81,9 @@ export async function GET(/* request: NextRequest */) {
     const now = new Date();
     yearLoop: for (const year of years) {
       for (const month of months) {
-        if (differenceInMonths(now, new Date(year, Number(month) - 1)) > 3) {
+        if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
+
+        if (differenceInMonths(now, new Date(year, Number(month) - 1)) > 1) {
           const entriesForMonth = await foodEntries.countDocuments({
             user_id: myFitnessPalUserId,
             date: { $regex: new RegExp(`^${year}-${month}-`) },
@@ -95,6 +97,7 @@ export async function GET(/* request: NextRequest */) {
           year,
           month
         );
+        console.log(`Got ${reportEntries.length} entries for ${year}-${month}`);
         if (Array.isArray(reportEntries)) {
           // Wipe the month to be replaced with the new data
           await foodEntries.deleteMany({
@@ -130,7 +133,6 @@ export async function GET(/* request: NextRequest */) {
             );
           }
         }
-        break yearLoop;
       }
     }
     await writer.write(encoder.encode("\n]"));
