@@ -97,7 +97,7 @@ export async function GET(/* request: NextRequest */) {
           year,
           month
         );
-        console.log(`Got ${reportEntries.length} entries for ${year}-${month}`);
+
         if (Array.isArray(reportEntries)) {
           // Wipe the month to be replaced with the new data
           await foodEntries.deleteMany({
