@@ -183,7 +183,7 @@ export const getMyFitnessPalReport = async (
     },
     {
       maxAge:
-        HOUR_IN_SECONDS *
+        (HOUR_IN_SECONDS / 2) *
         getMaxAgeFactor({ start: startOfMonth(month), end: endOfMonth(month) }),
     }
   );
