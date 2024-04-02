@@ -9,9 +9,15 @@ import Script from "next/script";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
 import { User } from "../../models/user";
-import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
+import {
+  getIoClimbAlongCompetitionEventEntry,
+  ioClimbAlongEventsWithIds,
+} from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
-import { getSportsTimingEventEntry } from "../../sources/sportstiming";
+import {
+  getSportsTimingEventEntry,
+  ioSportsTimingEventsWithIds,
+} from "../../sources/sportstiming";
 import {
   TopLogger,
   fetchUser,
@@ -128,23 +134,9 @@ const getData = async (
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
-      getIoClimbAlongCompetitionEventEntry(13, 844),
-      getIoClimbAlongCompetitionEventEntry(20, 1284),
-      getIoClimbAlongCompetitionEventEntry(26, 3381),
-      getIoClimbAlongCompetitionEventEntry(27, 8468),
-      getIoClimbAlongCompetitionEventEntry(28, 10770),
-      getIoClimbAlongCompetitionEventEntry(30, 11951),
-      getIoClimbAlongCompetitionEventEntry(32, 12091),
-      getIoClimbAlongCompetitionEventEntry(33, 12477),
-      getIoClimbAlongCompetitionEventEntry(34, 14063),
-      getIoClimbAlongCompetitionEventEntry(147),
-      getIoClimbAlongCompetitionEventEntry(148),
-      getIoClimbAlongCompetitionEventEntry(149),
-      getIoClimbAlongCompetitionEventEntry(150),
-      getIoClimbAlongCompetitionEventEntry(151),
-      getIoClimbAlongCompetitionEventEntry(152),
-      getIoClimbAlongCompetitionEventEntry(153),
-      getIoClimbAlongCompetitionEventEntry(154),
+      ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
+        getIoClimbAlongCompetitionEventEntry(eventId, ioId)
+      ),
       ...(topLoggerUserId
         ? await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
             "toplogger_group_users"
@@ -159,15 +151,9 @@ const getData = async (
   }
   if (disciplines?.includes("running") || !disciplines?.length) {
     eventsPromises.push(
-      getSportsTimingEventEntry(12576, 5298030),
-      getSportsTimingEventEntry(11107, 5177996),
-      getSportsTimingEventEntry(10694, 5096890),
-      getSportsTimingEventEntry(8962, 4433356),
-      getSportsTimingEventEntry(8940, 3999953),
-      getSportsTimingEventEntry(7913, 3825124),
-      getSportsTimingEventEntry(5805, 2697593),
-      getSportsTimingEventEntry(5647, 2619935),
-      getSportsTimingEventEntry(4923, 2047175)
+      ...ioSportsTimingEventsWithIds.map(([eventId, ioId]) =>
+        getSportsTimingEventEntry(eventId, ioId)
+      )
     );
   }
   if (disciplines?.includes("metal") || !disciplines?.length) {

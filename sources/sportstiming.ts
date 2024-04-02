@@ -316,3 +316,15 @@ export async function getSportsTimingEventEntry(
     end: addHours(parseSTDate(event.RawDate), 16),
   } as const;
 }
+
+export const ioSportsTimingEventsWithIds = [
+  [12576, 5298030],
+  [11107, 5177996],
+  [10694, 5096890],
+  [8962, 4433356],
+  [8940, 3999953],
+  [7913, 3825124],
+  [5805, 2697593],
+  [5647, 2619935],
+  [4923, 2047175],
+] as const;
