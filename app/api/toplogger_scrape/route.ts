@@ -204,7 +204,6 @@ export async function GET(/* request: NextRequest */) {
      * Io Ascends
      */
     console.info(`Scraping Io ascends ${topLoggerId}`);
-    console.time("Io ascends");
     await Promise.all([
       ...randomSlice(
         (await fetchAscends(
