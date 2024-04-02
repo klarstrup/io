@@ -100,10 +100,10 @@ const ResultList = ({
 
 export default async function TimelineEventContent({
   eventEntry,
-  urlDisciplines,
+  disciplines,
 }: {
   eventEntry: EventEntry;
-  urlDisciplines: string[] | undefined;
+  disciplines: string[] | undefined;
 }) {
   const {
     source,
@@ -194,7 +194,7 @@ export default async function TimelineEventContent({
       >
         <Link
           title={`${discipline} ${type}`}
-          href={urlDisciplines?.includes(discipline) ? "/" : `/${discipline}`}
+          href={disciplines?.includes(discipline) ? "/" : `/${discipline}`}
           style={{ textDecoration: "none", cursor: "pointer" }}
         >
           {discipline === "metal"
@@ -284,7 +284,7 @@ export default async function TimelineEventContent({
             </div>
           ))
         : null}
-      {urlDisciplines?.includes(discipline) && derivedScores.length ? (
+      {disciplines?.includes(discipline) && derivedScores.length ? (
         <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
           {derivedScores.map((score) => (
             <fieldset

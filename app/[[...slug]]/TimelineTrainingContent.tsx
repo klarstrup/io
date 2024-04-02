@@ -8,14 +8,14 @@ import LiftByLift from "./LiftByLift";
 
 export default function TimelineTrainingContent({
   training,
-  urlDisciplines,
+  disciplines,
 }: {
   training: NonNullable<
     | Awaited<ReturnType<typeof getLiftingTrainingData>>
     | Awaited<ReturnType<typeof getRunningTrainingData>>
     | Awaited<ReturnType<typeof getBoulderingTrainingData>>
   >;
-  urlDisciplines?: string[];
+  disciplines?: string[];
 }) {
   const { type, discipline, count } = training;
 
@@ -23,7 +23,7 @@ export default function TimelineTrainingContent({
     <div style={{ display: "flex", gap: "4px" }} data-via={training.source}>
       <Link
         title={`${discipline} ${type}`}
-        href={urlDisciplines?.includes(discipline) ? "/" : `/${discipline}`}
+        href={disciplines?.includes(discipline) ? "/" : `/${discipline}`}
         style={{
           textDecoration: "none",
           cursor: "pointer",

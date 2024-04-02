@@ -585,9 +585,6 @@ export async function getIoTopLoggerGroupEvent(
   ioId: number,
   sex?: boolean
 ) {
-  console.time(
-    `getIoTopLoggerGroupEvent for groupId ${groupId} and userId ${ioId}`
-  );
   const DB = (await dbConnect()).connection.db;
 
   const group = await DB.collection<TopLogger.GroupSingle>(
@@ -734,10 +731,6 @@ export async function getIoTopLoggerGroupEvent(
     ),
   } as const;
 
-  console.timeEnd(
-    `getIoTopLoggerGroupEvent for groupId ${groupId} and userId ${ioId}`
-  );
-
   return r;
 }
 
@@ -854,9 +847,6 @@ export async function getTopLoggerGroupEventEntry(
   groupId: number,
   userId: number
 ): Promise<EventEntry> {
-  console.time(
-    `getTopLoggerGroupEventEntry for groupId ${groupId} and userId ${userId}`
-  );
   const DB = (await dbConnect()).connection.db;
 
   const group = await DB.collection<TopLogger.GroupSingle>(
@@ -868,9 +858,6 @@ export async function getTopLoggerGroupEventEntry(
     "toplogger_gyms"
   ).findOne({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } }))!;
 
-  console.timeEnd(
-    `getTopLoggerGroupEventEntry for groupId ${groupId} and userId ${userId}`
-  );
   return {
     source,
     type: "competition",
@@ -895,9 +882,6 @@ const discipline = "bouldering";
 export const getBoulderingTrainingData = async (
   trainingInterval: DateInterval
 ) => {
-  console.time(
-    `getBoulderingTrainingData for ${trainingInterval.start.toLocaleDateString()} to ${trainingInterval.end.toLocaleDateString()}`
-  );
   const DB = (await dbConnect()).connection.db;
 
   // Io is the only user in the database,
@@ -955,8 +939,5 @@ export const getBoulderingTrainingData = async (
 
   const count = ascends.length;
 
-  console.timeEnd(
-    `getBoulderingTrainingData for ${trainingInterval.start.toLocaleDateString()} to ${trainingInterval.end.toLocaleDateString()}`
-  );
   return { source, type, discipline, count, problemByProblem } as const;
 };

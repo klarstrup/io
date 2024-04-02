@@ -29,17 +29,17 @@ const getTrainingData = async (
 export async function TimelineTrainingArticle({
   from,
   to,
-  urlDisciplines,
+  disciplines,
 }: {
   from: Date;
   to: Date;
-  urlDisciplines: string[] | undefined;
+  disciplines: string[] | undefined;
 }) {
   if (isFuture(from)) return null;
 
   const trainingInterval = { start: min([from, to]), end: max([from, to]) };
   const trainings: Awaited<ReturnType<typeof getTrainingData>> = (
-    await getTrainingData(trainingInterval, urlDisciplines)
+    await getTrainingData(trainingInterval, disciplines)
   ).filter(({ count }) => count);
 
   return trainings.length ? (
@@ -65,7 +65,7 @@ export async function TimelineTrainingArticle({
             <TimelineTrainingContent
               key={training.type + training.discipline}
               training={training}
-              urlDisciplines={urlDisciplines}
+              disciplines={disciplines}
             />
           ))}
         </div>

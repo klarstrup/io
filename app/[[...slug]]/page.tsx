@@ -2,7 +2,8 @@ import {
   differenceInMilliseconds,
   isAfter,
   isBefore,
-  startOfMonth,
+  isWithinInterval,
+  subMonths,
 } from "date-fns";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
@@ -22,45 +23,77 @@ import {
   getTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
 import "../page.css";
-import { BalanceColumnsScript } from "./BalanceColumnsScript";
-import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
+import LoadMore from "./LoadMore";
 import { TimelineEventsList } from "./TimelineEventsList";
 import UserStuff from "./UserStuff";
 
+const monthsPerPage = 3;
+
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
-  searchParams,
 }: {
   params: { slug?: string[] };
-  searchParams: { [key: string]: string };
 }) {
-  const urlDisciplines: string[] | undefined =
+  const disciplines: string[] | undefined =
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||
     undefined;
-  const from = searchParams.from
-    ? new Date(searchParams.from as unknown as string)
-    : startOfMonth(new Date());
-  const to = searchParams.to
-    ? new Date(searchParams.to as unknown as string)
-    : undefined;
-  const events = await getData(urlDisciplines, { from, to });
+  const from = subMonths(new Date(), monthsPerPage);
+  const to = undefined;
+  const events = await getData(disciplines, { from, to });
+
+  const initialCursor = JSON.stringify({
+    disciplines,
+    from: subMonths(from, monthsPerPage),
+    to: from,
+  });
 
   return (
     <div>
       <UserStuff />
       <section id="timeline">
-        <TimelineEventsList
-          events={events}
-          urlDisciplines={urlDisciplines}
-          from={from}
-          to={to}
-        />
-        <LoadPreviousMonthWhenYouSeeThisAlright from={from} />
+        <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
+          <TimelineEventsList
+            events={events}
+            disciplines={disciplines}
+            from={from}
+            to={to}
+          />
+        </LoadMore>
       </section>
-      <BalanceColumnsScript />
     </div>
   );
+}
+
+async function loadMoreData(cursor: string) {
+  "use server";
+
+  const { disciplines, from, to } = JSON.parse(cursor) as {
+    disciplines?: string[];
+    from?: Date;
+    to?: Date;
+  };
+
+  const isAtLimit = isAfter(new Date(2013, 9), to || from || new Date());
+
+  if (isAtLimit) return [null, null] as const;
+
+  const events = await getData(disciplines, { from, to });
+
+  return [
+    <TimelineEventsList
+      from={from}
+      to={to}
+      disciplines={disciplines}
+      events={events}
+      key={JSON.stringify({ disciplines, from, to })}
+    />,
+    JSON.stringify({
+      disciplines,
+      from: subMonths(from!, monthsPerPage),
+      to: from,
+    }),
+  ] as const;
 }
 
 const getData = async (
@@ -113,9 +146,17 @@ const getData = async (
 
   return (await Promise.all(eventsPromises))
     .filter((event) => {
-      if (from && isBefore(event.end, from)) return false;
+      const eventCenter = new Date(
+        (event.start.getTime() + event.end.getTime()) / 2
+      );
 
-      if (to && isAfter(event.start, to)) return false;
+      if (from && to) {
+        return isWithinInterval(eventCenter, { start: from, end: to });
+      }
+
+      if (from && isBefore(eventCenter, from)) return false;
+
+      if (to && isAfter(eventCenter, to)) return false;
 
       return true;
     })

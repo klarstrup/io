@@ -2,21 +2,22 @@ import { isFuture, isPast } from "date-fns";
 import { Fragment } from "react";
 import { EventEntry } from "../../lib";
 import { cotemporality } from "../../utils";
+import { BalanceColumnsScript } from "./BalanceColumnsScript";
 import TimelineEventContent from "./TimelineEventContent";
-import { TimelineTrainingArticle } from "./TimelineTrainingArticle";
+// import { TimelineTrainingArticle } from "./TimelineTrainingArticle";
 
 export function TimelineEventsList({
   events,
-  urlDisciplines,
+  disciplines,
   from,
   to,
 }: {
   events: EventEntry[];
-  urlDisciplines: string[] | undefined;
+  disciplines: string[] | undefined;
   from?: Date;
   to?: Date;
 }) {
-  const now = new Date();
+  //  const now = new Date();
 
   return events.map((event, j) => {
     const nextEvent = events[j - 1];
@@ -33,19 +34,22 @@ export function TimelineEventsList({
             </article>
           )
         ) : null}
+        {/*
         <TimelineTrainingArticle
           from={event.end}
           to={nextEvent?.start || now}
-          urlDisciplines={urlDisciplines}
+          disciplines={disciplines}
         />
-        <article>
+        */}
+        <article key={event.id}>
           <div className={`content ${cotemporality(event)}`}>
             <TimelineEventContent
               eventEntry={event}
-              urlDisciplines={urlDisciplines}
+              disciplines={disciplines}
             />
           </div>
         </article>
+        <BalanceColumnsScript />
       </Fragment>
     );
   });
