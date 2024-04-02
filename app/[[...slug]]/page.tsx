@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   differenceInMilliseconds,
   isAfter,
   isBefore,
   startOfMonth,
 } from "date-fns";
-import Script from "next/script";
 import dbConnect from "../../dbConnect";
 import type { EventEntry } from "../../lib";
 import { User } from "../../models/user";
@@ -24,6 +22,7 @@ import {
   getTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
 import "../page.css";
+import { BalanceColumnsScript } from "./BalanceColumnsScript";
 import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
 import { TimelineEventsList } from "./TimelineEventsList";
 import UserStuff from "./UserStuff";
@@ -59,57 +58,9 @@ export default async function Home({
         />
         <LoadPreviousMonthWhenYouSeeThisAlright from={from} />
       </section>
-      <Script key={String(new Date())} id={String(new Date())}>
-        {`
-        var balanceColumns = ${String(balanceColumns)};
-        window.addEventListener("resize", () => {
-          balanceColumns();
-          setTimeout(() => balanceColumns(), 200);
-          setTimeout(() => balanceColumns(), 400);
-          setTimeout(() => balanceColumns(), 600);
-        });
-        window.addEventListener("popstate", () => {
-          balanceColumns();
-          setTimeout(() => balanceColumns(), 200);
-          setTimeout(() => balanceColumns(), 400);
-          setTimeout(() => balanceColumns(), 600);
-        });
-        window.addEventListener("navigate", () => {
-          balanceColumns();
-          setTimeout(() => balanceColumns(), 200);
-          setTimeout(() => balanceColumns(), 400);
-          setTimeout(() => balanceColumns(), 600);
-        });
-        balanceColumns();
-        setTimeout(() => balanceColumns(), 200);
-        setTimeout(() => balanceColumns(), 400);
-        setTimeout(() => balanceColumns(), 600);
-        `}
-      </Script>
+      <BalanceColumnsScript />
     </div>
   );
-}
-
-function balanceColumns() {
-  const timelines = document.querySelectorAll<HTMLElement>("#timeline");
-  for (const timeline of Array.from(timelines)) {
-    let leftColumnHeight = 0;
-    let rightColumnHeight = 0;
-    const articles = timeline.querySelectorAll<HTMLElement>(
-      "#timeline > article"
-    );
-    for (const article of Array.from(articles)) {
-      article.classList.remove("left");
-      article.classList.remove("right");
-      if (leftColumnHeight - rightColumnHeight > 5) {
-        article.classList.add("right");
-        rightColumnHeight += article.offsetHeight;
-      } else {
-        article.classList.add("left");
-        leftColumnHeight += article.offsetHeight;
-      }
-    }
-  }
 }
 
 const getData = async (
