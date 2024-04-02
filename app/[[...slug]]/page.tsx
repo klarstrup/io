@@ -3,90 +3,24 @@ import {
   differenceInMilliseconds,
   isAfter,
   isBefore,
-  isFuture,
-  isPast,
-  max,
-  min,
   startOfMonth,
 } from "date-fns";
 import Script from "next/script";
-import { Fragment } from "react";
 import dbConnect from "../../dbConnect";
-import type { DateInterval, EventEntry } from "../../lib";
+import type { EventEntry } from "../../lib";
 import { User } from "../../models/user";
 import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
-import { getLiftingTrainingData } from "../../sources/fitocracy";
-import { getRunningTrainingData } from "../../sources/rundouble";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntry } from "../../sources/sportstiming";
 import {
   TopLogger,
   fetchUser,
-  getBoulderingTrainingData,
   getTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
-import { cotemporality } from "../../utils";
 import "../page.css";
 import { LoadPreviousMonthWhenYouSeeThisAlright } from "./LoadNextMonthWhenYouSeeThisAlright";
-import TimelineEventContent from "./TimelineEventContent";
-import TimelineTrainingContent from "./TimelineTrainingContent";
+import { TimelineEventsList } from "./TimelineEventsList";
 import UserStuff from "./UserStuff";
-
-/*
-export function generateStaticParams() {
-  return ["", "index", "bouldering", "running", "metal"].map((slug) => ({
-    slug: slug ? [slug] : undefined,
-  }));
-}
-*/
-
-async function TimelineTrainingArticle({
-  from,
-  to,
-  urlDisciplines,
-}: {
-  from: Date;
-  to: Date;
-  urlDisciplines: string[] | undefined;
-}) {
-  if (isFuture(from)) return null;
-
-  const trainingInterval = { start: min([from, to]), end: max([from, to]) };
-  const trainings: Awaited<ReturnType<typeof getTrainingData>> = (
-    await getTrainingData(trainingInterval, urlDisciplines)
-  ).filter(({ count }) => count);
-
-  return trainings.length ? (
-    <article>
-      <div className="content" style={{ padding: "7px 10px" }}>
-        <div style={{ fontSize: "0.75em", marginBottom: "1px" }}>
-          <b>
-            {new Intl.DateTimeFormat("en-DK", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              timeZone: "Europe/Copenhagen",
-            }).formatRange(
-              ...([trainingInterval.start, trainingInterval.end].sort(
-                (a, b) => Number(a) - Number(b)
-              ) as [Date, Date])
-            )}
-          </b>{" "}
-          in <b>Training</b>
-        </div>
-        <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
-          {trainings.map((training) => (
-            <TimelineTrainingContent
-              key={training.type + training.discipline}
-              training={training}
-              urlDisciplines={urlDisciplines}
-            />
-          ))}
-        </div>
-      </div>
-    </article>
-  ) : null;
-}
 
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
@@ -95,7 +29,6 @@ export default async function Home({
   params: { slug?: string[] };
   searchParams: { [key: string]: string };
 }) {
-  const now = new Date();
   const urlDisciplines: string[] | undefined =
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||
@@ -112,39 +45,12 @@ export default async function Home({
     <div>
       <UserStuff />
       <section id="timeline">
-        {events.map((event, j) => {
-          const nextEvent = events[j - 1];
-
-          return (
-            <Fragment key={event.id}>
-              {(!nextEvent || isFuture(nextEvent.start)) &&
-              isPast(event.start) ? (
-                (searchParams.to && isPast(new Date(searchParams.to))) ||
-                (searchParams.from &&
-                  isFuture(new Date(searchParams.from))) ? null : (
-                  <article className="now">
-                    <div className="content">
-                      You are <b>now</b>
-                    </div>
-                  </article>
-                )
-              ) : null}
-              <TimelineTrainingArticle
-                from={event.end}
-                to={nextEvent?.start || now}
-                urlDisciplines={urlDisciplines}
-              />
-              <article>
-                <div className={`content ${cotemporality(event)}`}>
-                  <TimelineEventContent
-                    eventEntry={event}
-                    urlDisciplines={urlDisciplines}
-                  />
-                </div>
-              </article>
-            </Fragment>
-          );
-        })}
+        <TimelineEventsList
+          events={events}
+          urlDisciplines={urlDisciplines}
+          from={from}
+          to={to}
+        />
         <LoadPreviousMonthWhenYouSeeThisAlright from={from} />
       </section>
       <Script key={String(new Date())} id={String(new Date())}>
@@ -199,25 +105,6 @@ function balanceColumns() {
     }
   }
 }
-
-const getTrainingData = async (
-  trainingInterval: DateInterval,
-  disciplines?: string[]
-) => {
-  await dbConnect();
-  const user = await User.findOne();
-  return [
-    disciplines?.includes("bouldering")
-      ? await getBoulderingTrainingData(trainingInterval)
-      : null,
-    disciplines?.includes("running") && user?.runDoubleId
-      ? await getRunningTrainingData(user.runDoubleId, trainingInterval)
-      : null,
-    disciplines?.includes("bouldering") || disciplines?.includes("running")
-      ? await getLiftingTrainingData(trainingInterval)
-      : null,
-  ].filter(Boolean);
-};
 
 const getData = async (
   disciplines?: string[],
