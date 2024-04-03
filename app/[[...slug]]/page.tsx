@@ -27,7 +27,7 @@ import LoadMore from "./LoadMore";
 import { TimelineEventsList } from "./TimelineEventsList";
 import UserStuff from "./UserStuff";
 
-const monthsPerPage = 3;
+const monthsPerPage = 2;
 
 export default async function Home({
   params: { slug: [disciplinesString] = [] },
