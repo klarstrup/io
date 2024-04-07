@@ -55,7 +55,15 @@ export default async function Page() {
 
   const user = await User.findOne({ _id: session?.user.id });
 
-  if (!user) return null;
+  if (!user)
+    return (
+      <div>
+        <span>Hello, stranger!</span>
+        <p>
+          <a href="/api/auth/signin">Sign in</a>
+        </p>
+      </div>
+    );
 
   let fitocracyUserId = user.fitocracyUserId;
   if (!fitocracyUserId) {
