@@ -2,6 +2,7 @@ import {
   addDays,
   eachDayOfInterval,
   endOfDay,
+  isToday,
   isWithinInterval,
   startOfDay,
 } from "date-fns";
@@ -447,121 +448,127 @@ export default async function Page() {
                     </ol>
                   ) : null}
                 </div>
-                <div>
+                {isToday(day) ? (
                   <div>
-                    <b>Next Sets</b>
-                    <ol>
-                      {nextSets.map(
-                        ({
-                          exercise,
-                          successful,
-                          nextWorkingSet,
-                          workout_timestamp,
-                        }) => (
-                          <li key={exercise.id}>
-                            <b>
-                              {(exercise.aliases[1] || exercise.name).replace(
-                                "Barbell",
-                                ""
-                              )}{" "}
-                              {successful ? null : " (failed)"}
-                            </b>{" "}
-                            {nextWorkingSet}kg Last set{" "}
-                            {String(
-                              workout_timestamp.toLocaleDateString("da-DK")
-                            )}
-                          </li>
-                        )
-                      )}
-                    </ol>
-                  </div>
-                  {workouts?.length
-                    ? workouts?.map((workout) => (
-                        <div
-                          key={workout.id}
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {workout.root_group.children.map((workoutGroup) => {
-                            const exercise = exercises.find(
-                              ({ id }) =>
-                                workoutGroup.exercise.exercise_id === id
-                            )!;
+                    <div>
+                      <b>Next Sets</b>
+                      <ol>
+                        {nextSets.map(
+                          ({
+                            exercise,
+                            successful,
+                            nextWorkingSet,
+                            workout_timestamp,
+                          }) => (
+                            <li key={exercise.id}>
+                              <b>
+                                {(exercise.aliases[1] || exercise.name).replace(
+                                  "Barbell",
+                                  ""
+                                )}{" "}
+                                {successful ? null : " (failed)"}
+                              </b>{" "}
+                              {nextWorkingSet}kg Last set{" "}
+                              {String(
+                                workout_timestamp.toLocaleDateString("da-DK")
+                              )}
+                            </li>
+                          )
+                        )}
+                      </ol>
+                    </div>
+                    {workouts?.length
+                      ? workouts?.map((workout) => (
+                          <div
+                            key={workout.id}
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            {workout.root_group.children.map((workoutGroup) => {
+                              const exercise = exercises.find(
+                                ({ id }) =>
+                                  workoutGroup.exercise.exercise_id === id
+                              )!;
+                              return (
+                                <div key={workoutGroup.id}>
+                                  <b style={{ whiteSpace: "nowrap" }}>
+                                    {(
+                                      exercise.aliases[1] || exercise.name
+                                    ).replace("Barbell", "")}
+                                  </b>
+                                  <ol style={{ padding: 0, margin: 0 }}>
+                                    {workoutGroup.exercise.sets.map((set) => (
+                                      <li
+                                        key={set.id}
+                                        style={{ whiteSpace: "nowrap" }}
+                                      >
+                                        {set.description_string}
+                                      </li>
+                                    ))}
+                                  </ol>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))
+                      : null}
+                    {ascends?.length
+                      ? gyms
+                          .filter((gym) =>
+                            unique(
+                              ascends.map(({ climb }) => climb.gym_id)
+                            ).some((gym_id) => gym_id === gym.id)
+                          )
+                          .map((gym) => {
+                            const gymAscends = ascends.filter(
+                              ({ climb }) => climb.gym_id === gym.id
+                            );
+                            if (!gymAscends.length) return null;
                             return (
-                              <div key={workoutGroup.id}>
-                                <b style={{ whiteSpace: "nowrap" }}>
-                                  {(
-                                    exercise.aliases[1] || exercise.name
-                                  ).replace("Barbell", "")}
-                                </b>
-                                <ol style={{ padding: 0, margin: 0 }}>
-                                  {workoutGroup.exercise.sets.map((set) => (
-                                    <li
-                                      key={set.id}
-                                      style={{ whiteSpace: "nowrap" }}
-                                    >
-                                      {set.description_string}
-                                    </li>
-                                  ))}
-                                </ol>
+                              <div
+                                key={gym.id}
+                                style={{
+                                  marginTop: "1em",
+                                }}
+                              >
+                                <b>{gym.name}</b>
+                                <ProblemByProblem
+                                  problemByProblem={gymAscends.map(
+                                    ({
+                                      climb: { grade, hold_id },
+                                      checks,
+                                    }) => ({
+                                      number: "",
+                                      color:
+                                        holds.find(
+                                          (hold) => hold.id === hold_id
+                                        )?.color || undefined,
+                                      grade: Number(grade) || undefined,
+                                      attempt: true,
+                                      // TopLogger does not do zones, at least not for Beta Boulders
+                                      zone: checks >= 1,
+                                      top: checks >= 1,
+                                      flash: checks >= 2,
+                                    })
+                                  )}
+                                />
                               </div>
                             );
-                          })}
-                        </div>
-                      ))
-                    : null}
-                  {ascends?.length
-                    ? gyms
-                        .filter((gym) =>
-                          unique(ascends.map(({ climb }) => climb.gym_id)).some(
-                            (gym_id) => gym_id === gym.id
-                          )
-                        )
-                        .map((gym) => {
-                          const gymAscends = ascends.filter(
-                            ({ climb }) => climb.gym_id === gym.id
-                          );
-                          if (!gymAscends.length) return null;
-                          return (
-                            <div
-                              key={gym.id}
-                              style={{
-                                marginTop: "1em",
-                              }}
-                            >
-                              <b>{gym.name}</b>
-                              <ProblemByProblem
-                                problemByProblem={gymAscends.map(
-                                  ({ climb: { grade, hold_id }, checks }) => ({
-                                    number: "",
-                                    color:
-                                      holds.find((hold) => hold.id === hold_id)
-                                        ?.color || undefined,
-                                    grade: Number(grade) || undefined,
-                                    attempt: true,
-                                    // TopLogger does not do zones, at least not for Beta Boulders
-                                    zone: checks >= 1,
-                                    top: checks >= 1,
-                                    flash: checks >= 2,
-                                  })
-                                )}
-                              />
-                            </div>
-                          );
-                        })
-                    : null}
-                  {runs?.length ? (
-                    <ol>
-                      {runs.map((run) => (
-                        <li key={run.key}>
-                          {run.runDistance}m {run.runTime}ms
-                        </li>
-                      ))}
-                    </ol>
-                  ) : null}
-                </div>
+                          })
+                      : null}
+                    {runs?.length ? (
+                      <ol>
+                        {runs.map((run) => (
+                          <li key={run.key}>
+                            {run.runDistance}m {run.runTime}ms
+                          </li>
+                        ))}
+                      </ol>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
               <hr />
               {!food?.length ? (
