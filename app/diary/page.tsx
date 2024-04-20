@@ -156,7 +156,9 @@ export default async function Page() {
     async () => {
       if (user.runDoubleId) {
         console.time("runs");
-        for (const run of await getRuns(user.runDoubleId)) {
+        for (const run of await getRuns(user.runDoubleId, {
+          maxAge: 1000 * 60 * 60 * 12,
+        })) {
           addDiaryEntry(new Date(run.completed), "runs", run);
         }
         console.timeEnd("runs");
