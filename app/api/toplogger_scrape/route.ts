@@ -307,7 +307,7 @@ export async function GET(/* request: NextRequest */) {
                 { maxAge: HOUR_IN_SECONDS }
               ).then((groupUsers) =>
                 Promise.all(
-                  randomSlice(groupUsers, 2).map(({ user, ...groupUser }) =>
+                  randomSlice(groupUsers, 8).map(({ user, ...groupUser }) =>
                     Promise.all([
                       upsertGroupUser(groupUser).then(() =>
                         flushJSON("group_user:" + groupUser.id)
