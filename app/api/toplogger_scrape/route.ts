@@ -208,7 +208,22 @@ export async function GET(/* request: NextRequest */) {
     await Promise.all([
       ...(
         (await fetchAscends(
-          { filters: { user_id: topLoggerId }, includes: ["climb"] },
+          {
+            filters: { user_id: topLoggerId, used: true, live: true },
+            includes: ["climb"],
+          },
+          { maxAge: HOUR_IN_SECONDS }
+        )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
+      ).flatMap(({ climb, ...ascend }) => [
+        upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
+        upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
+      ]),
+      ...(
+        (await fetchAscends(
+          {
+            filters: { user_id: topLoggerId, used: true, live: false },
+            includes: ["climb"],
+          },
           { maxAge: HOUR_IN_SECONDS }
         )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
       ).flatMap(({ climb, ...ascend }) => [
