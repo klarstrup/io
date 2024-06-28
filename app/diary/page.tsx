@@ -21,6 +21,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export default async function Page() {
+  console.time("diary preamble");
   const DB = (await dbConnect()).connection.db;
 
   const workoutsCollection =
@@ -99,13 +100,11 @@ export default async function Page() {
     diary[dayStr] = day;
   }
 
-  const holds: TopLogger.Hold[] = await DB.collection<TopLogger.Hold>(
-    "toplogger_holds"
-  )
-    .find()
-    .toArray();
+  console.timeEnd("diary preamble");
 
-  const [gyms] = await allPromises(
+  console.time("diary body");
+  const [holds, gyms] = await allPromises(
+    DB.collection<TopLogger.Hold>("toplogger_holds").find().toArray(),
     DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
     async () => {
       if (user.fitocracyUserId) {
@@ -167,6 +166,7 @@ export default async function Page() {
     }
   );
 
+  console.time("diary sort");
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>
       new Date(
@@ -180,7 +180,9 @@ export default async function Page() {
         Number(a.split("-")[2])
       ).getTime()
   );
+  console.timeEnd("diary sort");
 
+  console.timeEnd("diary body");
   return (
     <div>
       {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
