@@ -27,7 +27,7 @@ export default function Page() {
       </div>
       <Script key="reload" id="reload">
         {
-          "setInterval(()=>Array.from(window.frames).forEach(window=>window.location.reload()), 1000*10);"
+          "setInterval(()=>Array.from(window.frames).forEach(window=>window.location.reload()), 1000*60);"
         }
       </Script>
     </center>
