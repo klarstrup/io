@@ -297,59 +297,56 @@ export async function GET(/* request: NextRequest */) {
               ...climbs.map((climb) =>
                 upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
               ),
-              [] ||
-                fetchGroupsUsers<
-                  TopLogger.GroupUserMultiple & { user: TopLogger.User }
-                >(
-                  {
-                    filters: { group_id: groupUser.group_id },
-                    includes: "user",
-                  },
-                  { maxAge: HOUR_IN_SECONDS }
-                ).then((groupUsers) =>
-                  Promise.all(
-                    randomSlice(groupUsers, 2).map(({ user, ...groupUser }) =>
-                      Promise.all([
-                        upsertGroupUser(groupUser).then(() =>
-                          flushJSON("group_user:" + groupUser.id)
-                        ),
+              fetchGroupsUsers<
+                TopLogger.GroupUserMultiple & { user: TopLogger.User }
+              >(
+                {
+                  filters: { group_id: groupUser.group_id },
+                  includes: "user",
+                },
+                { maxAge: HOUR_IN_SECONDS }
+              ).then((groupUsers) =>
+                Promise.all(
+                  randomSlice(groupUsers, 2).map(({ user, ...groupUser }) =>
+                    Promise.all([
+                      upsertGroupUser(groupUser).then(() =>
+                        flushJSON("group_user:" + groupUser.id)
+                      ),
 
-                        /**
-                         * Group User
-                         */
-                        upsertUser(user).then(() =>
-                          flushJSON("user:" + user.id)
-                        ),
+                      /**
+                       * Group User
+                       */
+                      upsertUser(user).then(() => flushJSON("user:" + user.id)),
 
-                        /**
-                         * Group User Ascends
-                         */
-                        (climbs.length
-                          ? fetchAscends(
-                              {
-                                filters: {
-                                  user_id: user.id,
-                                  climb_id: climbs.map(({ id }) => id),
-                                },
+                      /**
+                       * Group User Ascends
+                       */
+                      (climbs.length
+                        ? fetchAscends(
+                            {
+                              filters: {
+                                user_id: user.id,
+                                climb_id: climbs.map(({ id }) => id),
                               },
-                              { maxAge: HOUR_IN_SECONDS }
-                            )
-                          : Promise.resolve([])
-                        ).then((ascends) =>
-                          Array.isArray(ascends)
-                            ? Promise.all(
-                                ascends.map((ascend) =>
-                                  upsertAscend(ascend).then(() =>
-                                    flushJSON("ascend:" + ascend.id)
-                                  )
+                            },
+                            { maxAge: HOUR_IN_SECONDS }
+                          )
+                        : Promise.resolve([])
+                      ).then((ascends) =>
+                        Array.isArray(ascends)
+                          ? Promise.all(
+                              ascends.map((ascend) =>
+                                upsertAscend(ascend).then(() =>
+                                  flushJSON("ascend:" + ascend.id)
                                 )
-                              ) // Some toplogger users have privacy enabled for their ascends
-                            : []
-                        ),
-                      ])
-                    )
+                              )
+                            ) // Some toplogger users have privacy enabled for their ascends
+                          : []
+                      ),
+                    ])
                   )
-                ),
+                )
+              ),
             ]);
           })
         )
