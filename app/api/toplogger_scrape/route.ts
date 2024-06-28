@@ -221,7 +221,7 @@ export async function GET(/* request: NextRequest */) {
       ...(
         (await fetchAscends(
           {
-            filters: { user_id: topLoggerId, climb: { live: true } },
+            filters: { user_id: topLoggerId, climb: { live: false } },
             includes: ["climb"],
           },
           { maxAge: HOUR_IN_SECONDS }
