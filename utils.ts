@@ -24,6 +24,8 @@ export function unique<T>(arr: T[]): T[] {
 }
 
 export function chunk<I>(rawArr: I[], size: number) {
+  if (!Array.isArray(rawArr)) throw new Error("Expected an array");
+
   const arr = Array.from(rawArr);
   const results: I[][] = [];
 
