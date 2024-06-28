@@ -13,6 +13,7 @@ import {
 import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 interface ScrapedAt {
   _io_scrapedAt?: Date;

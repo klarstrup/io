@@ -26,6 +26,7 @@ const months = [
 const years = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] as const;
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function GET(/* request: NextRequest */) {
   /*
