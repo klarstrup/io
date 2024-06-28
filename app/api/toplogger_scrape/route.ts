@@ -206,12 +206,11 @@ export async function GET(/* request: NextRequest */) {
      */
     console.info(`Scraping Io ascends ${topLoggerId}`);
     await Promise.all([
-      ...randomSlice(
+      ...(
         (await fetchAscends(
           { filters: { user_id: topLoggerId }, includes: ["climb"] },
           { maxAge: HOUR_IN_SECONDS }
-        )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
-        4
+        )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
       ).flatMap(({ climb, ...ascend }) => [
         upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
         upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
