@@ -18,6 +18,7 @@ import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export default async function Page() {
   console.time("diary preamble");
