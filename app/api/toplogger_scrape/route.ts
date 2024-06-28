@@ -206,30 +206,42 @@ export async function GET(/* request: NextRequest */) {
      */
     console.info(`Scraping Io ascends ${topLoggerId}`);
     await Promise.all([
-      ...(
-        (await fetchAscends(
+      (
+        fetchAscends(
           {
             filters: { user_id: topLoggerId, climb: { live: true } },
             includes: ["climb"],
           },
           { maxAge: HOUR_IN_SECONDS }
-        )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
-      ).flatMap(({ climb, ...ascend }) => [
-        upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
-        upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
-      ]),
-      ...(
-        (await fetchAscends(
+        ) as Promise<
+          (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
+        >
+      ).then((ascends) =>
+        Promise.all(
+          ascends.flatMap(({ climb, ...ascend }) => [
+            upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
+            upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
+          ])
+        )
+      ),
+      (
+        fetchAscends(
           {
             filters: { user_id: topLoggerId, climb: { live: false } },
             includes: ["climb"],
           },
           { maxAge: HOUR_IN_SECONDS }
-        )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
-      ).flatMap(({ climb, ...ascend }) => [
-        upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
-        upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
-      ]),
+        ) as Promise<
+          (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
+        >
+      ).then((ascends) =>
+        Promise.all(
+          ascends.flatMap(({ climb, ...ascend }) => [
+            upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
+            upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
+          ])
+        )
+      ),
       climbsCollection.distinct("gym_id").then((gymIds) =>
         Promise.all(
           gymIds.map((gymId) =>
