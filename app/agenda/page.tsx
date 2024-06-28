@@ -361,7 +361,7 @@ export default async function Page() {
               <div>
                 <div>
                   {food ? (
-                    <ol style={{ padding: 0 }}>
+                    <ol>
                       {[
                         MyFitnessPal.MealName.Breakfast,
                         MyFitnessPal.MealName.Lunch,
@@ -406,7 +406,7 @@ export default async function Page() {
                                   </small>
                                 ) : null}
                               </div>
-                              <ul style={{ padding: 0 }}>
+                              <ul>
                                 {food
                                   ?.filter(
                                     (foodEntry) =>
@@ -501,7 +501,7 @@ export default async function Page() {
                                       exercise.aliases[1] || exercise.name
                                     ).replace("Barbell", "")}
                                   </b>
-                                  <ol style={{ padding: 0, margin: 0 }}>
+                                  <ol>
                                     {workoutGroup.exercise.sets.map((set) => (
                                       <li
                                         key={set.id}

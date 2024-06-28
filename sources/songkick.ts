@@ -131,6 +131,12 @@ const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
 
 export async function getSongkickEvents() {
+  if (!process.env.SONGKICK_APIKEY) {
+    console.error("Missing SONGKICK_APIKEY");
+
+    return [];
+  }
+
   const events = [
     ...(await getPastEvents(EXELERATE_ID)),
     ...(await getFutureEvents(EXELERATE_ID)),
