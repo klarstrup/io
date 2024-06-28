@@ -211,7 +211,7 @@ export async function GET(/* request: NextRequest */) {
           { filters: { user_id: topLoggerId }, includes: ["climb"] },
           { maxAge: HOUR_IN_SECONDS }
         )) as (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
-        16
+        8
       ).flatMap(({ climb, ...ascend }) => [
         upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
         upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
@@ -278,7 +278,7 @@ export async function GET(/* request: NextRequest */) {
                 { maxAge: HOUR_IN_SECONDS }
               ).then((groupUsers) =>
                 Promise.all(
-                  randomSlice(groupUsers, 4).map(({ user, ...groupUser }) =>
+                  randomSlice(groupUsers, 2).map(({ user, ...groupUser }) =>
                     Promise.all([
                       upsertGroupUser(groupUser).then(() =>
                         flushJSON("group_user:" + groupUser.id)
