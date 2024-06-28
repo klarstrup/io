@@ -209,7 +209,7 @@ export async function GET(/* request: NextRequest */) {
       (
         fetchAscends(
           {
-            filters: { user_id: topLoggerId, climb: { live: true } },
+            filters: { user_id: topLoggerId, climb: { deleted: false } },
             includes: ["climb"],
           },
           { maxAge: HOUR_IN_SECONDS }
@@ -227,7 +227,7 @@ export async function GET(/* request: NextRequest */) {
       (
         fetchAscends(
           {
-            filters: { user_id: topLoggerId, climb: { live: false } },
+            filters: { user_id: topLoggerId, climb: { deleted: true } },
             includes: ["climb"],
           },
           { maxAge: HOUR_IN_SECONDS }
