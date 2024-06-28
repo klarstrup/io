@@ -525,9 +525,12 @@ export default async function Page() {
                             ).some((gym_id) => gym_id === gym.id)
                           )
                           .map((gym) => {
-                            const gymAscends = ascends.filter(
-                              ({ climb }) => climb.gym_id === gym.id
-                            );
+                            const gymAscends = ascends
+                              .filter(({ climb }) => climb.gym_id === gym.id)
+                              .sort(
+                                (a, b) =>
+                                  Number(b.date_logged) - Number(a.date_logged)
+                              );
                             if (!gymAscends.length) return null;
                             return (
                               <div
