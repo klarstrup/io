@@ -26,6 +26,7 @@ import { type TopLogger } from "../../sources/toplogger";
 import { allPromises, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
+import UserStuff from "../[[...slug]]/UserStuff";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -317,6 +318,7 @@ export default async function Page() {
 
   return (
     <div>
+      <UserStuff />
       {eachDayOfInterval(allDayTodayAndTomorrow)
         .reverse()
         .map((day) => {
