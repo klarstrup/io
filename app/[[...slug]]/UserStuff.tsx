@@ -101,7 +101,7 @@ export default async function UserStuff() {
   return (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         top: "4px",
         right: "4px",
         paddingLeft: "4px",

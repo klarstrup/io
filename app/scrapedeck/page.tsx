@@ -1,9 +1,11 @@
 import Script from "next/script";
 import "../page.css";
+import UserStuff from "../[[...slug]]/UserStuff";
 
 export default function Page() {
   return (
     <center style={{ display: "flex", width: "100%", height: "100%" }}>
+      <UserStuff />
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <h2>Fitocracy</h2>
         <iframe

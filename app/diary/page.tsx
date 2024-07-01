@@ -16,6 +16,7 @@ import { type TopLogger } from "../../sources/toplogger";
 import { allPromises, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import "../page.css";
+import UserStuff from "../[[...slug]]/UserStuff";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -193,6 +194,7 @@ export default async function Page() {
   console.timeEnd("diary body");
   return (
     <div>
+      <UserStuff />
       {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
         const dayTotalEnergy = food?.reduce(
           (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
