@@ -345,21 +345,8 @@ export const getLiftingTrainingData = async (
   // Io is the only user in the database,
   const user = (await User.findOne())!;
 
-  const fitocracySessionId = user?.fitocracySessionId;
-  if (!fitocracySessionId) return null;
-
-  let fitocracyUserId = user.fitocracyUserId;
-  if (!fitocracyUserId) {
-    const fitocracySessionId = user?.fitocracySessionId;
-    if (!fitocracySessionId) return null;
-    let fitocracyProfile: Fitocracy.ProfileData;
-    try {
-      fitocracyProfile = await getUserProfileBySessionId(fitocracySessionId);
-    } catch (e) {
-      return null;
-    }
-    fitocracyUserId = fitocracyProfile.id;
-    await user.updateOne({ fitocracyUserId });
+  if (!user.fitocracyUserId) {
+    throw new Error("No Fitocracy user ID");
   }
 
   const workoutsCollection = (
@@ -367,7 +354,7 @@ export const getLiftingTrainingData = async (
   ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   const workoutsCursor = workoutsCollection.find({
-    user_id: fitocracyUserId,
+    user_id: user.fitocracyUserId,
     workout_timestamp: {
       $gte: trainingInterval.start,
       $lt: trainingInterval.end,

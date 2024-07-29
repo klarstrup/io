@@ -3,7 +3,6 @@ import { revalidateTag } from "next/cache";
 import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import { User } from "../../models/user";
-import { getUserProfileBySessionId } from "../../sources/fitocracy";
 import {
   MyFitnessPal,
   getMyFitnessPalSession,
@@ -53,19 +52,6 @@ export default async function UserStuff() {
     } catch (e) {
       console.error(e);
     }
-  }
-
-  let fitocracyProfile: Awaited<
-    ReturnType<typeof getUserProfileBySessionId>
-  > | null = null;
-  try {
-    if (currentUser?.fitocracySessionId) {
-      fitocracyProfile = await getUserProfileBySessionId(
-        currentUser.fitocracySessionId
-      );
-    }
-  } catch {
-    fitocracyProfile = null;
   }
 
   let topLoggerUser: TopLogger.User | null = null;
@@ -159,26 +145,6 @@ export default async function UserStuff() {
             </p>
             {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <form action={updateUser}>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
-                <legend>Fitocracy Session ID</legend>
-                <input
-                  name="fitocracySessionId"
-                  defaultValue={currentUser.fitocracySessionId || ""}
-                  style={{ flex: 1 }}
-                />
-                {fitocracyProfile ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt="Fitocracy Avatar"
-                    src={`https://s3.amazonaws.com/static.fitocracy.com/site_media/${fitocracyProfile.pic}`}
-                    width={24}
-                    height={24}
-                    style={{ borderRadius: "100%" }}
-                  />
-                ) : (
-                  "❌"
-                )}
-              </fieldset>
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>TopLogger ID</legend>
                 <input

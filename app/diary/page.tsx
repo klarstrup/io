@@ -2,11 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth";
 import dbConnect from "../../dbConnect";
 import { User } from "../../models/user";
-import {
-  exercises,
-  getUserProfileBySessionId,
-  type Fitocracy,
-} from "../../sources/fitocracy";
+import { exercises, type Fitocracy } from "../../sources/fitocracy";
 import {
   MyFitnessPal,
   getMyFitnessPalSession,
@@ -15,8 +11,8 @@ import { getRuns, type RunDouble } from "../../sources/rundouble";
 import { type TopLogger } from "../../sources/toplogger";
 import { allPromises, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
-import "../page.css";
 import UserStuff from "../[[...slug]]/UserStuff";
+import "../page.css";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -45,20 +41,6 @@ export default async function Page() {
         </p>
       </div>
     );
-
-  let fitocracyUserId = user.fitocracyUserId;
-  if (!fitocracyUserId) {
-    const fitocracySessionId = user?.fitocracySessionId;
-    if (!fitocracySessionId) return null;
-    let fitocracyProfile: Fitocracy.ProfileData;
-    try {
-      fitocracyProfile = await getUserProfileBySessionId(fitocracySessionId);
-    } catch (e) {
-      return null;
-    }
-    fitocracyUserId = fitocracyProfile.id;
-    await user.updateOne({ fitocracyUserId });
-  }
 
   if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
     const myFitnessPalToken = user?.myFitnessPalToken;
@@ -119,7 +101,7 @@ export default async function Page() {
       if (user.fitocracyUserId) {
         console.time("workouts");
         for await (const workout of workoutsCollection.find({
-          user_id: fitocracyUserId,
+          user_id: user.fitocracyUserId,
         })) {
           addDiaryEntry(workout.workout_timestamp, "workouts", workout);
         }
