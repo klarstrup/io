@@ -276,10 +276,9 @@ export default async function Page() {
         for (const run of await getRuns(user.runDoubleId, {
           maxAge: HOUR_IN_SECONDS * 12,
         })) {
-          if (
-            isWithinInterval(new Date(run.completed), allDayTodayAndTomorrow)
-          ) {
-            addDiaryEntry(new Date(run.completed), "runs", run);
+          const runDate = new Date(run.completed);
+          if (isWithinInterval(runDate, allDayTodayAndTomorrow)) {
+            addDiaryEntry(runDate, "runs", run);
           }
         }
         console.timeEnd("runs");
