@@ -13,6 +13,7 @@ import { allPromises, HOUR_IN_SECONDS, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
+import RunByRun from "../[[...slug]]/RunByRun";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -179,237 +180,252 @@ export default async function Page() {
   return (
     <div>
       <UserStuff />
-      {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
-        const dayTotalEnergy = food?.reduce(
-          (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
-          0
-        );
-        const dayTotalProtein = food?.reduce(
-          (acc, foodEntry) =>
-            acc + (foodEntry.nutritional_contents.protein || 0),
-          0
-        );
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(20em, 1fr))",
+          gap: "1em",
+          padding: "1em",
+        }}
+      >
+        {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
+          const dayTotalEnergy = food?.reduce(
+            (acc, foodEntry) =>
+              acc + foodEntry.nutritional_contents.energy.value,
+            0
+          );
+          const dayTotalProtein = food?.reduce(
+            (acc, foodEntry) =>
+              acc + (foodEntry.nutritional_contents.protein || 0),
+            0
+          );
 
-        return (
-          <div
-            key={date}
-            style={{
-              boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
-              borderRadius: "2em",
-              padding: "2em",
-              margin: "1em",
-              background: "white",
-            }}
-          >
-            <div>
-              <big>{date}</big>{" "}
-              {dayTotalEnergy && dayTotalProtein ? (
-                <small>
-                  {Math.round(dayTotalEnergy)} kcal,{" "}
-                  {Math.round(dayTotalProtein)}g protein
-                </small>
-              ) : null}
-            </div>
-            <div>
-              <div>
-                {food ? (
-                  <ol>
-                    {[
-                      MyFitnessPal.MealName.Breakfast,
-                      MyFitnessPal.MealName.Lunch,
-                      MyFitnessPal.MealName.Dinner,
-                      MyFitnessPal.MealName.Snacks,
-                    ]
-                      .filter((mealName) =>
-                        food?.some(
-                          (foodEntry) => foodEntry.meal_name === mealName
-                        )
-                      )
-                      .map((mealName) => {
-                        const mealTotalEnergy = food
-                          ?.filter(
-                            (foodEntry) => foodEntry.meal_name === mealName
+          return (
+            <div
+              key={date}
+              style={{
+                boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
+                borderRadius: "1.5em",
+                background: "white",
+                display: "flex",
+                flexDirection: "column",
+                padding: "0.5em",
+              }}
+            >
+              <div
+                style={{
+                  marginBottom: "0.5em",
+                  marginLeft: "1em",
+                }}
+              >
+                <big>{date}</big>{" "}
+                {dayTotalEnergy && dayTotalProtein ? (
+                  <small>
+                    {Math.round(dayTotalEnergy)} kcal,{" "}
+                    {Math.round(dayTotalProtein)}g protein
+                  </small>
+                ) : null}
+              </div>
+              <div style={{ flex: "1" }}>
+                <div>
+                  {food ? (
+                    <>
+                      <small>Meals:</small>
+                      <ol>
+                        {[
+                          MyFitnessPal.MealName.Breakfast,
+                          MyFitnessPal.MealName.Lunch,
+                          MyFitnessPal.MealName.Dinner,
+                          MyFitnessPal.MealName.Snacks,
+                        ]
+                          .filter((mealName) =>
+                            food?.some(
+                              (foodEntry) => foodEntry.meal_name === mealName
+                            )
                           )
-                          .reduce(
-                            (acc, foodEntry) =>
-                              acc + foodEntry.nutritional_contents.energy.value,
-                            0
-                          );
-                        const mealTotalProtein = food
-                          ?.filter(
-                            (foodEntry) => foodEntry.meal_name === mealName
-                          )
-                          .reduce(
-                            (acc, foodEntry) =>
-                              acc +
-                              (foodEntry.nutritional_contents.protein || 0),
-                            0
-                          );
+                          .map((mealName) => {
+                            const mealTotalEnergy = food
+                              ?.filter(
+                                (foodEntry) => foodEntry.meal_name === mealName
+                              )
+                              .reduce(
+                                (acc, foodEntry) =>
+                                  acc +
+                                  foodEntry.nutritional_contents.energy.value,
+                                0
+                              );
+                            const mealTotalProtein = food
+                              ?.filter(
+                                (foodEntry) => foodEntry.meal_name === mealName
+                              )
+                              .reduce(
+                                (acc, foodEntry) =>
+                                  acc +
+                                  (foodEntry.nutritional_contents.protein || 0),
+                                0
+                              );
 
-                        return (
-                          <li key={mealName}>
-                            <div>
-                              <b>{mealName}</b>{" "}
-                              {mealTotalEnergy && mealTotalProtein ? (
-                                <small>
-                                  {Math.round(mealTotalEnergy)} kcal,{" "}
-                                  {Math.round(mealTotalProtein)}g protein
-                                </small>
-                              ) : null}
-                            </div>
-                            <ul>
-                              {food
-                                ?.filter(
-                                  (foodEntry) =>
-                                    foodEntry.meal_name === mealName
-                                )
-                                .map((foodEntry) => (
-                                  <li
-                                    key={foodEntry.id}
-                                    style={{ listStyle: "none" }}
-                                  >
-                                    {foodEntry.food.description}
+                            return (
+                              <li key={mealName}>
+                                <div>
+                                  <b>{mealName}</b>{" "}
+                                  {mealTotalEnergy && mealTotalProtein ? (
                                     <small>
-                                      {" "}
-                                      {foodEntry.servings *
-                                        foodEntry.serving_size.value !==
-                                      1 ? (
-                                        <>
+                                      {Math.round(mealTotalEnergy)} kcal,{" "}
+                                      {Math.round(mealTotalProtein)}g protein
+                                    </small>
+                                  ) : null}
+                                </div>
+                                <ul>
+                                  {food
+                                    ?.filter(
+                                      (foodEntry) =>
+                                        foodEntry.meal_name === mealName
+                                    )
+                                    .map((foodEntry) => (
+                                      <li
+                                        key={foodEntry.id}
+                                        style={{ listStyle: "none" }}
+                                      >
+                                        {foodEntry.food.description}
+                                        <small>
+                                          {" "}
                                           {foodEntry.servings *
-                                            foodEntry.serving_size.value}{" "}
+                                            foodEntry.serving_size.value !==
+                                          1 ? (
+                                            <>
+                                              {foodEntry.servings *
+                                                foodEntry.serving_size
+                                                  .value}{" "}
+                                              {foodEntry.serving_size.unit.match(
+                                                /container/i
+                                              )
+                                                ? "x "
+                                                : null}
+                                            </>
+                                          ) : null}
                                           {foodEntry.serving_size.unit.match(
                                             /container/i
                                           )
-                                            ? "x "
-                                            : null}
-                                        </>
-                                      ) : null}
-                                      {foodEntry.serving_size.unit.match(
-                                        /container/i
-                                      )
-                                        ? foodEntry.serving_size.unit.replace(
-                                            /(container \((.+)\))/i,
-                                            "$2"
-                                          )
-                                        : foodEntry.serving_size.unit}
-                                    </small>
-                                  </li>
-                                ))}
-                            </ul>
-                          </li>
-                        );
-                      })}
-                  </ol>
-                ) : null}
+                                            ? foodEntry.serving_size.unit.replace(
+                                                /(container \((.+)\))/i,
+                                                "$2"
+                                              )
+                                            : foodEntry.serving_size.unit}
+                                        </small>
+                                      </li>
+                                    ))}
+                                </ul>
+                              </li>
+                            );
+                          })}
+                      </ol>
+                    </>
+                  ) : null}
+                </div>
+                <div>
+                  {workouts?.length ? (
+                    <>
+                      <small>Lifts:</small>
+                      {workouts?.map((workout) => (
+                        <div
+                          key={workout.id}
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {workout.root_group.children.map((workoutGroup) => {
+                            const exercise = exercises.find(
+                              ({ id }) =>
+                                workoutGroup.exercise.exercise_id === id
+                            )!;
+                            return (
+                              <div key={workoutGroup.id}>
+                                <b style={{ whiteSpace: "nowrap" }}>
+                                  {(
+                                    exercise.aliases[1] || exercise.name
+                                  ).replace("Barbell", "")}
+                                </b>
+                                <ol>
+                                  {workoutGroup.exercise.sets.map((set) => (
+                                    <li
+                                      key={set.id}
+                                      style={{ whiteSpace: "nowrap" }}
+                                    >
+                                      {set.description_string}
+                                    </li>
+                                  ))}
+                                </ol>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </>
+                  ) : null}
+                  {ascends?.length ? (
+                    <>
+                      <small>Climbs:</small>
+                      <big>
+                        <ProblemByProblem
+                          problemByProblem={ascends
+                            .sort(
+                              (a, b) =>
+                                Number(b.date_logged) - Number(a.date_logged)
+                            )
+                            .map(({ climb: { grade, hold_id }, checks }) => ({
+                              number: "",
+                              color:
+                                holds.find((hold) => hold.id === hold_id)
+                                  ?.color || undefined,
+                              grade: Number(grade) || undefined,
+                              attempt: true,
+                              // TopLogger does not do zones, at least not for Beta Boulders
+                              zone: checks >= 1,
+                              top: checks >= 1,
+                              flash: checks >= 2,
+                            }))}
+                        />
+                      </big>
+                    </>
+                  ) : null}
+                  {runs?.length ? (
+                    <>
+                      <small>Runs:</small>
+                      <RunByRun
+                        runByRun={runs.map(
+                          (run) =>
+                            ({
+                              date: new Date(run.completedLong),
+                              distance: run.runDistance,
+                              duration: run.runTime,
+                              pace: run.runPace,
+                            } as const)
+                        )}
+                      />
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div>
-                {workouts?.length
-                  ? workouts?.map((workout) => (
-                      <div
-                        key={workout.id}
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {workout.root_group.children.map((workoutGroup) => {
-                          const exercise = exercises.find(
-                            ({ id }) => workoutGroup.exercise.exercise_id === id
-                          )!;
-                          return (
-                            <div key={workoutGroup.id}>
-                              <b style={{ whiteSpace: "nowrap" }}>
-                                {(exercise.aliases[1] || exercise.name).replace(
-                                  "Barbell",
-                                  ""
-                                )}
-                              </b>
-                              <ol>
-                                {workoutGroup.exercise.sets.map((set) => (
-                                  <li
-                                    key={set.id}
-                                    style={{ whiteSpace: "nowrap" }}
-                                  >
-                                    {set.description_string}
-                                  </li>
-                                ))}
-                              </ol>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))
-                  : null}
-                {ascends?.length
-                  ? gyms
-                      .filter((gym) =>
-                        unique(ascends.map(({ climb }) => climb.gym_id)).some(
-                          (gym_id) => gym_id === gym.id
-                        )
-                      )
-                      .map((gym) => {
-                        const gymAscends = ascends
-                          .filter(({ climb }) => climb.gym_id === gym.id)
-                          .sort(
-                            (a, b) =>
-                              Number(b.date_logged) - Number(a.date_logged)
-                          );
-                        if (!gymAscends.length) return null;
-                        return (
-                          <div
-                            key={gym.id}
-                            style={{
-                              marginTop: "1em",
-                            }}
-                          >
-                            <b>{gym.name}</b>
-                            <ProblemByProblem
-                              problemByProblem={gymAscends.map(
-                                ({ climb: { grade, hold_id }, checks }) => ({
-                                  number: "",
-                                  color:
-                                    holds.find((hold) => hold.id === hold_id)
-                                      ?.color || undefined,
-                                  grade: Number(grade) || undefined,
-                                  attempt: true,
-                                  // TopLogger does not do zones, at least not for Beta Boulders
-                                  zone: checks >= 1,
-                                  top: checks >= 1,
-                                  flash: checks >= 2,
-                                })
-                              )}
-                            />
-                          </div>
-                        );
-                      })
-                  : null}
-                {runs?.length ? (
-                  <ol>
-                    {runs.map((run) => (
-                      <li key={run.key}>
-                        {run.runDistance}m {run.runTime}ms
-                      </li>
-                    ))}
-                  </ol>
-                ) : null}
-              </div>
+              <hr />
+              <small
+                style={{
+                  textAlign: "center",
+                  display: "flex",
+                  justifyContent: "space-evenly",
+                  opacity: 0.5,
+                }}
+              >
+                {!food?.length ? <i>No meals logged</i> : null}
+                {!workouts?.length ? <i>No lifts logged</i> : null}
+                {!ascends?.length ? <i>No climbs logged</i> : null}
+                {!runs?.length ? <i>No runs logged</i> : null}
+              </small>
             </div>
-            <hr />
-            {!food?.length ? (
-              <i style={{ display: "block" }}>No meals logged</i>
-            ) : null}
-            {!workouts?.length ? (
-              <i style={{ display: "block" }}>No lifts logged</i>
-            ) : null}
-            {!ascends?.length ? (
-              <i style={{ display: "block" }}>No climbs logged</i>
-            ) : null}
-            {!runs?.length ? (
-              <i style={{ display: "block" }}>No runs logged</i>
-            ) : null}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

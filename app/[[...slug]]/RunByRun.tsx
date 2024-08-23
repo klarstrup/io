@@ -21,7 +21,7 @@ export default function RunByRun({
   runByRun: Awaited<ReturnType<typeof getRunningTrainingData>>["runByRun"];
 }) {
   return (
-    <table>
+    <table style={{ display: "inline-flex" }}>
       <tbody>
         {runByRun.map((run) => (
           <tr
