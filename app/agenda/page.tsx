@@ -22,7 +22,7 @@ import {
 } from "../../sources/myfitnesspal";
 import { getRuns, type RunDouble } from "../../sources/rundouble";
 import { type TopLogger } from "../../sources/toplogger";
-import { allPromises, unique } from "../../utils";
+import { allPromises, HOUR_IN_SECONDS, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
@@ -274,7 +274,7 @@ export default async function Page() {
       if (user.runDoubleId) {
         console.time("runs");
         for (const run of await getRuns(user.runDoubleId, {
-          maxAge: 1000 * 60 * 60 * 12,
+          maxAge: HOUR_IN_SECONDS * 12,
         })) {
           if (
             isWithinInterval(new Date(run.completed), allDayTodayAndTomorrow)
