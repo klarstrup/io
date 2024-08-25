@@ -95,9 +95,8 @@ export default async function Page() {
   console.timeEnd("diary preamble");
 
   console.time("diary body");
-  const [holds, gyms] = await allPromises(
+  const [holds] = await allPromises(
     DB.collection<TopLogger.Hold>("toplogger_holds").find().toArray(),
-    DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
     async () => {
       if (user.fitocracyUserId) {
         console.time("workouts");
