@@ -318,6 +318,7 @@ export async function getSportsTimingEventEntry(
 }
 
 export const ioSportsTimingEventsWithIds = [
+  [12920, 6076514],
   [12576, 5298030],
   [11107, 5177996],
   [10694, 5096890],
