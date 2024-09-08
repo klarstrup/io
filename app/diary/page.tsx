@@ -285,16 +285,20 @@ export default async function Page() {
                                         key={foodEntry.id}
                                         style={{ listStyle: "none" }}
                                       >
-                                        {foodEntry.food.description}
+                                        {foodEntry.food.description.replace(
+                                          /\s+/g,
+                                          " "
+                                        )}
                                         <small>
                                           {" "}
                                           {foodEntry.servings *
                                             foodEntry.serving_size.value !==
                                           1 ? (
                                             <>
-                                              {foodEntry.servings *
-                                                foodEntry.serving_size
-                                                  .value}{" "}
+                                              {Math.round(
+                                                foodEntry.servings *
+                                                  foodEntry.serving_size.value
+                                              )}{" "}
                                               {foodEntry.serving_size.unit.match(
                                                 /container/i
                                               )
@@ -340,17 +344,14 @@ export default async function Page() {
                             )!;
                             return (
                               <div key={workoutGroup.id}>
-                                <b style={{ whiteSpace: "nowrap" }}>
+                                <b>
                                   {(
                                     exercise.aliases[1] || exercise.name
                                   ).replace("Barbell", "")}
                                 </b>
                                 <ol>
                                   {workoutGroup.exercise.sets.map((set) => (
-                                    <li
-                                      key={set.id}
-                                      style={{ whiteSpace: "nowrap" }}
-                                    >
+                                    <li key={set.id}>
                                       {set.description_string}
                                     </li>
                                   ))}
