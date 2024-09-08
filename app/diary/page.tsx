@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth";
-import dbConnect from "../../dbConnect";
+import { auth } from "../../auth";
+import { getDB } from "../../dbConnect";
 import { User } from "../../models/user";
 import { exercises, type Fitocracy } from "../../sources/fitocracy";
 import {
@@ -20,7 +19,7 @@ export const maxDuration = 60;
 
 export default async function Page() {
   console.time("diary preamble");
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   const workoutsCollection =
     DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
@@ -29,7 +28,7 @@ export default async function Page() {
     "myfitnesspal_food_entries"
   );
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   const user = await User.findOne({ _id: session?.user.id });
 

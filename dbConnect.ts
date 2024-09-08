@@ -45,4 +45,15 @@ async function dbConnect() {
   return cached.conn;
 }
 
+export const getDB = async () => {
+  await dbConnect();
+  const DB = mongoose.connection.db;
+
+  if (!DB) {
+    throw new Error("Failed to connect to the database.");
+  }
+
+  return DB;
+};
+
 export default dbConnect;

@@ -1,4 +1,4 @@
-import dbConnect from "../../../dbConnect";
+import dbConnect, { getDB } from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
   Fitocracy,
@@ -42,9 +42,8 @@ export async function GET(/* request: NextRequest */) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
 
-  const workouts = (
-    await dbConnect()
-  ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
+  const DB = await getDB();
+  const workouts = DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   (async () => {
     const workoutsSynchronized = {

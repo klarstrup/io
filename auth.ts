@@ -1,10 +1,10 @@
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import { AuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-import { clientPromise } from "./mongodb";
+import { mongoClient } from "./mongodb";
 
-export const authOptions: AuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  adapter: MongoDBAdapter(mongoClient),
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID!,
@@ -15,4 +15,4 @@ export const authOptions: AuthOptions = {
   callbacks: {
     session: ({ session, user }) => ({ ...session, user: user ?? null }),
   },
-};
+});

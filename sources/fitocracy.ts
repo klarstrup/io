@@ -1,10 +1,10 @@
 import { format } from "date-fns";
-import dbConnect from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { DateInterval } from "../lib";
 import { User } from "../models/user";
 import { HOUR_IN_SECONDS } from "../utils";
 import exercicez from "./fitocracy.exercises.json" assert { type: "json" };
+import { getDB } from "../dbConnect";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -349,9 +349,9 @@ export const getLiftingTrainingData = async (
     throw new Error("No Fitocracy user ID");
   }
 
-  const workoutsCollection = (
-    await dbConnect()
-  ).connection.db.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
+  const DB = await getDB();
+  const workoutsCollection =
+    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   const workoutsCursor = workoutsCollection.find({
     user_id: user.fitocracyUserId,

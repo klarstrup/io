@@ -8,7 +8,7 @@ import {
   isWithinInterval,
   subHours,
 } from "date-fns";
-import dbConnect from "../dbConnect";
+import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
@@ -533,7 +533,7 @@ export const fetchGroupClimbs = async (
 };
 
 const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
   const climbsCollection =
     DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs");
 
@@ -585,7 +585,7 @@ export async function getIoTopLoggerGroupEvent(
   ioId: number,
   sex?: boolean
 ) {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   const group = await DB.collection<TopLogger.GroupSingle>(
     "toplogger_groups"
@@ -847,7 +847,7 @@ export async function getTopLoggerGroupEventEntry(
   groupId: number,
   userId: number
 ): Promise<EventEntry> {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   const group = await DB.collection<TopLogger.GroupSingle>(
     "toplogger_groups"
@@ -882,7 +882,7 @@ const discipline = "bouldering";
 export const getBoulderingTrainingData = async (
   trainingInterval: DateInterval
 ) => {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   // Io is the only user in the database,
   const user = (await User.findOne())!;

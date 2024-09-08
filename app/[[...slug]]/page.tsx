@@ -5,7 +5,7 @@ import {
   isWithinInterval,
   subMonths,
 } from "date-fns";
-import dbConnect from "../../dbConnect";
+import { getDB } from "../../dbConnect";
 import type { EventEntry } from "../../lib";
 import { User } from "../../models/user";
 import {
@@ -100,7 +100,7 @@ const getData = async (
   disciplines?: string[],
   { from, to }: { from?: Date; to?: Date } | undefined = {}
 ) => {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   // Io is the only user in the database,
   const user = await User.findOne();

@@ -6,9 +6,8 @@ import {
   isWithinInterval,
   startOfDay,
 } from "date-fns";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth";
-import dbConnect from "../../dbConnect";
+import { auth } from "../../auth";
+import { getDB } from "../../dbConnect";
 import type { DateInterval } from "../../lib";
 import { User } from "../../models/user";
 import {
@@ -22,7 +21,7 @@ import {
 } from "../../sources/myfitnesspal";
 import { getRuns, type RunDouble } from "../../sources/rundouble";
 import { type TopLogger } from "../../sources/toplogger";
-import { allPromises, HOUR_IN_SECONDS, unique } from "../../utils";
+import { HOUR_IN_SECONDS, allPromises, unique } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
@@ -31,7 +30,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export default async function Page() {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   const allDayToday: DateInterval = {
     start: startOfDay(new Date()),
@@ -53,7 +52,7 @@ export default async function Page() {
     "myfitnesspal_food_entries"
   );
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   const user = await User.findOne({ _id: session?.user.id });
 

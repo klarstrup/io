@@ -6,7 +6,7 @@ import {
 } from "ical-generator";
 import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
-import dbConnect from "../../dbConnect";
+import { getDB } from "../../dbConnect";
 import { EventEntry } from "../../lib";
 import { User } from "../../models/user";
 import {
@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET() {
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
 
   // Io is the only user in the database,
   const user = await User.findOne();

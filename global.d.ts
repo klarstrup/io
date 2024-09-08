@@ -1,4 +1,6 @@
-import { DefaultSession } from "next-auth";
+/* eslint-disable no-var */
+import type { MongoClient } from "mongodb";
+import type { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   /**
@@ -7,4 +9,8 @@ declare module "next-auth" {
   interface Session {
     user: DefaultSession["user"] & { id: string };
   }
+}
+
+declare global {
+  var _mongoClient: MongoClient | undefined;
 }

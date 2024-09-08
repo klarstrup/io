@@ -1,6 +1,6 @@
 import { differenceInMonths, isFuture } from "date-fns";
 import { DateTime } from "luxon";
-import dbConnect from "../../../dbConnect";
+import dbConnect, { getDB } from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
   MyFitnessPal,
@@ -67,9 +67,8 @@ export async function GET(/* request: NextRequest */) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
 
-  const foodEntries = (
-    await dbConnect()
-  ).connection.db.collection<MyFitnessPal.MongoFoodEntry>(
+  const DB = await getDB();
+  const foodEntries = DB.collection<MyFitnessPal.MongoFoodEntry>(
     "myfitnesspal_food_entries"
   );
 

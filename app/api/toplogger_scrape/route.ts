@@ -1,4 +1,4 @@
-import dbConnect from "../../../dbConnect";
+import { getDB } from "../../../dbConnect";
 import { User } from "../../../models/user";
 import {
   TopLogger,
@@ -34,7 +34,7 @@ export async function GET(/* request: NextRequest */) {
   }
   */
 
-  const DB = (await dbConnect()).connection.db;
+  const DB = await getDB();
   const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
     "toplogger_users"
   );

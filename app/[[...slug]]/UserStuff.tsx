@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
-import { authOptions } from "../../auth";
+import { auth } from "../../auth";
 import dbConnect from "../../dbConnect";
 import { User } from "../../models/user";
 import {
@@ -11,7 +10,7 @@ import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
 
 export default async function UserStuff() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   const currentUser = (await User.findOne({ _id: session?.user.id }))?.toJSON();
 
