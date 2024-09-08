@@ -97,15 +97,12 @@ export const getRunningTrainingData = async (
     runs.reduce((sum, run) => run.runDistance + sum, 0) / 1000
   );
   const runByRun = runs
-    .map(
-      (run) =>
-        ({
-          date: new Date(run.completedLong),
-          distance: run.runDistance,
-          duration: run.runTime,
-          pace: run.runPace,
-        } as const)
-    )
+    .map((run) => ({
+      date: new Date(run.completedLong),
+      distance: run.runDistance,
+      duration: run.runTime,
+      pace: run.runPace,
+    }))
     .filter(({ distance }) => distance >= 5000)
     .sort((a, b) => b.pace - a.pace)
     .slice(0, 5);
