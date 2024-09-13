@@ -69,7 +69,7 @@ export function WorkoutForm({
         console.log({ workout, data, newWorkout });
         await upsertWorkout(newWorkout);
         onClose?.();
-        reset();
+        reset({ exercises: [] });
       })}
     >
       <input
@@ -165,7 +165,7 @@ export function WorkoutForm({
         type="button"
         disabled={!isDirty || isSubmitting}
         onClick={() => {
-          reset();
+          reset({ exercises: [] });
         }}
       >
         Reset
