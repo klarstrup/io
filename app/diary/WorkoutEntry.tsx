@@ -17,7 +17,7 @@ export default function WorkoutEntry({
 
   return (
     <div key={workout._id} style={{ display: "flex" }}>
-      {workout.worked_out_at > new Date(2024, 6, 1) ? (
+      {workout.worked_out_at > new Date(2024, 6, 26) ? (
         <button onClick={() => setIsEditing(!isEditing)}>
           {isEditing ? "Cancel" : "Edit"}
         </button>
