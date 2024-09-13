@@ -1,8 +1,8 @@
 "use client";
 
+import { Session } from "next-auth";
 import { useState } from "react";
 import { exercises } from "../../models/exercises";
-import type { IUser } from "../../models/user";
 import type { WorkoutData } from "../../models/workout";
 import { WorkoutForm } from "./WorkoutForm";
 
@@ -11,7 +11,7 @@ export default function WorkoutEntry({
   user,
 }: {
   workout: WorkoutData & { _id: string };
-  user: IUser & { _id: string };
+  user: Session["user"];
 }) {
   const [isEditing, setIsEditing] = useState(false);
 

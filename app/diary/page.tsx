@@ -1,6 +1,6 @@
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
-import { type IUser, User } from "../../models/user";
+import { User } from "../../models/user";
 import { Workout, type WorkoutData } from "../../models/workout";
 import {
   type Fitocracy,
@@ -34,9 +34,7 @@ export default async function Page() {
     "myfitnesspal_food_entries"
   );
 
-  const session = await auth();
-
-  const user = await User.findOne({ _id: session?.user.id });
+  const user = (await auth())?.user;
 
   if (!user)
     return (
@@ -58,10 +56,13 @@ export default async function Page() {
       return null;
     }
     if (session) {
-      await user.updateOne({
-        myFitnessPalUserId: session.userId,
-        myFitnessPalUserName: session.user.name,
-      });
+      await User.updateOne(
+        { _id: user.id },
+        {
+          myFitnessPalUserId: session.userId,
+          myFitnessPalUserName: session.user.name,
+        }
+      );
     }
   }
 
@@ -105,7 +106,7 @@ export default async function Page() {
     async () => {
       if (user.fitocracyUserId) {
         console.time("workouts");
-        for await (const workout of Workout.find({ user_id: user._id })) {
+        for await (const workout of Workout.find({ user_id: user.id })) {
           addDiaryEntry(workout.worked_out_at, "workouts", {
             ...workout.toJSON(),
             _id: workout._id.toString(),
@@ -191,7 +192,7 @@ export default async function Page() {
   return (
     <div>
       <UserStuff />
-      <WorkoutForm user={user.toJSON() as IUser & { _id: string }} />
+      <WorkoutForm user={user} />
       <div
         style={{
           display: "grid",
@@ -347,7 +348,7 @@ export default async function Page() {
                       {workouts?.map((workout) => (
                         <WorkoutEntry
                           key={workout._id}
-                          user={user.toJSON() as IUser & { _id: string }}
+                          user={user}
                           workout={workout}
                         />
                       ))}

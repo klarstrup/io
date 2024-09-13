@@ -2,11 +2,18 @@
 
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
+import { auth } from "../../auth";
 import { Workout, type WorkoutData } from "../../models/workout";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData
 ) {
+  const user = (await auth())?.user;
+
+  if (!user || workout.user_id !== String(user.id)) {
+    throw new Error("Unauthorized");
+  }
+
   let _id: ObjectId;
   if ("_id" in workout) {
     const { _id: id, ...rest } = workout;

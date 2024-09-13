@@ -1,4 +1,4 @@
-import type { ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 
 export interface IUser {
@@ -7,13 +7,13 @@ export interface IUser {
   email: string;
   image: string;
   emailVerified: boolean;
-  fitocracySessionId: string;
-  fitocracyUserId: number;
-  topLoggerId: number;
-  myFitnessPalToken: string;
-  myFitnessPalUserName: string;
-  myFitnessPalUserId: string;
-  runDoubleId: string;
+  fitocracySessionId?: string | null;
+  fitocracyUserId?: number;
+  topLoggerId?: number | null;
+  myFitnessPalToken?: string | null;
+  myFitnessPalUserName?: string;
+  myFitnessPalUserId?: string;
+  runDoubleId?: string | null;
 }
 
 const userSchema = new mongoose.Schema<IUser>(

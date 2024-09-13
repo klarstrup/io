@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
+import { Session } from "next-auth";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
 import { type ExerciseData, exercises } from "../../models/exercises";
-import { type IUser } from "../../models/user";
 import { type WorkoutData } from "../../models/workout";
 import { deleteWorkout, upsertWorkout } from "./actions";
 
@@ -29,7 +29,7 @@ export function WorkoutForm({
   workout,
   onClose,
 }: {
-  user: IUser & { _id?: string };
+  user: Session["user"];
   workout?: WorkoutData & { _id?: string };
   onClose?: () => void;
 }) {
@@ -59,7 +59,7 @@ export function WorkoutForm({
 
         const newWorkout: WorkoutData & { _id?: string } = {
           _id: workout?._id,
-          user_id: user._id as string,
+          user_id: user.id,
           // Shit that will change
           worked_out_at: data.worked_out_at ?? workout?.worked_out_at,
           created_at: workout?.created_at ?? new Date(),
