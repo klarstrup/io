@@ -1,18 +1,24 @@
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
-import { User } from "../../models/user";
-import { exercises, type Fitocracy } from "../../sources/fitocracy";
+import { type IUser, User } from "../../models/user";
+import { Workout, type WorkoutData } from "../../models/workout";
+import {
+  type Fitocracy,
+  workoutFromFitocracyWorkout,
+} from "../../sources/fitocracy";
 import {
   getMyFitnessPalSession,
   MyFitnessPal,
 } from "../../sources/myfitnesspal";
 import { getRuns, type RunDouble } from "../../sources/rundouble";
-import { type TopLogger } from "../../sources/toplogger";
+import type { TopLogger } from "../../sources/toplogger";
 import { allPromises, HOUR_IN_SECONDS } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import RunByRun from "../[[...slug]]/RunByRun";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
+import WorkoutEntry from "./WorkoutEntry";
+import { WorkoutForm } from "./WorkoutForm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -62,7 +68,7 @@ export default async function Page() {
   const diary: Record<
     `${number}-${number}-${number}`,
     {
-      workouts?: Fitocracy.MongoWorkout[];
+      workouts?: (WorkoutData & { _id: string })[];
       food?: MyFitnessPal.FoodEntry[];
       ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
       runs?: RunDouble.HistoryItem[];
@@ -99,10 +105,17 @@ export default async function Page() {
     async () => {
       if (user.fitocracyUserId) {
         console.time("workouts");
-        for await (const workout of workoutsCollection.find({
+        for await (const workout of Workout.find({ user_id: user._id })) {
+          addDiaryEntry(workout.worked_out_at, "workouts", {
+            ...workout.toJSON(),
+            _id: workout._id.toString(),
+          });
+        }
+        for await (const fitocracyWorkout of workoutsCollection.find({
           user_id: user.fitocracyUserId,
         })) {
-          addDiaryEntry(workout.workout_timestamp, "workouts", workout);
+          const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
+          addDiaryEntry(workout.worked_out_at, "workouts", workout);
         }
         console.timeEnd("workouts");
       }
@@ -178,10 +191,12 @@ export default async function Page() {
   return (
     <div>
       <UserStuff />
+      <WorkoutForm user={user.toJSON() as IUser & { _id: string }} />
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(20em, 1fr))",
+          gridTemplateRows: "masonry",
           gap: "1em",
           padding: "1em",
         }}
@@ -330,36 +345,11 @@ export default async function Page() {
                     <>
                       <small>Lifts:</small>
                       {workouts?.map((workout) => (
-                        <div
-                          key={workout.id}
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {workout.root_group.children.map((workoutGroup) => {
-                            const exercise = exercises.find(
-                              ({ id }) =>
-                                workoutGroup.exercise.exercise_id === id
-                            )!;
-                            return (
-                              <div key={workoutGroup.id}>
-                                <b>
-                                  {(
-                                    exercise.aliases[1] || exercise.name
-                                  ).replace("Barbell", "")}
-                                </b>
-                                <ol>
-                                  {workoutGroup.exercise.sets.map((set) => (
-                                    <li key={set.id}>
-                                      {set.description_string}
-                                    </li>
-                                  ))}
-                                </ol>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        <WorkoutEntry
+                          key={workout._id}
+                          user={user.toJSON() as IUser & { _id: string }}
+                          workout={workout}
+                        />
                       ))}
                     </>
                   ) : null}

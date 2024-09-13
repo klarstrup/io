@@ -1,10 +1,12 @@
 import { format } from "date-fns";
+import type { WithId } from "mongodb";
+import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { DateInterval } from "../lib";
 import { User } from "../models/user";
+import type { WorkoutData } from "../models/workout";
 import { HOUR_IN_SECONDS } from "../utils";
 import exercicez from "./fitocracy.exercises.json" assert { type: "json" };
-import { getDB } from "../dbConnect";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -422,3 +424,32 @@ export const getLiftingTrainingData = async (
 };
 
 export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];
+
+export function workoutFromFitocracyWorkout(
+  workout: WithId<Fitocracy.MongoWorkout>
+): WorkoutData & { _id: string } {
+  const exercises = workout.root_group.children.map(({ exercise }, index) => ({
+    exercise_id: exercise.exercise_id,
+    index,
+    sets: exercise.sets.map(({ inputs }, index) => ({
+      index,
+      inputs: inputs.map(({ id, input_ordinal, type, unit, value }) => ({
+        id,
+        input_ordinal,
+        type,
+        unit,
+        value,
+      })),
+    })),
+  }));
+
+  return {
+    _id: String(workout._id),
+    exercises,
+    user_id: String(workout.root_group.id),
+    created_at: new Date(),
+    updated_at: new Date(),
+    worked_out_at: new Date(workout.workout_timestamp),
+    deleted_at: undefined,
+  };
+}
