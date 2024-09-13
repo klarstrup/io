@@ -16,7 +16,7 @@ export default function WorkoutEntry({
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div key={workout._id} style={{ display: "flex" }}>
+    <div key={workout._id}>
       {workout.worked_out_at > new Date(2024, 6, 26) ? (
         <button onClick={() => setIsEditing(!isEditing)}>
           {isEditing ? "Cancel" : "Edit"}
@@ -51,10 +51,13 @@ export default function WorkoutEntry({
                 <ol>
                   {workoutGroup.sets.map((set, setIndex) => (
                     <li key={setIndex}>
-                      {set.inputs.map((input) => (
-                        <span key={input.id}>
-                          {input.value} {input.unit}
-                        </span>
+                      {set.inputs.map((input, i, l) => (
+                        <>
+                          <span key={input.id}>
+                            {input.value} {input.unit}
+                          </span>
+                          {i < l.length - 1 ? " × " : ""}
+                        </>
                       ))}
                     </li>
                   ))}

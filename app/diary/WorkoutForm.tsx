@@ -69,7 +69,14 @@ export function WorkoutForm({
         console.log({ workout, data, newWorkout });
         await upsertWorkout(newWorkout);
         onClose?.();
-        reset({ exercises: [] });
+        reset(
+          workout
+            ? {
+                ...workout,
+                worked_out_at: dateToInputDate(workout?.worked_out_at),
+              }
+            : { exercises: [] }
+        );
       })}
     >
       <input
@@ -81,8 +88,7 @@ export function WorkoutForm({
             : String(dateToInputDate(new Date()))
         }
       />
-      <fieldset>
-        <legend>Exercises</legend>
+      <div>
         {fields.map((field, index) => {
           const exercise = exercises.find(
             (exercise) => exercise.id === field.exercise_id
@@ -104,7 +110,7 @@ export function WorkoutForm({
                 onClick={() => remove(index)}
                 disabled={isSubmitting}
               >
-                Remove Exercise
+                ❌
               </button>
               <button
                 type="button"
@@ -117,7 +123,7 @@ export function WorkoutForm({
                 }}
                 disabled={index === 0 || isSubmitting}
               >
-                Move Up
+                ⬆️
               </button>
               <button
                 type="button"
@@ -130,7 +136,7 @@ export function WorkoutForm({
                 }}
                 disabled={index === fields.length - 1 || isSubmitting}
               >
-                Move Down
+                ⬇️
               </button>
             </div>
           );
@@ -157,7 +163,7 @@ export function WorkoutForm({
             }}
           />
         </label>
-      </fieldset>
+      </div>
       <button type="submit" disabled={!isDirty || isSubmitting}>
         {workout ? "Update" : "Create"}
       </button>
@@ -165,7 +171,14 @@ export function WorkoutForm({
         type="button"
         disabled={!isDirty || isSubmitting}
         onClick={() => {
-          reset({ exercises: [] });
+          reset(
+            workout
+              ? {
+                  ...workout,
+                  worked_out_at: dateToInputDate(workout?.worked_out_at),
+                }
+              : { exercises: [] }
+          );
         }}
       >
         Reset
@@ -205,68 +218,78 @@ function SetsForm({
     name: `exercises.${parentIndex}.sets`,
   });
   return (
-    <fieldset>
-      <legend>Sets</legend>
-      {fields.map((field, index) => (
-        <div key={field.id}>
-          <InputsForm
-            control={control}
-            register={register}
-            parentIndex={parentIndex}
-            setIndex={index}
-            exercise={exercise}
-          />
-          <button type="button" onClick={() => remove(index)}>
-            Remove Set
-          </button>
+    <div>
+      <ol>
+        {fields.map((field, index) => (
+          <li key={field.id}>
+            <div
+              style={{
+                display: "flex",
+              }}
+            >
+              <InputsForm
+                control={control}
+                register={register}
+                parentIndex={parentIndex}
+                setIndex={index}
+                exercise={exercise}
+              />
+              <button type="button" onClick={() => remove(index)}>
+                ❌
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const newIndex = index - 1;
+                  const destination = fields[newIndex]!;
+                  const source = fields[index]!;
+                  update(index, destination);
+                  update(newIndex, source);
+                }}
+                disabled={index === 0}
+              >
+                ⬆️
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const newIndex = index + 1;
+                  const destination = fields[newIndex]!;
+                  const source = fields[index]!;
+                  update(index, destination);
+                  update(newIndex, source);
+                }}
+                disabled={index === fields.length - 1}
+              >
+                ⬇️
+              </button>
+            </div>
+          </li>
+        ))}
+        <li>
           <button
             type="button"
-            onClick={() => {
-              const newIndex = index - 1;
-              const destination = fields[newIndex]!;
-              const source = fields[index]!;
-              update(index, destination);
-              update(newIndex, source);
-            }}
-            disabled={index === 0}
+            onClick={() =>
+              append({
+                inputs: exercise.inputs.map((input) => ({
+                  id: input.id,
+                  input_ordinal: input.input_ordinal,
+                  value:
+                    fields[fields.length - 1]?.inputs[input.id]?.value ?? 0,
+                  unit:
+                    fields[fields.length - 1]?.inputs[input.id]?.unit ??
+                    input.metric_unit ??
+                    input.allowed_units?.[0]?.name,
+                  type: input.type,
+                })),
+              })
+            }
           >
-            Move Up
+            ➕
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              const newIndex = index + 1;
-              const destination = fields[newIndex]!;
-              const source = fields[index]!;
-              update(index, destination);
-              update(newIndex, source);
-            }}
-            disabled={index === fields.length - 1}
-          >
-            Move Down
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={() =>
-          append({
-            inputs: exercise.inputs.map((input) => ({
-              id: input.id,
-              input_ordinal: input.input_ordinal,
-              value: fields[fields.length - 1]?.inputs[input.id]?.value ?? 0,
-              unit:
-                fields[fields.length - 1]?.inputs[input.id]?.unit ??
-                input.metric_unit ??
-                input.allowed_units?.[0]?.name,
-              type: input.type,
-            })),
-          })
-        }
-      >
-        Add Set
-      </button>
-    </fieldset>
+        </li>
+      </ol>
+    </div>
   );
 }
 
@@ -286,54 +309,53 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
 }) {
-  return (
-    <fieldset>
-      <legend>Set {setIndex + 1}</legend>
-      {exercise.inputs.map((input) => (
-        <div key={input.id} style={{ display: "flex" }}>
-          {input.display_name}:
-          {input.options && input.options.length > 1 ? (
-            <select
-              {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
-              )}
-            >
-              {input.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.value}
-                </option>
-              ))}
-            </select>
-          ) : null}
-          <input
-            {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
-            )}
-          />
-          {input.allowed_units && input.allowed_units.length > 1 ? (
-            <select
-              {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.unit`
-              )}
-            >
-              {[...input.allowed_units]
-                .sort((a, b) => {
-                  return (
-                    (a.name === input.metric_unit ? -1 : 1) -
-                    (b.name === input.metric_unit ? -1 : 1)
-                  );
-                })
-                .map((unit) => (
-                  <option key={unit.name} value={unit.name}>
-                    {unit.name}
-                  </option>
-                ))}
-            </select>
-          ) : (
-            input.metric_unit
+  return exercise.inputs.map((input) => (
+    <div key={input.id} style={{ display: "flex", flex: 1 }}>
+      <span style={{ width: "auto", flex: 1 }}>{input.display_name}: </span>
+      {input.options && input.options.length > 1 ? (
+        <select
+          {...register(
+            `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
           )}
-        </div>
-      ))}
-    </fieldset>
-  );
+          style={{ flex: 1 }}
+        >
+          {input.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+      ) : null}
+      <input
+        {...register(
+          `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+        )}
+        type="number"
+        style={{ width: "64px", flex: 1, textAlign: "right" }}
+      />
+      {input.allowed_units && input.allowed_units.length > 1 ? (
+        <select
+          {...register(
+            `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.unit`
+          )}
+          style={{ flex: 1 }}
+        >
+          {[...input.allowed_units]
+            .sort((a, b) => {
+              return (
+                (a.name === input.metric_unit ? -1 : 1) -
+                (b.name === input.metric_unit ? -1 : 1)
+              );
+            })
+            .map((unit) => (
+              <option key={unit.name} value={unit.name}>
+                {unit.name}
+              </option>
+            ))}
+        </select>
+      ) : (
+        <span style={{ width: "auto", flex: 1 }}>{input.metric_unit}</span>
+      )}
+    </div>
+  ));
 }
