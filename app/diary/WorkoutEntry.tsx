@@ -1,7 +1,7 @@
 "use client";
 
 import { Session } from "next-auth";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { exercises } from "../../models/exercises";
 import type { WorkoutData } from "../../models/workout";
 import { WorkoutForm } from "./WorkoutForm";
@@ -52,12 +52,12 @@ export default function WorkoutEntry({
                   {workoutGroup.sets.map((set, setIndex) => (
                     <li key={setIndex}>
                       {set.inputs.map((input, i, l) => (
-                        <>
-                          <span key={input.id}>
+                        <Fragment key={input.id}>
+                          <span>
                             {input.value} {input.unit}
                           </span>
                           {i < l.length - 1 ? " × " : ""}
-                        </>
+                        </Fragment>
                       ))}
                     </li>
                   ))}

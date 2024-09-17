@@ -39,7 +39,7 @@ export async function GET() {
     topLoggerUser = user?.topLoggerId
       ? await fetchUser(user.topLoggerId)
       : null;
-  } catch (e) {
+  } catch {
     /* */
   }
   const topLoggerUserId = topLoggerUser?.id;

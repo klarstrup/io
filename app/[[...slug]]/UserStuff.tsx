@@ -81,7 +81,6 @@ export default async function UserStuff() {
   } catch {
     runDoubleUser = null;
   }
-  getRunDoubleUser;
 
   return (
     <div

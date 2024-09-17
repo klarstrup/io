@@ -52,7 +52,7 @@ export default async function Page() {
     let session: MyFitnessPal.Session;
     try {
       session = await getMyFitnessPalSession(myFitnessPalToken);
-    } catch (e) {
+    } catch {
       return null;
     }
     if (session) {

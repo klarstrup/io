@@ -197,7 +197,11 @@ export async function GET(/* request: NextRequest */) {
 
     let first = true;
     const flushJSON = async (data: string) => {
-      first ? (first = false) : await writer.write(encoder.encode(",\n"));
+      if (first) {
+        first = false;
+      } else {
+        await writer.write(encoder.encode(",\n"));
+      }
       await writer.write(encoder.encode(JSON.stringify(data)));
     };
 
