@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dump-prod": "mongodump --uri=\"$(npx dotenv-cli -e .env.local -- bash -c 'echo $PROD_MONGODB_URL')\" --out=\"mongodump/$(date '+%Y-%m-%d %H:%M:%S')\"",
+    "restore-local-from-dump": "mongorestore -h 127.0.0.1 --port 27017 --drop --nsFrom=\"self.*\" --nsTo=\"test.*\""
   },
   "dependencies": {
     "@auth/mongodb-adapter": "3.5.0",
