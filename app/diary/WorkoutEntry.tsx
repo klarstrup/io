@@ -34,6 +34,9 @@ export default function WorkoutEntry({
         marginBottom: "4px",
         borderLeft: "0.25em solid #a0a0a0a0",
         paddingLeft: "0.5em",
+        borderRight: "0.25em solid #a0a0a0a0",
+        paddingRight: "0.5em",
+        borderRadius: "0.5em",
       }}
     >
       {workout.source === WorkoutSource.Self || !workout.source ? (
@@ -52,7 +55,7 @@ export default function WorkoutEntry({
           key={workout._id}
           style={{
             display: "grid",
-            gap: "8px",
+            gap: "8px 4px",
             gridTemplateColumns: "50% 50%",
           }}
         >
@@ -73,8 +76,8 @@ export default function WorkoutEntry({
                   style={{
                     paddingInlineStart:
                       workoutGroup.sets.length === 1 ? 0 : "1em",
-                    marginBlockStart: "0.25em",
-                    marginBlockEnd: "0.5em",
+                    marginBlockStart: 0,
+                    marginBlockEnd: 0,
                   }}
                 >
                   {workoutGroup.sets.map((set, setIndex) => (
@@ -100,7 +103,7 @@ export default function WorkoutEntry({
                           })
                           .map((input, i) => (
                             <Fragment key={input.id}>
-                              {i > 0
+                              {i > 0 && input.value
                                 ? input.assist_type === AssistType.Assisted
                                   ? " - "
                                   : input.assist_type === AssistType.Weighted
@@ -128,12 +131,12 @@ export default function WorkoutEntry({
                                     })}
                                     <small>km</small>
                                   </>
-                                ) : (
+                                ) : input.value ? (
                                   <>
                                     {input.value}
                                     <small>{input.unit}</small>
                                   </>
-                                )}
+                                ) : null}
                               </span>
                             </Fragment>
                           ))}
