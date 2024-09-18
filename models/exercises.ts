@@ -13207,7 +13207,7 @@ export const exercises = [
           "https://www.youtube.com/embed/Vol9MoFquLc?rel=0&autoplay=1&modestbranding=1&feature=player_embedded",
       },
     },
-    name: "Dumbbell Upright Row (standing)",
+    name: "Dumbbell Upright Row",
     tags: [
       {
         name: "Dumbbell",
