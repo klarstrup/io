@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
+import { Fragment } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
 import { type ExerciseData, exercises, Unit } from "../../models/exercises";
@@ -79,93 +80,11 @@ export function WorkoutForm({
         );
       })}
     >
-      <input
-        type="date"
-        {...register("worked_out_at", { valueAsDate: true })}
-        defaultValue={
-          workout
-            ? String(dateToInputDate(workout?.worked_out_at))
-            : String(dateToInputDate(new Date()))
-        }
-      />
-      <div>
-        {fields.map((field, index) => {
-          const exercise = exercises.find(
-            (exercise) => exercise.id === field.exercise_id
-          );
-          if (!exercise) {
-            throw new Error(`Exercise with ID ${field.exercise_id} not found`);
-          }
-          return (
-            <div key={field.id}>
-              {exercise.name}
-              <SetsForm
-                control={control}
-                register={register}
-                parentIndex={index}
-                exercise={exercise}
-              />
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                disabled={isSubmitting}
-              >
-                ❌
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const newIndex = index - 1;
-                  const destination = fields[newIndex]!;
-                  const source = fields[index]!;
-                  update(index, destination);
-                  update(newIndex, source);
-                }}
-                disabled={index === 0 || isSubmitting}
-              >
-                ⬆️
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const newIndex = index + 1;
-                  const destination = fields[newIndex]!;
-                  const source = fields[index]!;
-                  update(index, destination);
-                  update(newIndex, source);
-                }}
-                disabled={index === fields.length - 1 || isSubmitting}
-              >
-                ⬇️
-              </button>
-            </div>
-          );
-        })}
-        <label>
-          Add Exercise
-          <Select
-            isDisabled={isSubmitting}
-            options={exercises
-              .filter(
-                ({ id }) => !fields.some((field) => field.exercise_id === id)
-              )
-              .map(({ id, name, aliases }) => ({
-                label: `${name} ${
-                  aliases.length ? `(${aliases.join(", ")})` : ""
-                }`,
-                value: id,
-              }))}
-            onChange={(selected) => {
-              if (!selected) return;
-
-              append({
-                exercise_id: selected.value,
-                sets: [],
-              });
-            }}
-          />
-        </label>
-      </div>
+      {onClose ? (
+        <button type="button" onClick={onClose}>
+          Cancel
+        </button>
+      ) : null}
       <button type="submit" disabled={!isDirty || isSubmitting}>
         {workout ? "Update" : "Create"}
       </button>
@@ -196,6 +115,100 @@ export function WorkoutForm({
           Delete
         </button>
       ) : null}
+      <input
+        type="date"
+        {...register("worked_out_at", { valueAsDate: true })}
+        defaultValue={
+          workout
+            ? String(dateToInputDate(workout?.worked_out_at))
+            : String(dateToInputDate(new Date()))
+        }
+      />
+      <div>
+        {fields.map((field, index) => {
+          const exercise = exercises.find(
+            (exercise) => exercise.id === field.exercise_id
+          );
+          if (!exercise) {
+            throw new Error(`Exercise with ID ${field.exercise_id} not found`);
+          }
+          return (
+            <div key={field.id}>
+              <div style={{ display: "flex" }}>
+                <header style={{ flex: "1", fontWeight: 700 }}>
+                  {exercise.name}
+                </header>
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  disabled={isSubmitting}
+                  style={{ padding: 0 }}
+                >
+                  ❌
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIndex = index - 1;
+                    const destination = fields[newIndex]!;
+                    const source = fields[index]!;
+                    update(index, destination);
+                    update(newIndex, source);
+                  }}
+                  disabled={index === 0 || isSubmitting}
+                  style={{ padding: 0 }}
+                >
+                  ⬆️
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIndex = index + 1;
+                    const destination = fields[newIndex]!;
+                    const source = fields[index]!;
+                    update(index, destination);
+                    update(newIndex, source);
+                  }}
+                  disabled={index === fields.length - 1 || isSubmitting}
+                  style={{ padding: 0 }}
+                >
+                  ⬇️
+                </button>
+              </div>
+              <SetsForm
+                control={control}
+                register={register}
+                parentIndex={index}
+                exercise={exercise}
+              />
+            </div>
+          );
+        })}
+        <label>
+          Add Exercise
+          <Select
+            isDisabled={isSubmitting}
+            options={exercises
+              .filter(
+                ({ id }) => !fields.some((field) => field.exercise_id === id)
+              )
+              .map(({ id, name, aliases }) => ({
+                label: `${name} ${
+                  aliases.length ? `(${aliases.join(", ")})` : ""
+                }`,
+                value: id,
+              }))}
+            onChange={(selected) => {
+              if (!selected) return;
+
+              append({
+                exercise_id: selected.value,
+                sets: [],
+              });
+            }}
+          />
+        </label>
+      </div>
     </form>
   );
 }
@@ -215,60 +228,130 @@ function SetsForm({
   parentIndex: number;
   exercise: ExerciseData;
 }) {
-  const { fields, append, update, remove } = useFieldArray({
+  const {
+    fields: sets,
+    append,
+    update,
+    remove,
+  } = useFieldArray({
     control,
     name: `exercises.${parentIndex}.sets`,
   });
   return (
-    <div>
-      <ol>
-        {fields.map((field, index) => (
-          <li key={field.id}>
-            <div
-              style={{
-                display: "flex",
-              }}
-            >
-              <InputsForm
-                control={control}
-                register={register}
-                parentIndex={parentIndex}
-                setIndex={index}
-                exercise={exercise}
-              />
-              <button type="button" onClick={() => remove(index)}>
-                ❌
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const newIndex = index - 1;
-                  const destination = fields[newIndex]!;
-                  const source = fields[index]!;
-                  update(index, destination);
-                  update(newIndex, source);
-                }}
-                disabled={index === 0}
-              >
-                ⬆️
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const newIndex = index + 1;
-                  const destination = fields[newIndex]!;
-                  const source = fields[index]!;
-                  update(index, destination);
-                  update(newIndex, source);
-                }}
-                disabled={index === fields.length - 1}
-              >
-                ⬇️
-              </button>
-            </div>
-          </li>
+    <table
+      style={{
+        display: "block",
+        width: "100%",
+        borderCollapse: "collapse",
+      }}
+    >
+      <thead>
+        <tr>
+          {exercise.inputs.map((input) => (
+            <th key={input.id}>
+              {input.display_name}{" "}
+              <small>
+                {input.allowed_units && input.allowed_units.length > 1 ? (
+                  <>
+                    (
+                    <select
+                      value={sets[0]?.inputs[input.id]?.unit}
+                      style={{ flex: 1 }}
+                      onChange={(event) => {
+                        const unit = event.target.value as Unit;
+                        sets.forEach((set, setIndex) => {
+                          update(setIndex, {
+                            ...set,
+                            inputs: set.inputs.map((input) => ({
+                              ...input,
+                              unit,
+                            })),
+                          });
+                        });
+                      }}
+                    >
+                      {[...input.allowed_units]
+                        .sort((a, b) => {
+                          return (
+                            (a.name === input.metric_unit ? -1 : 1) -
+                            (b.name === input.metric_unit ? -1 : 1)
+                          );
+                        })
+                        .map((unit) => (
+                          <option key={unit.name} value={unit.name}>
+                            {unit.name}
+                          </option>
+                        ))}
+                    </select>
+                    )
+                  </>
+                ) : input.metric_unit?.toLowerCase() !==
+                  input.display_name.toLowerCase() ? (
+                  <>
+                    (
+                    <span style={{ width: "auto", flex: 1 }}>
+                      {input.metric_unit}
+                    </span>
+                    )
+                  </>
+                ) : null}
+              </small>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {sets.map((set, index) => (
+          <tr key={set.id}>
+            <InputsForm
+              control={control}
+              register={register}
+              parentIndex={parentIndex}
+              setIndex={index}
+              exercise={exercise}
+            />
+            <td>
+              <div style={{ display: "flex" }}>
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  style={{ padding: 0 }}
+                >
+                  ❌
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIndex = index - 1;
+                    const destination = sets[newIndex]!;
+                    const source = sets[index]!;
+                    update(index, destination);
+                    update(newIndex, source);
+                  }}
+                  disabled={index === 0}
+                  style={{ padding: 0 }}
+                >
+                  ⬆️
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newIndex = index + 1;
+                    const destination = sets[newIndex]!;
+                    const source = sets[index]!;
+                    update(index, destination);
+                    update(newIndex, source);
+                  }}
+                  disabled={index === sets.length - 1}
+                  style={{ padding: 0 }}
+                >
+                  ⬇️
+                </button>
+              </div>
+            </td>
+          </tr>
         ))}
-        <li>
+        <tr>
           <button
             type="button"
             onClick={() =>
@@ -276,22 +359,22 @@ function SetsForm({
                 inputs: exercise.inputs.map((input) => ({
                   id: input.id,
                   input_ordinal: input.input_ordinal,
-                  value:
-                    fields[fields.length - 1]?.inputs[input.id]?.value ?? 0,
+                  value: sets[sets.length - 1]?.inputs[input.id]?.value ?? 0,
                   unit:
-                    fields[fields.length - 1]?.inputs[input.id]?.unit ??
+                    sets[sets.length - 1]?.inputs[input.id]?.unit ??
                     input.metric_unit ??
                     input.allowed_units?.[0]?.name,
                   type: input.type,
                 })),
               })
             }
+            style={{ padding: 0 }}
           >
             ➕
           </button>
-        </li>
-      </ol>
-    </div>
+        </tr>
+      </tbody>
+    </table>
   );
 }
 
@@ -311,54 +394,36 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
 }) {
-  return exercise.inputs.map((input) => (
-    <div key={input.id} style={{ display: "flex", flex: 1 }}>
-      <span style={{ width: "auto", flex: 1 }}>{input.display_name}: </span>
-      {input.options && input.options.length > 1 ? (
-        <select
-          {...register(
-            `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
-          )}
-          style={{ flex: 1 }}
-        >
-          {input.options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.value}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      <input
-        {...register(
-          `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
-        )}
-        type="number"
-        step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
-        style={{ width: "64px", flex: 1, textAlign: "right" }}
-      />
-      {input.allowed_units && input.allowed_units.length > 1 ? (
-        <select
-          {...register(
-            `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.unit`
-          )}
-          style={{ flex: 1 }}
-        >
-          {[...input.allowed_units]
-            .sort((a, b) => {
-              return (
-                (a.name === input.metric_unit ? -1 : 1) -
-                (b.name === input.metric_unit ? -1 : 1)
-              );
-            })
-            .map((unit) => (
-              <option key={unit.name} value={unit.name}>
-                {unit.name}
-              </option>
-            ))}
-        </select>
-      ) : (
-        <span style={{ width: "auto", flex: 1 }}>{input.metric_unit}</span>
-      )}
-    </div>
-  ));
+  return (
+    <Fragment>
+      {exercise.inputs.map((input) => (
+        <td key={input.id}>
+          <div style={{ display: "flex" }}>
+            {input.options && input.options.length > 1 ? (
+              <select
+                {...register(
+                  `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
+                )}
+                style={{ flex: 1 }}
+              >
+                {input.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.value}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            <input
+              {...register(
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+              )}
+              type="number"
+              step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
+              style={{ width: "64px", flex: 1, textAlign: "right" }}
+            />
+          </div>
+        </td>
+      ))}
+    </Fragment>
+  );
 }

@@ -1,7 +1,7 @@
 import { isAfter, isWithinInterval, subMonths } from "date-fns";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
-import { DiaryEntry } from "../../lib";
+import type { DiaryEntry } from "../../lib";
 import { User } from "../../models/user";
 import { Workout } from "../../models/workout";
 import {
@@ -239,7 +239,10 @@ export default async function Page() {
   return (
     <div>
       <UserStuff />
-      <WorkoutForm user={user} />
+      <fieldset>
+        <legend>New workout</legend>
+        <WorkoutForm user={user} />
+      </fieldset>
       <div
         style={{
           display: "grid",

@@ -2,7 +2,7 @@
 
 import { Session } from "next-auth";
 import { Fragment, useState } from "react";
-import { exercises } from "../../models/exercises";
+import { AssistType, exercises } from "../../models/exercises";
 import type { WorkoutData } from "../../models/workout";
 import { WorkoutForm } from "./WorkoutForm";
 
@@ -18,9 +18,9 @@ export default function WorkoutEntry({
   return (
     <div key={workout._id}>
       {workout.worked_out_at > new Date(2024, 6, 26) ? (
-        <button onClick={() => setIsEditing(!isEditing)}>
-          {isEditing ? "Cancel" : "Edit"}
-        </button>
+        !isEditing ? (
+          <button onClick={() => setIsEditing(!isEditing)}>Edit</button>
+        ) : null
       ) : null}
       {isEditing ? (
         <WorkoutForm
@@ -52,14 +52,31 @@ export default function WorkoutEntry({
                 <ol>
                   {workoutGroup.sets.map((set, setIndex) => (
                     <li key={setIndex}>
-                      {set.inputs.map((input, i, l) => (
-                        <Fragment key={input.id}>
-                          <span>
-                            {input.value} {input.unit}
-                          </span>
-                          {i < l.length - 1 ? " × " : ""}
-                        </Fragment>
-                      ))}
+                      {set.inputs
+                        .filter((input) => {
+                          if (
+                            input.assist_type === AssistType.Assisted ||
+                            input.assist_type === AssistType.Weighted
+                          ) {
+                            return input.value !== 0;
+                          }
+
+                          return true;
+                        })
+                        .map((input, i) => (
+                          <Fragment key={input.id}>
+                            {i > 0
+                              ? input.assist_type === AssistType.Assisted
+                                ? " - "
+                                : input.assist_type === AssistType.Weighted
+                                ? " + "
+                                : " × "
+                              : ""}
+                            <span>
+                              {input.value} {input.unit}
+                            </span>
+                          </Fragment>
+                        ))}
                     </li>
                   ))}
                 </ol>
