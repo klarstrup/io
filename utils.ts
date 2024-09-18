@@ -45,7 +45,7 @@ export function seconds2time(seconds: number) {
   seconds = seconds - hours * 3600 - minutes * 60;
 
   return `${hours ? `${hours}:` : ""}${
-    minutes < 10 ? `0${minutes}` : String(minutes)
+    hours && minutes < 10 ? `0${minutes}` : String(minutes)
   }:${seconds < 10 ? `0${seconds}` : String(seconds)}`;
 }
 

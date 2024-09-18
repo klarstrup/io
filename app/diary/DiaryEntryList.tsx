@@ -59,7 +59,7 @@ export async function DiaryEntryList({
             {food ? (
               <>
                 <small>Meals:</small>
-                <ol>
+                <ol style={{ paddingInlineStart: "20px" }}>
                   {[
                     MyFitnessPal.MealName.Breakfast,
                     MyFitnessPal.MealName.Lunch,
