@@ -9818,7 +9818,7 @@ export const exercises = [
     name: "Barbell Rear Delt Row",
   },
   {
-    aliases: ["Barbell Overhead Press", "OHP"],
+    aliases: ["Barbell Shoulder Press", "OHP"],
     id: 183,
     inputs: [
       {
@@ -9889,7 +9889,7 @@ export const exercises = [
           "https://www.youtube.com/embed/Mlr0Ysg6rqA?rel=0&autoplay=1&modestbranding=1&feature=player_embedded",
       },
     },
-    name: "Barbell Shoulder Press",
+    name: "Barbell Overhead Press",
     tags: [
       {
         name: "Crossfit",
@@ -10482,7 +10482,7 @@ export const exercises = [
     ],
   },
   {
-    aliases: ["Dumbbell Overhead Press"],
+    aliases: ["Dumbbell Shoulder Press"],
     id: 196,
     inputs: [
       {
@@ -10553,7 +10553,7 @@ export const exercises = [
           "https://www.youtube.com/embed/lH5eU1vk9XM?rel=0&autoplay=1&modestbranding=1&feature=player_embedded",
       },
     },
-    name: "Dumbbell Shoulder Press",
+    name: "Dumbbell Overhead Press",
     tags: [
       {
         name: "Dumbbell",
