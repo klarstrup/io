@@ -1,3 +1,8 @@
+import type { WorkoutData } from "./models/workout";
+import type { MyFitnessPal } from "./sources/myfitnesspal";
+import type { RunDouble } from "./sources/rundouble";
+import type { TopLogger } from "./sources/toplogger";
+
 export interface DateInterval {
   start: Date;
   end: Date;
@@ -101,3 +106,10 @@ export type EventEntry =
       start: Date;
       end: Date;
     };
+
+export interface DiaryEntry {
+  workouts?: (WorkoutData & { _id: string })[];
+  food?: MyFitnessPal.FoodEntry[];
+  ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
+  runs?: RunDouble.HistoryItem[];
+}

@@ -1,7 +1,9 @@
+import { isAfter, isWithinInterval, subMonths } from "date-fns";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
+import { DiaryEntry } from "../../lib";
 import { User } from "../../models/user";
-import { Workout, type WorkoutData } from "../../models/workout";
+import { Workout } from "../../models/workout";
 import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
@@ -10,21 +12,26 @@ import {
   getMyFitnessPalSession,
   MyFitnessPal,
 } from "../../sources/myfitnesspal";
-import { getRuns, type RunDouble } from "../../sources/rundouble";
+import { getRuns } from "../../sources/rundouble";
 import type { TopLogger } from "../../sources/toplogger";
 import { allPromises, HOUR_IN_SECONDS } from "../../utils";
-import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
-import RunByRun from "../[[...slug]]/RunByRun";
+import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
-import WorkoutEntry from "./WorkoutEntry";
+import { DiaryEntryList } from "./DiaryEntryList";
 import { WorkoutForm } from "./WorkoutForm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export default async function Page() {
-  console.time("diary preamble");
+const monthsPerPage = 3;
+
+async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
+  const user = (await auth())?.user;
+
+  if (!user) {
+    return [];
+  }
   const DB = await getDB();
 
   const workoutsCollection =
@@ -33,7 +40,161 @@ export default async function Page() {
   const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
     "myfitnesspal_food_entries"
   );
+  const diary: Record<`${number}-${number}-${number}`, DiaryEntry> = {};
+  function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
+    date: Date,
+    key: K,
+    entry: NonNullable<(typeof diary)[keyof typeof diary][K]>[number]
+  ) {
+    const dayStr: `${number}-${number}-${number}` = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+    let day = diary[dayStr];
+    if (!day) {
+      day = {};
+    }
+    let dayEntries = day[key];
+    if (!dayEntries) {
+      dayEntries = [];
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+    dayEntries.push(entry as any);
+    day[key] = dayEntries;
 
+    diary[dayStr] = day;
+  }
+
+  await allPromises(
+    async () => {
+      for await (const workout of Workout.find({
+        user_id: user.id,
+      })) {
+        if (
+          isWithinInterval(workout.worked_out_at, {
+            start: from,
+            end: to || new Date(),
+          })
+        ) {
+          addDiaryEntry(workout.worked_out_at, "workouts", {
+            ...workout.toJSON(),
+            _id: workout._id.toString(),
+          });
+        }
+      }
+      if (user.fitocracyUserId) {
+        for await (const fitocracyWorkout of workoutsCollection.find({
+          user_id: user.fitocracyUserId,
+          workout_timestamp: { $gte: from, $lt: to },
+        })) {
+          const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
+          addDiaryEntry(workout.worked_out_at, "workouts", workout);
+        }
+      }
+    },
+    async () => {
+      if (user.myFitnessPalUserId) {
+        for await (const foodEntry of foodEntriesCollection.find({
+          user_id: user.myFitnessPalUserId,
+          datetime: { $gte: from, $lt: to },
+        })) {
+          addDiaryEntry(foodEntry.datetime, "food", foodEntry);
+        }
+      }
+    },
+    async () => {
+      if (user.topLoggerId) {
+        const ascends = await DB.collection<TopLogger.AscendSingle>(
+          "toplogger_ascends"
+        )
+          .find({
+            user_id: user.topLoggerId,
+            date_logged: { $gte: from, $lt: to },
+          })
+          .toArray();
+
+        const climbs = await DB.collection<TopLogger.ClimbMultiple>(
+          "toplogger_climbs"
+        )
+          .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
+          .toArray();
+
+        for (const ascend of ascends) {
+          if (!ascend.date_logged) continue;
+          addDiaryEntry(ascend.date_logged, "ascends", {
+            ...ascend,
+            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+          });
+        }
+      }
+    },
+    async () => {
+      if (user.runDoubleId) {
+        for (const run of await getRuns(user.runDoubleId, {
+          maxAge: HOUR_IN_SECONDS * 12,
+        })) {
+          if (
+            isWithinInterval(new Date(run.completedLong), {
+              start: from,
+              end: to || new Date(),
+            })
+          ) {
+            addDiaryEntry(new Date(run.completed), "runs", run);
+          }
+        }
+      }
+    }
+  );
+
+  const diaryEntries = Object.entries(diary).sort(
+    ([a], [b]) =>
+      new Date(
+        Number(b.split("-")[0]),
+        Number(b.split("-")[1]) - 1,
+        Number(b.split("-")[2])
+      ).getTime() -
+      new Date(
+        Number(a.split("-")[0]),
+        Number(a.split("-")[1]) - 1,
+        Number(a.split("-")[2])
+      ).getTime()
+  ) as [`${number}-${number}-${number}`, DiaryEntry][];
+
+  return diaryEntries;
+}
+
+async function loadMoreData(cursor: string) {
+  "use server";
+
+  const user = (await auth())?.user;
+  if (!user) throw new Error("User not found");
+
+  const { from, to } = JSON.parse(cursor) as {
+    from?: string;
+    to?: string;
+  };
+  if (!from) throw new Error("From not found");
+  if (!to) throw new Error("To not found");
+
+  const isAtLimit = isAfter(new Date(2013, 9), to || from || new Date());
+
+  if (isAtLimit) return [null, null] as const;
+
+  const diaryEntries = await getDiaryEntries({
+    from: new Date(from),
+    to: new Date(to),
+  });
+
+  return [
+    <DiaryEntryList
+      diaryEntries={diaryEntries}
+      user={user}
+      key={JSON.stringify({ from, to })}
+    />,
+    JSON.stringify({ from: subMonths(from, monthsPerPage), to: from }),
+  ] as const;
+}
+
+export default async function Page() {
   const user = (await auth())?.user;
 
   if (!user)
@@ -66,129 +227,15 @@ export default async function Page() {
     }
   }
 
-  const diary: Record<
-    `${number}-${number}-${number}`,
-    {
-      workouts?: (WorkoutData & { _id: string })[];
-      food?: MyFitnessPal.FoodEntry[];
-      ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
-      runs?: RunDouble.HistoryItem[];
-    }
-  > = {};
-  function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
-    date: Date,
-    key: K,
-    entry: NonNullable<(typeof diary)[keyof typeof diary][K]>[number]
-  ) {
-    const dayStr: `${number}-${number}-${number}` = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`;
-    let day = diary[dayStr];
-    if (!day) {
-      day = {};
-    }
-    let dayEntries = day[key];
-    if (!dayEntries) {
-      dayEntries = [];
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-    dayEntries.push(entry as any);
-    day[key] = dayEntries;
+  const from = subMonths(new Date(), monthsPerPage);
+  const to = undefined;
+  const diaryEntries = await getDiaryEntries({ from, to });
 
-    diary[dayStr] = day;
-  }
+  const initialCursor = JSON.stringify({
+    from: subMonths(from, monthsPerPage),
+    to: from,
+  });
 
-  console.timeEnd("diary preamble");
-
-  console.time("diary body");
-  const [holds] = await allPromises(
-    DB.collection<TopLogger.Hold>("toplogger_holds").find().toArray(),
-    async () => {
-      if (user.fitocracyUserId) {
-        console.time("workouts");
-        for await (const workout of Workout.find({ user_id: user.id })) {
-          addDiaryEntry(workout.worked_out_at, "workouts", {
-            ...workout.toJSON(),
-            _id: workout._id.toString(),
-          });
-        }
-        for await (const fitocracyWorkout of workoutsCollection.find({
-          user_id: user.fitocracyUserId,
-        })) {
-          const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
-          addDiaryEntry(workout.worked_out_at, "workouts", workout);
-        }
-        console.timeEnd("workouts");
-      }
-    },
-    async () => {
-      if (user.myFitnessPalUserId) {
-        console.time("food");
-        for await (const foodEntry of foodEntriesCollection.find({
-          user_id: user.myFitnessPalUserId,
-        })) {
-          addDiaryEntry(foodEntry.datetime, "food", foodEntry);
-        }
-        console.timeEnd("food");
-      }
-    },
-    async () => {
-      if (user.topLoggerId) {
-        console.time("ascends");
-        const ascends = await DB.collection<TopLogger.AscendSingle>(
-          "toplogger_ascends"
-        )
-          .find({ user_id: user.topLoggerId })
-          .toArray();
-
-        const climbs = await DB.collection<TopLogger.ClimbMultiple>(
-          "toplogger_climbs"
-        )
-          .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
-          .toArray();
-
-        for (const ascend of ascends) {
-          if (!ascend.date_logged) continue;
-          addDiaryEntry(ascend.date_logged, "ascends", {
-            ...ascend,
-            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-          });
-        }
-        console.timeEnd("ascends");
-      }
-    },
-    async () => {
-      if (user.runDoubleId) {
-        console.time("runs");
-        for (const run of await getRuns(user.runDoubleId, {
-          maxAge: HOUR_IN_SECONDS * 12,
-        })) {
-          addDiaryEntry(new Date(run.completed), "runs", run);
-        }
-        console.timeEnd("runs");
-      }
-    }
-  );
-
-  console.time("diary sort");
-  const diaryEntries = Object.entries(diary).sort(
-    ([a], [b]) =>
-      new Date(
-        Number(b.split("-")[0]),
-        Number(b.split("-")[1]) - 1,
-        Number(b.split("-")[2])
-      ).getTime() -
-      new Date(
-        Number(a.split("-")[0]),
-        Number(a.split("-")[1]) - 1,
-        Number(a.split("-")[2])
-      ).getTime()
-  );
-  //  console.log(diary["2024-8-20"]);
-  //  console.log(diaryEntries);
-  console.timeEnd("diary sort");
-
-  console.timeEnd("diary body");
   return (
     <div>
       <UserStuff />
@@ -202,219 +249,9 @@ export default async function Page() {
           padding: "1em",
         }}
       >
-        {diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
-          const dayTotalEnergy = food?.reduce(
-            (acc, foodEntry) =>
-              acc + foodEntry.nutritional_contents.energy.value,
-            0
-          );
-          const dayTotalProtein = food?.reduce(
-            (acc, foodEntry) =>
-              acc + (foodEntry.nutritional_contents.protein || 0),
-            0
-          );
-
-          return (
-            <div
-              key={date}
-              style={{
-                boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
-                borderRadius: "1.5em",
-                background: "white",
-                display: "flex",
-                flexDirection: "column",
-                padding: "0.5em",
-              }}
-            >
-              <div
-                style={{
-                  marginBottom: "0.5em",
-                  marginLeft: "1em",
-                }}
-              >
-                <big>{date}</big>{" "}
-                {dayTotalEnergy && dayTotalProtein ? (
-                  <small>
-                    {Math.round(dayTotalEnergy)} kcal,{" "}
-                    {Math.round(dayTotalProtein)}g protein
-                  </small>
-                ) : null}
-              </div>
-              <div style={{ flex: "1" }}>
-                <div>
-                  {food ? (
-                    <>
-                      <small>Meals:</small>
-                      <ol>
-                        {[
-                          MyFitnessPal.MealName.Breakfast,
-                          MyFitnessPal.MealName.Lunch,
-                          MyFitnessPal.MealName.Dinner,
-                          MyFitnessPal.MealName.Snacks,
-                        ]
-                          .filter((mealName) =>
-                            food?.some(
-                              (foodEntry) => foodEntry.meal_name === mealName
-                            )
-                          )
-                          .map((mealName) => {
-                            const mealTotalEnergy = food
-                              ?.filter(
-                                (foodEntry) => foodEntry.meal_name === mealName
-                              )
-                              .reduce(
-                                (acc, foodEntry) =>
-                                  acc +
-                                  foodEntry.nutritional_contents.energy.value,
-                                0
-                              );
-                            const mealTotalProtein = food
-                              ?.filter(
-                                (foodEntry) => foodEntry.meal_name === mealName
-                              )
-                              .reduce(
-                                (acc, foodEntry) =>
-                                  acc +
-                                  (foodEntry.nutritional_contents.protein || 0),
-                                0
-                              );
-
-                            return (
-                              <li key={mealName}>
-                                <div>
-                                  <b>{mealName}</b>{" "}
-                                  {mealTotalEnergy && mealTotalProtein ? (
-                                    <small>
-                                      {Math.round(mealTotalEnergy)} kcal,{" "}
-                                      {Math.round(mealTotalProtein)}g protein
-                                    </small>
-                                  ) : null}
-                                </div>
-                                <ul>
-                                  {food
-                                    ?.filter(
-                                      (foodEntry) =>
-                                        foodEntry.meal_name === mealName
-                                    )
-                                    .map((foodEntry) => (
-                                      <li
-                                        key={foodEntry.id}
-                                        style={{ listStyle: "none" }}
-                                      >
-                                        {foodEntry.food.description.replace(
-                                          /\s+/g,
-                                          " "
-                                        )}
-                                        <small>
-                                          {" "}
-                                          {foodEntry.servings *
-                                            foodEntry.serving_size.value !==
-                                          1 ? (
-                                            <>
-                                              {Math.round(
-                                                foodEntry.servings *
-                                                  foodEntry.serving_size.value
-                                              )}{" "}
-                                              {foodEntry.serving_size.unit.match(
-                                                /container/i
-                                              )
-                                                ? "x "
-                                                : null}
-                                            </>
-                                          ) : null}
-                                          {foodEntry.serving_size.unit.match(
-                                            /container/i
-                                          )
-                                            ? foodEntry.serving_size.unit.replace(
-                                                /(container \((.+)\))/i,
-                                                "$2"
-                                              )
-                                            : foodEntry.serving_size.unit}
-                                        </small>
-                                      </li>
-                                    ))}
-                                </ul>
-                              </li>
-                            );
-                          })}
-                      </ol>
-                    </>
-                  ) : null}
-                </div>
-                <div>
-                  {workouts?.length ? (
-                    <>
-                      <small>Lifts:</small>
-                      {workouts?.map((workout) => (
-                        <WorkoutEntry
-                          key={workout._id}
-                          user={user}
-                          workout={workout}
-                        />
-                      ))}
-                    </>
-                  ) : null}
-                  {ascends?.length ? (
-                    <>
-                      <small>Climbs:</small>
-                      <big>
-                        <ProblemByProblem
-                          problemByProblem={ascends
-                            .sort(
-                              (a, b) =>
-                                Number(b.date_logged) - Number(a.date_logged)
-                            )
-                            .map(({ climb: { grade, hold_id }, checks }) => ({
-                              number: "",
-                              color:
-                                holds.find((hold) => hold.id === hold_id)
-                                  ?.color || undefined,
-                              grade: Number(grade) || undefined,
-                              attempt: true,
-                              // TopLogger does not do zones, at least not for Beta Boulders
-                              zone: checks >= 1,
-                              top: checks >= 1,
-                              flash: checks >= 2,
-                            }))}
-                        />
-                      </big>
-                    </>
-                  ) : null}
-                  {runs?.length ? (
-                    <>
-                      <small>Runs:</small>
-                      <RunByRun
-                        runByRun={runs.map(
-                          (run) =>
-                            ({
-                              date: new Date(run.completedLong),
-                              distance: run.runDistance,
-                              duration: run.runTime,
-                              pace: run.runPace,
-                            } as const)
-                        )}
-                      />
-                    </>
-                  ) : null}
-                </div>
-              </div>
-              <hr />
-              <small
-                style={{
-                  textAlign: "center",
-                  display: "flex",
-                  justifyContent: "space-evenly",
-                  opacity: 0.5,
-                }}
-              >
-                {!food?.length ? <i>No meals logged</i> : null}
-                {!workouts?.length ? <i>No lifts logged</i> : null}
-                {!ascends?.length ? <i>No climbs logged</i> : null}
-                {!runs?.length ? <i>No runs logged</i> : null}
-              </small>
-            </div>
-          );
-        })}
+        <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
+          <DiaryEntryList diaryEntries={diaryEntries} user={user} />
+        </LoadMore>
       </div>
     </div>
   );

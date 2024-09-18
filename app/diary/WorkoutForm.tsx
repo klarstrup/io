@@ -331,6 +331,7 @@ function InputsForm({
           `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
         )}
         type="number"
+        step="0.01"
         style={{ width: "64px", flex: 1, textAlign: "right" }}
       />
       {input.allowed_units && input.allowed_units.length > 1 ? (
