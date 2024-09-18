@@ -24,7 +24,7 @@ import { WorkoutForm } from "./WorkoutForm";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const monthsPerPage = 3;
+const monthsPerPage = 1;
 
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
