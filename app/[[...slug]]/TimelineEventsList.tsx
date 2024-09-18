@@ -4,7 +4,6 @@ import { EventEntry } from "../../lib";
 import { cotemporality } from "../../utils";
 import { BalanceColumnsScript } from "./BalanceColumnsScript";
 import TimelineEventContent from "./TimelineEventContent";
-// import { TimelineTrainingArticle } from "./TimelineTrainingArticle";
 
 export function TimelineEventsList({
   events,
@@ -34,13 +33,6 @@ export function TimelineEventsList({
             </article>
           )
         ) : null}
-        {/*
-        <TimelineTrainingArticle
-          from={event.end}
-          to={nextEvent?.start || now}
-          disciplines={disciplines}
-        />
-        */}
         <article key={event.id}>
           <div className={`content ${cotemporality(event)}`}>
             <TimelineEventContent

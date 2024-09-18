@@ -194,17 +194,7 @@ export async function DiaryEntryList({
             {runs?.length ? (
               <>
                 <small>Runs:</small>
-                <RunByRun
-                  runByRun={runs.map(
-                    (run) =>
-                      ({
-                        date: new Date(run.completedLong),
-                        distance: run.runDistance,
-                        duration: run.runTime,
-                        pace: run.runPace,
-                      } as const)
-                  )}
-                />
+                <RunByRun runByRun={runs} />
               </>
             ) : null}
           </div>

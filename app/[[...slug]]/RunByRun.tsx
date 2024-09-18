@@ -1,4 +1,4 @@
-import { getRunningTrainingData } from "../../sources/rundouble";
+import { RunDouble } from "../../sources/rundouble";
 import { seconds2time } from "../../utils";
 
 function pad(i: number, width: number, z = "0") {
@@ -18,21 +18,21 @@ function formatPace(pace: number) {
 export default function RunByRun({
   runByRun,
 }: {
-  runByRun: Awaited<ReturnType<typeof getRunningTrainingData>>["runByRun"];
+  runByRun: RunDouble.HistoryItem[];
 }) {
   return (
     <table style={{ display: "inline-flex" }}>
       <tbody>
         {runByRun.map((run) => (
           <tr
-            key={String(run.date)}
+            key={String(run.completed)}
             style={{ textAlign: "center", fontSize: "0.75em" }}
           >
             <td>
               <dl>
                 <dt>km</dt>
                 <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                  {(run.distance / 1000).toLocaleString("en-US", {
+                  {(run.runDistance / 1000).toLocaleString("en-US", {
                     unit: "kilometer",
                     maximumSignificantDigits: 2,
                   })}
@@ -43,7 +43,7 @@ export default function RunByRun({
               <dl>
                 <dt>Duration</dt>
                 <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                  {seconds2time(Math.round(run.duration / 1000))}
+                  {seconds2time(Math.round(run.runTime / 1000))}
                 </dd>
               </dl>
             </td>
@@ -51,9 +51,9 @@ export default function RunByRun({
               <dl>
                 <dt>Pace</dt>
                 <dd style={{ fontSize: "1.5em", fontWeight: 600 }}>
-                  {run.pace ? (
+                  {run.runPace ? (
                     <>
-                      {formatPace(run.pace)}
+                      {formatPace(run.runPace)}
                       <small>
                         <small>min/km</small>
                       </small>

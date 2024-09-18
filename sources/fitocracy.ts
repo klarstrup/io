@@ -1,9 +1,7 @@
 import { format } from "date-fns";
 import type { WithId } from "mongodb";
-import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { DateInterval } from "../lib";
-import { User } from "../models/user";
 import { WorkoutSource, type WorkoutData } from "../models/workout";
 import { HOUR_IN_SECONDS } from "../utils";
 import exercicez from "./fitocracy.exercises.json" assert { type: "json" };
@@ -336,91 +334,6 @@ export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
   if ("error" in result) throw new Error(result.error);
 
   return Object.values(result)[0] as Fitocracy.ProfileData;
-};
-
-const type = "training";
-const discipline = "lifting";
-
-export const getLiftingTrainingData = async (
-  trainingInterval: DateInterval
-) => {
-  // Io is the only user in the database,
-  const user = (await User.findOne())!;
-
-  if (!user.fitocracyUserId) {
-    throw new Error("No Fitocracy user ID");
-  }
-
-  const DB = await getDB();
-  const workoutsCollection =
-    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
-
-  const workoutsCursor = workoutsCollection.find({
-    user_id: user.fitocracyUserId,
-    workout_timestamp: {
-      $gte: trainingInterval.start,
-      $lt: trainingInterval.end,
-    },
-  });
-
-  const biggestLifts: Record<
-    string,
-    Fitocracy.WorkoutData["root_group"]["children"][number]["exercise"]["sets"][number]
-  > = {};
-  let count = 0;
-  for await (const workout of workoutsCursor) {
-    for (const child of workout.root_group.children) {
-      for (const set of child.exercise.sets) {
-        let reps: number | undefined, weight: number | undefined;
-        for (const input of set.inputs) {
-          switch (input.unit) {
-            case Fitocracy.Unit.Reps: {
-              reps = input.value;
-              break;
-            }
-            case Fitocracy.Unit.Kg: {
-              weight = input.value;
-              break;
-            }
-          }
-        }
-        if (reps && weight) {
-          count += reps * weight;
-
-          const key = child.exercise.exercise_id;
-          const biggestLift = biggestLifts[key];
-          const biggestWeight = biggestLift?.inputs.find(
-            ({ unit }) => unit === Fitocracy.Unit.Kg
-          )?.value;
-          const setReps = set.inputs.find(
-            ({ unit }) => unit === Fitocracy.Unit.Reps
-          )?.value;
-          if (
-            !biggestLift ||
-            (((biggestWeight && biggestWeight < weight) ||
-              (biggestWeight === weight && set.is_personal_record)) &&
-              setReps &&
-              setReps >= 5)
-          ) {
-            biggestLifts[key] = set;
-          }
-        }
-      }
-    }
-  }
-
-  return {
-    source: "fitocracy",
-    type,
-    discipline,
-    count,
-    liftByLift: Object.entries(biggestLifts)
-      .map(
-        ([exerciseId, set]) =>
-          [exercises.find(({ id }) => id === Number(exerciseId))!, set] as const
-      )
-      .filter(([exercise]) => exerciseIdsThatICareAbout.includes(exercise.id)),
-  } as const;
 };
 
 export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];

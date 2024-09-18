@@ -20,7 +20,6 @@ import {
   ThousandDivideByScore,
   type DateInterval,
 } from "../lib";
-import { User } from "../models/user";
 import { RelativeURL, percentile } from "../utils";
 
 export namespace TopLogger {
@@ -667,8 +666,8 @@ export async function getIoTopLoggerGroupEvent(
     .toArray();
 
   const r = {
-    source,
-    discipline,
+    source: EventSource.TopLogger,
+    discipline: "bouldering",
     type: "competition",
     id: groupId,
     ioId,
@@ -862,7 +861,7 @@ export async function getTopLoggerGroupEventEntry(
   return {
     source: EventSource.TopLogger,
     type: "competition",
-    discipline,
+    discipline: "bouldering",
     id: groupId,
     venue: gym.name.trim(),
     location: gym.address || null,
@@ -876,69 +875,3 @@ export async function getTopLoggerGroupEventEntry(
     end: group.date_loggable_end,
   } as const;
 }
-
-const source = "toplogger";
-const type = "training";
-const discipline = "bouldering";
-export const getBoulderingTrainingData = async (
-  trainingInterval: DateInterval
-) => {
-  const DB = await getDB();
-
-  // Io is the only user in the database,
-  const user = (await User.findOne())!;
-  const topLoggerId = user.topLoggerId!;
-
-  const ascends = await DB.collection<TopLogger.AscendSingle>(
-    "toplogger_ascends"
-  )
-    .find({
-      user_id: topLoggerId,
-      date_logged: { $gte: trainingInterval.start, $lte: trainingInterval.end },
-    })
-    .toArray();
-
-  const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
-    .find()
-    .toArray();
-
-  const climbs = await DB.collection<TopLogger.ClimbMultiple>(
-    "toplogger_climbs"
-  )
-    .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
-    .toArray();
-
-  let problemByProblem = ascends.map(({ climb_id, checks }) => {
-    const climb = climbs.find(({ id }) => id === climb_id);
-
-    return {
-      number: "",
-      color:
-        (climb && holds.find((hold) => hold.id === climb.hold_id)?.color) ||
-        undefined,
-      grade: (climb && Number(climb.grade)) || undefined,
-      attempt: true,
-      // TopLogger does not do zones, at least not for Beta Boulders
-      zone: checks >= 1,
-      top: checks >= 1,
-      flash: checks >= 2,
-    };
-  });
-  const grades = Array.from(
-    problemByProblem.reduce((set, { grade }) => {
-      if (grade) set.add(grade);
-      return set;
-    }, new Set<number>())
-  )
-    .sort()
-    .reverse();
-
-  problemByProblem = problemByProblem
-    .sort((a, b) => (b.grade || 0) - (a.grade || 0))
-    .filter(({ grade }) => grade && grades.includes(grade))
-    .slice(0, 15);
-
-  const count = ascends.length;
-
-  return { source, type, discipline, count, problemByProblem } as const;
-};
