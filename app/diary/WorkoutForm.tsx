@@ -4,7 +4,7 @@
 import { Session } from "next-auth";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
-import { type ExerciseData, exercises } from "../../models/exercises";
+import { type ExerciseData, exercises, Unit } from "../../models/exercises";
 import { type WorkoutData } from "../../models/workout";
 import { deleteWorkout, upsertWorkout } from "./actions";
 
@@ -331,7 +331,7 @@ function InputsForm({
           `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
         )}
         type="number"
-        step="0.01"
+        step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
         style={{ width: "64px", flex: 1, textAlign: "right" }}
       />
       {input.allowed_units && input.allowed_units.length > 1 ? (
