@@ -12,7 +12,7 @@ import {
   getMyFitnessPalSession,
   MyFitnessPal,
 } from "../../sources/myfitnesspal";
-import { getRuns } from "../../sources/rundouble";
+import { getRuns, workoutFromRunDouble } from "../../sources/rundouble";
 import type { TopLogger } from "../../sources/toplogger";
 import { allPromises, HOUR_IN_SECONDS } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
@@ -138,7 +138,11 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
               end: to || new Date(),
             })
           ) {
-            addDiaryEntry(new Date(run.completed), "runs", run);
+            addDiaryEntry(
+              new Date(run.completed),
+              "workouts",
+              workoutFromRunDouble(run)
+            );
           }
         }
       }

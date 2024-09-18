@@ -4,7 +4,6 @@ import type { DiaryEntry } from "../../lib";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { TopLogger } from "../../sources/toplogger";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
-import RunByRun from "../[[...slug]]/RunByRun";
 import WorkoutEntry from "./WorkoutEntry";
 
 export async function DiaryEntryList({
@@ -19,7 +18,7 @@ export async function DiaryEntryList({
     .find()
     .toArray();
 
-  return diaryEntries.map(([date, { food, workouts, ascends, runs }]) => {
+  return diaryEntries.map(([date, { food, workouts, ascends }]) => {
     const dayTotalEnergy = food?.reduce(
       (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
       0
@@ -154,18 +153,15 @@ export async function DiaryEntryList({
             ) : null}
           </div>
           <div>
-            {workouts?.length ? (
-              <>
-                <small>Lifts:</small>
-                {workouts?.map((workout) => (
+            {workouts?.length
+              ? workouts?.map((workout) => (
                   <WorkoutEntry
                     key={workout._id}
                     user={user}
                     workout={workout}
                   />
-                ))}
-              </>
-            ) : null}
+                ))
+              : null}
             {ascends?.length ? (
               <>
                 <small>Climbs:</small>
@@ -191,12 +187,6 @@ export async function DiaryEntryList({
                 </big>
               </>
             ) : null}
-            {runs?.length ? (
-              <>
-                <small>Runs:</small>
-                <RunByRun runByRun={runs} />
-              </>
-            ) : null}
           </div>
         </div>
         <hr />
@@ -211,7 +201,6 @@ export async function DiaryEntryList({
           {!food?.length ? <i>No meals logged</i> : null}
           {!workouts?.length ? <i>No lifts logged</i> : null}
           {!ascends?.length ? <i>No climbs logged</i> : null}
-          {!runs?.length ? <i>No runs logged</i> : null}
         </small>
       </div>
     );

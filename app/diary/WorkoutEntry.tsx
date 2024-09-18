@@ -2,9 +2,21 @@
 
 import { Session } from "next-auth";
 import { Fragment, useState } from "react";
-import { AssistType, exercises } from "../../models/exercises";
+import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import { WorkoutData, WorkoutSource } from "../../models/workout";
+import { seconds2time } from "../../utils";
 import { WorkoutForm } from "./WorkoutForm";
+
+function pad(i: number, width: number, z = "0") {
+  const n = String(i);
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+function decimalAsTime(dec: number) {
+  const minutes = Math.floor(dec);
+  const sec = Math.floor(60 * (dec - minutes));
+  return String(minutes) + ":" + pad(sec, 2);
+}
 
 export default function WorkoutEntry({
   workout,
@@ -16,7 +28,14 @@ export default function WorkoutEntry({
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div key={workout._id}>
+    <div
+      key={workout._id}
+      style={{
+        marginBottom: "4px",
+        borderLeft: "0.25em solid #a0a0a0a0",
+        paddingLeft: "0.5em",
+      }}
+    >
       {workout.source === WorkoutSource.Self || !workout.source ? (
         !isEditing ? (
           <button onClick={() => setIsEditing(!isEditing)}>Edit</button>
@@ -51,7 +70,13 @@ export default function WorkoutEntry({
                 </b>
                 <ol>
                   {workoutGroup.sets.map((set, setIndex) => (
-                    <li key={setIndex}>
+                    <li
+                      key={setIndex}
+                      style={{
+                        listStyleType:
+                          workoutGroup.sets.length === 1 ? "none" : "decimal",
+                      }}
+                    >
                       {set.inputs
                         .filter((input) => {
                           if (
@@ -73,7 +98,30 @@ export default function WorkoutEntry({
                                 : " × "
                               : ""}
                             <span>
-                              {input.value} {input.unit}
+                              {input.type === InputType.Pace ? (
+                                <>
+                                  {decimalAsTime(input.value)}
+                                  <small>min/km</small>
+                                </>
+                              ) : input.type === InputType.Time ? (
+                                <>{seconds2time(Math.round(input.value))}</>
+                              ) : input.type === InputType.Distance ? (
+                                <>
+                                  {(input.unit === Unit.M
+                                    ? input.value / 1000
+                                    : input.value
+                                  ).toLocaleString("en-US", {
+                                    unit: "kilometer",
+                                    maximumSignificantDigits: 2,
+                                  })}
+                                  <small>km</small>
+                                </>
+                              ) : (
+                                <>
+                                  {input.value}
+                                  <small>{input.unit}</small>
+                                </>
+                              )}
                             </span>
                           </Fragment>
                         ))}

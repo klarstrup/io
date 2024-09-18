@@ -1,4 +1,6 @@
 import { dbFetch } from "../fetch";
+import { InputType, Unit } from "../models/exercises";
+import { WorkoutData, WorkoutSource } from "../models/workout";
 import { RelativeURL } from "../utils";
 
 export namespace RunDouble {
@@ -18,7 +20,9 @@ export namespace RunDouble {
     completedLong: number;
     stageName: string;
     shortCode: string;
+    /** Run distance in meters */
     runDistance: number;
+    /** Run duration in milliseconds */
     runTime: number;
     polyline: string;
     runPace: number;
@@ -80,3 +84,45 @@ export const getRunDoubleUser = async (
     )
   ).user;
 };
+
+export function workoutFromRunDouble(
+  run: RunDouble.HistoryItem
+): WorkoutData & { _id: string } {
+  return {
+    _id: `rundouble-${run.key}`,
+    exercises: [
+      {
+        exercise_id: 518,
+        sets: [
+          {
+            inputs: [
+              {
+                id: 0,
+                type: InputType.Time,
+                unit: Unit.SEC,
+                value: run.runTime / 1000,
+              },
+              {
+                id: 1,
+                type: InputType.Distance,
+                unit: Unit.M,
+                value: run.runDistance,
+              },
+              {
+                id: 2,
+                type: InputType.Pace,
+                unit: Unit.MinKM,
+                value: 0.6215 / run.runPace,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    user_id: "rundouble",
+    created_at: new Date(run.completedLong),
+    updated_at: new Date(run.completedLong),
+    worked_out_at: new Date(run.completedLong),
+    source: WorkoutSource.RunDouble,
+  };
+}
