@@ -21954,6 +21954,37 @@ export const exercises = [
         metric_unit: "sec",
         type: "time",
       },
+      {
+        allowed_units: [
+          {
+            conversion_factor: 1.0,
+            name: "lb",
+          },
+          {
+            conversion_factor: 0.4535923703803783,
+            name: "kg",
+          },
+        ],
+        bounds: {
+          maximum: 200.0,
+          minimum: 0.0,
+        },
+        display_name: "Type",
+        hidden_by_default: true,
+        id: 1,
+        imperial_unit: "lb",
+        input_ordinal: 2,
+        metric_unit: "kg",
+        options: [
+          {
+            value: "weighted",
+          },
+          {
+            value: "assisted",
+          },
+        ],
+        type: "weightassist",
+      },
     ],
     instructions: [
       {
