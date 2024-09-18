@@ -10,6 +10,7 @@ import { dbFetch } from "../fetch";
 import {
   DistanceRaceScore,
   EventEntry,
+  EventSource,
   SCORING_SOURCE,
   SCORING_SYSTEM,
   Score,
@@ -293,7 +294,7 @@ export async function getSportsTimingEventEntry(
   if (!event) throw new Error("???");
 
   return {
-    source: "sportstiming",
+    source: EventSource.Sportstiming,
     type: "competition",
     discipline: "running",
     id: eventId,

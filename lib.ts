@@ -1,4 +1,4 @@
-import type { WorkoutData } from "./models/workout";
+import type { WorkoutData, WorkoutSource } from "./models/workout";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
 import type { RunDouble } from "./sources/rundouble";
 import type { TopLogger } from "./sources/toplogger";
@@ -54,11 +54,18 @@ export type Score =
   | TopsAndZonesScore
   | ThousandDivideByScore;
 
+export enum EventSource {
+  TopLogger = "toplogger",
+  ClimbAlong = "climbalong",
+  Sportstiming = "sportstiming",
+  Songkick = "songkick",
+}
+
 export type EventEntry =
   | {
       id: number;
       ioId: number;
-      source: "toplogger";
+      source: EventSource.TopLogger;
       type: "competition";
       discipline: "bouldering";
       event: string;
@@ -71,7 +78,7 @@ export type EventEntry =
   | {
       id: number;
       ioId: number;
-      source: "climbalong";
+      source: EventSource.ClimbAlong;
       type: "competition";
       discipline: "bouldering";
       event: string;
@@ -84,7 +91,7 @@ export type EventEntry =
   | {
       id: number;
       ioId: number;
-      source: "sportstiming";
+      source: EventSource.Sportstiming;
       type: "competition";
       discipline: "running";
       event: string;
@@ -96,7 +103,7 @@ export type EventEntry =
     }
   | {
       id: number;
-      source: "songkick";
+      source: EventSource.Songkick;
       type: "performance";
       discipline: "metal";
       event: string;
@@ -108,7 +115,7 @@ export type EventEntry =
     };
 
 export interface DiaryEntry {
-  workouts?: (WorkoutData & { _id: string })[];
+  workouts?: (WorkoutData & { _id: string } & { source?: WorkoutSource })[];
   food?: MyFitnessPal.FoodEntry[];
   ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
   runs?: RunDouble.HistoryItem[];

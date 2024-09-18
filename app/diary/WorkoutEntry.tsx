@@ -3,7 +3,7 @@
 import { Session } from "next-auth";
 import { Fragment, useState } from "react";
 import { AssistType, exercises } from "../../models/exercises";
-import type { WorkoutData } from "../../models/workout";
+import { WorkoutData, WorkoutSource } from "../../models/workout";
 import { WorkoutForm } from "./WorkoutForm";
 
 export default function WorkoutEntry({
@@ -17,7 +17,7 @@ export default function WorkoutEntry({
 
   return (
     <div key={workout._id}>
-      {workout.worked_out_at > new Date(2024, 6, 26) ? (
+      {workout.source === WorkoutSource.Self || !workout.source ? (
         !isEditing ? (
           <button onClick={() => setIsEditing(!isEditing)}>Edit</button>
         ) : null

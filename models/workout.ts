@@ -1,6 +1,14 @@
 import mongoose from "mongoose";
 import type { AssistType, InputType, Unit } from "./exercises";
 
+export enum WorkoutSource {
+  Fitocracy = "fitocracy",
+  MyFitnessPal = "myfitnesspal",
+  RunDouble = "rundouble",
+  TopLogger = "toplogger",
+  Self = "self",
+}
+
 export interface WorkoutData {
   exercises: Exercise[];
   user_id: string; // This is a string because it's a MongoDB ObjectId
@@ -8,6 +16,7 @@ export interface WorkoutData {
   updated_at: Date;
   worked_out_at: Date;
   deleted_at?: Date;
+  source?: WorkoutSource;
 }
 
 interface Exercise {

@@ -2,7 +2,13 @@
 import { differenceInDays, isPast, subDays } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
-import { EventEntry, SCORING_SOURCE, SCORING_SYSTEM, Score } from "../../lib";
+import {
+  EventEntry,
+  EventSource,
+  SCORING_SOURCE,
+  SCORING_SYSTEM,
+  Score,
+} from "../../lib";
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
@@ -123,13 +129,13 @@ export default async function TimelineEventContent({
     team,
     id,
     url,
-  } = await (eventEntry.source === "climbalong"
+  } = await (eventEntry.source === EventSource.ClimbAlong
     ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId, sex)
-    : eventEntry.source === "toplogger"
+    : eventEntry.source === EventSource.TopLogger
     ? getIoTopLoggerGroupEvent(eventEntry.id, eventEntry.ioId, sex)
-    : eventEntry.source === "sportstiming"
+    : eventEntry.source === EventSource.Sportstiming
     ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
-    : eventEntry.source === "songkick"
+    : eventEntry.source === EventSource.Songkick
     ? (await getSongkickEvents()).find(({ id }) => eventEntry.id === id)!
     : undefined)!;
 

@@ -1,6 +1,6 @@
 import { isAfter } from "date-fns";
 import { dbFetch } from "../fetch";
-import { Score } from "../lib";
+import { EventSource, Score } from "../lib";
 import { DAY_IN_SECONDS } from "../utils";
 
 export namespace Songkick {
@@ -149,7 +149,7 @@ export async function getSongkickEvents() {
   return events.map(
     (event) =>
       ({
-        source: "songkick",
+        source: EventSource.Songkick,
         type: "performance",
         discipline: "metal",
         id: event.id,

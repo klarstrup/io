@@ -4,7 +4,7 @@ import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { DateInterval } from "../lib";
 import { User } from "../models/user";
-import type { WorkoutData } from "../models/workout";
+import { WorkoutSource, type WorkoutData } from "../models/workout";
 import { HOUR_IN_SECONDS } from "../utils";
 import exercicez from "./fitocracy.exercises.json" assert { type: "json" };
 
@@ -451,5 +451,6 @@ export function workoutFromFitocracyWorkout(
     updated_at: new Date(),
     worked_out_at: new Date(workout.workout_timestamp),
     deleted_at: undefined,
+    source: WorkoutSource.Fitocracy,
   };
 }

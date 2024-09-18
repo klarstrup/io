@@ -5,8 +5,8 @@ import type { Session } from "next-auth";
 import { Fragment } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
-import { type ExerciseData, exercises, Unit } from "../../models/exercises";
-import { type WorkoutData } from "../../models/workout";
+import { exercises, Unit, type ExerciseData } from "../../models/exercises";
+import { WorkoutSource, type WorkoutData } from "../../models/workout";
 import { deleteWorkout, upsertWorkout } from "./actions";
 
 function isValidDate(date: Date) {
@@ -66,6 +66,7 @@ export function WorkoutForm({
           created_at: workout?.created_at ?? new Date(),
           updated_at: new Date(),
           exercises: data.exercises ?? workout?.exercises,
+          source: WorkoutSource.Self,
         };
         console.log({ workout, data, newWorkout });
         await upsertWorkout(newWorkout);

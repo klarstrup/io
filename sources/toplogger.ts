@@ -12,6 +12,7 @@ import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
+  EventSource,
   PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
@@ -859,7 +860,7 @@ export async function getTopLoggerGroupEventEntry(
   ).findOne({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } }))!;
 
   return {
-    source,
+    source: EventSource.TopLogger,
     type: "competition",
     discipline,
     id: groupId,

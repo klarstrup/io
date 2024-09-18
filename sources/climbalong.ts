@@ -10,6 +10,7 @@ import {
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
+  EventSource,
   PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
@@ -735,7 +736,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
   );
 
   return {
-    source: "climbalong",
+    source: EventSource.ClimbAlong,
     type: "competition",
     discipline: "bouldering",
     id: competitionId,
