@@ -43,10 +43,11 @@ export default function WorkoutEntry({
             return (
               <div key={exerciseIndex}>
                 <b>
-                  {(exercise.aliases[1] || exercise.name).replace(
-                    "Barbell",
-                    ""
-                  )}
+                  {
+                    [...exercise.aliases, exercise.name]
+                      .filter((name) => name.length >= 4)
+                      .sort((a, b) => a.length - b.length)[0]!
+                  }
                 </b>
                 <ol>
                   {workoutGroup.sets.map((set, setIndex) => (

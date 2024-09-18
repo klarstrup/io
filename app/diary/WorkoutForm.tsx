@@ -150,7 +150,9 @@ export function WorkoutForm({
                 ({ id }) => !fields.some((field) => field.exercise_id === id)
               )
               .map(({ id, name, aliases }) => ({
-                label: `${name} (${aliases.join(", ")})`,
+                label: `${name} ${
+                  aliases.length ? `(${aliases.join(", ")})` : ""
+                }`,
                 value: id,
               }))}
             onChange={(selected) => {
