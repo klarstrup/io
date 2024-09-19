@@ -1,10 +1,5 @@
-import { format } from "date-fns";
 import type { WithId } from "mongodb";
-import { dbFetch } from "../fetch";
-import type { DateInterval } from "../lib";
 import { WorkoutSource, type WorkoutData } from "../models/workout";
-import { HOUR_IN_SECONDS } from "../utils";
-import exercicez from "./fitocracy.exercises.json" assert { type: "json" };
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -270,71 +265,6 @@ export namespace Fitocracy {
     name: null | string;
   }
 }
-
-export const exercises = exercicez as Fitocracy.ExerciseData[];
-
-const fetchFitocracy = async <T>(
-  fitocracySessionId: string,
-  input: string | URL,
-  init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) => {
-  const result = await dbFetch<Fitocracy.Result<T>>(
-    `https://www.fitocracy.com${String(input)}`,
-    {
-      ...init,
-      headers: { cookie: `sessionid=${fitocracySessionId}`, ...init?.headers },
-    },
-    dbFetchOptions
-  );
-  if (!result.success) throw new Error(result.error);
-
-  return result.data;
-};
-
-export const getUserWorkoutIds = async (
-  fitocracySessionId: string,
-  userId: number,
-  interval?: DateInterval,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  Object.values(
-    await fetchFitocracy<{ [date: string]: number[] }>(
-      fitocracySessionId,
-      `/api/v2/user/${userId}/workouts/?start_date=${format(
-        interval?.start || new Date(2001, 9, 11),
-        "yyyy-MM-dd"
-      )}&end_date=${format(interval?.end || new Date(), "yyyy-MM-dd")}`,
-      undefined,
-      dbFetchOptions
-    )
-  ).flat();
-export const getUserWorkout = async (
-  fitocracySessionId: string,
-  userId: number,
-  workoutId: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
-) =>
-  await fetchFitocracy<Fitocracy.WorkoutData>(
-    fitocracySessionId,
-    `/api/v2/user/${userId}/workout/${workoutId}/`,
-    undefined,
-    dbFetchOptions
-  );
-
-export const getUserProfileBySessionId = async (fitocracySessionId: string) => {
-  const result = await dbFetch<
-    Fitocracy.ProfileResult | { error: "missing source credentials" }
-  >(
-    `https://www.fitocracy.com/api/user/profile/?sessionid=${fitocracySessionId}`,
-    { headers: { cookie: `sessionid=${fitocracySessionId}` } },
-    { maxAge: HOUR_IN_SECONDS }
-  );
-
-  if ("error" in result) throw new Error(result.error);
-
-  return Object.values(result)[0] as Fitocracy.ProfileData;
-};
 
 export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];
 

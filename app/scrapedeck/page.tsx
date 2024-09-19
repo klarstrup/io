@@ -7,13 +7,6 @@ export default function Page() {
     <center style={{ display: "flex", width: "100%", height: "100%" }}>
       <UserStuff />
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <h2>Fitocracy</h2>
-        <iframe
-          src="/api/fitocracy_scrape"
-          style={{ height: "100%", width: "100%", flex: 1 }}
-        />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <h2>MyFitnessPal</h2>
         <iframe
           src="/api/myfitnesspal_scrape"
