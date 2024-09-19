@@ -187,30 +187,28 @@ export function WorkoutForm({
             </div>
           );
         })}
-        <label>
-          Add Exercise
-          <Select
-            isDisabled={isSubmitting}
-            options={exercises
-              .filter(
-                ({ id }) => !fields.some((field) => field.exercise_id === id)
-              )
-              .map(({ id, name, aliases }) => ({
-                label: `${name} ${
-                  aliases.length ? `(${aliases.join(", ")})` : ""
-                }`,
-                value: id,
-              }))}
-            onChange={(selected) => {
-              if (!selected) return;
+        <Select
+          isDisabled={isSubmitting}
+          placeholder="Add exercise..."
+          options={exercises
+            .filter(
+              ({ id }) => !fields.some((field) => field.exercise_id === id)
+            )
+            .map(({ id, name, aliases }) => ({
+              label: `${name} ${
+                aliases.length ? `(${aliases.join(", ")})` : ""
+              }`,
+              value: id,
+            }))}
+          onChange={(selected) => {
+            if (!selected) return;
 
-              append({
-                exercise_id: selected.value,
-                sets: [],
-              });
-            }}
-          />
-        </label>
+            append({
+              exercise_id: selected.value,
+              sets: [],
+            });
+          }}
+        />
       </div>
     </form>
   );
