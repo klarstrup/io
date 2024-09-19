@@ -6,11 +6,8 @@ export enum Unit {
   Fathoms = "fathoms",
   Floors = "floors",
   Ft = "ft",
-  Holes = "holes",
   Hr = "hr",
   In = "in",
-  JumpingJacks = "jumping jacks",
-  Jumps = "jumps",
   KM = "km",
   KMHr = "km/hr",
   Kg = "kg",
@@ -29,25 +26,8 @@ export enum Unit {
   SEC = "sec",
   SECLap25M = "sec/lap (25m)",
   SECLap50M = "sec/lap (50m)",
-  Slams = "slams",
   Split = "split",
-  Throws = "throws",
   Yd = "yd",
-
-  // What the fuck is the deal with these
-  AssistedSquats = "assisted squats",
-  BentKneeBenchDips = "bent knee bench dips",
-  Easy = "easy",
-  Flat = "flat",
-  FlatKneeRaises = "flat knee raises",
-  InclinePikePushUPS = "incline pike push ups",
-  KneelingPlank = "kneeling plank",
-  LegAssistedPullUPS = "leg assisted pull-ups",
-  Practice = "practice",
-  SplashingAround = "splashing around",
-  The1InchBand = "1-inch band",
-  VerticalPullsDoorPulls = "vertical pulls (door pulls)",
-  WallPushUPS = "wall push ups",
 
   // Custom post-fitocracy units
   FrenchRounded = "french_rounded",
@@ -17757,9 +17737,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -19276,9 +19255,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -19352,9 +19330,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -19505,9 +19482,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -19575,9 +19551,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -19814,9 +19789,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -19885,9 +19859,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -19956,9 +19929,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -20068,9 +20040,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -21128,9 +21099,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -21199,9 +21169,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -21901,9 +21870,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -22345,9 +22313,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -26340,9 +26307,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26408,9 +26374,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26476,9 +26441,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26544,9 +26508,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26612,9 +26575,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26680,9 +26642,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26748,9 +26709,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26816,9 +26776,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26884,9 +26843,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -26952,9 +26910,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27019,9 +26976,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27087,9 +27043,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27155,9 +27110,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27223,9 +27177,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27291,9 +27244,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27359,9 +27311,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -27426,9 +27377,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -29788,9 +29738,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -29983,9 +29932,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -31135,9 +31083,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -31715,9 +31662,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -32123,9 +32069,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -32520,9 +32465,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -32561,7 +32505,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Jumps,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -32571,9 +32515,9 @@ export const exercises = [
         display_name: "No. of Jumps",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.Jumps,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Jumps,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -32868,7 +32812,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Jumps,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -32878,9 +32822,9 @@ export const exercises = [
         display_name: "No. of Jumps",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.Jumps,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Jumps,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -32952,9 +32896,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -33020,9 +32963,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -33393,9 +33335,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -33461,9 +33402,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -34128,9 +34068,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -34271,9 +34210,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -34970,7 +34908,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Holes,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -34980,9 +34918,9 @@ export const exercises = [
         display_name: "Holes",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Holes,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Holes,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -35065,7 +35003,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.JumpingJacks,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -35075,9 +35013,9 @@ export const exercises = [
         display_name: "Jumping Jacks",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.JumpingJacks,
+        imperial_unit: Unit.Reps,
         input_ordinal: 0,
-        metric_unit: Unit.JumpingJacks,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
     ],
@@ -35266,9 +35204,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -35711,9 +35648,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -35846,9 +35782,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -35914,9 +35849,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -35982,9 +35916,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36139,9 +36072,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36206,9 +36138,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -36330,9 +36261,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36398,9 +36328,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36466,9 +36395,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36534,9 +36462,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36601,9 +36528,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36669,9 +36595,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36737,9 +36662,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36805,9 +36729,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36873,9 +36796,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -36941,9 +36863,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37009,9 +36930,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37077,9 +36997,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37145,9 +37064,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37213,9 +37131,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37281,9 +37198,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37349,9 +37265,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37506,9 +37421,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -37576,9 +37490,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -37646,9 +37559,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -37713,9 +37625,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -37781,9 +37692,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -37948,9 +37858,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -38016,9 +37925,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -40429,9 +40337,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -40810,9 +40717,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -40878,9 +40784,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -40945,9 +40850,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41069,9 +40973,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41136,9 +41039,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41568,9 +41470,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41635,9 +41536,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41702,9 +41602,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41770,9 +41669,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41837,9 +41735,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -41904,9 +41801,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -42488,9 +42384,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -43121,9 +43016,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -43468,9 +43362,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -44996,9 +44889,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -45211,9 +45103,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -45621,9 +45512,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -46180,9 +46070,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -46247,9 +46136,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -49279,9 +49167,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -49481,9 +49368,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -49640,9 +49526,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -49767,9 +49652,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -51499,9 +51383,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -51629,9 +51512,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -52047,9 +51929,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -52115,9 +51996,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -52183,9 +52063,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -52251,9 +52130,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -54654,9 +54532,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -54832,9 +54709,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -55010,9 +54886,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -56399,7 +56274,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Jumps,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -56409,9 +56284,9 @@ export const exercises = [
         display_name: "No. of Jumps",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.Jumps,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Jumps,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -56456,7 +56331,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Jumps,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -56466,9 +56341,9 @@ export const exercises = [
         display_name: "No. of Jumps",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.Jumps,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Jumps,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -56539,9 +56414,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -56987,9 +56861,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -57132,9 +57005,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -60517,9 +60389,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -60689,9 +60560,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -61118,9 +60988,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -61403,9 +61272,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -61555,9 +61423,8 @@ export const exercises = [
         display_name: "Terrain",
         hidden_by_default: true,
         id: 4,
-        imperial_unit: Unit.Flat,
         input_ordinal: 4,
-        metric_unit: Unit.Flat,
+        default_value: 0,
         options: [
           {
             value: "flat",
@@ -62205,9 +62072,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -65117,9 +64983,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -72599,9 +72464,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -72700,9 +72564,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -73029,9 +72892,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -73800,9 +73662,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -73867,9 +73728,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -73935,9 +73795,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -74003,9 +73862,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -74162,9 +74020,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -75111,9 +74968,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -76534,9 +76390,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -77157,9 +77012,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -81339,7 +81193,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Jumps,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -81349,9 +81203,9 @@ export const exercises = [
         display_name: "No. of Jumps",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.Jumps,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Jumps,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -82957,9 +82811,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -83062,9 +82915,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -83129,9 +82981,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
@@ -83420,7 +83271,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Holes,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -83430,9 +83281,9 @@ export const exercises = [
         display_name: "Holes",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Holes,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Holes,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -83781,7 +83632,7 @@ export const exercises = [
         allowed_units: [
           {
             conversion_factor: 1.0,
-            name: Unit.Jumps,
+            name: Unit.Reps,
           },
         ],
         bounds: {
@@ -83791,9 +83642,9 @@ export const exercises = [
         display_name: "No. of Jumps",
         hidden_by_default: false,
         id: 0,
-        imperial_unit: Unit.Jumps,
+        imperial_unit: Unit.Reps,
         input_ordinal: 1,
-        metric_unit: Unit.Jumps,
+        metric_unit: Unit.Reps,
         type: InputType.Reps,
       },
       {
@@ -84100,9 +83951,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -84316,9 +84166,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Practice,
         input_ordinal: 4,
-        metric_unit: Unit.Practice,
+        default_value: 1,
         options: [
           {
             value: "just for fun",
@@ -85489,9 +85338,8 @@ export const exercises = [
         display_name: "Options",
         hidden_by_default: false,
         id: 1,
-        imperial_unit: Unit.Easy,
         input_ordinal: 4,
-        metric_unit: Unit.Easy,
+        default_value: 1,
         options: [
           {
             value: "intense",
