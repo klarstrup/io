@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-const frenchRounded = {
+export const frenchRounded = {
   key: "french_rounded",
   name: "Font.`",
   description: "Font, rounded below 6a. E.g. 4-, 4 and 4+.",

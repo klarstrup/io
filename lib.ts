@@ -117,5 +117,4 @@ export type EventEntry =
 export interface DiaryEntry {
   workouts?: (WorkoutData & { _id: string } & { source?: WorkoutSource })[];
   food?: MyFitnessPal.FoodEntry[];
-  ascends?: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[];
 }

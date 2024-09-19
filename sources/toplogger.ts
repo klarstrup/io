@@ -20,6 +20,8 @@ import {
   ThousandDivideByScore,
   type DateInterval,
 } from "../lib";
+import { InputType, exercises } from "../models/exercises";
+import { WorkoutSource, type WorkoutData } from "../models/workout";
 import { RelativeURL, percentile } from "../utils";
 
 export namespace TopLogger {
@@ -291,7 +293,7 @@ export namespace TopLogger {
     topped: boolean;
     used: boolean;
     checks: number;
-    date_logged?: Date;
+    date_logged: Date;
   }
 
   export interface GroupUserMultiple {
@@ -874,4 +876,51 @@ export async function getTopLoggerGroupEventEntry(
     start: group.date_loggable_start,
     end: group.date_loggable_end,
   } as const;
+}
+
+export function workoutFromTopLoggerAscends(
+  ascends: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
+  holds: TopLogger.Hold[]
+): WorkoutData & { _id: string } {
+  const firstAscend = ascends[0];
+  if (!firstAscend) throw new Error("No ascends");
+
+  const exercise = exercises.find(({ id }) => id === 2001)!;
+
+  return {
+    _id: String(firstAscend.id),
+    exercises: [
+      {
+        exercise_id: 2001,
+        sets: ascends
+          .filter(({ checks }) => checks >= 1)
+          .map(({ checks, climb: { grade, hold_id } }) => ({
+            inputs: [
+              { id: 0, type: InputType.Grade, value: Number(grade) },
+              // Color
+              {
+                id: 1,
+                type: InputType.Options,
+                value:
+                  exercise.inputs[1]?.options?.findIndex(
+                    ({ value }) =>
+                      value ===
+                      holds
+                        .find(({ id }) => id === hold_id)
+                        ?.brand?.toLowerCase()
+                  ) ?? NaN,
+              },
+              // Sent-ness
+              { id: 2, type: InputType.Options, value: checks === 2 ? 0 : 1 },
+            ],
+          })),
+      },
+    ],
+    user_id: String(firstAscend.user_id),
+    created_at: firstAscend.date_logged,
+    updated_at: firstAscend.date_logged,
+    worked_out_at: firstAscend.date_logged,
+    deleted_at: undefined,
+    source: WorkoutSource.TopLogger,
+  };
 }

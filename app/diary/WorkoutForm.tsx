@@ -2,10 +2,15 @@
 "use client";
 
 import type { Session } from "next-auth";
-import { Fragment } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
-import { exercises, Unit, type ExerciseData } from "../../models/exercises";
+import { frenchRounded } from "../../grades";
+import {
+  exercises,
+  InputType,
+  Unit,
+  type ExerciseData,
+} from "../../models/exercises";
 import { WorkoutSource, type WorkoutData } from "../../models/workout";
 import { deleteWorkout, upsertWorkout } from "./actions";
 
@@ -250,7 +255,7 @@ function SetsForm({
         <tr>
           <th />
           {exercise.inputs.map((input) => (
-            <th key={input.id}>
+            <th key={input.id} style={{ fontSize: "0.5em" }}>
               {input.display_name}{" "}
               <small>
                 {input.allowed_units && input.allowed_units.length > 1 ? (
@@ -288,7 +293,9 @@ function SetsForm({
                     )
                   </>
                 ) : input.metric_unit?.toLowerCase() !==
-                  input.display_name.toLowerCase() ? (
+                    input.display_name.toLowerCase() &&
+                  input.type !== InputType.Options &&
+                  input.type !== InputType.Grade ? (
                   <>
                     (
                     <span style={{ width: "auto", flex: 1 }}>
@@ -402,25 +409,54 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
 }) {
-  return (
-    <Fragment>
-      {exercise.inputs.map((input) => (
-        <td key={input.id}>
-          <div style={{ display: "flex" }}>
-            {input.options && input.options.length > 1 ? (
-              <select
-                {...register(
-                  `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
-                )}
-                style={{ flex: 1 }}
-              >
-                {input.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.value}
-                  </option>
-                ))}
-              </select>
-            ) : null}
+  return exercise.inputs.map((input) => (
+    <td key={input.id}>
+      <div style={{ display: "flex" }}>
+        {input.type === InputType.Options && input.options ? (
+          <select
+            {...register(
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+            )}
+            style={{ flex: 1 }}
+          >
+            {input.hidden_by_default ? <option value={""}>---</option> : null}
+            {input.options.map((option, i) => (
+              <option key={option.value} value={i}>
+                {option.value}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {input.type === InputType.Weightassist && input.options ? (
+          <select
+            {...register(
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
+            )}
+            style={{ flex: 1 }}
+          >
+            {input.hidden_by_default ? <option value={""}>---</option> : null}
+            {input.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.value}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {input.type !== InputType.Options ? (
+          input.type === InputType.Grade ? (
+            <select
+              {...register(
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+              )}
+            >
+              {input.hidden_by_default ? <option value={""}>---</option> : null}
+              {frenchRounded.data.map(({ value, name }) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          ) : (
             <input
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
@@ -429,9 +465,9 @@ function InputsForm({
               step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
               style={{ width: "64px", flex: 1, textAlign: "right" }}
             />
-          </div>
-        </td>
-      ))}
-    </Fragment>
-  );
+          )
+        ) : null}
+      </div>
+    </td>
+  ));
 }

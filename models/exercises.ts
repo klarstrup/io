@@ -48,6 +48,9 @@ export enum Unit {
   The1InchBand = "1-inch band",
   VerticalPullsDoorPulls = "vertical pulls (door pulls)",
   WallPushUPS = "wall push ups",
+
+  // Custom post-fitocracy units
+  FrenchRounded = "french_rounded",
 }
 
 export enum InputType {
@@ -61,6 +64,7 @@ export enum InputType {
   Time = "time",
   Weight = "weight",
   Weightassist = "weightassist",
+  Grade = "grade",
 }
 
 enum TagType {
@@ -84,6 +88,7 @@ export interface ExerciseData {
     input_ordinal: number;
     metric_unit?: Unit;
     type: InputType;
+    // THIS ARRAY IS APPEND-ONLY, AS OPTIONS CHOSEN ARE STORED AS INDEXES HEREOF
     options?: { value: string }[];
   }[];
   instructions: { value: string }[];
@@ -85858,5 +85863,63 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Dead Hangs",
+  },
+  // From here custom post-fitocracy exercises
+  {
+    aliases: [],
+    id: 2001,
+    inputs: [
+      {
+        allowed_units: [{ conversion_factor: 1.0, name: "french_rounded" }],
+        bounds: {
+          minimum: 2,
+          maximum: 9.5,
+        },
+        display_name: "Grade",
+        hidden_by_default: true,
+        id: 0,
+        input_ordinal: 1,
+        imperial_unit: "french_rounded",
+        metric_unit: "french_rounded",
+        type: InputType.Grade,
+      },
+      {
+        display_name: "Color",
+        hidden_by_default: true,
+        id: 1,
+        input_ordinal: 2,
+        options: [
+          { value: "mint" },
+          { value: "green" },
+          { value: "yellow" },
+          { value: "blue" },
+          { value: "orange" },
+          { value: "red" },
+          { value: "black" },
+          { value: "pink" },
+          { value: "white" },
+          { value: "purple" },
+        ],
+        type: "options",
+      },
+      {
+        display_name: "Send",
+        hidden_by_default: false,
+        id: 2,
+        input_ordinal: 3,
+        imperial_unit: "top",
+        metric_unit: "top",
+        options: [{ value: "flash" }, { value: "top" }, { value: "zone" }],
+        type: "options",
+      },
+    ],
+    instructions: [
+      {
+        value: "An activity that involves climbing up a short wall of plastic.",
+      },
+    ],
+    is_hidden: false,
+    is_popular: false,
+    name: "Bouldering",
   },
 ] as ExerciseData[];

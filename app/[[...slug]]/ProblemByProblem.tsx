@@ -198,7 +198,22 @@ export default function ProblemByProblem({
               style={{
                 maxWidth: "100%",
                 width: "1.33em",
-                color: color || "#c84821",
+                color:
+                  color === "mint"
+                    ? "#00E0E6"
+                    : color === "yellow"
+                    ? "#FFDE00"
+                    : color === "green"
+                    ? "#0CE600"
+                    : color === "red"
+                    ? "#E60000"
+                    : color === "purple"
+                    ? "#800080"
+                    : color === "orange"
+                    ? "#FF9B2F"
+                    : color === "white"
+                    ? "#FFEFC1"
+                    : color || "#c84821",
               }}
               key={number}
               grade={grade ? new Grade(grade).name : undefined}

@@ -1,24 +1,16 @@
-import { Session } from "next-auth";
-import { getDB } from "../../dbConnect";
+import type { Session } from "next-auth";
 import type { DiaryEntry } from "../../lib";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
-import { TopLogger } from "../../sources/toplogger";
-import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import WorkoutEntry from "./WorkoutEntry";
 
-export async function DiaryEntryList({
+export function DiaryEntryList({
   diaryEntries,
   user,
 }: {
   diaryEntries: [`${number}-${number}-${number}`, DiaryEntry][];
   user: Session["user"];
 }) {
-  const DB = await getDB();
-  const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
-    .find()
-    .toArray();
-
-  return diaryEntries.map(([date, { food, workouts, ascends }]) => {
+  return diaryEntries.map(([date, { food, workouts }]) => {
     const dayTotalEnergy = food?.reduce(
       (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
       0
@@ -102,16 +94,13 @@ export async function DiaryEntryList({
                               </small>
                             ) : null}
                           </div>
-                          <ul>
+                          <ul style={{ paddingInlineStart: "0px" }}>
                             {food
                               ?.filter(
                                 (foodEntry) => foodEntry.meal_name === mealName
                               )
                               .map((foodEntry) => (
-                                <li
-                                  key={foodEntry.id}
-                                  style={{ listStyle: "none" }}
-                                >
+                                <li key={foodEntry.id}>
                                   {foodEntry.food.description.replace(
                                     /\s+/g,
                                     " "
@@ -162,31 +151,6 @@ export async function DiaryEntryList({
                   />
                 ))
               : null}
-            {ascends?.length ? (
-              <>
-                <small>Climbs:</small>
-                <big>
-                  <ProblemByProblem
-                    problemByProblem={ascends
-                      .sort(
-                        (a, b) => Number(b.date_logged) - Number(a.date_logged)
-                      )
-                      .map(({ climb: { grade, hold_id }, checks }) => ({
-                        number: "",
-                        color:
-                          holds.find((hold) => hold.id === hold_id)?.color ||
-                          undefined,
-                        grade: Number(grade) || undefined,
-                        attempt: true,
-                        // TopLogger does not do zones, at least not for Beta Boulders
-                        zone: checks >= 1,
-                        top: checks >= 1,
-                        flash: checks >= 2,
-                      }))}
-                  />
-                </big>
-              </>
-            ) : null}
           </div>
         </div>
         <hr />
@@ -200,7 +164,6 @@ export async function DiaryEntryList({
         >
           {!food?.length ? <i>No meals logged</i> : null}
           {!workouts?.length ? <i>No lifts logged</i> : null}
-          {!ascends?.length ? <i>No climbs logged</i> : null}
         </small>
       </div>
     );

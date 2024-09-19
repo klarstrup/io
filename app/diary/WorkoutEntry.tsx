@@ -2,9 +2,11 @@
 
 import { Session } from "next-auth";
 import { Fragment, useState } from "react";
+import Grade from "../../grades";
 import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import { WorkoutData, WorkoutSource } from "../../models/workout";
 import { seconds2time } from "../../utils";
+import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import { WorkoutForm } from "./WorkoutForm";
 
 function pad(i: number, width: number, z = "0") {
@@ -52,11 +54,11 @@ export default function WorkoutEntry({
         />
       ) : (
         <div
-          key={workout._id}
           style={{
             display: "grid",
             gap: "8px 4px",
-            gridTemplateColumns: "50% 50%",
+            gridTemplateColumns:
+              workout.exercises.length > 1 ? "50% 50%" : undefined,
           }}
         >
           {workout.exercises.map((workoutGroup, exerciseIndex) => {
@@ -72,78 +74,116 @@ export default function WorkoutEntry({
                       .sort((a, b) => a.length - b.length)[0]!
                   }
                 </span>
-                <ol
-                  style={{
-                    paddingInlineStart:
-                      workoutGroup.sets.length === 1 ? 0 : "1em",
-                    marginBlockStart: 0,
-                    marginBlockEnd: 0,
-                  }}
-                >
-                  {workoutGroup.sets.map((set, setIndex) => (
-                    <li
-                      key={setIndex}
-                      style={{
-                        listStyleType:
-                          workoutGroup.sets.length === 1 ? "none" : "decimal",
-                        fontSize: "0.8em",
-                      }}
-                    >
-                      <div style={{ fontSize: "1.25em" }}>
-                        {set.inputs
-                          .filter((input) => {
-                            if (
-                              input.assist_type === AssistType.Assisted ||
-                              input.assist_type === AssistType.Weighted
-                            ) {
-                              return input.value !== 0;
-                            }
+                {exercise.id === 2001 ? (
+                  <div style={{ fontSize: "1.5em" }}>
+                    <ProblemByProblem
+                      problemByProblem={workoutGroup.sets.map((set, i) => ({
+                        grade: set.inputs[0]!.value,
+                        color:
+                          exercise.inputs[set.inputs[1]!.id]!.options![
+                            set.inputs[1]!.value
+                          ]?.value ?? "",
+                        flash: set.inputs[2]!.value === 0,
+                        top: set.inputs[2]!.value <= 1,
+                        zone: set.inputs[2]!.value <= 2,
+                        number: String(i + 1),
+                        attempt: true,
+                      }))}
+                    />
+                  </div>
+                ) : (
+                  <ol
+                    style={{
+                      paddingInlineStart:
+                        workoutGroup.sets.length === 1 ? 0 : "1em",
+                      marginBlockStart: 0,
+                      marginBlockEnd: 0,
+                    }}
+                  >
+                    {workoutGroup.sets.map((set, setIndex) => (
+                      <li
+                        key={setIndex}
+                        style={{
+                          listStyleType:
+                            workoutGroup.sets.length === 1 ? "none" : "decimal",
+                          fontSize: "0.8em",
+                        }}
+                      >
+                        <div
+                          style={{ fontSize: "1.25em", whiteSpace: "nowrap" }}
+                        >
+                          {set.inputs
+                            .filter((input) => {
+                              if (
+                                input.assist_type === AssistType.Assisted ||
+                                input.assist_type === AssistType.Weighted
+                              ) {
+                                return input.value !== 0;
+                              }
 
-                            return true;
-                          })
-                          .map((input, i) => (
-                            <Fragment key={input.id}>
-                              {i > 0 && input.value
-                                ? input.assist_type === AssistType.Assisted
-                                  ? " - "
-                                  : input.assist_type === AssistType.Weighted
-                                  ? " + "
-                                  : " × "
-                                : ""}
-                              <span
-                                style={{ fontVariantNumeric: "tabular-nums" }}
-                              >
-                                {input.type === InputType.Pace ? (
-                                  <>
-                                    {decimalAsTime(input.value)}
-                                    <small>min/km</small>
-                                  </>
-                                ) : input.type === InputType.Time ? (
-                                  <>{seconds2time(Math.round(input.value))}</>
-                                ) : input.type === InputType.Distance ? (
-                                  <>
-                                    {(input.unit === Unit.M
-                                      ? input.value / 1000
-                                      : input.value
-                                    ).toLocaleString("en-US", {
-                                      unit: "kilometer",
-                                      maximumSignificantDigits: 2,
-                                    })}
-                                    <small>km</small>
-                                  </>
-                                ) : input.value ? (
-                                  <>
-                                    {input.value}
-                                    <small>{input.unit}</small>
-                                  </>
-                                ) : null}
-                              </span>
-                            </Fragment>
-                          ))}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                              return input.value !== null;
+                            })
+                            .map((input, i) => (
+                              <Fragment key={input.id}>
+                                {i > 0
+                                  ? input.type === InputType.Options
+                                    ? ", "
+                                    : input.value
+                                    ? input.assist_type === AssistType.Assisted
+                                      ? " - "
+                                      : input.assist_type ===
+                                        AssistType.Weighted
+                                      ? " + "
+                                      : " × "
+                                    : ""
+                                  : ""}
+                                <span
+                                  style={{ fontVariantNumeric: "tabular-nums" }}
+                                >
+                                  {input.type === InputType.Pace ? (
+                                    <>
+                                      {decimalAsTime(input.value)}
+                                      <small>min/km</small>
+                                    </>
+                                  ) : input.type === InputType.Time ? (
+                                    <>{seconds2time(Math.round(input.value))}</>
+                                  ) : input.type === InputType.Distance ? (
+                                    <>
+                                      {(input.unit === Unit.M
+                                        ? input.value / 1000
+                                        : input.value
+                                      ).toLocaleString("en-US", {
+                                        unit: "kilometer",
+                                        maximumSignificantDigits: 2,
+                                      })}
+                                      <small>km</small>
+                                    </>
+                                  ) : input.type === InputType.Options ? (
+                                    <>
+                                      {String(
+                                        exercise.inputs[input.id]?.options?.[
+                                          input.value
+                                        ]?.value
+                                      )}
+                                    </>
+                                  ) : input.value ? (
+                                    input.unit === Unit.FrenchRounded ? (
+                                      new Grade(input.value).name
+                                    ) : (
+                                      <>
+                                        {input.value}
+                                        <small>{input.unit}</small>
+                                      </>
+                                    )
+                                  ) : null}
+                                </span>
+                              </Fragment>
+                            ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </div>
             );
           })}
