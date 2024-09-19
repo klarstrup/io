@@ -887,6 +887,11 @@ export function workoutFromTopLoggerAscends(
 
   const exercise = exercises.find(({ id }) => id === 2001)!;
 
+  const colorOptions =
+    exercise.inputs[1] &&
+    "options" in exercise.inputs[1] &&
+    exercise.inputs[1].options;
+
   return {
     _id: String(firstAscend.id),
     exercises: [
@@ -902,13 +907,15 @@ export function workoutFromTopLoggerAscends(
                 id: 1,
                 type: InputType.Options,
                 value:
-                  exercise.inputs[1]?.options?.findIndex(
-                    ({ value }) =>
-                      value ===
-                      holds
-                        .find(({ id }) => id === hold_id)
-                        ?.brand?.toLowerCase()
-                  ) ?? NaN,
+                  (colorOptions
+                    ? colorOptions?.findIndex(
+                        ({ value }) =>
+                          value ===
+                          holds
+                            .find(({ id }) => id === hold_id)
+                            ?.brand?.toLowerCase()
+                      )
+                    : undefined) ?? NaN,
               },
               // Sent-ness
               { id: 2, type: InputType.Options, value: checks === 2 ? 0 : 1 },

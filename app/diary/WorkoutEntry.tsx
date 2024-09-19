@@ -75,22 +75,29 @@ export default function WorkoutEntry({
                   }
                 </span>
                 {exercise.id === 2001 ? (
-                  <div style={{ fontSize: "1.5em" }}>
-                    <ProblemByProblem
-                      problemByProblem={workoutGroup.sets.map((set, i) => ({
-                        grade: set.inputs[0]!.value,
-                        color:
-                          exercise.inputs[set.inputs[1]!.id]!.options![
-                            set.inputs[1]!.value
-                          ]?.value ?? "",
-                        flash: set.inputs[2]!.value === 0,
-                        top: set.inputs[2]!.value <= 1,
-                        zone: set.inputs[2]!.value <= 2,
-                        number: String(i + 1),
-                        attempt: true,
-                      }))}
-                    />
-                  </div>
+                  (() => {
+                    const colorOptions =
+                      exercise.inputs[1] &&
+                      "options" in exercise.inputs[1] &&
+                      exercise.inputs[1].options;
+                    if (!colorOptions) return null;
+                    return (
+                      <div style={{ fontSize: "1.5em" }}>
+                        <ProblemByProblem
+                          problemByProblem={workoutGroup.sets.map((set, i) => ({
+                            grade: set.inputs[0]!.value,
+                            color:
+                              colorOptions[set.inputs[1]!.value]?.value ?? "",
+                            flash: set.inputs[2]!.value === 0,
+                            top: set.inputs[2]!.value <= 1,
+                            zone: set.inputs[2]!.value <= 2,
+                            number: String(i + 1),
+                            attempt: true,
+                          }))}
+                        />
+                      </div>
+                    );
+                  })()
                 ) : (
                   <ol
                     style={{
@@ -123,62 +130,75 @@ export default function WorkoutEntry({
 
                               return input.value !== null;
                             })
-                            .map((input, i) => (
-                              <Fragment key={input.id}>
-                                {i > 0
-                                  ? input.type === InputType.Options
-                                    ? ", "
-                                    : input.value
-                                    ? input.assist_type === AssistType.Assisted
-                                      ? " - "
-                                      : input.assist_type ===
-                                        AssistType.Weighted
-                                      ? " + "
-                                      : " × "
-                                    : ""
-                                  : ""}
-                                <span
-                                  style={{ fontVariantNumeric: "tabular-nums" }}
-                                >
-                                  {input.type === InputType.Pace ? (
-                                    <>
-                                      {decimalAsTime(input.value)}
-                                      <small>min/km</small>
-                                    </>
-                                  ) : input.type === InputType.Time ? (
-                                    <>{seconds2time(Math.round(input.value))}</>
-                                  ) : input.type === InputType.Distance ? (
-                                    <>
-                                      {(input.unit === Unit.M
-                                        ? input.value / 1000
-                                        : input.value
-                                      ).toLocaleString("en-US", {
-                                        unit: "kilometer",
-                                        maximumSignificantDigits: 2,
-                                      })}
-                                      <small>km</small>
-                                    </>
-                                  ) : input.type === InputType.Options ? (
-                                    <>
-                                      {String(
-                                        exercise.inputs[input.id]?.options?.[
-                                          input.value
-                                        ]?.value
-                                      )}
-                                    </>
-                                  ) : input.value ? (
-                                    input.unit === Unit.FrenchRounded ? (
-                                      new Grade(input.value).name
-                                    ) : (
+                            .map((input, i) => {
+                              const inputDefinition =
+                                exercise.inputs[input.id]!;
+                              const inputOptions =
+                                input.type === InputType.Options &&
+                                "options" in inputDefinition &&
+                                inputDefinition.options;
+
+                              return (
+                                <Fragment key={input.id}>
+                                  {i > 0
+                                    ? input.type === InputType.Options
+                                      ? ", "
+                                      : input.value
+                                      ? input.assist_type ===
+                                        AssistType.Assisted
+                                        ? " - "
+                                        : input.assist_type ===
+                                          AssistType.Weighted
+                                        ? " + "
+                                        : " × "
+                                      : ""
+                                    : ""}
+                                  <span
+                                    style={{
+                                      fontVariantNumeric: "tabular-nums",
+                                    }}
+                                  >
+                                    {input.type === InputType.Pace ? (
                                       <>
-                                        {input.value}
-                                        <small>{input.unit}</small>
+                                        {decimalAsTime(input.value)}
+                                        <small>min/km</small>
                                       </>
-                                    )
-                                  ) : null}
-                                </span>
-                              </Fragment>
-                            ))}
+                                    ) : input.type === InputType.Time ? (
+                                      <>
+                                        {seconds2time(Math.round(input.value))}
+                                      </>
+                                    ) : input.type === InputType.Distance ? (
+                                      <>
+                                        {(input.unit === Unit.M
+                                          ? input.value / 1000
+                                          : input.value
+                                        ).toLocaleString("en-US", {
+                                          unit: "kilometer",
+                                          maximumSignificantDigits: 2,
+                                        })}
+                                        <small>km</small>
+                                      </>
+                                    ) : input.type === InputType.Options &&
+                                      inputOptions ? (
+                                      <>
+                                        {String(
+                                          inputOptions[input.value]?.value
+                                        )}
+                                      </>
+                                    ) : input.value ? (
+                                      input.unit === Unit.FrenchRounded ? (
+                                        new Grade(input.value).name
+                                      ) : (
+                                        <>
+                                          {input.value}
+                                          <small>{input.unit}</small>
+                                        </>
+                                      )
+                                    ) : null}
+                                  </span>
+                                </Fragment>
+                              );
+                            })}
                         </div>
                       </li>
                     ))}

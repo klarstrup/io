@@ -1,5 +1,6 @@
 import type { WithId } from "mongodb";
 import { WorkoutSource, type WorkoutData } from "../models/workout";
+import { Unit } from "../models/exercises";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -280,7 +281,7 @@ export function workoutFromFitocracyWorkout(
         id,
         input_ordinal,
         type,
-        unit,
+        unit: unit as Unit | undefined,
         value,
       })),
     })),
