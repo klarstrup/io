@@ -161,7 +161,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     async () => {
       if (user.runDoubleId) {
         for (const run of await getRuns(user.runDoubleId, {
-          maxAge: HOUR_IN_SECONDS * 12,
+          maxAge: HOUR_IN_SECONDS * 3,
         })) {
           if (
             isWithinInterval(new Date(run.completedLong), {
