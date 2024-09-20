@@ -42,9 +42,46 @@ export default function WorkoutEntry({
       }}
     >
       {workout.source === WorkoutSource.Self || !workout.source ? (
-        !isEditing ? (
-          <button onClick={() => setIsEditing(!isEditing)}>Edit</button>
-        ) : null
+        <small>
+          <small>You</small>
+          {!isEditing ? (
+            <>
+              {" "}
+              -{" "}
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                style={{
+                  fontSize: "12px",
+                  appearance: "none",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  color: "#edab00",
+                  fontWeight: 600,
+                }}
+              >
+                Edit
+              </button>
+            </>
+          ) : null}
+        </small>
+      ) : workout.source === WorkoutSource.Fitocracy ? (
+        <small>
+          <small>Fitocracy</small>
+        </small>
+      ) : workout.source === WorkoutSource.MyFitnessPal ? (
+        <small>
+          <small>MyFitnessPal</small>
+        </small>
+      ) : workout.source === WorkoutSource.RunDouble ? (
+        <small>
+          <small>RunDouble</small>
+        </small>
+      ) : workout.source === WorkoutSource.TopLogger ? (
+        <small>
+          <small>TopLogger</small>
+        </small>
       ) : null}
       {isEditing ? (
         <WorkoutForm

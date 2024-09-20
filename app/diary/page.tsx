@@ -353,8 +353,6 @@ export default async function Page() {
         (b?.workout_timestamp.getTime() || 0)
     );
 
-  console.log(nextSets);
-
   return (
     <div>
       <UserStuff />
