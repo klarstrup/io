@@ -284,10 +284,15 @@ export function DiaryEntryList({
                             )}{" "}
                             {successful ? null : " (failed)"}
                           </b>{" "}
-                          {nextWorkingSet}kg Last set{" "}
-                          {String(
-                            workout_timestamp.toLocaleDateString("da-DK")
-                          )}
+                          {nextWorkingSet}kg{" "}
+                          <small>
+                            <small>
+                              Last set{" "}
+                              {String(
+                                workout_timestamp.toLocaleDateString("da-DK")
+                              )}
+                            </small>
+                          </small>
                         </li>
                       );
                     }
