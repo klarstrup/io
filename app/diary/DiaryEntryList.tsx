@@ -31,7 +31,10 @@ export function DiaryEntryList({
       <div
         key={date}
         style={{
-          boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
+          boxShadow:
+            date === todayStr
+              ? "0 0 2em rgba(0, 0, 0, 0.6)"
+              : "0 0 2em rgba(0, 0, 0, 0.2)",
           borderRadius: "1.5em",
           background: "white",
           display: "flex",
