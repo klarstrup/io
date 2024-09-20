@@ -1,23 +1,23 @@
-import { isAfter, isWithinInterval, subMonths } from "date-fns";
+import { isAfter, subMonths } from "date-fns";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
 import { User } from "../../models/user";
 import { Workout } from "../../models/workout";
 import {
-  Fitocracy,
+  type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
 import {
   getMyFitnessPalSession,
-  MyFitnessPal,
+  type MyFitnessPal,
 } from "../../sources/myfitnesspal";
-import { getRuns, workoutFromRunDouble } from "../../sources/rundouble";
+import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
 import {
-  workoutFromTopLoggerAscends,
   type TopLogger,
+  workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises, HOUR_IN_SECONDS } from "../../utils";
+import { allPromises } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
@@ -30,6 +30,9 @@ const monthsPerPage = 1;
 
 type DayStr = `${number}-${number}-${number}`;
 
+const rangeToQuery = (from: Date, to?: Date) =>
+  to ? { $gte: from, $lt: to } : { $gte: from };
+
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
 
@@ -40,6 +43,9 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
 
   const workoutsCollection =
     DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
+
+  const runsCollection =
+    DB.collection<RunDouble.MongoHistoryItem>("rundouble_runs");
 
   const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
     "myfitnesspal_food_entries"
@@ -76,23 +82,17 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       for await (const workout of Workout.find({
         user_id: user.id,
         deleted_at: { $exists: false },
+        worked_out_at: rangeToQuery(from, to),
       })) {
-        if (
-          isWithinInterval(workout.worked_out_at, {
-            start: from,
-            end: to || new Date(),
-          })
-        ) {
-          addDiaryEntry(workout.worked_out_at, "workouts", {
-            ...workout.toJSON(),
-            _id: workout._id.toString(),
-          });
-        }
+        addDiaryEntry(workout.worked_out_at, "workouts", {
+          ...workout.toJSON(),
+          _id: workout._id.toString(),
+        });
       }
       if (user.fitocracyUserId) {
         for await (const fitocracyWorkout of workoutsCollection.find({
           user_id: user.fitocracyUserId,
-          workout_timestamp: { $gte: from, $lt: to },
+          workout_timestamp: rangeToQuery(from, to),
         })) {
           const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
           addDiaryEntry(workout.worked_out_at, "workouts", workout);
@@ -103,7 +103,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       if (user.myFitnessPalUserId) {
         for await (const foodEntry of foodEntriesCollection.find({
           user_id: user.myFitnessPalUserId,
-          datetime: { $gte: from, $lt: to },
+          datetime: rangeToQuery(from, to),
         })) {
           addDiaryEntry(foodEntry.datetime, "food", foodEntry);
         }
@@ -120,7 +120,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         )
           .find({
             user_id: user.topLoggerId,
-            date_logged: { $gte: from, $lt: to },
+            date_logged: rangeToQuery(from, to),
           })
           .toArray();
 
@@ -161,21 +161,11 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     },
     async () => {
       if (user.runDoubleId) {
-        for (const run of await getRuns(user.runDoubleId, {
-          maxAge: HOUR_IN_SECONDS * 3,
+        for await (const run of runsCollection.find({
+          userId: user.runDoubleId,
+          completedAt: rangeToQuery(from, to),
         })) {
-          if (
-            isWithinInterval(new Date(run.completedLong), {
-              start: from,
-              end: to || new Date(),
-            })
-          ) {
-            addDiaryEntry(
-              new Date(run.completed),
-              "workouts",
-              workoutFromRunDouble(run)
-            );
-          }
+          addDiaryEntry(run.completedAt, "workouts", workoutFromRunDouble(run));
         }
       }
     }

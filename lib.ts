@@ -1,7 +1,5 @@
 import type { WorkoutData, WorkoutSource } from "./models/workout";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
-import type { RunDouble } from "./sources/rundouble";
-import type { TopLogger } from "./sources/toplogger";
 
 export interface DateInterval {
   start: Date;
@@ -117,4 +115,8 @@ export type EventEntry =
 export interface DiaryEntry {
   workouts?: (WorkoutData & { _id: string } & { source?: WorkoutSource })[];
   food?: MyFitnessPal.FoodEntry[];
+}
+
+export interface ScrapedAt {
+  _io_scrapedAt?: Date;
 }

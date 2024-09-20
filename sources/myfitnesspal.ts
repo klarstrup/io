@@ -41,7 +41,7 @@ export namespace MyFitnessPal {
     servings: number;
     meal_food_id: string;
     nutritional_contents: NutritionalContents;
-    geolocation: Geolocation;
+    geolocation: Record<string, never>;
     image_ids: unknown[];
     tags: unknown[];
     consumed_at: null;
@@ -104,8 +104,6 @@ export namespace MyFitnessPal {
     Food = "food",
     Recipe = "recipe",
   }
-
-  export interface Geolocation {}
 
   export enum MealName {
     Breakfast = "Breakfast",

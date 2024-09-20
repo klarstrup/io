@@ -1,7 +1,8 @@
 import { getDB } from "../../../dbConnect";
+import type { ScrapedAt } from "../../../lib";
 import { User } from "../../../models/user";
 import {
-  TopLogger,
+  type TopLogger,
   fetchAscends,
   fetchGroup,
   fetchGroupClimbs,
@@ -15,25 +16,10 @@ import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-interface ScrapedAt {
-  _io_scrapedAt?: Date;
-}
-
 const randomSlice = <T>(array: T[], slices: number) =>
   shuffle(chunk(array, Math.ceil(array.length / slices)))[0] || [];
 
-export async function GET(/* request: NextRequest */) {
-  /*
-  if (process.env.VERCEL) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new Response("Unauthorized", {
-        status: 401,
-      });
-    }
-  }
-  */
-
+export async function GET() {
   const DB = await getDB();
   const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
     "toplogger_users"
@@ -183,6 +169,7 @@ export async function GET(/* request: NextRequest */) {
     );
 
   // Io is the only user in the database,
+  // TODO: They will not be the only user in the future
   const { topLoggerId } = (await User.findOne())!;
 
   if (!topLoggerId) {
