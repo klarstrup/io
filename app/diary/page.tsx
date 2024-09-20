@@ -2,6 +2,7 @@ import { isAfter, isWithinInterval, subMonths } from "date-fns";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
+import { exercises, InputType } from "../../models/exercises";
 import { User } from "../../models/user";
 import { Workout } from "../../models/workout";
 import {
@@ -24,7 +25,6 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryEntryList } from "./DiaryEntryList";
 import { WorkoutForm } from "./WorkoutForm";
-import { exercises } from "../../models/exercises";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -269,46 +269,47 @@ export default async function Page() {
     to: from,
   });
 
-  const DB = await getDB();
-  const workoutsCollection =
-    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
   const nextSets = (
     await Promise.all(
       exerciseIdsThatICareAbout.map(
         async (id) =>
           [
             id,
-            (await workoutsCollection.findOne(
-              { "root_group.children.exercise.exercise_id": id },
-              { sort: { workout_timestamp: -1 } }
-            ))!,
+            (
+              await Workout.findOne({ "exercises.exercise_id": id }, null, {
+                sort: { workout_timestamp: -1 },
+              })
+            )?.toJSON(),
           ] as const
       )
     )
   )
     .map(([id, workout]) => {
-      const { workout_timestamp } = workout;
-      const { exercise } = workout.root_group.children.find(
-        ({ exercise: { exercise_id } }) => exercise_id === id
+      if (!workout) {
+        return null;
+      }
+
+      const { worked_out_at } = workout;
+      console.log(workout);
+      const exercise = workout.exercises.find(
+        ({ exercise_id }) => exercise_id === id
       )!;
 
       const heaviestSet = exercise.sets.reduce((acc, set) => {
         const setWeight = set.inputs.find(
-          (input) => input.type === Fitocracy.InputType.Weight
+          (input) => input.type === InputType.Weight
         )?.value;
         const accWeight = acc?.inputs.find(
-          (input) => input.type === Fitocracy.InputType.Weight
+          (input) => input.type === InputType.Weight
         )?.value;
         return setWeight && accWeight && setWeight > accWeight ? set : acc;
       }, exercise.sets[0]);
 
       const workingSets = exercise.sets.filter(
         (set) =>
-          set.inputs.find((input) => input.type === Fitocracy.InputType.Weight)
-            ?.value ===
-          heaviestSet?.inputs.find(
-            (input) => input.type === Fitocracy.InputType.Weight
-          )?.value
+          set.inputs.find((input) => input.type === InputType.Weight)?.value ===
+          heaviestSet?.inputs.find((input) => input.type === InputType.Weight)
+            ?.value
       );
 
       let successful = true;
@@ -319,8 +320,7 @@ export default async function Page() {
         if (
           workingSets.every(
             ({ inputs }) =>
-              inputs.find(({ type }) => type === Fitocracy.InputType.Reps)!
-                .value < 5
+              inputs.find(({ type }) => type === InputType.Reps)!.value < 5
           )
         ) {
           successful = false;
@@ -331,16 +331,14 @@ export default async function Page() {
 
       const nextWorkingSet = successful
         ? ([1, 183, 532].includes(exercise.exercise_id) ? 1.25 : 2.5) +
-          (heaviestSet?.inputs.find(
-            (input) => input.type === Fitocracy.InputType.Weight
-          )?.value || 0)
+          (heaviestSet?.inputs.find((input) => input.type === InputType.Weight)
+            ?.value || 0)
         : 0.9 *
-          (heaviestSet?.inputs.find(
-            (input) => input.type === Fitocracy.InputType.Weight
-          )?.value || 0);
+          (heaviestSet?.inputs.find((input) => input.type === InputType.Weight)
+            ?.value || 0);
 
       return {
-        workout_timestamp,
+        workout_timestamp: worked_out_at,
         exercise_id: exercise.exercise_id,
         exercise: exercises.find(({ id }) => id === exercise.exercise_id)!,
         successful,
@@ -366,21 +364,28 @@ export default async function Page() {
         <div>
           <b>Next Sets</b>
           <ol>
-            {nextSets.map(
-              ({ exercise, successful, nextWorkingSet, workout_timestamp }) => (
-                <li key={exercise.id}>
-                  <b>
-                    {(exercise.aliases[1] || exercise.name).replace(
-                      "Barbell",
-                      ""
-                    )}{" "}
-                    {successful ? null : " (failed)"}
-                  </b>{" "}
-                  {nextWorkingSet}kg Last set{" "}
-                  {String(workout_timestamp.toLocaleDateString("da-DK"))}
-                </li>
-              )
-            )}
+            {nextSets
+              .filter(Boolean)
+              .map(
+                ({
+                  exercise,
+                  successful,
+                  nextWorkingSet,
+                  workout_timestamp,
+                }) => (
+                  <li key={exercise.id}>
+                    <b>
+                      {(exercise.aliases[1] || exercise.name).replace(
+                        "Barbell",
+                        ""
+                      )}{" "}
+                      {successful ? null : " (failed)"}
+                    </b>{" "}
+                    {nextWorkingSet}kg Last set{" "}
+                    {String(workout_timestamp.toLocaleDateString("da-DK"))}
+                  </li>
+                )
+              )}
           </ol>
         </div>
       </fieldset>
