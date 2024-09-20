@@ -29,8 +29,11 @@ export async function upsertWorkout(
 }
 
 export async function deleteWorkout(workoutId: string) {
-  const result = await Workout.deleteOne({ _id: new ObjectId(workoutId) });
+  const result = await Workout.updateOne(
+    { _id: new ObjectId(workoutId) },
+    { $set: { deleted_at: new Date() } }
+  );
   revalidatePath("/diary");
 
-  return result.deletedCount;
+  return result.modifiedCount;
 }

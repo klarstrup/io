@@ -75,6 +75,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     async () => {
       for await (const workout of Workout.find({
         user_id: user.id,
+        deleted_at: { $exists: false },
       })) {
         if (
           isWithinInterval(workout.worked_out_at, {

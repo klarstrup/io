@@ -178,7 +178,10 @@ export function DiaryEntryList({
                           id,
                           (
                             await Workout.findOne(
-                              { "exercises.exercise_id": id },
+                              {
+                                "exercises.exercise_id": id,
+                                deleted_at: { $exists: false },
+                              },
                               null,
                               { sort: { workout_timestamp: -1 } }
                             )

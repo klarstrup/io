@@ -927,7 +927,6 @@ export function workoutFromTopLoggerAscends(
     created_at: firstAscend.date_logged,
     updated_at: firstAscend.date_logged,
     worked_out_at: firstAscend.date_logged,
-    deleted_at: undefined,
     source: WorkoutSource.TopLogger,
   };
 }

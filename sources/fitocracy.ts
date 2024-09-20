@@ -294,7 +294,6 @@ export function workoutFromFitocracyWorkout(
     created_at: new Date(),
     updated_at: new Date(),
     worked_out_at: new Date(workout.workout_timestamp),
-    deleted_at: undefined,
     source: WorkoutSource.Fitocracy,
   };
 }
