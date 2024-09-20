@@ -290,7 +290,6 @@ export default async function Page() {
       }
 
       const { worked_out_at } = workout;
-      console.log(workout);
       const exercise = workout.exercises.find(
         ({ exercise_id }) => exercise_id === id
       )!;
@@ -356,37 +355,6 @@ export default async function Page() {
   return (
     <div>
       <UserStuff />
-      <fieldset>
-        <legend>New workout</legend>
-        <WorkoutForm user={user} />
-        <div>
-          <b>Next Sets</b>
-          <ol>
-            {nextSets
-              .filter(Boolean)
-              .map(
-                ({
-                  exercise,
-                  successful,
-                  nextWorkingSet,
-                  workout_timestamp,
-                }) => (
-                  <li key={exercise.id}>
-                    <b>
-                      {(exercise.aliases[1] || exercise.name).replace(
-                        "Barbell",
-                        ""
-                      )}{" "}
-                      {successful ? null : " (failed)"}
-                    </b>{" "}
-                    {nextWorkingSet}kg Last set{" "}
-                    {String(workout_timestamp.toLocaleDateString("da-DK"))}
-                  </li>
-                )
-              )}
-          </ol>
-        </div>
-      </fieldset>
       <div
         style={{
           display: "grid",
@@ -396,6 +364,45 @@ export default async function Page() {
           padding: "1em",
         }}
       >
+        <fieldset
+          style={{
+            boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
+            borderRadius: "1.5em",
+            background: "white",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <legend>New workout</legend>
+          <WorkoutForm user={user} />
+          <div>
+            <b>Next Sets</b>
+            <ol>
+              {nextSets
+                .filter(Boolean)
+                .map(
+                  ({
+                    exercise,
+                    successful,
+                    nextWorkingSet,
+                    workout_timestamp,
+                  }) => (
+                    <li key={exercise.id}>
+                      <b>
+                        {(exercise.aliases[1] || exercise.name).replace(
+                          "Barbell",
+                          ""
+                        )}{" "}
+                        {successful ? null : " (failed)"}
+                      </b>{" "}
+                      {nextWorkingSet}kg Last set{" "}
+                      {String(workout_timestamp.toLocaleDateString("da-DK"))}
+                    </li>
+                  )
+                )}
+            </ol>
+          </div>
+        </fieldset>
         <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
           <DiaryEntryList diaryEntries={diaryEntries} user={user} />
         </LoadMore>

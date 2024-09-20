@@ -253,7 +253,28 @@ function SetsForm({
     >
       <thead>
         <tr>
-          <th />
+          <th>
+            <button
+              type="button"
+              onClick={() =>
+                append({
+                  inputs: exercise.inputs.map((input) => ({
+                    id: input.id,
+                    input_ordinal: input.input_ordinal,
+                    value: sets[sets.length - 1]?.inputs[input.id]?.value ?? 0,
+                    unit:
+                      sets[sets.length - 1]?.inputs[input.id]?.unit ??
+                      input.metric_unit ??
+                      input.allowed_units?.[0]?.name,
+                    type: input.type,
+                  })),
+                })
+              }
+              style={{ padding: 0 }}
+            >
+              ➕
+            </button>
+          </th>
           {exercise.inputs.map((input) => (
             <th key={input.id} style={{ fontSize: "0.5em" }}>
               {input.display_name}{" "}
@@ -363,31 +384,6 @@ function SetsForm({
             </td>
           </tr>
         ))}
-        <tr>
-          <td />
-          <td>
-            <button
-              type="button"
-              onClick={() =>
-                append({
-                  inputs: exercise.inputs.map((input) => ({
-                    id: input.id,
-                    input_ordinal: input.input_ordinal,
-                    value: sets[sets.length - 1]?.inputs[input.id]?.value ?? 0,
-                    unit:
-                      sets[sets.length - 1]?.inputs[input.id]?.unit ??
-                      input.metric_unit ??
-                      input.allowed_units?.[0]?.name,
-                    type: input.type,
-                  })),
-                })
-              }
-              style={{ padding: 0 }}
-            >
-              ➕
-            </button>
-          </td>
-        </tr>
       </tbody>
     </table>
   );
