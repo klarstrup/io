@@ -2,11 +2,9 @@ import { isAfter, isWithinInterval, subMonths } from "date-fns";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
-import { exercises, InputType } from "../../models/exercises";
 import { User } from "../../models/user";
 import { Workout } from "../../models/workout";
 import {
-  exerciseIdsThatICareAbout,
   Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
@@ -24,12 +22,13 @@ import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryEntryList } from "./DiaryEntryList";
-import { WorkoutForm } from "./WorkoutForm";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const monthsPerPage = 1;
+
+type DayStr = `${number}-${number}-${number}`;
 
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
@@ -45,13 +44,16 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
     "myfitnesspal_food_entries"
   );
-  const diary: Record<`${number}-${number}-${number}`, DiaryEntry> = {};
+  const todayStr = `${new Date().getFullYear()}-${
+    new Date().getMonth() + 1
+  }-${new Date().getDate()}`;
+  const diary: Record<DayStr, DiaryEntry> = !to ? { [todayStr]: {} } : {};
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
     date: Date,
     key: K,
     entry: NonNullable<(typeof diary)[keyof typeof diary][K]>[number]
   ) {
-    const dayStr: `${number}-${number}-${number}` = `${date.getFullYear()}-${
+    const dayStr: DayStr = `${date.getFullYear()}-${
       date.getMonth() + 1
     }-${date.getDate()}`;
     let day = diary[dayStr];
@@ -190,7 +192,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         Number(a.split("-")[1]) - 1,
         Number(a.split("-")[2])
       ).getTime()
-  ) as [`${number}-${number}-${number}`, DiaryEntry][];
+  ) as [DayStr, DiaryEntry][];
 
   return diaryEntries;
 }
@@ -269,89 +271,6 @@ export default async function Page() {
     to: from,
   });
 
-  const nextSets = (
-    await Promise.all(
-      exerciseIdsThatICareAbout.map(
-        async (id) =>
-          [
-            id,
-            (
-              await Workout.findOne({ "exercises.exercise_id": id }, null, {
-                sort: { workout_timestamp: -1 },
-              })
-            )?.toJSON(),
-          ] as const
-      )
-    )
-  )
-    .map(([id, workout]) => {
-      if (!workout) {
-        return null;
-      }
-
-      const { worked_out_at } = workout;
-      const exercise = workout.exercises.find(
-        ({ exercise_id }) => exercise_id === id
-      )!;
-
-      const heaviestSet = exercise.sets.reduce((acc, set) => {
-        const setWeight = set.inputs.find(
-          (input) => input.type === InputType.Weight
-        )?.value;
-        const accWeight = acc?.inputs.find(
-          (input) => input.type === InputType.Weight
-        )?.value;
-        return setWeight && accWeight && setWeight > accWeight ? set : acc;
-      }, exercise.sets[0]);
-
-      const workingSets = exercise.sets.filter(
-        (set) =>
-          set.inputs.find((input) => input.type === InputType.Weight)?.value ===
-          heaviestSet?.inputs.find((input) => input.type === InputType.Weight)
-            ?.value
-      );
-
-      let successful = true;
-      if (
-        workingSets.length >= 3 ||
-        (exercise.exercise_id === 3 && workingSets.length >= 1)
-      ) {
-        if (
-          workingSets.every(
-            ({ inputs }) =>
-              inputs.find(({ type }) => type === InputType.Reps)!.value < 5
-          )
-        ) {
-          successful = false;
-        }
-      } else {
-        successful = false;
-      }
-
-      const nextWorkingSet = successful
-        ? ([1, 183, 532].includes(exercise.exercise_id) ? 1.25 : 2.5) +
-          (heaviestSet?.inputs.find((input) => input.type === InputType.Weight)
-            ?.value || 0)
-        : 0.9 *
-          (heaviestSet?.inputs.find((input) => input.type === InputType.Weight)
-            ?.value || 0);
-
-      return {
-        workout_timestamp: worked_out_at,
-        exercise_id: exercise.exercise_id,
-        exercise: exercises.find(({ id }) => id === exercise.exercise_id)!,
-        successful,
-        nextWorkingSet: String(nextWorkingSet).endsWith(".25")
-          ? nextWorkingSet - 0.25
-          : nextWorkingSet,
-      };
-    })
-    .sort(
-      (a, b) =>
-        (a?.workout_timestamp.getTime() || 0) -
-        (b?.workout_timestamp.getTime() || 0)
-    );
-
   return (
     <div>
       <UserStuff />
@@ -364,45 +283,6 @@ export default async function Page() {
           padding: "1em",
         }}
       >
-        <fieldset
-          style={{
-            boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
-            borderRadius: "1.5em",
-            background: "white",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <legend>New workout</legend>
-          <WorkoutForm user={user} />
-          <div>
-            <b>Next Sets</b>
-            <ol>
-              {nextSets
-                .filter(Boolean)
-                .map(
-                  ({
-                    exercise,
-                    successful,
-                    nextWorkingSet,
-                    workout_timestamp,
-                  }) => (
-                    <li key={exercise.id}>
-                      <b>
-                        {(exercise.aliases[1] || exercise.name).replace(
-                          "Barbell",
-                          ""
-                        )}{" "}
-                        {successful ? null : " (failed)"}
-                      </b>{" "}
-                      {nextWorkingSet}kg Last set{" "}
-                      {String(workout_timestamp.toLocaleDateString("da-DK"))}
-                    </li>
-                  )
-                )}
-            </ol>
-          </div>
-        </fieldset>
         <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
           <DiaryEntryList diaryEntries={diaryEntries} user={user} />
         </LoadMore>
