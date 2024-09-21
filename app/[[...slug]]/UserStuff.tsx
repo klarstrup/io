@@ -8,6 +8,7 @@ import {
 } from "../../sources/myfitnesspal";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
+import Link from "next/link";
 
 export default async function UserStuff() {
   const session = await auth();
@@ -125,6 +126,16 @@ export default async function UserStuff() {
           boxShadow: "yellow 0px 0px 20px",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            marginBottom: "6px",
+          }}
+        >
+          <Link href="/diary">Diary</Link>
+          <Link href="/">Events</Link>
+        </div>
         {currentUser ? (
           <div>
             <span>
