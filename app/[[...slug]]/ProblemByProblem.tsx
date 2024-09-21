@@ -3,10 +3,26 @@ import Grade from "../../grades";
 import { type getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { type getIoTopLoggerGroupEvent } from "../../sources/toplogger";
 
-type ProblemBadgeProps = SVGProps<SVGSVGElement> & {
+interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
   grade?: string;
-};
+}
+
+const GradeText = ({ grade }: { grade: string }) => (
+  <text
+    y="38"
+    x="8"
+    dominantBaseline="central"
+    textAnchor="start"
+    fill="#fff"
+    fontSize="28px"
+    stroke="#000"
+    paintOrder="stroke"
+    strokeWidth="3px"
+  >
+    {grade}
+  </text>
+);
 
 const FlashBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -30,18 +46,7 @@ const FlashBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
     >
       ⚡️
     </text>
-    {grade ? (
-      <text
-        y="38"
-        x="8"
-        dominantBaseline="central"
-        textAnchor="start"
-        fill="#fff"
-        fontSize="28px"
-      >
-        {grade}
-      </text>
-    ) : null}
+    {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
 const TopBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
@@ -56,18 +61,7 @@ const TopBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       height="50"
       strokeWidth="8"
     ></rect>
-    {grade ? (
-      <text
-        y="38"
-        x="8"
-        dominantBaseline="central"
-        textAnchor="start"
-        fill="#fff"
-        fontSize="28px"
-      >
-        {grade}
-      </text>
-    ) : null}
+    {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
 const ZoneBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
@@ -88,18 +82,7 @@ const ZoneBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       width="60"
       height="60"
     ></rect>
-    {grade ? (
-      <text
-        y="38"
-        x="8"
-        dominantBaseline="central"
-        textAnchor="start"
-        fill="#fff"
-        fontSize="28px"
-      >
-        {grade}
-      </text>
-    ) : null}
+    {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
 const AttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
@@ -114,18 +97,7 @@ const AttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       height="50"
       strokeWidth="8"
     ></rect>
-    {grade ? (
-      <text
-        y="38"
-        x="8"
-        dominantBaseline="central"
-        textAnchor="start"
-        fill="#000"
-        fontSize="28px"
-      >
-        {grade}
-      </text>
-    ) : null}
+    {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
 const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
@@ -141,18 +113,7 @@ const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       height="50"
       strokeWidth="8"
     ></rect>
-    {grade ? (
-      <text
-        y="38"
-        x="8"
-        dominantBaseline="central"
-        textAnchor="start"
-        fill="#000"
-        fontSize="28px"
-      >
-        {grade}
-      </text>
-    ) : null}
+    {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
 
