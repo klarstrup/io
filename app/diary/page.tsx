@@ -22,6 +22,7 @@ import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryEntryList } from "./DiaryEntryList";
+import { TZDate } from "@date-fns/tz";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -50,9 +51,10 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
     "myfitnesspal_food_entries"
   );
-  const todayStr = `${new Date().getFullYear()}-${
-    new Date().getMonth() + 1
-  }-${new Date().getDate()}`;
+  const now = TZDate.tz("Europe/Copenhagen");
+  const todayStr = `${now.getFullYear()}-${
+    now.getMonth() + 1
+  }-${now.getDate()}`;
   const diary: Record<DayStr, DiaryEntry> = !to ? { [todayStr]: {} } : {};
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
     date: Date,
@@ -253,7 +255,7 @@ export default async function Page() {
     }
   }
 
-  const from = subMonths(new Date(), monthsPerPage);
+  const from = subMonths(TZDate.tz("Europe/Copenhagen"), monthsPerPage);
   const to = undefined;
   const diaryEntries = await getDiaryEntries({ from, to });
 
