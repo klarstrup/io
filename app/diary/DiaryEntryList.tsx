@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
 import type { DiaryEntry } from "../../lib";
 import { exercises, InputType } from "../../models/exercises";
@@ -147,9 +148,10 @@ export function DiaryEntryList({
   diaryEntries: [`${number}-${number}-${number}`, DiaryEntry][];
   user: Session["user"];
 }) {
-  const todayStr = `${new Date().getFullYear()}-${
-    new Date().getMonth() + 1
-  }-${new Date().getDate()}`;
+  const now = TZDate.tz("Europe/Copenhagen");
+  const todayStr = `${now.getFullYear()}-${
+    now.getMonth() + 1
+  }-${now.getDate()}`;
   return diaryEntries.map(([date, { food, workouts }]) => {
     const dayTotalEnergy = food?.reduce(
       (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
