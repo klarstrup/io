@@ -13,6 +13,7 @@ import {
 } from "../../models/exercises";
 import { WorkoutSource, type WorkoutData } from "../../models/workout";
 import { deleteWorkout, upsertWorkout } from "./actions";
+import { TZDate } from "@date-fns/tz";
 
 function isValidDate(date: Date) {
   return !isNaN(date.getTime());
@@ -127,7 +128,7 @@ export function WorkoutForm({
         defaultValue={
           workout
             ? String(dateToInputDate(workout?.worked_out_at))
-            : String(dateToInputDate(new Date()))
+            : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
         }
       />
       <div>
@@ -458,7 +459,7 @@ function InputsForm({
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
               )}
               type="number"
-              onFocus={((e) => e.target.select())} 
+              onFocus={(e) => e.target.select()}
               step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
               style={{ width: "64px", flex: 1, textAlign: "right" }}
             />
