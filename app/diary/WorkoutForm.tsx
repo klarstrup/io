@@ -458,6 +458,7 @@ function InputsForm({
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
               )}
               type="number"
+              onFocus={((e) => e.target.select())} 
               step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
               style={{ width: "64px", flex: 1, textAlign: "right" }}
             />
