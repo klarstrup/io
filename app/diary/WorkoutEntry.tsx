@@ -2,6 +2,7 @@
 
 import { Session } from "next-auth";
 import { Fragment, useState } from "react";
+import { StealthButton } from "../../components/StealthButton";
 import Grade from "../../grades";
 import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import { WorkoutData, WorkoutSource } from "../../models/workout";
@@ -48,21 +49,16 @@ export default function WorkoutEntry({
             <>
               {" "}
               -{" "}
-              <button
+              <StealthButton
                 onClick={() => setIsEditing(!isEditing)}
                 style={{
                   fontSize: "12px",
-                  appearance: "none",
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
                   color: "#edab00",
                   fontWeight: 600,
                 }}
               >
                 Edit
-              </button>
+              </StealthButton>
             </>
           ) : null}
         </small>

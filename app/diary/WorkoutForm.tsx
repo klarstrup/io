@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
+import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
+import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
   exercises,
@@ -13,7 +15,6 @@ import {
 } from "../../models/exercises";
 import { WorkoutSource, type WorkoutData } from "../../models/workout";
 import { deleteWorkout, upsertWorkout } from "./actions";
-import { TZDate } from "@date-fns/tz";
 
 function isValidDate(date: Date) {
   return !isNaN(date.getTime());
@@ -140,23 +141,17 @@ export function WorkoutForm({
             throw new Error(`Exercise with ID ${field.exercise_id} not found`);
           }
           return (
-            <div key={field.id}>
-              <div style={{ display: "flex" }}>
-                <header
-                  style={{ flex: "1", fontWeight: 600, fontSize: "0.9em" }}
-                >
-                  {exercise.name}
-                </header>
-                <button
-                  type="button"
+            <fieldset key={field.id} style={{ display: "flex" }}>
+              <legend style={{ flex: "1", fontWeight: 600, fontSize: "0.9em" }}>
+                {exercise.name}
+                <StealthButton
                   onClick={() => remove(index)}
                   disabled={isSubmitting}
-                  style={{ padding: 0 }}
+                  style={{ lineHeight: 0 }}
                 >
                   ❌
-                </button>
-                <button
-                  type="button"
+                </StealthButton>
+                <StealthButton
                   onClick={() => {
                     const newIndex = index - 1;
                     const destination = fields[newIndex]!;
@@ -165,12 +160,11 @@ export function WorkoutForm({
                     update(newIndex, source);
                   }}
                   disabled={index === 0 || isSubmitting}
-                  style={{ padding: 0 }}
+                  style={{ lineHeight: 0 }}
                 >
                   ⬆️
-                </button>
-                <button
-                  type="button"
+                </StealthButton>
+                <StealthButton
                   onClick={() => {
                     const newIndex = index + 1;
                     const destination = fields[newIndex]!;
@@ -179,18 +173,18 @@ export function WorkoutForm({
                     update(newIndex, source);
                   }}
                   disabled={index === fields.length - 1 || isSubmitting}
-                  style={{ padding: 0 }}
+                  style={{ lineHeight: 0 }}
                 >
                   ⬇️
-                </button>
-              </div>
+                </StealthButton>
+              </legend>
               <SetsForm
                 control={control}
                 register={register}
                 parentIndex={index}
                 exercise={exercise}
               />
-            </div>
+            </fieldset>
           );
         })}
         <Select
@@ -250,13 +244,13 @@ function SetsForm({
         display: "block",
         width: "100%",
         borderCollapse: "collapse",
+        borderSpacing: 0,
       }}
     >
       <thead>
         <tr>
           <th>
-            <button
-              type="button"
+            <StealthButton
               onClick={() =>
                 append({
                   inputs: exercise.inputs.map((input) => ({
@@ -271,49 +265,45 @@ function SetsForm({
                   })),
                 })
               }
-              style={{ padding: 0 }}
+              style={{ lineHeight: 0 }}
             >
               ➕
-            </button>
+            </StealthButton>
           </th>
           {exercise.inputs.map((input) => (
             <th key={input.id} style={{ fontSize: "0.5em" }}>
               {input.display_name}{" "}
               <small>
                 {input.allowed_units && input.allowed_units.length > 1 ? (
-                  <>
-                    (
-                    <select
-                      value={sets[0]?.inputs[input.id]?.unit}
-                      style={{ flex: 1 }}
-                      onChange={(event) => {
-                        const unit = event.target.value as Unit;
-                        sets.forEach((set, setIndex) => {
-                          update(setIndex, {
-                            ...set,
-                            inputs: set.inputs.map((input) => ({
-                              ...input,
-                              unit,
-                            })),
-                          });
+                  <select
+                    value={sets[0]?.inputs[input.id]?.unit}
+                    style={{ flex: 1, fontSize: "inherit" }}
+                    onChange={(event) => {
+                      const unit = event.target.value as Unit;
+                      sets.forEach((set, setIndex) => {
+                        update(setIndex, {
+                          ...set,
+                          inputs: set.inputs.map((input) => ({
+                            ...input,
+                            unit,
+                          })),
                         });
-                      }}
-                    >
-                      {[...input.allowed_units]
-                        .sort((a, b) => {
-                          return (
-                            (a.name === input.metric_unit ? -1 : 1) -
-                            (b.name === input.metric_unit ? -1 : 1)
-                          );
-                        })
-                        .map((unit) => (
-                          <option key={unit.name} value={unit.name}>
-                            {unit.name}
-                          </option>
-                        ))}
-                    </select>
-                    )
-                  </>
+                      });
+                    }}
+                  >
+                    {[...input.allowed_units]
+                      .sort((a, b) => {
+                        return (
+                          (a.name === input.metric_unit ? -1 : 1) -
+                          (b.name === input.metric_unit ? -1 : 1)
+                        );
+                      })
+                      .map((unit) => (
+                        <option key={unit.name} value={unit.name}>
+                          {unit.name}
+                        </option>
+                      ))}
+                  </select>
                 ) : input.metric_unit?.toLowerCase() !==
                     input.display_name.toLowerCase() &&
                   input.type !== InputType.Options &&
@@ -346,15 +336,13 @@ function SetsForm({
             />
             <td>
               <div style={{ display: "flex" }}>
-                <button
-                  type="button"
+                <StealthButton
                   onClick={() => remove(index)}
-                  style={{ padding: 0 }}
+                  style={{ lineHeight: 0 }}
                 >
                   ❌
-                </button>
-                <button
-                  type="button"
+                </StealthButton>
+                <StealthButton
                   onClick={() => {
                     const newIndex = index - 1;
                     const destination = sets[newIndex]!;
@@ -363,12 +351,11 @@ function SetsForm({
                     update(newIndex, source);
                   }}
                   disabled={index === 0}
-                  style={{ padding: 0 }}
+                  style={{ lineHeight: 0 }}
                 >
                   ⬆️
-                </button>
-                <button
-                  type="button"
+                </StealthButton>
+                <StealthButton
                   onClick={() => {
                     const newIndex = index + 1;
                     const destination = sets[newIndex]!;
@@ -377,10 +364,10 @@ function SetsForm({
                     update(newIndex, source);
                   }}
                   disabled={index === sets.length - 1}
-                  style={{ padding: 0 }}
+                  style={{ lineHeight: 0 }}
                 >
                   ⬇️
-                </button>
+                </StealthButton>
               </div>
             </td>
           </tr>
@@ -462,6 +449,26 @@ function InputsForm({
               onFocus={(e) => e.target.select()}
               step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
               style={{ width: "64px", flex: 1, textAlign: "right" }}
+              onKeyDown={(e) => {
+                const input = e.currentTarget;
+                const formElements = input.form?.elements;
+                if (!formElements) return;
+                if (e.key == "Enter") {
+                  const followingFormElements = Array.from(formElements).slice(
+                    Array.from(formElements).indexOf(input) + 1
+                  );
+
+                  for (const element of followingFormElements) {
+                    if (element instanceof HTMLInputElement) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      element.focus();
+                      break;
+                    }
+                  }
+                }
+              }}
             />
           )
         ) : null}
