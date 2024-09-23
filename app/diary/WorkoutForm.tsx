@@ -142,6 +142,7 @@ export function WorkoutForm({
         control={control}
         render={({ field }) => (
           <Creatable<{ label: string; value: string }, false>
+            placeholder="Pick location..."
             isDisabled={isSubmitting}
             isMulti={false}
             isClearable={true}
