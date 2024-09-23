@@ -24,9 +24,11 @@ function decimalAsTime(dec: number) {
 export default function WorkoutEntry({
   workout,
   user,
+  locations,
 }: {
   workout: WorkoutData & { _id: string };
   user: Session["user"];
+  locations: string[];
 }) {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -42,47 +44,59 @@ export default function WorkoutEntry({
         borderRadius: "0.5em",
       }}
     >
-      {workout.source === WorkoutSource.Self || !workout.source ? (
-        <small>
-          <small>You</small>
-          {!isEditing ? (
-            <>
-              {" "}
-              -{" "}
-              <StealthButton
-                onClick={() => setIsEditing(!isEditing)}
-                style={{
-                  fontSize: "12px",
-                  color: "#edab00",
-                  fontWeight: 600,
-                }}
-              >
-                Edit
-              </StealthButton>
-            </>
-          ) : null}
-        </small>
-      ) : workout.source === WorkoutSource.Fitocracy ? (
-        <small>
-          <small>Fitocracy</small>
-        </small>
-      ) : workout.source === WorkoutSource.MyFitnessPal ? (
-        <small>
-          <small>MyFitnessPal</small>
-        </small>
-      ) : workout.source === WorkoutSource.RunDouble ? (
-        <small>
-          <small>RunDouble</small>
-        </small>
-      ) : workout.source === WorkoutSource.TopLogger ? (
-        <small>
-          <small>TopLogger</small>
-        </small>
-      ) : null}
+      <small>
+        {workout.source === WorkoutSource.Self || !workout.source ? (
+          <>
+            <small>You</small>
+            {!isEditing ? (
+              <>
+                {" "}
+                <small>-</small>{" "}
+                <StealthButton
+                  onClick={() => setIsEditing(!isEditing)}
+                  style={{
+                    fontSize: "12px",
+                    color: "#edab00",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit
+                </StealthButton>
+              </>
+            ) : null}
+          </>
+        ) : workout.source === WorkoutSource.Fitocracy ? (
+          <>
+            <small>Fitocracy</small>
+          </>
+        ) : workout.source === WorkoutSource.MyFitnessPal ? (
+          <>
+            <small>MyFitnessPal</small>
+          </>
+        ) : workout.source === WorkoutSource.RunDouble ? (
+          <>
+            <small>RunDouble</small>
+          </>
+        ) : workout.source === WorkoutSource.TopLogger ? (
+          <>
+            <small>TopLogger</small>
+          </>
+        ) : null}
+        {workout.location ? (
+          <>
+            {" "}
+            <small>
+              <small>@</small>
+            </small>{" "}
+            <small>{workout.location}</small>
+          </>
+        ) : null}
+      </small>
       {isEditing ? (
         <WorkoutForm
           user={user}
           workout={workout}
+          locations={locations}
           onClose={() => setIsEditing(false)}
         />
       ) : (

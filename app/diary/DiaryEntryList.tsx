@@ -144,9 +144,11 @@ async function NextSets({ user }: { user: Session["user"] }) {
 export function DiaryEntryList({
   diaryEntries,
   user,
+  locations,
 }: {
   diaryEntries: [`${number}-${number}-${number}`, DiaryEntry][];
   user: Session["user"];
+  locations: string[];
 }) {
   const now = TZDate.tz("Europe/Copenhagen");
   const todayStr = `${now.getFullYear()}-${
@@ -293,6 +295,7 @@ export function DiaryEntryList({
                     key={workout._id}
                     user={user}
                     workout={workout}
+                    locations={locations}
                   />
                 ))
               : null}
@@ -301,7 +304,7 @@ export function DiaryEntryList({
         {date === todayStr ? (
           <fieldset>
             <legend>New workout</legend>
-            <WorkoutForm user={user} />
+            <WorkoutForm user={user} locations={locations} />
             <NextSets user={user} />
           </fieldset>
         ) : null}

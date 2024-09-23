@@ -17,6 +17,7 @@ export interface WorkoutData {
   worked_out_at: Date;
   deleted_at?: Date;
   source?: WorkoutSource;
+  location?: string;
 }
 
 interface Exercise {
@@ -67,6 +68,7 @@ const workoutExerciseSchema = new mongoose.Schema<
 const workoutSchema = new mongoose.Schema<WorkoutData>(
   {
     exercises: [workoutExerciseSchema],
+    location: String,
     user_id: String,
     created_at: Date,
     updated_at: Date,

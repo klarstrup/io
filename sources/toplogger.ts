@@ -23,6 +23,7 @@ import {
 import { InputType, exercises } from "../models/exercises";
 import { WorkoutSource, type WorkoutData } from "../models/workout";
 import { RelativeURL, percentile } from "../utils";
+import { first } from "cheerio/dist/commonjs/api/traversing";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -880,7 +881,8 @@ export async function getTopLoggerGroupEventEntry(
 
 export function workoutFromTopLoggerAscends(
   ascends: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
-  holds: TopLogger.Hold[]
+  holds: TopLogger.Hold[],
+  gyms: TopLogger.GymSingle[]
 ): WorkoutData & { _id: string } {
   const firstAscend = ascends[0];
   if (!firstAscend) throw new Error("No ascends");
@@ -923,6 +925,7 @@ export function workoutFromTopLoggerAscends(
           })),
       },
     ],
+    location: gyms.find(({ id }) => id === firstAscend.climb.gym_id)?.name,
     user_id: String(firstAscend.user_id),
     created_at: firstAscend.date_logged,
     updated_at: firstAscend.date_logged,

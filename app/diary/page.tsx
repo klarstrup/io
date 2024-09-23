@@ -1,4 +1,6 @@
+import { TZDate } from "@date-fns/tz";
 import { isAfter, subMonths } from "date-fns";
+import type { Session } from "next-auth";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
@@ -22,7 +24,6 @@ import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryEntryList } from "./DiaryEntryList";
-import { TZDate } from "@date-fns/tz";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -33,6 +34,14 @@ type DayStr = `${number}-${number}-${number}`;
 
 const rangeToQuery = (from: Date, to?: Date) =>
   to ? { $gte: from, $lt: to } : { $gte: from };
+
+const getAllWorkoutLocations = async (user: Session["user"]) =>
+  (
+    await Workout.distinct("location", {
+      user_id: user.id,
+      deleted_at: { $exists: false },
+    })
+  ).filter((loc) => loc);
 
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
@@ -116,6 +125,9 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
           .find()
           .toArray();
+        const gyms = await DB.collection<TopLogger.GymSingle>("toplogger_gyms")
+          .find()
+          .toArray();
 
         const ascends = await DB.collection<TopLogger.AscendSingle>(
           "toplogger_ascends"
@@ -155,7 +167,8 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
                 ...ascend,
                 climb: climbs.find(({ id }) => id === ascend.climb_id)!,
               })),
-              holds
+              holds,
+              gyms
             )
           );
         }
@@ -211,11 +224,13 @@ async function loadMoreData(cursor: string) {
     from: new Date(from),
     to: new Date(to),
   });
+  const allLocations = await getAllWorkoutLocations(user);
 
   return [
     <DiaryEntryList
       diaryEntries={diaryEntries}
       user={user}
+      locations={allLocations}
       key={JSON.stringify({ from, to })}
     />,
     JSON.stringify({ from: subMonths(from, monthsPerPage), to: from }),
@@ -258,6 +273,7 @@ export default async function Page() {
   const from = subMonths(TZDate.tz("Europe/Copenhagen"), monthsPerPage);
   const to = undefined;
   const diaryEntries = await getDiaryEntries({ from, to });
+  const allLocations = await getAllWorkoutLocations(user);
 
   const initialCursor = JSON.stringify({
     from: subMonths(from, monthsPerPage),
@@ -277,7 +293,11 @@ export default async function Page() {
         }}
       >
         <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
-          <DiaryEntryList diaryEntries={diaryEntries} user={user} />
+          <DiaryEntryList
+            diaryEntries={diaryEntries}
+            user={user}
+            locations={allLocations}
+          />
         </LoadMore>
       </div>
     </div>

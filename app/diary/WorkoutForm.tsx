@@ -3,8 +3,9 @@
 
 import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
+import Creatable from "react-select/creatable";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
@@ -36,10 +37,12 @@ export function WorkoutForm({
   user,
   workout,
   onClose,
+  locations,
 }: {
   user: Session["user"];
   workout?: WorkoutData & { _id?: string };
   onClose?: () => void;
+  locations: string[];
 }) {
   const {
     handleSubmit,
@@ -57,6 +60,7 @@ export function WorkoutForm({
     name: "exercises",
   });
 
+  console.log({ locations });
   return (
     <form
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -74,6 +78,7 @@ export function WorkoutForm({
           updated_at: new Date(),
           exercises: data.exercises ?? workout?.exercises,
           source: WorkoutSource.Self,
+          location: data.location ?? workout?.location,
         };
         console.log({ workout, data, newWorkout });
         await upsertWorkout(newWorkout);
@@ -131,6 +136,29 @@ export function WorkoutForm({
             ? String(dateToInputDate(workout?.worked_out_at))
             : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
         }
+      />
+      <Controller
+        name="location"
+        control={control}
+        render={({ field }) => (
+          <Creatable<{ label: string; value: string }, false>
+            isDisabled={isSubmitting}
+            isMulti={false}
+            isClearable={true}
+            options={locations.map((location) => ({
+              label: location,
+              value: location,
+            }))}
+            {...field}
+            value={
+              field.value ? { label: field.value, value: field.value } : null
+            }
+            onChange={(selected) => {
+              if (selected) field.onChange(selected.value);
+            }}
+          />
+        )}
+        rules={{ required: true }}
       />
       <div>
         {fields.map((field, index) => {
