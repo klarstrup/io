@@ -97,9 +97,11 @@ async function NextSets({ user }: { user: Session["user"] }) {
               workout_timestamp: worked_out_at,
               exercise_id: exercise.exercise_id,
               successful,
-              nextWorkingSet: String(nextWorkingSet).endsWith(".25")
-                ? nextWorkingSet - 0.25
-                : nextWorkingSet,
+              nextWorkingSet:
+                String(nextWorkingSet).endsWith(".25") ||
+                String(nextWorkingSet).endsWith(".75")
+                  ? nextWorkingSet - 0.25
+                  : nextWorkingSet,
             };
           })
           .filter(Boolean)
