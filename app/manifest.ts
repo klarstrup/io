@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "io input/output",
     short_name: "io",
     description: "A simple input/output app",
-    start_url: "/",
+    start_url: "/diary",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ff0",
