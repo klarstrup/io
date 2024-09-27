@@ -1,58 +1,73 @@
+import { ObjectId } from "mongodb";
 import { revalidateTag } from "next/cache";
+import Link from "next/link";
 import { auth } from "../../auth";
-import dbConnect from "../../dbConnect";
-import { User } from "../../models/user";
+import { getDB } from "../../dbConnect";
+import { type IUser } from "../../models/user";
 import {
   MyFitnessPal,
   getMyFitnessPalSession,
 } from "../../sources/myfitnesspal";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
-import Link from "next/link";
+
+async function updateUser(formData: FormData) {
+  "use server";
+
+  const session = await auth();
+  const db = await getDB();
+
+  const user = session?.user.id
+    ? await db
+        .collection<IUser>("users")
+        .findOne({ _id: new ObjectId(session.user.id) })
+    : null;
+  if (!user) throw new Error("No user found");
+
+  const newUser = { ...user };
+  const fitocracySessionId = formData.get("fitocracySessionId");
+  if (typeof fitocracySessionId === "string") {
+    newUser.fitocracySessionId = fitocracySessionId.trim() || null;
+  }
+
+  const topLoggerId = formData.get("topLoggerId");
+  if (typeof topLoggerId === "string") {
+    newUser.topLoggerId = topLoggerId.trim()
+      ? Number(topLoggerId.trim())
+      : null;
+  }
+
+  const myFitnessPalToken = formData.get("myFitnessPalToken");
+  if (typeof myFitnessPalToken === "string") {
+    newUser.myFitnessPalToken = myFitnessPalToken.trim() || null;
+  }
+  const runDoubleId = formData.get("runDoubleId");
+  if (typeof runDoubleId === "string") {
+    newUser.runDoubleId = runDoubleId.trim() || null;
+  }
+
+  await db
+    .collection<IUser>("users")
+    .updateOne({ _id: user._id }, { $set: newUser });
+
+  // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
+  // calling it at all will make the page rerender with the new data.
+  try {
+    revalidateTag("");
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 export default async function UserStuff() {
   const session = await auth();
+  const db = await getDB();
 
-  const currentUser = (await User.findOne({ _id: session?.user.id }))?.toJSON();
-
-  async function updateUser(formData: FormData) {
-    "use server";
-    await dbConnect();
-
-    const userModel = await User.findOne({ _id: session?.user.id });
-    if (!userModel) throw new Error("No user found");
-
-    const fitocracySessionId = formData.get("fitocracySessionId");
-    if (typeof fitocracySessionId === "string") {
-      userModel.fitocracySessionId = fitocracySessionId.trim() || null;
-    }
-
-    const topLoggerId = formData.get("topLoggerId");
-    if (typeof topLoggerId === "string") {
-      userModel.topLoggerId = topLoggerId.trim()
-        ? Number(topLoggerId.trim())
-        : null;
-    }
-
-    const myFitnessPalToken = formData.get("myFitnessPalToken");
-    if (typeof myFitnessPalToken === "string") {
-      userModel.myFitnessPalToken = myFitnessPalToken.trim() || null;
-    }
-    const runDoubleId = formData.get("runDoubleId");
-    if (typeof runDoubleId === "string") {
-      userModel.runDoubleId = runDoubleId.trim() || null;
-    }
-
-    await userModel.save();
-
-    // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
-    // calling it at all will make the page rerender with the new data.
-    try {
-      revalidateTag("");
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  const currentUser = session?.user.id
+    ? await db
+        .collection<IUser>("users")
+        .findOne({ _id: new ObjectId(session.user.id) })
+    : null;
 
   let topLoggerUser: TopLogger.User | null = null;
   try {

@@ -1,6 +1,6 @@
+import { auth } from "../../../auth";
 import { getDB } from "../../../dbConnect";
 import type { ScrapedAt } from "../../../lib";
-import { User } from "../../../models/user";
 import {
   type TopLogger,
   fetchAscends,
@@ -20,6 +20,12 @@ const randomSlice = <T>(array: T[], slices: number) =>
   shuffle(chunk(array, Math.ceil(array.length / slices)))[0] || [];
 
 export async function GET() {
+  const user = (await auth())?.user;
+  if (!user) return new Response("Unauthorized", { status: 401 });
+
+  const { topLoggerId } = user;
+  if (!topLoggerId) return new Response("No topLoggerId", { status: 401 });
+
   const DB = await getDB();
   const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
     "toplogger_users"
@@ -168,13 +174,6 @@ export async function GET() {
       { upsert: true }
     );
 
-  // Io is the only user in the database,
-  // TODO: They will not be the only user in the future
-  const { topLoggerId } = (await User.findOne())!;
-
-  if (!topLoggerId) {
-    return new Response("No topLoggerId", { status: 401 });
-  }
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
   const encoder = new TextEncoder();

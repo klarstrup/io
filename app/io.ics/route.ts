@@ -6,9 +6,9 @@ import {
 } from "ical-generator";
 import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
+import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import { EventEntry } from "../../lib";
-import { User } from "../../models/user";
 import {
   getIoClimbAlongCompetitionEventEntry,
   ioClimbAlongEventsWithIds,
@@ -29,10 +29,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET() {
-  const DB = await getDB();
+  const user = (await auth())?.user;
+  if (!user) return new Response("Unauthorized", { status: 401 });
 
-  // Io is the only user in the database,
-  const user = await User.findOne();
+  const DB = await getDB();
 
   let topLoggerUser: TopLogger.User | null = null;
   try {

@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import type { AssistType, InputType, Unit } from "./exercises";
 
 export enum WorkoutSource {
@@ -32,52 +31,3 @@ interface Exercise {
     }[];
   }[];
 }
-
-const workoutInputSchema = new mongoose.Schema<
-  WorkoutData["exercises"][number]["sets"][number]["inputs"][number]
->(
-  {
-    id: Number,
-    type: String,
-    unit: String,
-    value: Number,
-    assist_type: String,
-  },
-  { _id: false }
-);
-
-const workoutSetSchema = new mongoose.Schema<
-  WorkoutData["exercises"][number]["sets"][number]
->(
-  {
-    inputs: [workoutInputSchema],
-  },
-  { _id: false }
-);
-
-const workoutExerciseSchema = new mongoose.Schema<
-  WorkoutData["exercises"][number]
->(
-  {
-    exercise_id: Number,
-    sets: [workoutSetSchema],
-  },
-  { _id: false }
-);
-
-const workoutSchema = new mongoose.Schema<WorkoutData>(
-  {
-    exercises: [workoutExerciseSchema],
-    location: String,
-    user_id: String,
-    created_at: Date,
-    updated_at: Date,
-    worked_out_at: Date,
-    deleted_at: Date,
-  },
-  { toJSON: { flattenObjectIds: true } }
-);
-
-export const Workout = mongoose.model("Workout", workoutSchema, undefined, {
-  overwriteModels: true,
-});

@@ -1,7 +1,7 @@
 import { differenceInMonths, isFuture } from "date-fns";
 import { DateTime } from "luxon";
-import dbConnect, { getDB } from "../../../dbConnect";
-import { User } from "../../../models/user";
+import { auth } from "../../../auth";
+import { getDB } from "../../../dbConnect";
 import {
   MyFitnessPal,
   getMyFitnessPalReport,
@@ -40,14 +40,8 @@ export async function GET(/* request: NextRequest */) {
   }
   */
 
-  await dbConnect();
-
-  // Io is the only user in the database,
-  const user = await User.findOne();
-
-  if (!user) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const user = (await auth())?.user;
+  if (!user) return new Response("Unauthorized", { status: 401 });
 
   const myFitnessPalToken = user.myFitnessPalToken;
   if (!myFitnessPalToken) {

@@ -1,11 +1,12 @@
 import { TZDate } from "@date-fns/tz";
 import { isAfter, subMonths } from "date-fns";
+import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
-import { User } from "../../models/user";
-import { Workout } from "../../models/workout";
+import { IUser } from "../../models/user";
+import { WorkoutData } from "../../models/workout";
 import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
@@ -35,20 +36,22 @@ type DayStr = `${number}-${number}-${number}`;
 const rangeToQuery = (from: Date, to?: Date) =>
   to ? { $gte: from, $lt: to } : { $gte: from };
 
-const getAllWorkoutLocations = async (user: Session["user"]) =>
-  (
-    await Workout.distinct("location", {
+const getAllWorkoutLocations = async (user: Session["user"]) => {
+  const DB = await getDB();
+  const workoutsCollection = DB.collection<WorkoutData>("workouts");
+
+  return (
+    await workoutsCollection.distinct("location", {
       user_id: user.id,
       deleted_at: { $exists: false },
     })
-  ).filter((loc) => loc);
+  ).filter((loc): loc is string => Boolean(loc));
+};
 
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
+  if (!user) throw new Error("User not found");
 
-  if (!user) {
-    return [];
-  }
   const DB = await getDB();
 
   const workoutsCollection =
@@ -90,13 +93,13 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
 
   await allPromises(
     async () => {
-      for await (const workout of Workout.find({
+      for await (const workout of DB.collection<WorkoutData>("workouts").find({
         user_id: user.id,
         deleted_at: { $exists: false },
         worked_out_at: rangeToQuery(from, to),
       })) {
         addDiaryEntry(workout.worked_out_at, "workouts", {
-          ...workout.toJSON(),
+          ...workout,
           _id: workout._id.toString(),
         });
       }
@@ -250,6 +253,8 @@ export default async function Page() {
       </div>
     );
 
+  const DB = await getDB();
+
   if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
     const myFitnessPalToken = user?.myFitnessPalToken;
     if (!myFitnessPalToken) return null;
@@ -260,11 +265,13 @@ export default async function Page() {
       return null;
     }
     if (session) {
-      await User.updateOne(
-        { _id: user.id },
+      await DB.collection<IUser>("users").updateOne(
+        { _id: new ObjectId(user.id) },
         {
-          myFitnessPalUserId: session.userId,
-          myFitnessPalUserName: session.user.name,
+          $set: {
+            myFitnessPalUserId: session.userId,
+            myFitnessPalUserName: session.user.name,
+          },
         }
       );
     }

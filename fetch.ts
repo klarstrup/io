@@ -1,17 +1,13 @@
-import mongoose from "mongoose";
+import { getDB } from "./dbConnect";
 
-const fetchSchema = new mongoose.Schema({
-  fetchArgs: String,
-  lastAttemptedFetchAt: Date,
-  lastSuccessfulFetchAt: Date,
-  lastFailedFetchAt: Date,
-  lastResult: String,
-  lastError: String,
-});
-
-export const Fetch = mongoose.model("Fetch", fetchSchema, undefined, {
-  overwriteModels: true,
-});
+interface IFetch {
+  fetchArgs: string;
+  lastAttemptedFetchAt: Date;
+  lastSuccessfulFetchAt: Date;
+  lastFailedFetchAt: Date;
+  lastResult: string;
+  lastError: string;
+}
 
 // DB-backed fetch function that will return stale stuff
 const rawDbFetch = async <T = string>(
@@ -35,7 +31,9 @@ const rawDbFetch = async <T = string>(
   const filter = { fetchArgs };
   const now = new Date();
 
-  const fetchRow = await Fetch.findOne(filter);
+  const db = await getDB();
+  const fetchesCollection = db.collection<IFetch>("fetches");
+  const fetchRow = await fetchesCollection.findOne(filter);
   let result: string | null = null;
   let parsedResult: T | null = null;
   let error: unknown;
@@ -63,9 +61,9 @@ const rawDbFetch = async <T = string>(
 
   try {
     if (!result) {
-      await Fetch.updateOne(
+      await fetchesCollection.updateOne(
         filter,
-        { lastAttemptedFetchAt: now },
+        { $set: { lastAttemptedFetchAt: now } },
         { upsert: true }
       );
       console.info(
@@ -104,9 +102,11 @@ const rawDbFetch = async <T = string>(
         !(String(input).match(/\/holds\//) && response.status === 404)
       ) {
         error = await response.text();
-        await Fetch.updateOne(filter, {
-          lastError: error,
-          lastFailedFetchAt: now,
+        await fetchesCollection.updateOne(filter, {
+          $set: {
+            lastError: String(error),
+            lastFailedFetchAt: now,
+          },
         });
       } else {
         result = await response.text();
@@ -124,14 +124,18 @@ const rawDbFetch = async <T = string>(
         ) {
           error = parsedResult.error;
           parsedResult = null;
-          await Fetch.updateOne(filter, {
-            lastError: error,
-            lastFailedFetchAt: now,
+          await fetchesCollection.updateOne(filter, {
+            $set: {
+              lastError: String(error),
+              lastFailedFetchAt: now,
+            },
           });
         } else {
-          await Fetch.updateOne(filter, {
-            lastResult: result,
-            lastSuccessfulFetchAt: now,
+          await fetchesCollection.updateOne(filter, {
+            $set: {
+              lastResult: result,
+              lastSuccessfulFetchAt: now,
+            },
           });
         }
       }

@@ -1,14 +1,18 @@
 import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
+import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
 import { exercises, InputType } from "../../models/exercises";
-import { Workout } from "../../models/workout";
+import { WorkoutData } from "../../models/workout";
 import { exerciseIdsThatICareAbout } from "../../sources/fitocracy";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
 
 async function NextSets({ user }: { user: Session["user"] }) {
+  const DB = await getDB();
+  const workoutsCollection = DB.collection<WorkoutData>("workouts");
+
   return (
     <div>
       <b>Next Sets</b>
@@ -19,17 +23,14 @@ async function NextSets({ user }: { user: Session["user"] }) {
               async (id) =>
                 [
                   id,
-                  (
-                    await Workout.findOne(
-                      {
-                        user_id: user.id,
-                        "exercises.exercise_id": id,
-                        deleted_at: { $exists: false },
-                      },
-                      null,
-                      { sort: { worked_out_at: -1 } }
-                    )
-                  )?.toJSON(),
+                  await workoutsCollection.findOne(
+                    {
+                      user_id: user.id,
+                      "exercises.exercise_id": id,
+                      deleted_at: { $exists: false },
+                    },
+                    { sort: { worked_out_at: -1 } }
+                  ),
                 ] as const
             )
           )

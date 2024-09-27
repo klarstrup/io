@@ -113,7 +113,7 @@ export type EventEntry =
     };
 
 export interface DiaryEntry {
-  workouts?: (WorkoutData & { _id: string } & { source?: WorkoutSource })[];
+  workouts?: (WorkoutData & { _id: string })[];
   food?: MyFitnessPal.FoodEntry[];
 }
 

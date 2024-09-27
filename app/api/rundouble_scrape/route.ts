@@ -1,21 +1,15 @@
-import dbConnect, { getDB } from "../../../dbConnect";
+import { auth } from "../../../auth";
+import { getDB } from "../../../dbConnect";
 import type { ScrapedAt } from "../../../lib";
-import { User } from "../../../models/user";
 import { getRuns, type RunDouble } from "../../../sources/rundouble";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET() {
-  await dbConnect();
+  const user = (await auth())?.user;
+  if (!user) return new Response("Unauthorized", { status: 401 });
 
-  // Io is the only user in the database,
-  // TODO: They will not be the only user in the future
-  const user = await User.findOne();
-
-  if (!user) {
-    return new Response("Unauthorized", { status: 401 });
-  }
   const runDoubleId = user.runDoubleId;
   if (!runDoubleId) {
     return new Response("No runDoubleId", { status: 401 });

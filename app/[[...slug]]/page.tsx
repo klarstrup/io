@@ -5,9 +5,9 @@ import {
   isWithinInterval,
   subMonths,
 } from "date-fns";
+import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { EventEntry } from "../../lib";
-import { User } from "../../models/user";
 import {
   getIoClimbAlongCompetitionEventEntry,
   ioClimbAlongEventsWithIds,
@@ -100,10 +100,11 @@ const getData = async (
   disciplines?: string[],
   { from, to }: { from?: Date; to?: Date } | undefined = {}
 ) => {
+  const user = (await auth())?.user;
+  if (!user) throw new Error("Unauthorized");
+
   const DB = await getDB();
 
-  // Io is the only user in the database,
-  const user = await User.findOne();
   let topLoggerUser: TopLogger.User | null = null;
   try {
     topLoggerUser = user?.topLoggerId

@@ -3,7 +3,6 @@ const nextConfig = {
   logging: { fetches: { fullUrl: true } },
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["mongoose"],
     typedRoutes: true,
   },
   staticPageGenerationTimeout: 600,
