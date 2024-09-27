@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "A simple input/output app",
     start_url: "/diary",
     display: "standalone",
-    background_color: "#ffffff",
+    background_color: "#000",
     theme_color: "#ff0",
     icons: [{ src: "/apple-icon", sizes: "512x512", type: "image/png" }],
   };
