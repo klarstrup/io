@@ -177,9 +177,8 @@ export default function WorkoutEntry({
 
                               return input.value !== null;
                             })
-                            .map((input, i) => {
-                              const inputDefinition =
-                                exercise.inputs[input.id]!;
+                            .map((input, index) => {
+                              const inputDefinition = exercise.inputs[index]!;
                               const inputOptions =
                                 inputDefinition.type === InputType.Options &&
                                 "options" in inputDefinition &&
@@ -188,8 +187,8 @@ export default function WorkoutEntry({
                               const inputType = inputDefinition.type;
 
                               return (
-                                <Fragment key={input.id}>
-                                  {i > 0
+                                <Fragment key={index}>
+                                  {index > 0
                                     ? inputType === InputType.Options
                                       ? ", "
                                       : input.assist_type ===

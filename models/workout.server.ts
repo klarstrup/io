@@ -1,76 +1,78 @@
+import { isAfter } from "date-fns";
 import type { Session } from "next-auth";
 import { getDB } from "../dbConnect";
-import { exerciseIdsThatICareAbout } from "../sources/fitocracy";
+import {
+  exerciseIdsThatICareAbout,
+  Fitocracy,
+  workoutFromFitocracyWorkout,
+} from "../sources/fitocracy";
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData } from "./workout";
 
 export async function getNextSets({ user }: { user: Session["user"] }) {
   const DB = await getDB();
   const workoutsCollection = DB.collection<WorkoutData>("workouts");
+  const fitocracyWorkoutsCollection =
+    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   return (
     await Promise.all(
-      exerciseIdsThatICareAbout.map(
-        async (id) =>
-          [
-            id,
-            await workoutsCollection.findOne(
+      exerciseIdsThatICareAbout.map(async (id) => {
+        const workout = await workoutsCollection.findOne(
+          {
+            user_id: user.id,
+            "exercises.exercise_id": id,
+            deleted_at: { $exists: false },
+          },
+          { sort: { worked_out_at: -1 } }
+        );
+
+        const fitWorkout = user.fitocracyUserId
+          ? await fitocracyWorkoutsCollection.findOne(
               {
-                user_id: user.id,
-                "exercises.exercise_id": id,
-                deleted_at: { $exists: false },
+                user_id: user.fitocracyUserId,
+                "root_group.children.exercise.exercise_id": id,
               },
-              { sort: { worked_out_at: -1 } }
-            ),
-          ] as const
-      )
+              { sort: { workout_timestamp: -1 } }
+            )
+          : null;
+        const fitocracyWorkout =
+          fitWorkout && workoutFromFitocracyWorkout(fitWorkout);
+
+        const recentmostWorkout =
+          workout && fitocracyWorkout
+            ? isAfter(workout.worked_out_at, fitocracyWorkout.worked_out_at)
+              ? workout
+              : fitocracyWorkout
+            : workout ?? fitocracyWorkout ?? null;
+
+        return [id, recentmostWorkout] as const;
+      })
     )
   )
     .map(([id, workout]) => {
-      if (!workout) {
-        return null;
-      }
+      if (!workout) return null;
 
-      const { worked_out_at } = workout;
       const exercise = workout.exercises.find(
         ({ exercise_id }) => exercise_id === id
       )!;
       const exerciseDefinition = exercises.find((ex) => ex.id === id)!;
-
+      const exerciseWeightInputIndex = exerciseDefinition.inputs.findIndex(
+        ({ type }) => type === InputType.Weight
+      );
+      const exerciseRepsInputIndex = exerciseDefinition.inputs.findIndex(
+        ({ type }) => type === InputType.Reps
+      );
       const heaviestSet = exercise.sets.reduce((acc, set) => {
-        const setWeight = set.inputs.find((input) => {
-          const inputDefinition = exerciseDefinition.inputs.find(
-            (inputDef) => inputDef.id === input.id
-          )!;
-
-          return inputDefinition.type === InputType.Weight;
-        })?.value;
-        const accWeight = acc?.inputs.find((input) => {
-          const inputDefinition = exerciseDefinition.inputs.find(
-            (inputDef) => inputDef.id === input.id
-          )!;
-
-          return inputDefinition.type === InputType.Weight;
-        })?.value;
+        const setWeight = set.inputs[exerciseWeightInputIndex]!.value;
+        const accWeight = acc?.inputs[exerciseWeightInputIndex]!.value;
         return setWeight && accWeight && setWeight > accWeight ? set : acc;
       }, exercise.sets[0]);
 
       const workingSets = exercise.sets.filter(
         (set) =>
-          set.inputs.find((input) => {
-            const inputDefinition = exerciseDefinition.inputs.find(
-              (inputDef) => inputDef.id === input.id
-            )!;
-
-            return inputDefinition.type === InputType.Weight;
-          })?.value ===
-          heaviestSet?.inputs.find((input) => {
-            const inputDefinition = exerciseDefinition.inputs.find(
-              (inputDef) => inputDef.id === input.id
-            )!;
-
-            return inputDefinition.type === InputType.Weight;
-          })?.value
+          set.inputs[exerciseWeightInputIndex]!.value ===
+          heaviestSet?.inputs[exerciseWeightInputIndex]!.value
       );
 
       let successful = true;
@@ -80,14 +82,7 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
       ) {
         if (
           workingSets.every(
-            ({ inputs }) =>
-              inputs.find((input) => {
-                const inputDefinition = exerciseDefinition.inputs.find(
-                  (inputDef) => inputDef.id === input.id
-                )!;
-
-                return inputDefinition.type === InputType.Reps;
-              })!.value < 5
+            (sets) => sets.inputs[exerciseRepsInputIndex]!.value < 5
           )
         ) {
           successful = false;
@@ -98,24 +93,11 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
 
       const nextWorkingSet = successful
         ? ([1, 183, 532].includes(exercise.exercise_id) ? 1.25 : 2.5) +
-          (heaviestSet?.inputs.find((input) => {
-            const inputDefinition = exerciseDefinition.inputs.find(
-              (inputDef) => inputDef.id === input.id
-            )!;
-
-            return inputDefinition.type === InputType.Weight;
-          })?.value || 0)
-        : 0.9 *
-          (heaviestSet?.inputs.find((input) => {
-            const inputDefinition = exerciseDefinition.inputs.find(
-              (inputDef) => inputDef.id === input.id
-            )!;
-
-            return inputDefinition.type === InputType.Weight;
-          })?.value || 0);
+          (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0)
+        : 0.9 * (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0);
 
       return {
-        workout_timestamp: worked_out_at,
+        workout_timestamp: workout.worked_out_at,
         exercise_id: exercise.exercise_id,
         successful,
         nextWorkingSet:

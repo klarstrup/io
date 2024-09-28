@@ -908,10 +908,9 @@ export function workoutFromTopLoggerAscends(
             ({ checks, climb: { grade, hold_id } }): WorkoutExerciseSet => ({
               inputs: [
                 // Grade
-                { id: 0, value: Number(grade) },
+                { value: Number(grade) },
                 // Color
                 {
-                  id: 1,
                   value:
                     (colorOptions
                       ? colorOptions?.findIndex(
@@ -924,7 +923,7 @@ export function workoutFromTopLoggerAscends(
                       : undefined) ?? NaN,
                 },
                 // Sent-ness
-                { id: 2, value: checks === 2 ? 0 : 1 },
+                { value: checks === 2 ? 0 : 1 },
               ],
             })
           ),

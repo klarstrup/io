@@ -201,21 +201,9 @@ export function workoutFromRunDouble(
         sets: [
           {
             inputs: [
-              {
-                id: 0,
-                unit: Unit.SEC,
-                value: run.runTime / 1000,
-              },
-              {
-                id: 1,
-                unit: Unit.M,
-                value: run.runDistance,
-              },
-              {
-                id: 2,
-                unit: Unit.MinKM,
-                value: 0.6215 / run.runPace,
-              },
+              { unit: Unit.SEC, value: run.runTime / 1000 },
+              { unit: Unit.M, value: run.runDistance },
+              { unit: Unit.MinKM, value: 0.6215 / run.runPace },
             ],
           },
         ],

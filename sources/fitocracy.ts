@@ -277,15 +277,14 @@ export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];
 
 export function workoutFromFitocracyWorkout(
   workout: WithId<Fitocracy.MongoWorkout>
-): WorkoutData & { _id: string } {
+): WithId<WorkoutData> {
   const exercises = workout.root_group.children.map(
     ({ exercise }): WorkoutExercise => ({
       exercise_id: exercise.exercise_id,
       sets: exercise.sets.map(
         ({ inputs }): WorkoutExerciseSet => ({
           inputs: inputs.map(
-            ({ id, unit, value }): WorkoutExerciseSetInput => ({
-              id,
+            ({ unit, value }): WorkoutExerciseSetInput => ({
               unit: unit as Unit | undefined,
               value,
             })
@@ -296,7 +295,7 @@ export function workoutFromFitocracyWorkout(
   );
 
   return {
-    _id: String(workout._id),
+    _id: workout._id,
     exercises,
     user_id: String(workout.root_group.id),
     created_at: new Date(),

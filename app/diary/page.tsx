@@ -104,88 +104,88 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
           _id: workout._id.toString(),
         });
       }
-      if (user.fitocracyUserId) {
-        for await (const fitocracyWorkout of workoutsCollection.find({
-          user_id: user.fitocracyUserId,
-          workout_timestamp: rangeToQuery(from, to),
-        })) {
-          const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
-          addDiaryEntry(workout.worked_out_at, "workouts", workout);
-        }
-      }
     },
     async () => {
-      if (user.myFitnessPalUserId) {
-        for await (const foodEntry of foodEntriesCollection.find({
-          user_id: user.myFitnessPalUserId,
-          datetime: rangeToQuery(from, to),
-        })) {
-          addDiaryEntry(foodEntry.datetime, "food", foodEntry);
-        }
-      }
-    },
-    async () => {
-      if (user.topLoggerId) {
-        const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
-          .find()
-          .toArray();
-        const gyms = await DB.collection<TopLogger.GymSingle>("toplogger_gyms")
-          .find()
-          .toArray();
+      if (!user.fitocracyUserId) return;
 
-        const ascends = await DB.collection<TopLogger.AscendSingle>(
-          "toplogger_ascends"
-        )
+      for await (const fitocracyWorkout of workoutsCollection.find({
+        user_id: user.fitocracyUserId,
+        workout_timestamp: rangeToQuery(from, to),
+      })) {
+        const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
+        addDiaryEntry(workout.worked_out_at, "workouts", {
+          ...workout,
+          _id: workout._id.toString(),
+        });
+      }
+    },
+    async () => {
+      if (!user.myFitnessPalUserId) return;
+
+      for await (const foodEntry of foodEntriesCollection.find({
+        user_id: user.myFitnessPalUserId,
+        datetime: rangeToQuery(from, to),
+      })) {
+        addDiaryEntry(foodEntry.datetime, "food", foodEntry);
+      }
+    },
+    async () => {
+      if (!user.topLoggerId) return;
+
+      const [holds, gyms, ascends] = await Promise.all([
+        DB.collection<TopLogger.Hold>("toplogger_holds").find().toArray(),
+        DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
+        DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
           .find({
             user_id: user.topLoggerId,
             date_logged: rangeToQuery(from, to),
           })
-          .toArray();
+          .toArray(),
+      ]);
 
-        const climbs = await DB.collection<TopLogger.ClimbMultiple>(
-          "toplogger_climbs"
-        )
-          .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
-          .toArray();
+      const climbs = await DB.collection<TopLogger.ClimbMultiple>(
+        "toplogger_climbs"
+      )
+        .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
+        .toArray();
 
-        const ascendsByDay = Object.values(
-          ascends.reduce((acc, ascend) => {
-            if (!ascend.date_logged) return acc;
-            const date = `${ascend.date_logged.getFullYear()}-${
-              ascend.date_logged.getMonth() + 1
-            }-${ascend.date_logged.getDate()}`;
-            if (!acc[date]) {
-              acc[date] = [];
-            }
-            acc[date].push(ascend);
+      const ascendsByDay = Object.values(
+        ascends.reduce((acc, ascend) => {
+          if (!ascend.date_logged) return acc;
+          const date = `${ascend.date_logged.getFullYear()}-${
+            ascend.date_logged.getMonth() + 1
+          }-${ascend.date_logged.getDate()}`;
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(ascend);
 
-            return acc;
-          }, {} as Record<string, TopLogger.AscendSingle[]>)
+          return acc;
+        }, {} as Record<string, TopLogger.AscendSingle[]>)
+      );
+      for (const dayAscends of ascendsByDay) {
+        addDiaryEntry(
+          dayAscends[0]!.date_logged,
+          "workouts",
+          workoutFromTopLoggerAscends(
+            dayAscends.map((ascend) => ({
+              ...ascend,
+              climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+            })),
+            holds,
+            gyms
+          )
         );
-        for (const dayAscends of ascendsByDay) {
-          addDiaryEntry(
-            dayAscends[0]!.date_logged,
-            "workouts",
-            workoutFromTopLoggerAscends(
-              dayAscends.map((ascend) => ({
-                ...ascend,
-                climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-              })),
-              holds,
-              gyms
-            )
-          );
-        }
       }
     },
     async () => {
-      if (user.runDoubleId) {
-        for await (const run of runsCollection.find({
-          userId: user.runDoubleId,
-          completedAt: rangeToQuery(from, to),
-        })) {
-          addDiaryEntry(run.completedAt, "workouts", workoutFromRunDouble(run));
-        }
+      if (!user.runDoubleId) return;
+
+      for await (const run of runsCollection.find({
+        userId: user.runDoubleId,
+        completedAt: rangeToQuery(from, to),
+      })) {
+        addDiaryEntry(run.completedAt, "workouts", workoutFromRunDouble(run));
       }
     }
   );
@@ -224,12 +224,11 @@ async function loadMoreData(cursor: string) {
 
   if (isAtLimit) return [null, null] as const;
 
-  const diaryEntries = await getDiaryEntries({
-    from: new Date(from),
-    to: new Date(to),
-  });
-  const allLocations = await getAllWorkoutLocations(user);
-  const nextSets = await getNextSets({ user });
+  const [diaryEntries, allLocations, nextSets] = await Promise.all([
+    getDiaryEntries({ from: new Date(from), to: new Date(to) }),
+    getAllWorkoutLocations(user),
+    getNextSets({ user }),
+  ]);
 
   return [
     <DiaryEntryList
@@ -282,9 +281,11 @@ export default async function Page() {
 
   const from = subMonths(TZDate.tz("Europe/Copenhagen"), monthsPerPage);
   const to = undefined;
-  const diaryEntries = await getDiaryEntries({ from, to });
-  const allLocations = await getAllWorkoutLocations(user);
-  const nextSets = await getNextSets({ user });
+  const [diaryEntries, allLocations, nextSets] = await Promise.all([
+    getDiaryEntries({ from, to }),
+    getAllWorkoutLocations(user),
+    getNextSets({ user }),
+  ]);
 
   const initialCursor = JSON.stringify({
     from: subMonths(from, monthsPerPage),

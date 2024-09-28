@@ -29,7 +29,6 @@ export interface WorkoutExerciseSet {
 }
 
 export interface WorkoutExerciseSetInput {
-  id: number;
   unit?: Unit;
   value: number;
   assist_type?: AssistType;

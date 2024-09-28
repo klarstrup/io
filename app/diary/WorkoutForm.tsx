@@ -4,6 +4,7 @@
 import { TZDate } from "@date-fns/tz";
 import { differenceInDays } from "date-fns";
 import type { Session } from "next-auth";
+import { useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
 import Creatable from "react-select/creatable";
@@ -254,6 +255,7 @@ export function WorkoutForm({
           );
         })}
         <Select
+          instanceId={useId()}
           isDisabled={isSubmitting}
           placeholder="Add exercise..."
           options={exercises
@@ -309,7 +311,6 @@ export function WorkoutForm({
                   (setWeight): WorkoutExerciseSet => ({
                     inputs: exerciseDefinition.inputs.map(
                       (input): WorkoutExerciseSetInput => ({
-                        id: input.id,
                         value:
                           input.type === InputType.Weight ? setWeight : NaN,
                         unit: input.metric_unit,
