@@ -159,7 +159,6 @@ export function WorkoutForm({
             }}
           />
         )}
-        rules={{ required: true }}
       />
       <div>
         {fields.map((field, index) => {
@@ -488,7 +487,11 @@ function InputsForm({
                   );
 
                   for (const element of followingFormElements) {
-                    if (element instanceof HTMLInputElement) {
+                    console.log(element, element instanceof HTMLInputElement);
+                    if (
+                      element instanceof HTMLInputElement &&
+                      element.type === "number"
+                    ) {
                       e.preventDefault();
                       e.stopPropagation();
 
