@@ -6,9 +6,9 @@ import {
 } from "ical-generator";
 import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
-import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import { EventEntry } from "../../lib";
+import { IUser } from "../../models/user";
 import {
   getIoClimbAlongCompetitionEventEntry,
   ioClimbAlongEventsWithIds,
@@ -24,7 +24,6 @@ import {
   getTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
 import { MINUTE_IN_SECONDS } from "../../utils";
-import { IUser } from "../../models/user";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

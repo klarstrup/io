@@ -1,5 +1,5 @@
 import { dbFetch } from "../fetch";
-import { InputType, Unit } from "../models/exercises";
+import { Unit } from "../models/exercises";
 import { type WorkoutData, WorkoutSource } from "../models/workout";
 import { RelativeURL } from "../utils";
 
@@ -203,19 +203,16 @@ export function workoutFromRunDouble(
             inputs: [
               {
                 id: 0,
-                type: InputType.Time,
                 unit: Unit.SEC,
                 value: run.runTime / 1000,
               },
               {
                 id: 1,
-                type: InputType.Distance,
                 unit: Unit.M,
                 value: run.runDistance,
               },
               {
                 id: 2,
-                type: InputType.Pace,
                 unit: Unit.MinKM,
                 value: 0.6215 / run.runPace,
               },

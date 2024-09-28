@@ -1,4 +1,4 @@
-import type { AssistType, InputType, Unit } from "./exercises";
+import type { AssistType, Unit } from "./exercises";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -9,7 +9,7 @@ export enum WorkoutSource {
 }
 
 export interface WorkoutData {
-  exercises: Exercise[];
+  exercises: WorkoutExercise[];
   user_id: string; // This is a string because it's a MongoDB ObjectId
   created_at: Date;
   updated_at: Date;
@@ -19,15 +19,18 @@ export interface WorkoutData {
   location?: string;
 }
 
-interface Exercise {
+export interface WorkoutExercise {
   exercise_id: number;
-  sets: {
-    inputs: {
-      id: number;
-      type: InputType;
-      unit?: Unit;
-      value: number;
-      assist_type?: AssistType;
-    }[];
-  }[];
+  sets: WorkoutExerciseSet[];
+}
+
+export interface WorkoutExerciseSet {
+  inputs: WorkoutExerciseSetInput[];
+}
+
+export interface WorkoutExerciseSetInput {
+  id: number;
+  unit?: Unit;
+  value: number;
+  assist_type?: AssistType;
 }

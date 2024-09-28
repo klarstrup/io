@@ -1,6 +1,12 @@
 import type { WithId } from "mongodb";
-import { WorkoutSource, type WorkoutData } from "../models/workout";
 import { Unit } from "../models/exercises";
+import {
+  WorkoutExercise,
+  WorkoutExerciseSet,
+  WorkoutExerciseSetInput,
+  WorkoutSource,
+  type WorkoutData,
+} from "../models/workout";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -272,20 +278,22 @@ export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];
 export function workoutFromFitocracyWorkout(
   workout: WithId<Fitocracy.MongoWorkout>
 ): WorkoutData & { _id: string } {
-  const exercises = workout.root_group.children.map(({ exercise }, index) => ({
-    exercise_id: exercise.exercise_id,
-    index,
-    sets: exercise.sets.map(({ inputs }, index) => ({
-      index,
-      inputs: inputs.map(({ id, input_ordinal, type, unit, value }) => ({
-        id,
-        input_ordinal,
-        type,
-        unit: unit as Unit | undefined,
-        value,
-      })),
-    })),
-  }));
+  const exercises = workout.root_group.children.map(
+    ({ exercise }): WorkoutExercise => ({
+      exercise_id: exercise.exercise_id,
+      sets: exercise.sets.map(
+        ({ inputs }): WorkoutExerciseSet => ({
+          inputs: inputs.map(
+            ({ id, unit, value }): WorkoutExerciseSetInput => ({
+              id,
+              unit: unit as Unit | undefined,
+              value,
+            })
+          ),
+        })
+      ),
+    })
+  );
 
   return {
     _id: String(workout._id),

@@ -7,6 +7,7 @@ import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
 import { IUser } from "../../models/user";
 import { WorkoutData } from "../../models/workout";
+import { getNextSets } from "../../models/workout.server";
 import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
@@ -228,12 +229,14 @@ async function loadMoreData(cursor: string) {
     to: new Date(to),
   });
   const allLocations = await getAllWorkoutLocations(user);
+  const nextSets = await getNextSets({ user });
 
   return [
     <DiaryEntryList
       diaryEntries={diaryEntries}
       user={user}
       locations={allLocations}
+      nextSets={nextSets}
       key={JSON.stringify({ from, to })}
     />,
     JSON.stringify({ from: subMonths(from, monthsPerPage), to: from }),
@@ -281,6 +284,7 @@ export default async function Page() {
   const to = undefined;
   const diaryEntries = await getDiaryEntries({ from, to });
   const allLocations = await getAllWorkoutLocations(user);
+  const nextSets = await getNextSets({ user });
 
   const initialCursor = JSON.stringify({
     from: subMonths(from, monthsPerPage),
@@ -304,6 +308,7 @@ export default async function Page() {
             diaryEntries={diaryEntries}
             user={user}
             locations={allLocations}
+            nextSets={nextSets}
           />
         </LoadMore>
       </div>

@@ -181,14 +181,16 @@ export default function WorkoutEntry({
                               const inputDefinition =
                                 exercise.inputs[input.id]!;
                               const inputOptions =
-                                input.type === InputType.Options &&
+                                inputDefinition.type === InputType.Options &&
                                 "options" in inputDefinition &&
                                 inputDefinition.options;
+
+                              const inputType = inputDefinition.type;
 
                               return (
                                 <Fragment key={input.id}>
                                   {i > 0
-                                    ? input.type === InputType.Options
+                                    ? inputType === InputType.Options
                                       ? ", "
                                       : input.assist_type ===
                                         AssistType.Assisted
@@ -203,16 +205,16 @@ export default function WorkoutEntry({
                                       fontVariantNumeric: "tabular-nums",
                                     }}
                                   >
-                                    {input.type === InputType.Pace ? (
+                                    {inputType === InputType.Pace ? (
                                       <>
                                         {decimalAsTime(input.value)}
                                         <small>min/km</small>
                                       </>
-                                    ) : input.type === InputType.Time ? (
+                                    ) : inputType === InputType.Time ? (
                                       <>
                                         {seconds2time(Math.round(input.value))}
                                       </>
-                                    ) : input.type === InputType.Distance ? (
+                                    ) : inputType === InputType.Distance ? (
                                       <>
                                         {(input.unit === Unit.M
                                           ? input.value / 1000
@@ -223,7 +225,7 @@ export default function WorkoutEntry({
                                         })}
                                         <small>km</small>
                                       </>
-                                    ) : input.type === InputType.Options &&
+                                    ) : inputType === InputType.Options &&
                                       inputOptions ? (
                                       <>
                                         {String(

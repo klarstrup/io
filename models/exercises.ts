@@ -85757,4 +85757,4 @@ export const exercises = [
     is_popular: false,
     name: "Bouldering",
   },
-] satisfies ExerciseData[];
+] as ExerciseData[];

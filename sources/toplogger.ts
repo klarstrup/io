@@ -20,10 +20,13 @@ import {
   ThousandDivideByScore,
   type DateInterval,
 } from "../lib";
-import { InputType, exercises } from "../models/exercises";
-import { WorkoutSource, type WorkoutData } from "../models/workout";
+import { exercises } from "../models/exercises";
+import {
+  WorkoutExerciseSet,
+  WorkoutSource,
+  type WorkoutData,
+} from "../models/workout";
 import { RelativeURL, percentile } from "../utils";
-import { first } from "cheerio/dist/commonjs/api/traversing";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -901,28 +904,30 @@ export function workoutFromTopLoggerAscends(
         exercise_id: 2001,
         sets: ascends
           .filter(({ checks }) => checks >= 1)
-          .map(({ checks, climb: { grade, hold_id } }) => ({
-            inputs: [
-              { id: 0, type: InputType.Grade, value: Number(grade) },
-              // Color
-              {
-                id: 1,
-                type: InputType.Options,
-                value:
-                  (colorOptions
-                    ? colorOptions?.findIndex(
-                        ({ value }) =>
-                          value ===
-                          holds
-                            .find(({ id }) => id === hold_id)
-                            ?.brand?.toLowerCase()
-                      )
-                    : undefined) ?? NaN,
-              },
-              // Sent-ness
-              { id: 2, type: InputType.Options, value: checks === 2 ? 0 : 1 },
-            ],
-          })),
+          .map(
+            ({ checks, climb: { grade, hold_id } }): WorkoutExerciseSet => ({
+              inputs: [
+                // Grade
+                { id: 0, value: Number(grade) },
+                // Color
+                {
+                  id: 1,
+                  value:
+                    (colorOptions
+                      ? colorOptions?.findIndex(
+                          ({ value }) =>
+                            value ===
+                            holds
+                              .find(({ id }) => id === hold_id)
+                              ?.brand?.toLowerCase()
+                        )
+                      : undefined) ?? NaN,
+                },
+                // Sent-ness
+                { id: 2, value: checks === 2 ? 0 : 1 },
+              ],
+            })
+          ),
       },
     ],
     location: gyms.find(({ id }) => id === firstAscend.climb.gym_id)?.name,

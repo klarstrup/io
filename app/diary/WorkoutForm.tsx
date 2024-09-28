@@ -2,6 +2,7 @@
 "use client";
 
 import { TZDate } from "@date-fns/tz";
+import { differenceInDays } from "date-fns";
 import type { Session } from "next-auth";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
@@ -14,8 +15,15 @@ import {
   Unit,
   type ExerciseData,
 } from "../../models/exercises";
-import { WorkoutSource, type WorkoutData } from "../../models/workout";
+import {
+  WorkoutExerciseSet,
+  WorkoutExerciseSetInput,
+  WorkoutSource,
+  type WorkoutData,
+} from "../../models/workout";
+import type { getNextSets } from "../../models/workout.server";
 import { deleteWorkout, upsertWorkout } from "./actions";
+import { NextSets } from "./NextSets";
 
 function isValidDate(date: Date) {
   return !isNaN(date.getTime());
@@ -38,17 +46,20 @@ export function WorkoutForm({
   workout,
   onClose,
   locations,
+  nextSets,
 }: {
   user: Session["user"];
   workout?: WorkoutData & { _id?: string };
   onClose?: () => void;
   locations: string[];
+  nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const {
     handleSubmit,
     register,
     reset,
     control,
+    watch,
     formState: { isDirty, isSubmitting },
   } = useForm<WorkoutData & { _id?: string }>({
     defaultValues: workout
@@ -60,7 +71,17 @@ export function WorkoutForm({
     name: "exercises",
   });
 
-  console.log({ locations });
+  const dueSets = nextSets
+    ?.filter(
+      (nextSet) => differenceInDays(new Date(), nextSet.workout_timestamp) > 2
+    )
+    .filter(
+      (nextSet) =>
+        !watch("exercises")?.some(
+          (exerciseValue) => exerciseValue.exercise_id === nextSet.exercise_id
+        )
+    );
+
   return (
     <form
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -168,10 +189,16 @@ export function WorkoutForm({
           if (!exercise) {
             throw new Error(`Exercise with ID ${field.exercise_id} not found`);
           }
+          const nextExerciseSet = nextSets?.find(
+            (nextSet) => nextSet.exercise_id === exercise.id
+          );
           return (
-            <fieldset key={field.id} style={{ display: "flex" }}>
+            <fieldset
+              key={field.id}
+              style={{ display: "flex", flexDirection: "column" }}
+            >
               <legend style={{ flex: "1", fontWeight: 600, fontSize: "0.9em" }}>
-                {exercise.name}
+                {exercise.name}{" "}
                 <StealthButton
                   onClick={() => remove(index)}
                   disabled={isSubmitting}
@@ -206,6 +233,17 @@ export function WorkoutForm({
                   ⬇️
                 </StealthButton>
               </legend>
+              {nextExerciseSet ? (
+                <div>
+                  <small>
+                    Goal {nextExerciseSet.nextWorkingSet}
+                    kg based on last set{" "}
+                    {nextExerciseSet.workout_timestamp.toLocaleDateString(
+                      "da-DK"
+                    )}
+                  </small>
+                </div>
+              ) : null}
               <SetsForm
                 control={control}
                 register={register}
@@ -224,19 +262,67 @@ export function WorkoutForm({
             )
             .map(({ id, name, aliases }) => ({
               label: `${name} ${
-                aliases.length ? `(${aliases.join(", ")})` : ""
+                aliases.length > 1
+                  ? `(${new Intl.ListFormat("en-DK", {
+                      type: "disjunction",
+                    }).format(aliases)})`
+                  : aliases.length === 1
+                  ? `(${aliases[0]})`
+                  : ""
               }`,
               value: id,
             }))}
           onChange={(selected) => {
             if (!selected) return;
 
-            append({
-              exercise_id: selected.value,
-              sets: [],
-            });
+            append({ exercise_id: selected.value, sets: [] });
           }}
         />
+        {dueSets?.length ? (
+          <div>
+            <b>Due Sets:</b>
+            <NextSets
+              nextSets={dueSets}
+              onAddExercise={(exerciseId) => {
+                const exerciseDefinition = exercises.find(
+                  (exercise) => exercise.id === exerciseId
+                )!;
+
+                const goalWeight = dueSets.find(
+                  (nextSet) => nextSet.exercise_id === exerciseId
+                )?.nextWorkingSet;
+
+                const warmupIncrement = [1, 183, 532].includes(exerciseId)
+                  ? 10
+                  : 20;
+                const setWeights: number[] = [goalWeight ?? NaN];
+                while (
+                  setWeights[setWeights.length - 1]! >
+                  20 + warmupIncrement
+                ) {
+                  setWeights.push(
+                    setWeights[setWeights.length - 1]! - warmupIncrement
+                  );
+                }
+
+                const sets = setWeights.reverse().map(
+                  (setWeight): WorkoutExerciseSet => ({
+                    inputs: exerciseDefinition.inputs.map(
+                      (input): WorkoutExerciseSetInput => ({
+                        id: input.id,
+                        value:
+                          input.type === InputType.Weight ? setWeight : NaN,
+                        unit: input.metric_unit,
+                      })
+                    ),
+                  })
+                );
+
+                append({ exercise_id: exerciseId, sets });
+              }}
+            />
+          </div>
+        ) : null}
       </div>
     </form>
   );
@@ -283,13 +369,11 @@ function SetsForm({
                 append({
                   inputs: exercise.inputs.map((input) => ({
                     id: input.id,
-                    input_ordinal: input.input_ordinal,
                     value: sets[sets.length - 1]?.inputs[input.id]?.value ?? 0,
                     unit:
                       sets[sets.length - 1]?.inputs[input.id]?.unit ??
                       input.metric_unit ??
                       input.allowed_units?.[0]?.name,
-                    type: input.type,
                   })),
                 })
               }
