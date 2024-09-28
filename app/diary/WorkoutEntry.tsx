@@ -185,10 +185,16 @@ export default function WorkoutEntry({
                                 inputDefinition.options;
 
                               const inputType = inputDefinition.type;
-
+                              console.log(input.value);
                               return (
                                 <Fragment key={index}>
-                                  {index > 0
+                                  {index > 0 &&
+                                  !isNaN(input.value) &&
+                                  input.value !== undefined &&
+                                  input.value !== null &&
+                                  (inputType === InputType.Weightassist
+                                    ? input.value !== 0
+                                    : true)
                                     ? inputType === InputType.Options
                                       ? ", "
                                       : input.assist_type ===
@@ -233,12 +239,17 @@ export default function WorkoutEntry({
                                       </>
                                     ) : input.unit === Unit.FrenchRounded ? (
                                       new Grade(input.value).name
-                                    ) : (
+                                    ) : !isNaN(input.value) &&
+                                      input.value !== undefined &&
+                                      input.value !== null &&
+                                      (inputType === InputType.Weightassist
+                                        ? input.value !== 0
+                                        : true) ? (
                                       <>
                                         {input.value}
                                         <small>{input.unit}</small>
                                       </>
-                                    )}
+                                    ) : null}
                                   </span>
                                 </Fragment>
                               );
