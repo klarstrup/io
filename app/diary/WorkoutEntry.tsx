@@ -190,15 +190,13 @@ export default function WorkoutEntry({
                                   {i > 0
                                     ? input.type === InputType.Options
                                       ? ", "
-                                      : input.value
-                                      ? input.assist_type ===
+                                      : input.assist_type ===
                                         AssistType.Assisted
-                                        ? " - "
-                                        : input.assist_type ===
-                                          AssistType.Weighted
-                                        ? " + "
-                                        : " × "
-                                      : ""
+                                      ? " - "
+                                      : input.assist_type ===
+                                        AssistType.Weighted
+                                      ? " + "
+                                      : " × "
                                     : ""}
                                   <span
                                     style={{
@@ -232,16 +230,14 @@ export default function WorkoutEntry({
                                           inputOptions[input.value]?.value
                                         )}
                                       </>
-                                    ) : input.value ? (
-                                      input.unit === Unit.FrenchRounded ? (
-                                        new Grade(input.value).name
-                                      ) : (
-                                        <>
-                                          {input.value}
-                                          <small>{input.unit}</small>
-                                        </>
-                                      )
-                                    ) : null}
+                                    ) : input.unit === Unit.FrenchRounded ? (
+                                      new Grade(input.value).name
+                                    ) : (
+                                      <>
+                                        {input.value}
+                                        <small>{input.unit}</small>
+                                      </>
+                                    )}
                                   </span>
                                 </Fragment>
                               );
