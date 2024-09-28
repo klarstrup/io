@@ -471,7 +471,8 @@ function InputsForm({
           ) : (
             <input
               {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
+                { valueAsNumber: true }
               )}
               type="number"
               onFocus={(e) => e.target.select()}
