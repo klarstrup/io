@@ -70,7 +70,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
     date: Date,
     key: K,
-    entry: NonNullable<(typeof diary)[keyof typeof diary][K]>[number]
+    entry: NonNullable<DiaryEntry[K]>[number]
   ) {
     const dayStr: DayStr = `${date.getFullYear()}-${
       date.getMonth() + 1
@@ -124,7 +124,10 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         user_id: user.myFitnessPalUserId,
         datetime: rangeToQuery(from, to),
       })) {
-        addDiaryEntry(foodEntry.datetime, "food", foodEntry);
+        addDiaryEntry(foodEntry.datetime, "food", {
+          ...foodEntry,
+          _id: foodEntry._id.toString(),
+        });
       }
     },
     async () => {
