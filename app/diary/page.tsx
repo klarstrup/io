@@ -12,10 +12,8 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
-import {
-  getMyFitnessPalSession,
-  type MyFitnessPal,
-} from "../../sources/myfitnesspal";
+import { MyFitnessPal } from "../../sources/myfitnesspal";
+import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
 import {
   type TopLogger,

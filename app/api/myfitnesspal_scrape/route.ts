@@ -2,11 +2,8 @@ import { differenceInMonths, isFuture } from "date-fns";
 import { DateTime } from "luxon";
 import { auth } from "../../../auth";
 import { getDB } from "../../../dbConnect";
-import {
-  MyFitnessPal,
-  getMyFitnessPalReport,
-} from "../../../sources/myfitnesspal";
-// import { NextRequest } from "next/server";
+import { MyFitnessPal } from "../../../sources/myfitnesspal";
+import { getMyFitnessPalReport } from "../../../sources/myfitnesspal.server";
 
 const months = [
   "01",
@@ -28,18 +25,7 @@ const years = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] as const;
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function GET(/* request: NextRequest */) {
-  /*
-  if (process.env.VERCEL) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new Response("Unauthorized", {
-        status: 401,
-      });
-    }
-  }
-  */
-
+export async function GET() {
   const user = (await auth())?.user;
   if (!user) return new Response("Unauthorized", { status: 401 });
 

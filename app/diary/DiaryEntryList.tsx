@@ -1,3 +1,4 @@
+"use client";
 import { TZDate } from "@date-fns/tz";
 import { differenceInDays } from "date-fns";
 import type { Session } from "next-auth";

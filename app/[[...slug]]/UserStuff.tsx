@@ -4,10 +4,8 @@ import Link from "next/link";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import { type IUser } from "../../models/user";
-import {
-  MyFitnessPal,
-  getMyFitnessPalSession,
-} from "../../sources/myfitnesspal";
+import { MyFitnessPal } from "../../sources/myfitnesspal";
+import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
 
