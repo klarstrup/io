@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { isAfter, subMonths } from "date-fns";
+import { isAfter, subWeeks } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
@@ -28,7 +28,7 @@ import { DiaryEntryList } from "./DiaryEntryList";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const monthsPerPage = 1;
+const weeksPerPage = 4;
 
 type DayStr = `${number}-${number}-${number}`;
 
@@ -236,7 +236,7 @@ async function loadMoreData(cursor: string) {
       nextSets={nextSets}
       key={JSON.stringify({ from, to })}
     />,
-    JSON.stringify({ from: subMonths(from, monthsPerPage), to: from }),
+    JSON.stringify({ from: subWeeks(from, weeksPerPage), to: from }),
   ] as const;
 }
 
@@ -277,7 +277,7 @@ export default async function Page() {
     }
   }
 
-  const from = subMonths(TZDate.tz("Europe/Copenhagen"), monthsPerPage);
+  const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
   const to = undefined;
   const [diaryEntries, allLocations, nextSets] = await Promise.all([
     getDiaryEntries({ from, to }),
@@ -286,7 +286,7 @@ export default async function Page() {
   ]);
 
   const initialCursor = JSON.stringify({
-    from: subMonths(from, monthsPerPage),
+    from: subWeeks(from, weeksPerPage),
     to: from,
   });
 
