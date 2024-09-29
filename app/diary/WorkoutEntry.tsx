@@ -185,7 +185,6 @@ export default function WorkoutEntry({
                                 inputDefinition.options;
 
                               const inputType = inputDefinition.type;
-                              console.log(input.value);
                               return (
                                 <Fragment key={index}>
                                   {index > 0 &&
