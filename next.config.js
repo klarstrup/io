@@ -6,6 +6,15 @@ const nextConfig = {
     typedRoutes: true,
   },
   staticPageGenerationTimeout: 600,
+  rewrites: async () => {
+    return [
+      {
+        source: "/",
+        has: [{ type: "host", value: "io.klarstrup.dk" }],
+        destination: "/diary",
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
