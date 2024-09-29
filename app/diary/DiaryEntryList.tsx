@@ -184,7 +184,7 @@ export function DiaryEntryList({
                 <NextSets
                   nextSets={nextSets.filter(
                     (nextSet) =>
-                      differenceInDays(new Date(), nextSet.workout_timestamp) <
+                      differenceInDays(new Date(), nextSet.workout_timestamp) <=
                       2
                   )}
                 />
