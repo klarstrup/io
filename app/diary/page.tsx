@@ -252,7 +252,7 @@ async function loadMoreData(cursor: string) {
   if (!from) throw new Error("From not found");
   if (!to) throw new Error("To not found");
 
-  const isAtLimit = isAfter(new Date(2013, 9), to || from || new Date());
+  const isAtLimit = isAfter(new Date(2013, 9), to || from);
 
   if (isAtLimit) return [null, null] as const;
 
@@ -291,23 +291,21 @@ export default async function Page() {
 
   if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
     const myFitnessPalToken = user?.myFitnessPalToken;
-    if (!myFitnessPalToken) return null;
-    let session: MyFitnessPal.Session;
-    try {
-      session = await getMyFitnessPalSession(myFitnessPalToken);
-    } catch {
-      return null;
-    }
-    if (session) {
-      await DB.collection<IUser>("users").updateOne(
-        { _id: new ObjectId(user.id) },
-        {
-          $set: {
-            myFitnessPalUserId: session.userId,
-            myFitnessPalUserName: session.user.name,
-          },
-        }
-      );
+    if (myFitnessPalToken) {
+      try {
+        const session = await getMyFitnessPalSession(myFitnessPalToken);
+        await DB.collection<IUser>("users").updateOne(
+          { _id: new ObjectId(user.id) },
+          {
+            $set: {
+              myFitnessPalUserId: session.userId,
+              myFitnessPalUserName: session.user.name,
+            },
+          }
+        );
+      } catch {
+        /* empty */
+      }
     }
   }
   let weatherIntervals:

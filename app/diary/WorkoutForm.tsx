@@ -94,10 +94,6 @@ export function WorkoutForm({
     <form
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onSubmit={handleSubmit(async (data) => {
-        if (!(typeof user.fitocracyUserId === "number")) {
-          throw new Error("User has no Fitocracy user ID");
-        }
-
         const newWorkout: WorkoutData & { _id?: string } = {
           _id: workout?._id,
           user_id: user.id,
