@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useEvent, useInView } from "../../hooks";
 
 const LoadMore = ({
@@ -15,23 +15,25 @@ const LoadMore = ({
   const { ref, inView } = useInView();
   const [loadMoreNodes, setLoadMoreNodes] = useState<ReactNode[]>([]);
 
-  const currentOffsetRef = useRef<string | undefined>(initialCursor);
+  const [currentOffsetRef, setCurrentOffsetRef] = useState<string | undefined>(
+    initialCursor
+  );
 
   const loadMore = useEvent(async (abortController?: AbortController) => {
-    if (currentOffsetRef.current === undefined) return;
+    if (currentOffsetRef === undefined) return;
 
-    const [node, next] = await loadMoreAction(currentOffsetRef.current);
+    const [node, next] = await loadMoreAction(currentOffsetRef);
     if (abortController?.signal.aborted) return;
 
     if (node !== null) {
       setLoadMoreNodes((prev) => [...prev, node]);
     }
     if (next === null) {
-      currentOffsetRef.current = undefined;
+      setCurrentOffsetRef(undefined);
       return;
     }
 
-    currentOffsetRef.current = next;
+    setCurrentOffsetRef(next);
   });
 
   useEffect(
@@ -51,7 +53,7 @@ const LoadMore = ({
     <>
       {children}
       {loadMoreNodes}
-      {currentOffsetRef.current ? (
+      {currentOffsetRef ? (
         <article className="now" ref={ref}>
           <div className="content">
             We are <b>loading</b>
