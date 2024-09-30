@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
+import { addSeconds, endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import Image, { StaticImageData } from "next/image";
@@ -342,10 +342,13 @@ export default async function Page() {
 
     const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
     tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
-    tomorrowDayUrl.searchParams.set("startTime", new Date().toISOString());
+    tomorrowDayUrl.searchParams.set(
+      "startTime",
+      startOfDay(new Date()).toISOString()
+    );
     tomorrowDayUrl.searchParams.set(
       "endTime",
-      addDays(new Date(), 1).toISOString()
+      addSeconds(endOfDay(new Date()), 1).toISOString()
     );
     tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
     tomorrowDayUrl.searchParams.set("timesteps", "1d");
