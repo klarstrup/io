@@ -45,16 +45,23 @@ export function dateToInputDate(date?: Date) {
 export function WorkoutForm({
   user,
   workout,
+  date,
   onClose,
   locations,
   nextSets,
 }: {
   user: Session["user"];
   workout?: WorkoutData & { _id?: string };
+  date?: string;
   onClose?: () => void;
   locations: string[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
+  const now = TZDate.tz("Europe/Copenhagen");
+  const todayDate = `${now.getFullYear()}-${
+    now.getMonth() + 1
+  }-${now.getDate()}`;
+
   const {
     handleSubmit,
     register,
@@ -158,6 +165,7 @@ export function WorkoutForm({
             ? String(dateToInputDate(workout?.worked_out_at))
             : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
         }
+        hidden={!workout && todayDate !== date}
       />
       <Controller
         name="location"
