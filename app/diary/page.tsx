@@ -1,9 +1,12 @@
 import { TZDate } from "@date-fns/tz";
-import { isAfter, subWeeks } from "date-fns";
+import { addDays, endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
+import Image, { StaticImageData } from "next/image";
 import { auth } from "../../auth";
+import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { getDB } from "../../dbConnect";
+import { dbFetch } from "../../fetch";
 import type { DiaryEntry } from "../../lib";
 import { IUser } from "../../models/user";
 import { WorkoutData } from "../../models/workout";
@@ -19,14 +22,41 @@ import {
   type TopLogger,
   workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises } from "../../utils";
+import { allPromises, DAY_IN_SECONDS, HOUR_IN_SECONDS } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
+import { DiaryEntryItem } from "./DiaryEntryItem";
 import { DiaryEntryList } from "./DiaryEntryList";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+interface TomorrowResponse {
+  data: {
+    timelines: {
+      timestep: string;
+      endTime: string;
+      startTime: string;
+      intervals: {
+        startTime: string;
+        values: {
+          cloudCover: number;
+          humidity: number;
+          precipitationIntensity: number;
+          precipitationProbability: number;
+          precipitationType: number;
+          temperatureApparent: number;
+          weatherCode: number;
+          windGust: number;
+          windSpeed: number;
+          sunriseTime: string;
+          sunsetTime: string;
+        };
+      }[];
+    }[];
+  };
+}
 
 const weeksPerPage = 4;
 
@@ -62,6 +92,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
     "myfitnesspal_food_entries"
   );
+
   const now = TZDate.tz("Europe/Copenhagen");
   const todayStr = `${now.getFullYear()}-${
     now.getMonth() + 1
@@ -279,9 +310,58 @@ export default async function Page() {
       );
     }
   }
+  let weatherIntervals:
+    | TomorrowResponse["data"]["timelines"][0]["intervals"]
+    | undefined;
+  let weatherDayInterval:
+    | TomorrowResponse["data"]["timelines"][0]["intervals"][0]
+    | undefined;
+  if (process.env.TOMORROW_API_KEY) {
+    const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
+    tomorrowUrl.searchParams.set("location", `55.658693,12.489322`);
+    tomorrowUrl.searchParams.set(
+      "startTime",
+      startOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
+    );
+    tomorrowUrl.searchParams.set(
+      "endTime",
+      endOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
+    );
+    tomorrowUrl.searchParams.set(
+      "fields",
+      "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode"
+    );
+    tomorrowUrl.searchParams.set("timesteps", "1h");
+    tomorrowUrl.searchParams.set("units", "metric");
+    tomorrowUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
+    weatherIntervals = (
+      await dbFetch<TomorrowResponse>(tomorrowUrl, undefined, {
+        maxAge: HOUR_IN_SECONDS,
+      })
+    ).data?.timelines[0]?.intervals.filter((interval) =>
+      isAfter(new Date(interval.startTime), new Date())
+    );
+
+    const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
+    tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
+    tomorrowDayUrl.searchParams.set("startTime", new Date().toISOString());
+    tomorrowDayUrl.searchParams.set(
+      "endTime",
+      addDays(new Date(), 1).toISOString()
+    );
+    tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
+    tomorrowDayUrl.searchParams.set("timesteps", "1d");
+    tomorrowDayUrl.searchParams.set("units", "metric");
+    tomorrowDayUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
+    weatherDayInterval = (
+      await dbFetch<TomorrowResponse>(tomorrowDayUrl, undefined, {
+        maxAge: DAY_IN_SECONDS,
+      })
+    ).data?.timelines[0]?.intervals[0];
+  }
 
   const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
-  const to = undefined;
+  const to = startOfDay(TZDate.tz("Europe/Copenhagen"));
   const [diaryEntries, allLocations, nextSets] = await Promise.all([
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
@@ -296,6 +376,126 @@ export default async function Page() {
   return (
     <div>
       <UserStuff />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, 1fr)",
+          gridTemplateRows: "masonry",
+          gap: "1em",
+          padding: "1em",
+          maxWidth: "64em",
+          margin: "0 auto",
+        }}
+      >
+        <DiaryEntryItem
+          diaryEntry={
+            (
+              await getDiaryEntries({
+                from: startOfDay(TZDate.tz("Europe/Copenhagen")),
+              })
+            )[0]!
+          }
+          user={user}
+          locations={allLocations}
+          nextSets={nextSets}
+        >
+          {weatherIntervals?.[0] && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                padding: "0.5em",
+              }}
+            >
+              <h3>Weather</h3>
+              {weatherDayInterval && (
+                <div>
+                  Daylight:{" "}
+                  {new Date(
+                    weatherDayInterval.values.sunriseTime
+                  ).toLocaleTimeString("en-DK", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                  -
+                  {new Date(
+                    weatherDayInterval.values.sunsetTime
+                  ).toLocaleTimeString("en-DK", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </div>
+              )}
+              <ol
+                start={Number(
+                  new Date(weatherIntervals[0].startTime).toLocaleTimeString(
+                    "en-DK",
+                    { hour: "numeric" }
+                  )
+                )}
+                style={{
+                  paddingInlineStart: "28px",
+                  marginBlockStart: 0,
+                  marginBlockEnd: 0,
+                }}
+              >
+                {weatherIntervals.map((interval, i) => {
+                  const extendedWeatherCode = Number(
+                    String(interval.values.weatherCode) +
+                      String(
+                        weatherDayInterval?.values.sunriseTime &&
+                          weatherDayInterval?.values.sunsetTime &&
+                          isAfter(
+                            new Date(interval.startTime),
+                            new Date(weatherDayInterval.values.sunriseTime)
+                          ) &&
+                          isAfter(
+                            new Date(weatherDayInterval.values.sunsetTime),
+                            new Date(interval.startTime)
+                          )
+                          ? 0
+                          : 1
+                      )
+                  );
+                  const weatherIcon =
+                    (extendedWeatherCode in weatherIconsByCode &&
+                      (weatherIconsByCode[extendedWeatherCode] as
+                        | StaticImageData
+                        | undefined)) ||
+                    (extendedWeatherCode.toString().substring(0, 4) + "0" in
+                      weatherIconsByCode &&
+                      (weatherIconsByCode[
+                        extendedWeatherCode.toString().substring(0, 4) + "0"
+                      ] as StaticImageData | undefined)) ||
+                    null;
+                  return (
+                    <li key={i}>
+                      {weatherIcon ? (
+                        <Image
+                          src={weatherIcon}
+                          alt={prettyPrintWeatherCode(extendedWeatherCode)}
+                          width={24}
+                          style={{
+                            verticalAlign: "middle",
+                          }}
+                        />
+                      ) : (
+                        extendedWeatherCode
+                      )}{" "}
+                      {interval.values.temperatureApparent.toFixed(1)}°C,{" "}
+                      {interval.values.humidity.toFixed(0)}%,{" "}
+                      {interval.values.windSpeed.toFixed(1)} m/s,{" "}
+                      {interval.values.precipitationIntensity.toFixed(1)} mm/h,{" "}
+                      {interval.values.precipitationProbability.toFixed(0)}%,{" "}
+                      {interval.values.cloudCover.toFixed(0)}%
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
+        </DiaryEntryItem>
+      </div>
       <div
         style={{
           display: "grid",
@@ -317,3 +517,42 @@ export default async function Page() {
     </div>
   );
 }
+
+const weatherCodes = {
+  0: "Unknown",
+  1000: "Clear",
+  1001: "Cloudy",
+  1100: "Mostly Clear",
+  1101: "Partly Cloudy",
+  1102: "Mostly Cloudy",
+  2000: "Fog",
+  2100: "Light Fog",
+  3000: "Light Wind",
+  3001: "Wind",
+  3002: "Strong Wind",
+  4000: "Drizzle",
+  4001: "Rain",
+  4200: "Light Rain",
+  4201: "Heavy Rain",
+  5000: "Snow",
+  5001: "Flurries",
+  5100: "Light Snow",
+  5101: "Heavy Snow",
+  6000: "Freezing Drizzle",
+  6001: "Freezing Rain",
+  6200: "Light Freezing Rain",
+  6201: "Heavy Freezing Rain",
+  7000: "Ice Pellets",
+  7101: "Heavy Ice Pellets",
+  7102: "Light Ice Pellets",
+  8000: "Thunderstorm",
+} as const;
+const prettyPrintWeatherCode = (code: number): string => {
+  const truncatedCode = code.toString().slice(0, 4);
+
+  if (truncatedCode in weatherCodes) {
+    return weatherCodes[truncatedCode as unknown as keyof typeof weatherCodes];
+  }
+
+  return "Unknown";
+};

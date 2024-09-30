@@ -45,8 +45,6 @@ function useEvent_shouldNotBeInvokedBeforeMount() {
   );
 }
 
-export default useEvent;
-
 const observerMap = new Map<
   string,
   {

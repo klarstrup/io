@@ -2,7 +2,7 @@
 import { TZDate } from "@date-fns/tz";
 import { differenceInDays } from "date-fns";
 import type { Session } from "next-auth";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { DiaryEntry } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
@@ -15,11 +15,13 @@ export function DiaryEntryItem({
   user,
   locations,
   nextSets,
+  children,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
+  children?: ReactNode | ReactNode[];
 }) {
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
 
@@ -65,7 +67,16 @@ export function DiaryEntryItem({
         <div style={{ flex: 1, lineHeight: 1, display: "flex" }}>
           <big>
             <big>
-              <big>{date}</big>
+              <big>
+                {todayStr === date ? (
+                  <>
+                    <b>Today</b>{" "}
+                    <span style={{ fontSize: "0.75em" }}>{date}</span>
+                  </>
+                ) : (
+                  <b>{date}</b>
+                )}
+              </big>
             </big>
           </big>
           {dayTotalEnergy && dayTotalProtein ? (
@@ -200,6 +211,7 @@ export function DiaryEntryItem({
             <fieldset>
               <legend>New workout</legend>
               <WorkoutForm
+                date={date}
                 user={user}
                 locations={locations}
                 nextSets={nextSets}
@@ -223,6 +235,7 @@ export function DiaryEntryItem({
           ) : null}
         </div>
       </div>
+      {children}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import { ReactNode, useEffect, useRef, useState } from "react";
-import useEvent, { useInView } from "../../hooks";
+import { useEvent, useInView } from "../../hooks";
 
 const LoadMore = ({
   children,

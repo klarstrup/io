@@ -223,7 +223,7 @@ export default function WorkoutEntry({
                                         {(input.unit === Unit.M
                                           ? input.value / 1000
                                           : input.value
-                                        ).toLocaleString("en-US", {
+                                        ).toLocaleString("en-DK", {
                                           unit: "kilometer",
                                           maximumSignificantDigits: 2,
                                         })}
