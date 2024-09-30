@@ -112,7 +112,9 @@ export function DiaryEntryItem({
         >
           <option value="">➕</option>
           <option value="workout">Add Workout</option>
-          <option value="food">Log Food</option>
+          {user.myFitnessPalToken ? (
+            <option value="food">Log Food</option>
+          ) : null}
         </select>
       </div>
       <div style={{ flex: "1" }}>
