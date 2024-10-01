@@ -25,8 +25,8 @@ import {
 } from "../../sources/toplogger";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+export const revalidate = 600; // 10 minutes
 
 export async function GET() {
   const DB = await getDB();

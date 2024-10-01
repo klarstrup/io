@@ -29,8 +29,8 @@ import "../page.css";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 import { DiaryEntryList } from "./DiaryEntryList";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+export const revalidate = 3600; // 1 hour
 
 interface TomorrowResponse {
   data: {
