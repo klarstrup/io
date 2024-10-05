@@ -1,5 +1,15 @@
 import { TZDate } from "@date-fns/tz";
-import { addSeconds, endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
+import {
+  addSeconds,
+  endOfDay,
+  endOfHour,
+  isAfter,
+  startOfDay,
+  startOfHour,
+  subHours,
+  subSeconds,
+  subWeeks,
+} from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import Image, { StaticImageData } from "next/image";
@@ -319,12 +329,13 @@ export default async function Page() {
     tomorrowUrl.searchParams.set("location", `55.658693,12.489322`);
     tomorrowUrl.searchParams.set(
       "startTime",
-      startOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
+      subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
     );
     tomorrowUrl.searchParams.set(
       "endTime",
       endOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
     );
+    tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
     tomorrowUrl.searchParams.set(
       "fields",
       "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode"
@@ -337,19 +348,21 @@ export default async function Page() {
         maxAge: HOUR_IN_SECONDS,
       })
     ).data?.timelines[0]?.intervals.filter((interval) =>
-      isAfter(new Date(interval.startTime), new Date())
+      isAfter(new Date(interval.startTime), endOfHour(subHours(new Date(), 1)))
     );
+    console.log(weatherIntervals);
 
     const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
     tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
     tomorrowDayUrl.searchParams.set(
       "startTime",
-      startOfDay(new Date()).toISOString()
+      startOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
     );
     tomorrowDayUrl.searchParams.set(
       "endTime",
-      addSeconds(endOfDay(new Date()), 1).toISOString()
+      addSeconds(endOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
     );
+    tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
     tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
     tomorrowDayUrl.searchParams.set("timesteps", "1d");
     tomorrowDayUrl.searchParams.set("units", "metric");
@@ -417,6 +430,7 @@ export default async function Page() {
                   ).toLocaleTimeString("en-DK", {
                     hour: "numeric",
                     minute: "2-digit",
+                    timeZone: "Europe/Copenhagen",
                   })}
                   -
                   {new Date(
@@ -424,6 +438,7 @@ export default async function Page() {
                   ).toLocaleTimeString("en-DK", {
                     hour: "numeric",
                     minute: "2-digit",
+                    timeZone: "Europe/Copenhagen",
                   })}
                 </div>
               )}
@@ -431,7 +446,7 @@ export default async function Page() {
                 start={Number(
                   new Date(weatherIntervals[0].startTime).toLocaleTimeString(
                     "en-DK",
-                    { hour: "numeric" }
+                    { hour: "numeric", timeZone: "Europe/Copenhagen" }
                   )
                 )}
                 style={{
