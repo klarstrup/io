@@ -259,7 +259,7 @@ async function loadMoreData(cursor: string) {
   const [diaryEntries, allLocations, nextSets] = await Promise.all([
     getDiaryEntries({ from: new Date(from), to: new Date(to) }),
     getAllWorkoutLocations(user),
-    getNextSets({ user }),
+    getNextSets({ user, to: startOfDay(new Date()) }),
   ]);
 
   return [
@@ -366,7 +366,7 @@ export default async function Page() {
   const [diaryEntries, allLocations, nextSets] = await Promise.all([
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
-    getNextSets({ user }),
+    getNextSets({ user, to: startOfDay(new Date()) }),
   ]);
 
   const initialCursor = JSON.stringify({

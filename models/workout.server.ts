@@ -9,7 +9,13 @@ import {
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData } from "./workout";
 
-export async function getNextSets({ user }: { user: Session["user"] }) {
+export async function getNextSets({
+  user,
+  to,
+}: {
+  user: Session["user"];
+  to: Date;
+}) {
   const DB = await getDB();
   const workoutsCollection = DB.collection<WorkoutData>("workouts");
   const fitocracyWorkoutsCollection =
@@ -23,6 +29,7 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
             userId: user.id,
             "exercises.exerciseId": id,
             deletedAt: { $exists: false },
+            workedOutAt: { $lte: to },
           },
           { sort: { workedOutAt: -1 } }
         );
@@ -32,6 +39,7 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
               {
                 user_id: user.fitocracyUserId,
                 "root_group.children.exercise.exercise_id": id,
+                workout_timestamp: { $lte: to },
               },
               { sort: { workout_timestamp: -1 } }
             )

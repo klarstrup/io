@@ -324,6 +324,21 @@ export function WorkoutForm({
             />
           </div>
         ) : null}
+        {nextSets?.filter(
+          (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) <= 2
+        ).length ? (
+          <div>
+            <small>
+              <b>Future Sets:</b>
+              <NextSets
+                nextSets={nextSets.filter(
+                  (nextSet) =>
+                    differenceInDays(new Date(), nextSet.workedOutAt) <= 2
+                )}
+              />
+            </small>
+          </div>
+        ) : null}
       </div>
     </form>
   );
@@ -388,14 +403,19 @@ function SetsForm({
             <StealthButton
               onClick={() =>
                 append({
-                  inputs: exercise.inputs.map((input) => ({
-                    id: input.id,
-                    value: sets[sets.length - 1]?.inputs[input.id]?.value ?? 0,
-                    unit:
-                      sets[sets.length - 1]?.inputs[input.id]?.unit ??
-                      input.metric_unit ??
-                      input.allowed_units?.[0]?.name,
-                  })),
+                  inputs: exercise.inputs.map((input, inputIndex) => {
+                    const lastSetInput =
+                      sets[sets.length - 1]?.inputs[inputIndex];
+
+                    return {
+                      id: input.id,
+                      value: lastSetInput?.value ?? 0,
+                      unit:
+                        lastSetInput?.unit ??
+                        input.metric_unit ??
+                        input.allowed_units?.[0]?.name,
+                    };
+                  }),
                 })
               }
               style={{ lineHeight: 0 }}

@@ -9,6 +9,7 @@ import { WorkoutData, WorkoutSource } from "../../models/workout";
 import { seconds2time } from "../../utils";
 import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
 import { WorkoutForm } from "./WorkoutForm";
+import type { getNextSets } from "../../models/workout.server";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);
@@ -25,10 +26,12 @@ export default function WorkoutEntry({
   workout,
   user,
   locations,
+  nextSets,
 }: {
   workout: WorkoutData & { _id: string };
   user: Session["user"];
   locations: string[];
+  nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -98,6 +101,7 @@ export default function WorkoutEntry({
           workout={workout}
           locations={locations}
           onClose={() => setIsEditing(false)}
+          nextSets={nextSets}
         />
       ) : (
         <div
@@ -196,11 +200,9 @@ export default function WorkoutEntry({
                                     : true)
                                     ? inputType === InputType.Options
                                       ? ", "
-                                      : input.assistType ===
-                                        AssistType.Assisted
+                                      : input.assistType === AssistType.Assisted
                                       ? " - "
-                                      : input.assistType ===
-                                        AssistType.Weighted
+                                      : input.assistType === AssistType.Weighted
                                       ? " + "
                                       : " × "
                                     : ""}

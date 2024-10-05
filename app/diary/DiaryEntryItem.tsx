@@ -206,6 +206,7 @@ export function DiaryEntryItem({
                   user={user}
                   workout={workout}
                   locations={locations}
+                  nextSets={nextSets}
                 />
               ))
             : null}
@@ -219,17 +220,6 @@ export function DiaryEntryItem({
                 nextSets={nextSets}
                 onClose={() => setIsAddingWorkout(false)}
               />
-              <div>
-                <small>
-                  <b>Future Sets:</b>
-                  <NextSets
-                    nextSets={nextSets.filter(
-                      (nextSet) =>
-                        differenceInDays(new Date(), nextSet.workedOutAt) <= 2
-                    )}
-                  />
-                </small>
-              </div>
             </fieldset>
           ) : null}
         </div>
