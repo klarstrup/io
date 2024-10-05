@@ -225,10 +225,7 @@ export function DiaryEntryItem({
                   <NextSets
                     nextSets={nextSets.filter(
                       (nextSet) =>
-                        differenceInDays(
-                          new Date(),
-                          nextSet.workout_timestamp
-                        ) <= 2
+                        differenceInDays(new Date(), nextSet.workedOutAt) <= 2
                     )}
                   />
                 </small>

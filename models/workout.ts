@@ -10,17 +10,17 @@ export enum WorkoutSource {
 
 export interface WorkoutData {
   exercises: WorkoutExercise[];
-  user_id: string; // This is a string because it's a MongoDB ObjectId
-  created_at: Date;
-  updated_at: Date;
-  worked_out_at: Date;
-  deleted_at?: Date;
+  userId: string; // This is a string because it's a MongoDB ObjectId
+  createdAt: Date;
+  updatedAt: Date;
+  workedOutAt: Date;
+  deletedAt?: Date;
   source?: WorkoutSource;
   location?: string;
 }
 
 export interface WorkoutExercise {
-  exercise_id: number;
+  exerciseId: number;
   sets: WorkoutExerciseSet[];
 }
 
@@ -31,5 +31,5 @@ export interface WorkoutExerciseSet {
 export interface WorkoutExerciseSetInput {
   unit?: Unit;
   value: number;
-  assist_type?: AssistType;
+  assistType?: AssistType;
 }

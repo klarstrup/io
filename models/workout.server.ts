@@ -20,11 +20,11 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
       exerciseIdsThatICareAbout.map(async (id) => {
         const workout = await workoutsCollection.findOne(
           {
-            user_id: user.id,
-            "exercises.exercise_id": id,
-            deleted_at: { $exists: false },
+            userId: user.id,
+            "exercises.exerciseId": id,
+            deletedAt: { $exists: false },
           },
-          { sort: { worked_out_at: -1 } }
+          { sort: { workedOutAt: -1 } }
         );
 
         const fitWorkout = user.fitocracyUserId
@@ -41,7 +41,7 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
 
         const recentmostWorkout =
           workout && fitocracyWorkout
-            ? isAfter(workout.worked_out_at, fitocracyWorkout.worked_out_at)
+            ? isAfter(workout.workedOutAt, fitocracyWorkout.workedOutAt)
               ? workout
               : fitocracyWorkout
             : workout ?? fitocracyWorkout ?? null;
@@ -54,7 +54,7 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
       if (!workout) return null;
 
       const exercise = workout.exercises.find(
-        ({ exercise_id }) => exercise_id === id
+        ({ exerciseId }) => exerciseId === id
       )!;
       const exerciseDefinition = exercises.find((ex) => ex.id === id)!;
       const exerciseWeightInputIndex = exerciseDefinition.inputs.findIndex(
@@ -78,7 +78,7 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
       let successful = true;
       if (
         workingSets.length >= 3 ||
-        (exercise.exercise_id === 3 && workingSets.length >= 1)
+        (exercise.exerciseId === 3 && workingSets.length >= 1)
       ) {
         if (
           workingSets.every(
@@ -92,13 +92,13 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
       }
 
       const nextWorkingSet = successful
-        ? ([1, 183, 532].includes(exercise.exercise_id) ? 1.25 : 2.5) +
+        ? ([1, 183, 532].includes(exercise.exerciseId) ? 1.25 : 2.5) +
           (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0)
         : 0.9 * (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0);
 
       return {
-        workout_timestamp: workout.worked_out_at,
-        exercise_id: exercise.exercise_id,
+        workedOutAt: workout.workedOutAt,
+        exerciseId: exercise.exerciseId,
         successful,
         nextWorkingSet:
           String(nextWorkingSet).endsWith(".25") ||
@@ -108,7 +108,5 @@ export async function getNextSets({ user }: { user: Session["user"] }) {
       };
     })
     .filter(Boolean)
-    .sort(
-      (a, b) => a.workout_timestamp.getTime() - b.workout_timestamp.getTime()
-    );
+    .sort((a, b) => a.workedOutAt.getTime() - b.workedOutAt.getTime());
 }

@@ -71,7 +71,7 @@ export function WorkoutForm({
     formState: { isDirty, isSubmitting },
   } = useForm<WorkoutData & { _id?: string }>({
     defaultValues: workout
-      ? { ...workout, worked_out_at: dateToInputDate(workout?.worked_out_at) }
+      ? { ...workout, workedOutAt: dateToInputDate(workout?.workedOutAt) }
       : undefined,
   });
   const { fields, append, update, remove } = useFieldArray({
@@ -80,13 +80,11 @@ export function WorkoutForm({
   });
 
   const dueSets = nextSets
-    ?.filter(
-      (nextSet) => differenceInDays(new Date(), nextSet.workout_timestamp) > 2
-    )
+    ?.filter((nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) > 2)
     .filter(
       (nextSet) =>
         !watch("exercises")?.some(
-          (exerciseValue) => exerciseValue.exercise_id === nextSet.exercise_id
+          (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId
         )
     );
 
@@ -96,11 +94,11 @@ export function WorkoutForm({
       onSubmit={handleSubmit(async (data) => {
         const newWorkout: WorkoutData & { _id?: string } = {
           _id: workout?._id,
-          user_id: user.id,
+          userId: user.id,
           // Shit that will change
-          worked_out_at: data.worked_out_at ?? workout?.worked_out_at,
-          created_at: workout?.created_at ?? new Date(),
-          updated_at: new Date(),
+          workedOutAt: data.workedOutAt ?? workout?.workedOutAt,
+          createdAt: workout?.createdAt ?? new Date(),
+          updatedAt: new Date(),
           exercises: data.exercises ?? workout?.exercises,
           source: WorkoutSource.Self,
           location: data.location ?? workout?.location,
@@ -112,7 +110,7 @@ export function WorkoutForm({
           workout
             ? {
                 ...workout,
-                worked_out_at: dateToInputDate(workout?.worked_out_at),
+                workedOutAt: dateToInputDate(workout?.workedOutAt),
               }
             : { exercises: [] }
         );
@@ -134,7 +132,7 @@ export function WorkoutForm({
             workout
               ? {
                   ...workout,
-                  worked_out_at: dateToInputDate(workout?.worked_out_at),
+                  workedOutAt: dateToInputDate(workout?.workedOutAt),
                 }
               : { exercises: [] }
           );
@@ -155,10 +153,10 @@ export function WorkoutForm({
       ) : null}
       <input
         type="date"
-        {...register("worked_out_at", { valueAsDate: true })}
+        {...register("workedOutAt", { valueAsDate: true })}
         defaultValue={
           workout
-            ? String(dateToInputDate(workout?.worked_out_at))
+            ? String(dateToInputDate(workout?.workedOutAt))
             : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
         }
         hidden={!workout && todayDate !== date}
@@ -189,13 +187,13 @@ export function WorkoutForm({
       <div>
         {fields.map((field, index) => {
           const exercise = exercises.find(
-            (exercise) => exercise.id === field.exercise_id
+            (exercise) => exercise.id === field.exerciseId
           );
           if (!exercise) {
-            throw new Error(`Exercise with ID ${field.exercise_id} not found`);
+            throw new Error(`Exercise with ID ${field.exerciseId} not found`);
           }
           const nextExerciseSet = nextSets?.find(
-            (nextSet) => nextSet.exercise_id === exercise.id
+            (nextSet) => nextSet.exerciseId === exercise.id
           );
           return (
             <fieldset
@@ -243,9 +241,7 @@ export function WorkoutForm({
                   <small>
                     Goal {nextExerciseSet.nextWorkingSet}
                     kg based on last set{" "}
-                    {nextExerciseSet.workout_timestamp.toLocaleDateString(
-                      "da-DK"
-                    )}
+                    {nextExerciseSet.workedOutAt.toLocaleDateString("da-DK")}
                   </small>
                 </div>
               ) : null}
@@ -264,7 +260,7 @@ export function WorkoutForm({
           placeholder="Add exercise..."
           options={exercises
             .filter(
-              ({ id }) => !fields.some((field) => field.exercise_id === id)
+              ({ id }) => !fields.some((field) => field.exerciseId === id)
             )
             .map(({ id, name, aliases }) => ({
               label: `${name} ${
@@ -281,7 +277,7 @@ export function WorkoutForm({
           onChange={(selected) => {
             if (!selected) return;
 
-            append({ exercise_id: selected.value, sets: [] });
+            append({ exerciseId: selected.value, sets: [] });
           }}
         />
         {dueSets?.length ? (
@@ -295,7 +291,7 @@ export function WorkoutForm({
                 )!;
 
                 const goalWeight = dueSets.find(
-                  (nextSet) => nextSet.exercise_id === exerciseId
+                  (nextSet) => nextSet.exerciseId === exerciseId
                 )?.nextWorkingSet;
 
                 const warmupIncrement = [1, 183, 532].includes(exerciseId)
@@ -323,7 +319,7 @@ export function WorkoutForm({
                   })
                 );
 
-                append({ exercise_id: exerciseId, sets });
+                append({ exerciseId, sets });
               }}
             />
           </div>
@@ -531,7 +527,7 @@ function InputsForm({
         {input.type === InputType.Weightassist && input.options ? (
           <select
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assist_type`
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assistType`
             )}
             style={{ flex: 1 }}
           >

@@ -280,13 +280,14 @@ export function workoutFromFitocracyWorkout(
 ): WithId<WorkoutData> {
   const exercises = workout.root_group.children.map(
     ({ exercise }): WorkoutExercise => ({
-      exercise_id: exercise.exercise_id,
+      exerciseId: exercise.exercise_id,
       sets: exercise.sets.map(
         ({ inputs }): WorkoutExerciseSet => ({
           inputs: inputs.map(
-            ({ unit, value }): WorkoutExerciseSetInput => ({
+            ({ unit, value, assist_type }): WorkoutExerciseSetInput => ({
               unit: unit as Unit | undefined,
               value,
+              assistType: assist_type,
             })
           ),
         })
@@ -297,10 +298,10 @@ export function workoutFromFitocracyWorkout(
   return {
     _id: workout._id,
     exercises,
-    user_id: String(workout.root_group.id),
-    created_at: new Date(),
-    updated_at: new Date(),
-    worked_out_at: new Date(workout.workout_timestamp),
+    userId: String(workout.root_group.id),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    workedOutAt: new Date(workout.workout_timestamp),
     source: WorkoutSource.Fitocracy,
   };
 }

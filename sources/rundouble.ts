@@ -197,7 +197,7 @@ export function workoutFromRunDouble(
     _id: `rundouble-${run.key}`,
     exercises: [
       {
-        exercise_id: 518,
+        exerciseId: 518,
         sets: [
           {
             inputs: [
@@ -209,10 +209,10 @@ export function workoutFromRunDouble(
         ],
       },
     ],
-    user_id: "rundouble",
-    created_at: new Date(run.completedLong),
-    updated_at: new Date(run.completedLong),
-    worked_out_at: new Date(run.completedLong),
+    userId: "rundouble",
+    createdAt: new Date(run.completedLong),
+    updatedAt: new Date(run.completedLong),
+    workedOutAt: new Date(run.completedLong),
     source: WorkoutSource.RunDouble,
   };
 }

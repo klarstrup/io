@@ -18,8 +18,8 @@ export function NextSets({
       }}
     >
       {nextSets.map(
-        ({ exercise_id, successful, nextWorkingSet, workout_timestamp }) => {
-          const exercise = exercises.find(({ id }) => exercise_id === id)!;
+        ({ exerciseId, successful, nextWorkingSet, workedOutAt }) => {
+          const exercise = exercises.find(({ id }) => exerciseId === id)!;
 
           return (
             <li key={exercise.id}>
@@ -29,14 +29,17 @@ export function NextSets({
                 </StealthButton>
               ) : null}{" "}
               <b>
-                {(exercise.aliases[1] || exercise.name).replace("Barbell", "")}{" "}
+                {
+                  [exercise.name, ...exercise.aliases]
+                    .filter((name) => name.length >= 4)
+                    .sort((a, b) => a.length - b.length)[0]!
+                }{" "}
                 {successful ? null : " (failed)"}
               </b>{" "}
               {nextWorkingSet}kg{" "}
               <small>
                 <small>
-                  Last set{" "}
-                  {String(workout_timestamp.toLocaleDateString("da-DK"))}
+                  Last set {String(workedOutAt.toLocaleDateString("da-DK"))}
                 </small>
               </small>
             </li>

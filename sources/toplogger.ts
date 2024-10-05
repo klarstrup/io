@@ -901,7 +901,7 @@ export function workoutFromTopLoggerAscends(
     _id: String(firstAscend.id),
     exercises: [
       {
-        exercise_id: 2001,
+        exerciseId: 2001,
         sets: ascends
           .filter(({ checks }) => checks >= 1)
           .map(
@@ -930,10 +930,10 @@ export function workoutFromTopLoggerAscends(
       },
     ],
     location: gyms.find(({ id }) => id === firstAscend.climb.gym_id)?.name,
-    user_id: String(firstAscend.user_id),
-    created_at: firstAscend.date_logged,
-    updated_at: firstAscend.date_logged,
-    worked_out_at: firstAscend.date_logged,
+    userId: String(firstAscend.user_id),
+    createdAt: firstAscend.date_logged,
+    updatedAt: firstAscend.date_logged,
+    workedOutAt: firstAscend.date_logged,
     source: WorkoutSource.TopLogger,
   };
 }

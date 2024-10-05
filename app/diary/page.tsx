@@ -71,8 +71,8 @@ const getAllWorkoutLocations = async (user: Session["user"]) => {
 
   return (
     await workoutsCollection.distinct("location", {
-      user_id: user.id,
-      deleted_at: { $exists: false },
+      userId: user.id,
+      deletedAt: { $exists: false },
     })
   ).filter((loc): loc is string => Boolean(loc));
 };
@@ -124,11 +124,11 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   await allPromises(
     async () => {
       for await (const workout of DB.collection<WorkoutData>("workouts").find({
-        user_id: user.id,
-        deleted_at: { $exists: false },
-        worked_out_at: rangeToQuery(from, to),
+        userId: user.id,
+        deletedAt: { $exists: false },
+        workedOutAt: rangeToQuery(from, to),
       })) {
-        addDiaryEntry(workout.worked_out_at, "workouts", {
+        addDiaryEntry(workout.workedOutAt, "workouts", {
           ...workout,
           _id: workout._id.toString(),
         });
@@ -142,7 +142,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         workout_timestamp: rangeToQuery(from, to),
       })) {
         const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
-        addDiaryEntry(workout.worked_out_at, "workouts", {
+        addDiaryEntry(workout.workedOutAt, "workouts", {
           ...workout,
           _id: workout._id.toString(),
         });

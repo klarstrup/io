@@ -10,7 +10,7 @@ export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData
 ) {
   const user = (await auth())?.user;
-  if (!user || workout.user_id !== String(user.id)) {
+  if (!user || workout.userId !== String(user.id)) {
     throw new Error("Unauthorized");
   }
 
@@ -40,7 +40,7 @@ export async function deleteWorkout(workoutId: string) {
 
   const result = await workoutsCollection.updateOne(
     { _id: new ObjectId(workoutId) },
-    { $set: { deleted_at: new Date() } }
+    { $set: { deletedAt: new Date() } }
   );
   revalidatePath("/diary");
 

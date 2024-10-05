@@ -110,7 +110,7 @@ export default function WorkoutEntry({
         >
           {workout.exercises.map((workoutGroup, exerciseIndex) => {
             const exercise = exercises.find(
-              ({ id }) => workoutGroup.exercise_id === id
+              ({ id }) => workoutGroup.exerciseId === id
             )!;
             return (
               <div key={exerciseIndex}>
@@ -169,8 +169,8 @@ export default function WorkoutEntry({
                           {set.inputs
                             .filter((input) => {
                               if (
-                                input.assist_type === AssistType.Assisted ||
-                                input.assist_type === AssistType.Weighted
+                                input.assistType === AssistType.Assisted ||
+                                input.assistType === AssistType.Weighted
                               ) {
                                 return input.value !== 0;
                               }
@@ -196,10 +196,10 @@ export default function WorkoutEntry({
                                     : true)
                                     ? inputType === InputType.Options
                                       ? ", "
-                                      : input.assist_type ===
+                                      : input.assistType ===
                                         AssistType.Assisted
                                       ? " - "
-                                      : input.assist_type ===
+                                      : input.assistType ===
                                         AssistType.Weighted
                                       ? " + "
                                       : " × "
