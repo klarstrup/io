@@ -350,7 +350,6 @@ export default async function Page() {
     ).data?.timelines[0]?.intervals.filter((interval) =>
       isAfter(new Date(interval.startTime), endOfHour(subHours(new Date(), 1)))
     );
-    console.log(weatherIntervals);
 
     const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
     tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
