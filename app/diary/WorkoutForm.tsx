@@ -4,7 +4,7 @@
 import { TZDate } from "@date-fns/tz";
 import { differenceInDays } from "date-fns";
 import type { Session } from "next-auth";
-import { useId } from "react";
+import { useEffect, useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import Select from "react-select";
 import Creatable from "react-select/creatable";
@@ -353,6 +353,26 @@ function SetsForm({
     control,
     name: `exercises.${parentIndex}.sets`,
   });
+
+  useEffect(() => {
+    exercise.inputs.forEach((input, inputIndex) => {
+      if (input.allowed_units && input.allowed_units.length > 1) return;
+
+      const unit = input.metric_unit ?? input.allowed_units?.[0]?.name;
+
+      sets.forEach((set, setIndex) => {
+        if (set.inputs[inputIndex]!.unit === unit) return;
+
+        update(setIndex, {
+          ...set,
+          inputs: set.inputs.map((setInput, setInputIndex) =>
+            setInputIndex === inputIndex ? { ...setInput, unit } : setInput
+          ),
+        });
+      });
+    });
+  }, [exercise.inputs, sets, update]);
+
   return (
     <table
       style={{
@@ -383,23 +403,24 @@ function SetsForm({
               ➕
             </StealthButton>
           </th>
-          {exercise.inputs.map((input) => (
-            <th key={input.id} style={{ fontSize: "0.5em" }}>
+          {exercise.inputs.map((input, inputIndex) => (
+            <th key={inputIndex} style={{ fontSize: "0.5em" }}>
               {input.display_name}{" "}
               <small>
                 {input.allowed_units && input.allowed_units.length > 1 ? (
                   <select
-                    value={sets[0]?.inputs[input.id]?.unit}
+                    value={sets[0]?.inputs[inputIndex]?.unit}
                     style={{ flex: 1, fontSize: "inherit" }}
                     onChange={(event) => {
                       const unit = event.target.value as Unit;
                       sets.forEach((set, setIndex) => {
                         update(setIndex, {
                           ...set,
-                          inputs: set.inputs.map((input) => ({
-                            ...input,
-                            unit,
-                          })),
+                          inputs: set.inputs.map((setInput, setInputIndex) =>
+                            setInputIndex === inputIndex
+                              ? { ...setInput, unit }
+                              : setInput
+                          ),
                         });
                       });
                     }}
