@@ -4,8 +4,8 @@ import {
   endOfDay,
   endOfHour,
   isAfter,
+  isWithinInterval,
   startOfDay,
-  startOfHour,
   subHours,
   subSeconds,
   subWeeks,
@@ -361,7 +361,7 @@ export default async function Page() {
       "endTime",
       addSeconds(endOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
     );
-    tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
+    tomorrowDayUrl.searchParams.set("timezone", "Europe/Copenhagen");
     tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
     tomorrowDayUrl.searchParams.set("timesteps", "1d");
     tomorrowDayUrl.searchParams.set("units", "metric");
@@ -370,7 +370,12 @@ export default async function Page() {
       await dbFetch<TomorrowResponse>(tomorrowDayUrl, undefined, {
         maxAge: DAY_IN_SECONDS,
       })
-    ).data?.timelines[0]?.intervals[0];
+    ).data?.timelines[0]?.intervals.find((interval) =>
+      isWithinInterval(new Date(interval.startTime), {
+        start: startOfDay(TZDate.tz("Europe/Copenhagen")),
+        end: endOfDay(TZDate.tz("Europe/Copenhagen")),
+      })
+    );
   }
 
   const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
@@ -460,14 +465,12 @@ export default async function Page() {
                       String(
                         weatherDayInterval?.values.sunriseTime &&
                           weatherDayInterval?.values.sunsetTime &&
-                          isAfter(
-                            new Date(interval.startTime),
-                            new Date(weatherDayInterval.values.sunriseTime)
-                          ) &&
-                          isAfter(
-                            new Date(weatherDayInterval.values.sunsetTime),
-                            new Date(interval.startTime)
-                          )
+                          isWithinInterval(new Date(interval.startTime), {
+                            start: new Date(
+                              weatherDayInterval.values.sunriseTime
+                            ),
+                            end: new Date(weatherDayInterval.values.sunsetTime),
+                          })
                           ? 0
                           : 1
                       )
