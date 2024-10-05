@@ -492,20 +492,54 @@ export default async function Page() {
                         <Image
                           src={weatherIcon}
                           alt={prettyPrintWeatherCode(extendedWeatherCode)}
+                          title={prettyPrintWeatherCode(extendedWeatherCode)}
                           width={24}
-                          style={{
-                            verticalAlign: "middle",
-                          }}
+                          style={{ verticalAlign: "middle" }}
                         />
                       ) : (
                         extendedWeatherCode
                       )}{" "}
-                      {interval.values.temperatureApparent.toFixed(1)}°C,{" "}
-                      {interval.values.humidity.toFixed(0)}%,{" "}
-                      {interval.values.windSpeed.toFixed(1)} m/s,{" "}
-                      {interval.values.precipitationIntensity.toFixed(1)} mm/h,{" "}
-                      {interval.values.precipitationProbability.toFixed(0)}%,{" "}
-                      {interval.values.cloudCover.toFixed(0)}%
+                      <span
+                        style={{ fontSize: "1.4em", verticalAlign: "middle" }}
+                      >
+                        {interval.values.temperatureApparent.toFixed(1)}
+                      </span>
+                      <sup style={{ fontSize: "0.7em" }}>°C</sup>
+                      <sub
+                        style={{
+                          fontSize: "0.7em",
+                          marginLeft: "-14px",
+                        }}
+                      >
+                        {interval.values.humidity.toFixed(0)}%
+                      </sub>{" "}
+                      {interval.values.windSpeed.toFixed(1)}
+                      <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
+                      {interval.values.precipitationProbability > 0 &&
+                      interval.values.precipitationIntensity > 0.11 ? (
+                        <>
+                          <span
+                            style={{
+                              fontSize: "1.4em",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            {interval.values.precipitationIntensity.toFixed(2)}
+                          </span>
+                          <sup style={{ fontSize: "0.7em" }}>mm</sup>
+                          <sub
+                            style={{
+                              fontSize: "0.7em",
+                              marginLeft: "-14px",
+                            }}
+                          >
+                            {interval.values.precipitationProbability.toFixed(
+                              0
+                            )}
+                            %
+                          </sub>
+                        </>
+                      ) : null}
                     </li>
                   );
                 })}
