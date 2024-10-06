@@ -516,7 +516,7 @@ export default async function Page() {
                       {interval.values.windSpeed.toFixed(1)}
                       <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
                       {interval.values.precipitationProbability > 0 &&
-                      interval.values.precipitationIntensity > 0.15 ? (
+                      interval.values.precipitationIntensity >= 0.2 ? (
                         <>
                           <span
                             style={{
