@@ -1,12 +1,12 @@
 import { TZDate } from "@date-fns/tz";
 import {
+  addDays,
+  addHours,
   addSeconds,
   endOfDay,
-  endOfHour,
   isAfter,
   isWithinInterval,
   startOfDay,
-  subHours,
   subSeconds,
   subWeeks,
 } from "date-fns";
@@ -333,7 +333,10 @@ export default async function Page() {
     );
     tomorrowUrl.searchParams.set(
       "endTime",
-      endOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
+      subSeconds(
+        endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
+        1
+      ).toISOString()
     );
     tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
     tomorrowUrl.searchParams.set(
@@ -348,7 +351,10 @@ export default async function Page() {
         maxAge: HOUR_IN_SECONDS,
       })
     ).data?.timelines[0]?.intervals.filter((interval) =>
-      isAfter(new Date(interval.startTime), endOfHour(subHours(new Date(), 1)))
+      isWithinInterval(new Date(interval.startTime), {
+        start: TZDate.tz("Europe/Copenhagen"),
+        end: addHours(TZDate.tz("Europe/Copenhagen"), 24),
+      })
     );
 
     const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
@@ -359,7 +365,10 @@ export default async function Page() {
     );
     tomorrowDayUrl.searchParams.set(
       "endTime",
-      addSeconds(endOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
+      addSeconds(
+        endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
+        1
+      ).toISOString()
     );
     tomorrowDayUrl.searchParams.set("timezone", "Europe/Copenhagen");
     tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
@@ -372,8 +381,8 @@ export default async function Page() {
       })
     ).data?.timelines[0]?.intervals.find((interval) =>
       isWithinInterval(new Date(interval.startTime), {
-        start: startOfDay(TZDate.tz("Europe/Copenhagen")),
-        end: endOfDay(TZDate.tz("Europe/Copenhagen")),
+        start: TZDate.tz("Europe/Copenhagen"),
+        end: addHours(TZDate.tz("Europe/Copenhagen"), 24),
       })
     );
   }
