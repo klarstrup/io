@@ -1,14 +1,13 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
-import { differenceInDays } from "date-fns";
 import type { Session } from "next-auth";
 import { type ReactNode, useState } from "react";
 import type { DiaryEntry } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
-import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
+import { compareAsc } from "date-fns";
 
 export function DiaryEntryItem({
   diaryEntry,
@@ -200,15 +199,17 @@ export function DiaryEntryItem({
         </div>
         <div>
           {workouts?.length
-            ? workouts?.map((workout) => (
-                <WorkoutEntry
-                  key={workout._id}
-                  user={user}
-                  workout={workout}
-                  locations={locations}
-                  nextSets={nextSets}
-                />
-              ))
+            ? Array.from(workouts)
+                .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
+                ?.map((workout) => (
+                  <WorkoutEntry
+                    key={workout._id}
+                    user={user}
+                    workout={workout}
+                    locations={locations}
+                    nextSets={nextSets}
+                  />
+                ))
             : null}
           {isAddingWorkout ? (
             <fieldset>
