@@ -124,22 +124,6 @@ export function WorkoutForm({
       <button type="submit" disabled={!isDirty || isSubmitting}>
         {workout ? "Update" : "Create"}
       </button>
-      <button
-        type="button"
-        disabled={!isDirty || isSubmitting}
-        onClick={() => {
-          reset(
-            workout
-              ? {
-                  ...workout,
-                  workedOutAt: dateToInputDate(workout?.workedOutAt),
-                }
-              : { exercises: [] }
-          );
-        }}
-      >
-        Reset
-      </button>
       {workout?._id ? (
         <button
           disabled={isSubmitting}
