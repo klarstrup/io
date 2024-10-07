@@ -69,21 +69,13 @@ export default function WorkoutEntry({
             ) : null}
           </>
         ) : workout.source === WorkoutSource.Fitocracy ? (
-          <>
-            <small>Fitocracy</small>
-          </>
+          <small>Fitocracy</small>
         ) : workout.source === WorkoutSource.MyFitnessPal ? (
-          <>
-            <small>MyFitnessPal</small>
-          </>
+          <small>MyFitnessPal</small>
         ) : workout.source === WorkoutSource.RunDouble ? (
-          <>
-            <small>RunDouble</small>
-          </>
+          <small>RunDouble</small>
         ) : workout.source === WorkoutSource.TopLogger ? (
-          <>
-            <small>TopLogger</small>
-          </>
+          <small>TopLogger</small>
         ) : null}
         {workout.location ? (
           <>
@@ -217,9 +209,7 @@ export default function WorkoutEntry({
                                         <small>min/km</small>
                                       </>
                                     ) : inputType === InputType.Time ? (
-                                      <>
-                                        {seconds2time(Math.round(input.value))}
-                                      </>
+                                      seconds2time(Math.round(input.value))
                                     ) : inputType === InputType.Distance ? (
                                       <>
                                         {(input.unit === Unit.M
@@ -233,11 +223,7 @@ export default function WorkoutEntry({
                                       </>
                                     ) : inputType === InputType.Options &&
                                       inputOptions ? (
-                                      <>
-                                        {String(
-                                          inputOptions[input.value]?.value
-                                        )}
-                                      </>
+                                      String(inputOptions[input.value]?.value)
                                     ) : input.unit === Unit.FrenchRounded ? (
                                       new Grade(input.value).name
                                     ) : !isNaN(input.value) &&

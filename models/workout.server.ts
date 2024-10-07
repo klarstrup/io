@@ -111,7 +111,10 @@ export async function getNextSets({
         nextWorkingSet:
           String(nextWorkingSet).endsWith(".25") ||
           String(nextWorkingSet).endsWith(".75")
-            ? nextWorkingSet - 0.25
+            ? String(nextWorkingSet).endsWith("2.25") ||
+              String(nextWorkingSet).endsWith("4.75")
+              ? nextWorkingSet + 0.25
+              : nextWorkingSet - 0.25
             : nextWorkingSet,
       };
     })
