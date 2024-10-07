@@ -90,7 +90,7 @@ export function DiaryAgenda({
             flexWrap: "wrap",
           }}
         >
-          <fieldset>
+          <fieldset style={{ borderLeft: 0, borderRight: 0 }}>
             <legend>
               <big>Food</big>{" "}
               {dayTotalEnergy && dayTotalProtein ? (
@@ -102,7 +102,7 @@ export function DiaryAgenda({
             </legend>
             <FoodEntry foodEntries={food} />
           </fieldset>
-          <fieldset>
+          <fieldset style={{ borderLeft: 0, borderRight: 0 }}>
             <legend>
               <big>Workouts</big>
             </legend>
@@ -139,6 +139,8 @@ export function DiaryAgenda({
               display: "flex",
               flexDirection: "column",
               padding: "0.5em",
+              borderLeft: 0,
+              borderRight: 0,
             }}
           >
             <legend>
