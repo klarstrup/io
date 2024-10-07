@@ -64,6 +64,34 @@ export function DiaryAgenda({
             <big>
               <big>
                 <b>Today</b> <span style={{ fontSize: "0.75em" }}>{date}</span>
+                <span
+                  style={{
+                    fontSize: "0.5em",
+                    marginLeft: "1em",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {weatherDayInterval && (
+                    <>
+                      Daylight:{" "}
+                      {new Date(
+                        weatherDayInterval.values.sunriseTime
+                      ).toLocaleTimeString("en-DK", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        timeZone: "Europe/Copenhagen",
+                      })}
+                      -
+                      {new Date(
+                        weatherDayInterval.values.sunsetTime
+                      ).toLocaleTimeString("en-DK", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        timeZone: "Europe/Copenhagen",
+                      })}
+                    </>
+                  )}
+                </span>
               </big>
             </big>
           </big>
@@ -177,26 +205,6 @@ export function DiaryAgenda({
             <legend style={{ marginLeft: "0.5em" }}>
               <big>Weather</big>
             </legend>
-            {weatherDayInterval && (
-              <div>
-                Daylight:{" "}
-                {new Date(
-                  weatherDayInterval.values.sunriseTime
-                ).toLocaleTimeString("en-DK", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  timeZone: "Europe/Copenhagen",
-                })}
-                -
-                {new Date(
-                  weatherDayInterval.values.sunsetTime
-                ).toLocaleTimeString("en-DK", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  timeZone: "Europe/Copenhagen",
-                })}
-              </div>
-            )}
             <ul
               style={{
                 listStyleType: "none",
