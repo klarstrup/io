@@ -90,8 +90,20 @@ export function DiaryAgenda({
             flexWrap: "wrap",
           }}
         >
-          <fieldset style={{ borderLeft: 0, borderRight: 0 }}>
-            <legend>
+          <fieldset
+            style={{
+              borderLeft: 0,
+              borderRight: 0,
+              borderTop: "0.25em solid #a0a0a0a0",
+              paddingTop: "0.5em",
+              borderBottom: "0.25em solid #a0a0a0a0",
+              paddingBottom: "0.5em",
+              borderRadius: "0.5em",
+              paddingLeft: "0.25em",
+              paddingRight: "0.25em",
+            }}
+          >
+            <legend style={{ marginLeft: "0.5em" }}>
               <big>Food</big>{" "}
               {dayTotalEnergy && dayTotalProtein ? (
                 <small>
@@ -102,8 +114,20 @@ export function DiaryAgenda({
             </legend>
             <FoodEntry foodEntries={food} />
           </fieldset>
-          <fieldset style={{ borderLeft: 0, borderRight: 0 }}>
-            <legend>
+          <fieldset
+            style={{
+              borderLeft: 0,
+              borderRight: 0,
+              borderTop: "0.25em solid #a0a0a0a0",
+              paddingTop: "0.5em",
+              borderBottom: "0.25em solid #a0a0a0a0",
+              paddingBottom: "0.5em",
+              borderRadius: "0.5em",
+              paddingLeft: "0.25em",
+              paddingRight: "0.25em",
+            }}
+          >
+            <legend style={{ marginLeft: "0.5em" }}>
               <big>Workouts</big>
             </legend>
             {workouts?.length
@@ -141,9 +165,16 @@ export function DiaryAgenda({
               padding: "0.5em",
               borderLeft: 0,
               borderRight: 0,
+              borderTop: "0.25em solid #a0a0a0a0",
+              paddingTop: "0.5em",
+              borderBottom: "0.25em solid #a0a0a0a0",
+              paddingBottom: "0.5em",
+              borderRadius: "0.5em",
+              paddingLeft: "0.25em",
+              paddingRight: "0.25em",
             }}
           >
-            <legend>
+            <legend style={{ marginLeft: "0.5em" }}>
               <big>Weather</big>
             </legend>
             {weatherDayInterval && (
