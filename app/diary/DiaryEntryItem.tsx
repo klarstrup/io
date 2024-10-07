@@ -1,13 +1,13 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
+import { compareAsc } from "date-fns";
 import type { Session } from "next-auth";
 import { type ReactNode, useState } from "react";
 import type { DiaryEntry } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
-import { MyFitnessPal } from "../../sources/myfitnesspal";
+import { FoodEntry } from "./FoodEntry";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
-import { compareAsc } from "date-fns";
 
 export function DiaryEntryItem({
   diaryEntry,
@@ -30,6 +30,8 @@ export function DiaryEntryItem({
   }-${now.getDate()}`;
 
   const [date, { food, workouts }] = diaryEntry;
+
+  const isToday = todayStr === date;
 
   const dayTotalEnergy = food?.reduce(
     (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
@@ -116,88 +118,16 @@ export function DiaryEntryItem({
           ) : null}
         </select>
       </div>
-      <div style={{ flex: "1" }}>
+      <div
+        style={{
+          flex: "1",
+          display: "flex",
+          flexDirection: isToday ? "row" : "column",
+          flexWrap: "wrap",
+        }}
+      >
         <div>
-          {food ? (
-            <ol style={{ paddingInlineStart: "20px" }}>
-              {[
-                MyFitnessPal.MealName.Breakfast,
-                MyFitnessPal.MealName.Lunch,
-                MyFitnessPal.MealName.Dinner,
-                MyFitnessPal.MealName.Snacks,
-              ]
-                .filter((mealName) =>
-                  food?.some((foodEntry) => foodEntry.meal_name === mealName)
-                )
-                .map((mealName) => {
-                  const mealTotalEnergy = food
-                    ?.filter((foodEntry) => foodEntry.meal_name === mealName)
-                    .reduce(
-                      (acc, foodEntry) =>
-                        acc + foodEntry.nutritional_contents.energy.value,
-                      0
-                    );
-                  const mealTotalProtein = food
-                    ?.filter((foodEntry) => foodEntry.meal_name === mealName)
-                    .reduce(
-                      (acc, foodEntry) =>
-                        acc + (foodEntry.nutritional_contents.protein || 0),
-                      0
-                    );
-
-                  return (
-                    <li key={mealName}>
-                      <div>
-                        <b>{mealName}</b>{" "}
-                        {mealTotalEnergy && mealTotalProtein ? (
-                          <small>
-                            {Math.round(mealTotalEnergy)} kcal,{" "}
-                            {Math.round(mealTotalProtein)}g protein
-                          </small>
-                        ) : null}
-                      </div>
-                      <ul style={{ paddingInlineStart: "0px" }}>
-                        {food
-                          ?.filter(
-                            (foodEntry) => foodEntry.meal_name === mealName
-                          )
-                          .map((foodEntry) => (
-                            <li key={foodEntry.id}>
-                              {foodEntry.food.description.replace(/\s+/g, " ")}
-                              <small>
-                                {" "}
-                                {foodEntry.servings *
-                                  foodEntry.serving_size.value !==
-                                1 ? (
-                                  <>
-                                    {Math.round(
-                                      foodEntry.servings *
-                                        foodEntry.serving_size.value
-                                    )}{" "}
-                                    {foodEntry.serving_size.unit.match(
-                                      /container/i
-                                    )
-                                      ? "x "
-                                      : null}
-                                  </>
-                                ) : null}
-                                {foodEntry.serving_size.unit.match(/container/i)
-                                  ? foodEntry.serving_size.unit.replace(
-                                      /(container \((.+)\))/i,
-                                      "$2"
-                                    )
-                                  : foodEntry.serving_size.unit}
-                              </small>
-                            </li>
-                          ))}
-                      </ul>
-                    </li>
-                  );
-                })}
-            </ol>
-          ) : null}
-        </div>
-        <div>
+          <FoodEntry foodEntries={food} />
           {workouts?.length
             ? Array.from(workouts)
                 .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
@@ -224,8 +154,8 @@ export function DiaryEntryItem({
             </fieldset>
           ) : null}
         </div>
+        {children}
       </div>
-      {children}
     </div>
   );
 }
