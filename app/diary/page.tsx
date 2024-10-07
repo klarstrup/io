@@ -36,7 +36,7 @@ import { allPromises, DAY_IN_SECONDS, HOUR_IN_SECONDS } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
-import { DiaryEntryItem } from "./DiaryEntryItem";
+import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
 
 export const maxDuration = 60;
@@ -414,7 +414,7 @@ export default async function Page() {
           margin: "0 auto",
         }}
       >
-        <DiaryEntryItem
+        <DiaryAgenda
           diaryEntry={
             (
               await getDiaryEntries({
@@ -427,14 +427,14 @@ export default async function Page() {
           nextSets={nextSets}
         >
           {weatherIntervals?.[0] && (
-            <div
+            <fieldset
               style={{
                 display: "flex",
                 flexDirection: "column",
                 padding: "0.5em",
               }}
             >
-              <h3>Weather</h3>
+              <legend>Weather</legend>
               {weatherDayInterval && (
                 <div>
                   Daylight:{" "}
@@ -553,9 +553,9 @@ export default async function Page() {
                   );
                 })}
               </ol>
-            </div>
+            </fieldset>
           )}
-        </DiaryEntryItem>
+        </DiaryAgenda>
       </div>
       <div
         style={{
