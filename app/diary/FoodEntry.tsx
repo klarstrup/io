@@ -9,7 +9,13 @@ export function FoodEntry({
   return (
     <div>
       {foodEntries ? (
-        <ol style={{ paddingInlineStart: "20px" }}>
+        <ol
+          style={{
+            paddingInlineStart: "20px",
+            marginBlockStart: 0,
+            marginBlockEnd: 0,
+          }}
+        >
           {[
             MyFitnessPal.MealName.Breakfast,
             MyFitnessPal.MealName.Lunch,
