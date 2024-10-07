@@ -325,7 +325,7 @@ export default async function Page() {
     ).data?.timelines[0]?.intervals.filter((interval) =>
       isWithinInterval(new Date(interval.startTime), {
         start: TZDate.tz("Europe/Copenhagen"),
-        end: addHours(TZDate.tz("Europe/Copenhagen"), 24),
+        end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
       })
     );
 

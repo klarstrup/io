@@ -158,15 +158,10 @@ export function DiaryAgenda({
                 })}
               </div>
             )}
-            <ol
-              start={Number(
-                new Date(weatherIntervals[0].startTime).toLocaleTimeString(
-                  "en-DK",
-                  { hour: "numeric", timeZone: "Europe/Copenhagen" }
-                )
-              )}
+            <ul
               style={{
-                paddingInlineStart: "28px",
+                listStyleType: "none",
+                paddingInlineStart: 0,
                 marginBlockStart: 0,
                 marginBlockEnd: 0,
               }}
@@ -200,6 +195,15 @@ export function DiaryAgenda({
                   null;
                 return (
                   <li key={i}>
+                    <big style={{ fontWeight: 800 }}>
+                      {new Date(interval.startTime).toLocaleTimeString(
+                        "en-DK",
+                        {
+                          hour: "numeric",
+                          timeZone: "Europe/Copenhagen",
+                        }
+                      )}
+                    </big>{" "}
                     {weatherIcon ? (
                       <Image
                         src={weatherIcon}
@@ -252,7 +256,7 @@ export function DiaryAgenda({
                   </li>
                 );
               })}
-            </ol>
+            </ul>
           </fieldset>
         )}
       </div>
