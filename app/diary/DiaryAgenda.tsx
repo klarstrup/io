@@ -169,6 +169,7 @@ export function DiaryAgenda({
                       textAlign: "center",
                       fontWeight: 600,
                       cursor: "pointer",
+                      marginBottom: "1em",
                     }}
                   >
                     ➕ Food
@@ -230,6 +231,7 @@ export function DiaryAgenda({
                       textAlign: "center",
                       fontWeight: 600,
                       cursor: "pointer",
+                      marginBottom: "1em",
                     }}
                   >
                     ➕ Workout
