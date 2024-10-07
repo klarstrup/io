@@ -87,12 +87,10 @@ export function DiaryAgenda({
             flex: "1",
             display: "flex",
             flexDirection: "column",
-            flexWrap: "wrap",
           }}
         >
           <fieldset
             style={{
-              flex: "1",
               borderLeft: 0,
               borderRight: 0,
               borderTop: "0.25em solid #a0a0a0a0",
