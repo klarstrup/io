@@ -7,13 +7,26 @@ export function FoodEntry({
   foodEntries: DiaryEntry["food"];
 }) {
   return (
-    <div>
+    <div
+      style={{
+        marginBottom: "4px",
+        borderLeft: "0.25em solid #a0a0a0a0",
+        paddingLeft: "0.5em",
+        borderRight: "0.25em solid #a0a0a0a0",
+        paddingRight: "0.5em",
+        borderRadius: "0.5em",
+      }}
+    >
       {foodEntries ? (
-        <ol
+        <ul
           style={{
-            paddingInlineStart: "20px",
+            paddingInlineStart: 0,
             marginBlockStart: 0,
             marginBlockEnd: 0,
+            listStyleType: "none",
+            display: "grid",
+            gap: "8px 4px",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
           }}
         >
           {[
@@ -44,7 +57,9 @@ export function FoodEntry({
               return (
                 <li key={mealName}>
                   <div>
-                    <b>{mealName}</b>{" "}
+                    <span style={{ fontWeight: 600, fontSize: "0.9em" }}>
+                      {mealName}
+                    </span>{" "}
                     {mealTotalEnergy && mealTotalProtein ? (
                       <small>
                         {Math.round(mealTotalEnergy)} kcal,{" "}
@@ -52,7 +67,7 @@ export function FoodEntry({
                       </small>
                     ) : null}
                   </div>
-                  <ul style={{ paddingInlineStart: "0px" }}>
+                  <ul style={{ paddingInlineStart: "20px" }}>
                     {foodEntries
                       ?.filter((foodEntry) => foodEntry.meal_name === mealName)
                       .map((foodEntry) => (
@@ -86,7 +101,7 @@ export function FoodEntry({
                 </li>
               );
             })}
-        </ol>
+        </ul>
       ) : null}
     </div>
   );
