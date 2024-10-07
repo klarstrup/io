@@ -139,7 +139,43 @@ export function DiaryAgenda({
                 </small>
               ) : null}
             </legend>
-            <FoodEntry foodEntries={food} />
+            {food ? (
+              <FoodEntry foodEntries={food} />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                  flexDirection: "column",
+                }}
+              >
+                <p style={{ marginTop: 0 }}>No food logged</p>
+                <div>
+                  <button
+                    onClick={() => {
+                      window.open(
+                        `https://www.myfitnesspal.com/food/diary?date=${date}`
+                      );
+                    }}
+                    style={{
+                      fontSize: "1.25em",
+                      padding: "0.5em 0.75em",
+                      paddingRight: "1em",
+                      borderRadius: "1em",
+                      border: "none",
+                      background: "#ff0",
+                      textAlign: "center",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ➕ Food
+                  </button>
+                </div>
+              </div>
+            )}
           </fieldset>
           <fieldset
             style={{
@@ -158,19 +194,49 @@ export function DiaryAgenda({
             <legend style={{ marginLeft: "0.5em" }}>
               <big>Workouts</big>
             </legend>
-            {workouts?.length
-              ? Array.from(workouts)
-                  .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
-                  ?.map((workout) => (
-                    <WorkoutEntry
-                      key={workout._id}
-                      user={user}
-                      workout={workout}
-                      locations={locations}
-                      nextSets={nextSets}
-                    />
-                  ))
-              : null}
+            {workouts?.length ? (
+              Array.from(workouts)
+                .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
+                ?.map((workout) => (
+                  <WorkoutEntry
+                    key={workout._id}
+                    user={user}
+                    workout={workout}
+                    locations={locations}
+                    nextSets={nextSets}
+                  />
+                ))
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                  flexDirection: "column",
+                }}
+              >
+                <p style={{ marginTop: 0 }}>No workout logged </p>
+                <div>
+                  <button
+                    onClick={() => setIsAddingWorkout(true)}
+                    style={{
+                      fontSize: "1.25em",
+                      padding: "0.5em 0.75em",
+                      paddingRight: "1em",
+                      borderRadius: "1em",
+                      border: "none",
+                      background: "#ff0",
+                      textAlign: "center",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ➕ Workout
+                  </button>
+                </div>
+              </div>
+            )}
             {isAddingWorkout ? (
               <fieldset>
                 <legend>New workout</legend>

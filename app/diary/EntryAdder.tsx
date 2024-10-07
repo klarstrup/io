@@ -36,8 +36,8 @@ export function EntryAdder({
       }}
     >
       <option value="">➕</option>
-      <option value="workout">Add Workout</option>
-      {user.myFitnessPalToken ? <option value="food">Log Food</option> : null}
+      <option value="workout">Workout</option>
+      {user.myFitnessPalToken ? <option value="food">Food</option> : null}
     </select>
   );
 }
