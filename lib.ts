@@ -120,3 +120,31 @@ export interface DiaryEntry {
 export interface ScrapedAt {
   _io_scrapedAt?: Date;
 }
+
+export interface TomorrowResponseTimelineInterval {
+  startTime: string;
+  values: {
+    cloudCover: number;
+    humidity: number;
+    precipitationIntensity: number;
+    precipitationProbability: number;
+    precipitationType: number;
+    temperatureApparent: number;
+    weatherCode: number;
+    windGust: number;
+    windSpeed: number;
+    sunriseTime: string;
+    sunsetTime: string;
+  };
+}
+
+export interface TomorrowResponse {
+  data: {
+    timelines: {
+      timestep: string;
+      endTime: string;
+      startTime: string;
+      intervals: TomorrowResponseTimelineInterval[];
+    }[];
+  };
+}
