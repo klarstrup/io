@@ -67,12 +67,6 @@ export function DiaryAgenda({
               </big>
             </big>
           </big>
-          {dayTotalEnergy && dayTotalProtein ? (
-            <small style={{ paddingLeft: "0.5em" }}>
-              <div>{Math.round(dayTotalEnergy)} kcal</div>
-              <div>{Math.round(dayTotalProtein)}g protein</div>
-            </small>
-          ) : null}
         </div>
         <EntryAdder
           diaryEntry={diaryEntry}
@@ -97,11 +91,21 @@ export function DiaryAgenda({
           }}
         >
           <fieldset>
-            <legend>Food</legend>
+            <legend>
+              <big>Food</big>{" "}
+              {dayTotalEnergy && dayTotalProtein ? (
+                <small>
+                  {Math.round(dayTotalEnergy)} kcal,{" "}
+                  {Math.round(dayTotalProtein)}g protein
+                </small>
+              ) : null}
+            </legend>
             <FoodEntry foodEntries={food} />
           </fieldset>
           <fieldset>
-            <legend>Workouts</legend>
+            <legend>
+              <big>Workouts</big>
+            </legend>
             {workouts?.length
               ? Array.from(workouts)
                   .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
@@ -137,7 +141,9 @@ export function DiaryAgenda({
               padding: "0.5em",
             }}
           >
-            <legend>Weather</legend>
+            <legend>
+              <big>Weather</big>
+            </legend>
             {weatherDayInterval && (
               <div>
                 Daylight:{" "}
