@@ -23,6 +23,7 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
+import { fetchIcalCalendar, fetchIcalEventsBetween } from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
@@ -36,7 +37,6 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
-import { fetchIcalCalendar, fetchIcalEventsBetween } from "../../sources/ical";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -272,118 +272,122 @@ export default async function Page() {
 
   const DB = await getDB();
 
-  if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
-    const myFitnessPalToken = user?.myFitnessPalToken;
-    if (myFitnessPalToken) {
-      try {
-        const session = await getMyFitnessPalSession(myFitnessPalToken);
-        await DB.collection<IUser>("users").updateOne(
-          { _id: new ObjectId(user.id) },
-          {
-            $set: {
-              myFitnessPalUserId: session.userId,
-              myFitnessPalUserName: session.user.name,
-            },
-          }
-        );
-      } catch {
-        /* empty */
-      }
-    }
-  }
-  let weatherIntervals:
-    | TomorrowResponse["data"]["timelines"][0]["intervals"]
-    | undefined;
-  let weatherDayInterval:
-    | TomorrowResponse["data"]["timelines"][0]["intervals"][0]
-    | undefined;
-  if (process.env.TOMORROW_API_KEY) {
-    const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
-    tomorrowUrl.searchParams.set("location", `55.658693,12.489322`);
-    tomorrowUrl.searchParams.set(
-      "startTime",
-      subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
-    );
-    tomorrowUrl.searchParams.set(
-      "endTime",
-      subSeconds(
-        endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
-        1
-      ).toISOString()
-    );
-    tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
-    tomorrowUrl.searchParams.set(
-      "fields",
-      "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode"
-    );
-    tomorrowUrl.searchParams.set("timesteps", "1h");
-    tomorrowUrl.searchParams.set("units", "metric");
-    tomorrowUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
-    weatherIntervals = (
-      await dbFetch<TomorrowResponse>(tomorrowUrl, undefined, {
-        maxAge: HOUR_IN_SECONDS,
-      })
-    ).data?.timelines[0]?.intervals.filter((interval) =>
-      isWithinInterval(new Date(interval.startTime), {
-        start: TZDate.tz("Europe/Copenhagen"),
-        end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
-      })
-    );
-
-    const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
-    tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
-    tomorrowDayUrl.searchParams.set(
-      "startTime",
-      startOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
-    );
-    tomorrowDayUrl.searchParams.set(
-      "endTime",
-      addSeconds(
-        endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
-        1
-      ).toISOString()
-    );
-    tomorrowDayUrl.searchParams.set("timezone", "Europe/Copenhagen");
-    tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
-    tomorrowDayUrl.searchParams.set("timesteps", "1d");
-    tomorrowDayUrl.searchParams.set("units", "metric");
-    tomorrowDayUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
-    weatherDayInterval = (
-      await dbFetch<TomorrowResponse>(tomorrowDayUrl, undefined, {
-        maxAge: DAY_IN_SECONDS,
-      })
-    ).data?.timelines[0]?.intervals.find((interval) =>
-      isWithinInterval(new Date(interval.startTime), {
-        start: TZDate.tz("Europe/Copenhagen"),
-        end: addHours(TZDate.tz("Europe/Copenhagen"), 24),
-      })
-    );
-  }
-
   const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
   const to = startOfDay(TZDate.tz("Europe/Copenhagen"));
-  const [diaryEntries, allLocations, nextSets] = await Promise.all([
+  const [
+    diaryEntries,
+    allLocations,
+    nextSets,
+    eventsByCalendar,
+    weatherIntervals,
+    weatherDayInterval,
+  ] = await Promise.all([
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
     getNextSets({ user, to: startOfDay(new Date()) }),
+    Promise.all(
+      (user.icalUrls ?? []).map((icalUrl) =>
+        Promise.all([
+          fetchIcalCalendar(icalUrl),
+          fetchIcalEventsBetween(icalUrl, {
+            start: startOfDay(TZDate.tz("Europe/Copenhagen")),
+            end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
+          }),
+        ])
+      )
+    ),
+    (async () => {
+      if (!process.env.TOMORROW_API_KEY) return;
+      const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
+      tomorrowUrl.searchParams.set("location", `55.658693,12.489322`);
+      tomorrowUrl.searchParams.set(
+        "startTime",
+        subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
+      );
+      tomorrowUrl.searchParams.set(
+        "endTime",
+        subSeconds(
+          endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
+          1
+        ).toISOString()
+      );
+      tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
+      tomorrowUrl.searchParams.set(
+        "fields",
+        "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode"
+      );
+      tomorrowUrl.searchParams.set("timesteps", "1h");
+      tomorrowUrl.searchParams.set("units", "metric");
+      tomorrowUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
+      return (
+        await dbFetch<TomorrowResponse>(tomorrowUrl, undefined, {
+          maxAge: HOUR_IN_SECONDS,
+        })
+      ).data?.timelines[0]?.intervals.filter((interval) =>
+        isWithinInterval(new Date(interval.startTime), {
+          start: TZDate.tz("Europe/Copenhagen"),
+          end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
+        })
+      );
+    })(),
+    (async () => {
+      if (!process.env.TOMORROW_API_KEY) return;
+      const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
+      tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
+      tomorrowDayUrl.searchParams.set(
+        "startTime",
+        startOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
+      );
+      tomorrowDayUrl.searchParams.set(
+        "endTime",
+        addSeconds(
+          endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
+          1
+        ).toISOString()
+      );
+      tomorrowDayUrl.searchParams.set("timezone", "Europe/Copenhagen");
+      tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
+      tomorrowDayUrl.searchParams.set("timesteps", "1d");
+      tomorrowDayUrl.searchParams.set("units", "metric");
+      tomorrowDayUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
+      return (
+        await dbFetch<TomorrowResponse>(tomorrowDayUrl, undefined, {
+          maxAge: DAY_IN_SECONDS,
+        })
+      ).data?.timelines[0]?.intervals.find((interval) =>
+        isWithinInterval(new Date(interval.startTime), {
+          start: TZDate.tz("Europe/Copenhagen"),
+          end: addHours(TZDate.tz("Europe/Copenhagen"), 24),
+        })
+      );
+    })(),
+    (async () => {
+      if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+        const myFitnessPalToken = user?.myFitnessPalToken;
+        if (myFitnessPalToken) {
+          try {
+            const session = await getMyFitnessPalSession(myFitnessPalToken);
+            await DB.collection<IUser>("users").updateOne(
+              { _id: new ObjectId(user.id) },
+              {
+                $set: {
+                  myFitnessPalUserId: session.userId,
+                  myFitnessPalUserName: session.user.name,
+                },
+              }
+            );
+          } catch {
+            /* empty */
+          }
+        }
+      }
+    })(),
   ]);
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
     to: from,
   });
-
-  const eventsByCalendar = await Promise.all(
-    (user.icalUrls ?? []).map((icalUrl) =>
-      Promise.all([
-        fetchIcalCalendar(icalUrl),
-        fetchIcalEventsBetween(icalUrl, {
-          start: startOfDay(TZDate.tz("Europe/Copenhagen")),
-          end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
-        }),
-      ])
-    )
-  );
 
   return (
     <div>
