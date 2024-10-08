@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { Interval, isWithinInterval } from "date-fns";
+import { areIntervalsOverlapping, Interval, isWithinInterval } from "date-fns";
 import ical, { VEvent } from "node-ical";
 import { dbFetch } from "../fetch";
 import { HOUR_IN_SECONDS } from "../utils";
@@ -27,7 +27,15 @@ export async function fetchIcalEventsBetween(
         event.recurrences
       ) {
         for (const recurrence of Object.values(event.recurrences)) {
-          if (isWithinInterval(recurrence.start, dateInterval)) {
+          if (
+            areIntervalsOverlapping(
+              {
+                start: recurrence.start,
+                end: recurrence.end,
+              },
+              dateInterval
+            )
+          ) {
             eventsThatFallWithinRange.push(recurrence);
           }
         }

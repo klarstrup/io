@@ -2,8 +2,10 @@
 import { TZDate } from "@date-fns/tz";
 import { compareAsc } from "date-fns";
 import type { Session } from "next-auth";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import type { DiaryEntry } from "../../lib";
+import { exercises, TagType } from "../../models/exercises";
+import { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
@@ -15,15 +17,14 @@ export function DiaryEntryItem({
   user,
   locations,
   nextSets,
-  children,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
-  children?: ReactNode | ReactNode[];
 }) {
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const now = TZDate.tz("Europe/Copenhagen");
   const todayStr = `${now.getFullYear()}-${
@@ -31,8 +32,6 @@ export function DiaryEntryItem({
   }-${now.getDate()}`;
 
   const [date, { food, workouts }] = diaryEntry;
-
-  const isToday = todayStr === date;
 
   const dayTotalEnergy = food?.reduce(
     (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
@@ -56,7 +55,10 @@ export function DiaryEntryItem({
         display: "flex",
         flexDirection: "column",
         padding: "0.5em",
+        cursor: "pointer",
       }}
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={"diary-entry" + (isExpanded ? " expanded" : "")}
     >
       <div
         style={{
@@ -66,46 +68,65 @@ export function DiaryEntryItem({
           alignItems: "center",
         }}
       >
-        <div style={{ flex: 1, lineHeight: 1, display: "flex" }}>
+        <div
+          style={{
+            flex: 1,
+            lineHeight: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <big>
             <big>
               <big>
-                {todayStr === date ? (
-                  <>
-                    <b>Today</b>{" "}
-                    <span style={{ fontSize: "0.75em" }}>{date}</span>
-                  </>
-                ) : (
-                  <b>{date}</b>
-                )}
+                <b style={{ lineHeight: 1.25, whiteSpace: "nowrap" }}>{date}</b>
               </big>
             </big>
           </big>
-          {dayTotalEnergy && dayTotalProtein ? (
-            <small style={{ paddingLeft: "0.5em" }}>
-              <div>{Math.round(dayTotalEnergy)} kcal</div>
-              <div>{Math.round(dayTotalProtein)}g protein</div>
-            </small>
-          ) : null}
         </div>
-        <EntryAdder
-          diaryEntry={diaryEntry}
-          user={user}
-          onAddWorkout={() => setIsAddingWorkout(true)}
-        />
+        {isExpanded ? (
+          <EntryAdder
+            diaryEntry={diaryEntry}
+            user={user}
+            onAddWorkout={() => setIsAddingWorkout(true)}
+          />
+        ) : null}
       </div>
       <div
         style={{
           flex: "1",
           display: "flex",
-          flexDirection: isToday ? "row" : "column",
+          flexDirection: "column",
           flexWrap: "wrap",
         }}
       >
         <div>
-          <FoodEntry foodEntries={food} />
-          {workouts?.length
-            ? Array.from(workouts)
+          {isExpanded ? (
+            <FoodEntry foodEntries={food} />
+          ) : (
+            <div
+              style={{
+                fontSize: "1em",
+                padding: "0.25em",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.25em",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {dayTotalEnergy && dayTotalProtein ? (
+                <small style={{ paddingLeft: "0.5em" }}>
+                  <div>{Math.round(dayTotalEnergy)} kcal</div>
+                  <div>{Math.round(dayTotalProtein)}g protein</div>
+                </small>
+              ) : null}
+            </div>
+          )}
+          {workouts?.length ? (
+            isExpanded ? (
+              Array.from(workouts)
                 .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
                 ?.map((workout) => (
                   <WorkoutEntry
@@ -116,7 +137,10 @@ export function DiaryEntryItem({
                     nextSets={nextSets}
                   />
                 ))
-            : null}
+            ) : (
+              <WorkoutsSummary workouts={workouts} />
+            )
+          ) : null}
           {isAddingWorkout ? (
             <fieldset>
               <legend>New workout</legend>
@@ -130,8 +154,81 @@ export function DiaryEntryItem({
             </fieldset>
           ) : null}
         </div>
-        {children}
       </div>
+    </div>
+  );
+}
+
+function WorkoutsSummary({
+  workouts,
+}: {
+  workouts: (WorkoutData & { _id: string })[];
+}) {
+  const exercisesDone = new Set<number>();
+
+  for (const workout of workouts) {
+    for (const { exerciseId } of workout.exercises) {
+      exercisesDone.add(exerciseId);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        fontSize: "2em",
+        padding: "0.25em",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "0.25em",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {Array.from(exercisesDone).map((exerciseId) => {
+        const exercise = exercises.find(({ id }) => exerciseId === id)!;
+
+        return (
+          <span key={exercise.id}>
+            {exercise.name === "Bouldering" ? (
+              "🧗‍♀️"
+            ) : exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Equipment && tag.name === "Barbell"
+              ) ? (
+              "🏋️‍♀️"
+            ) : exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Equipment &&
+                  (tag.name === "Dumbbell" ||
+                    tag.name === "EZ Bar" ||
+                    tag.name === "Cables" ||
+                    tag.name === "Machine")
+              ) ? (
+              "💪"
+            ) : exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.MuscleGroup && tag.name === "Cardio"
+              ) ? (
+              "🏃‍♀️"
+            ) : exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Type && tag.name === "Calisthenics"
+              ) ? (
+              "🤸🏻"
+            ) : (
+              <span
+                style={{
+                  fontSize: "0.125em",
+                  display: "inline-block",
+                  maxWidth: "12em",
+                }}
+              >
+                {exercise.name}
+              </span>
+            )}
+          </span>
+        );
+      })}
     </div>
   );
 }

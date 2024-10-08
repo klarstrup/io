@@ -14,6 +14,7 @@ export function EntryAdder({
 
   return (
     <select
+      onClick={(e) => e.stopPropagation()}
       onChange={(e) => {
         if (e.target.value === "workout") {
           onAddWorkout();

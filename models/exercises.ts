@@ -47,7 +47,7 @@ export enum InputType {
   Grade = "grade",
 }
 
-enum TagType {
+export enum TagType {
   Equipment = "Equipment",
   ExperienceLevel = "Experience Level",
   MuscleGroup = "Muscle Group",
@@ -550,6 +550,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Machine Ab Crunch",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Machine",
+      },
+    ],
   },
   {
     aliases: [],
@@ -1231,6 +1237,10 @@ export const exercises = [
         name: "Strength",
         type: TagType.Type,
       },
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
     ],
   },
   {
@@ -1820,6 +1830,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Close-Grip EZ Bar Curl",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "EZ Bar",
+      },
+    ],
   },
   {
     aliases: [],
@@ -3116,6 +3132,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Seated Dumbbell Curl",
+    tags: [
+      {
+        name: "Dumbbell",
+        type: TagType.Equipment,
+      },
+    ],
   },
   {
     aliases: [],
@@ -3173,6 +3195,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Seated Dumbbell Inner Biceps Curl",
+    tags: [
+      {
+        name: "Dumbbell",
+        type: TagType.Equipment,
+      },
+    ],
   },
   {
     aliases: [],
@@ -6431,6 +6459,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Palms-Down Barbell Wrist Curl Over A Bench",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -6488,6 +6522,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Palms-Up Barbell Wrist Curl Over A Bench",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -6545,6 +6585,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Palms-Up Dumbbell Wrist Curl Over A Bench",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Dumbbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -6659,6 +6705,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Seated Dumbbell Palms-Down Wrist Curl",
+    tags: [
+      {
+        name: "Dumbbell",
+        type: TagType.Equipment,
+      },
+    ],
   },
   {
     aliases: [],
@@ -6716,6 +6768,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Seated Dumbbell Palms-Up Wrist Curl",
+    tags: [
+      {
+        name: "Dumbbell",
+        type: TagType.Equipment,
+      },
+    ],
   },
   {
     aliases: [],
@@ -6830,6 +6888,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Seated Palm-Up Barbell Wrist Curl",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -7679,6 +7743,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Hyperextension",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -7792,6 +7862,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Weighted Hyperextension",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -11711,6 +11787,10 @@ export const exercises = [
         name: "Shoulders",
         type: TagType.MuscleGroup,
       },
+      {
+        type: TagType.Equipment,
+        name: "Dumbbell",
+      },
     ],
   },
   {
@@ -14165,6 +14245,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Dips - Triceps Version",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -16212,6 +16298,10 @@ export const exercises = [
         type: TagType.Type,
       },
       {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
+      {
         name: "P90X 10: Back & Biceps",
         type: TagType.Program,
       },
@@ -16828,6 +16918,10 @@ export const exercises = [
       {
         name: "Crossfit - Fran",
         type: TagType.Program,
+      },
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
       },
     ],
   },
@@ -17597,6 +17691,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Running (treadmill)",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -17954,6 +18054,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Stair Machine",
+    tags: [
+      {
+        name: "Cardio",
+        type: TagType.MuscleGroup,
+      },
+    ],
   },
   {
     aliases: [],
@@ -18582,6 +18688,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Rowing (machine)",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: ["Rack Pull", "Block Deadlift"],
@@ -21530,6 +21642,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Weighted Decline Sit-Up",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -23326,6 +23444,20 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Ab Wheel (kneeling)",
+    tags: [
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
+      {
+        name: "abs",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Abdominals",
+        type: TagType.MuscleGroup,
+      },
+    ],
   },
   {
     aliases: [],
@@ -23688,6 +23820,16 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Renegade Row",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Dumbbell",
+      },
+      {
+        type: TagType.Equipment,
+        name: "Kettlebell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -25918,6 +26060,10 @@ export const exercises = [
         name: "Lats",
         type: TagType.MuscleGroup,
       },
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
     ],
   },
   {
@@ -26033,6 +26179,10 @@ export const exercises = [
       {
         name: "Lats",
         type: TagType.MuscleGroup,
+      },
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
       },
     ],
   },
@@ -27876,6 +28026,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Power Clean and Jerk",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -27990,6 +28146,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Jerk",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -28476,6 +28638,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Dumbbell Bulgarian Split Squat",
+    tags: [
+      {
+        name: "Dumbbell",
+        type: TagType.Equipment,
+      },
+    ],
   },
   {
     aliases: [],
@@ -31139,6 +31307,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: true,
     name: "Running",
+    tags: [
+      {
+        name: "Cardio",
+        type: TagType.MuscleGroup,
+      },
+    ],
   },
   {
     aliases: [],
@@ -31196,6 +31370,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Adductor Machine",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Machine",
+      },
+    ],
   },
   {
     aliases: [],
@@ -31253,6 +31433,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Abductor Machine",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Machine",
+      },
+    ],
   },
   {
     aliases: ["Low Cable Chest Fly"],
@@ -31718,6 +31904,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Walking",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -31948,6 +32140,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Hashing",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -32126,6 +32324,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Hiking",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -32272,6 +32476,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Walking (treadmill)",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -35813,6 +36023,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Other Cardio",
+    tags: [
+      {
+        name: "Cardio",
+        type: TagType.MuscleGroup,
+      },
+    ],
   },
   {
     aliases: [],
@@ -36102,6 +36318,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Drumming",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -39302,6 +39524,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Hanging Bent Leg Raise",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -39388,6 +39616,10 @@ export const exercises = [
       },
       {
         name: "Strength",
+        type: TagType.Type,
+      },
+      {
+        name: "Calisthenics",
         type: TagType.Type,
       },
     ],
@@ -40435,6 +40667,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Toes-To-Bar",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -42743,6 +42981,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Close Grip Chin-Up",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: ["Pike", "Pike-Ups"],
@@ -55495,6 +55739,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Rope Climb",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -55666,6 +55916,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Running (Intervals/Sprints)",
+    tags: [
+      {
+        type: TagType.MuscleGroup,
+        name: "Cardio",
+      },
+    ],
   },
   {
     aliases: [],
@@ -56094,6 +56350,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Hang Power Clean",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -59073,6 +59335,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Machine Seated Row",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Machine",
+      },
+    ],
   },
   {
     aliases: [],
@@ -59859,6 +60127,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Seated Dumbbell Row",
+    tags: [
+      {
+        name: "Dumbbell",
+        type: TagType.Equipment,
+      },
+    ],
   },
   {
     aliases: [],
@@ -60353,6 +60627,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Split Jerk",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Barbell",
+      },
+    ],
   },
   {
     aliases: [],
@@ -61087,6 +61367,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Negative Pull-Up",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -63809,6 +64095,10 @@ export const exercises = [
         name: "Strength",
         type: TagType.Type,
       },
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
     ],
   },
   {
@@ -64833,6 +65123,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Smith Machine Squat",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Machine",
+      },
+    ],
   },
   {
     aliases: [],
@@ -71568,6 +71864,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Negative Chin-Up",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   {
     aliases: [],
@@ -71984,6 +72286,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Reverse Grip Lat Pulldown",
+    tags: [
+      {
+        type: TagType.Equipment,
+        name: "Machine",
+      },
+    ],
   },
   {
     aliases: [],
@@ -74245,6 +74553,16 @@ export const exercises = [
     ],
     is_hidden: false,
     is_popular: false,
+    tags: [
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
+      {
+        name: "Body Weight",
+        type: TagType.Equipment,
+      },
+    ],
     name: "Hanging Windshield Wipers",
   },
   {
@@ -85699,6 +86017,12 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Dead Hangs",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+    ],
   },
   // From here custom post-fitocracy exercises
   {
@@ -85756,5 +86080,15 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Bouldering",
+    tags: [
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
+      {
+        name: "Body Weight",
+        type: TagType.Equipment,
+      },
+    ],
   },
 ] as ExerciseData[];
