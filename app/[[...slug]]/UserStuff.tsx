@@ -174,7 +174,6 @@ export default async function UserStuff() {
             <p>
               <a href="/api/auth/signout">Sign out</a>
             </p>
-            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <form action={updateUser}>
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>TopLogger ID</legend>

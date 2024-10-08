@@ -1,4 +1,5 @@
 "use client";
+import { TZDate } from "@date-fns/tz";
 import {
   compareAsc,
   differenceInDays,
@@ -87,16 +88,18 @@ export function DiaryAgenda({
                   {weatherDayInterval && (
                     <>
                       Daylight:{" "}
-                      {new Date(
-                        weatherDayInterval.values.sunriseTime
+                      {new TZDate(
+                        weatherDayInterval.values.sunriseTime,
+                        "Europe/Copenhagen"
                       ).toLocaleTimeString("en-DK", {
                         hour: "numeric",
                         minute: "2-digit",
                         timeZone: "Europe/Copenhagen",
                       })}
                       -
-                      {new Date(
-                        weatherDayInterval.values.sunsetTime
+                      {new TZDate(
+                        weatherDayInterval.values.sunsetTime,
+                        "Europe/Copenhagen"
                       ).toLocaleTimeString("en-DK", {
                         hour: "numeric",
                         minute: "2-digit",
@@ -447,13 +450,13 @@ export function DiaryAgenda({
                     }}
                   >
                     <big style={{ fontWeight: 800 }}>
-                      {new Date(interval.startTime).toLocaleTimeString(
-                        "en-DK",
-                        {
-                          hour: "numeric",
-                          timeZone: "Europe/Copenhagen",
-                        }
-                      )}
+                      {new TZDate(
+                        interval.startTime,
+                        "Europe/Copenhagen"
+                      ).toLocaleTimeString("en-DK", {
+                        hour: "numeric",
+                        timeZone: "Europe/Copenhagen",
+                      })}
                     </big>{" "}
                     {weatherIcon ? (
                       <Image
