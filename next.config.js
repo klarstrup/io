@@ -3,8 +3,7 @@ const nextConfig = {
   logging: { fetches: { fullUrl: true } },
   reactStrictMode: true,
   experimental: {
-    // Incompatible with turbopacks
-    // typedRoutes: true,
+    typedRoutes: true,
   },
   staticPageGenerationTimeout: 600,
   rewrites: async () => {

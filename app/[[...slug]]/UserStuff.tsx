@@ -44,6 +44,15 @@ async function updateUser(formData: FormData) {
     newUser.runDoubleId = runDoubleId.trim() || null;
   }
 
+  const icalUrls = formData.get("icalUrls");
+  if (typeof icalUrls === "string") {
+    newUser.icalUrls = icalUrls
+      .trim()
+      .split("\n")
+      .map((url) => url.trim())
+      .filter((url) => url);
+  }
+
   await db
     .collection<IUser>("users")
     .updateOne({ _id: user._id }, { $set: newUser });
@@ -226,6 +235,20 @@ export default async function UserStuff() {
                 ) : (
                   "❌"
                 )}
+              </fieldset>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
+                <legend>iCal URLs</legend>
+                <textarea
+                  name="icalUrls"
+                  defaultValue={currentUser.icalUrls?.join("\n") || ""}
+                  style={{ flex: 1 }}
+                  rows={
+                    currentUser.icalUrls ? currentUser.icalUrls.length + 2 : 5
+                  }
+                  placeholder={
+                    "https://example.com/calendar.ics\nhttps://example.com/other.ics"
+                  }
+                />
               </fieldset>
               <input type="submit" value="Update" />
             </form>

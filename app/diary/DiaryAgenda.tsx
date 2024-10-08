@@ -1,7 +1,13 @@
 "use client";
-import { compareAsc, differenceInDays, isWithinInterval } from "date-fns";
+import {
+  compareAsc,
+  differenceInDays,
+  formatDistance,
+  isWithinInterval,
+} from "date-fns";
 import type { Session } from "next-auth";
-import Image, { StaticImageData } from "next/image";
+import Image, { type StaticImageData } from "next/image";
+import type { VCalendar, VEvent } from "node-ical";
 import { useState } from "react";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import type { DiaryEntry, TomorrowResponseTimelineInterval } from "../../lib";
@@ -14,6 +20,7 @@ import { WorkoutForm } from "./WorkoutForm";
 
 export function DiaryAgenda({
   diaryEntry,
+  calendarEvents,
   user,
   locations,
   nextSets,
@@ -21,6 +28,7 @@ export function DiaryAgenda({
   weatherDayInterval,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
+  calendarEvents: [VCalendar, VEvent[]][];
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
@@ -109,7 +117,7 @@ export function DiaryAgenda({
       </div>
       <div
         style={{
-          flex: "1",
+          flex: 1,
           display: "flex",
           flexDirection: "row",
           flexWrap: "wrap",
@@ -117,7 +125,7 @@ export function DiaryAgenda({
       >
         <div
           style={{
-            flex: "1",
+            flex: 2,
             display: "flex",
             flexDirection: "column",
           }}
@@ -273,9 +281,111 @@ export function DiaryAgenda({
             ) : null}
           </fieldset>
         </div>
+        {calendarEvents?.length ? (
+          <fieldset
+            style={{
+              flex: 1,
+              borderLeft: 0,
+              borderRight: 0,
+              borderTop: "0.25em solid #a0a0a0a0",
+              paddingTop: "0.5em",
+              borderBottom: "0.25em solid #a0a0a0a0",
+              paddingBottom: "0.5em",
+              borderRadius: "0.5em",
+              paddingLeft: "0.25em",
+              paddingRight: "0.25em",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <legend style={{ marginLeft: "0.5em" }}>
+              <big>Events</big>
+            </legend>
+            {calendarEvents.map(([calendar, events], i) => (
+              <fieldset
+                key={i}
+                style={{
+                  flex: 1,
+                  borderTop: 0,
+                  borderBottom: 0,
+                  borderLeft: "0.25em solid #a0a0a0a0",
+                  paddingLeft: "0.5em",
+                  borderRight: "0.25em solid #a0a0a0a0",
+                  paddingRight: "0.5em",
+                  borderRadius: "0.5em",
+                  paddingTop: "0.25em",
+                  paddingBottom: "0.25em",
+                }}
+              >
+                <legend style={{ marginLeft: "0.5em" }}>
+                  <big>{calendar["WR-CALNAME"]}</big>
+                </legend>
+                <ul
+                  style={{
+                    listStyleType: "none",
+                    paddingInlineStart: 0,
+                    marginBlockStart: 0,
+                    marginBlockEnd: 0,
+                  }}
+                >
+                  {Object.entries(
+                    events
+                      .sort((a, b) => compareAsc(a.start, b.start))
+                      .reduce((acc, event) => {
+                        const weekday = new Date(
+                          event.start
+                        ).toLocaleDateString("en-DK", {
+                          weekday: "short",
+                          timeZone: "Europe/Copenhagen",
+                        });
+                        if (!acc[weekday]) acc[weekday] = [];
+                        acc[weekday].push(event);
+                        return acc;
+                      }, [] as unknown as Record<string, VEvent[]>)
+                  ).map(([weekday, events]) => (
+                    <li key={i}>
+                      <big>{weekday} </big>
+                      <ul
+                        style={{
+                          listStyleType: "none",
+                          paddingInlineStart: 0,
+                          marginBlockStart: 0,
+                          marginBlockEnd: 0,
+                        }}
+                      >
+                        {events.map((event, i) => (
+                          <li key={i}>
+                            <big style={{ fontWeight: 800 }}>
+                              {event.datetype === "date-time"
+                                ? new Date(event.start).toLocaleTimeString(
+                                    "en-DK",
+                                    {
+                                      hour: "numeric",
+                                      timeZone: "Europe/Copenhagen",
+                                    }
+                                  )
+                                : null}
+                            </big>{" "}
+                            {event.summary}{" "}
+                            {event.datetype === "date" ? (
+                              <small>
+                                ({formatDistance(event.start, event.end)})
+                              </small>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              </fieldset>
+            ))}
+          </fieldset>
+        ) : null}
         {weatherIntervals?.[0] && (
           <fieldset
             style={{
+              flex: 1,
               display: "flex",
               flexDirection: "column",
               padding: "0.5em",
@@ -329,7 +439,13 @@ export function DiaryAgenda({
                     ] as StaticImageData | undefined)) ||
                   null;
                 return (
-                  <li key={i}>
+                  <li
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
                     <big style={{ fontWeight: 800 }}>
                       {new Date(interval.startTime).toLocaleTimeString(
                         "en-DK",
@@ -350,25 +466,29 @@ export function DiaryAgenda({
                     ) : (
                       extendedWeatherCode
                     )}{" "}
-                    <span
-                      style={{ fontSize: "1.4em", verticalAlign: "middle" }}
-                    >
-                      {interval.values.temperatureApparent.toFixed(1)}
-                    </span>
-                    <sup style={{ fontSize: "0.7em" }}>°C</sup>
-                    <sub
-                      style={{
-                        fontSize: "0.7em",
-                        marginLeft: "-14px",
-                      }}
-                    >
-                      {interval.values.humidity.toFixed(0)}%
-                    </sub>{" "}
-                    {interval.values.windSpeed.toFixed(1)}
-                    <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
+                    <div>
+                      <span
+                        style={{ fontSize: "1.4em", verticalAlign: "middle" }}
+                      >
+                        {interval.values.temperatureApparent.toFixed(1)}
+                      </span>
+                      <sup style={{ fontSize: "0.7em" }}>°C</sup>
+                      <sub
+                        style={{
+                          fontSize: "0.7em",
+                          marginLeft: "-14px",
+                        }}
+                      >
+                        {interval.values.humidity.toFixed(0)}%
+                      </sub>{" "}
+                    </div>
+                    <div>
+                      {interval.values.windSpeed.toFixed(1)}
+                      <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
+                    </div>
                     {interval.values.precipitationProbability > 0 &&
                     interval.values.precipitationIntensity >= 0.2 ? (
-                      <>
+                      <div>
                         <span
                           style={{
                             fontSize: "1.4em",
@@ -386,7 +506,7 @@ export function DiaryAgenda({
                         >
                           {interval.values.precipitationProbability.toFixed(0)}%
                         </sub>
-                      </>
+                      </div>
                     ) : null}
                   </li>
                 );

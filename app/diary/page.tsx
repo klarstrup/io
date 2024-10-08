@@ -36,6 +36,7 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
+import { fetchIcalCalendar, fetchIcalEventsBetween } from "../../sources/ical";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -372,6 +373,18 @@ export default async function Page() {
     to: from,
   });
 
+  const eventsByCalendar = await Promise.all(
+    (user.icalUrls ?? []).map((icalUrl) =>
+      Promise.all([
+        fetchIcalCalendar(icalUrl),
+        fetchIcalEventsBetween(icalUrl, {
+          start: startOfDay(TZDate.tz("Europe/Copenhagen")),
+          end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
+        }),
+      ])
+    )
+  );
+
   return (
     <div>
       <UserStuff />
@@ -394,6 +407,7 @@ export default async function Page() {
               })
             )[0]!
           }
+          calendarEvents={eventsByCalendar}
           user={user}
           locations={allLocations}
           nextSets={nextSets}

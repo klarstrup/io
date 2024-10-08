@@ -10,4 +10,5 @@ export interface IUser {
   myFitnessPalUserName?: string;
   myFitnessPalUserId?: string;
   runDoubleId?: string | null;
+  icalUrls?: string[];
 }
