@@ -1,5 +1,5 @@
 "use client";
-import { compareAsc, isWithinInterval } from "date-fns";
+import { compareAsc, differenceInDays, isWithinInterval } from "date-fns";
 import type { Session } from "next-auth";
 import Image, { StaticImageData } from "next/image";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import type { DiaryEntry, TomorrowResponseTimelineInterval } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
+import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
 
@@ -37,6 +38,10 @@ export function DiaryAgenda({
   const dayTotalProtein = food?.reduce(
     (acc, foodEntry) => acc + (foodEntry.nutritional_contents.protein || 0),
     0
+  );
+
+  const dueSets = nextSets?.filter(
+    (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) > 2
   );
 
   return (
@@ -195,7 +200,7 @@ export function DiaryAgenda({
             <legend style={{ marginLeft: "0.5em" }}>
               <big>Workouts</big>
             </legend>
-            {workouts?.length ? (
+            {isAddingWorkout ? null : workouts?.length ? (
               Array.from(workouts)
                 .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
                 ?.map((workout) => (
@@ -211,36 +216,51 @@ export function DiaryAgenda({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "center",
+                  justifyContent: "space-around",
                   alignItems: "center",
                   height: "100%",
-                  flexDirection: "column",
+                  flexWrap: "wrap",
                 }}
               >
-                <p style={{ marginTop: 0 }}>No workout logged </p>
-                <div>
-                  <button
-                    onClick={() => setIsAddingWorkout(true)}
-                    style={{
-                      fontSize: "1.25em",
-                      padding: "0.5em 0.75em",
-                      paddingRight: "1em",
-                      borderRadius: "1em",
-                      border: "none",
-                      background: "#ff0",
-                      textAlign: "center",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      marginBottom: "1em",
-                    }}
-                  >
-                    ➕ Workout
-                  </button>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flexDirection: "column",
+                  }}
+                >
+                  <p style={{ marginTop: 0 }}>No workout logged </p>
+                  <div>
+                    <button
+                      onClick={() => setIsAddingWorkout(true)}
+                      style={{
+                        fontSize: "1.25em",
+                        padding: "0.5em 0.75em",
+                        paddingRight: "1em",
+                        borderRadius: "1em",
+                        border: "none",
+                        background: "#ff0",
+                        textAlign: "center",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        marginBottom: "1em",
+                      }}
+                    >
+                      ➕ Workout
+                    </button>
+                  </div>
                 </div>
+                {dueSets?.length ? (
+                  <div>
+                    <b>Due Sets:</b>
+                    <NextSets nextSets={dueSets} />
+                  </div>
+                ) : null}
               </div>
             )}
             {isAddingWorkout ? (
-              <fieldset>
+              <fieldset style={{ width: "100%" }}>
                 <legend>New workout</legend>
                 <WorkoutForm
                   date={date}

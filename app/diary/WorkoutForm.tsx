@@ -89,181 +89,199 @@ export function WorkoutForm({
     );
 
   return (
-    <form
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onSubmit={handleSubmit(async (data) => {
-        const newWorkout: WorkoutData & { _id?: string } = {
-          _id: workout?._id,
-          userId: user.id,
-          // Shit that will change
-          workedOutAt: data.workedOutAt ?? workout?.workedOutAt,
-          createdAt: workout?.createdAt ?? new Date(),
-          updatedAt: new Date(),
-          exercises: data.exercises ?? workout?.exercises,
-          source: WorkoutSource.Self,
-          location: data.location ?? workout?.location,
-        };
-        console.log({ workout, data, newWorkout });
-        await upsertWorkout(newWorkout);
-        onClose?.();
-        reset(
-          workout
-            ? {
-                ...workout,
-                workedOutAt: dateToInputDate(workout?.workedOutAt),
-              }
-            : { exercises: [] }
-        );
-      })}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: "1em",
+      }}
     >
-      {onClose ? (
-        <button type="button" onClick={onClose}>
-          Cancel
-        </button>
-      ) : null}
-      <button type="submit" disabled={!isDirty || isSubmitting}>
-        {workout ? "Update" : "Create"}
-      </button>
-      {workout?._id ? (
-        <button
-          disabled={isSubmitting}
-          type="button"
-          onClick={async () => {
-            await deleteWorkout(workout._id!);
-          }}
-        >
-          Delete
-        </button>
-      ) : null}
-      <input
-        type="date"
-        {...register("workedOutAt", { valueAsDate: true })}
-        defaultValue={
-          workout
-            ? String(dateToInputDate(workout?.workedOutAt))
-            : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
-        }
-        hidden={!workout && todayDate !== date}
-      />
-      <Controller
-        name="location"
-        control={control}
-        render={({ field }) => (
-          <Creatable<{ label: string; value: string }, false>
-            placeholder="Pick location..."
-            isDisabled={isSubmitting}
-            isMulti={false}
-            isClearable={true}
-            options={locations.map((location) => ({
-              label: location,
-              value: location,
-            }))}
-            {...field}
-            value={
-              field.value ? { label: field.value, value: field.value } : null
-            }
-            onChange={(selected) => {
-              if (selected) field.onChange(selected.value);
-            }}
-          />
-        )}
-      />
-      <div>
-        {fields.map((field, index) => {
-          const exercise = exercises.find(
-            (exercise) => exercise.id === field.exerciseId
-          );
-          if (!exercise) {
-            throw new Error(`Exercise with ID ${field.exerciseId} not found`);
-          }
-          const nextExerciseSet = nextSets?.find(
-            (nextSet) => nextSet.exerciseId === exercise.id
-          );
-          return (
-            <fieldset
-              key={field.id}
-              style={{ display: "flex", flexDirection: "column" }}
-            >
-              <legend style={{ flex: "1", fontWeight: 600, fontSize: "0.9em" }}>
-                {exercise.name}{" "}
-                <StealthButton
-                  onClick={() => remove(index)}
-                  disabled={isSubmitting}
-                  style={{ lineHeight: 0 }}
-                >
-                  ❌
-                </StealthButton>
-                <StealthButton
-                  onClick={() => {
-                    const newIndex = index - 1;
-                    const destination = fields[newIndex]!;
-                    const source = fields[index]!;
-                    update(index, destination);
-                    update(newIndex, source);
-                  }}
-                  disabled={index === 0 || isSubmitting}
-                  style={{ lineHeight: 0 }}
-                >
-                  ⬆️
-                </StealthButton>
-                <StealthButton
-                  onClick={() => {
-                    const newIndex = index + 1;
-                    const destination = fields[newIndex]!;
-                    const source = fields[index]!;
-                    update(index, destination);
-                    update(newIndex, source);
-                  }}
-                  disabled={index === fields.length - 1 || isSubmitting}
-                  style={{ lineHeight: 0 }}
-                >
-                  ⬇️
-                </StealthButton>
-              </legend>
-              {nextExerciseSet ? (
-                <div>
-                  <small>
-                    Goal {nextExerciseSet.nextWorkingSet}
-                    kg based on last set{" "}
-                    {nextExerciseSet.workedOutAt.toLocaleDateString("da-DK")}
-                  </small>
-                </div>
-              ) : null}
-              <SetsForm
-                control={control}
-                register={register}
-                parentIndex={index}
-                exercise={exercise}
-              />
-            </fieldset>
+      <form
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onSubmit={handleSubmit(async (data) => {
+          const newWorkout: WorkoutData & { _id?: string } = {
+            _id: workout?._id,
+            userId: user.id,
+            // Shit that will change
+            workedOutAt: data.workedOutAt ?? workout?.workedOutAt,
+            createdAt: workout?.createdAt ?? new Date(),
+            updatedAt: new Date(),
+            exercises: data.exercises ?? workout?.exercises,
+            source: WorkoutSource.Self,
+            location: data.location ?? workout?.location,
+          };
+          console.log({ workout, data, newWorkout });
+          await upsertWorkout(newWorkout);
+          onClose?.();
+          reset(
+            workout
+              ? {
+                  ...workout,
+                  workedOutAt: dateToInputDate(workout?.workedOutAt),
+                }
+              : { exercises: [] }
           );
         })}
-        <Select
-          instanceId={useId()}
-          isDisabled={isSubmitting}
-          placeholder="Add exercise..."
-          options={exercises
-            .filter(
-              ({ id }) => !fields.some((field) => field.exerciseId === id)
-            )
-            .map(({ id, name, aliases }) => ({
-              label: `${name} ${
-                aliases.length > 1
-                  ? `(${new Intl.ListFormat("en-DK", {
-                      type: "disjunction",
-                    }).format(aliases)})`
-                  : aliases.length === 1
-                  ? `(${aliases[0]})`
-                  : ""
-              }`,
-              value: id,
-            }))}
-          onChange={(selected) => {
-            if (!selected) return;
-
-            append({ exerciseId: selected.value, sets: [] });
-          }}
+        style={{
+          flex: 1,
+        }}
+      >
+        {onClose ? (
+          <button type="button" onClick={onClose}>
+            Cancel
+          </button>
+        ) : null}
+        <button type="submit" disabled={!isDirty || isSubmitting}>
+          {workout ? "Update" : "Create"}
+        </button>
+        {workout?._id ? (
+          <button
+            disabled={isSubmitting}
+            type="button"
+            onClick={async () => {
+              await deleteWorkout(workout._id!);
+            }}
+          >
+            Delete
+          </button>
+        ) : null}
+        <input
+          type="date"
+          {...register("workedOutAt", { valueAsDate: true })}
+          defaultValue={
+            workout
+              ? String(dateToInputDate(workout?.workedOutAt))
+              : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
+          }
+          hidden={!workout && todayDate !== date}
         />
+        <Controller
+          name="location"
+          control={control}
+          render={({ field }) => (
+            <Creatable<{ label: string; value: string }, false>
+              placeholder="Pick location..."
+              isDisabled={isSubmitting}
+              isMulti={false}
+              isClearable={true}
+              options={locations.map((location) => ({
+                label: location,
+                value: location,
+              }))}
+              {...field}
+              value={
+                field.value ? { label: field.value, value: field.value } : null
+              }
+              onChange={(selected) => {
+                if (selected) field.onChange(selected.value);
+              }}
+            />
+          )}
+        />
+        <div>
+          {fields.map((field, index) => {
+            const exercise = exercises.find(
+              (exercise) => exercise.id === field.exerciseId
+            );
+            if (!exercise) {
+              throw new Error(`Exercise with ID ${field.exerciseId} not found`);
+            }
+            const nextExerciseSet = nextSets?.find(
+              (nextSet) => nextSet.exerciseId === exercise.id
+            );
+            return (
+              <fieldset
+                key={field.id}
+                style={{ display: "flex", flexDirection: "column" }}
+              >
+                <legend
+                  style={{ flex: "1", fontWeight: 600, fontSize: "0.9em" }}
+                >
+                  {exercise.name}{" "}
+                  <StealthButton
+                    onClick={() => remove(index)}
+                    disabled={isSubmitting}
+                    style={{ lineHeight: 0 }}
+                  >
+                    ❌
+                  </StealthButton>
+                  <StealthButton
+                    onClick={() => {
+                      const newIndex = index - 1;
+                      const destination = fields[newIndex]!;
+                      const source = fields[index]!;
+                      update(index, destination);
+                      update(newIndex, source);
+                    }}
+                    disabled={index === 0 || isSubmitting}
+                    style={{ lineHeight: 0 }}
+                  >
+                    ⬆️
+                  </StealthButton>
+                  <StealthButton
+                    onClick={() => {
+                      const newIndex = index + 1;
+                      const destination = fields[newIndex]!;
+                      const source = fields[index]!;
+                      update(index, destination);
+                      update(newIndex, source);
+                    }}
+                    disabled={index === fields.length - 1 || isSubmitting}
+                    style={{ lineHeight: 0 }}
+                  >
+                    ⬇️
+                  </StealthButton>
+                </legend>
+                {nextExerciseSet ? (
+                  <div>
+                    <small>
+                      Goal {nextExerciseSet.nextWorkingSets}x
+                      {nextExerciseSet.nextWorkingSetsReps}x
+                      {nextExerciseSet.nextWorkingSetsWeight}
+                      kg based on last set{" "}
+                      {nextExerciseSet.workedOutAt.toLocaleDateString("da-DK")}
+                    </small>
+                  </div>
+                ) : null}
+                <SetsForm
+                  control={control}
+                  register={register}
+                  parentIndex={index}
+                  exercise={exercise}
+                />
+              </fieldset>
+            );
+          })}
+          <Select
+            instanceId={useId()}
+            isDisabled={isSubmitting}
+            placeholder="Add exercise..."
+            options={exercises
+              .filter(
+                ({ id }) => !fields.some((field) => field.exerciseId === id)
+              )
+              .map(({ id, name, aliases }) => ({
+                label: `${name} ${
+                  aliases.length > 1
+                    ? `(${new Intl.ListFormat("en-DK", {
+                        type: "disjunction",
+                      }).format(aliases)})`
+                    : aliases.length === 1
+                    ? `(${aliases[0]})`
+                    : ""
+                }`,
+                value: id,
+              }))}
+            onChange={(selected) => {
+              if (!selected) return;
+
+              append({ exerciseId: selected.value, sets: [] });
+            }}
+          />
+        </div>
+      </form>
+      <div>
         {dueSets?.length ? (
           <div>
             <b>Due Sets:</b>
@@ -276,11 +294,11 @@ export function WorkoutForm({
 
                 const goalWeight = dueSets.find(
                   (nextSet) => nextSet.exerciseId === exerciseId
-                )?.nextWorkingSet;
+                )?.nextWorkingSetsWeight;
 
-                const warmupIncrement = [1, 183, 532].includes(exerciseId)
-                  ? 10
-                  : 20;
+                const warmupIncrement =
+                  ((goalWeight ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
+
                 const setWeights: number[] = [goalWeight ?? NaN];
                 while (
                   setWeights[setWeights.length - 1]! >
@@ -324,7 +342,7 @@ export function WorkoutForm({
           </div>
         ) : null}
       </div>
-    </form>
+    </div>
   );
 }
 

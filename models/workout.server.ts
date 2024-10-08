@@ -99,7 +99,7 @@ export async function getNextSets({
         successful = false;
       }
 
-      const nextWorkingSet = successful
+      const goalWeight = successful
         ? ([1, 183, 532].includes(exercise.exerciseId) ? 1.25 : 2.5) +
           (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0)
         : 0.9 * (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0);
@@ -108,14 +108,16 @@ export async function getNextSets({
         workedOutAt: workout.workedOutAt,
         exerciseId: exercise.exerciseId,
         successful,
-        nextWorkingSet:
-          String(nextWorkingSet).endsWith(".25") ||
-          String(nextWorkingSet).endsWith(".75")
-            ? String(nextWorkingSet).endsWith("2.25") ||
-              String(nextWorkingSet).endsWith("4.75")
-              ? nextWorkingSet + 0.25
-              : nextWorkingSet - 0.25
-            : nextWorkingSet,
+        nextWorkingSets: exercise.exerciseId === 3 ? 1 : 3,
+        nextWorkingSetsReps: 5,
+        nextWorkingSetsWeight:
+          String(goalWeight).endsWith(".25") ||
+          String(goalWeight).endsWith(".75")
+            ? String(goalWeight).endsWith("2.25") ||
+              String(goalWeight).endsWith("4.75")
+              ? goalWeight + 0.25
+              : goalWeight - 0.25
+            : goalWeight,
       };
     })
     .filter(Boolean)

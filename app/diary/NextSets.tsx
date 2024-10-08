@@ -1,3 +1,5 @@
+import { TZDate } from "@date-fns/tz";
+import { formatDistance } from "date-fns";
 import { StealthButton } from "../../components/StealthButton";
 import { exercises } from "../../models/exercises";
 import type { getNextSets } from "../../models/workout.server";
@@ -18,7 +20,14 @@ export function NextSets({
       }}
     >
       {nextSets.map(
-        ({ exerciseId, successful, nextWorkingSet, workedOutAt }) => {
+        ({
+          exerciseId,
+          successful,
+          nextWorkingSets,
+          nextWorkingSetsReps,
+          nextWorkingSetsWeight,
+          workedOutAt,
+        }) => {
           const exercise = exercises.find(({ id }) => exerciseId === id)!;
 
           return (
@@ -36,10 +45,14 @@ export function NextSets({
                 }{" "}
                 {successful ? null : " (failed)"}
               </b>{" "}
-              {nextWorkingSet}kg{" "}
+              {nextWorkingSets}x{nextWorkingSetsReps}x{nextWorkingSetsWeight}
+              kg{" "}
               <small>
                 <small>
-                  Last set {String(workedOutAt.toLocaleDateString("da-DK"))}
+                  Last set{" "}
+                  {formatDistance(workedOutAt, TZDate.tz("Europe/Copenhagen"), {
+                    addSuffix: true,
+                  })}{" "}
                 </small>
               </small>
             </li>
