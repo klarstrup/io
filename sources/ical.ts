@@ -13,6 +13,7 @@ export async function fetchIcalEventsBetween(
     maxAge: HOUR_IN_SECONDS,
   });
   console.time("fetchIcalEventsBetween:parseICS");
+  console.info("fetchIcalEventsBetween:parseICS:icalStr.length", icalStr.length);
   const data = ical.parseICS(icalStr);
   console.timeEnd("fetchIcalEventsBetween:parseICS");
 
