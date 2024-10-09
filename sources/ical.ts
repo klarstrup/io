@@ -12,7 +12,9 @@ export async function fetchIcalEventsBetween(
     parseJson: false,
     maxAge: HOUR_IN_SECONDS,
   });
+  console.time("fetchIcalEventsBetween:parseICS");
   const data = ical.parseICS(icalStr);
+  console.timeEnd("fetchIcalEventsBetween:parseICS");
 
   const eventsThatFallWithinRange: VEvent[] = [];
   for (const event of Object.values(data)) {
@@ -53,7 +55,9 @@ export async function fetchIcalCalendar(icalUrl: string) {
     parseJson: false,
     maxAge: HOUR_IN_SECONDS,
   });
+  console.time("fetchIcalCalendar:parseICS");
   const data = ical.parseICS(icalStr);
+  console.timeEnd("fetchIcalCalendar:parseICS");
   for (const event of Object.values(data)) {
     if (event.type === "VCALENDAR") {
       return event;
