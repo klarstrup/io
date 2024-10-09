@@ -57,6 +57,7 @@ export async function fetchIcalCalendar(icalUrl: string) {
     maxAge: HOUR_IN_SECONDS,
   });
   console.time("fetchIcalCalendar:parseICS");
+  console.info("fetchIcalCalendar:parseICS:icalStr.length", icalStr.length);
   const data = ical.parseICS(icalStr);
   console.timeEnd("fetchIcalCalendar:parseICS");
   for (const event of Object.values(data)) {
