@@ -12,13 +12,12 @@ import { useState } from "react";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import type { DiaryEntry, TomorrowResponseTimelineInterval } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
+import { VCalendar, VEvent } from "../../vendor/ical";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
-import { VCalendar } from "../../vendor/ical";
-import { VEvent } from "node-ical";
 
 export function DiaryAgenda({
   diaryEntry,
