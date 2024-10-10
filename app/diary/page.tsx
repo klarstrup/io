@@ -23,7 +23,11 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
-import { fetchIcalCalendar, fetchIcalEventsBetween } from "../../sources/ical";
+import {
+  fetchAndParseIcal,
+  getIcalCalendar,
+  getIcalEventsBetween,
+} from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
@@ -286,15 +290,17 @@ export default async function Page() {
     getAllWorkoutLocations(user),
     getNextSets({ user, to: startOfDay(new Date()) }),
     Promise.all(
-      (user.icalUrls ?? []).map((icalUrl) =>
-        Promise.all([
-          fetchIcalCalendar(icalUrl),
-          fetchIcalEventsBetween(icalUrl, {
+      (user.icalUrls ?? []).map(async (icalUrl) => {
+        const icalData = await fetchAndParseIcal(icalUrl);
+
+        return Promise.all([
+          getIcalCalendar(icalData),
+          getIcalEventsBetween(icalData, {
             start: startOfDay(TZDate.tz("Europe/Copenhagen")),
             end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
           }),
-        ])
-      )
+        ]);
+      })
     ),
     (async () => {
       if (!process.env.TOMORROW_API_KEY) return;

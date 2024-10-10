@@ -1,11 +1,12 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, endOfDay, startOfDay } from "date-fns";
 import { NextResponse } from "next/server";
-import {
-  fetchIcalCalendar,
-  fetchIcalEventsBetween,
-} from "../../../sources/ical";
 import { auth } from "../../../auth";
+import {
+  fetchAndParseIcal,
+  getIcalCalendar,
+  getIcalEventsBetween,
+} from "../../../sources/ical";
 
 export async function GET() {
   const user = (await auth())?.user;
@@ -13,15 +14,17 @@ export async function GET() {
 
   return NextResponse.json(
     await Promise.all(
-      (user.icalUrls ?? []).map((icalUrl) =>
-        Promise.all([
-          fetchIcalCalendar(icalUrl),
-          fetchIcalEventsBetween(icalUrl, {
+      (user.icalUrls ?? []).map(async (icalUrl) => {
+        const icalData = await fetchAndParseIcal(icalUrl);
+
+        return Promise.all([
+          getIcalCalendar(icalData),
+          getIcalEventsBetween(icalData, {
             start: startOfDay(TZDate.tz("Europe/Copenhagen")),
             end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
           }),
-        ])
-      )
+        ]);
+      })
     )
   );
 }

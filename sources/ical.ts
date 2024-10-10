@@ -6,24 +6,20 @@ import {
 } from "date-fns";
 import { dbFetch } from "../fetch";
 import { HOUR_IN_SECONDS } from "../utils";
-import { parseICS, type VEvent } from "../vendor/ical";
+import { CalendarResponse, parseICS, type VEvent } from "../vendor/ical";
 
-export async function fetchIcalEventsBetween(
-  icalUrl: string,
+export const fetchAndParseIcal = async (icalUrl: string) =>
+  parseICS(
+    await dbFetch<string>(icalUrl, undefined, {
+      parseJson: false,
+      maxAge: HOUR_IN_SECONDS,
+    })
+  );
+
+export function getIcalEventsBetween(
+  data: CalendarResponse,
   dateInterval: Interval<Date, Date> | Interval<TZDate, TZDate>
 ) {
-  const icalStr = await dbFetch<string>(icalUrl, undefined, {
-    parseJson: false,
-    maxAge: HOUR_IN_SECONDS,
-  });
-  console.time("fetchIcalEventsBetween:parseICS");
-  console.info(
-    "fetchIcalEventsBetween:parseICS:icalStr.length",
-    icalStr.length
-  );
-  const data = parseICS(icalStr);
-  console.timeEnd("fetchIcalEventsBetween:parseICS");
-
   const eventsThatFallWithinRange: VEvent[] = [];
   for (const event of Object.values(data)) {
     if (
@@ -58,19 +54,9 @@ export async function fetchIcalEventsBetween(
   return eventsThatFallWithinRange;
 }
 
-export async function fetchIcalCalendar(icalUrl: string) {
-  const icalStr = await dbFetch<string>(icalUrl, undefined, {
-    parseJson: false,
-    maxAge: HOUR_IN_SECONDS,
-  });
-  console.time("fetchIcalCalendar:parseICS");
-  console.info("fetchIcalCalendar:parseICS:icalStr.length", icalStr.length);
-  const data = parseICS(icalStr);
-  console.timeEnd("fetchIcalCalendar:parseICS");
+export function getIcalCalendar(data: CalendarResponse) {
   for (const event of Object.values(data)) {
-    if (event.type === "VCALENDAR") {
-      return event;
-    }
+    if (event.type === "VCALENDAR") return event;
   }
 
   throw new Error("No VCALENDAR found in ical");
