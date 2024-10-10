@@ -716,8 +716,6 @@ const objectHandlers = {
           // not quite sure what the correct behaviour should be.  For now, just take the new information
           // and merge it with the old record by overwriting only the fields that appear in the new record.
           for (const key of Object.keys(curr)) {
-            if (key === null) continue;
-
             (parent[curr.uid] as typeof curr)[key] =
               curr[key as keyof typeof curr];
           }
@@ -741,8 +739,7 @@ const objectHandlers = {
           // would end up with a shared reference that would cause us to overwrite *both* records at the point
           // that we try and fix up the parent record.)
           const recurrenceObject = {};
-          for (const key in curr) {
-            if (key === null) continue;
+          for (const key of Object.keys(curr)) {
             recurrenceObject[key] = curr[key as keyof typeof curr];
           }
 
