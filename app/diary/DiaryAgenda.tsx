@@ -10,9 +10,12 @@ import type { Session } from "next-auth";
 import Image, { type StaticImageData } from "next/image";
 import { useState } from "react";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
-import type { DiaryEntry, TomorrowResponseTimelineInterval } from "../../lib";
+import type {
+  DiaryEntry,
+  TomorrowResponseTimelineInterval,
+  VEventWithVCalendar,
+} from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
-import { VCalendar, VEvent } from "../../vendor/ical";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
@@ -29,7 +32,7 @@ export function DiaryAgenda({
   weatherDayInterval,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
-  calendarEvents: [VCalendar, VEvent[]][];
+  calendarEvents: VEventWithVCalendar[];
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
@@ -52,7 +55,7 @@ export function DiaryAgenda({
   const dueSets = nextSets?.filter(
     (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) > 2
   );
-
+  console.log(calendarEvents);
   return (
     <div
       key={date}
@@ -304,7 +307,20 @@ export function DiaryAgenda({
             <legend style={{ marginLeft: "0.5em" }}>
               <big>Events</big>
             </legend>
-            {calendarEvents.map(([calendar, events], i) => (
+            {Object.entries(
+              calendarEvents.reduce(
+                (memo: Record<string, VEventWithVCalendar[]>, event) => {
+                  const calName =
+                    event["x-vcalendar"]["WR-CALNAME"] || "Unknown";
+
+                  if (!memo[calName]) memo[calName] = [];
+                  memo[calName].push(event);
+
+                  return memo;
+                },
+                {}
+              )
+            ).map(([calendarName, events], i) => (
               <fieldset
                 key={i}
                 style={{
@@ -321,7 +337,7 @@ export function DiaryAgenda({
                 }}
               >
                 <legend style={{ marginLeft: "0.5em" }}>
-                  <big>{calendar["WR-CALNAME"]}</big>
+                  <big>{calendarName}</big>
                 </legend>
                 <ul
                   style={{
@@ -344,7 +360,7 @@ export function DiaryAgenda({
                         if (!acc[weekday]) acc[weekday] = [];
                         acc[weekday].push(event);
                         return acc;
-                      }, [] as unknown as Record<string, VEvent[]>)
+                      }, [] as unknown as Record<string, VEventWithVCalendar[]>)
                   ).map(([weekday, events]) => (
                     <li key={i}>
                       <big>{weekday} </big>

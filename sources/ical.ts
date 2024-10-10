@@ -4,9 +4,11 @@ import {
   type Interval,
   isWithinInterval,
 } from "date-fns";
+import { RRule } from "rrule";
 import { dbFetch } from "../fetch";
+import { VEventWithVCalendar } from "../lib";
 import { HOUR_IN_SECONDS } from "../utils";
-import { CalendarResponse, parseICS, type VEvent } from "../vendor/ical";
+import { CalendarResponse, parseICS } from "../vendor/ical";
 
 export const fetchAndParseIcal = async (icalUrl: string) =>
   parseICS(
@@ -20,16 +22,32 @@ export function getIcalEventsBetween(
   data: CalendarResponse,
   dateInterval: Interval<Date, Date> | Interval<TZDate, TZDate>
 ) {
-  const eventsThatFallWithinRange: VEvent[] = [];
+  const calendar = getIcalCalendar(data);
+
+  const eventsThatFallWithinRange: VEventWithVCalendar[] = [];
   for (const event of Object.values(data)) {
+    const rrule =
+      event.type === "VEVENT" &&
+      event.rrule?.origOptions &&
+      new RRule({
+        ...event.rrule.origOptions,
+        dtstart:
+          event.rrule.origOptions.dtstart &&
+          new Date(event.rrule.origOptions.dtstart),
+        until:
+          event.rrule.origOptions.until &&
+          new Date(event.rrule.origOptions.until),
+      });
+
     if (
       event.type === "VEVENT" &&
-      (event.rrule
-        ? event.rrule?.between(dateInterval.start, dateInterval.end).length
+      (rrule
+        ? rrule.between(dateInterval.start, dateInterval.end).length
         : isWithinInterval(event.start, dateInterval))
     ) {
       if (
-        event.rrule?.between(dateInterval.start, dateInterval.end).length &&
+        rrule &&
+        rrule.between(dateInterval.start, dateInterval.end).length &&
         event.recurrences
       ) {
         for (const recurrence of Object.values(event.recurrences)) {
@@ -42,11 +60,14 @@ export function getIcalEventsBetween(
               dateInterval
             )
           ) {
-            eventsThatFallWithinRange.push(recurrence);
+            eventsThatFallWithinRange.push({
+              ...recurrence,
+              "x-vcalendar": calendar,
+            });
           }
         }
       } else if (isWithinInterval(event.start, dateInterval)) {
-        eventsThatFallWithinRange.push(event);
+        eventsThatFallWithinRange.push({ ...event, "x-vcalendar": calendar });
       }
     }
   }

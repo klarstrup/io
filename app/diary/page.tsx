@@ -290,17 +290,12 @@ export default async function Page() {
     getAllWorkoutLocations(user),
     getNextSets({ user, to: startOfDay(new Date()) }),
     Promise.all(
-      (user.icalUrls ?? []).map(async (icalUrl) => {
-        const icalData = await fetchAndParseIcal(icalUrl);
-
-        return Promise.all([
-          getIcalCalendar(icalData),
-          getIcalEventsBetween(icalData, {
-            start: startOfDay(TZDate.tz("Europe/Copenhagen")),
-            end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
-          }),
-        ]);
-      })
+      (user.icalUrls ?? []).map(async (icalUrl) =>
+        getIcalEventsBetween(await fetchAndParseIcal(icalUrl), {
+          start: startOfDay(TZDate.tz("Europe/Copenhagen")),
+          end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
+        })
+      )
     ),
     (async () => {
       if (!process.env.TOMORROW_API_KEY) return;
@@ -417,7 +412,7 @@ export default async function Page() {
               })
             )[0]!
           }
-          calendarEvents={eventsByCalendar}
+          calendarEvents={eventsByCalendar.flat()}
           user={user}
           locations={allLocations}
           nextSets={nextSets}

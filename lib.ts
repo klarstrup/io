@@ -1,5 +1,6 @@
 import type { WorkoutData } from "./models/workout";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
+import { VCalendar, VEvent } from "./vendor/ical";
 
 export interface DateInterval {
   start: Date;
@@ -147,4 +148,8 @@ export interface TomorrowResponse {
       intervals: TomorrowResponseTimelineInterval[];
     }[];
   };
+}
+
+export interface VEventWithVCalendar extends VEvent {
+  "x-vcalendar": VCalendar;
 }
