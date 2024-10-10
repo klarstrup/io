@@ -8,7 +8,6 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import Image, { type StaticImageData } from "next/image";
-import type { VCalendar, VEvent } from "node-ical";
 import { useState } from "react";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import type { DiaryEntry, TomorrowResponseTimelineInterval } from "../../lib";
@@ -18,6 +17,8 @@ import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
+import { VCalendar } from "../../vendor/ical";
+import { VEvent } from "node-ical";
 
 export function DiaryAgenda({
   diaryEntry,
