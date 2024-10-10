@@ -1,8 +1,12 @@
 import { TZDate } from "@date-fns/tz";
-import { areIntervalsOverlapping, Interval, isWithinInterval } from "date-fns";
-import ical, { VEvent } from "node-ical";
+import {
+  areIntervalsOverlapping,
+  type Interval,
+  isWithinInterval,
+} from "date-fns";
 import { dbFetch } from "../fetch";
 import { HOUR_IN_SECONDS } from "../utils";
+import { parseICS, type VEvent } from "../vendor/ical";
 
 export async function fetchIcalEventsBetween(
   icalUrl: string,
@@ -13,8 +17,11 @@ export async function fetchIcalEventsBetween(
     maxAge: HOUR_IN_SECONDS,
   });
   console.time("fetchIcalEventsBetween:parseICS");
-  console.info("fetchIcalEventsBetween:parseICS:icalStr.length", icalStr.length);
-  const data = ical.parseICS(icalStr);
+  console.info(
+    "fetchIcalEventsBetween:parseICS:icalStr.length",
+    icalStr.length
+  );
+  const data = parseICS(icalStr);
   console.timeEnd("fetchIcalEventsBetween:parseICS");
 
   const eventsThatFallWithinRange: VEvent[] = [];
@@ -58,7 +65,7 @@ export async function fetchIcalCalendar(icalUrl: string) {
   });
   console.time("fetchIcalCalendar:parseICS");
   console.info("fetchIcalCalendar:parseICS:icalStr.length", icalStr.length);
-  const data = ical.parseICS(icalStr);
+  const data = parseICS(icalStr);
   console.timeEnd("fetchIcalCalendar:parseICS");
   for (const event of Object.values(data)) {
     if (event.type === "VCALENDAR") {

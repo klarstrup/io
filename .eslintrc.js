@@ -14,7 +14,13 @@ module.exports = {
   root: true,
   rules: {
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        varsIgnorePattern: "^_",
+        argsIgnorePattern: "^_",
+      },
+    ],
     "@typescript-eslint/no-namespace": "off",
   },
   ignorePatterns: [".eslintrc.js", "next.config.js"],
