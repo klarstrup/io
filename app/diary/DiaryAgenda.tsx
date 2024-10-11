@@ -60,7 +60,7 @@ export function DiaryAgenda({
         nextSet.workedOutAt
       ) > 3
   );
-  console.log(calendarEvents);
+
   return (
     <div
       key={date}
@@ -71,6 +71,8 @@ export function DiaryAgenda({
         display: "flex",
         flexDirection: "column",
         padding: "0.5em",
+        maxWidth: "100%",
+        overflowX: "hidden",
       }}
     >
       <div
@@ -436,6 +438,7 @@ export function DiaryAgenda({
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-around",
+              overflowX: "hidden",
             }}
           >
             {weatherIntervals.map((interval, i) => {
