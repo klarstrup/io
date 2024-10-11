@@ -53,7 +53,7 @@ export function DiaryAgenda({
   );
 
   const dueSets = nextSets?.filter(
-    (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) > 2
+    (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) >= 3
   );
   console.log(calendarEvents);
   return (
