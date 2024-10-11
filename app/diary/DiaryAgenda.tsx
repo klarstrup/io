@@ -405,71 +405,81 @@ export function DiaryAgenda({
             ))}
           </fieldset>
         ) : null}
-        {weatherIntervals?.[0] && (
-          <fieldset
+      </div>
+      {weatherIntervals?.[0] && (
+        <fieldset
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            padding: "0.5em",
+            borderLeft: 0,
+            borderRight: 0,
+            borderTop: "0.25em solid #a0a0a0a0",
+            paddingTop: "0.5em",
+            borderBottom: "0.25em solid #a0a0a0a0",
+            paddingBottom: "0.5em",
+            borderRadius: "0.5em",
+            paddingLeft: "0.25em",
+            paddingRight: "0.25em",
+          }}
+        >
+          <legend style={{ marginLeft: "0.5em" }}>
+            <big>Weather</big>
+          </legend>
+          <ul
             style={{
-              flex: 1,
+              listStyleType: "none",
+              paddingInlineStart: 0,
+              marginBlockStart: 0,
+              marginBlockEnd: 0,
               display: "flex",
-              flexDirection: "column",
-              padding: "0.5em",
-              borderLeft: 0,
-              borderRight: 0,
-              borderTop: "0.25em solid #a0a0a0a0",
-              paddingTop: "0.5em",
-              borderBottom: "0.25em solid #a0a0a0a0",
-              paddingBottom: "0.5em",
-              borderRadius: "0.5em",
-              paddingLeft: "0.25em",
-              paddingRight: "0.25em",
+              flexDirection: "row",
+              justifyContent: "space-around",
             }}
           >
-            <legend style={{ marginLeft: "0.5em" }}>
-              <big>Weather</big>
-            </legend>
-            <ul
-              style={{
-                listStyleType: "none",
-                paddingInlineStart: 0,
-                marginBlockStart: 0,
-                marginBlockEnd: 0,
-              }}
-            >
-              {weatherIntervals.map((interval, i) => {
-                const extendedWeatherCode = Number(
-                  String(interval.values.weatherCode) +
-                    String(
-                      weatherDayInterval?.values.sunriseTime &&
-                        weatherDayInterval?.values.sunsetTime &&
-                        isWithinInterval(new Date(interval.startTime), {
-                          start: new Date(
-                            weatherDayInterval.values.sunriseTime
-                          ),
-                          end: new Date(weatherDayInterval.values.sunsetTime),
-                        })
-                        ? 0
-                        : 1
-                    )
-                );
-                const weatherIcon =
-                  (extendedWeatherCode in weatherIconsByCode &&
-                    (weatherIconsByCode[extendedWeatherCode] as
-                      | StaticImageData
-                      | undefined)) ||
-                  (extendedWeatherCode.toString().substring(0, 4) + "0" in
-                    weatherIconsByCode &&
-                    (weatherIconsByCode[
-                      extendedWeatherCode.toString().substring(0, 4) + "0"
-                    ] as StaticImageData | undefined)) ||
-                  null;
-                return (
-                  <li
-                    key={i}
+            {weatherIntervals.map((interval, i) => {
+              const extendedWeatherCode = Number(
+                String(interval.values.weatherCode) +
+                  String(
+                    weatherDayInterval?.values.sunriseTime &&
+                      weatherDayInterval?.values.sunsetTime &&
+                      isWithinInterval(new Date(interval.startTime), {
+                        start: new Date(weatherDayInterval.values.sunriseTime),
+                        end: new Date(weatherDayInterval.values.sunsetTime),
+                      })
+                      ? 0
+                      : 1
+                  )
+              );
+              const weatherIcon =
+                (extendedWeatherCode in weatherIconsByCode &&
+                  (weatherIconsByCode[extendedWeatherCode] as
+                    | StaticImageData
+                    | undefined)) ||
+                (extendedWeatherCode.toString().substring(0, 4) + "0" in
+                  weatherIconsByCode &&
+                  (weatherIconsByCode[
+                    extendedWeatherCode.toString().substring(0, 4) + "0"
+                  ] as StaticImageData | undefined)) ||
+                null;
+              return (
+                <li
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
                     style={{
                       display: "flex",
                       alignItems: "center",
+                      flexDirection: "row",
                     }}
                   >
-                    <big style={{ fontWeight: 800 }}>
+                    <big style={{ fontWeight: 800, fontSize: "1.4em" }}>
                       {new TZDate(
                         interval.startTime,
                         "Europe/Copenhagen"
@@ -477,7 +487,7 @@ export function DiaryAgenda({
                         hour: "numeric",
                         timeZone: "Europe/Copenhagen",
                       })}
-                    </big>{" "}
+                    </big>
                     {weatherIcon ? (
                       <Image
                         src={weatherIcon}
@@ -488,56 +498,57 @@ export function DiaryAgenda({
                       />
                     ) : (
                       extendedWeatherCode
-                    )}{" "}
+                    )}
+                  </div>
+                  <div>
+                    <span
+                      style={{ fontSize: "1.4em", verticalAlign: "middle" }}
+                    >
+                      {interval.values.temperatureApparent.toFixed(0)}
+                    </span>
+                    <sup style={{ fontSize: "0.5em" }}>C</sup>
+                    <sub
+                      style={{
+                        fontSize: "0.7em",
+                        marginLeft: "-6px",
+                      }}
+                      title={"Humidity"}
+                    >
+                      {interval.values.humidity.toFixed(0)}%
+                    </sub>{" "}
+                  </div>
+                  <div>
+                    {interval.values.windSpeed.toFixed(1)}
+                    <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
+                  </div>
+                  {interval.values.precipitationProbability > 0 &&
+                  interval.values.precipitationIntensity >= 0.2 ? (
                     <div>
                       <span
-                        style={{ fontSize: "1.4em", verticalAlign: "middle" }}
+                        style={{
+                          fontSize: "1.4em",
+                          verticalAlign: "middle",
+                        }}
                       >
-                        {interval.values.temperatureApparent.toFixed(1)}
+                        {interval.values.precipitationIntensity.toFixed(2)}
                       </span>
-                      <sup style={{ fontSize: "0.7em" }}>°C</sup>
+                      <sup style={{ fontSize: "0.7em" }}>mm</sup>
                       <sub
                         style={{
                           fontSize: "0.7em",
                           marginLeft: "-14px",
                         }}
                       >
-                        {interval.values.humidity.toFixed(0)}%
-                      </sub>{" "}
+                        {interval.values.precipitationProbability.toFixed(0)}%
+                      </sub>
                     </div>
-                    <div>
-                      {interval.values.windSpeed.toFixed(1)}
-                      <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
-                    </div>
-                    {interval.values.precipitationProbability > 0 &&
-                    interval.values.precipitationIntensity >= 0.2 ? (
-                      <div>
-                        <span
-                          style={{
-                            fontSize: "1.4em",
-                            verticalAlign: "middle",
-                          }}
-                        >
-                          {interval.values.precipitationIntensity.toFixed(2)}
-                        </span>
-                        <sup style={{ fontSize: "0.7em" }}>mm</sup>
-                        <sub
-                          style={{
-                            fontSize: "0.7em",
-                            marginLeft: "-14px",
-                          }}
-                        >
-                          {interval.values.precipitationProbability.toFixed(0)}%
-                        </sub>
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </fieldset>
-        )}
-      </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </fieldset>
+      )}
     </div>
   );
 }
