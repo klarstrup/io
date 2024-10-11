@@ -2,7 +2,7 @@
 "use client";
 
 import { TZDate } from "@date-fns/tz";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import { useEffect, useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -80,7 +80,13 @@ export function WorkoutForm({
   });
 
   const dueSets = nextSets
-    ?.filter((nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) >= 3)
+    ?.filter(
+      (nextSet) =>
+        differenceInDays(
+          startOfDay(TZDate.tz("Europe/Copenhagen")),
+          nextSet.workedOutAt
+        ) > 3
+    )
     .filter(
       (nextSet) =>
         !watch("exercises")?.some(
@@ -327,7 +333,11 @@ export function WorkoutForm({
           </div>
         ) : null}
         {nextSets?.filter(
-          (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) <= 2
+          (nextSet) =>
+            differenceInDays(
+              startOfDay(TZDate.tz("Europe/Copenhagen")),
+              nextSet.workedOutAt
+            ) <= 3
         ).length ? (
           <div>
             <small>
@@ -335,7 +345,10 @@ export function WorkoutForm({
               <NextSets
                 nextSets={nextSets.filter(
                   (nextSet) =>
-                    differenceInDays(new Date(), nextSet.workedOutAt) <= 2
+                    differenceInDays(
+                      startOfDay(TZDate.tz("Europe/Copenhagen")),
+                      nextSet.workedOutAt
+                    ) <= 3
                 )}
               />
             </small>

@@ -5,6 +5,7 @@ import {
   differenceInDays,
   formatDistance,
   isWithinInterval,
+  startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
 import Image, { type StaticImageData } from "next/image";
@@ -53,7 +54,11 @@ export function DiaryAgenda({
   );
 
   const dueSets = nextSets?.filter(
-    (nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) >= 3
+    (nextSet) =>
+      differenceInDays(
+        startOfDay(TZDate.tz("Europe/Copenhagen")),
+        nextSet.workedOutAt
+      ) > 3
   );
   console.log(calendarEvents);
   return (
