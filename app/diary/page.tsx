@@ -23,7 +23,7 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
-import { fetchAndParseIcal, getIcalEventsBetween } from "../../sources/ical";
+//import { fetchAndParseIcal, getIcalEventsBetween } from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
@@ -285,14 +285,14 @@ export default async function Page() {
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
     getNextSets({ user, to: startOfDay(new Date()) }),
-    Promise.all(
+    [] /*Promise.all(
       (user.icalUrls ?? []).map(async (icalUrl) =>
         getIcalEventsBetween(await fetchAndParseIcal(icalUrl), {
           start: startOfDay(TZDate.tz("Europe/Copenhagen")),
           end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
         })
       )
-    ),
+    )*/,
     (async () => {
       if (!process.env.TOMORROW_API_KEY) return;
       const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
