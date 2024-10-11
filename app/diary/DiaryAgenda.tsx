@@ -310,8 +310,7 @@ export function DiaryAgenda({
             {Object.entries(
               calendarEvents.reduce(
                 (memo: Record<string, VEventWithVCalendar[]>, event) => {
-                  const calName =
-                    event["x-vcalendar"]["WR-CALNAME"] || "Unknown";
+                  const calName = event.calendar["WR-CALNAME"] || "Unknown";
 
                   if (!memo[calName]) memo[calName] = [];
                   memo[calName].push(event);

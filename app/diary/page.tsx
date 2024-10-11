@@ -23,11 +23,7 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
-import {
-  fetchAndParseIcal,
-  getIcalCalendar,
-  getIcalEventsBetween,
-} from "../../sources/ical";
+import { fetchAndParseIcal, getIcalEventsBetween } from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";

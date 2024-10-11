@@ -151,5 +151,11 @@ export interface TomorrowResponse {
 }
 
 export interface VEventWithVCalendar extends VEvent {
-  "x-vcalendar": VCalendar;
+  calendar: VCalendar;
+}
+
+export interface MongoVEventWithVCalendar extends VEventWithVCalendar {
+  _io_scrapedAt?: Date;
+  _io_userId?: string;
+  _io_iCalId?: string;
 }

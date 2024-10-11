@@ -22,7 +22,12 @@ export function getIcalEventsBetween(
   data: CalendarResponse,
   dateInterval: Interval<Date, Date> | Interval<TZDate, TZDate>
 ) {
-  const calendar = getIcalCalendar(data);
+  const extras = {
+    calendar: getIcalCalendar(data),
+    _io_scrapedAt: new Date(),
+    _io_userId: "string",
+    _io_iCalId: "string",
+  };
 
   const eventsThatFallWithinRange: VEventWithVCalendar[] = [];
   for (const event of Object.values(data)) {
@@ -60,14 +65,11 @@ export function getIcalEventsBetween(
               dateInterval
             )
           ) {
-            eventsThatFallWithinRange.push({
-              ...recurrence,
-              "x-vcalendar": calendar,
-            });
+            eventsThatFallWithinRange.push({ ...recurrence, ...extras });
           }
         }
       } else if (isWithinInterval(event.start, dateInterval)) {
-        eventsThatFallWithinRange.push({ ...event, "x-vcalendar": calendar });
+        eventsThatFallWithinRange.push({ ...event, ...extras });
       }
     }
   }
