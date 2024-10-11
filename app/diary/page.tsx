@@ -353,8 +353,8 @@ export default async function Page() {
         })
       ).data?.timelines[0]?.intervals.find((interval) =>
         isWithinInterval(new Date(interval.startTime), {
-          start: TZDate.tz("Europe/Copenhagen"),
-          end: addHours(TZDate.tz("Europe/Copenhagen"), 24),
+          start: startOfDay(TZDate.tz("Europe/Copenhagen")),
+          end: endOfDay(TZDate.tz("Europe/Copenhagen")),
         })
       );
     })(),
