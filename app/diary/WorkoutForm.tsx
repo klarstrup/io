@@ -80,7 +80,7 @@ export function WorkoutForm({
   });
 
   const dueSets = nextSets
-    ?.filter((nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) > 2)
+    ?.filter((nextSet) => differenceInDays(new Date(), nextSet.workedOutAt) >= 3)
     .filter(
       (nextSet) =>
         !watch("exercises")?.some(
