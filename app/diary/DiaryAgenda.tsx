@@ -506,11 +506,11 @@ export function DiaryAgenda({
                     >
                       {interval.values.temperatureApparent.toFixed(0)}
                     </span>
-                    <sup style={{ fontSize: "0.5em" }}>C</sup>
+                    <sup style={{ fontSize: "0.5em" }}>c</sup>
                     <sub
                       style={{
                         fontSize: "0.7em",
-                        marginLeft: "-6px",
+                        marginLeft: "-5px",
                       }}
                       title={"Humidity"}
                     >
@@ -518,7 +518,11 @@ export function DiaryAgenda({
                     </sub>{" "}
                   </div>
                   <div>
-                    {interval.values.windSpeed.toFixed(1)}
+                    <span
+                      style={{ fontSize: "1.4em", verticalAlign: "middle" }}
+                    >
+                      {interval.values.windSpeed.toFixed(0)}
+                    </span>
                     <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
                   </div>
                   {interval.values.precipitationProbability > 0 &&
