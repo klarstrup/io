@@ -5,32 +5,61 @@ import {
   isWithinInterval,
 } from "date-fns";
 import { RRule } from "rrule";
+import { auth } from "../auth";
+import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
-import { VEventWithVCalendar } from "../lib";
-import { HOUR_IN_SECONDS } from "../utils";
-import { CalendarResponse, parseICS } from "../vendor/ical";
+import type { MongoVEventWithVCalendar, VEventWithVCalendar } from "../lib";
+import { MINUTE_IN_SECONDS, omit } from "../utils";
+import {
+  type CalendarResponse,
+  parseICS,
+  VCalendar,
+  type VEvent,
+} from "../vendor/ical";
 
 export const fetchAndParseIcal = async (icalUrl: string) =>
   parseICS(
     await dbFetch<string>(icalUrl, undefined, {
       parseJson: false,
-      maxAge: HOUR_IN_SECONDS,
+      maxAge: MINUTE_IN_SECONDS,
     })
   );
 
-export function getIcalEventsBetween(
-  data: CalendarResponse,
+export function extractIcalCalendarAndEvents(data: CalendarResponse) {
+  let calendar: VCalendar | undefined;
+  const events: VEvent[] = [];
+
+  for (const component of Object.values(data)) {
+    switch (component.type) {
+      case "VCALENDAR":
+        calendar = component;
+        break;
+      case "VEVENT":
+        events.push(component);
+        break;
+    }
+  }
+
+  if (!calendar) throw new Error("No calendar found in iCal data");
+
+  return { calendar, events };
+}
+
+export async function getUserIcalEventsBetween(
+  userId: string,
   dateInterval: Interval<Date, Date> | Interval<TZDate, TZDate>
 ) {
-  const extras = {
-    calendar: getIcalCalendar(data),
-    _io_scrapedAt: new Date(),
-    _io_userId: "string",
-    _io_iCalId: "string",
-  };
+  const user = (await auth())?.user;
+  if (!user || userId !== user.id) throw new Error("Unauthorized");
+
+  const DB = await getDB();
 
   const eventsThatFallWithinRange: VEventWithVCalendar[] = [];
-  for (const event of Object.values(data)) {
+  for await (const event of DB.collection<MongoVEventWithVCalendar>(
+    "ical_events"
+  ).find({
+    _io_userId: userId,
+  })) {
     const rrule =
       event.type === "VEVENT" &&
       event.rrule?.origOptions &&
@@ -65,22 +94,17 @@ export function getIcalEventsBetween(
               dateInterval
             )
           ) {
-            eventsThatFallWithinRange.push({ ...recurrence, ...extras });
+            eventsThatFallWithinRange.push({
+              ...recurrence,
+              calendar: event.calendar,
+            });
           }
         }
       } else if (isWithinInterval(event.start, dateInterval)) {
-        eventsThatFallWithinRange.push({ ...event, ...extras });
+        eventsThatFallWithinRange.push(omit(event, "_id"));
       }
     }
   }
 
   return eventsThatFallWithinRange;
-}
-
-export function getIcalCalendar(data: CalendarResponse) {
-  for (const event of Object.values(data)) {
-    if (event.type === "VCALENDAR") return event;
-  }
-
-  throw new Error("No VCALENDAR found in ical");
 }

@@ -154,8 +154,12 @@ export interface VEventWithVCalendar extends VEvent {
   calendar: VCalendar;
 }
 
-export interface MongoVEventWithVCalendar extends VEventWithVCalendar {
-  _io_scrapedAt?: Date;
-  _io_userId?: string;
-  _io_iCalId?: string;
+export interface IcalIoMeta {
+  _io_userId: string;
+  /** This is a hash of the iCal URL and the user ID */
+  _io_icalUrlHash: string;
 }
+export interface MongoVEventWithVCalendar
+  extends VEventWithVCalendar,
+    ScrapedAt,
+    IcalIoMeta {}
