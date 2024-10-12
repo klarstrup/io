@@ -76,9 +76,6 @@ export async function getUserIcalEventsBetween(
               { start, end }
             )
           ) {
-            if (event.summary.includes("Breakfast")) {
-              console.log("event", event);
-            }
             eventsThatFallWithinRange.push({
               ...recurrence,
               calendar: event.calendar,

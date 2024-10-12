@@ -173,7 +173,7 @@ export type AttendeePartStat =
   | "TENTATIVE"
   | "DELEGATED";
 
-export type DateWithTimeZone = Date & { tz?: string; dateOnly?: boolean };
+export type DateWithTimeZone = Date & { tz?: string };
 export type DateType = "date-time" | "date";
 export type Transparency = "TRANSPARENT" | "OPAQUE";
 export type Class = "PUBLIC" | "PRIVATE" | "CONFIDENTIAL";
@@ -309,7 +309,7 @@ const getTimeZone = (value: string) => {
     tz.startsWith("tzone://Microsoft/")
   ) {
     // Set it to the local timezone, because we can't tell
-    tz = moment.tz.guess();
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
   // Remove quotes if found
@@ -392,8 +392,6 @@ const dateParameter =
           Number.parseInt(comps[3]!, 10)
         ) as DateWithTimeZone;
 
-        newDate.dateOnly = true;
-
         // Store as string - worst case scenario
         return storeValueParameter(name)(newDate, curr);
       }
@@ -402,20 +400,32 @@ const dateParameter =
     // Typical RFC date-time format
     const comps = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z)?$/.exec(
       value
-    );
+    ) as
+      | [
+          unknown,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string,
+          string | undefined
+        ]
+      | null;
     if (comps !== null) {
+      const compsNumbers = comps
+        .slice(1, 7)
+        .map((n, i) => (i === 1 ? Number(n) - 1 : Number(n))) as [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number
+      ];
       if (comps[7] === "Z") {
         // GMT
-        newDate = new Date(
-          Date.UTC(
-            Number.parseInt(comps[1]!, 10),
-            Number.parseInt(comps[2]!, 10) - 1,
-            Number.parseInt(comps[3]!, 10),
-            Number.parseInt(comps[4]!, 10),
-            Number.parseInt(comps[5]!, 10),
-            Number.parseInt(comps[6]!, 10)
-          )
-        ) as DateWithTimeZone;
+        newDate = new Date(Date.UTC(...compsNumbers)) as DateWithTimeZone;
         newDate.tz = "Etc/UTC";
       } else if (
         parameters?.[0]?.includes("TZID=") &&
@@ -470,14 +480,7 @@ const dateParameter =
         // Timezone confirmed or forced to offset
         newDate = found
           ? moment.tz(value, "YYYYMMDDTHHmmss" + offset, tz!).toDate()
-          : (new Date(
-              Number.parseInt(comps[1]!, 10),
-              Number.parseInt(comps[2]!, 10) - 1,
-              Number.parseInt(comps[3]!, 10),
-              Number.parseInt(comps[4]!, 10),
-              Number.parseInt(comps[5]!, 10),
-              Number.parseInt(comps[6]!, 10)
-            ) as DateWithTimeZone);
+          : (new Date(...compsNumbers) as DateWithTimeZone);
 
         // Make sure to correct the parameters if the TZID= is changed
         newDate = addTZ(newDate, parameters);
@@ -505,14 +508,7 @@ const dateParameter =
         newDate =
           normalizedTzId && moment.tz.zone(normalizedTzId)
             ? moment.tz(value, "YYYYMMDDTHHmmss", normalizedTzId).toDate()
-            : new Date(
-                Number.parseInt(comps[1]!, 10),
-                Number.parseInt(comps[2]!, 10) - 1,
-                Number.parseInt(comps[3]!, 10),
-                Number.parseInt(comps[4]!, 10),
-                Number.parseInt(comps[5]!, 10),
-                Number.parseInt(comps[6]!, 10)
-              );
+            : new Date(...compsNumbers);
       }
     }
 
@@ -855,19 +851,13 @@ const objectHandlers = {
         // If the date has an toISOString function
         if (curr.start && typeof curr.start.toISOString === "function") {
           try {
+            const timeString = curr.start.toISOString().replace(/[-:]/g, "");
             // If the original date has a TZID, add it
             if (curr.start.tz) {
               const tz = getTimeZone(curr.start.tz);
-              // If a timezone is provided, rrule requires the time to be local
-              const adjustedTimeString = curr.start
-                .toLocaleString("sv", { timeZone: tz })
-                .replace(/ /g, "T")
-                .replace(/[-:]/g, "");
-              rule += `;DTSTART;TZID=${tz}:${adjustedTimeString}`;
+              rule += `;DTSTART;TZID=${tz}:${timeString}`;
             } else {
-              rule += `;DTSTART=${curr.start
-                .toISOString()
-                .replace(/[-:]/g, "")}`;
+              rule += `;DTSTART=${timeString}`;
             }
 
             rule = rule.replace(/\.\d{3}/, "");

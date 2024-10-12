@@ -386,6 +386,7 @@ export function DiaryAgenda({
                                     "en-DK",
                                     {
                                       hour: "numeric",
+                                      minute: "2-digit",
                                       timeZone: "Europe/Copenhagen",
                                     }
                                   )
