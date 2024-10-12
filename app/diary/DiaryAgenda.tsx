@@ -585,7 +585,7 @@ const weatherCodes = {
   7102: "Light Ice Pellets",
   8000: "Thunderstorm",
 } as const;
-const prettyPrintWeatherCode = (code: string): string => {
+const prettyPrintWeatherCode = (code: string) => {
   const truncatedCode = code.slice(0, 4);
 
   if (truncatedCode in weatherCodes) {
