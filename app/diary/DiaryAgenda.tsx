@@ -8,7 +8,7 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { useState } from "react";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import type {
@@ -442,30 +442,26 @@ export function DiaryAgenda({
             }}
           >
             {weatherIntervals.map((interval, i) => {
-              const extendedWeatherCode = Number(
-                String(interval.values.weatherCode) +
-                  String(
-                    weatherDayInterval?.values.sunriseTime &&
-                      weatherDayInterval?.values.sunsetTime &&
-                      isWithinInterval(new Date(interval.startTime), {
-                        start: new Date(weatherDayInterval.values.sunriseTime),
-                        end: new Date(weatherDayInterval.values.sunsetTime),
-                      })
-                      ? 0
-                      : 1
-                  )
-              );
+              const extendedWeatherCode = `${interval.values.weatherCode}${
+                weatherDayInterval?.values.sunriseTime &&
+                weatherDayInterval?.values.sunsetTime &&
+                isWithinInterval(new Date(interval.startTime), {
+                  start: new Date(weatherDayInterval.values.sunriseTime),
+                  end: new Date(weatherDayInterval.values.sunsetTime),
+                })
+                  ? 0
+                  : 1
+              }`;
+              const dayWeatherCode = extendedWeatherCode.substring(0, 4) + "0";
               const weatherIcon =
                 (extendedWeatherCode in weatherIconsByCode &&
-                  (weatherIconsByCode[extendedWeatherCode] as
-                    | StaticImageData
-                    | undefined)) ||
-                (extendedWeatherCode.toString().substring(0, 4) + "0" in
-                  weatherIconsByCode &&
-                  (weatherIconsByCode[
-                    extendedWeatherCode.toString().substring(0, 4) + "0"
-                  ] as StaticImageData | undefined)) ||
-                null;
+                  weatherIconsByCode[
+                    extendedWeatherCode as keyof typeof weatherIconsByCode
+                  ]) ||
+                (dayWeatherCode in weatherIconsByCode &&
+                  weatherIconsByCode[
+                    dayWeatherCode as keyof typeof weatherIconsByCode
+                  ]);
               return (
                 <li
                   key={i}
@@ -589,8 +585,8 @@ const weatherCodes = {
   7102: "Light Ice Pellets",
   8000: "Thunderstorm",
 } as const;
-const prettyPrintWeatherCode = (code: number): string => {
-  const truncatedCode = code.toString().slice(0, 4);
+const prettyPrintWeatherCode = (code: string): string => {
+  const truncatedCode = code.slice(0, 4);
 
   if (truncatedCode in weatherCodes) {
     return weatherCodes[truncatedCode as unknown as keyof typeof weatherCodes];
