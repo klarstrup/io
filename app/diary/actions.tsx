@@ -10,9 +10,7 @@ export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData
 ) {
   const user = (await auth())?.user;
-  if (!user || workout.userId !== String(user.id)) {
-    throw new Error("Unauthorized");
-  }
+  if (!user || workout.userId !== user.id) throw new Error("Unauthorized");
 
   const DB = await getDB();
   const workoutsCollection = DB.collection<WorkoutData>("workouts");
