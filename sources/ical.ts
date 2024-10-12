@@ -1,8 +1,9 @@
 import { TZDate } from "@date-fns/tz";
 import {
+  addSeconds,
   areIntervalsOverlapping,
+  differenceInSeconds,
   type Interval,
-  isWithinInterval,
 } from "date-fns";
 import { RRule } from "rrule";
 import { auth } from "../auth";
@@ -47,7 +48,7 @@ export function extractIcalCalendarAndEvents(data: CalendarResponse) {
 
 export async function getUserIcalEventsBetween(
   userId: string,
-  dateInterval: Interval<Date, Date> | Interval<TZDate, TZDate>
+  { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>
 ) {
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
@@ -55,53 +56,61 @@ export async function getUserIcalEventsBetween(
   const DB = await getDB();
 
   const eventsThatFallWithinRange: VEventWithVCalendar[] = [];
+  // Sadly we can't select the date range from the database because of recurrence logic
   for await (const event of DB.collection<MongoVEventWithVCalendar>(
     "ical_events"
   ).find({
     _io_userId: userId,
   })) {
     const rrule =
-      event.type === "VEVENT" &&
-      event.rrule?.origOptions &&
-      new RRule({
-        ...event.rrule.origOptions,
-        dtstart:
-          event.rrule.origOptions.dtstart &&
-          new Date(event.rrule.origOptions.dtstart),
-        until:
-          event.rrule.origOptions.until &&
-          new Date(event.rrule.origOptions.until),
-      });
-
-    if (
-      event.type === "VEVENT" &&
-      (rrule
-        ? rrule.between(dateInterval.start, dateInterval.end).length
-        : isWithinInterval(event.start, dateInterval))
-    ) {
-      if (
-        rrule &&
-        rrule.between(dateInterval.start, dateInterval.end).length &&
-        event.recurrences
-      ) {
+      event.type === "VEVENT" && event.rrule?.origOptions
+        ? new RRule(event.rrule.origOptions)
+        : undefined;
+    const rruleDates = rrule?.between(start, end, true);
+    if (event.type === "VEVENT") {
+      if (event.recurrences) {
         for (const recurrence of Object.values(event.recurrences)) {
           if (
             areIntervalsOverlapping(
-              {
-                start: recurrence.start,
-                end: recurrence.end,
-              },
-              dateInterval
+              { start: recurrence.start, end: recurrence.end },
+              { start, end }
             )
           ) {
+            if (event.summary.includes("Breakfast")) {
+              console.log("event", event);
+            }
             eventsThatFallWithinRange.push({
               ...recurrence,
               calendar: event.calendar,
             });
           }
         }
-      } else if (isWithinInterval(event.start, dateInterval)) {
+      }
+      if (
+        areIntervalsOverlapping(
+          { start: event.start, end: event.end },
+          { start, end }
+        )
+      ) {
         eventsThatFallWithinRange.push(omit(event, "_id"));
+      }
+      if (rruleDates) {
+        for (const rruleDate of rruleDates) {
+          if (event.recurrences?.[rruleDate.toISOString().slice(0, 10)]) {
+            continue;
+          }
+          eventsThatFallWithinRange.push({
+            ...omit(event, "_id"),
+            // RRule date is not in the correct timezone.
+            // This is partially because RRule only deals in UTC dates.
+            // But also because we are not accounting for timezone when scraping the iCal feed.
+            start: rruleDate,
+            end: addSeconds(
+              rruleDate,
+              differenceInSeconds(event.start.getTime(), event.end.getTime())
+            ),
+          });
+        }
       }
     }
   }
