@@ -146,6 +146,10 @@ export default async function UserStuff() {
           display: "none",
           borderRadius: "10px",
           boxShadow: "yellow 0px 0px 20px",
+          width: "420px",
+          maxWidth: "90vw",
+          maxHeight: "90vh",
+          overflow: "auto",
         }}
       >
         <div
