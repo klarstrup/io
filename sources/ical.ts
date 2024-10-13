@@ -3,6 +3,7 @@ import {
   addSeconds,
   areIntervalsOverlapping,
   differenceInSeconds,
+  subMinutes,
   type Interval,
 } from "date-fns";
 import { RRule } from "rrule";
@@ -46,23 +47,6 @@ export function extractIcalCalendarAndEvents(data: CalendarResponse) {
   return { calendar, events };
 }
 
-const dateTZtoISO8601 = function (date: Date, timeZone: string) {
-  // date format for sv-SE is almost ISO8601
-  const dateStr = date.toLocaleString("sv-SE", { timeZone });
-  // '2023-02-07 10:41:36'
-  return dateStr.replace(" ", "T") + "Z";
-};
-
-export const dateInTimeZone = function (date: Date, timeZone: string) {
-  const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // Date constructor can only reliably parse dates in ISO8601 format
-  const dateInLocalTZ = new Date(dateTZtoISO8601(date, localTimeZone));
-  const dateInTargetTZ = new Date(dateTZtoISO8601(date, timeZone ?? "UTC"));
-  const tzOffset = dateInTargetTZ.getTime() - dateInLocalTZ.getTime();
-
-  return new Date(date.getTime() - tzOffset);
-};
-
 export async function getUserIcalEventsBetween(
   userId: string,
   { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>
@@ -81,7 +65,21 @@ export async function getUserIcalEventsBetween(
   })) {
     const rrule =
       event.type === "VEVENT" && event.rrule?.origOptions
-        ? new RRule(event.rrule.origOptions)
+        ? new RRule({
+            ...event.rrule.origOptions,
+            dtstart:
+              event.rrule.origOptions.dtstart &&
+              subMinutes(
+                event.rrule.origOptions.dtstart,
+                new TZDate(
+                  event.rrule.origOptions.dtstart
+                ).getTimezoneOffset() -
+                  new TZDate(
+                    event.rrule.origOptions.dtstart,
+                    "Europe/Copenhagen"
+                  ).getTimezoneOffset()
+              ),
+          })
         : undefined;
     const rruleDates = rrule?.between(start, end, true);
     if (event.type === "VEVENT") {
