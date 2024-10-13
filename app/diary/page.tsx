@@ -36,6 +36,7 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
+import { fetchTomorrowTimelineIntervals } from "../../sources/tomorrow";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -291,42 +292,10 @@ export default async function Page() {
       end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
     }),
     (async () => {
-      if (!process.env.TOMORROW_API_KEY) return;
-      const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
-      // Dump precision to 4 characters(+/- 20-40km(lat-lng)), it's the fucking weather.
-      const userLocation =
-        user.geohash && decodeGeohash(user.geohash.slice(0, 4));
-
-      tomorrowUrl.searchParams.set(
-        "location",
-        userLocation
-          ? `${userLocation.latitude},${userLocation.longitude}`
-          : `55.658693,12.489322`,
-      );
-      tomorrowUrl.searchParams.set(
-        "startTime",
-        subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString(),
-      );
-      tomorrowUrl.searchParams.set(
-        "endTime",
-        subSeconds(
-          endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
-          1,
-        ).toISOString(),
-      );
-      tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
-      tomorrowUrl.searchParams.set(
-        "fields",
-        "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode",
-      );
-      tomorrowUrl.searchParams.set("timesteps", "1h");
-      tomorrowUrl.searchParams.set("units", "metric");
-      tomorrowUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
-      return (
-        await dbFetch<TomorrowResponse>(tomorrowUrl, undefined, {
-          maxAge: HOUR_IN_SECONDS,
-        })
-      ).data?.timelines[0]?.intervals.filter((interval) =>
+      const intervals = await fetchTomorrowTimelineIntervals({
+        geohash: user.geohash,
+      });
+      return intervals.filter((interval) =>
         isWithinInterval(new Date(interval.startTime), {
           start: TZDate.tz("Europe/Copenhagen"),
           end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
