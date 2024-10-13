@@ -22,6 +22,7 @@ import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
+import { getSunrise, getSunset } from "../../utils";
 
 export function DiaryAgenda({
   diaryEntry,
@@ -30,7 +31,6 @@ export function DiaryAgenda({
   locations,
   nextSets,
   weatherIntervals,
-  weatherDayInterval,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
   calendarEvents: VEventWithVCalendar[];
@@ -38,7 +38,6 @@ export function DiaryAgenda({
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
   weatherIntervals?: TomorrowResponseTimelineInterval[];
-  weatherDayInterval?: TomorrowResponseTimelineInterval;
 }) {
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
 
@@ -59,6 +58,17 @@ export function DiaryAgenda({
         startOfDay(TZDate.tz("Europe/Copenhagen")),
         nextSet.workedOutAt
       ) > 3
+  );
+
+  const sunrise = getSunrise(
+    55.658693,
+    12.489322,
+    TZDate.tz("Europe/Copenhagen")
+  );
+  const sunset = getSunset(
+    55.658693,
+    12.489322,
+    TZDate.tz("Europe/Copenhagen")
   );
 
   return (
@@ -95,28 +105,18 @@ export function DiaryAgenda({
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {weatherDayInterval && (
-                    <>
-                      Daylight:{" "}
-                      {new TZDate(
-                        weatherDayInterval.values.sunriseTime,
-                        "Europe/Copenhagen"
-                      ).toLocaleTimeString("en-DK", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        timeZone: "Europe/Copenhagen",
-                      })}
-                      -
-                      {new TZDate(
-                        weatherDayInterval.values.sunsetTime,
-                        "Europe/Copenhagen"
-                      ).toLocaleTimeString("en-DK", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        timeZone: "Europe/Copenhagen",
-                      })}
-                    </>
-                  )}
+                  Daylight:{" "}
+                  {sunrise.toLocaleTimeString("en-DK", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    timeZone: "Europe/Copenhagen",
+                  })}
+                  -
+                  {sunset.toLocaleTimeString("en-DK", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    timeZone: "Europe/Copenhagen",
+                  })}
                 </span>
               </big>
             </big>
@@ -442,11 +442,9 @@ export function DiaryAgenda({
           >
             {weatherIntervals.map((interval, i) => {
               const extendedWeatherCode = `${interval.values.weatherCode}${
-                weatherDayInterval?.values.sunriseTime &&
-                weatherDayInterval?.values.sunsetTime &&
                 isWithinInterval(new Date(interval.startTime), {
-                  start: new Date(weatherDayInterval.values.sunriseTime),
-                  end: new Date(weatherDayInterval.values.sunsetTime),
+                  start: sunrise,
+                  end: sunset,
                 })
                   ? 0
                   : 1
