@@ -6,15 +6,13 @@ import {
   isAfter,
   isWithinInterval,
   startOfDay,
-  subSeconds,
   subWeeks,
 } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
-import { dbFetch } from "../../fetch";
-import type { DiaryEntry, TomorrowResponse } from "../../lib";
+import { type DiaryEntry, MongoTomorrowInterval } from "../../lib";
 import { IUser } from "../../models/user";
 import { WorkoutData } from "../../models/workout";
 import { getNextSets } from "../../models/workout.server";
@@ -30,13 +28,12 @@ import {
   type TopLogger,
   workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises, decodeGeohash, HOUR_IN_SECONDS } from "../../utils";
+import { allPromises } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
-import { fetchTomorrowTimelineIntervals } from "../../sources/tomorrow";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -292,15 +289,19 @@ export default async function Page() {
       end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
     }),
     (async () => {
-      const intervals = await fetchTomorrowTimelineIntervals({
-        geohash: user.geohash,
-      });
-      return intervals.filter((interval) =>
-        isWithinInterval(new Date(interval.startTime), {
-          start: TZDate.tz("Europe/Copenhagen"),
-          end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
-        }),
-      );
+      if (!user.geohash) return;
+
+      return (
+        await DB.collection<MongoTomorrowInterval>("tomorrow_intervals")
+          .find({
+            _io_geohash: user.geohash.slice(0, 4),
+            startTime: {
+              $gte: TZDate.tz("Europe/Copenhagen"),
+              $lt: addHours(TZDate.tz("Europe/Copenhagen"), 12),
+            },
+          })
+          .toArray()
+      ).map((interval) => ({ ...interval, _id: interval._id.toString() }));
     })(),
     (async () => {
       if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {

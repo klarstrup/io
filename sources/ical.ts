@@ -60,9 +60,7 @@ export async function getUserIcalEventsBetween(
   // Sadly we can't select the date range from the database because of recurrence logic
   for await (const event of DB.collection<MongoVEventWithVCalendar>(
     "ical_events",
-  ).find({
-    _io_userId: userId,
-  })) {
+  ).find({ _io_userId: userId })) {
     const rrule =
       event.type === "VEVENT" && event.rrule?.origOptions
         ? new RRule({

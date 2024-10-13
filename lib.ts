@@ -163,3 +163,14 @@ export interface MongoVEventWithVCalendar
   extends VEventWithVCalendar,
     ScrapedAt,
     IcalIoMeta {}
+
+export interface TomorrowIoMeta {
+  _io_geohash: string;
+}
+
+export interface MongoTomorrowInterval
+  extends Omit<TomorrowResponseTimelineInterval, "startTime">,
+    ScrapedAt,
+    TomorrowIoMeta {
+  startTime: Date;
+}

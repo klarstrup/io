@@ -13,16 +13,16 @@ import { useState } from "react";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import type {
   DiaryEntry,
-  TomorrowResponseTimelineInterval,
+  MongoTomorrowInterval,
   VEventWithVCalendar,
 } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
+import { decodeGeohash, getSunrise, getSunset } from "../../utils";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
-import { decodeGeohash, getSunrise, getSunset } from "../../utils";
 
 export function DiaryAgenda({
   diaryEntry,
@@ -37,7 +37,7 @@ export function DiaryAgenda({
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
-  weatherIntervals?: TomorrowResponseTimelineInterval[];
+  weatherIntervals?: MongoTomorrowInterval[];
 }) {
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
 
