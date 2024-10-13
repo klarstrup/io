@@ -45,54 +45,38 @@ export function DiaryAgenda({
 
   const dayTotalEnergy = food?.reduce(
     (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
-    0
+    0,
   );
   const dayTotalProtein = food?.reduce(
     (acc, foodEntry) => acc + (foodEntry.nutritional_contents.protein || 0),
-    0
+    0,
   );
 
   const dueSets = nextSets?.filter(
     (nextSet) =>
       differenceInDays(
         startOfDay(TZDate.tz("Europe/Copenhagen")),
-        nextSet.workedOutAt
-      ) > 3
+        nextSet.workedOutAt,
+      ) > 3,
   );
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    TZDate.tz("Europe/Copenhagen")
+    TZDate.tz("Europe/Copenhagen"),
   );
   const sunset = getSunset(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    TZDate.tz("Europe/Copenhagen")
+    TZDate.tz("Europe/Copenhagen"),
   );
 
   return (
     <div
       key={date}
-      style={{
-        boxShadow: "0 0 2em rgba(0, 0, 0, 0.6)",
-        borderRadius: "1.5em",
-        background: "white",
-        display: "flex",
-        flexDirection: "column",
-        padding: "0.5em",
-        maxWidth: "100%",
-        overflowX: "hidden",
-      }}
+      className="flex max-w-full flex-col overflow-x-hidden rounded-3xl bg-white p-4 shadow-lg shadow-slate-600"
     >
-      <div
-        style={{
-          marginBottom: "0.5em",
-          marginLeft: "0.5em",
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
+      <div className="mb-2 ml-2 flex items-center">
         <div style={{ flex: 1, lineHeight: 1, display: "flex" }}>
           <big>
             <big>
@@ -182,7 +166,7 @@ export function DiaryAgenda({
                   <button
                     onClick={() => {
                       window.open(
-                        `https://www.myfitnesspal.com/food/diary?date=${date}`
+                        `https://www.myfitnesspal.com/food/diary?date=${date}`,
                       );
                     }}
                     style={{
@@ -324,8 +308,8 @@ export function DiaryAgenda({
 
                   return memo;
                 },
-                {}
-              )
+                {},
+              ),
             ).map(([calendarName, events], i) => (
               <fieldset
                 key={i}
@@ -356,18 +340,21 @@ export function DiaryAgenda({
                   {Object.entries(
                     events
                       .sort((a, b) => compareAsc(a.start, b.start))
-                      .reduce((acc, event) => {
-                        const weekday = event.start.toLocaleDateString(
-                          "en-DK",
-                          {
-                            weekday: "short",
-                            timeZone: "Europe/Copenhagen",
-                          }
-                        );
-                        if (!acc[weekday]) acc[weekday] = [];
-                        acc[weekday].push(event);
-                        return acc;
-                      }, [] as unknown as Record<string, VEventWithVCalendar[]>)
+                      .reduce(
+                        (acc, event) => {
+                          const weekday = event.start.toLocaleDateString(
+                            "en-DK",
+                            {
+                              weekday: "short",
+                              timeZone: "Europe/Copenhagen",
+                            },
+                          );
+                          if (!acc[weekday]) acc[weekday] = [];
+                          acc[weekday].push(event);
+                          return acc;
+                        },
+                        [] as unknown as Record<string, VEventWithVCalendar[]>,
+                      ),
                   ).map(([weekday, events], i) => (
                     <li key={i}>
                       <big>{weekday} </big>
@@ -478,7 +465,7 @@ export function DiaryAgenda({
                     <big style={{ fontWeight: 800, fontSize: "1.4em" }}>
                       {new TZDate(
                         interval.startTime,
-                        "Europe/Copenhagen"
+                        "Europe/Copenhagen",
                       ).toLocaleTimeString("en-DK", {
                         hour: "numeric",
                         timeZone: "Europe/Copenhagen",
