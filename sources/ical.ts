@@ -81,13 +81,7 @@ export async function getUserIcalEventsBetween(
   })) {
     const rrule =
       event.type === "VEVENT" && event.rrule?.origOptions
-        ? new RRule({
-            ...event.rrule.origOptions,
-            dtstart:
-              (event.rrule.origOptions.dtstart &&
-                dateInTimeZone(event.rrule.origOptions.dtstart, "UTC")) ||
-              event.rrule.origOptions.dtstart,
-          })
+        ? new RRule(event.rrule.origOptions)
         : undefined;
     const rruleDates = rrule?.between(start, end, true);
     if (event.type === "VEVENT") {
@@ -127,7 +121,7 @@ export async function getUserIcalEventsBetween(
             start: rruleDate,
             end: addSeconds(
               rruleDate,
-              differenceInSeconds(event.start.getTime(), event.end.getTime())
+              differenceInSeconds(event.start, event.end)
             ),
           });
         }
