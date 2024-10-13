@@ -30,7 +30,7 @@ import {
   type TopLogger,
   workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises, HOUR_IN_SECONDS } from "../../utils";
+import { allPromises, decodeGeohash, HOUR_IN_SECONDS } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
@@ -290,7 +290,16 @@ export default async function Page() {
     (async () => {
       if (!process.env.TOMORROW_API_KEY) return;
       const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
-      tomorrowUrl.searchParams.set("location", `55.658693,12.489322`);
+      // Dump precision to 4 characters(+/- 20-40km(lat-lng)), it's the fucking weather.
+      const userLocation =
+        user.geohash && decodeGeohash(user.geohash.slice(0, 4));
+
+      tomorrowUrl.searchParams.set(
+        "location",
+        userLocation
+          ? `${userLocation.latitude},${userLocation.longitude}`
+          : `55.658693,12.489322`
+      );
       tomorrowUrl.searchParams.set(
         "startTime",
         subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()

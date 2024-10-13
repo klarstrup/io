@@ -22,7 +22,7 @@ import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
-import { getSunrise, getSunset } from "../../utils";
+import { decodeGeohash, getSunrise, getSunset } from "../../utils";
 
 export function DiaryAgenda({
   diaryEntry,
@@ -59,15 +59,15 @@ export function DiaryAgenda({
         nextSet.workedOutAt
       ) > 3
   );
-
+  const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
   const sunrise = getSunrise(
-    55.658693,
-    12.489322,
+    userLocation?.latitude ?? 55.658693,
+    userLocation?.longitude ?? 12.489322,
     TZDate.tz("Europe/Copenhagen")
   );
   const sunset = getSunset(
-    55.658693,
-    12.489322,
+    userLocation?.latitude ?? 55.658693,
+    userLocation?.longitude ?? 12.489322,
     TZDate.tz("Europe/Copenhagen")
   );
 
