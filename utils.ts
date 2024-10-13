@@ -147,6 +147,108 @@ export function pick<T, K extends keyof T>(obj: T, ...keys: K[]): Pick<T, K> {
   return ret as Pick<T, K>;
 }
 
+export function encodeGeohash(
+  lat: number | string,
+  lon: number | string,
+  precision: number
+) {
+  lat = Number(lat);
+  lon = Number(lon);
+  precision = Number(precision);
+
+  if (isNaN(lat) || isNaN(lon) || isNaN(precision))
+    throw new Error("Invalid geohash");
+
+  let idx = 0; // index into base32 map
+  let bit = 0; // each char holds 5 bits
+  let evenBit = true;
+  let geohash = "";
+
+  let latMin = -90,
+    latMax = 90;
+  let lonMin = -180,
+    lonMax = 180;
+
+  while (geohash.length < precision) {
+    if (evenBit) {
+      // bisect E-W longitude
+      const lonMid = (lonMin + lonMax) / 2;
+      if (lon >= lonMid) {
+        idx = idx * 2 + 1;
+        lonMin = lonMid;
+      } else {
+        idx = idx * 2;
+        lonMax = lonMid;
+      }
+    } else {
+      // bisect N-S latitude
+      const latMid = (latMin + latMax) / 2;
+      if (lat >= latMid) {
+        idx = idx * 2 + 1;
+        latMin = latMid;
+      } else {
+        idx = idx * 2;
+        latMax = latMid;
+      }
+    }
+    evenBit = !evenBit;
+
+    if (++bit == 5) {
+      // 5 bits gives us a character: append it and start over
+      geohash += BASE32_CODES.charAt(idx);
+      bit = 0;
+      idx = 0;
+    }
+  }
+
+  return geohash;
+}
+const BASE32_CODES = "0123456789bcdefghjkmnpqrstuvwxyz";
+const BASE32_CODES_DICT: Record<string, number> = {};
+for (let i = 0; i < BASE32_CODES.length; i++)
+  BASE32_CODES_DICT[BASE32_CODES.charAt(i)] = i;
+export function decodeGeohashBounds(hashString: string) {
+  let isLon = true,
+    maxLat = 90,
+    minLat = -90,
+    maxLon = 180,
+    minLon = -180,
+    mid: number;
+
+  for (let i = 0, l = hashString.length; i < l; i++) {
+    for (let bits = 4; bits >= 0; bits--) {
+      const code = BASE32_CODES_DICT[hashString[i]!.toLowerCase()];
+      if (code === undefined) throw new Error("Invalid geohash");
+
+      const bit = (code >> bits) & 1;
+
+      if (isLon) {
+        mid = (maxLon + minLon) / 2;
+        if (bit === 1) {
+          minLon = mid;
+        } else {
+          maxLon = mid;
+        }
+      } else {
+        mid = (maxLat + minLat) / 2;
+        if (bit === 1) {
+          minLat = mid;
+        } else {
+          maxLat = mid;
+        }
+      }
+      isLon = !isLon;
+    }
+  }
+
+  return { east: maxLon, west: minLon, north: maxLat, south: minLat };
+}
+export function decodeGeohash(hashString: string) {
+  const { east, west, north, south } = decodeGeohashBounds(hashString);
+
+  return { latitude: (south + north) / 2, longitude: (west + east) / 2 };
+}
+
 /**
  * Sunrise/sunset script. By Matt Kane. Adopted for NPM use by Alexey Udivankin.
  *
@@ -238,8 +340,7 @@ function calculate(
   );
   const ascension = 0.91764 * tanDeg(sunTrueLongitude);
 
-  let rightAscension: number;
-  rightAscension = (360 / (2 * Math.PI)) * Math.atan(ascension);
+  let rightAscension = (360 / (2 * Math.PI)) * Math.atan(ascension);
   rightAscension = mod(rightAscension, 360);
 
   const lQuadrant = Math.floor(sunTrueLongitude / 90) * 90;

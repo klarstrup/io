@@ -8,6 +8,8 @@ import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
+import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
+import { decodeGeohash } from "../../utils";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -23,6 +25,17 @@ async function updateUser(formData: FormData) {
   if (!user) throw new Error("No user found");
 
   const newUser = { ...user };
+
+  const geohash = formData.get("geohash");
+  if (typeof geohash === "string") {
+    try {
+      if (geohash.trim()) decodeGeohash(geohash.trim());
+      newUser.geohash = geohash.trim() || null;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   const fitocracySessionId = formData.get("fitocracySessionId");
   if (typeof fitocracySessionId === "string") {
     newUser.fitocracySessionId = fitocracySessionId.trim() || null;
@@ -179,6 +192,10 @@ export default async function UserStuff() {
               <a href="/api/auth/signout">Sign out</a>
             </p>
             <form action={updateUser}>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
+                <legend>Location</legend>
+                <UserStuffGeohashInput geohash={currentUser.geohash} />
+              </fieldset>
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>TopLogger ID</legend>
                 <input

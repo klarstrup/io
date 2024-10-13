@@ -3,6 +3,7 @@ export interface IUser {
   email: string;
   image: string;
   emailVerified: boolean;
+  geohash: string | null;
   fitocracySessionId?: string | null;
   fitocracyUserId?: number;
   topLoggerId?: number | null;
