@@ -357,12 +357,13 @@ export function DiaryAgenda({
                     events
                       .sort((a, b) => compareAsc(a.start, b.start))
                       .reduce((acc, event) => {
-                        const weekday = new Date(
-                          event.start
-                        ).toLocaleDateString("en-DK", {
-                          weekday: "short",
-                          timeZone: "Europe/Copenhagen",
-                        });
+                        const weekday = event.start.toLocaleDateString(
+                          "en-DK",
+                          {
+                            weekday: "short",
+                            timeZone: "Europe/Copenhagen",
+                          }
+                        );
                         if (!acc[weekday]) acc[weekday] = [];
                         acc[weekday].push(event);
                         return acc;
@@ -382,14 +383,11 @@ export function DiaryAgenda({
                           <li key={i}>
                             <big style={{ fontWeight: 800 }}>
                               {event.datetype === "date-time"
-                                ? new Date(event.start).toLocaleTimeString(
-                                    "en-DK",
-                                    {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                      timeZone: "Europe/Copenhagen",
-                                    }
-                                  )
+                                ? event.start.toLocaleTimeString("en-DK", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                    timeZone: "Europe/Copenhagen",
+                                  })
                                 : null}
                             </big>{" "}
                             {event.summary}{" "}
