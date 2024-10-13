@@ -72,11 +72,11 @@ export async function getUserIcalEventsBetween(
               subMinutes(
                 event.rrule.origOptions.dtstart,
                 new TZDate(
-                  event.rrule.origOptions.dtstart
+                  event.rrule.origOptions.dtstart,
+                  "Europe/Copenhagen"
                 ).getTimezoneOffset() -
                   new TZDate(
-                    event.rrule.origOptions.dtstart,
-                    "Europe/Copenhagen"
+                    event.rrule.origOptions.dtstart
                   ).getTimezoneOffset()
               ),
           })
