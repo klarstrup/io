@@ -85,11 +85,7 @@ export async function getUserIcalEventsBetween(
             ...event.rrule.origOptions,
             dtstart:
               (event.rrule.origOptions.dtstart &&
-                event.rrule.origOptions.tzid &&
-                dateInTimeZone(
-                  event.rrule.origOptions.dtstart,
-                  event.rrule.origOptions.tzid
-                )) ||
+                dateInTimeZone(event.rrule.origOptions.dtstart, "UTC")) ||
               event.rrule.origOptions.dtstart,
           })
         : undefined;
