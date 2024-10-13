@@ -57,14 +57,14 @@ export const cotemporality = (interval: DateInterval, now = Date.now()) =>
     : "future";
 
 export async function arrayFromAsyncIterable<T>(
-  gen: AsyncIterable<T>
+  gen: AsyncIterable<T>,
 ): Promise<T[]> {
   const out: T[] = [];
   for await (const x of gen) out.push(x);
   return out;
 }
 export function jsonReadableStreamFromAsyncIterable<T>(
-  iterable: AsyncGenerator<T, T[]>
+  iterable: AsyncGenerator<T, T[]>,
 ) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
@@ -102,11 +102,11 @@ export const getMaxAgeFactor = (eventInterval: Interval, now = Date.now()) =>
     ? 1
     : Math.max(
         Math.abs(differenceInDays(now, eventInterval.start)),
-        Math.abs(differenceInDays(now, eventInterval.end))
+        Math.abs(differenceInDays(now, eventInterval.end)),
       ) * 10;
 
 export function allPromises<
-  T extends readonly ((() => Promise<unknown>) | Promise<unknown>)[]
+  T extends readonly ((() => Promise<unknown>) | Promise<unknown>)[],
 >(
   ...values: T
 ): Promise<{
@@ -115,7 +115,7 @@ export function allPromises<
   >;
 }> {
   return Promise.all(
-    values.map((value) => (typeof value === "function" ? value() : value))
+    values.map((value) => (typeof value === "function" ? value() : value)),
   ) as Promise<{
     -readonly [P in keyof T]: Awaited<
       T[P] extends () => Promise<unknown> ? ReturnType<T[P]> : T[P]
@@ -124,7 +124,10 @@ export function allPromises<
 }
 
 interface OmitF {
-  <T extends object, K extends [...(keyof T)[]]>(obj: T, ...keys: K): {
+  <T extends object, K extends [...(keyof T)[]]>(
+    obj: T,
+    ...keys: K
+  ): {
     [K2 in Exclude<keyof T, K[number]>]: T[K2];
   };
 }
@@ -150,7 +153,7 @@ export function pick<T, K extends keyof T>(obj: T, ...keys: K[]): Pick<T, K> {
 export function encodeGeohash(
   lat: number | string,
   lon: number | string,
-  precision: number
+  precision: number,
 ) {
   lat = Number(lat);
   lon = Number(lon);
@@ -296,7 +299,7 @@ const MSEC_IN_DAY = 8.64e7;
 const getDayOfYear = (date: Date) =>
   Math.ceil(
     (date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) /
-      MSEC_IN_DAY
+      MSEC_IN_DAY,
   );
 
 const sinDeg = (deg: number) => Math.sin((deg * 2.0 * Math.PI) / 360.0);
@@ -322,7 +325,7 @@ function calculate(
   longitude: number,
   isSunrise: boolean,
   zenith: number,
-  date: Date
+  date: Date,
 ): Date {
   const dayOfYear = getDayOfYear(date);
   const hoursFromMeridian = longitude / DEGREES_PER_HOUR;
@@ -336,7 +339,7 @@ function calculate(
       1.916 * sinDeg(sunMeanAnomaly) +
       0.02 * sinDeg(2 * sunMeanAnomaly) +
       282.634,
-    360
+    360,
   );
   const ascension = 0.91764 * tanDeg(sunTrueLongitude);
 
@@ -364,7 +367,7 @@ function calculate(
   const utcMidnight = Date.UTC(
     date.getFullYear(),
     date.getMonth(),
-    date.getDate()
+    date.getDate(),
   );
 
   // Created date will be set to local (system) time zone.
@@ -377,7 +380,7 @@ function calculate(
 export const getSunrise = (
   latitude: number,
   longitude: number,
-  date = new Date()
+  date = new Date(),
 ) => calculate(latitude, longitude, true, DEFAULT_ZENITH, date);
 
 /**
@@ -386,5 +389,5 @@ export const getSunrise = (
 export const getSunset = (
   latitude: number,
   longitude: number,
-  date = new Date()
+  date = new Date(),
 ) => calculate(latitude, longitude, false, DEFAULT_ZENITH, date);

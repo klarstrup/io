@@ -31,8 +31,8 @@ export async function GET() {
           created_at: "createdAt",
           updated_at: "updatedAt",
         },
-      }
-    )
+      },
+    ),
   );
 
   console.log(
@@ -69,7 +69,7 @@ export async function GET() {
           },
         },
       },
-    ])
+    ]),
   );
 
   return new Response("Hello, world!");

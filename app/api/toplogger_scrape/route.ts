@@ -28,27 +28,27 @@ export async function GET() {
 
   const DB = await getDB();
   const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
-    "toplogger_users"
+    "toplogger_users",
   );
   await usersCollection.createIndexes([{ key: { id: 1 } }]);
 
   const gymsCollection = DB.collection<TopLogger.GymSingle & ScrapedAt>(
-    "toplogger_gyms"
+    "toplogger_gyms",
   );
   await gymsCollection.createIndexes([{ key: { id: 1 } }]);
 
   const groupsCollection = DB.collection<TopLogger.GroupSingle & ScrapedAt>(
-    "toplogger_groups"
+    "toplogger_groups",
   );
   await groupsCollection.createIndexes([{ key: { id: 1 } }]);
 
   const holdsCollection = DB.collection<TopLogger.Hold & ScrapedAt>(
-    "toplogger_holds"
+    "toplogger_holds",
   );
   await holdsCollection.createIndexes([{ key: { gym_id: 1 } }]);
 
   const climbsCollection = DB.collection<TopLogger.ClimbMultiple & ScrapedAt>(
-    "toplogger_climbs"
+    "toplogger_climbs",
   );
   await climbsCollection.createIndexes([
     { key: { id: 1 } },
@@ -57,7 +57,7 @@ export async function GET() {
   ]);
 
   const ascendsCollection = DB.collection<TopLogger.AscendSingle & ScrapedAt>(
-    "toplogger_ascends"
+    "toplogger_ascends",
   );
   await ascendsCollection.createIndexes([
     { key: { user_id: 1 } },
@@ -66,7 +66,7 @@ export async function GET() {
   ]);
 
   const gymGroupsCollection = DB.collection<TopLogger.GymGroup & ScrapedAt>(
-    "toplogger_gym_groups"
+    "toplogger_gym_groups",
   );
   await gymGroupsCollection.createIndexes([{ key: { gym_id: 1 } }]);
 
@@ -92,7 +92,7 @@ export async function GET() {
           _io_scrapedAt: new Date(),
         },
       },
-      { upsert: true }
+      { upsert: true },
     );
   const upsertClimb = (climb: TopLogger.ClimbMultiple) =>
     climbsCollection.updateOne(
@@ -110,25 +110,25 @@ export async function GET() {
           _io_scrapedAt: new Date(),
         },
       },
-      { upsert: true }
+      { upsert: true },
     );
   const upsertGym = (gym: TopLogger.GymMultiple) =>
     gymsCollection.updateOne(
       { id: gym.id },
       { $set: { ...gym, _io_scrapedAt: new Date() } },
-      { upsert: true }
+      { upsert: true },
     );
   const upsertHold = (hold: TopLogger.Hold) =>
     holdsCollection.updateOne(
       { id: hold.id },
       { $set: { ...hold, _io_scrapedAt: new Date() } },
-      { upsert: true }
+      { upsert: true },
     );
   const upsertGymGroup = (gymGroup: TopLogger.GymGroup) =>
     gymGroupsCollection.updateOne(
       { id: gymGroup.id },
       { $set: { ...gymGroup, _io_scrapedAt: new Date() } },
-      { upsert: true }
+      { upsert: true },
     );
   const upsertGroup = async ({
     climb_groups,
@@ -145,7 +145,7 @@ export async function GET() {
           _io_scrapedAt: new Date(),
         },
       },
-      { upsert: true }
+      { upsert: true },
     );
     const dbGroup = (await groupsCollection.findOne({ id: group.id }))!;
     if (
@@ -155,7 +155,7 @@ export async function GET() {
       await groupsCollection.updateOne(
         { id: group.id },
         { $set: { climb_groups, _io_scrapedAt: new Date() } },
-        { upsert: true }
+        { upsert: true },
       );
     }
   };
@@ -163,15 +163,15 @@ export async function GET() {
     usersCollection.updateOne(
       { id: user.id },
       { $set: { ...user, _io_scrapedAt: new Date() } },
-      { upsert: true }
+      { upsert: true },
     );
   const upsertGroupUser = (
-    groupUser: Omit<TopLogger.GroupUserMultiple, "user">
+    groupUser: Omit<TopLogger.GroupUserMultiple, "user">,
   ) =>
     groupUsersCollection.updateOne(
       { id: groupUser.id },
       { $set: { ...groupUser, _io_scrapedAt: new Date() } },
-      { upsert: true }
+      { upsert: true },
     );
 
   const responseStream = new TransformStream<Uint8Array, string>();
@@ -202,7 +202,7 @@ export async function GET() {
             filters: { user_id: topLoggerId, climb: { deleted: false } },
             includes: ["climb"],
           },
-          { maxAge: HOUR_IN_SECONDS }
+          { maxAge: HOUR_IN_SECONDS },
         ) as Promise<
           (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
         >
@@ -211,8 +211,8 @@ export async function GET() {
           ascends.flatMap(({ climb, ...ascend }) => [
             upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
             upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
-          ])
-        )
+          ]),
+        ),
       ),
       (
         fetchAscends(
@@ -220,7 +220,7 @@ export async function GET() {
             filters: { user_id: topLoggerId, climb: { deleted: true } },
             includes: ["climb"],
           },
-          { maxAge: HOUR_IN_SECONDS }
+          { maxAge: HOUR_IN_SECONDS },
         ) as Promise<
           (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[]
         >
@@ -229,8 +229,8 @@ export async function GET() {
           ascends.flatMap(({ climb, ...ascend }) => [
             upsertAscend(ascend).then(() => flushJSON("ascend:" + ascend.id)),
             upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
-          ])
-        )
+          ]),
+        ),
       ),
       climbsCollection.distinct("gym_id").then((gymIds) =>
         Promise.all(
@@ -240,15 +240,16 @@ export async function GET() {
                 .load(gymId)
                 .then(
                   (gym) =>
-                    gym && upsertGym(gym).then(() => flushJSON("gym:" + gym.id))
+                    gym &&
+                    upsertGym(gym).then(() => flushJSON("gym:" + gym.id)),
                 ),
               fetchGymHolds(gymId, undefined, { maxAge: HOUR_IN_SECONDS }).then(
                 (holds) =>
                   Promise.all(
                     holds.map((hold) =>
-                      upsertHold(hold).then(() => flushJSON("hold:" + hold.id))
-                    )
-                  )
+                      upsertHold(hold).then(() => flushJSON("hold:" + hold.id)),
+                    ),
+                  ),
               ),
               fetchGymGymGroups(gymId, void 0, {
                 maxAge: HOUR_IN_SECONDS,
@@ -256,23 +257,23 @@ export async function GET() {
                 Promise.all(
                   gymGroups.map((gymGroup) =>
                     upsertGymGroup(gymGroup).then(() =>
-                      flushJSON("gym_group:" + gymGroup.id)
-                    )
-                  )
-                )
+                      flushJSON("gym_group:" + gymGroup.id),
+                    ),
+                  ),
+                ),
               ),
-            ])
-          )
-        )
+            ]),
+          ),
+        ),
       ),
       fetchGroupsUsers(
         { filters: { user_id: topLoggerId } },
-        { maxAge: HOUR_IN_SECONDS }
+        { maxAge: HOUR_IN_SECONDS },
       ).then((groupUsers) =>
         Promise.all(
           groupUsers.map(async (groupUser) => {
             await upsertGroupUser(groupUser).then(() =>
-              flushJSON("group_user:" + groupUser.id)
+              flushJSON("group_user:" + groupUser.id),
             );
 
             const group = await fetchGroup(groupUser.group_id, {
@@ -285,7 +286,7 @@ export async function GET() {
             });
             await Promise.all([
               ...climbs.map((climb) =>
-                upsertClimb(climb).then(() => flushJSON("climb:" + climb.id))
+                upsertClimb(climb).then(() => flushJSON("climb:" + climb.id)),
               ),
               fetchGroupsUsers<
                 TopLogger.GroupUserMultiple & { user: TopLogger.User }
@@ -294,13 +295,13 @@ export async function GET() {
                   filters: { group_id: groupUser.group_id },
                   includes: "user",
                 },
-                { maxAge: HOUR_IN_SECONDS }
+                { maxAge: HOUR_IN_SECONDS },
               ).then((groupUsers) =>
                 Promise.all(
                   randomSlice(groupUsers, 8).map(({ user, ...groupUser }) =>
                     Promise.all([
                       upsertGroupUser(groupUser).then(() =>
-                        flushJSON("group_user:" + groupUser.id)
+                        flushJSON("group_user:" + groupUser.id),
                       ),
 
                       /**
@@ -319,7 +320,7 @@ export async function GET() {
                                 climb_id: climbs.map(({ id }) => id),
                               },
                             },
-                            { maxAge: HOUR_IN_SECONDS }
+                            { maxAge: HOUR_IN_SECONDS },
                           )
                         : Promise.resolve([])
                       ).then((ascends) =>
@@ -327,19 +328,19 @@ export async function GET() {
                           ? Promise.all(
                               ascends.map((ascend) =>
                                 upsertAscend(ascend).then(() =>
-                                  flushJSON("ascend:" + ascend.id)
-                                )
-                              )
+                                  flushJSON("ascend:" + ascend.id),
+                                ),
+                              ),
                             ) // Some toplogger users have privacy enabled for their ascends
-                          : []
+                          : [],
                       ),
-                    ])
-                  )
-                )
+                    ]),
+                  ),
+                ),
               ),
             ]);
-          })
-        )
+          }),
+        ),
       ),
     ]);
 

@@ -72,7 +72,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     DB.collection<RunDouble.MongoHistoryItem>("rundouble_runs");
 
   const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
-    "myfitnesspal_food_entries"
+    "myfitnesspal_food_entries",
   );
 
   const now = TZDate.tz("Europe/Copenhagen");
@@ -83,7 +83,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
     date: Date,
     key: K,
-    entry: NonNullable<DiaryEntry[K]>[number]
+    entry: NonNullable<DiaryEntry[K]>[number],
   ) {
     const dayStr: DayStr = `${date.getFullYear()}-${
       date.getMonth() + 1
@@ -158,24 +158,27 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       ]);
 
       const climbs = await DB.collection<TopLogger.ClimbMultiple>(
-        "toplogger_climbs"
+        "toplogger_climbs",
       )
         .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
         .toArray();
 
       const ascendsByDay = Object.values(
-        ascends.reduce((acc, ascend) => {
-          if (!ascend.date_logged) return acc;
-          const date = `${ascend.date_logged.getFullYear()}-${
-            ascend.date_logged.getMonth() + 1
-          }-${ascend.date_logged.getDate()}`;
-          if (!acc[date]) {
-            acc[date] = [];
-          }
-          acc[date].push(ascend);
+        ascends.reduce(
+          (acc, ascend) => {
+            if (!ascend.date_logged) return acc;
+            const date = `${ascend.date_logged.getFullYear()}-${
+              ascend.date_logged.getMonth() + 1
+            }-${ascend.date_logged.getDate()}`;
+            if (!acc[date]) {
+              acc[date] = [];
+            }
+            acc[date].push(ascend);
 
-          return acc;
-        }, {} as Record<string, TopLogger.AscendSingle[]>)
+            return acc;
+          },
+          {} as Record<string, TopLogger.AscendSingle[]>,
+        ),
       );
       for (const dayAscends of ascendsByDay) {
         addDiaryEntry(
@@ -187,8 +190,8 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
               climb: climbs.find(({ id }) => id === ascend.climb_id)!,
             })),
             holds,
-            gyms
-          )
+            gyms,
+          ),
         );
       }
     },
@@ -201,7 +204,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       })) {
         addDiaryEntry(run.completedAt, "workouts", workoutFromRunDouble(run));
       }
-    }
+    },
   );
 
   const diaryEntries = Object.entries(diary).sort(
@@ -209,13 +212,13 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       new Date(
         Number(b.split("-")[0]),
         Number(b.split("-")[1]) - 1,
-        Number(b.split("-")[2])
+        Number(b.split("-")[2]),
       ).getTime() -
       new Date(
         Number(a.split("-")[0]),
         Number(a.split("-")[1]) - 1,
-        Number(a.split("-")[2])
-      ).getTime()
+        Number(a.split("-")[2]),
+      ).getTime(),
   ) as [DayStr, DiaryEntry][];
 
   return diaryEntries;
@@ -298,23 +301,23 @@ export default async function Page() {
         "location",
         userLocation
           ? `${userLocation.latitude},${userLocation.longitude}`
-          : `55.658693,12.489322`
+          : `55.658693,12.489322`,
       );
       tomorrowUrl.searchParams.set(
         "startTime",
-        subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString()
+        subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString(),
       );
       tomorrowUrl.searchParams.set(
         "endTime",
         subSeconds(
           endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
-          1
-        ).toISOString()
+          1,
+        ).toISOString(),
       );
       tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
       tomorrowUrl.searchParams.set(
         "fields",
-        "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode"
+        "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode",
       );
       tomorrowUrl.searchParams.set("timesteps", "1h");
       tomorrowUrl.searchParams.set("units", "metric");
@@ -327,7 +330,7 @@ export default async function Page() {
         isWithinInterval(new Date(interval.startTime), {
           start: TZDate.tz("Europe/Copenhagen"),
           end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
-        })
+        }),
       );
     })(),
     (async () => {
@@ -343,7 +346,7 @@ export default async function Page() {
                   myFitnessPalUserId: session.userId,
                   myFitnessPalUserName: session.user.name,
                 },
-              }
+              },
             );
           } catch {
             /* empty */

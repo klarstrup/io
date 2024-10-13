@@ -6,12 +6,12 @@ import { MyFitnessPal } from "./myfitnesspal";
 const fetchMyFitnessPal = async <T>(
   input: string | URL,
   init?: RequestInit | null,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   await dbFetch<T>(
     new URL(input, "https://www.myfitnesspal.com/api/"),
     init,
-    dbOptions
+    dbOptions,
   );
 
 export const getMyFitnessPalSession = async (myFitnessPalToken: string) => {
@@ -24,7 +24,7 @@ export const getMyFitnessPalSession = async (myFitnessPalToken: string) => {
         cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,
       },
     },
-    { maxAge: HOUR_IN_SECONDS }
+    { maxAge: HOUR_IN_SECONDS },
   );
 
   if (!session.user) throw new Error("myFitnessPalToken is not valid");
@@ -48,7 +48,7 @@ export const getMyFitnessPalReport = async (
     | "09"
     | "10"
     | "11"
-    | "12"
+    | "12",
 ) => {
   const month = new Date(year, Number(monthStr) - 1);
   const reportEntries = await fetchMyFitnessPal<MyFitnessPal.ReportEntry[]>(
@@ -69,7 +69,7 @@ export const getMyFitnessPalReport = async (
       maxAge:
         (HOUR_IN_SECONDS / 2) *
         getMaxAgeFactor({ start: startOfMonth(month), end: endOfMonth(month) }),
-    }
+    },
   );
   if (!Array.isArray(reportEntries)) {
     throw new Error(reportEntries);

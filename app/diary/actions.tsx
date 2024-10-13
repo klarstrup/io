@@ -7,7 +7,7 @@ import { getDB } from "../../dbConnect";
 import { type WorkoutData } from "../../models/workout";
 
 export async function upsertWorkout(
-  workout: (WorkoutData & { _id: string }) | WorkoutData
+  workout: (WorkoutData & { _id: string }) | WorkoutData,
 ) {
   const user = (await auth())?.user;
   if (!user || workout.userId !== user.id) throw new Error("Unauthorized");
@@ -38,7 +38,7 @@ export async function deleteWorkout(workoutId: string) {
 
   const result = await workoutsCollection.updateOne(
     { _id: new ObjectId(workoutId) },
-    { $set: { deletedAt: new Date() } }
+    { $set: { deletedAt: new Date() } },
   );
   revalidatePath("/diary");
 

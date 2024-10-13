@@ -36,7 +36,9 @@ export function FoodEntry({
             MyFitnessPal.MealName.Snacks,
           ]
             .filter((mealName) =>
-              foodEntries?.some((foodEntry) => foodEntry.meal_name === mealName)
+              foodEntries?.some(
+                (foodEntry) => foodEntry.meal_name === mealName,
+              ),
             )
             .map((mealName) => {
               const mealTotalEnergy = foodEntries
@@ -44,14 +46,14 @@ export function FoodEntry({
                 .reduce(
                   (acc, foodEntry) =>
                     acc + foodEntry.nutritional_contents.energy.value,
-                  0
+                  0,
                 );
               const mealTotalProtein = foodEntries
                 ?.filter((foodEntry) => foodEntry.meal_name === mealName)
                 .reduce(
                   (acc, foodEntry) =>
                     acc + (foodEntry.nutritional_contents.protein || 0),
-                  0
+                  0,
                 );
 
               return (
@@ -81,7 +83,7 @@ export function FoodEntry({
                               <>
                                 {Math.round(
                                   foodEntry.servings *
-                                    foodEntry.serving_size.value
+                                    foodEntry.serving_size.value,
                                 )}{" "}
                                 {foodEntry.serving_size.unit.match(/container/i)
                                   ? "x "
@@ -91,7 +93,7 @@ export function FoodEntry({
                             {foodEntry.serving_size.unit.match(/container/i)
                               ? foodEntry.serving_size.unit.replace(
                                   /(container \((.+)\))/i,
-                                  "$2"
+                                  "$2",
                                 )
                               : foodEntry.serving_size.unit}
                           </small>

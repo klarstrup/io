@@ -98,7 +98,7 @@ async function loadMoreData(cursor: string) {
 
 const getData = async (
   disciplines?: string[],
-  { from, to }: { from?: Date; to?: Date } | undefined = {}
+  { from, to }: { from?: Date; to?: Date } | undefined = {},
 ) => {
   const DB = await getDB();
   const user = await DB.collection<IUser>("users").findOne();
@@ -118,25 +118,25 @@ const getData = async (
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
     eventsPromises.push(
       ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
-        getIoClimbAlongCompetitionEventEntry(eventId, ioId)
+        getIoClimbAlongCompetitionEventEntry(eventId, ioId),
       ),
       ...(topLoggerUserId
         ? await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
-            "toplogger_group_users"
+            "toplogger_group_users",
           )
             .find({ user_id: topLoggerUserId })
             .toArray()
         : []
       ).map(({ group_id, user_id }) =>
-        getTopLoggerGroupEventEntry(group_id, user_id)
-      )
+        getTopLoggerGroupEventEntry(group_id, user_id),
+      ),
     );
   }
   if (disciplines?.includes("running") || !disciplines?.length) {
     eventsPromises.push(
       ...ioSportsTimingEventsWithIds.map(([eventId, ioId]) =>
-        getSportsTimingEventEntry(eventId, ioId)
-      )
+        getSportsTimingEventEntry(eventId, ioId),
+      ),
     );
   }
   if (disciplines?.includes("metal") || !disciplines?.length) {
@@ -146,7 +146,7 @@ const getData = async (
   return (await Promise.all(eventsPromises))
     .filter((event) => {
       const eventCenter = new Date(
-        (event.start.getTime() + event.end.getTime()) / 2
+        (event.start.getTime() + event.end.getTime()) / 2,
       );
 
       if (from && to) {

@@ -146,17 +146,17 @@ export namespace RunDouble {
 const fetchRunDouble = async <T>(
   input: string | URL,
   init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   dbFetch<T>(
     `https://www.rundouble.com/rundoublesite${String(input)}`,
     init,
-    dbFetchOptions
+    dbFetchOptions,
   );
 
 export async function* getRuns(
   userId: string,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) {
   let cursor: string | undefined = undefined;
   do {
@@ -167,7 +167,7 @@ export async function* getRuns(
     const response = await fetchRunDouble<RunDouble.HistoryResponse>(
       url,
       undefined,
-      dbFetchOptions
+      dbFetchOptions,
     );
     cursor = response.cursor;
     yield* response.history;
@@ -176,7 +176,7 @@ export async function* getRuns(
 
 export const getRunDoubleUser = async (
   userId: string,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL("/history");
   url.searchParams.set("user", userId);
@@ -185,13 +185,13 @@ export const getRunDoubleUser = async (
     await fetchRunDouble<RunDouble.HistoryResponse>(
       url,
       undefined,
-      dbFetchOptions
+      dbFetchOptions,
     )
   ).user;
 };
 
 export function workoutFromRunDouble(
-  run: RunDouble.HistoryItem
+  run: RunDouble.HistoryItem,
 ): WorkoutData & { _id: string } {
   return {
     _id: `rundouble-${run.key}`,

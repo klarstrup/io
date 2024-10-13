@@ -84,14 +84,14 @@ export function WorkoutForm({
       (nextSet) =>
         differenceInDays(
           startOfDay(TZDate.tz("Europe/Copenhagen")),
-          nextSet.workedOutAt
-        ) > 3
+          nextSet.workedOutAt,
+        ) > 3,
     )
     .filter(
       (nextSet) =>
         !watch("exercises")?.some(
-          (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId
-        )
+          (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId,
+        ),
     );
 
   return (
@@ -126,7 +126,7 @@ export function WorkoutForm({
                   ...workout,
                   workedOutAt: dateToInputDate(workout?.workedOutAt),
                 }
-              : { exercises: [] }
+              : { exercises: [] },
           );
         })}
         style={{
@@ -188,13 +188,13 @@ export function WorkoutForm({
         <div>
           {fields.map((field, index) => {
             const exercise = exercises.find(
-              (exercise) => exercise.id === field.exerciseId
+              (exercise) => exercise.id === field.exerciseId,
             );
             if (!exercise) {
               throw new Error(`Exercise with ID ${field.exerciseId} not found`);
             }
             const nextExerciseSet = nextSets?.find(
-              (nextSet) => nextSet.exerciseId === exercise.id
+              (nextSet) => nextSet.exerciseId === exercise.id,
             );
             return (
               <fieldset
@@ -265,7 +265,7 @@ export function WorkoutForm({
             placeholder="Add exercise..."
             options={exercises
               .filter(
-                ({ id }) => !fields.some((field) => field.exerciseId === id)
+                ({ id }) => !fields.some((field) => field.exerciseId === id),
               )
               .map(({ id, name, aliases }) => ({
                 label: `${name} ${
@@ -274,8 +274,8 @@ export function WorkoutForm({
                         type: "disjunction",
                       }).format(aliases)})`
                     : aliases.length === 1
-                    ? `(${aliases[0]})`
-                    : ""
+                      ? `(${aliases[0]})`
+                      : ""
                 }`,
                 value: id,
               }))}
@@ -295,11 +295,11 @@ export function WorkoutForm({
               nextSets={dueSets}
               onAddExercise={(exerciseId) => {
                 const exerciseDefinition = exercises.find(
-                  (exercise) => exercise.id === exerciseId
+                  (exercise) => exercise.id === exerciseId,
                 )!;
 
                 const goalWeight = dueSets.find(
-                  (nextSet) => nextSet.exerciseId === exerciseId
+                  (nextSet) => nextSet.exerciseId === exerciseId,
                 )?.nextWorkingSetsWeight;
 
                 const warmupIncrement =
@@ -311,7 +311,7 @@ export function WorkoutForm({
                   20 + warmupIncrement
                 ) {
                   setWeights.push(
-                    setWeights[setWeights.length - 1]! - warmupIncrement
+                    setWeights[setWeights.length - 1]! - warmupIncrement,
                   );
                 }
 
@@ -322,9 +322,9 @@ export function WorkoutForm({
                         value:
                           input.type === InputType.Weight ? setWeight : NaN,
                         unit: input.metric_unit,
-                      })
+                      }),
                     ),
-                  })
+                  }),
                 );
 
                 append({ exerciseId, sets });
@@ -336,8 +336,8 @@ export function WorkoutForm({
           (nextSet) =>
             differenceInDays(
               startOfDay(TZDate.tz("Europe/Copenhagen")),
-              nextSet.workedOutAt
-            ) <= 3
+              nextSet.workedOutAt,
+            ) <= 3,
         ).length ? (
           <div>
             <small>
@@ -347,8 +347,8 @@ export function WorkoutForm({
                   (nextSet) =>
                     differenceInDays(
                       startOfDay(TZDate.tz("Europe/Copenhagen")),
-                      nextSet.workedOutAt
-                    ) <= 3
+                      nextSet.workedOutAt,
+                    ) <= 3,
                 )}
               />
             </small>
@@ -396,7 +396,7 @@ function SetsForm({
         update(setIndex, {
           ...set,
           inputs: set.inputs.map((setInput, setInputIndex) =>
-            setInputIndex === inputIndex ? { ...setInput, unit } : setInput
+            setInputIndex === inputIndex ? { ...setInput, unit } : setInput,
           ),
         });
       });
@@ -454,7 +454,7 @@ function SetsForm({
                           inputs: set.inputs.map((setInput, setInputIndex) =>
                             setInputIndex === inputIndex
                               ? { ...setInput, unit }
-                              : setInput
+                              : setInput,
                           ),
                         });
                       });
@@ -568,7 +568,7 @@ function InputsForm({
         {input.type === InputType.Options && input.options ? (
           <select
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
             )}
             style={{ flex: 1 }}
           >
@@ -583,7 +583,7 @@ function InputsForm({
         {input.type === InputType.Weightassist && input.options ? (
           <select
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assistType`
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assistType`,
             )}
             style={{ flex: 1 }}
           >
@@ -599,7 +599,7 @@ function InputsForm({
           input.type === InputType.Grade ? (
             <select
               {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
               )}
             >
               {input.hidden_by_default ? <option value={""}>---</option> : null}
@@ -613,7 +613,7 @@ function InputsForm({
             <input
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
-                { valueAsNumber: true }
+                { valueAsNumber: true },
               )}
               type="number"
               onFocus={(e) => e.target.select()}
@@ -625,7 +625,7 @@ function InputsForm({
                 if (!formElements) return;
                 if (e.key == "Enter") {
                   const followingFormElements = Array.from(formElements).slice(
-                    Array.from(formElements).indexOf(input) + 1
+                    Array.from(formElements).indexOf(input) + 1,
                   );
 
                   for (const element of followingFormElements) {

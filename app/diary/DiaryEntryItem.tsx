@@ -35,11 +35,11 @@ export function DiaryEntryItem({
 
   const dayTotalEnergy = food?.reduce(
     (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
-    0
+    0,
   );
   const dayTotalProtein = food?.reduce(
     (acc, foodEntry) => acc + (foodEntry.nutritional_contents.protein || 0),
-    0
+    0,
   );
 
   return (
@@ -193,7 +193,7 @@ function WorkoutsSummary({
               "🧗‍♀️"
             ) : exercise.tags?.some(
                 (tag) =>
-                  tag.type === TagType.Equipment && tag.name === "Barbell"
+                  tag.type === TagType.Equipment && tag.name === "Barbell",
               ) ? (
               "🏋️‍♀️"
             ) : exercise.tags?.some(
@@ -202,17 +202,17 @@ function WorkoutsSummary({
                   (tag.name === "Dumbbell" ||
                     tag.name === "EZ Bar" ||
                     tag.name === "Cables" ||
-                    tag.name === "Machine")
+                    tag.name === "Machine"),
               ) ? (
               "💪"
             ) : exercise.tags?.some(
                 (tag) =>
-                  tag.type === TagType.MuscleGroup && tag.name === "Cardio"
+                  tag.type === TagType.MuscleGroup && tag.name === "Cardio",
               ) ? (
               "🏃‍♀️"
             ) : exercise.tags?.some(
                 (tag) =>
-                  tag.type === TagType.Type && tag.name === "Calisthenics"
+                  tag.type === TagType.Type && tag.name === "Calisthenics",
               ) ? (
               "🤸🏻"
             ) : (

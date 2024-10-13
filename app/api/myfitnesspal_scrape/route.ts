@@ -49,7 +49,7 @@ export async function GET() {
 
   const DB = await getDB();
   const foodEntries = DB.collection<MyFitnessPal.MongoFoodEntry>(
-    "myfitnesspal_food_entries"
+    "myfitnesspal_food_entries",
   );
 
   (async () => {
@@ -75,7 +75,7 @@ export async function GET() {
           myFitnessPalToken,
           myFitnessPalUserName,
           year,
-          month
+          month,
         );
 
         if (Array.isArray(reportEntries)) {
@@ -100,7 +100,7 @@ export async function GET() {
                     }).toJSDate(),
                   },
                 },
-                { upsert: true }
+                { upsert: true },
               );
             }
             if (first) {
@@ -109,7 +109,7 @@ export async function GET() {
               await writer.write(encoder.encode(",\n"));
             }
             await writer.write(
-              encoder.encode(JSON.stringify(reportEntry.date))
+              encoder.encode(JSON.stringify(reportEntry.date)),
             );
           }
         }

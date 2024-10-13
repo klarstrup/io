@@ -9,13 +9,13 @@ type AnyFunction = (...args: unknown[]) => unknown;
  * - Properties or state accessed within the callback will always be "current"
  */
 export function useEvent<TCallback extends AnyFunction>(
-  callback: TCallback
+  callback: TCallback,
 ): TCallback {
   // Keep track of the latest callback:
   const latestRef = useRef<TCallback>(
     process.env.NODE_ENV === "production"
       ? (useEvent_shouldNotBeInvokedBeforeMount as TCallback)
-      : (undefined as unknown as TCallback)
+      : (undefined as unknown as TCallback),
   );
   useInsertionEffect(() => {
     latestRef.current = callback;
@@ -41,7 +41,7 @@ export function useEvent<TCallback extends AnyFunction>(
  */
 function useEvent_shouldNotBeInvokedBeforeMount() {
   throw new Error(
-    "INVALID_USEEVENT_INVOCATION: the callback from useEvent cannot be invoked before the component has mounted."
+    "INVALID_USEEVENT_INVOCATION: the callback from useEvent cannot be invoked before the component has mounted.",
   );
 }
 
@@ -79,7 +79,7 @@ function optionsToId(options: IntersectionObserverInit) {
     .sort()
     .filter(
       (key): key is keyof IntersectionObserverInit =>
-        options[key as keyof IntersectionObserverInit] !== undefined
+        options[key as keyof IntersectionObserverInit] !== undefined,
     )
     .map(
       (key) =>
@@ -88,7 +88,7 @@ function optionsToId(options: IntersectionObserverInit) {
           key === "root"
             ? getRootId(options.root)
             : options[key as keyof IntersectionObserverInit]
-        }`
+        }`,
     )
     .toString();
 }
@@ -154,7 +154,7 @@ function observe(
   element: Element,
   callback: ObserverInstanceCallback,
   options: IntersectionObserverInit = {},
-  fallbackInView = unsupportedValue
+  fallbackInView = unsupportedValue,
 ) {
   if (
     typeof window.IntersectionObserver === "undefined" &&
@@ -205,7 +205,7 @@ function observe(
 
 type ObserverInstanceCallback = (
   inView: boolean,
-  entry: IntersectionObserverEntry
+  entry: IntersectionObserverEntry,
 ) => void;
 
 interface IntersectionOptions extends IntersectionObserverInit {
@@ -237,7 +237,7 @@ interface IntersectionOptions extends IntersectionObserverInit {
 type InViewHookResponse = [
   (node?: Element | null) => void,
   boolean,
-  IntersectionObserverEntry | undefined
+  IntersectionObserverEntry | undefined,
 ] & {
   ref: (node?: Element | null) => void;
   inView: boolean;
@@ -327,7 +327,7 @@ export function useInView({
           trackVisibility,
           delay,
         },
-        fallbackInView
+        fallbackInView,
       );
 
       return () => {
@@ -348,7 +348,7 @@ export function useInView({
       trackVisibility,
       fallbackInView,
       delay,
-    ]
+    ],
   );
 
   const entryTarget = state.entry?.target;

@@ -31,7 +31,7 @@ export async function getNextSets({
             deletedAt: { $exists: false },
             workedOutAt: { $lte: to },
           },
-          { sort: { workedOutAt: -1 } }
+          { sort: { workedOutAt: -1 } },
         );
 
         const fitWorkout = user.fitocracyUserId
@@ -41,7 +41,7 @@ export async function getNextSets({
                 "root_group.children.exercise.exercise_id": id,
                 workout_timestamp: { $lte: to },
               },
-              { sort: { workout_timestamp: -1 } }
+              { sort: { workout_timestamp: -1 } },
             )
           : null;
         const fitocracyWorkout =
@@ -52,24 +52,24 @@ export async function getNextSets({
             ? isAfter(workout.workedOutAt, fitocracyWorkout.workedOutAt)
               ? workout
               : fitocracyWorkout
-            : workout ?? fitocracyWorkout ?? null;
+            : (workout ?? fitocracyWorkout ?? null);
 
         return [id, recentmostWorkout] as const;
-      })
+      }),
     )
   )
     .map(([id, workout]) => {
       if (!workout) return null;
 
       const exercise = workout.exercises.find(
-        ({ exerciseId }) => exerciseId === id
+        ({ exerciseId }) => exerciseId === id,
       )!;
       const exerciseDefinition = exercises.find((ex) => ex.id === id)!;
       const exerciseWeightInputIndex = exerciseDefinition.inputs.findIndex(
-        ({ type }) => type === InputType.Weight
+        ({ type }) => type === InputType.Weight,
       );
       const exerciseRepsInputIndex = exerciseDefinition.inputs.findIndex(
-        ({ type }) => type === InputType.Reps
+        ({ type }) => type === InputType.Reps,
       );
       const heaviestSet = exercise.sets.reduce((acc, set) => {
         const setWeight = set.inputs[exerciseWeightInputIndex]!.value;
@@ -80,7 +80,7 @@ export async function getNextSets({
       const workingSets = exercise.sets.filter(
         (set) =>
           set.inputs[exerciseWeightInputIndex]!.value ===
-          heaviestSet?.inputs[exerciseWeightInputIndex]!.value
+          heaviestSet?.inputs[exerciseWeightInputIndex]!.value,
       );
 
       let successful = true;
@@ -90,7 +90,7 @@ export async function getNextSets({
       ) {
         if (
           workingSets.every(
-            (sets) => sets.inputs[exerciseRepsInputIndex]!.value < 5
+            (sets) => sets.inputs[exerciseRepsInputIndex]!.value < 5,
           )
         ) {
           successful = false;

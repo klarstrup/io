@@ -228,7 +228,7 @@ const storeValueParameter =
   (name: string) =>
   <Component extends BaseComponent | CalendarResponse>(
     value: Property<unknown> | DateWithTimeZone,
-    curr: Component
+    curr: Component,
   ) => {
     const current = curr[name as keyof typeof curr];
 
@@ -250,7 +250,7 @@ const storeParameter =
     parameters: string[],
     curr: Component,
     _stack?: Record<string, CalendarComponent>[],
-    _line?: string
+    _line?: string,
   ) => {
     const data: Property<unknown> =
       parameters &&
@@ -288,7 +288,7 @@ const getIanaTZFromMS = (msTZName: keyof typeof zoneTable) => {
     const firstLocationName = msTZName.split(",")[0]!;
     // Loop thru the zonetable entries, save all that match
     const temporaryLookup = Object.keys(zoneTable).find((tzEntry) =>
-      tzEntry.includes(firstLocationName)
+      tzEntry.includes(firstLocationName),
     ) as keyof typeof zoneTable | undefined;
 
     // If we found any
@@ -347,7 +347,7 @@ const typeParameter =
   (value: string, parameters: string[], curr: VEvent | VTimeZone) =>
     storeValueParameter(name)(
       isDateOnly(value, parameters) ? "date" : "date-time",
-      curr
+      curr,
     );
 const dateParameter =
   (
@@ -359,14 +359,14 @@ const dateParameter =
       | "created"
       | "lastmodified"
       | "dtstamp"
-      | "recurrenceid"
+      | "recurrenceid",
   ) =>
   <Component extends BaseComponent | CalendarResponse>(
     value: string,
     parameters: string[],
     curr: Component,
     stack?: Record<string, CalendarComponent>[],
-    _line?: string
+    _line?: string,
   ) => {
     // The regex from main gets confused by extra :
     const pi = parameters.indexOf("TZID=tzone");
@@ -389,7 +389,7 @@ const dateParameter =
         newDate = new Date(
           Number.parseInt(comps[1]!, 10),
           Number.parseInt(comps[2]!, 10) - 1,
-          Number.parseInt(comps[3]!, 10)
+          Number.parseInt(comps[3]!, 10),
         ) as DateWithTimeZone;
 
         // Store as string - worst case scenario
@@ -399,7 +399,7 @@ const dateParameter =
 
     // Typical RFC date-time format
     const comps = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z)?$/.exec(
-      value
+      value,
     ) as
       | [
           unknown,
@@ -409,7 +409,7 @@ const dateParameter =
           string,
           string,
           string,
-          string | undefined
+          string | undefined,
         ]
       | null;
     if (comps !== null) {
@@ -421,7 +421,7 @@ const dateParameter =
         number,
         number,
         number,
-        number
+        number,
       ];
       if (comps[7] === "Z") {
         // GMT
@@ -488,13 +488,13 @@ const dateParameter =
         // Get the time zone from the stack
         const stackItemWithTimeZone = stack?.find((item) =>
           Object.values(item).find(
-            (subItem): subItem is VTimeZone => subItem.type === "VTIMEZONE"
-          )
+            (subItem): subItem is VTimeZone => subItem.type === "VTIMEZONE",
+          ),
         );
         const vTimezone =
           stackItemWithTimeZone &&
           Object.values(stackItemWithTimeZone).find(
-            (c): c is VTimeZone => c.type === "VTIMEZONE"
+            (c): c is VTimeZone => c.type === "VTIMEZONE",
           );
 
         // If the VTIMEZONE contains multiple TZIDs (against RFC), use last one
@@ -523,7 +523,7 @@ const geoParameter =
     _parameters: string[],
     curr: VEvent,
     _stack: CalendarComponent[],
-    _line: string
+    _line: string,
   ) => {
     const parts = value.split(";");
     curr.geo = { lat: Number(parts[0]), lon: Number(parts[1]) };
@@ -537,14 +537,14 @@ const categoriesParameter =
     parameters: string[],
     curr: VEvent,
     _stack: CalendarComponent[],
-    _line: string
+    _line: string,
   ) => {
     storeParameter("categories")(value, parameters, curr);
     if (curr.categories === undefined) {
       curr.categories = value ? value.split(",").map((s) => s.trim()) : [];
     } else if (value) {
       curr.categories = curr.categories.concat(
-        value.split(",").map((s) => s.trim())
+        value.split(",").map((s) => s.trim()),
       );
     }
 
@@ -574,7 +574,7 @@ const exdateParameter =
     parameters: string[],
     curr: VEvent,
     _stack?: Record<string, CalendarComponent>[],
-    _line?: string
+    _line?: string,
   ) => {
     curr.exdate = curr.exdate || [];
     const dates = value ? value.split(",").map((s) => s.trim()) : [];
@@ -593,7 +593,7 @@ const exdateParameter =
           throw new TypeError(
             "No toISOString function in exdate[name]",
             //@ts-expect-error -- asd
-            exdateDate
+            exdateDate,
           );
         }
       }
@@ -608,7 +608,7 @@ const objectHandlers = {
     parameters: string[],
     curr: CalendarComponent,
     stack: CalendarComponent[],
-    _line?: string
+    _line?: string,
   ) {
     stack.push(curr);
 
@@ -619,7 +619,7 @@ const objectHandlers = {
     parameters: string[],
     curr: CalendarComponent | VAlarm,
     stack: (CalendarComponent | VAlarm)[],
-    _line?: string
+    _line?: string,
   ) {
     // Original end function
     const originalEnd = (
@@ -627,7 +627,7 @@ const objectHandlers = {
       _parameters_: string[],
       curr: CalendarComponent | VAlarm,
       stack: (CalendarComponent | VAlarm)[],
-      _line?: string
+      _line?: string,
     ) => {
       // Prevents the need to search the root of the tree for the VCALENDAR object
       if (component === "VCALENDAR") {
@@ -683,7 +683,7 @@ const objectHandlers = {
           const indicator = curr.duration.startsWith("-") ? -1 : 1;
           newend = newend.add(
             Number.parseInt(r, 10) * indicator,
-            durationUnits[r.toString().slice(-1) as keyof typeof durationUnits]
+            durationUnits[r.toString().slice(-1) as keyof typeof durationUnits],
           );
           // End is a Date type, not moment
           curr.end = newend.toDate();
@@ -769,7 +769,7 @@ const objectHandlers = {
             throw new TypeError(
               "No toISOString function in curr.recurrenceid",
               // @ts-expect-error - don't care
-              curr.recurrenceid
+              curr.recurrenceid,
             );
           }
         }
@@ -832,7 +832,7 @@ const objectHandlers = {
             // Make the internally stored DATE the actual date (not UTC offseted)
             // Luxon expects local time, not utc, so gets start date wrong if not adjusted
             curr.start = new Date(
-              curr.start.getTime() + Math.abs(offset) * 60000
+              curr.start.getTime() + Math.abs(offset) * 60000,
             );
           } else {
             // Get rid of any time (shouldn't be any, but be sure)
@@ -842,7 +842,7 @@ const objectHandlers = {
               curr.start = new Date(
                 Number(comps[3]!),
                 Number(comps[1]!) - 1,
-                Number(comps[2]!)
+                Number(comps[2]!),
               );
             }
           }
@@ -887,12 +887,12 @@ const objectHandlers = {
     parameters: string[],
     curr: VEvent | VTimeZone,
     stack: Record<string, CalendarComponent>[],
-    _line?: string
+    _line?: string,
   ) =>
     typeParameter("datetype")(
       value,
       parameters,
-      dateParameter("start")(value, parameters, curr, stack)
+      dateParameter("start")(value, parameters, curr, stack),
     ),
   DTEND: dateParameter("end"),
   EXDATE: exdateParameter("exdate"),
@@ -911,7 +911,7 @@ const objectHandlers = {
     _parameters: string[],
     curr: VEvent,
     _stack: CalendarComponent[],
-    line: string
+    line: string,
   ) {
     curr.rrule = line as unknown as RRule; // This is a string, but it will be converted to an RRule object later in the END handler
     return curr;
@@ -924,7 +924,7 @@ function handleObject(
   parameters: string[],
   ctx: CalendarResponse,
   stack: CalendarResponse[],
-  line: string
+  line: string,
 ): CalendarResponse {
   if (name in objectHandlers) {
     const objectHandler = objectHandlers[name as keyof typeof objectHandlers];
@@ -946,7 +946,7 @@ function parseLines(
   limit: number,
   ctx: CalendarResponse = {},
   stack: CalendarResponse[] = [],
-  lastIndex: number = 0
+  lastIndex: number = 0,
 ): CalendarResponse {
   let limitCounter = 0;
 

@@ -80,17 +80,17 @@ const ResultList = ({
           ],
         ]
       : score.system === SCORING_SYSTEM.POINTS
-      ? [["Points", score.points]]
-      : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
-      ? [["Points", score.points]]
-      : score.system === SCORING_SYSTEM.TOPS_AND_ZONES
-      ? [
-          ["T", score.tops, "Tops"],
-          ["Z", score.zones, "Zones"],
-          ["aT", score.topsAttempts, "Attempts to achieve top"],
-          ["aZ", score.zonesAttempts, "Attempts to achieve zone"],
-        ]
-      : [];
+        ? [["Points", score.points]]
+        : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
+          ? [["Points", score.points]]
+          : score.system === SCORING_SYSTEM.TOPS_AND_ZONES
+            ? [
+                ["T", score.tops, "Tops"],
+                ["Z", score.zones, "Zones"],
+                ["aT", score.topsAttempts, "Attempts to achieve top"],
+                ["aZ", score.zonesAttempts, "Attempts to achieve zone"],
+              ]
+            : [];
 
   return (
     <>
@@ -129,18 +129,22 @@ export default async function TimelineEventContent({
     team,
     id,
     url,
-  } = await (eventEntry.source === EventSource.ClimbAlong
-    ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId, sex)
-    : eventEntry.source === EventSource.TopLogger
-    ? getIoTopLoggerGroupEvent(eventEntry.id, eventEntry.ioId, sex)
-    : eventEntry.source === EventSource.Sportstiming
-    ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
-    : eventEntry.source === EventSource.Songkick
-    ? (await getSongkickEvents()).find(({ id }) => eventEntry.id === id)!
-    : undefined)!;
+  } = await (
+    eventEntry.source === EventSource.ClimbAlong
+      ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId, sex)
+      : eventEntry.source === EventSource.TopLogger
+        ? getIoTopLoggerGroupEvent(eventEntry.id, eventEntry.ioId, sex)
+        : eventEntry.source === EventSource.Sportstiming
+          ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
+          : eventEntry.source === EventSource.Songkick
+            ? (await getSongkickEvents()).find(
+                ({ id }) => eventEntry.id === id,
+              )!
+            : undefined
+  )!;
 
   const officialScores = scores.filter(
-    (score) => score.source === SCORING_SOURCE.OFFICIAL
+    (score) => score.source === SCORING_SOURCE.OFFICIAL,
   );
   const derivedScores = scores
     .filter((score) => score.source === SCORING_SOURCE.DERIVED)
@@ -151,8 +155,8 @@ export default async function TimelineEventContent({
           .some(
             (officialScore) =>
               JSON.stringify({ ...officialScore, source: undefined }) ===
-              JSON.stringify({ ...derivedScore, source: undefined })
-          )
+              JSON.stringify({ ...derivedScore, source: undefined }),
+          ),
     );
 
   return (
@@ -172,8 +176,8 @@ export default async function TimelineEventContent({
           }).formatRange(
             ...([start, end].sort((a, b) => Number(a) - Number(b)) as [
               Date,
-              Date
-            ])
+              Date,
+            ]),
           )}
         </b>
         {venue && !event.includes(venue) ? (
@@ -206,10 +210,10 @@ export default async function TimelineEventContent({
           {discipline === "metal"
             ? "🤘"
             : discipline === "bouldering"
-            ? "🧗‍♀️"
-            : discipline === "running"
-            ? "🏃‍♀️"
-            : null}
+              ? "🧗‍♀️"
+              : discipline === "running"
+                ? "🏃‍♀️"
+                : null}
         </Link>
         <span>
           <a href={url} rel="external noopener" target="_blank">
@@ -219,24 +223,24 @@ export default async function TimelineEventContent({
                   `#${new Date(start).toLocaleDateString("da-DK", {
                     month: "long",
                   })}`,
-                  "i"
+                  "i",
                 ),
-                ""
+                "",
               )
               .replace(
                 new RegExp(
                   `#(\\d+) ${new Date(start).toLocaleDateString("da-DK", {
                     month: "long",
                   })}`,
-                  "i"
+                  "i",
                 ),
-                ""
+                "",
               )
               .replace(
                 `${new Date(start).toLocaleDateString("da-DK", {
                   year: "numeric",
                 })}`,
-                ""
+                "",
               )
               .trim()}
           </a>{" "}
@@ -266,8 +270,8 @@ export default async function TimelineEventContent({
               {category === "male"
                 ? "M"
                 : category === "female"
-                ? "F"
-                : category}{" "}
+                  ? "F"
+                  : category}{" "}
               bracket
             </b>
           ) : null}
@@ -304,19 +308,19 @@ export default async function TimelineEventContent({
                   score.system === SCORING_SYSTEM.POINTS
                     ? "100 per top, 20 bonus per flash"
                     : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
-                    ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
-                    : undefined
+                      ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
+                      : undefined
                 }
               >
                 {score.system === SCORING_SYSTEM.TOPS_AND_ZONES
                   ? "Tops & Zones"
                   : score.system === SCORING_SYSTEM.DISTANCE_RACE
-                  ? "Race"
-                  : score.system === SCORING_SYSTEM.POINTS
-                  ? "Points"
-                  : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
-                  ? "1000 / Tops"
-                  : null}{" "}
+                    ? "Race"
+                    : score.system === SCORING_SYSTEM.POINTS
+                      ? "Points"
+                      : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
+                        ? "1000 / Tops"
+                        : null}{" "}
                 Scoring
               </legend>
               <div

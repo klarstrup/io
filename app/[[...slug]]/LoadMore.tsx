@@ -9,14 +9,14 @@ const LoadMore = ({
 }: React.PropsWithChildren<{
   initialCursor: string;
   loadMoreAction: (
-    cursor: string
+    cursor: string,
   ) => Promise<readonly [ReactNode | null, string | null]>;
 }>) => {
   const { ref, inView } = useInView();
   const [loadMoreNodes, setLoadMoreNodes] = useState<ReactNode[]>([]);
 
   const [currentOffsetRef, setCurrentOffsetRef] = useState<string | undefined>(
-    initialCursor
+    initialCursor,
   );
 
   const loadMore = useEvent(async (abortController?: AbortController) => {
@@ -46,7 +46,7 @@ const LoadMore = ({
         signal.abort();
       };
     },
-    [inView, loadMore, loadMoreNodes.length]
+    [inView, loadMore, loadMoreNodes.length],
   );
 
   return (

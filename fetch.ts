@@ -21,7 +21,7 @@ const rawDbFetch = async <T = string>(
      * when the client shuts down (browser is closed).
      */
     maxAge?: number;
-  }
+  },
 ): Promise<T> => {
   const sanitizedInit = init && {
     ...init,
@@ -42,7 +42,7 @@ const rawDbFetch = async <T = string>(
     let stale = false;
     if (typeof options?.maxAge === "number") {
       const rowAge = Math.floor(
-        (Number(now) - Number(fetchRow.lastSuccessfulFetchAt)) / 1000
+        (Number(now) - Number(fetchRow.lastSuccessfulFetchAt)) / 1000,
       );
       if (rowAge > options.maxAge || options.maxAge === 0) stale = true;
     }
@@ -64,7 +64,7 @@ const rawDbFetch = async <T = string>(
       await fetchesCollection.updateOne(
         filter,
         { $set: { lastAttemptedFetchAt: now } },
-        { upsert: true }
+        { upsert: true },
       );
       console.info(
         `DB FETCHING ${String(input)} ${
@@ -74,13 +74,13 @@ const rawDbFetch = async <T = string>(
                 ?.trim()
                 .replace(
                   /at process.processTicksAndRejections \(node:internal\/process\/task_queues:95:5\)/g,
-                  ""
+                  "",
                 )
                 .replace(/^Error/g, "")
                 .replace(/webpack-internal:\/\/\/\(rsc\)\//g, "")
                 .replace(/:\d+:\d+/g, "")
                 .trim() || ""
-        } `.trim()
+        } `.trim(),
       );
 
       const response = await fetch(input, {
@@ -190,7 +190,7 @@ export const cachedDbFetch = async <T>(
      * when the client shuts down (browser is closed).
      */
     maxAge?: number;
-  }
+  },
 ): Promise<T> => {
   const key = JSON.stringify({ input, init });
   let entry = dbFetchCache.get(key);
@@ -204,7 +204,7 @@ export const cachedDbFetch = async <T>(
   ) {
     // console.info(`cachedDbFetch MISS ${String(input)}`);
     const promise = rawDbFetch<T>(input, init, options).catch(() =>
-      dbFetchCache.delete(key)
+      dbFetchCache.delete(key),
     );
     entry = { promise, date: new Date() };
     dbFetchCache.set(key, entry);

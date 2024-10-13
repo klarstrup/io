@@ -147,12 +147,12 @@ export default function ProblemByProblem({
           const Badge = flash
             ? FlashBadge
             : top
-            ? TopBadge
-            : zone
-            ? ZoneBadge
-            : attempt
-            ? AttemptBadge
-            : NoAttemptBadge;
+              ? TopBadge
+              : zone
+                ? ZoneBadge
+                : attempt
+                  ? AttemptBadge
+                  : NoAttemptBadge;
 
           return (
             <Badge
@@ -163,18 +163,18 @@ export default function ProblemByProblem({
                   color === "mint"
                     ? "#00E0E6"
                     : color === "yellow"
-                    ? "#FFDE00"
-                    : color === "green"
-                    ? "#0CE600"
-                    : color === "red"
-                    ? "#E60000"
-                    : color === "purple"
-                    ? "#800080"
-                    : color === "orange"
-                    ? "#FF9B2F"
-                    : color === "white"
-                    ? "#FFEFC1"
-                    : color || "#c84821",
+                      ? "#FFDE00"
+                      : color === "green"
+                        ? "#0CE600"
+                        : color === "red"
+                          ? "#E60000"
+                          : color === "purple"
+                            ? "#800080"
+                            : color === "orange"
+                              ? "#FF9B2F"
+                              : color === "white"
+                                ? "#FFEFC1"
+                                : color || "#c84821",
               }}
               key={number}
               grade={grade ? new Grade(grade).name : undefined}
@@ -184,12 +184,12 @@ export default function ProblemByProblem({
                 flash
                   ? "flash"
                   : top
-                  ? "top"
-                  : zone
-                  ? "zone"
-                  : attempt
-                  ? "no send"
-                  : "no attempt"
+                    ? "top"
+                    : zone
+                      ? "zone"
+                      : attempt
+                        ? "no send"
+                        : "no attempt"
               }`}
             />
           );

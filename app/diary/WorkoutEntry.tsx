@@ -106,7 +106,7 @@ export default function WorkoutEntry({
         >
           {workout.exercises.map((workoutGroup, exerciseIndex) => {
             const exercise = exercises.find(
-              ({ id }) => workoutGroup.exerciseId === id
+              ({ id }) => workoutGroup.exerciseId === id,
             )!;
             return (
               <div key={exerciseIndex}>
@@ -193,10 +193,11 @@ export default function WorkoutEntry({
                                     ? inputType === InputType.Options
                                       ? ", "
                                       : input.assistType === AssistType.Assisted
-                                      ? " - "
-                                      : input.assistType === AssistType.Weighted
-                                      ? " + "
-                                      : " × "
+                                        ? " - "
+                                        : input.assistType ===
+                                            AssistType.Weighted
+                                          ? " + "
+                                          : " × "
                                     : ""}
                                   <span
                                     style={{

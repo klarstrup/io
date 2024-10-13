@@ -47,29 +47,29 @@ export async function GET() {
 
   eventsPromises.push(
     ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
-      getIoClimbAlongCompetitionEventEntry(eventId, ioId)
+      getIoClimbAlongCompetitionEventEntry(eventId, ioId),
     ),
     ...(
       await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
-        "toplogger_group_users"
+        "toplogger_group_users",
       )
         .find({ user_id: topLoggerUserId })
         .toArray()
     ).map(({ group_id, user_id }) =>
-      getTopLoggerGroupEventEntry(group_id, user_id)
-    )
+      getTopLoggerGroupEventEntry(group_id, user_id),
+    ),
   );
 
   eventsPromises.push(
     ...ioSportsTimingEventsWithIds.map(([eventId, ioId]) =>
-      getSportsTimingEventEntry(eventId, ioId)
-    )
+      getSportsTimingEventEntry(eventId, ioId),
+    ),
   );
 
   eventsPromises.push(...(await getSongkickEvents()));
 
   const events = await Promise.all(eventsPromises).then((events) =>
-    events.sort((a, b) => differenceInMilliseconds(b.start, a.start))
+    events.sort((a, b) => differenceInMilliseconds(b.start, a.start)),
   );
   const calendar = new ICalCalendar({
     name: "ioCal",
@@ -82,10 +82,10 @@ export async function GET() {
       busystatus: ICalEventBusyStatus.BUSY,
       timezone: "Europe/Copenhagen",
       start: DateTime.fromJSDate(event.start, { zone: "UTC" }).setZone(
-        "Europe/Copenhagen"
+        "Europe/Copenhagen",
       ),
       end: DateTime.fromJSDate(event.end, { zone: "UTC" }).setZone(
-        "Europe/Copenhagen"
+        "Europe/Copenhagen",
       ),
       summary: event.event,
       categories: [

@@ -85,7 +85,7 @@ export namespace Songkick {
 const fetchSongKick = async <T>(
   input: string | URL,
   init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new URL(`https://api.songkick.com/api/3.0${String(input)}`);
   if (process.env.SONGKICK_APIKEY) {
@@ -107,7 +107,7 @@ const getFutureEvents = (artistId: number) =>
   }>(`/artists/${artistId}/calendar.json`, undefined, {
     maxAge: DAY_IN_SECONDS,
   }).then((response) =>
-    response.resultsPage.totalEntries ? response.resultsPage.results.event : []
+    response.resultsPage.totalEntries ? response.resultsPage.results.event : [],
   );
 
 const getPastEvents = (artistId: number) =>
@@ -124,7 +124,7 @@ const getPastEvents = (artistId: number) =>
   }>(`/artists/${artistId}/gigography.json`, undefined, {
     maxAge: DAY_IN_SECONDS,
   }).then((response) =>
-    response.resultsPage.totalEntries ? response.resultsPage.results.event : []
+    response.resultsPage.totalEntries ? response.resultsPage.results.event : [],
   );
 
 const EXELERATE_ID = 6777179;
@@ -141,7 +141,7 @@ export async function getSongkickEvents() {
     ...(await getPastEvents(EXELERATE_ID)),
     ...(await getFutureEvents(EXELERATE_ID)),
     ...(await getPastEvents(ETHEREAL_KINGDOMS_ID)).filter((event) =>
-      isAfter(new Date(event.start.date), new Date(2021, 0))
+      isAfter(new Date(event.start.date), new Date(2021, 0)),
     ),
     ...(await getFutureEvents(ETHEREAL_KINGDOMS_ID)),
   ];
@@ -166,30 +166,30 @@ export async function getSongkickEvents() {
         team:
           event.performance.find(
             ({ artist }) =>
-              artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID
+              artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID,
           )?.displayName || null,
         noParticipants: null,
         start:
           event.id === 41027597
             ? new Date("2023-08-26T14:15:00.000Z")
             : event.id === 40830303
-            ? new Date("2023-05-11T17:30:00.000Z")
-            : new Date(event.start.datetime || event.start.date),
+              ? new Date("2023-05-11T17:30:00.000Z")
+              : new Date(event.start.datetime || event.start.date),
         end:
           event.id === 41027597
             ? new Date("2023-08-26T14:45:00.000Z")
             : event.id === 40830303
-            ? new Date("2023-05-11T18:00:00.000Z")
-            : new Date(
-                event.end?.datetime ||
-                  event.end?.date ||
-                  event.start.datetime ||
-                  event.start.date
-              ),
+              ? new Date("2023-05-11T18:00:00.000Z")
+              : new Date(
+                  event.end?.datetime ||
+                    event.end?.date ||
+                    event.start.datetime ||
+                    event.start.date,
+                ),
         category: null,
         scores: [] as Score[],
         problems: null,
         problemByProblem: null,
-      } as const)
+      }) as const,
   );
 }

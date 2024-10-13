@@ -24,7 +24,7 @@ export const fetchAndParseIcal = async (icalUrl: string) =>
     await dbFetch<string>(icalUrl, undefined, {
       parseJson: false,
       maxAge: MINUTE_IN_SECONDS,
-    })
+    }),
   );
 
 export function extractIcalCalendarAndEvents(data: CalendarResponse) {
@@ -49,7 +49,7 @@ export function extractIcalCalendarAndEvents(data: CalendarResponse) {
 
 export async function getUserIcalEventsBetween(
   userId: string,
-  { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>
+  { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>,
 ) {
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
@@ -59,7 +59,7 @@ export async function getUserIcalEventsBetween(
   const eventsThatFallWithinRange: VEventWithVCalendar[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
   for await (const event of DB.collection<MongoVEventWithVCalendar>(
-    "ical_events"
+    "ical_events",
   ).find({
     _io_userId: userId,
   })) {
@@ -73,11 +73,11 @@ export async function getUserIcalEventsBetween(
                 event.rrule.origOptions.dtstart,
                 new TZDate(
                   event.rrule.origOptions.dtstart,
-                  "Europe/Copenhagen"
+                  "Europe/Copenhagen",
                 ).getTimezoneOffset() -
                   new TZDate(
-                    event.rrule.origOptions.dtstart
-                  ).getTimezoneOffset()
+                    event.rrule.origOptions.dtstart,
+                  ).getTimezoneOffset(),
               ),
           })
         : undefined;
@@ -88,7 +88,7 @@ export async function getUserIcalEventsBetween(
           if (
             areIntervalsOverlapping(
               { start: recurrence.start, end: recurrence.end },
-              { start, end }
+              { start, end },
             )
           ) {
             eventsThatFallWithinRange.push({
@@ -101,7 +101,7 @@ export async function getUserIcalEventsBetween(
       if (
         areIntervalsOverlapping(
           { start: event.start, end: event.end },
-          { start, end }
+          { start, end },
         )
       ) {
         eventsThatFallWithinRange.push(omit(event, "_id"));
@@ -119,7 +119,7 @@ export async function getUserIcalEventsBetween(
             start: rruleDate,
             end: addSeconds(
               rruleDate,
-              differenceInSeconds(event.start, event.end)
+              differenceInSeconds(event.start, event.end),
             ),
           });
         }

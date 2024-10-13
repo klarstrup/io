@@ -41,14 +41,13 @@ export async function GET() {
       };
       const { calendar, events } = extractIcalCalendarAndEvents(icalData);
 
-      const existingEventsCount = await eventsCollection.countDocuments(
-        ioIcalMeta
-      );
+      const existingEventsCount =
+        await eventsCollection.countDocuments(ioIcalMeta);
 
       // This accounts for a situation where we ingest an empty or otherwise malformed iCal feed
       if (existingEventsCount * 0.9 > events.length) {
         console.log(
-          `Existing events count(${existingEventsCount}) is much greater than new events count(${events.length}) for icalUrlHash: ${icalUrlHash}, skipping`
+          `Existing events count(${existingEventsCount}) is much greater than new events count(${events.length}) for icalUrlHash: ${icalUrlHash}, skipping`,
         );
         continue;
       }
@@ -59,7 +58,7 @@ export async function GET() {
           calendar,
           _io_scrapedAt,
           ...ioIcalMeta,
-        }))
+        })),
       );
 
       if (first) {
@@ -76,8 +75,8 @@ export async function GET() {
             existingEventsCount: existingEventsCount,
             deletedCount: deleteResult.deletedCount,
             insertedCount: insertResult.insertedCount,
-          })
-        )
+          }),
+        ),
       );
     }
 

@@ -90,12 +90,12 @@ const getAllNordicRaceEvents = async () =>
       dbFetch<{ Events: SportsTiming.Event[] }>(
         "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race",
         undefined,
-        { maxAge: WEEK_IN_SECONDS }
+        { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
       dbFetch<{ Events: SportsTiming.Event[] }>(
         "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race",
         undefined,
-        { maxAge: WEEK_IN_SECONDS }
+        { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
     ])
   ).flat();
@@ -103,7 +103,7 @@ const getAllNordicRaceEvents = async () =>
 const getEventParticipantFavoriteUpdate = async (
   eventId: number,
   participantId: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const cookie = `cookies_allowed=required,statistics,settings; favorites_${eventId}=1_${participantId},`;
 
@@ -111,7 +111,7 @@ const getEventParticipantFavoriteUpdate = async (
     await dbFetch<SportsTiming.FavoriteUpdate[]>(
       `https://www.sportstiming.dk/event/${eventId}/favorites/UpdateFavorites`,
       { headers: { cookie } },
-      dbFetchOptions
+      dbFetchOptions,
     )
   ).find(({ Id }) => Id === participantId);
 };
@@ -119,7 +119,7 @@ const getEventParticipantFavoriteUpdate = async (
 export async function getSportsTimingEventResults(
   eventId: number,
   ioId: number,
-  sex?: boolean
+  sex?: boolean,
 ) {
   const allNordicRaceEvents = await getAllNordicRaceEvents();
 
@@ -134,15 +134,15 @@ export async function getSportsTimingEventResults(
     competitionTime === "current"
       ? 30
       : isWithinInterval(new Date(), {
-          start: subHours(start, 3),
-          end: addHours(end, 1),
-        })
-      ? MINUTE_IN_SECONDS
-      : competitionTime === "past"
-      ? isWithinInterval(new Date(), { start, end: addWeeks(end, 1) })
-        ? DAY_IN_SECONDS
-        : undefined
-      : WEEK_IN_SECONDS;
+            start: subHours(start, 3),
+            end: addHours(end, 1),
+          })
+        ? MINUTE_IN_SECONDS
+        : competitionTime === "past"
+          ? isWithinInterval(new Date(), { start, end: addWeeks(end, 1) })
+            ? DAY_IN_SECONDS
+            : undefined
+          : WEEK_IN_SECONDS;
 
   const ioResult = await getEventParticipantFavoriteUpdate(eventId, ioId, {
     maxAge,
@@ -152,8 +152,8 @@ export async function getSportsTimingEventResults(
     await dbFetch(
       `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
       undefined,
-      { parseJson: false, maxAge }
-    )
+      { parseJson: false, maxAge },
+    ),
   );
 
   const bracket = $(".panel-primary td")
@@ -180,7 +180,7 @@ export async function getSportsTimingEventResults(
       .next()
       .toArray()
       .map(
-        (t) => Number($(t).text().replace(" km", "").replace(",", ".")) * 1000
+        (t) => Number($(t).text().replace(" km", "").replace(",", ".")) * 1000,
       )
       .reduce((sum, value) => sum + value, 0) ||
     Number(
@@ -191,7 +191,7 @@ export async function getSportsTimingEventResults(
         .text()
         .trim()
         .replace(" km", "")
-        .replace(",", ".")
+        .replace(",", "."),
     ) * 1000 ||
     NaN;
 
@@ -212,7 +212,7 @@ export async function getSportsTimingEventResults(
             seconds +
             (i === 0 ? n : i === 1 ? n * 60 : i === 2 ? n * 60 * 60 : 0)
           );
-        }, 0)
+        }, 0),
     ) ||
     NaN;
 
@@ -252,18 +252,18 @@ export async function getSportsTimingEventResults(
       eventId === 11107
         ? "L"
         : eventId === 8962
-        ? "Tjek"
-        : eventId === 8940
-        ? "E & L & S"
-        : eventId === 7913
-        ? "S"
-        : eventId === 5805
-        ? "E & L & C & J"
-        : eventId === 5647
-        ? "E & J"
-        : eventId === 4923
-        ? "Tjek"
-        : null,
+          ? "Tjek"
+          : eventId === 8940
+            ? "E & L & S"
+            : eventId === 7913
+              ? "S"
+              : eventId === 5805
+                ? "E & L & C & J"
+                : eventId === 5647
+                  ? "E & J"
+                  : eventId === 4923
+                    ? "Tjek"
+                    : null,
     noParticipants,
     start:
       ioResult?.StartTime && ioResult.StartTime > 0
@@ -286,7 +286,7 @@ export async function getSportsTimingEventResults(
 
 export async function getSportsTimingEventEntry(
   eventId: number,
-  ioId: number
+  ioId: number,
 ): Promise<EventEntry> {
   const allNordicRaceEvents = await getAllNordicRaceEvents();
 

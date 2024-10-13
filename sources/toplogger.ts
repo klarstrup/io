@@ -340,7 +340,7 @@ export namespace TopLogger {
 const fetchTopLogger = async <T>(
   input: string | URL,
   init?: RequestInit | null,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => dbFetch<T>(new URL(input, "https://api.toplogger.nu/"), init, dbOptions);
 
 interface JSONParams {
@@ -362,16 +362,16 @@ interface JSONParams {
 
 export const fetchGroup = (
   id: number,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchTopLogger<TopLogger.GroupSingle>(
     `/v1/groups/${id}.json`,
     null,
-    dbOptions
+    dbOptions,
   );
 const fetchGyms = (
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL(`/v1/gyms.json`);
   if (jsonParams) {
@@ -383,15 +383,15 @@ const fetchGyms = (
 export const gymLoader = new DataLoader(
   (ids: number[]) =>
     fetchGyms({ filters: { id: ids } }).then((items) =>
-      ids.map((id) => items.find((item) => item.id === id) || null)
+      ids.map((id) => items.find((item) => item.id === id) || null),
     ),
-  { cache: false }
+  { cache: false },
 );
 
 const fetchGymClimbs = (
   gymId: number,
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL(`/v1/gyms/${gymId}/climbs.json`);
   if (jsonParams) {
@@ -404,7 +404,7 @@ const fetchGymClimbs = (
 export const fetchGymHolds = (
   gymId: number,
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL(`/v1/gyms/${gymId}/holds.json`);
   if (jsonParams) {
@@ -417,7 +417,7 @@ export const fetchGymHold = (
   gymId: number,
   holdId: number,
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL(`/v1/gyms/${gymId}/holds/${holdId}.json`);
   if (jsonParams) {
@@ -435,7 +435,7 @@ const gymClimbByIdLoadersByGym: Record<
 export const fetchGymClimbById = (
   gymId: number,
   climbId: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   let gymClimbByIdLoader = gymClimbByIdLoadersByGym[gymId];
   if (!gymClimbByIdLoader) {
@@ -443,9 +443,9 @@ export const fetchGymClimbById = (
       (ids: number[]) =>
         fetchGymClimbs(gymId, { filters: { id: ids } }, dbFetchOptions).then(
           (items) =>
-            ids.map((id) => items.find((item) => item.id === id) || null)
+            ids.map((id) => items.find((item) => item.id === id) || null),
         ),
-      { cache: false }
+      { cache: false },
     );
     gymClimbByIdLoadersByGym[gymId] = gymClimbByIdLoader;
   }
@@ -454,11 +454,11 @@ export const fetchGymClimbById = (
 
 export const fetchUser = (
   id: number,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => fetchTopLogger<TopLogger.User>(`/v1/users/${id}.json`, null, dbOptions);
 export const fetchAscends = (
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL(`/v1/ascends.json`);
   url.searchParams.set("serialize_checks", "true");
@@ -470,7 +470,7 @@ export const fetchAscends = (
 };
 export const fetchGroupsUsers = <T = TopLogger.GroupUserMultiple>(
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL("/v1/group_users.json");
   url.searchParams.set("serializeall", "false");
@@ -484,14 +484,14 @@ export const fetchGroupsUsers = <T = TopLogger.GroupUserMultiple>(
 export const fetchGymGymGroups = (
   gymId: number,
   jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const url = new RelativeURL(`/v1/gyms/${gymId}/gym_groups.json`);
   url.searchParams.set("serializeall", "false");
 
   url.searchParams.set(
     "json_params",
-    JSON.stringify({ deleted: false, live: true, ...jsonParams })
+    JSON.stringify({ deleted: false, live: true, ...jsonParams }),
   );
 
   return fetchTopLogger<TopLogger.GymGroup[]>(url, null, dbOptions);
@@ -499,12 +499,12 @@ export const fetchGymGymGroups = (
 
 export const fetchGroupClimbs = async (
   group: TopLogger.GroupSingle,
-  dbOptions?: Parameters<typeof dbFetch>[2]
+  dbOptions?: Parameters<typeof dbFetch>[2],
 ) => {
   const gyms = (
     await gymLoader.loadMany(group.gym_groups.map(({ gym_id }) => gym_id))
   ).filter((gym): gym is TopLogger.GymMultiple =>
-    Boolean(gym && !(gym instanceof Error))
+    Boolean(gym && !(gym instanceof Error)),
   );
 
   if (group.climb_groups.length) {
@@ -572,10 +572,10 @@ const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
                 ) {
                   climbs.push(climb);
                 }
-              })
-            )
-        )
-      )
+              }),
+            ),
+        ),
+      ),
     );
 
   return climbs;
@@ -589,12 +589,12 @@ const PTS_FLASH_BONUS = 20;
 export async function getIoTopLoggerGroupEvent(
   groupId: number,
   ioId: number,
-  sex?: boolean
+  sex?: boolean,
 ) {
   const DB = await getDB();
 
   const group = await DB.collection<TopLogger.GroupSingle>(
-    "toplogger_groups"
+    "toplogger_groups",
   ).findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
 
@@ -605,7 +605,7 @@ export async function getIoTopLoggerGroupEvent(
 
   const gyms = (
     await Promise.all(
-      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id))
+      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id)),
     )
   ).filter(Boolean);
 
@@ -692,10 +692,10 @@ export async function getIoTopLoggerGroupEvent(
     subEvent: group.name.includes("- Qualification")
       ? "Qualification"
       : group.name.includes("(Qualification)")
-      ? "Qualification"
-      : group.name.includes("(Mini-Comp)")
-      ? "Mini-Comp"
-      : null,
+        ? "Qualification"
+        : group.name.includes("(Mini-Comp)")
+          ? "Mini-Comp"
+          : null,
     category: sex ? io.gender : null,
     team: null,
     noParticipants: participants.length || NaN,
@@ -703,7 +703,7 @@ export async function getIoTopLoggerGroupEvent(
     problemByProblem: climbs
       .map((climb) => {
         const ioAscend = ioAscends.find(
-          (ascend) => ascend.climb_id === climb.id
+          (ascend) => ascend.climb_id === climb.id,
         );
 
         return {
@@ -724,8 +724,8 @@ export async function getIoTopLoggerGroupEvent(
       .sort((a, b) =>
         Intl.Collator("en-DK", { numeric: true }).compare(
           a.number || "",
-          b.number || ""
-        )
+          b.number || "",
+        ),
       ),
     scores: getIoTopLoggerGroupScores(
       group,
@@ -733,7 +733,7 @@ export async function getIoTopLoggerGroupEvent(
       groupUsers,
       participants,
       ascends,
-      sex
+      sex,
     ),
   } as const;
 
@@ -746,7 +746,7 @@ function getIoTopLoggerGroupScores(
   groupUsers: Omit<TopLogger.GroupUserMultiple, "user">[],
   participants: TopLogger.User[],
   ascends: TopLogger.AscendSingle[],
-  sex?: boolean
+  sex?: boolean,
 ) {
   const topsByClimbId = ascends.reduce(
     (topMemo, { climb_id, user_id, checks }) => {
@@ -755,7 +755,7 @@ function getIoTopLoggerGroupScores(
       }
       return topMemo;
     },
-    new Map<number, number>()
+    new Map<number, number>(),
   );
 
   const usersWithResults = groupUsers.map(({ user_id, score, rank }) => {
@@ -851,17 +851,17 @@ function getIoTopLoggerGroupScores(
 
 export async function getTopLoggerGroupEventEntry(
   groupId: number,
-  userId: number
+  userId: number,
 ): Promise<EventEntry> {
   const DB = await getDB();
 
   const group = await DB.collection<TopLogger.GroupSingle>(
-    "toplogger_groups"
+    "toplogger_groups",
   ).findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
 
   const gym = (await DB.collection<TopLogger.GymSingle>(
-    "toplogger_gyms"
+    "toplogger_gyms",
   ).findOne({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } }))!;
 
   return {
@@ -885,7 +885,7 @@ export async function getTopLoggerGroupEventEntry(
 export function workoutFromTopLoggerAscends(
   ascends: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
   holds: TopLogger.Hold[],
-  gyms: TopLogger.GymSingle[]
+  gyms: TopLogger.GymSingle[],
 ): WorkoutData & { _id: string } {
   const firstAscend = ascends[0];
   if (!firstAscend) throw new Error("No ascends");
@@ -918,14 +918,14 @@ export function workoutFromTopLoggerAscends(
                             value ===
                             holds
                               .find(({ id }) => id === hold_id)
-                              ?.brand?.toLowerCase()
+                              ?.brand?.toLowerCase(),
                         )
                       : undefined) ?? NaN,
                 },
                 // Sent-ness
                 { value: checks === 2 ? 0 : 1 },
               ],
-            })
+            }),
           ),
       },
     ],

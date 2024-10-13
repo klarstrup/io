@@ -56,13 +56,13 @@ export function NextSets({
                     {
                       addSuffix: true,
                       roundingMethod: "floor",
-                    }
+                    },
                   )}{" "}
                 </small>
               </small>
             </li>
           );
-        }
+        },
       )}
     </ol>
   );

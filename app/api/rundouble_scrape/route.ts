@@ -20,7 +20,7 @@ export async function GET() {
 
   const DB = await getDB();
   const runsCollection = DB.collection<RunDouble.MongoHistoryItem & ScrapedAt>(
-    "rundouble_runs"
+    "rundouble_runs",
   );
 
   (async () => {
@@ -40,7 +40,7 @@ export async function GET() {
             _io_scrapedAt: new Date(),
           },
         },
-        { upsert: true }
+        { upsert: true },
       );
 
       if (first) {

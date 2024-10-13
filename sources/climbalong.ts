@@ -148,91 +148,91 @@ enum HoldScore {
 const fetchClimbalong = async <T>(
   input: string | URL,
   init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   dbFetch<T>(
     `https://comp.climbalong.com/api${String(input)}`,
     init,
-    dbFetchOptions
+    dbFetchOptions,
   );
 
 const getCompetition = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Competition>(
     `/v0/competitions/${id}`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 const getCompetitionAthletes = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Athlete[]>(
     `/v0/competitions/${id}/athletes`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 const getCompetitionRounds = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Round[]>(
     `/v1/competitions/${id}/rounds`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 const getCompetitionLanes = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Lane[]>(
     `/v1/competitions/${id}/lanes`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 
 const getLaneCircuits = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Circuit[]>(
     `/v0/lanes/${id}/circuits`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 const getLanesCircuits = (
   ids: number[],
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => Promise.all(ids.map((id) => getLaneCircuits(id, dbFetchOptions)));
 
 const getCircuitPerformances = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Performance[]>(
     `/v0/circuits/${id}/performances`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 const getCircuitsPerformances = (
   ids: number[],
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => Promise.all(ids.map((id) => getCircuitPerformances(id, dbFetchOptions)));
 
 const getCircuitProblems = (
   id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) =>
   fetchClimbalong<Climbalong.Problem[]>(
     `/v0/circuits/${id}/problems`,
     undefined,
-    dbFetchOptions
+    dbFetchOptions,
   );
 const getCircuitsProblems = (
   ids: number[],
-  dbFetchOptions?: Parameters<typeof dbFetch>[2]
+  dbFetchOptions?: Parameters<typeof dbFetch>[2],
 ) => Promise.all(ids.map((id) => getCircuitProblems(id, dbFetchOptions)));
 
 const TDB_BASE = 1000;
@@ -243,7 +243,7 @@ const PTS_FLASH_BONUS = 20;
 export async function getIoClimbAlongCompetitionEvent(
   competitionId: number,
   ioId?: number,
-  sex?: boolean
+  sex?: boolean,
 ) {
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
@@ -257,23 +257,23 @@ export async function getIoClimbAlongCompetitionEvent(
     competitionTime === "current"
       ? 30
       : isWithinInterval(new Date(), {
-          start: subHours(new Date(competition.startTime), 3),
-          end: addHours(new Date(competition.endTime), 1),
-        })
-      ? MINUTE_IN_SECONDS
-      : competitionTime === "past"
-      ? isWithinInterval(new Date(), {
-          start: new Date(competition.startTime),
-          end: addWeeks(new Date(competition.endTime), 1),
-        })
-        ? DAY_IN_SECONDS
-        : undefined
-      : WEEK_IN_SECONDS;
+            start: subHours(new Date(competition.startTime), 3),
+            end: addHours(new Date(competition.endTime), 1),
+          })
+        ? MINUTE_IN_SECONDS
+        : competitionTime === "past"
+          ? isWithinInterval(new Date(), {
+              start: new Date(competition.startTime),
+              end: addWeeks(new Date(competition.endTime), 1),
+            })
+            ? DAY_IN_SECONDS
+            : undefined
+          : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
+    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io",
   );
 
   if (io && sex) {
@@ -281,27 +281,27 @@ export async function getIoClimbAlongCompetitionEvent(
   }
 
   const rounds = (await getCompetitionRounds(competitionId, { maxAge })).filter(
-    ({ title }) => !title.match(/final/gi) // Only score quals
+    ({ title }) => !title.match(/final/gi), // Only score quals
   );
   const lanes = (await getCompetitionLanes(competitionId, { maxAge })).filter(
-    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId)
+    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId),
   );
   const circuits = (
     await getLanesCircuits(
       lanes.map(({ laneId }) => laneId),
-      { maxAge }
+      { maxAge },
     )
   ).flat();
   const performances = (
     await getCircuitsPerformances(
       circuits.map(({ circuitId }) => circuitId),
-      { maxAge }
+      { maxAge },
     )
   ).flat();
   const problems = (
     await getCircuitsProblems(
       circuits.map(({ circuitId }) => circuitId),
-      { maxAge }
+      { maxAge },
     )
   ).flat();
 
@@ -331,12 +331,12 @@ export async function getIoClimbAlongCompetitionEvent(
         pickTopPerformancesAmount: number;
         outputRanked: boolean;
         nodeName: string;
-      }[]
+      }[],
     ][]
   >(
     `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
     undefined,
-    { maxAge }
+    { maxAge },
   );
 
   const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
@@ -377,18 +377,18 @@ export async function getIoClimbAlongCompetitionEvent(
     start: new Date(
       firstPerformance ||
         circuitChallengeNodesGroupedByLane.find(
-          ([, [challengeNode]]) => challengeNode?.selfscoringOpen
+          ([, [challengeNode]]) => challengeNode?.selfscoringOpen,
         )?.[1][0]?.selfscoringOpen ||
-        competition.startTime
+        competition.startTime,
     ),
     end: isFuture(new Date(competition.endTime))
       ? new Date(competition.endTime)
       : new Date(
           lastPerformance ||
             circuitChallengeNodesGroupedByLane.find(
-              ([, [challengeNode]]) => challengeNode?.selfscoringClose
+              ([, [challengeNode]]) => challengeNode?.selfscoringClose,
             )?.[1][0]?.selfscoringClose ||
-            competition.endTime
+            competition.endTime,
         ),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
@@ -403,7 +403,7 @@ export async function getIoClimbAlongCompetitionEvent(
           problems
             .reduce((memo, problem) => {
               const ioPerformance = ioPerformances?.find(
-                (performance) => performance.problemId === problem.problemId
+                (performance) => performance.problemId === problem.problemId,
               );
 
               // More nastiness here because each problem is repeated for each lane
@@ -413,36 +413,36 @@ export async function getIoClimbAlongCompetitionEvent(
                 color: undefined,
                 grade: undefined,
                 attempt: Boolean(
-                  ioPerformance?.numberOfAttempts || memo.get(key)?.attempt
+                  ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
                 ),
                 zone: Boolean(
                   ioPerformance?.scores.some(
-                    (score) => score.holdScore === HoldScore.ZONE
-                  ) || memo.get(key)?.zone
+                    (score) => score.holdScore === HoldScore.ZONE,
+                  ) || memo.get(key)?.zone,
                 ),
                 top: Boolean(
                   ioPerformance?.scores.some(
-                    (score) => score.holdScore === HoldScore.TOP
-                  ) || memo.get(key)?.top
+                    (score) => score.holdScore === HoldScore.TOP,
+                  ) || memo.get(key)?.top,
                 ),
                 flash: Boolean(
                   ioPerformance?.scores.some(
                     (score) =>
                       score.holdScore === HoldScore.TOP &&
-                      score.reachedInAttempt === 1
-                  ) || memo.get(key)?.flash
+                      score.reachedInAttempt === 1,
+                  ) || memo.get(key)?.flash,
                 ),
               });
 
               return memo;
             }, new Map<string, { number: string; color: string | undefined; grade: number | undefined; attempt: boolean; zone: boolean; top: boolean; flash: boolean }>())
-            .values()
+            .values(),
         )
       : null,
     scores: await getIoClimbAlongCompetitionScores(
       competitionId,
       io?.athleteId || ioId,
-      sex
+      sex,
     ),
   } as const;
 }
@@ -450,7 +450,7 @@ export async function getIoClimbAlongCompetitionEvent(
 async function getIoClimbAlongCompetitionScores(
   competitionId: number,
   ioId?: number,
-  sex?: boolean
+  sex?: boolean,
 ) {
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
@@ -464,23 +464,23 @@ async function getIoClimbAlongCompetitionScores(
     competitionTime === "current"
       ? 30
       : isWithinInterval(new Date(), {
-          start: subHours(new Date(competition.startTime), 3),
-          end: addHours(new Date(competition.endTime), 1),
-        })
-      ? MINUTE_IN_SECONDS
-      : competitionTime === "past"
-      ? isWithinInterval(new Date(), {
-          start: new Date(competition.startTime),
-          end: addWeeks(new Date(competition.endTime), 1),
-        })
-        ? DAY_IN_SECONDS
-        : undefined
-      : WEEK_IN_SECONDS;
+            start: subHours(new Date(competition.startTime), 3),
+            end: addHours(new Date(competition.endTime), 1),
+          })
+        ? MINUTE_IN_SECONDS
+        : competitionTime === "past"
+          ? isWithinInterval(new Date(), {
+              start: new Date(competition.startTime),
+              end: addWeeks(new Date(competition.endTime), 1),
+            })
+            ? DAY_IN_SECONDS
+            : undefined
+          : WEEK_IN_SECONDS;
 
   let athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
+    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io",
   );
 
   if (io && sex) {
@@ -488,34 +488,34 @@ async function getIoClimbAlongCompetitionScores(
   }
 
   const rounds = (await getCompetitionRounds(competitionId, { maxAge })).filter(
-    ({ title }) => !title.match(/final/gi) // Only score quals
+    ({ title }) => !title.match(/final/gi), // Only score quals
   );
   const lanes = (await getCompetitionLanes(competitionId, { maxAge })).filter(
-    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId)
+    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId),
   );
   const circuits = (
     await getLanesCircuits(
       lanes.map(({ laneId }) => laneId),
-      { maxAge }
+      { maxAge },
     )
   ).flat();
   const performances = (
     await getCircuitsPerformances(
       circuits.map(({ circuitId }) => circuitId),
-      { maxAge }
+      { maxAge },
     )
   ).flat();
   const problems = (
     await getCircuitsProblems(
       circuits.map(({ circuitId }) => circuitId),
-      { maxAge }
+      { maxAge },
     )
   ).flat();
 
   const [topsByProblemTitle, zonesByProblemTitle] = performances.reduce(
     ([topMemo, zoneMemo], performance) => {
       const problem = problems.find(
-        (p) => p.problemId === performance.problemId
+        (p) => p.problemId === performance.problemId,
       );
 
       if (
@@ -534,7 +534,7 @@ async function getIoClimbAlongCompetitionScores(
       }
       return [topMemo, zoneMemo];
     },
-    [new Map<string, number>(), new Map<string, number>()]
+    [new Map<string, number>(), new Map<string, number>()],
   );
 
   const atheletesWithResults = athletes
@@ -548,11 +548,11 @@ async function getIoClimbAlongCompetitionScores(
       let zonesAttempts = 0;
 
       const athletePerformances = performances.filter(
-        (performance) => performance.athleteId === athlete.athleteId
+        (performance) => performance.athleteId === athlete.athleteId,
       );
       for (const performance of athletePerformances) {
         const problem = problems.find(
-          (p) => p.problemId === performance.problemId
+          (p) => p.problemId === performance.problemId,
         );
         if (!problem) continue;
 
@@ -595,7 +595,7 @@ async function getIoClimbAlongCompetitionScores(
     })
     .filter(
       ({ tops, zones, topsAttempts, zonesAttempts }) =>
-        tops + zones + topsAttempts + zonesAttempts
+        tops + zones + topsAttempts + zonesAttempts,
     );
 
   const ioPerformanceSum =
@@ -624,9 +624,9 @@ async function getIoClimbAlongCompetitionScores(
           }>(
             `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`,
             undefined,
-            { maxAge }
-          )
-        )
+            { maxAge },
+          ),
+        ),
       )
     )
       .map(({ athletes }) => athletes)
@@ -639,10 +639,10 @@ async function getIoClimbAlongCompetitionScores(
 
   if (ioPerformanceSum) {
     const ioTopSum = ioPerformanceSum.scoreSums.find(
-      (sum) => sum.holdScore === HoldScore.TOP
+      (sum) => sum.holdScore === HoldScore.TOP,
     );
     const ioZoneSum = ioPerformanceSum.scoreSums.find(
-      (sum) => sum.holdScore === HoldScore.ZONE
+      (sum) => sum.holdScore === HoldScore.ZONE,
     );
     scores.push({
       system: SCORING_SYSTEM.TOPS_AND_ZONES,
@@ -659,7 +659,7 @@ async function getIoClimbAlongCompetitionScores(
   const ioResults =
     io &&
     atheletesWithResults.find(
-      ({ athlete }) => athlete.athleteId === io.athleteId
+      ({ athlete }) => athlete.athleteId === io.athleteId,
     );
   if (ioResults) {
     const ioTopsAndZonesRank =
@@ -717,7 +717,7 @@ async function getIoClimbAlongCompetitionScores(
 
 export async function getIoClimbAlongCompetitionEventEntry(
   competitionId: number,
-  ioId?: number
+  ioId?: number,
 ): Promise<EventEntry> {
   const competition = await getCompetition(competitionId, {
     maxAge: WEEK_IN_SECONDS,
@@ -732,7 +732,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
   const athletes = await getCompetitionAthletes(competitionId, { maxAge });
 
   const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io"
+    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io",
   );
 
   return {

@@ -38,7 +38,7 @@ function balanceColumns() {
     let leftColumnHeight = 0;
     let rightColumnHeight = 0;
     const articles = timeline.querySelectorAll<HTMLElement>(
-      "#timeline > article"
+      "#timeline > article",
     );
     for (const article of Array.from(articles)) {
       article.classList.remove("left");

@@ -74,7 +74,7 @@ export default class Grade {
   get idxCeil() {
     const roundVal = round(this.value, 2);
     const idx = this.system.data.findIndex(
-      (item, i) => item.value > roundVal || i == this.system.data.length - 1
+      (item, i) => item.value > roundVal || i == this.system.data.length - 1,
     );
     return idx < 1 ? 1 : idx;
   }

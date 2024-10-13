@@ -276,7 +276,7 @@ export namespace Fitocracy {
 export const exerciseIdsThatICareAbout = [1, 2, 3, 174, 183, 532];
 
 export function workoutFromFitocracyWorkout(
-  workout: WithId<Fitocracy.MongoWorkout>
+  workout: WithId<Fitocracy.MongoWorkout>,
 ): WithId<WorkoutData> {
   const exercises = workout.root_group.children.map(
     ({ exercise }): WorkoutExercise => ({
@@ -288,11 +288,11 @@ export function workoutFromFitocracyWorkout(
               unit: unit as Unit | undefined,
               value,
               assistType: assist_type,
-            })
+            }),
           ),
-        })
+        }),
       ),
-    })
+    }),
   );
 
   return {
