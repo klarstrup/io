@@ -40,12 +40,13 @@ export async function GET() {
       const intervals = await fetchTomorrowTimelineIntervals({ geohash });
 
       for (const interval of intervals) {
+        const startTime = new Date(interval.startTime);
         const updateResult = await forecastsCollection.updateOne(
-          { _io_geohash: geohash, startTime: interval.startTime },
+          { _io_geohash: geohash, startTime },
           {
             $set: {
               ...interval,
-              startTime: new Date(interval.startTime),
+              startTime,
               _io_geohash: geohash,
               _io_scrapedAt: new Date(),
             },
