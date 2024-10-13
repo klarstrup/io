@@ -2,7 +2,6 @@ import { TZDate } from "@date-fns/tz";
 import {
   addDays,
   addHours,
-  addSeconds,
   endOfDay,
   isAfter,
   isWithinInterval,
@@ -31,7 +30,7 @@ import {
   type TopLogger,
   workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises, DAY_IN_SECONDS, HOUR_IN_SECONDS } from "../../utils";
+import { allPromises, HOUR_IN_SECONDS } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
@@ -280,7 +279,6 @@ export default async function Page() {
     nextSets,
     eventsByCalendar,
     weatherIntervals,
-    weatherDayInterval,
   ] = await Promise.all([
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
@@ -320,37 +318,6 @@ export default async function Page() {
         isWithinInterval(new Date(interval.startTime), {
           start: TZDate.tz("Europe/Copenhagen"),
           end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
-        })
-      );
-    })(),
-    (async () => {
-      if (!process.env.TOMORROW_API_KEY) return;
-      const tomorrowDayUrl = new URL("https://api.tomorrow.io/v4/timelines");
-      tomorrowDayUrl.searchParams.set("location", `55.658693,12.489322`);
-      tomorrowDayUrl.searchParams.set(
-        "startTime",
-        startOfDay(TZDate.tz("Europe/Copenhagen")).toISOString()
-      );
-      tomorrowDayUrl.searchParams.set(
-        "endTime",
-        addSeconds(
-          endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 1)),
-          1
-        ).toISOString()
-      );
-      tomorrowDayUrl.searchParams.set("timezone", "Europe/Copenhagen");
-      tomorrowDayUrl.searchParams.set("fields", "sunriseTime,sunsetTime");
-      tomorrowDayUrl.searchParams.set("timesteps", "1d");
-      tomorrowDayUrl.searchParams.set("units", "metric");
-      tomorrowDayUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
-      return (
-        await dbFetch<TomorrowResponse>(tomorrowDayUrl, undefined, {
-          maxAge: DAY_IN_SECONDS,
-        })
-      ).data?.timelines[0]?.intervals.find((interval) =>
-        isWithinInterval(new Date(interval.startTime), {
-          start: startOfDay(TZDate.tz("Europe/Copenhagen")),
-          end: endOfDay(TZDate.tz("Europe/Copenhagen")),
         })
       );
     })(),
@@ -409,7 +376,6 @@ export default async function Page() {
           locations={allLocations}
           nextSets={nextSets}
           weatherIntervals={weatherIntervals}
-          weatherDayInterval={weatherDayInterval}
         />
       </div>
       <div
