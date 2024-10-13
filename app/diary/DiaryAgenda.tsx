@@ -368,7 +368,7 @@ export function DiaryAgenda({
                         acc[weekday].push(event);
                         return acc;
                       }, [] as unknown as Record<string, VEventWithVCalendar[]>)
-                  ).map(([weekday, events]) => (
+                  ).map(([weekday, events], i) => (
                     <li key={i}>
                       <big>{weekday} </big>
                       <ul
