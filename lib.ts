@@ -160,9 +160,11 @@ export interface IcalIoMeta {
   _io_icalUrlHash: string;
 }
 export interface MongoVEventWithVCalendar
-  extends VEventWithVCalendar,
+  extends Omit<VEventWithVCalendar, "recurrences">,
     ScrapedAt,
-    IcalIoMeta {}
+    IcalIoMeta {
+  recurrences?: Omit<VEvent, "recurrences">[];
+}
 
 export interface TomorrowIoMeta {
   _io_geohash: string;

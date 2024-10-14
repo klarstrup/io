@@ -10,12 +10,12 @@ import { RRule } from "rrule";
 import { auth } from "../auth";
 import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
-import type { MongoVEventWithVCalendar, VEventWithVCalendar } from "../lib";
+import type { MongoVEventWithVCalendar } from "../lib";
 import { MINUTE_IN_SECONDS, omit } from "../utils";
 import {
-  type CalendarResponse,
   parseICS,
   VCalendar,
+  type CalendarResponse,
   type VEvent,
 } from "../vendor/ical";
 
@@ -56,74 +56,85 @@ export async function getUserIcalEventsBetween(
 
   const DB = await getDB();
 
-  const eventsThatFallWithinRange: VEventWithVCalendar[] = [];
+  const eventsThatFallWithinRange: MongoVEventWithVCalendar[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
+  let eventsCount = 0;
   for await (const event of DB.collection<MongoVEventWithVCalendar>(
     "ical_events",
-  ).find({ _io_userId: userId })) {
-    const rrule =
-      event.type === "VEVENT" && event.rrule?.origOptions
-        ? new RRule({
-            ...event.rrule.origOptions,
-            dtstart:
-              event.rrule.origOptions.dtstart &&
-              subMinutes(
+  ).find({
+    _io_userId: userId,
+    type: "VEVENT",
+  })) {
+    eventsCount++;
+    const rrule = event.rrule?.origOptions
+      ? new RRule({
+          ...event.rrule.origOptions,
+          dtstart:
+            event.rrule.origOptions.dtstart &&
+            subMinutes(
+              event.rrule.origOptions.dtstart,
+              new TZDate(
                 event.rrule.origOptions.dtstart,
-                new TZDate(
-                  event.rrule.origOptions.dtstart,
-                  "Europe/Copenhagen",
-                ).getTimezoneOffset() -
-                  new TZDate(
-                    event.rrule.origOptions.dtstart,
-                  ).getTimezoneOffset(),
-              ),
-          })
-        : undefined;
-    const rruleDates = rrule?.between(start, end, true);
-    if (event.type === "VEVENT") {
-      if (event.recurrences) {
-        for (const recurrence of Object.values(event.recurrences)) {
-          if (
-            areIntervalsOverlapping(
-              { start: recurrence.start, end: recurrence.end },
-              { start, end },
-            )
-          ) {
-            eventsThatFallWithinRange.push({
-              ...recurrence,
-              calendar: event.calendar,
-            });
-          }
-        }
-      }
-      if (
-        areIntervalsOverlapping(
-          { start: event.start, end: event.end },
-          { start, end },
-        )
-      ) {
-        eventsThatFallWithinRange.push(omit(event, "_id"));
-      }
-      if (rruleDates) {
-        for (const rruleDate of rruleDates) {
-          if (event.recurrences?.[rruleDate.toISOString().slice(0, 10)]) {
-            continue;
-          }
-          eventsThatFallWithinRange.push({
-            ...omit(event, "_id"),
-            // RRule date is not in the correct timezone.
-            // This is partially because RRule only deals in UTC dates.
-            // But also because we are not accounting for timezone when scraping the iCal feed.
-            start: rruleDate,
-            end: addSeconds(
-              rruleDate,
-              differenceInSeconds(event.start, event.end),
+                "Europe/Copenhagen",
+              ).getTimezoneOffset() -
+                new TZDate(event.rrule.origOptions.dtstart).getTimezoneOffset(),
             ),
+        })
+      : undefined;
+    const rruleDates = rrule?.between(start, end, true);
+
+    if (event.recurrences) {
+      for (const recurrence of event.recurrences) {
+        if (
+          areIntervalsOverlapping(
+            { start: recurrence.start, end: recurrence.end },
+            { start, end },
+          )
+        ) {
+          eventsThatFallWithinRange.push({
+            ...recurrence,
+            calendar: event.calendar,
+            _io_icalUrlHash: event._io_icalUrlHash,
+            _io_userId: event._io_userId,
+            _io_scrapedAt: event._io_scrapedAt,
           });
         }
       }
     }
+    if (
+      areIntervalsOverlapping(
+        { start: event.start, end: event.end },
+        { start, end },
+      )
+    ) {
+      eventsThatFallWithinRange.push(omit(event, "_id"));
+    }
+    if (rruleDates) {
+      for (const rruleDate of rruleDates) {
+        if (
+          event.recurrences?.some(
+            (recurrence) => recurrence.start.getTime() === rruleDate.getTime(),
+          )
+        ) {
+          continue;
+        }
+        eventsThatFallWithinRange.push({
+          ...omit(event, "_id"),
+          // RRule date is not in the correct timezone.
+          // This is partially because RRule only deals in UTC dates.
+          // But also because we are not accounting for timezone when scraping the iCal feed.
+          start: rruleDate,
+          end: addSeconds(
+            rruleDate,
+            differenceInSeconds(event.start, event.end),
+          ),
+        });
+      }
+    }
   }
-
+  console.log({
+    eventsCount: eventsCount,
+    "eventsThatFallWithinRange.length": eventsThatFallWithinRange.length,
+  });
   return eventsThatFallWithinRange;
 }

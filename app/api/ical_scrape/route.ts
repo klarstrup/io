@@ -55,6 +55,7 @@ export async function GET() {
       const insertResult = await eventsCollection.insertMany(
         events.map((event) => ({
           ...event,
+          recurrences: event.recurrences && Object.values(event.recurrences),
           calendar,
           _io_scrapedAt,
           ...ioIcalMeta,

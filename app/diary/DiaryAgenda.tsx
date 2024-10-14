@@ -14,7 +14,7 @@ import * as weatherIconsByCode from "../../components/weather-icons/index";
 import type {
   DiaryEntry,
   MongoTomorrowInterval,
-  VEventWithVCalendar,
+  MongoVEventWithVCalendar,
 } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { decodeGeohash, getSunrise, getSunset } from "../../utils";
@@ -33,7 +33,7 @@ export function DiaryAgenda({
   weatherIntervals,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
-  calendarEvents: VEventWithVCalendar[];
+  calendarEvents: MongoVEventWithVCalendar[];
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
@@ -300,7 +300,7 @@ export function DiaryAgenda({
             </legend>
             {Object.entries(
               calendarEvents.reduce(
-                (memo: Record<string, VEventWithVCalendar[]>, event) => {
+                (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
                   const calName = event.calendar["WR-CALNAME"] || "Unknown";
 
                   if (!memo[calName]) memo[calName] = [];
@@ -353,7 +353,10 @@ export function DiaryAgenda({
                           acc[weekday].push(event);
                           return acc;
                         },
-                        [] as unknown as Record<string, VEventWithVCalendar[]>,
+                        [] as unknown as Record<
+                          string,
+                          MongoVEventWithVCalendar[]
+                        >,
                       ),
                   ).map(([weekday, events], i) => (
                     <li key={i}>
