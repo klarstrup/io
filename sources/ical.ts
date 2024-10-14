@@ -6,6 +6,7 @@ import {
   subMinutes,
   type Interval,
 } from "date-fns";
+import type { FilterOperators } from "mongodb";
 import { RRule } from "rrule";
 import { auth } from "../auth";
 import { getDB } from "../dbConnect";
@@ -14,7 +15,7 @@ import type { MongoVEventWithVCalendar } from "../lib";
 import { MINUTE_IN_SECONDS, omit } from "../utils";
 import {
   parseICS,
-  VCalendar,
+  type VCalendar,
   type CalendarResponse,
   type VEvent,
 } from "../vendor/ical";
@@ -58,14 +59,30 @@ export async function getUserIcalEventsBetween(
 
   const eventsThatFallWithinRange: MongoVEventWithVCalendar[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
-  let eventsCount = 0;
+  const dateSelector = {
+    $or: [
+      { start: { $gte: start, $lte: end } },
+      { end: { $gte: start, $lte: end } },
+    ],
+  } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
   for await (const event of DB.collection<MongoVEventWithVCalendar>(
     "ical_events",
   ).find({
     _io_userId: userId,
     type: "VEVENT",
+    $or: [
+      dateSelector,
+      { recurrences: { $elemMatch: dateSelector } },
+      {
+        "rrule.options.dtstart": { $lte: end },
+        "rrule.options.until": { $gte: start },
+      },
+      {
+        "rrule.options.dtstart": { $lte: end },
+        "rrule.options.until": null,
+      },
+    ],
   })) {
-    eventsCount++;
     const rrule = event.rrule?.origOptions
       ? new RRule({
           ...event.rrule.origOptions,
@@ -77,7 +94,7 @@ export async function getUserIcalEventsBetween(
                 event.rrule.origOptions.dtstart,
                 "Europe/Copenhagen",
               ).getTimezoneOffset() -
-                new TZDate(event.rrule.origOptions.dtstart).getTimezoneOffset(),
+                event.rrule.origOptions.dtstart.getTimezoneOffset(),
             ),
         })
       : undefined;
@@ -132,9 +149,6 @@ export async function getUserIcalEventsBetween(
       }
     }
   }
-  console.log({
-    eventsCount: eventsCount,
-    "eventsThatFallWithinRange.length": eventsThatFallWithinRange.length,
-  });
+
   return eventsThatFallWithinRange;
 }
