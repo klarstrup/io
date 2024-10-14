@@ -286,7 +286,7 @@ export default async function Page() {
     getNextSets({ user, to: startOfDay(new Date()) }),
     getUserIcalEventsBetween(user.id, {
       start: startOfDay(TZDate.tz("Europe/Copenhagen")),
-      end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
+      end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 2),
     }),
     getTomorrowForecasts({
       geohash: user.geohash,
@@ -343,7 +343,7 @@ export default async function Page() {
               })
             )[0]!
           }
-          calendarEvents={eventsByCalendar.flat()}
+          calendarEvents={eventsByCalendar}
           user={user}
           locations={allLocations}
           nextSets={nextSets}

@@ -1,10 +1,15 @@
 "use client";
-import { TZDate } from "@date-fns/tz";
+import { tz, TZDate } from "@date-fns/tz";
 import {
+  addDays,
   compareAsc,
   differenceInDays,
-  formatDistance,
+  differenceInHours,
+  eachDayOfInterval,
+  endOfDay,
+  intervalToDuration,
   isWithinInterval,
+  min,
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
@@ -301,16 +306,28 @@ export function DiaryAgenda({
             {Object.entries(
               calendarEvents.reduce(
                 (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
-                  const calName = event.calendar["WR-CALNAME"] || "Unknown";
+                  for (const date of eachDayOfInterval(
+                    {
+                      start: event.start,
+                      end: min([
+                        event.end,
+                        addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 2),
+                      ]),
+                    },
+                    { in: tz("Europe/Copenhagen") },
+                  ).filter((date) => differenceInHours(event.end, date) > 2)) {
+                    const calName = date.toLocaleDateString("da-DK", {
+                      timeZone: "Europe/Copenhagen",
+                    });
 
-                  if (!memo[calName]) memo[calName] = [];
-                  memo[calName].push(event);
-
+                    if (!memo[calName]) memo[calName] = [];
+                    memo[calName].push(event);
+                  }
                   return memo;
                 },
                 {},
               ),
-            ).map(([calendarName, events], i) => (
+            ).map(([dayName, events], i) => (
               <fieldset
                 key={i}
                 style={{
@@ -327,70 +344,62 @@ export function DiaryAgenda({
                 }}
               >
                 <legend style={{ marginLeft: "0.5em" }}>
-                  <big>{calendarName}</big>
+                  <big>{dayName}</big>
                 </legend>
-                <ul
-                  style={{
-                    listStyleType: "none",
-                    paddingInlineStart: 0,
-                    marginBlockStart: 0,
-                    marginBlockEnd: 0,
-                  }}
-                >
-                  {Object.entries(
-                    events
-                      .sort((a, b) => compareAsc(a.start, b.start))
-                      .reduce(
-                        (acc, event) => {
-                          const weekday = event.start.toLocaleDateString(
-                            "en-DK",
-                            {
-                              weekday: "short",
-                              timeZone: "Europe/Copenhagen",
-                            },
-                          );
-                          if (!acc[weekday]) acc[weekday] = [];
-                          acc[weekday].push(event);
-                          return acc;
-                        },
-                        [] as unknown as Record<
-                          string,
-                          MongoVEventWithVCalendar[]
-                        >,
-                      ),
-                  ).map(([weekday, events], i) => (
-                    <li key={i}>
-                      <big>{weekday} </big>
-                      <ul
-                        style={{
-                          listStyleType: "none",
-                          paddingInlineStart: 0,
-                          marginBlockStart: 0,
-                          marginBlockEnd: 0,
-                        }}
-                      >
-                        {events.map((event, i) => (
-                          <li key={i}>
-                            <big style={{ fontWeight: 800 }}>
-                              {event.datetype === "date-time"
-                                ? event.start.toLocaleTimeString("en-DK", {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                    timeZone: "Europe/Copenhagen",
-                                  })
-                                : null}
-                            </big>{" "}
-                            {event.summary}{" "}
-                            {event.datetype === "date" ? (
-                              <small>
-                                ({formatDistance(event.start, event.end)})
-                              </small>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
-                  ))}
+                <ul>
+                  {events.map((event, i) => {
+                    const duration = intervalToDuration(event);
+
+                    return (
+                      <li key={i} className="flex items-center">
+                        <div className="mr-2 text-center">
+                          <div className="font-semibold">
+                            {event.datetype === "date-time" ? (
+                              event.start.toLocaleTimeString("en-DK", {
+                                hour: "numeric",
+                                minute: "2-digit",
+                                timeZone: "Europe/Copenhagen",
+                              })
+                            ) : (
+                              <>
+                                Day{" "}
+                                {eachDayOfInterval(event, {
+                                  in: tz("Europe/Copenhagen"),
+                                })
+                                  .filter(
+                                    (date) =>
+                                      differenceInHours(event.end, date) > 2,
+                                  )
+                                  .findIndex(
+                                    (date) =>
+                                      date.toLocaleDateString("da-DK", {
+                                        timeZone: "Europe/Copenhagen",
+                                      }) === dayName,
+                                  ) + 1}
+                              </>
+                            )}{" "}
+                          </div>
+                          <div className="whitespace-nowrap text-xs">
+                            {duration.days ? `${duration.days}d` : null}
+                            {duration.hours ? `${duration.hours}h` : null}
+                            {duration.minutes ? `${duration.minutes}m` : null}
+                            {duration.seconds ? `${duration.seconds}s` : null}
+                          </div>
+                        </div>{" "}
+                        <div className="max-w-64">
+                          <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                            {event.summary}
+                          </div>
+                          <div
+                            className="overflow-hidden text-ellipsis whitespace-nowrap text-xs"
+                            title={event.location}
+                          >
+                            <i>{event.location || <>&nbsp;</>}</i>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </fieldset>
             ))}

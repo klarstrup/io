@@ -2,6 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import {
   addSeconds,
   areIntervalsOverlapping,
+  compareAsc,
   differenceInSeconds,
   subMinutes,
   type Interval,
@@ -143,12 +144,12 @@ export async function getUserIcalEventsBetween(
           start: rruleDate,
           end: addSeconds(
             rruleDate,
-            differenceInSeconds(event.start, event.end),
+            differenceInSeconds(event.end, event.start),
           ),
         });
       }
     }
   }
 
-  return eventsThatFallWithinRange;
+  return eventsThatFallWithinRange.sort((a, b) => compareAsc(a.start, b.start));
 }

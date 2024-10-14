@@ -80,6 +80,7 @@ async function updateUser(formData: FormData) {
 }
 
 export default async function UserStuff() {
+  return null;
   const session = await auth();
   const db = await getDB();
 
