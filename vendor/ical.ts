@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { addDays } from "date-fns";
 import moment from "moment-timezone";
-import { RRule, RRule as rrule } from "rrule";
+import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
 import * as zoneTable from "./windowsZones.json" assert { type: "json" };
 
@@ -872,7 +872,7 @@ const objectHandlers = {
         }
       }
 
-      curr.rrule = rrule.fromString(rule);
+      curr.rrule = RRule.fromString(rule);
     }
 
     return originalEnd(value, parameters, curr, stack);
