@@ -12,13 +12,7 @@ export function NextSets({
   onAddExercise?: (exerciseId: number) => void;
 }) {
   return (
-    <ol
-      style={{
-        paddingInlineStart: "20px",
-        marginBlockStart: 0,
-        marginBlockEnd: 0,
-      }}
-    >
+    <ol style={{ paddingInlineStart: "20px" }}>
       {nextSets.map(
         ({
           exerciseId,

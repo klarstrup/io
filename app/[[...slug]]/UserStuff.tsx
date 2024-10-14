@@ -8,8 +8,8 @@ import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
-import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 import { decodeGeohash } from "../../utils";
+import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -80,7 +80,6 @@ async function updateUser(formData: FormData) {
 }
 
 export default async function UserStuff() {
-  return null;
   const session = await auth();
   const db = await getDB();
 
@@ -152,7 +151,7 @@ export default async function UserStuff() {
       >
         🌞
       </label>
-      <input type="checkbox" id="toggle" style={{ display: "none" }} />
+      <input type="checkbox" id="toggle" className="hidden" />
       <div
         style={{
           background: "yellow",
@@ -166,13 +165,7 @@ export default async function UserStuff() {
           overflow: "auto",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            gap: "6px",
-            marginBottom: "6px",
-          }}
-        >
+        <div className="mb-2 flex gap-2">
           <Link href="/diary">Diary</Link>
           <Link href="/">Events</Link>
         </div>
@@ -202,7 +195,7 @@ export default async function UserStuff() {
                 <input
                   name="topLoggerId"
                   defaultValue={currentUser.topLoggerId || ""}
-                  style={{ flex: 1 }}
+                  className="flex-1"
                 />
                 {topLoggerUser ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -222,7 +215,7 @@ export default async function UserStuff() {
                 <input
                   name="myFitnessPalToken"
                   defaultValue={currentUser.myFitnessPalToken || ""}
-                  style={{ flex: 1 }}
+                  className="flex-1"
                 />
                 {myFitnessPalUser ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -231,7 +224,7 @@ export default async function UserStuff() {
                     src={myFitnessPalUser.image}
                     width={24}
                     height={24}
-                    style={{ borderRadius: "100%" }}
+                    className="rounded-full"
                   />
                 ) : (
                   "❌"
@@ -242,7 +235,7 @@ export default async function UserStuff() {
                 <input
                   name="runDoubleId"
                   defaultValue={currentUser.runDoubleId || ""}
-                  style={{ flex: 1 }}
+                  className="flex-1"
                 />
                 {runDoubleUser ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -262,7 +255,7 @@ export default async function UserStuff() {
                 <textarea
                   name="icalUrls"
                   defaultValue={currentUser.icalUrls?.join("\n") || ""}
-                  style={{ flex: 1 }}
+                  className="flex-1"
                   rows={
                     currentUser.icalUrls ? currentUser.icalUrls.length + 2 : 5
                   }

@@ -9,6 +9,7 @@ import {
   endOfDay,
   intervalToDuration,
   isWithinInterval,
+  max,
   min,
   startOfDay,
 } from "date-fns";
@@ -82,18 +83,12 @@ export function DiaryAgenda({
       className="flex max-w-full flex-col overflow-x-hidden rounded-3xl bg-white p-4 shadow-lg shadow-slate-600"
     >
       <div className="mb-2 ml-2 flex items-center">
-        <div style={{ flex: 1, lineHeight: 1, display: "flex" }}>
+        <div className="flex flex-1 leading-none">
           <big>
             <big>
               <big>
-                <b>Today</b> <span style={{ fontSize: "0.75em" }}>{date}</span>
-                <span
-                  style={{
-                    fontSize: "0.5em",
-                    marginLeft: "1em",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <b>Today</b> <span className="text-base">{date}</span>
+                <span className="ml-4 whitespace-nowrap text-xs">
                   Daylight:{" "}
                   {sunrise.toLocaleTimeString("en-DK", {
                     hour: "numeric",
@@ -117,35 +112,10 @@ export function DiaryAgenda({
           onAddWorkout={() => setIsAddingWorkout(true)}
         />
       </div>
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            flex: 2,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <fieldset
-            style={{
-              borderLeft: 0,
-              borderRight: 0,
-              borderTop: "0.25em solid #a0a0a0a0",
-              paddingTop: "0.5em",
-              borderBottom: "0.25em solid #a0a0a0a0",
-              paddingBottom: "0.5em",
-              borderRadius: "0.5em",
-              paddingLeft: "0.25em",
-              paddingRight: "0.25em",
-            }}
-          >
-            <legend style={{ marginLeft: "0.5em" }}>
+      <div className="flex flex-1 flex-wrap gap-2">
+        <div className="flex flex-[2] flex-col">
+          <fieldset className="rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
+            <legend className="ml-2">
               <big>Food</big>{" "}
               {dayTotalEnergy && dayTotalProtein ? (
                 <small>
@@ -157,16 +127,8 @@ export function DiaryAgenda({
             {food ? (
               <FoodEntry foodEntries={food} />
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100%",
-                  flexDirection: "column",
-                }}
-              >
-                <p style={{ marginTop: 0 }}>No food logged</p>
+              <div className="flex h-full flex-col items-center justify-center">
+                <p className="mb-2">No food logged</p>
                 <div>
                   <button
                     onClick={() => {
@@ -174,18 +136,7 @@ export function DiaryAgenda({
                         `https://www.myfitnesspal.com/food/diary?date=${date}`,
                       );
                     }}
-                    style={{
-                      fontSize: "1.25em",
-                      padding: "0.5em 0.75em",
-                      paddingRight: "1em",
-                      borderRadius: "1em",
-                      border: "none",
-                      background: "#ff0",
-                      textAlign: "center",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      marginBottom: "1em",
-                    }}
+                    className="mb-4 cursor-pointer rounded-2xl bg-[#ff0] px-3 py-2 pr-4 text-center text-xl font-semibold"
                   >
                     ➕ Food
                   </button>
@@ -193,21 +144,8 @@ export function DiaryAgenda({
               </div>
             )}
           </fieldset>
-          <fieldset
-            style={{
-              flex: "1",
-              borderLeft: 0,
-              borderRight: 0,
-              borderTop: "0.25em solid #a0a0a0a0",
-              paddingTop: "0.5em",
-              borderBottom: "0.25em solid #a0a0a0a0",
-              paddingBottom: "0.5em",
-              borderRadius: "0.5em",
-              paddingLeft: "0.25em",
-              paddingRight: "0.25em",
-            }}
-          >
-            <legend style={{ marginLeft: "0.5em" }}>
+          <fieldset className="flex-1 rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
+            <legend className="ml-2">
               <big>Workouts</big>
             </legend>
             {isAddingWorkout ? null : workouts?.length ? (
@@ -223,39 +161,13 @@ export function DiaryAgenda({
                   />
                 ))
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-around",
-                  alignItems: "center",
-                  height: "100%",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flexDirection: "column",
-                  }}
-                >
-                  <p style={{ marginTop: 0 }}>No workout logged </p>
+              <div className="flex h-full flex-wrap items-center justify-around">
+                <div className="flex flex-col items-center justify-center">
+                  <p className="mb-2">No workout logged </p>
                   <div>
                     <button
                       onClick={() => setIsAddingWorkout(true)}
-                      style={{
-                        fontSize: "1.25em",
-                        padding: "0.5em 0.75em",
-                        paddingRight: "1em",
-                        borderRadius: "1em",
-                        border: "none",
-                        background: "#ff0",
-                        textAlign: "center",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        marginBottom: "1em",
-                      }}
+                      className="mb-4 cursor-pointer rounded-2xl bg-[#ff0] px-3 py-2 pr-4 text-center text-xl font-semibold"
                     >
                       ➕ Workout
                     </button>
@@ -270,7 +182,7 @@ export function DiaryAgenda({
               </div>
             )}
             {isAddingWorkout ? (
-              <fieldset style={{ width: "100%" }}>
+              <fieldset className="w-full">
                 <legend>New workout</legend>
                 <WorkoutForm
                   date={date}
@@ -284,23 +196,8 @@ export function DiaryAgenda({
           </fieldset>
         </div>
         {calendarEvents?.length ? (
-          <fieldset
-            style={{
-              flex: 1,
-              borderLeft: 0,
-              borderRight: 0,
-              borderTop: "0.25em solid #a0a0a0a0",
-              paddingTop: "0.5em",
-              borderBottom: "0.25em solid #a0a0a0a0",
-              paddingBottom: "0.5em",
-              borderRadius: "0.5em",
-              paddingLeft: "0.25em",
-              paddingRight: "0.25em",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <legend style={{ marginLeft: "0.5em" }}>
+          <fieldset className="flex flex-1 flex-col rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
+            <legend className="ml-2">
               <big>Events</big>
             </legend>
             {Object.entries(
@@ -308,7 +205,10 @@ export function DiaryAgenda({
                 (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
                   for (const date of eachDayOfInterval(
                     {
-                      start: event.start,
+                      start: max([
+                        event.start,
+                        startOfDay(TZDate.tz("Europe/Copenhagen")),
+                      ]),
                       end: min([
                         event.end,
                         addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 2),
@@ -330,20 +230,9 @@ export function DiaryAgenda({
             ).map(([dayName, events], i) => (
               <fieldset
                 key={i}
-                style={{
-                  flex: 1,
-                  borderTop: 0,
-                  borderBottom: 0,
-                  borderLeft: "0.25em solid #a0a0a0a0",
-                  paddingLeft: "0.5em",
-                  borderRight: "0.25em solid #a0a0a0a0",
-                  paddingRight: "0.5em",
-                  borderRadius: "0.5em",
-                  paddingTop: "0.25em",
-                  paddingBottom: "0.25em",
-                }}
+                className="flex-1 rounded-lg border-x-4 border-y-0 border-gray-200 px-2 py-1"
               >
-                <legend style={{ marginLeft: "0.5em" }}>
+                <legend className="ml-2">
                   <big>{dayName}</big>
                 </legend>
                 <ul>
@@ -351,8 +240,8 @@ export function DiaryAgenda({
                     const duration = intervalToDuration(event);
 
                     return (
-                      <li key={i} className="flex items-center">
-                        <div className="mr-2 text-center">
+                      <li key={i} className="flex items-center gap-2">
+                        <div className="text-center">
                           <div className="font-semibold">
                             {event.datetype === "date-time" ? (
                               event.start.toLocaleTimeString("en-DK", {
@@ -407,38 +296,11 @@ export function DiaryAgenda({
         ) : null}
       </div>
       {weatherIntervals?.[0] && (
-        <fieldset
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            padding: "0.5em",
-            borderLeft: 0,
-            borderRight: 0,
-            borderTop: "0.25em solid #a0a0a0a0",
-            paddingTop: "0.5em",
-            borderBottom: "0.25em solid #a0a0a0a0",
-            paddingBottom: "0.5em",
-            borderRadius: "0.5em",
-            paddingLeft: "0.25em",
-            paddingRight: "0.25em",
-          }}
-        >
-          <legend style={{ marginLeft: "0.5em" }}>
+        <fieldset className="flex flex-1 flex-col rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
+          <legend className="ml-2">
             <big>Weather</big>
           </legend>
-          <ul
-            style={{
-              listStyleType: "none",
-              paddingInlineStart: 0,
-              marginBlockStart: 0,
-              marginBlockEnd: 0,
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-around",
-              overflowX: "hidden",
-            }}
-          >
+          <ul className="flex justify-around overflow-x-hidden">
             {weatherIntervals.map((interval, i) => {
               const extendedWeatherCode = `${interval.values.weatherCode}${
                 isWithinInterval(new Date(interval.startTime), {
@@ -459,22 +321,9 @@ export function DiaryAgenda({
                     dayWeatherCode as keyof typeof weatherIconsByCode
                   ]);
               return (
-                <li
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    flexDirection: "column",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      flexDirection: "row",
-                    }}
-                  >
-                    <big style={{ fontWeight: 800, fontSize: "1.4em" }}>
+                <li key={i} className="flex flex-col items-center">
+                  <div className="flex items-center">
+                    <big className="text-lg font-bold">
                       {new TZDate(
                         interval.startTime,
                         "Europe/Copenhagen",
@@ -489,54 +338,37 @@ export function DiaryAgenda({
                         alt={prettyPrintWeatherCode(extendedWeatherCode)}
                         title={prettyPrintWeatherCode(extendedWeatherCode)}
                         width={24}
-                        style={{ verticalAlign: "middle" }}
+                        className="align-middle"
                       />
                     ) : (
                       extendedWeatherCode
                     )}
                   </div>
                   <div>
-                    <span
-                      style={{ fontSize: "1.4em", verticalAlign: "middle" }}
-                    >
+                    <span className="align-middle text-lg">
                       {interval.values.temperatureApparent.toFixed(0)}
                     </span>
-                    <sup style={{ fontSize: "0.5em" }}>c</sup>
-                    <sub
-                      style={{
-                        fontSize: "0.7em",
-                        marginLeft: "-5px",
-                      }}
-                      title={"Humidity"}
-                    >
+                    <sup className="text-base">c</sup>
+                    <sub className="-ml-2 text-sm" title="Humidity">
                       {interval.values.humidity.toFixed(0)}%
                     </sub>{" "}
                   </div>
                   <div>
-                    <span
-                      style={{ fontSize: "1.4em", verticalAlign: "middle" }}
-                    >
+                    <span className="align-middle text-lg">
                       {interval.values.windSpeed.toFixed(0)}
                     </span>
-                    <sup style={{ fontSize: "0.7em" }}>m/s</sup>{" "}
+                    <sup className="text-sm">m/s</sup>{" "}
                   </div>
                   {interval.values.precipitationProbability > 0 &&
                   interval.values.precipitationIntensity >= 0.2 ? (
                     <div>
-                      <span
-                        style={{
-                          fontSize: "1.4em",
-                          verticalAlign: "middle",
-                        }}
-                      >
+                      <span className="align-middle text-lg">
                         {interval.values.precipitationIntensity.toFixed(2)}
                       </span>
-                      <sup style={{ fontSize: "0.7em" }}>mm</sup>
+                      <sup className="text-sm">mm</sup>
                       <sub
-                        style={{
-                          fontSize: "0.7em",
-                          marginLeft: "-14px",
-                        }}
+                        className="-ml-2 text-sm"
+                        title="Precipitation Probability"
                       >
                         {interval.values.precipitationProbability.toFixed(0)}%
                       </sub>

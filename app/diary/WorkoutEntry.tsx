@@ -146,8 +146,6 @@ export default function WorkoutEntry({
                     style={{
                       paddingInlineStart:
                         workoutGroup.sets.length === 1 ? 0 : "1em",
-                      marginBlockStart: 0,
-                      marginBlockEnd: 0,
                     }}
                   >
                     {workoutGroup.sets.map((set, setIndex) => (

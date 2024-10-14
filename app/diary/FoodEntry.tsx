@@ -20,10 +20,6 @@ export function FoodEntry({
       {foodEntries ? (
         <ul
           style={{
-            paddingInlineStart: 0,
-            marginBlockStart: 0,
-            marginBlockEnd: 0,
-            listStyleType: "none",
             display: "grid",
             gap: "8px 4px",
             gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",

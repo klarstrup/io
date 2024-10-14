@@ -129,9 +129,7 @@ export function WorkoutForm({
               : { exercises: [] },
           );
         })}
-        style={{
-          flex: 1,
-        }}
+        className="flex-1"
       >
         {onClose ? (
           <button type="button" onClick={onClose}>
@@ -145,9 +143,7 @@ export function WorkoutForm({
           <button
             disabled={isSubmitting}
             type="button"
-            onClick={async () => {
-              await deleteWorkout(workout._id!);
-            }}
+            onClick={() => deleteWorkout(workout._id!)}
           >
             Delete
           </button>
@@ -197,18 +193,13 @@ export function WorkoutForm({
               (nextSet) => nextSet.exerciseId === exercise.id,
             );
             return (
-              <fieldset
-                key={field.id}
-                style={{ display: "flex", flexDirection: "column" }}
-              >
-                <legend
-                  style={{ flex: "1", fontWeight: 600, fontSize: "0.9em" }}
-                >
+              <fieldset key={field.id} className="flex flex-col">
+                <legend className="flex-1 text-sm font-semibold">
                   {exercise.name}{" "}
                   <StealthButton
                     onClick={() => remove(index)}
                     disabled={isSubmitting}
-                    style={{ lineHeight: 0 }}
+                    className="leading-[0]"
                   >
                     ❌
                   </StealthButton>
@@ -221,7 +212,7 @@ export function WorkoutForm({
                       update(newIndex, source);
                     }}
                     disabled={index === 0 || isSubmitting}
-                    style={{ lineHeight: 0 }}
+                    className="leading-[0]"
                   >
                     ⬆️
                   </StealthButton>
@@ -234,7 +225,7 @@ export function WorkoutForm({
                       update(newIndex, source);
                     }}
                     disabled={index === fields.length - 1 || isSubmitting}
-                    style={{ lineHeight: 0 }}
+                    className="leading-[0]"
                   >
                     ⬇️
                   </StealthButton>
@@ -433,7 +424,7 @@ function SetsForm({
                   }),
                 })
               }
-              style={{ lineHeight: 0 }}
+              className="leading-[0]"
             >
               ➕
             </StealthButton>
@@ -445,7 +436,7 @@ function SetsForm({
                 {input.allowed_units && input.allowed_units.length > 1 ? (
                   <select
                     value={sets[0]?.inputs[inputIndex]?.unit}
-                    style={{ flex: 1, fontSize: "inherit" }}
+                    className="flex-1 [font-size:inherit]"
                     onChange={(event) => {
                       const unit = event.target.value as Unit;
                       sets.forEach((set, setIndex) => {
@@ -478,11 +469,7 @@ function SetsForm({
                   input.type !== InputType.Options &&
                   input.type !== InputType.Grade ? (
                   <>
-                    (
-                    <span style={{ width: "auto", flex: 1 }}>
-                      {input.metric_unit}
-                    </span>
-                    )
+                    (<span className="w-auto flex-1">{input.metric_unit}</span>)
                   </>
                 ) : null}
               </small>
@@ -504,10 +491,10 @@ function SetsForm({
               exercise={exercise}
             />
             <td>
-              <div style={{ display: "flex" }}>
+              <div className="flex">
                 <StealthButton
                   onClick={() => remove(index)}
-                  style={{ lineHeight: 0 }}
+                  className="leading-[0]"
                 >
                   ❌
                 </StealthButton>
@@ -520,7 +507,7 @@ function SetsForm({
                     update(newIndex, source);
                   }}
                   disabled={index === 0}
-                  style={{ lineHeight: 0 }}
+                  className="leading-[0]"
                 >
                   ⬆️
                 </StealthButton>
@@ -533,7 +520,7 @@ function SetsForm({
                     update(newIndex, source);
                   }}
                   disabled={index === sets.length - 1}
-                  style={{ lineHeight: 0 }}
+                  className="leading-[0]"
                 >
                   ⬇️
                 </StealthButton>
@@ -564,13 +551,13 @@ function InputsForm({
 }) {
   return exercise.inputs.map((input) => (
     <td key={input.id}>
-      <div style={{ display: "flex" }}>
+      <div className="flex">
         {input.type === InputType.Options && input.options ? (
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
             )}
-            style={{ flex: 1 }}
+            className="flex-1"
           >
             {input.hidden_by_default ? <option value={""}>---</option> : null}
             {input.options.map((option, i) => (
@@ -585,9 +572,9 @@ function InputsForm({
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assistType`,
             )}
-            style={{ flex: 1 }}
+            className="flex-1"
           >
-            {input.hidden_by_default ? <option value={""}>---</option> : null}
+            {input.hidden_by_default ? <option value="">---</option> : null}
             {input.options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.value}
