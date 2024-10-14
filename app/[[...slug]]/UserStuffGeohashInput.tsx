@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { encodeGeohash } from "../../utils";
 
-export function UserStuffGeohashInput(props: { geohash: string | null }) {
-  const [geohash, setGeohash] = useState<string | null>(props.geohash);
+export function UserStuffGeohashInput(props: { geohash?: string | null }) {
+  const [geohash, setGeohash] = useState<string | null>(props.geohash ?? null);
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
     useState<boolean>(false);
 

@@ -36,6 +36,19 @@ async function updateUser(formData: FormData) {
     }
   }
 
+  const timeZone = formData.get("timeZone");
+  if (typeof timeZone === "string") {
+    try {
+      if (timeZone.trim()) {
+        // Crash out if the timezone is invalid
+        new Date().toLocaleString("da-DK", { timeZone: timeZone.trim() });
+      }
+      newUser.timeZone = timeZone.trim() || null;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   const fitocracySessionId = formData.get("fitocracySessionId");
   if (typeof fitocracySessionId === "string") {
     newUser.fitocracySessionId = fitocracySessionId.trim() || null;
@@ -189,6 +202,14 @@ export default async function UserStuff() {
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>Location</legend>
                 <UserStuffGeohashInput geohash={currentUser.geohash} />
+              </fieldset>
+              <fieldset style={{ display: "flex", gap: "6px" }}>
+                <legend>Time Zone</legend>
+                <input
+                  name="timeZone"
+                  defaultValue={currentUser.timeZone || ""}
+                  className="flex-1"
+                />
               </fieldset>
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>TopLogger ID</legend>
