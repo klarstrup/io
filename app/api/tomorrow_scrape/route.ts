@@ -1,7 +1,7 @@
 import { auth } from "../../../auth";
 import { getDB } from "../../../dbConnect";
 import type { ScrapedAt, TomorrowIoMeta, TomorrowResponse } from "../../../lib";
-import { IUser } from "../../../models/user";
+import type { IUser } from "../../../models/user";
 import { fetchTomorrowTimelineIntervals } from "../../../sources/tomorrow";
 
 export const dynamic = "force-dynamic";
@@ -32,9 +32,7 @@ export async function GET() {
 
     const uniqueGeohash4s = new Set<string>();
     for await (const user of DB.collection<IUser>("users").find()) {
-      if (user.geohash) {
-        uniqueGeohash4s.add(user.geohash.slice(0, 4));
-      }
+      if (user.geohash) uniqueGeohash4s.add(user.geohash.slice(0, 4));
     }
     for (const geohash of uniqueGeohash4s) {
       const intervals = await fetchTomorrowTimelineIntervals({ geohash });

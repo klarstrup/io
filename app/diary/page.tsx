@@ -11,9 +11,9 @@ import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
-import { type DiaryEntry, MongoTomorrowInterval } from "../../lib";
-import { IUser } from "../../models/user";
-import { WorkoutData } from "../../models/workout";
+import type { DiaryEntry } from "../../lib";
+import type { IUser } from "../../models/user";
+import type { WorkoutData } from "../../models/workout";
 import { getNextSets } from "../../models/workout.server";
 import {
   type Fitocracy,
@@ -23,6 +23,7 @@ import { getUserIcalEventsBetween } from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
+import { getTomorrowForecasts } from "../../sources/tomorrow";
 import {
   type TopLogger,
   workoutFromTopLoggerAscends,
@@ -273,7 +274,13 @@ export default async function Page() {
 
   const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
   const to = startOfDay(TZDate.tz("Europe/Copenhagen"));
-  const promises = [
+  const [
+    diaryEntries,
+    allLocations,
+    nextSets,
+    eventsByCalendar,
+    weatherIntervals,
+  ] = await Promise.all([
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
     getNextSets({ user, to: startOfDay(new Date()) }),
@@ -281,21 +288,11 @@ export default async function Page() {
       start: startOfDay(TZDate.tz("Europe/Copenhagen")),
       end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 7),
     }),
-    (async () => {
-      if (!user.geohash) return;
-
-      return (
-        await DB.collection<MongoTomorrowInterval>("tomorrow_intervals")
-          .find({
-            _io_geohash: user.geohash.slice(0, 4),
-            startTime: {
-              $gte: TZDate.tz("Europe/Copenhagen"),
-              $lt: addHours(TZDate.tz("Europe/Copenhagen"), 12),
-            },
-          })
-          .toArray()
-      ).map((interval) => ({ ...interval, _id: interval._id.toString() }));
-    })(),
+    getTomorrowForecasts({
+      geohash: user.geohash,
+      start: TZDate.tz("Europe/Copenhagen"),
+      end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
+    }),
     (async () => {
       if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
         const myFitnessPalToken = user?.myFitnessPalToken;
@@ -317,29 +314,7 @@ export default async function Page() {
         }
       }
     })(),
-  ] as const;
-  const [
-    diaryEntries,
-    allLocations,
-    nextSets,
-    eventsByCalendar,
-    weatherIntervals,
-  ] = await Promise.all(
-    promises.map(async (promise, i) => {
-      const promiseName = [
-        "getDiaryEntries",
-        "getAllWorkoutLocations",
-        "getNextSets",
-        "getUserIcalEventsBetween",
-        "getWeatherIntervals",
-        "getMyFitnessPalSession",
-      ][i];
-      console.time(promiseName);
-      const result = await promise;
-      console.timeEnd(promiseName);
-      return result;
-    }) as unknown as typeof promises,
-  );
+  ]);
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),

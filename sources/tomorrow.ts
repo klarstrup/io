@@ -1,7 +1,8 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, endOfDay, startOfDay, subSeconds } from "date-fns";
+import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
-import { TomorrowResponse } from "../lib";
+import type { MongoTomorrowInterval, TomorrowResponse } from "../lib";
 import { decodeGeohash, HOUR_IN_SECONDS } from "../utils";
 
 export async function fetchTomorrowTimelineIntervals({
@@ -41,9 +42,34 @@ export async function fetchTomorrowTimelineIntervals({
   tomorrowUrl.searchParams.set("timesteps", "1h");
   tomorrowUrl.searchParams.set("units", "metric");
   tomorrowUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
+
   return (
-    await dbFetch<TomorrowResponse>(tomorrowUrl, undefined, {
-      maxAge: HOUR_IN_SECONDS,
+    (
+      await dbFetch<TomorrowResponse>(tomorrowUrl, undefined, {
+        maxAge: HOUR_IN_SECONDS,
+      })
+    ).data?.timelines[0]?.intervals ?? []
+  );
+}
+
+export async function getTomorrowForecasts({
+  geohash,
+  start,
+  end,
+}: {
+  geohash?: string | null;
+  start: Date;
+  end: Date;
+}) {
+  if (!geohash) return;
+
+  const DB = await getDB();
+
+  return await DB.collection<MongoTomorrowInterval>("tomorrow_intervals")
+    .find({
+      _io_geohash: geohash.slice(0, 4),
+      startTime: { $gte: start, $lt: end },
     })
-  ).data?.timelines[0]?.intervals!;
+    .map((interval) => ({ ...interval, _id: interval._id.toString() }))
+    .toArray();
 }
