@@ -4,7 +4,6 @@ import {
   addHours,
   endOfDay,
   isAfter,
-  isWithinInterval,
   startOfDay,
   subWeeks,
 } from "date-fns";
@@ -274,13 +273,7 @@ export default async function Page() {
 
   const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
   const to = startOfDay(TZDate.tz("Europe/Copenhagen"));
-  const [
-    diaryEntries,
-    allLocations,
-    nextSets,
-    eventsByCalendar,
-    weatherIntervals,
-  ] = await Promise.all([
+  const promises = [
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
     getNextSets({ user, to: startOfDay(new Date()) }),
@@ -324,7 +317,29 @@ export default async function Page() {
         }
       }
     })(),
-  ]);
+  ] as const;
+  const [
+    diaryEntries,
+    allLocations,
+    nextSets,
+    eventsByCalendar,
+    weatherIntervals,
+  ] = await Promise.all(
+    promises.map(async (promise, i) => {
+      const promiseName = [
+        "getDiaryEntries",
+        "getAllWorkoutLocations",
+        "getNextSets",
+        "getUserIcalEventsBetween",
+        "getWeatherIntervals",
+        "getMyFitnessPalSession",
+      ][i];
+      console.time(promiseName);
+      const result = await promise;
+      console.timeEnd(promiseName);
+      return result;
+    }) as unknown as typeof promises,
+  );
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
