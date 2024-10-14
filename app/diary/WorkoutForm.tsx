@@ -25,6 +25,7 @@ import {
 import type { getNextSets } from "../../models/workout.server";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
+import { DEFAULT_TIMEZONE } from "../../utils";
 
 function isValidDate(date: Date) {
   return !isNaN(date.getTime());
@@ -57,7 +58,8 @@ export function WorkoutForm({
   locations: string[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
-  const now = TZDate.tz("Europe/Copenhagen");
+  const timeZone = user.timeZone ?? DEFAULT_TIMEZONE;
+  const now = TZDate.tz(timeZone);
   const todayDate = `${now.getFullYear()}-${
     now.getMonth() + 1
   }-${now.getDate()}`;
@@ -81,11 +83,7 @@ export function WorkoutForm({
 
   const dueSets = nextSets
     ?.filter(
-      (nextSet) =>
-        differenceInDays(
-          startOfDay(TZDate.tz("Europe/Copenhagen")),
-          nextSet.workedOutAt,
-        ) > 3,
+      (nextSet) => differenceInDays(startOfDay(now), nextSet.workedOutAt) > 3,
     )
     .filter(
       (nextSet) =>
@@ -151,11 +149,7 @@ export function WorkoutForm({
         <input
           type="date"
           {...register("workedOutAt", { valueAsDate: true })}
-          defaultValue={
-            workout
-              ? String(dateToInputDate(workout?.workedOutAt))
-              : String(dateToInputDate(TZDate.tz("Europe/Copenhagen")))
-          }
+          defaultValue={String(dateToInputDate(workout?.workedOutAt ?? now))}
           hidden={!workout && todayDate !== date}
         />
         <Controller
@@ -325,10 +319,7 @@ export function WorkoutForm({
         ) : null}
         {nextSets?.filter(
           (nextSet) =>
-            differenceInDays(
-              startOfDay(TZDate.tz("Europe/Copenhagen")),
-              nextSet.workedOutAt,
-            ) <= 3,
+            differenceInDays(startOfDay(now), nextSet.workedOutAt) <= 3,
         ).length ? (
           <div>
             <small>
@@ -336,10 +327,7 @@ export function WorkoutForm({
               <NextSets
                 nextSets={nextSets.filter(
                   (nextSet) =>
-                    differenceInDays(
-                      startOfDay(TZDate.tz("Europe/Copenhagen")),
-                      nextSet.workedOutAt,
-                    ) <= 3,
+                    differenceInDays(startOfDay(now), nextSet.workedOutAt) <= 3,
                 )}
               />
             </small>

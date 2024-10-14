@@ -28,7 +28,7 @@ import {
   type TopLogger,
   workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises } from "../../utils";
+import { allPromises, DEFAULT_TIMEZONE } from "../../utils";
 import LoadMore from "../[[...slug]]/LoadMore";
 import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
@@ -60,6 +60,7 @@ const getAllWorkoutLocations = async (user: Session["user"]) => {
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const DB = await getDB();
 
@@ -73,7 +74,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     "myfitnesspal_food_entries",
   );
 
-  const now = TZDate.tz("Europe/Copenhagen");
+  const now = TZDate.tz(timeZone);
   const todayStr = `${now.getFullYear()}-${
     now.getMonth() + 1
   }-${now.getDate()}`;
@@ -260,7 +261,7 @@ async function loadMoreData(cursor: string) {
 export default async function Page() {
   const user = (await auth())?.user;
 
-  if (!user)
+  if (!user) {
     return (
       <div>
         <span>Hello, stranger!</span>
@@ -269,11 +270,16 @@ export default async function Page() {
         </p>
       </div>
     );
+  }
+
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+
+  const now = TZDate.tz(timeZone);
 
   const DB = await getDB();
 
-  const from = subWeeks(TZDate.tz("Europe/Copenhagen"), weeksPerPage);
-  const to = startOfDay(TZDate.tz("Europe/Copenhagen"));
+  const from = subWeeks(now, weeksPerPage);
+  const to = startOfDay(now);
   const [
     diaryEntries,
     allLocations,
@@ -283,15 +289,15 @@ export default async function Page() {
   ] = await Promise.all([
     getDiaryEntries({ from, to }),
     getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(new Date()) }),
+    getNextSets({ user, to: startOfDay(now) }),
     getUserIcalEventsBetween(user.id, {
-      start: startOfDay(TZDate.tz("Europe/Copenhagen")),
-      end: addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 2),
+      start: startOfDay(now),
+      end: addDays(endOfDay(now), 2),
     }),
     getTomorrowForecasts({
       geohash: user.geohash,
-      start: TZDate.tz("Europe/Copenhagen"),
-      end: addHours(TZDate.tz("Europe/Copenhagen"), 12),
+      start: now,
+      end: addHours(now, 12),
     }),
     (async () => {
       if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
@@ -339,7 +345,7 @@ export default async function Page() {
           diaryEntry={
             (
               await getDiaryEntries({
-                from: startOfDay(TZDate.tz("Europe/Copenhagen")),
+                from: startOfDay(now),
               })
             )[0]!
           }

@@ -1,6 +1,8 @@
 import { differenceInDays, isWithinInterval, type Interval } from "date-fns";
 import type { DateInterval } from "./lib";
 
+export const DEFAULT_TIMEZONE = "Europe/Copenhagen";
+
 export class RelativeURL extends URL {
   constructor(url: string | URL) {
     super(url, "http://n");

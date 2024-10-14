@@ -13,11 +13,11 @@ import { auth } from "../auth";
 import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { MongoVEventWithVCalendar } from "../lib";
-import { MINUTE_IN_SECONDS, omit } from "../utils";
+import { DEFAULT_TIMEZONE, MINUTE_IN_SECONDS, omit } from "../utils";
 import {
   parseICS,
-  type VCalendar,
   type CalendarResponse,
+  type VCalendar,
   type VEvent,
 } from "../vendor/ical";
 
@@ -93,7 +93,7 @@ export async function getUserIcalEventsBetween(
               event.rrule.origOptions.dtstart,
               new TZDate(
                 event.rrule.origOptions.dtstart,
-                "Europe/Copenhagen",
+                event.rrule.options.tzid ?? DEFAULT_TIMEZONE,
               ).getTimezoneOffset() -
                 event.rrule.origOptions.dtstart.getTimezoneOffset(),
             ),

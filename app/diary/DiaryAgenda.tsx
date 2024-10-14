@@ -23,7 +23,12 @@ import type {
   MongoVEventWithVCalendar,
 } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
-import { decodeGeohash, getSunrise, getSunset } from "../../utils";
+import {
+  decodeGeohash,
+  DEFAULT_TIMEZONE,
+  getSunrise,
+  getSunset,
+} from "../../utils";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
 import { NextSets } from "./NextSets";
@@ -45,6 +50,8 @@ export function DiaryAgenda({
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
   weatherIntervals?: MongoTomorrowInterval[];
 }) {
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
 
   const [date, { food, workouts }] = diaryEntry;
@@ -60,21 +67,19 @@ export function DiaryAgenda({
 
   const dueSets = nextSets?.filter(
     (nextSet) =>
-      differenceInDays(
-        startOfDay(TZDate.tz("Europe/Copenhagen")),
-        nextSet.workedOutAt,
-      ) > 3,
+      differenceInDays(startOfDay(TZDate.tz(timeZone)), nextSet.workedOutAt) >
+      3,
   );
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    TZDate.tz("Europe/Copenhagen"),
+    TZDate.tz(timeZone),
   );
   const sunset = getSunset(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    TZDate.tz("Europe/Copenhagen"),
+    TZDate.tz(timeZone),
   );
 
   return (
@@ -93,13 +98,13 @@ export function DiaryAgenda({
                   {sunrise.toLocaleTimeString("en-DK", {
                     hour: "numeric",
                     minute: "2-digit",
-                    timeZone: "Europe/Copenhagen",
+                    timeZone,
                   })}
                   -
                   {sunset.toLocaleTimeString("en-DK", {
                     hour: "numeric",
                     minute: "2-digit",
-                    timeZone: "Europe/Copenhagen",
+                    timeZone,
                   })}
                 </span>
               </big>
@@ -207,17 +212,17 @@ export function DiaryAgenda({
                     {
                       start: max([
                         event.start,
-                        startOfDay(TZDate.tz("Europe/Copenhagen")),
+                        startOfDay(TZDate.tz(timeZone)),
                       ]),
                       end: min([
                         event.end,
-                        addDays(endOfDay(TZDate.tz("Europe/Copenhagen")), 2),
+                        addDays(endOfDay(TZDate.tz(timeZone)), 2),
                       ]),
                     },
-                    { in: tz("Europe/Copenhagen") },
+                    { in: tz(timeZone) },
                   ).filter((date) => differenceInHours(event.end, date) > 2)) {
                     const calName = date.toLocaleDateString("da-DK", {
-                      timeZone: "Europe/Copenhagen",
+                      timeZone,
                     });
 
                     if (!memo[calName]) memo[calName] = [];
@@ -247,14 +252,12 @@ export function DiaryAgenda({
                               event.start.toLocaleTimeString("en-DK", {
                                 hour: "numeric",
                                 minute: "2-digit",
-                                timeZone: "Europe/Copenhagen",
+                                timeZone,
                               })
                             ) : (
                               <>
                                 Day{" "}
-                                {eachDayOfInterval(event, {
-                                  in: tz("Europe/Copenhagen"),
-                                })
+                                {eachDayOfInterval(event, { in: tz(timeZone) })
                                   .filter(
                                     (date) =>
                                       differenceInHours(event.end, date) > 2,
@@ -262,7 +265,7 @@ export function DiaryAgenda({
                                   .findIndex(
                                     (date) =>
                                       date.toLocaleDateString("da-DK", {
-                                        timeZone: "Europe/Copenhagen",
+                                        timeZone,
                                       }) === dayName,
                                   ) + 1}
                               </>
@@ -326,10 +329,10 @@ export function DiaryAgenda({
                     <big className="text-lg font-bold">
                       {new TZDate(
                         interval.startTime,
-                        "Europe/Copenhagen",
+                        timeZone,
                       ).toLocaleTimeString("en-DK", {
                         hour: "numeric",
-                        timeZone: "Europe/Copenhagen",
+                        timeZone,
                       })}
                     </big>
                     {weatherIcon ? (

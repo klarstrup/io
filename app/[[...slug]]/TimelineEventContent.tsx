@@ -13,7 +13,7 @@ import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
-import { seconds2time } from "../../utils";
+import { DEFAULT_TIMEZONE, seconds2time } from "../../utils";
 import ProblemByProblem from "./ProblemByProblem";
 
 const sex = true;
@@ -159,6 +159,8 @@ export default async function TimelineEventContent({
           ),
     );
 
+  const timeZone = DEFAULT_TIMEZONE;
+
   return (
     <Fragment key={id}>
       <div
@@ -172,7 +174,7 @@ export default async function TimelineEventContent({
             day: "numeric",
             hour: differenceInDays(start, end) ? undefined : "numeric",
             minute: differenceInDays(start, end) ? undefined : "2-digit",
-            timeZone: "Europe/Copenhagen",
+            timeZone: timeZone,
           }).formatRange(
             ...([start, end].sort((a, b) => Number(a) - Number(b)) as [
               Date,

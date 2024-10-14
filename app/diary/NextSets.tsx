@@ -1,8 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { formatDistance, formatDistanceStrict, startOfDay } from "date-fns";
+import { formatDistanceStrict, startOfDay } from "date-fns";
 import { StealthButton } from "../../components/StealthButton";
 import { exercises } from "../../models/exercises";
 import type { getNextSets } from "../../models/workout.server";
+import { DEFAULT_TIMEZONE } from "../../utils";
 
 export function NextSets({
   nextSets,
@@ -46,11 +47,8 @@ export function NextSets({
                   Last set{" "}
                   {formatDistanceStrict(
                     workedOutAt,
-                    startOfDay(TZDate.tz("Europe/Copenhagen")),
-                    {
-                      addSuffix: true,
-                      roundingMethod: "floor",
-                    },
+                    startOfDay(TZDate.tz(DEFAULT_TIMEZONE)),
+                    { addSuffix: true, roundingMethod: "floor" },
                   )}{" "}
                 </small>
               </small>

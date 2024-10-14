@@ -11,6 +11,7 @@ import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutForm } from "./WorkoutForm";
+import { DEFAULT_TIMEZONE } from "../../utils";
 
 export function DiaryEntryItem({
   diaryEntry,
@@ -26,7 +27,8 @@ export function DiaryEntryItem({
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const now = TZDate.tz("Europe/Copenhagen");
+  const timeZone = user.timeZone ?? DEFAULT_TIMEZONE;
+  const now = TZDate.tz(timeZone);
   const todayStr = `${now.getFullYear()}-${
     now.getMonth() + 1
   }-${now.getDate()}`;

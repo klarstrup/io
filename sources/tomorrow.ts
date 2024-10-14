@@ -3,7 +3,7 @@ import { addDays, endOfDay, startOfDay, subSeconds } from "date-fns";
 import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { MongoTomorrowInterval, TomorrowResponse } from "../lib";
-import { decodeGeohash, HOUR_IN_SECONDS } from "../utils";
+import { decodeGeohash, DEFAULT_TIMEZONE, HOUR_IN_SECONDS } from "../utils";
 
 export async function fetchTomorrowTimelineIntervals({
   geohash,
@@ -16,25 +16,25 @@ export async function fetchTomorrowTimelineIntervals({
   const tomorrowUrl = new URL("https://api.tomorrow.io/v4/timelines");
 
   // Dump precision to 4 characters(+/- 20-40km(lat-lng)), it's the fucking weather.
-  const userLocation = geohash && decodeGeohash(geohash.slice(0, 4));
+  const location = geohash && decodeGeohash(geohash.slice(0, 4));
   tomorrowUrl.searchParams.set(
     "location",
-    userLocation
-      ? `${userLocation.latitude},${userLocation.longitude}`
+    location
+      ? `${location.latitude},${location.longitude}`
       : `55.658693,12.489322`,
   );
   tomorrowUrl.searchParams.set(
     "startTime",
-    subSeconds(startOfDay(TZDate.tz("Europe/Copenhagen")), 1).toISOString(),
+    subSeconds(startOfDay(TZDate.tz(DEFAULT_TIMEZONE)), 1).toISOString(),
   );
   tomorrowUrl.searchParams.set(
     "endTime",
     subSeconds(
-      endOfDay(addDays(TZDate.tz("Europe/Copenhagen"), 4)),
+      endOfDay(addDays(TZDate.tz(DEFAULT_TIMEZONE), 4)),
       1,
     ).toISOString(),
   );
-  tomorrowUrl.searchParams.set("timezone", "Europe/Copenhagen");
+  tomorrowUrl.searchParams.set("timezone", DEFAULT_TIMEZONE);
   tomorrowUrl.searchParams.set(
     "fields",
     "temperatureApparent,humidity,windSpeed,windDirection,windGust,precipitationIntensity,precipitationProbability,precipitationType,cloudCover,weatherCode",
