@@ -64,6 +64,7 @@ export async function getUserIcalEventsBetween(
     $or: [
       { start: { $gte: start, $lte: end } },
       { end: { $gte: start, $lte: end } },
+      { start: { $lte: start }, end: { $gte: end } },
     ],
   } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
   for await (const event of DB.collection<MongoVEventWithVCalendar>(
