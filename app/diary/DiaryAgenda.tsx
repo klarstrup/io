@@ -65,21 +65,20 @@ export function DiaryAgenda({
     0,
   );
 
+  const now = TZDate.tz(timeZone);
   const dueSets = nextSets?.filter(
-    (nextSet) =>
-      differenceInDays(startOfDay(TZDate.tz(timeZone)), nextSet.workedOutAt) >
-      3,
+    (nextSet) => differenceInDays(startOfDay(now), nextSet.workedOutAt) > 3,
   );
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    TZDate.tz(timeZone),
+    now,
   );
   const sunset = getSunset(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    TZDate.tz(timeZone),
+    now,
   );
 
   return (
@@ -210,14 +209,8 @@ export function DiaryAgenda({
                 (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
                   for (const date of eachDayOfInterval(
                     {
-                      start: max([
-                        event.start,
-                        startOfDay(TZDate.tz(timeZone)),
-                      ]),
-                      end: min([
-                        event.end,
-                        addDays(endOfDay(TZDate.tz(timeZone)), 2),
-                      ]),
+                      start: max([event.start, startOfDay(now)]),
+                      end: min([event.end, addDays(endOfDay(now), 2)]),
                     },
                     { in: tz(timeZone) },
                   ).filter((date) => differenceInHours(event.end, date) > 2)) {
