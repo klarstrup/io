@@ -3,32 +3,23 @@ import { getDB } from "../../../dbConnect";
 import type { ScrapedAt, TomorrowIoMeta, TomorrowResponse } from "../../../lib";
 import type { IUser } from "../../../models/user";
 import { fetchTomorrowTimelineIntervals } from "../../../sources/tomorrow";
+import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function GET() {
-  const user = (await auth())?.user;
-  if (!user) return new Response("Unauthorized", { status: 401 });
+export const GET = () =>
+  jsonStreamResponse(async function* () {
+    const user = (await auth())?.user;
+    if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const geohash = user.geohash;
-  if (!geohash) {
-    return new Response("No geohash", { status: 401 });
-  }
+    const geohash = user.geohash;
+    if (!geohash) return new Response("No geohash", { status: 401 });
 
-  const responseStream = new TransformStream<Uint8Array, string>();
-  const writer = responseStream.writable.getWriter();
-
-  const DB = await getDB();
-  const forecastsCollection = DB.collection<
-    TomorrowResponse & ScrapedAt & TomorrowIoMeta
-  >("tomorrow_intervals");
-
-  (async () => {
-    const encoder = new TextEncoder();
-
-    await writer.write(encoder.encode("[\n"));
-    let first = true;
+    const DB = await getDB();
+    const forecastsCollection = DB.collection<
+      TomorrowResponse & ScrapedAt & TomorrowIoMeta
+    >("tomorrow_intervals");
 
     const uniqueGeohash4s = new Set<string>();
     for await (const user of DB.collection<IUser>("users").find()) {
@@ -52,23 +43,7 @@ export async function GET() {
           { upsert: true },
         );
 
-        if (first) {
-          first = false;
-        } else {
-          await writer.write(encoder.encode(",\n"));
-        }
-        await writer.write(
-          encoder.encode(JSON.stringify([interval.startTime, updateResult])),
-        );
+        yield [interval.startTime, updateResult] as const;
       }
     }
-
-    await writer.write(encoder.encode("\n]"));
-
-    await writer.close();
-  })().catch(() => {});
-
-  return new Response(responseStream.readable, {
-    headers: { "Content-Type": "application/json" },
   });
-}
