@@ -6,26 +6,19 @@ import {
   extractIcalCalendarAndEvents,
   fetchAndParseIcal,
 } from "../../../sources/ical";
+import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function GET() {
-  const user = (await auth())?.user;
-  if (!user) return new Response("Unauthorized", { status: 401 });
+export const GET = () =>
+  jsonStreamResponse(async function* () {
+    const user = (await auth())?.user;
+    if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const responseStream = new TransformStream<Uint8Array, string>();
-  const writer = responseStream.writable.getWriter();
-
-  const DB = await getDB();
-  const eventsCollection =
-    DB.collection<MongoVEventWithVCalendar>("ical_events");
-
-  (async () => {
-    const encoder = new TextEncoder();
-
-    await writer.write(encoder.encode("[\n"));
-    let first = true;
+    const DB = await getDB();
+    const eventsCollection =
+      DB.collection<MongoVEventWithVCalendar>("ical_events");
 
     for (const icalUrl of user.icalUrls ?? []) {
       const icalData = await fetchAndParseIcal(icalUrl);
@@ -62,31 +55,12 @@ export async function GET() {
         })),
       );
 
-      if (first) {
-        first = false;
-      } else {
-        await writer.write(encoder.encode(",\n"));
-      }
-
-      await writer.write(
-        encoder.encode(
-          JSON.stringify({
-            icalUrlHash,
-            fetchedEventsCount: events.length,
-            existingEventsCount: existingEventsCount,
-            deletedCount: deleteResult.deletedCount,
-            insertedCount: insertResult.insertedCount,
-          }),
-        ),
-      );
+      yield {
+        icalUrlHash,
+        fetchedEventsCount: events.length,
+        existingEventsCount: existingEventsCount,
+        deletedCount: deleteResult.deletedCount,
+        insertedCount: insertResult.insertedCount,
+      };
     }
-
-    await writer.write(encoder.encode("\n]"));
-
-    await writer.close();
-  })().catch(() => {});
-
-  return new Response(responseStream.readable, {
-    headers: { "Content-Type": "application/json" },
   });
-}
