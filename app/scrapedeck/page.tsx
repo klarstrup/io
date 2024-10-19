@@ -41,11 +41,13 @@ export default function Page() {
           style={{ height: "100%", width: "100%", flex: 1 }}
         />
       </div>
+      {/*
       <Script key="reload" id="reload">
         {
           "setInterval(()=>Array.from(window.frames).forEach(window=>window.location.reload()), 1000*60);"
         }
       </Script>
+      */}
     </center>
   );
 }
