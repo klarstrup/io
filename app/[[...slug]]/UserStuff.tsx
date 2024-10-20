@@ -9,6 +9,7 @@ import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
 import { TopLogger, fetchUser } from "../../sources/toplogger";
 import { decodeGeohash } from "../../utils";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
+import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -173,28 +174,26 @@ export default async function UserStuff() {
               {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
               <img
                 src={user.image || ""}
-                width={48}
-                height={48}
-                style={{ borderRadius: "100%" }}
+                className="h-6 max-h-6 w-6 max-w-6 rounded-full"
               />
             </span>
             <p>
               <a href="/api/auth/signout">Sign out</a>
             </p>
             <form action={updateUser}>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
+              <FieldSetY className="flex items-center gap-1.5">
                 <legend>Location</legend>
                 <UserStuffGeohashInput geohash={user.geohash} />
-              </fieldset>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
+              </FieldSetY>
+              <FieldSetY className="flex items-center gap-1.5">
                 <legend>Time Zone</legend>
                 <input
                   name="timeZone"
                   defaultValue={user.timeZone || ""}
                   className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
-              </fieldset>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
+              </FieldSetY>
+              <FieldSetX className="flex items-center gap-1.5">
                 <legend>TopLogger ID</legend>
                 <input
                   name="topLoggerId"
@@ -206,15 +205,15 @@ export default async function UserStuff() {
                   <img
                     alt="TopLogger Avatar"
                     src={topLoggerUser.avatar}
-                    width={24}
-                    height={24}
-                    style={{ borderRadius: "100%" }}
+                    className="h-6 max-h-6 w-6 max-w-6 rounded-full"
                   />
                 ) : (
-                  "❌"
+                  <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
+                    ❌
+                  </span>
                 )}
-              </fieldset>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
+              </FieldSetX>
+              <FieldSetX className="flex items-center gap-1.5">
                 <legend>MyFitnessPal Token</legend>
                 <input
                   name="myFitnessPalToken"
@@ -226,15 +225,15 @@ export default async function UserStuff() {
                   <img
                     alt="MyFitnessPal Avatar"
                     src={myFitnessPalUser.image}
-                    width={24}
-                    height={24}
-                    className="rounded-full"
+                    className="h-6 max-h-6 w-6 max-w-6 rounded-full"
                   />
                 ) : (
-                  "❌"
+                  <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
+                    ❌
+                  </span>
                 )}
-              </fieldset>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
+              </FieldSetX>
+              <FieldSetX className="flex items-center gap-1.5">
                 <legend>RunDouble ID</legend>
                 <input
                   name="runDoubleId"
@@ -246,15 +245,15 @@ export default async function UserStuff() {
                   <img
                     alt="MyFitnessPal Avatar"
                     src={`https://gravatar.com/avatar/${runDoubleUser.gravatarHash}`}
-                    width={24}
-                    height={24}
-                    style={{ borderRadius: "100%" }}
+                    className="h-6 max-h-6 w-6 max-w-6 rounded-full"
                   />
                 ) : (
-                  "❌"
+                  <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
+                    ❌
+                  </span>
                 )}
-              </fieldset>
-              <fieldset style={{ display: "flex", gap: "6px" }}>
+              </FieldSetX>
+              <FieldSetX className="flex items-center gap-1.5">
                 <legend>iCal URLs</legend>
                 <textarea
                   name="icalUrls"
@@ -265,7 +264,7 @@ export default async function UserStuff() {
                     "https://example.com/calendar.ics\nhttps://example.com/other.ics"
                   }
                 />
-              </fieldset>
+              </FieldSetX>
               <input type="submit" value="Update" />
             </form>
           </div>

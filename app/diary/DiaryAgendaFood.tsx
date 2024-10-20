@@ -1,3 +1,4 @@
+import { FieldSetY } from "../../components/FieldSet";
 import type { DiaryEntry } from "../../lib";
 import { FoodEntry } from "./FoodEntry";
 
@@ -18,7 +19,7 @@ export function DiaryAgendaFood({
   );
 
   return (
-    <fieldset className="rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
+    <FieldSetY>
       <legend className="ml-2">
         <big>Food</big>{" "}
         {dayTotalEnergy && dayTotalProtein ? (
@@ -44,7 +45,7 @@ export function DiaryAgendaFood({
           </div>
         </div>
       )}
-    </fieldset>
+    </FieldSetY>
   );
 }
 

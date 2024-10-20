@@ -3,6 +3,7 @@ import { TZDate } from "@date-fns/tz";
 import { compareAsc, differenceInDays, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import { useState } from "react";
+import { FieldSetY } from "../../components/FieldSet";
 import type { DiaryEntry } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
@@ -33,7 +34,7 @@ export function DiaryAgendaWorkouts({
   );
 
   return (
-    <fieldset className="flex-1 rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
+    <FieldSetY className="flex-1">
       <legend className="ml-2">
         <big>Workouts</big>
       </legend>
@@ -82,6 +83,6 @@ export function DiaryAgendaWorkouts({
           />
         </fieldset>
       ) : null}
-    </fieldset>
+    </FieldSetY>
   );
 }
