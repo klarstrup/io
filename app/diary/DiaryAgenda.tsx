@@ -1,5 +1,7 @@
 import { TZDate } from "@date-fns/tz";
+import { addDays, subDays } from "date-fns";
 import type { Session } from "next-auth";
+import Link from "next/link";
 import type { DiaryEntry } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import {
@@ -13,6 +15,8 @@ import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
 
+const dateToString = (date: Date) =>
+  `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 export function DiaryAgenda({
   date,
   diaryEntry,
@@ -51,7 +55,7 @@ export function DiaryAgenda({
       key={date}
       className="flex h-full flex-col overflow-x-hidden bg-white p-4 shadow-lg shadow-slate-600"
     >
-      <div className="flex-0 mb-2 ml-3 flex items-center gap-2 leading-none">
+      <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-2 leading-none">
         {isToday ? <span className="text-xl">Today</span> : null}
         <span className="text-xl font-semibold">{date}</span>
         <span className="ml-2 whitespace-nowrap text-xs">
@@ -68,6 +72,15 @@ export function DiaryAgenda({
             timeZone,
           })}
           🌙
+        </span>
+        <span>
+          <Link href={`/diary/${dateToString(subDays(new Date(date), 1))}`}>
+            ⬅️
+          </Link>
+          <Link href={`/diary`}>🗓️</Link>
+          <Link href={`/diary/${dateToString(addDays(new Date(date), 1))}`}>
+            ➡️
+          </Link>
         </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
