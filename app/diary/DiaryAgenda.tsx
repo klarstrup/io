@@ -49,9 +49,9 @@ export function DiaryAgenda({
   return (
     <div
       key={date}
-      className="flex max-w-full flex-col overflow-x-hidden rounded-3xl bg-white p-4 shadow-lg shadow-slate-600"
+      className="flex h-full flex-col overflow-x-hidden bg-white p-4 shadow-lg shadow-slate-600"
     >
-      <div className="mb-2 ml-3 flex items-center gap-2 leading-none">
+      <div className="flex-0 mb-2 ml-3 flex items-center gap-2 leading-none">
         {isToday ? <span className="text-xl">Today</span> : null}
         <span className="text-xl font-semibold">{date}</span>
         <span className="ml-2 whitespace-nowrap text-xs">
@@ -71,7 +71,7 @@ export function DiaryAgenda({
         </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
-        <div className="flex flex-[2] flex-col">
+        <div className="flex flex-1 flex-col">
           <DiaryAgendaFood date={date} food={food} />
           <DiaryAgendaWorkouts
             date={date}

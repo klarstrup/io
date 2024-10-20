@@ -55,11 +55,7 @@ export function DiaryEntryItem({
           }}
         >
           <big>
-            <big>
-              <big>
-                <b style={{ lineHeight: 1.25, whiteSpace: "nowrap" }}>{date}</b>
-              </big>
-            </big>
+            <b style={{ lineHeight: 1.25, whiteSpace: "nowrap" }}>{date}</b>
           </big>
         </div>
       </div>

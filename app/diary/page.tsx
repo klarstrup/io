@@ -199,7 +199,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   return diaryEntries;
 }
 
-async function loadMoreData(cursor: string) {
+async function loadMoreData(cursor: string, params: Record<string, string>) {
   "use server";
 
   const user = (await auth())?.user;
@@ -223,6 +223,7 @@ async function loadMoreData(cursor: string) {
   return [
     <DiaryEntryList
       diaryEntries={diaryEntries}
+      pickedDate={params.date as `${number}-${number}-${number}`}
       key={JSON.stringify({ from, to })}
     />,
     JSON.stringify({ from: subWeeks(from, weeksPerPage), to: from }),
@@ -291,43 +292,42 @@ export default async function Page({
   return (
     <div>
       <UserStuff />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, 1fr)",
-          gridTemplateRows: "masonry",
-          gap: "1em",
-          padding: "1em",
-          maxWidth: "64em",
-          margin: "0 auto",
-        }}
-      >
-        <DiaryAgenda
-          date={date}
-          diaryEntry={
-            (diaryEntries.find(([dateStr]) => dateStr === date) ??
-              diaryEntries[0])?.[1]
-          }
-          user={user}
-          locations={allLocations}
-          nextSets={nextSets}
-        />
-      </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(20em, 1fr))",
-          gridTemplateRows: "masonry",
-          gap: "1em",
-          padding: "1em",
-        }}
-      >
-        <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
-          <DiaryEntryList
-            diaryEntries={diaryEntries.slice(1)}
-            pickedDate={params.date}
+      <div className="flex">
+        <div className="w-1/3">
+          <DiaryAgenda
+            date={date}
+            diaryEntry={
+              (diaryEntries.find(([dateStr]) => dateStr === date) ??
+                diaryEntries[0])?.[1]
+            }
+            user={user}
+            locations={allLocations}
+            nextSets={nextSets}
           />
-        </LoadMore>
+        </div>
+        <div
+          className="flex-1"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(8em, 1fr))",
+            gridTemplateRows: "masonry",
+            gap: "1em",
+            padding: "1em",
+            overflowY: "scroll",
+            maxHeight: "100vh",
+          }}
+        >
+          <LoadMore
+            params={params}
+            loadMoreAction={loadMoreData}
+            initialCursor={initialCursor}
+          >
+            <DiaryEntryList
+              diaryEntries={diaryEntries.slice(1)}
+              pickedDate={params.date}
+            />
+          </LoadMore>
+        </div>
       </div>
     </div>
   );

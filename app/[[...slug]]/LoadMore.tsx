@@ -6,11 +6,14 @@ const LoadMore = ({
   children,
   initialCursor,
   loadMoreAction,
+  params,
 }: React.PropsWithChildren<{
   initialCursor: string;
   loadMoreAction: (
     cursor: string,
+    params: Record<string, string>,
   ) => Promise<readonly [ReactNode | null, string | null]>;
+  params: Record<string, string>;
 }>) => {
   const { ref, inView } = useInView();
   const [loadMoreNodes, setLoadMoreNodes] = useState<ReactNode[]>([]);
@@ -22,7 +25,7 @@ const LoadMore = ({
   const loadMore = useEvent(async (abortController?: AbortController) => {
     if (currentOffsetRef === undefined) return;
 
-    const [node, next] = await loadMoreAction(currentOffsetRef);
+    const [node, next] = await loadMoreAction(currentOffsetRef, params);
     if (abortController?.signal.aborted) return;
 
     if (node !== null) {
