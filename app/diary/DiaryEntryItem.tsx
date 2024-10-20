@@ -117,6 +117,7 @@ function WorkoutsSummary({
         gap: "0.25em",
         alignItems: "center",
         justifyContent: "center",
+        lineHeight: 1,
       }}
     >
       {Array.from(exercisesDone).map((exerciseId) => {
