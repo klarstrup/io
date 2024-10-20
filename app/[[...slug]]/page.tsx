@@ -7,7 +7,7 @@ import {
 } from "date-fns";
 import { getDB } from "../../dbConnect";
 import type { EventEntry } from "../../lib";
-import { IUser } from "../../models/user";
+import { Users } from "../../models/user.server";
 import {
   getIoClimbAlongCompetitionEventEntry,
   ioClimbAlongEventsWithIds,
@@ -101,7 +101,7 @@ const getData = async (
   { from, to }: { from?: Date; to?: Date } | undefined = {},
 ) => {
   const DB = await getDB();
-  const user = await DB.collection<IUser>("users").findOne();
+  const user = await Users.findOne();
 
   let topLoggerUser: TopLogger.User | null = null;
   try {

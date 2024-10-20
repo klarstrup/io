@@ -8,7 +8,7 @@ import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
 import { getDB } from "../../dbConnect";
 import { EventEntry } from "../../lib";
-import { IUser } from "../../models/user";
+import { Users } from "../../models/user.server";
 import {
   getIoClimbAlongCompetitionEventEntry,
   ioClimbAlongEventsWithIds,
@@ -31,7 +31,7 @@ export const revalidate = 600; // 10 minutes
 
 export async function GET() {
   const DB = await getDB();
-  const user = await DB.collection<IUser>("users").findOne();
+  const user = await Users.findOne();
 
   let topLoggerUser: TopLogger.User | null = null;
   try {

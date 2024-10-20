@@ -5,7 +5,7 @@ import type { Session } from "next-auth";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
-import type { IUser } from "../../models/user";
+import { Users } from "../../models/user.server";
 import { getNextSets, Workouts } from "../../models/workout.server";
 import {
   type Fitocracy,
@@ -276,7 +276,7 @@ export default async function Page() {
           if (myFitnessPalToken) {
             try {
               const session = await getMyFitnessPalSession(myFitnessPalToken);
-              await DB.collection<IUser>("users").updateOne(
+              await Users.updateOne(
                 { _id: new ObjectId(user.id) },
                 {
                   $set: {

@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
-import { type IUser } from "../../models/user";
+import { Users } from "../../models/user.server";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
@@ -74,9 +74,7 @@ async function updateUser(formData: FormData) {
       .filter((url) => url);
   }
 
-  await db
-    .collection<IUser>("users")
-    .updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
+  await Users.updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
 
   // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
   // calling it at all will make the page rerender with the new data.

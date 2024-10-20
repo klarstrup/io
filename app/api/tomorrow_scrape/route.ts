@@ -1,7 +1,7 @@
 import { auth } from "../../../auth";
 import { getDB } from "../../../dbConnect";
 import type { ScrapedAt, TomorrowIoMeta, TomorrowResponse } from "../../../lib";
-import type { IUser } from "../../../models/user";
+import { Users } from "../../../models/user.server";
 import { fetchTomorrowTimelineIntervals } from "../../../sources/tomorrow";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -22,7 +22,7 @@ export const GET = () =>
     >("tomorrow_intervals");
 
     const uniqueGeohash4s = new Set<string>();
-    for await (const user of DB.collection<IUser>("users").find()) {
+    for await (const user of Users.find()) {
       if (user.geohash) uniqueGeohash4s.add(user.geohash.slice(0, 4));
     }
     for (const geohash of uniqueGeohash4s) {

@@ -1,8 +1,7 @@
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-import { getDB } from "./dbConnect";
-import { IUser } from "./models/user";
+import { Users } from "./models/user.server";
 import { mongoClient } from "./mongodb";
 
 const {
@@ -27,9 +26,7 @@ const {
 const auth = process.env.VERCEL
   ? authRaw
   : async () => {
-      const DB = await getDB();
-
-      const userDocument = await DB.collection<IUser>("users").findOne();
+      const userDocument = await Users.findOne();
 
       if (!userDocument) throw new Error("Unauthorized");
 
