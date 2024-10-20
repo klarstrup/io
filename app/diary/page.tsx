@@ -28,7 +28,7 @@ import { DiaryEntryList } from "./DiaryEntryList";
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
 
-const weeksPerPage = 4;
+const weeksPerPage = 24;
 
 type DayStr = `${number}-${number}-${number}`;
 

@@ -120,51 +120,53 @@ function WorkoutsSummary({
         lineHeight: 1,
       }}
     >
-      {Array.from(exercisesDone).map((exerciseId) => {
-        const exercise = exercises.find(({ id }) => exerciseId === id)!;
+      {Array.from(exercisesDone)
+        .sort()
+        .map((exerciseId) => {
+          const exercise = exercises.find(({ id }) => exerciseId === id)!;
 
-        return (
-          <span key={exercise.id} title={exercise.name}>
-            {exercise.name === "Bouldering" ? (
-              "🧗‍♀️"
-            ) : exercise.tags?.some(
-                (tag) =>
-                  tag.type === TagType.Equipment && tag.name === "Barbell",
-              ) ? (
-              "🏋️‍♀️"
-            ) : exercise.tags?.some(
-                (tag) =>
-                  tag.type === TagType.Equipment &&
-                  (tag.name === "Dumbbell" ||
-                    tag.name === "EZ Bar" ||
-                    tag.name === "Cables" ||
-                    tag.name === "Machine"),
-              ) ? (
-              "💪"
-            ) : exercise.tags?.some(
-                (tag) =>
-                  tag.type === TagType.MuscleGroup && tag.name === "Cardio",
-              ) ? (
-              "🏃‍♀️"
-            ) : exercise.tags?.some(
-                (tag) =>
-                  tag.type === TagType.Type && tag.name === "Calisthenics",
-              ) ? (
-              "🤸🏻"
-            ) : (
-              <span
-                style={{
-                  fontSize: "0.125em",
-                  display: "inline-block",
-                  maxWidth: "12em",
-                }}
-              >
-                {exercise.name}
-              </span>
-            )}
-          </span>
-        );
-      })}
+          return (
+            <span key={exercise.id} title={exercise.name}>
+              {exercise.name === "Bouldering" ? (
+                "🧗‍♀️"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.Equipment && tag.name === "Barbell",
+                ) ? (
+                "🏋️‍♀️"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.Equipment &&
+                    (tag.name === "Dumbbell" ||
+                      tag.name === "EZ Bar" ||
+                      tag.name === "Cables" ||
+                      tag.name === "Machine"),
+                ) ? (
+                "💪"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.MuscleGroup && tag.name === "Cardio",
+                ) ? (
+                "🏃‍♀️"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.Type && tag.name === "Calisthenics",
+                ) ? (
+                "🤸🏻"
+              ) : (
+                <span
+                  style={{
+                    fontSize: "0.125em",
+                    display: "inline-block",
+                    maxWidth: "12em",
+                  }}
+                >
+                  {exercise.name}
+                </span>
+              )}
+            </span>
+          );
+        })}
     </div>
   );
 }
