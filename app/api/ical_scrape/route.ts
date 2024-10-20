@@ -1,11 +1,11 @@
 import { createHash } from "crypto";
 import { auth } from "../../../auth";
-import { getDB } from "../../../dbConnect";
-import type { IcalIoMeta, MongoVEventWithVCalendar } from "../../../lib";
+import type { IcalIoMeta } from "../../../lib";
 import {
   extractIcalCalendarAndEvents,
   fetchAndParseIcal,
 } from "../../../sources/ical";
+import { IcalEvents } from "../../../sources/ical.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -15,10 +15,6 @@ export const GET = () =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
-
-    const DB = await getDB();
-    const eventsCollection =
-      DB.collection<MongoVEventWithVCalendar>("ical_events");
 
     for (const icalUrl of user.icalUrls ?? []) {
       const icalData = await fetchAndParseIcal(icalUrl);
@@ -34,8 +30,7 @@ export const GET = () =>
       };
       const { calendar, events } = extractIcalCalendarAndEvents(icalData);
 
-      const existingEventsCount =
-        await eventsCollection.countDocuments(ioIcalMeta);
+      const existingEventsCount = await IcalEvents.countDocuments(ioIcalMeta);
 
       // This accounts for a situation where we ingest an empty or otherwise malformed iCal feed
       if (existingEventsCount * 0.9 > events.length) {
@@ -44,8 +39,8 @@ export const GET = () =>
         );
         continue;
       }
-      const deleteResult = await eventsCollection.deleteMany(ioIcalMeta);
-      const insertResult = await eventsCollection.insertMany(
+      const deleteResult = await IcalEvents.deleteMany(ioIcalMeta);
+      const insertResult = await IcalEvents.insertMany(
         events.map((event) => ({
           ...event,
           recurrences: event.recurrences && Object.values(event.recurrences),

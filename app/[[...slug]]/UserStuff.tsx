@@ -2,7 +2,6 @@ import { ObjectId } from "mongodb";
 import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../../auth";
-import { getDB } from "../../dbConnect";
 import { Users } from "../../models/user.server";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
@@ -18,7 +17,6 @@ async function updateUser(formData: FormData) {
 
   if (!user) throw new Error("No user found");
 
-  const db = await getDB();
   const newUser = { ...user };
 
   const geohash = formData.get("geohash");

@@ -5,7 +5,6 @@ import {
   isWithinInterval,
   subMonths,
 } from "date-fns";
-import { getDB } from "../../dbConnect";
 import type { EventEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import {
@@ -101,7 +100,6 @@ const getData = async (
   disciplines?: string[],
   { from, to }: { from?: Date; to?: Date } | undefined = {},
 ) => {
-  const DB = await getDB();
   const user = await Users.findOne();
 
   let topLoggerUser: TopLogger.User | null = null;

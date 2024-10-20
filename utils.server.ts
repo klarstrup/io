@@ -11,6 +11,7 @@ type ProxyCollection<TSchema extends Document> = Pick<
   | "countDocuments"
   | "updateMany"
   | "deleteMany"
+  | "insertMany"
   | "createIndexes"
 >;
 export function proxyCollection<

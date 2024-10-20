@@ -1,5 +1,4 @@
 import { auth } from "../../../auth";
-import { getDB } from "../../../dbConnect";
 import { getRuns } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { jsonStreamResponse } from "../scraper-utils";

@@ -10,7 +10,6 @@ import {
 import type { FilterOperators } from "mongodb";
 import { RRule } from "rrule";
 import { auth } from "../auth";
-import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import type { MongoVEventWithVCalendar } from "../lib";
 import { DEFAULT_TIMEZONE, MINUTE_IN_SECONDS, omit } from "../utils";
@@ -20,6 +19,7 @@ import {
   type VCalendar,
   type VEvent,
 } from "../vendor/ical";
+import { IcalEvents } from "./ical.server";
 
 export const fetchAndParseIcal = async (icalUrl: string) =>
   parseICS(
@@ -56,8 +56,6 @@ export async function getUserIcalEventsBetween(
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
-  const DB = await getDB();
-
   const eventsThatFallWithinRange: MongoVEventWithVCalendar[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
@@ -67,9 +65,7 @@ export async function getUserIcalEventsBetween(
       { start: { $lte: start }, end: { $gte: end } },
     ],
   } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
-  for await (const event of DB.collection<MongoVEventWithVCalendar>(
-    "ical_events",
-  ).find({
+  for await (const event of IcalEvents.find({
     _io_userId: userId,
     type: "VEVENT",
     $or: [

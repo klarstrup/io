@@ -3,7 +3,6 @@ import { isAfter, startOfDay, subWeeks } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
-import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import { getNextSets, Workouts } from "../../models/workout.server";
@@ -19,18 +18,18 @@ import {
   type TopLogger,
   workoutFromTopLoggerAscends,
 } from "../../sources/toplogger";
-import { allPromises, DEFAULT_TIMEZONE } from "../../utils";
-import LoadMore from "../[[...slug]]/LoadMore";
-import UserStuff from "../[[...slug]]/UserStuff";
-import "../page.css";
-import { DiaryAgenda } from "./DiaryAgenda";
-import { DiaryEntryList } from "./DiaryEntryList";
 import {
   TopLoggerAscends,
   TopLoggerClimbs,
   TopLoggerGyms,
   TopLoggerHolds,
 } from "../../sources/toplogger.server";
+import { allPromises, DEFAULT_TIMEZONE } from "../../utils";
+import LoadMore from "../[[...slug]]/LoadMore";
+import UserStuff from "../[[...slug]]/UserStuff";
+import "../page.css";
+import { DiaryAgenda } from "./DiaryAgenda";
+import { DiaryEntryList } from "./DiaryEntryList";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -54,8 +53,6 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-
-  const DB = await getDB();
 
   const now = TZDate.tz(timeZone);
   const todayStr = `${now.getFullYear()}-${
@@ -254,8 +251,6 @@ export default async function Page() {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const now = TZDate.tz(timeZone);
-
-  const DB = await getDB();
 
   const from = subWeeks(now, weeksPerPage);
   const [[todayDiaryEntry, ...diaryEntries], allLocations, nextSets] =
