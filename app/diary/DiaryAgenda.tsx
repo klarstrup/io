@@ -28,6 +28,7 @@ import {
   DEFAULT_TIMEZONE,
   getSunrise,
   getSunset,
+  roundToNearestDay,
 } from "../../utils";
 import { EntryAdder } from "./EntryAdder";
 import { FoodEntry } from "./FoodEntry";
@@ -209,8 +210,18 @@ export function DiaryAgenda({
                 (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
                   for (const date of eachDayOfInterval(
                     {
-                      start: max([event.start, startOfDay(now)]),
-                      end: min([event.end, addDays(endOfDay(now), 2)]),
+                      start: max([
+                        event.datetype === "date"
+                          ? roundToNearestDay(event.start)
+                          : event.start,
+                        startOfDay(now),
+                      ]),
+                      end: min([
+                        event.datetype === "date"
+                          ? roundToNearestDay(event.end)
+                          : event.end,
+                        addDays(endOfDay(now), 2),
+                      ]),
                     },
                     { in: tz(timeZone) },
                   ).filter((date) => differenceInHours(event.end, date) > 2)) {

@@ -1,4 +1,13 @@
-import { differenceInDays, isWithinInterval, type Interval } from "date-fns";
+import {
+  addDays,
+  type ContextOptions,
+  differenceInDays,
+  type Interval,
+  isWithinInterval,
+  type RoundingMethod,
+  type RoundingOptions,
+  startOfDay,
+} from "date-fns";
 import type { DateInterval } from "./lib";
 
 export const DEFAULT_TIMEZONE = "Europe/Copenhagen";
@@ -278,6 +287,7 @@ export function decodeGeohash(hashString: string) {
  * Default zenith
  */
 const DEFAULT_ZENITH = 91.05; // This gives a result similar to Tomorrow.io
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEFAULT_ZENITH_OLD = 90.8333; // This is the value used by the original implementation
 
 /**
@@ -393,3 +403,30 @@ export const getSunset = (
   longitude: number,
   date = new Date(),
 ) => calculate(latitude, longitude, false, DEFAULT_ZENITH, date);
+
+const getRoundingMethod =
+  (method: RoundingMethod | undefined): ((number: number) => number) =>
+  (number) => {
+    const round = method ? Math[method] : Math.trunc;
+    const result = round(number);
+    // Prevent negative zero
+    return result === 0 ? 0 : result;
+  };
+
+export interface RoundToNearestDaysOptions<DateType extends Date = Date>
+  extends RoundingOptions,
+    ContextOptions<DateType> {}
+export function roundToNearestDay<
+  DateType extends Date,
+  ResultDate extends Date = DateType,
+>(date: DateType, options?: RoundToNearestDaysOptions<ResultDate>): ResultDate {
+  const hours =
+    date.getHours() +
+    date.getMinutes() / 60 +
+    date.getSeconds() / 60 / 60 +
+    date.getMilliseconds() / 1000 / 60 / 60;
+
+  const roundingMethod = getRoundingMethod(options?.roundingMethod ?? "round");
+
+  return addDays(startOfDay(date), roundingMethod(hours / 24) - 1);
+}
