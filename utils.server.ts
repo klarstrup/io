@@ -11,6 +11,7 @@ type ProxyCollection<TSchema extends Document> = Pick<
   | "countDocuments"
   | "updateMany"
   | "deleteMany"
+  | "createIndexes"
 >;
 export function proxyCollection<
   TSchema extends Document,
@@ -20,13 +21,27 @@ export function proxyCollection<
     // @ts-expect-error - ?
     get<K extends keyof PCollection>(_target: unknown, property: K) {
       if (property === "find") {
-        return async function* (...args: Parameters<PCollection["find"]>) {
-          const DB = await getDB();
+        return function (...args: Parameters<PCollection["find"]>) {
+          return {
+            async *[Symbol.asyncIterator]() {
+              const DB = await getDB();
 
-          // @ts-expect-error - ?
-          for await (const document of DB.collection(name).find(...args)) {
-            yield document;
-          }
+              // @ts-expect-error - ?
+              for await (const document of DB.collection(name).find(...args)) {
+                yield document;
+              }
+            },
+            async toArray() {
+              const DB = await getDB();
+
+              return (
+                DB.collection(name)
+                  // @ts-expect-error - ?
+                  .find(...args)
+                  .toArray()
+              );
+            },
+          };
         };
       }
 

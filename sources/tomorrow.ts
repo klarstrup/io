@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, endOfDay, startOfDay, subSeconds } from "date-fns";
 import { dbFetch } from "../fetch";
-import type { ScrapedAt, TomorrowIoMeta, TomorrowResponse } from "../lib";
+import type { TomorrowResponse } from "../lib";
 import { decodeGeohash, DEFAULT_TIMEZONE, HOUR_IN_SECONDS } from "../utils";
 import { TomorrowIntervals } from "./tomorrow.server";
 
@@ -63,15 +63,12 @@ export async function getTomorrowForecasts({
 }) {
   if (!geohash) return;
 
-  const intervals: (TomorrowResponse &
-    ScrapedAt &
-    TomorrowIoMeta & { _id: string })[] = [];
+  return (
+    await TomorrowIntervals.find({
+      _io_geohash: geohash.slice(0, 4),
+      startTime: { $gte: start, $lt: end },
+    })
 
-  for await (const document of TomorrowIntervals.find({
-    _io_geohash: geohash.slice(0, 4),
-    startTime: { $gte: start, $lt: end },
-  })) {
-    intervals.push({ ...document, _id: document._id.toString() });
-  }
-  return intervals;
+      .toArray()
+  ).map((document) => ({ ...document, _id: document._id.toString() }));
 }

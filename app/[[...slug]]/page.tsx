@@ -22,6 +22,7 @@ import {
   fetchUser,
   getTopLoggerGroupEventEntry,
 } from "../../sources/toplogger";
+import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
 import "../page.css";
 import LoadMore from "./LoadMore";
 import { TimelineEventsList } from "./TimelineEventsList";
@@ -121,11 +122,7 @@ const getData = async (
         getIoClimbAlongCompetitionEventEntry(eventId, ioId),
       ),
       ...(topLoggerUserId
-        ? await DB.collection<Omit<TopLogger.GroupUserMultiple, "user">>(
-            "toplogger_group_users",
-          )
-            .find({ user_id: topLoggerUserId })
-            .toArray()
+        ? await TopLoggerGroupUsers.find({ user_id: topLoggerUserId }).toArray()
         : []
       ).map(({ group_id, user_id }) =>
         getTopLoggerGroupEventEntry(group_id, user_id),

@@ -1,6 +1,4 @@
 import { auth } from "../../../auth";
-import { getDB } from "../../../dbConnect";
-import type { ScrapedAt } from "../../../lib";
 import {
   type TopLogger,
   fetchAscends,
@@ -11,6 +9,16 @@ import {
   fetchGymHolds,
   gymLoader,
 } from "../../../sources/toplogger";
+import {
+  TopLoggerAscends,
+  TopLoggerClimbs,
+  TopLoggerGroupUsers,
+  TopLoggerGroups,
+  TopLoggerGymGroups,
+  TopLoggerGyms,
+  TopLoggerHolds,
+  TopLoggerUsers,
+} from "../../../sources/toplogger.server";
 import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
 
 export const dynamic = "force-dynamic";
@@ -26,54 +34,29 @@ export async function GET() {
   const { topLoggerId } = user;
   if (!topLoggerId) return new Response("No topLoggerId", { status: 401 });
 
-  const DB = await getDB();
-  const usersCollection = DB.collection<TopLogger.User & ScrapedAt>(
-    "toplogger_users",
-  );
-  await usersCollection.createIndexes([{ key: { id: 1 } }]);
+  await TopLoggerUsers.createIndexes([{ key: { id: 1 } }]);
 
-  const gymsCollection = DB.collection<TopLogger.GymSingle & ScrapedAt>(
-    "toplogger_gyms",
-  );
-  await gymsCollection.createIndexes([{ key: { id: 1 } }]);
+  await TopLoggerGyms.createIndexes([{ key: { id: 1 } }]);
 
-  const groupsCollection = DB.collection<TopLogger.GroupSingle & ScrapedAt>(
-    "toplogger_groups",
-  );
-  await groupsCollection.createIndexes([{ key: { id: 1 } }]);
+  await TopLoggerGroups.createIndexes([{ key: { id: 1 } }]);
 
-  const holdsCollection = DB.collection<TopLogger.Hold & ScrapedAt>(
-    "toplogger_holds",
-  );
-  await holdsCollection.createIndexes([{ key: { gym_id: 1 } }]);
+  await TopLoggerHolds.createIndexes([{ key: { gym_id: 1 } }]);
 
-  const climbsCollection = DB.collection<TopLogger.ClimbMultiple & ScrapedAt>(
-    "toplogger_climbs",
-  );
-  await climbsCollection.createIndexes([
+  await TopLoggerClimbs.createIndexes([
     { key: { id: 1 } },
     { key: { gym_id: 1 } },
     { key: { date_live_start: 1 } },
   ]);
 
-  const ascendsCollection = DB.collection<TopLogger.AscendSingle & ScrapedAt>(
-    "toplogger_ascends",
-  );
-  await ascendsCollection.createIndexes([
+  await TopLoggerAscends.createIndexes([
     { key: { user_id: 1 } },
     { key: { climb_id: 1 } },
     { key: { date_logged: 1 } },
   ]);
 
-  const gymGroupsCollection = DB.collection<TopLogger.GymGroup & ScrapedAt>(
-    "toplogger_gym_groups",
-  );
-  await gymGroupsCollection.createIndexes([{ key: { gym_id: 1 } }]);
+  await TopLoggerGymGroups.createIndexes([{ key: { gym_id: 1 } }]);
 
-  const groupUsersCollection = DB.collection<
-    Omit<TopLogger.GroupUserMultiple, "user"> & ScrapedAt
-  >("toplogger_group_users");
-  await groupUsersCollection.createIndexes([
+  await TopLoggerGroupUsers.createIndexes([
     { key: { user_id: 1 } },
     { key: { group_id: 1 } },
   ]);
@@ -83,7 +66,7 @@ export async function GET() {
    */
 
   const upsertAscend = (ascend: TopLogger.AscendSingle) =>
-    ascendsCollection.updateOne(
+    TopLoggerAscends.updateOne(
       { id: ascend.id },
       {
         $set: {
@@ -95,7 +78,7 @@ export async function GET() {
       { upsert: true },
     );
   const upsertClimb = (climb: TopLogger.ClimbMultiple) =>
-    climbsCollection.updateOne(
+    TopLoggerClimbs.updateOne(
       { id: climb.id },
       {
         $set: {
@@ -113,19 +96,19 @@ export async function GET() {
       { upsert: true },
     );
   const upsertGym = (gym: TopLogger.GymMultiple) =>
-    gymsCollection.updateOne(
+    TopLoggerGyms.updateOne(
       { id: gym.id },
       { $set: { ...gym, _io_scrapedAt: new Date() } },
       { upsert: true },
     );
   const upsertHold = (hold: TopLogger.Hold) =>
-    holdsCollection.updateOne(
+    TopLoggerHolds.updateOne(
       { id: hold.id },
       { $set: { ...hold, _io_scrapedAt: new Date() } },
       { upsert: true },
     );
   const upsertGymGroup = (gymGroup: TopLogger.GymGroup) =>
-    gymGroupsCollection.updateOne(
+    TopLoggerGymGroups.updateOne(
       { id: gymGroup.id },
       { $set: { ...gymGroup, _io_scrapedAt: new Date() } },
       { upsert: true },
@@ -134,7 +117,7 @@ export async function GET() {
     climb_groups,
     ...group
   }: TopLogger.GroupSingle) => {
-    await groupsCollection.updateOne(
+    await TopLoggerGroups.updateOne(
       { id: group.id },
       {
         $set: {
@@ -147,12 +130,12 @@ export async function GET() {
       },
       { upsert: true },
     );
-    const dbGroup = (await groupsCollection.findOne({ id: group.id }))!;
+    const dbGroup = (await TopLoggerGroups.findOne({ id: group.id }))!;
     if (
       !dbGroup.climb_groups ||
       dbGroup.climb_groups.length < climb_groups.length
     ) {
-      await groupsCollection.updateOne(
+      await TopLoggerGroups.updateOne(
         { id: group.id },
         { $set: { climb_groups, _io_scrapedAt: new Date() } },
         { upsert: true },
@@ -160,7 +143,7 @@ export async function GET() {
     }
   };
   const upsertUser = (user: TopLogger.User) =>
-    usersCollection.updateOne(
+    TopLoggerUsers.updateOne(
       { id: user.id },
       { $set: { ...user, _io_scrapedAt: new Date() } },
       { upsert: true },
@@ -168,7 +151,7 @@ export async function GET() {
   const upsertGroupUser = (
     groupUser: Omit<TopLogger.GroupUserMultiple, "user">,
   ) =>
-    groupUsersCollection.updateOne(
+    TopLoggerGroupUsers.updateOne(
       { id: groupUser.id },
       { $set: { ...groupUser, _io_scrapedAt: new Date() } },
       { upsert: true },
@@ -232,7 +215,7 @@ export async function GET() {
           ]),
         ),
       ),
-      climbsCollection.distinct("gym_id").then((gymIds) =>
+      TopLoggerClimbs.distinct("gym_id").then((gymIds) =>
         Promise.all(
           gymIds.map((gymId) =>
             Promise.all([

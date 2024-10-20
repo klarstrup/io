@@ -25,6 +25,12 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
+import {
+  TopLoggerAscends,
+  TopLoggerClimbs,
+  TopLoggerGyms,
+  TopLoggerHolds,
+} from "../../sources/toplogger.server";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -123,21 +129,17 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       if (!user.topLoggerId) return;
 
       const [holds, gyms, ascends] = await Promise.all([
-        DB.collection<TopLogger.Hold>("toplogger_holds").find().toArray(),
-        DB.collection<TopLogger.GymSingle>("toplogger_gyms").find().toArray(),
-        DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-          .find({
-            user_id: user.topLoggerId,
-            date_logged: rangeToQuery(from, to),
-          })
-          .toArray(),
+        TopLoggerHolds.find().toArray(),
+        TopLoggerGyms.find().toArray(),
+        TopLoggerAscends.find({
+          user_id: user.topLoggerId,
+          date_logged: rangeToQuery(from, to),
+        }).toArray(),
       ]);
 
-      const climbs = await DB.collection<TopLogger.ClimbMultiple>(
-        "toplogger_climbs",
-      )
-        .find({ id: { $in: ascends.map(({ climb_id }) => climb_id) } })
-        .toArray();
+      const climbs = await TopLoggerClimbs.find({
+        id: { $in: ascends.map(({ climb_id }) => climb_id) },
+      }).toArray();
 
       const ascendsByDay = Object.values(
         ascends.reduce(

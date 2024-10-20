@@ -8,7 +8,6 @@ import {
   isWithinInterval,
   subHours,
 } from "date-fns";
-import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
@@ -27,6 +26,15 @@ import {
   type WorkoutData,
 } from "../models/workout";
 import { RelativeURL, percentile } from "../utils";
+import {
+  TopLoggerAscends,
+  TopLoggerClimbs,
+  TopLoggerGroupUsers,
+  TopLoggerGroups,
+  TopLoggerGyms,
+  TopLoggerHolds,
+  TopLoggerUsers,
+} from "./toplogger.server";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -539,14 +547,10 @@ export const fetchGroupClimbs = async (
 };
 
 const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
-  const DB = await getDB();
-  const climbsCollection =
-    DB.collection<TopLogger.ClimbMultiple>("toplogger_climbs");
-
   if (group.climb_groups.length) {
-    return await climbsCollection
-      .find({ id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) } })
-      .toArray();
+    return await TopLoggerClimbs.find({
+      id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) },
+    }).toArray();
   }
 
   const groupInterval: DateInterval = {
@@ -554,14 +558,14 @@ const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
     end: addHours(group.date_loggable_end, 21),
   };
   const climbs: TopLogger.ClimbMultiple[] = [];
-  await DB.collection<TopLogger.GymSingle>("toplogger_gyms")
-    .find({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } })
+  await TopLoggerGyms.find({
+    id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) },
+  })
     .toArray()
     .then((gyms) =>
       Promise.all(
         gyms.map((gym) =>
-          climbsCollection
-            .find({ gym_id: gym.id })
+          TopLoggerClimbs.find({ gym_id: gym.id })
             .toArray()
             .then((gymClimbs) =>
               gymClimbs.forEach((climb) => {
@@ -591,11 +595,7 @@ export async function getIoTopLoggerGroupEvent(
   ioId: number,
   sex?: boolean,
 ) {
-  const DB = await getDB();
-
-  const group = await DB.collection<TopLogger.GroupSingle>(
-    "toplogger_groups",
-  ).findOne({ id: groupId });
+  const group = await TopLoggerGroups.findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
 
   const groupInterval: DateInterval = {
@@ -611,42 +611,36 @@ export async function getIoTopLoggerGroupEvent(
 
   const climbs = await getGroupClimbs(group);
 
-  const io = await DB.collection<TopLogger.User>("toplogger_users").findOne({
+  const io = await TopLoggerUsers.findOne({
     id: ioId,
   });
 
   if (!io) throw new Error("io not found");
 
-  const groupUsers = await DB.collection<
-    Omit<TopLogger.GroupUserMultiple, "user">
-  >("toplogger_group_users")
-    .find({ group_id: groupId })
-    .toArray();
+  const groupUsers = await TopLoggerGroupUsers.find({
+    group_id: groupId,
+  }).toArray();
 
   const ascends = (
-    await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-      .find({
-        user_id: { $in: groupUsers.map(({ user_id }) => user_id) },
-        climb_id: { $in: climbs.map(({ id }) => id) },
-        date_logged: {
-          $gte: groupInterval.start,
-          $lte: groupInterval.end,
-        },
-      })
-      .toArray()
+    await TopLoggerAscends.find({
+      user_id: { $in: groupUsers.map(({ user_id }) => user_id) },
+      climb_id: { $in: climbs.map(({ id }) => id) },
+      date_logged: {
+        $gte: groupInterval.start,
+        $lte: groupInterval.end,
+      },
+    }).toArray()
   ).filter((ascend) => climbs.some((climb) => ascend.climb_id === climb.id));
 
   const ioAscends = climbs.length
     ? ascends.filter((ascend) => ascend.user_id === ioId)
-    : await DB.collection<TopLogger.AscendSingle>("toplogger_ascends")
-        .find({
-          user_id: ioId,
-          date_logged: {
-            $gte: groupInterval.start,
-            $lte: groupInterval.end,
-          },
-        })
-        .toArray();
+    : await TopLoggerAscends.find({
+        user_id: ioId,
+        date_logged: {
+          $gte: groupInterval.start,
+          $lte: groupInterval.end,
+        },
+      }).toArray();
 
   let firstAscend: Date | null = null;
   let lastAscend: Date | null = null;
@@ -660,16 +654,14 @@ export async function getIoTopLoggerGroupEvent(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
-  const holds = await DB.collection<TopLogger.Hold>("toplogger_holds")
-    .find({ gym_id: { $in: climbs.map(({ gym_id }) => gym_id) } })
-    .toArray();
+  const holds = await TopLoggerHolds.find({
+    gym_id: { $in: climbs.map(({ gym_id }) => gym_id) },
+  }).toArray();
 
-  const participants = await DB.collection<TopLogger.User>("toplogger_users")
-    .find({
-      id: { $in: groupUsers.map(({ user_id }) => user_id) },
-      gender: sex ? io.gender : undefined,
-    })
-    .toArray();
+  const participants = await TopLoggerUsers.find({
+    id: { $in: groupUsers.map(({ user_id }) => user_id) },
+    gender: sex ? io.gender : undefined,
+  }).toArray();
 
   const r = {
     source: EventSource.TopLogger,
@@ -853,16 +845,12 @@ export async function getTopLoggerGroupEventEntry(
   groupId: number,
   userId: number,
 ): Promise<EventEntry> {
-  const DB = await getDB();
-
-  const group = await DB.collection<TopLogger.GroupSingle>(
-    "toplogger_groups",
-  ).findOne({ id: groupId });
+  const group = await TopLoggerGroups.findOne({ id: groupId });
   if (!group) throw new Error("Group not found");
 
-  const gym = (await DB.collection<TopLogger.GymSingle>(
-    "toplogger_gyms",
-  ).findOne({ id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) } }))!;
+  const gym = (await TopLoggerGyms.findOne({
+    id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) },
+  }))!;
 
   return {
     source: EventSource.TopLogger,
