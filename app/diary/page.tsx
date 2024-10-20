@@ -216,25 +216,24 @@ async function loadMoreData(cursor: string) {
 
   if (isAtLimit) return [null, null] as const;
 
-  const [diaryEntries, allLocations, nextSets] = await Promise.all([
+  const [diaryEntries] = await Promise.all([
     getDiaryEntries({ from: new Date(from), to: new Date(to) }),
-    getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(new Date()) }),
   ]);
 
   return [
     <DiaryEntryList
       diaryEntries={diaryEntries}
-      user={user}
-      locations={allLocations}
-      nextSets={nextSets}
       key={JSON.stringify({ from, to })}
     />,
     JSON.stringify({ from: subWeeks(from, weeksPerPage), to: from }),
   ] as const;
 }
 
-export default async function Page() {
+export default async function Page({
+  params,
+}: {
+  params: { date?: `${number}-${number}-${number}` };
+}) {
   const user = (await auth())?.user;
 
   if (!user) {
@@ -252,34 +251,37 @@ export default async function Page() {
 
   const now = TZDate.tz(timeZone);
 
+  const date =
+    params.date ||
+    `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+
   const from = subWeeks(now, weeksPerPage);
-  const [[todayDiaryEntry, ...diaryEntries], allLocations, nextSets] =
-    await Promise.all([
-      getDiaryEntries({ from }),
-      getAllWorkoutLocations(user),
-      getNextSets({ user, to: startOfDay(now) }),
-      (async () => {
-        if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
-          const myFitnessPalToken = user?.myFitnessPalToken;
-          if (myFitnessPalToken) {
-            try {
-              const session = await getMyFitnessPalSession(myFitnessPalToken);
-              await Users.updateOne(
-                { _id: new ObjectId(user.id) },
-                {
-                  $set: {
-                    myFitnessPalUserId: session.userId,
-                    myFitnessPalUserName: session.user.name,
-                  },
+  const [diaryEntries, allLocations, nextSets] = await Promise.all([
+    getDiaryEntries({ from }),
+    getAllWorkoutLocations(user),
+    getNextSets({ user, to: startOfDay(now) }),
+    (async () => {
+      if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+        const myFitnessPalToken = user?.myFitnessPalToken;
+        if (myFitnessPalToken) {
+          try {
+            const session = await getMyFitnessPalSession(myFitnessPalToken);
+            await Users.updateOne(
+              { _id: new ObjectId(user.id) },
+              {
+                $set: {
+                  myFitnessPalUserId: session.userId,
+                  myFitnessPalUserName: session.user.name,
                 },
-              );
-            } catch {
-              /* empty */
-            }
+              },
+            );
+          } catch {
+            /* empty */
           }
         }
-      })(),
-    ]);
+      }
+    })(),
+  ]);
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
@@ -301,7 +303,11 @@ export default async function Page() {
         }}
       >
         <DiaryAgenda
-          diaryEntry={todayDiaryEntry!}
+          date={date}
+          diaryEntry={
+            (diaryEntries.find(([dateStr]) => dateStr === date) ??
+              diaryEntries[0])?.[1]
+          }
           user={user}
           locations={allLocations}
           nextSets={nextSets}
@@ -318,10 +324,8 @@ export default async function Page() {
       >
         <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
           <DiaryEntryList
-            diaryEntries={diaryEntries}
-            user={user}
-            locations={allLocations}
-            nextSets={nextSets}
+            diaryEntries={diaryEntries.slice(1)}
+            pickedDate={params.date}
           />
         </LoadMore>
       </div>
