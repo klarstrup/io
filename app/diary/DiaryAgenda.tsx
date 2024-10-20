@@ -26,8 +26,8 @@ import {
   getSunset,
   roundToNearestDay,
 } from "../../utils";
+import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
-import { FoodEntry } from "./FoodEntry";
 
 export function DiaryAgenda({
   diaryEntry,
@@ -47,15 +47,6 @@ export function DiaryAgenda({
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const [date, { food, workouts }] = diaryEntry;
-
-  const dayTotalEnergy = food?.reduce(
-    (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
-    0,
-  );
-  const dayTotalProtein = food?.reduce(
-    (acc, foodEntry) => acc + (foodEntry.nutritional_contents.protein || 0),
-    0,
-  );
 
   const now = TZDate.tz(timeZone);
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
@@ -102,33 +93,7 @@ export function DiaryAgenda({
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
         <div className="flex flex-[2] flex-col">
-          <fieldset className="rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">
-            <legend className="ml-2">
-              <big>Food</big>{" "}
-              {dayTotalEnergy && dayTotalProtein ? (
-                <small>
-                  {Math.round(dayTotalEnergy)} kcal,{" "}
-                  {Math.round(dayTotalProtein)}g protein
-                </small>
-              ) : null}
-            </legend>
-            {food ? (
-              <FoodEntry foodEntries={food} />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center">
-                <p className="mb-2">No food logged</p>
-                <div>
-                  <a
-                    href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
-                    target="_blank"
-                    className="mb-4 inline-block cursor-pointer rounded-2xl bg-[#ff0] px-3 py-2 pr-4 text-center text-xl font-semibold"
-                  >
-                    ➕ Food
-                  </a>
-                </div>
-              </div>
-            )}
-          </fieldset>
+          <DiaryAgendaFood date={date} food={food} />
           <DiaryAgendaWorkouts
             date={date}
             workouts={workouts}
