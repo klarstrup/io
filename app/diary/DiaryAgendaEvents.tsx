@@ -11,18 +11,18 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import type { MongoVEventWithVCalendar } from "../../lib";
+import { getUserIcalEventsBetween } from "../../sources/ical";
 import { DEFAULT_TIMEZONE, roundToNearestDay } from "../../utils";
 
-export function DiaryAgendaEvents({
-  calendarEvents,
-  user,
-}: {
-  calendarEvents: MongoVEventWithVCalendar[];
-  user: Session["user"];
-}) {
+export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const now = TZDate.tz(timeZone);
+
+  const calendarEvents = await getUserIcalEventsBetween(user.id, {
+    start: startOfDay(now),
+    end: addDays(endOfDay(now), 2),
+  });
 
   return (
     <fieldset className="flex flex-1 flex-col rounded-lg border-x-0 border-y-4 border-gray-200 px-1 py-2">

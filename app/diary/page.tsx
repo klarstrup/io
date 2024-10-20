@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
+import { isAfter, startOfDay, subWeeks } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
@@ -12,7 +12,6 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
-import { getUserIcalEventsBetween } from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
@@ -271,41 +270,33 @@ export default async function Page() {
   const DB = await getDB();
 
   const from = subWeeks(now, weeksPerPage);
-  const [
-    [todayDiaryEntry, ...diaryEntries],
-    allLocations,
-    nextSets,
-    eventsByCalendar,
-  ] = await Promise.all([
-    getDiaryEntries({ from }),
-    getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(now) }),
-    getUserIcalEventsBetween(user.id, {
-      start: startOfDay(now),
-      end: addDays(endOfDay(now), 2),
-    }),
-    (async () => {
-      if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
-        const myFitnessPalToken = user?.myFitnessPalToken;
-        if (myFitnessPalToken) {
-          try {
-            const session = await getMyFitnessPalSession(myFitnessPalToken);
-            await DB.collection<IUser>("users").updateOne(
-              { _id: new ObjectId(user.id) },
-              {
-                $set: {
-                  myFitnessPalUserId: session.userId,
-                  myFitnessPalUserName: session.user.name,
+  const [[todayDiaryEntry, ...diaryEntries], allLocations, nextSets] =
+    await Promise.all([
+      getDiaryEntries({ from }),
+      getAllWorkoutLocations(user),
+      getNextSets({ user, to: startOfDay(now) }),
+      (async () => {
+        if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+          const myFitnessPalToken = user?.myFitnessPalToken;
+          if (myFitnessPalToken) {
+            try {
+              const session = await getMyFitnessPalSession(myFitnessPalToken);
+              await DB.collection<IUser>("users").updateOne(
+                { _id: new ObjectId(user.id) },
+                {
+                  $set: {
+                    myFitnessPalUserId: session.userId,
+                    myFitnessPalUserName: session.user.name,
+                  },
                 },
-              },
-            );
-          } catch {
-            /* empty */
+              );
+            } catch {
+              /* empty */
+            }
           }
         }
-      }
-    })(),
-  ]);
+      })(),
+    ]);
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
@@ -328,7 +319,6 @@ export default async function Page() {
       >
         <DiaryAgenda
           diaryEntry={todayDiaryEntry!}
-          calendarEvents={eventsByCalendar}
           user={user}
           locations={allLocations}
           nextSets={nextSets}
