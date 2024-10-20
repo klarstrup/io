@@ -110,7 +110,7 @@ function WorkoutsSummary({
   return (
     <div
       style={{
-        fontSize: "2em",
+        fontSize: "1.5em",
         padding: "0.25em",
         display: "flex",
         flexWrap: "wrap",

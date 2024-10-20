@@ -290,10 +290,10 @@ export default async function Page({
   });
 
   return (
-    <div>
+    <div className="min-h-[100vh]">
       <UserStuff />
-      <div className="flex">
-        <div className="w-1/3">
+      <div className="flex min-h-[100vh] items-start">
+        <div className="w-1/3 self-stretch">
           <DiaryAgenda
             date={date}
             diaryEntry={
@@ -310,7 +310,7 @@ export default async function Page({
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(8em, 1fr))",
-            gridTemplateRows: "masonry",
+            gridTemplateRows: "repeat(auto-fit, 8em)",
             gap: "1em",
             padding: "1em",
             overflowY: "scroll",
