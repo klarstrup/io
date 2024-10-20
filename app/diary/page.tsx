@@ -271,38 +271,41 @@ export default async function Page() {
   const DB = await getDB();
 
   const from = subWeeks(now, weeksPerPage);
-  const to = startOfDay(now);
-  const [diaryEntries, allLocations, nextSets, eventsByCalendar] =
-    await Promise.all([
-      getDiaryEntries({ from, to }),
-      getAllWorkoutLocations(user),
-      getNextSets({ user, to: startOfDay(now) }),
-      getUserIcalEventsBetween(user.id, {
-        start: startOfDay(now),
-        end: addDays(endOfDay(now), 2),
-      }),
-      (async () => {
-        if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
-          const myFitnessPalToken = user?.myFitnessPalToken;
-          if (myFitnessPalToken) {
-            try {
-              const session = await getMyFitnessPalSession(myFitnessPalToken);
-              await DB.collection<IUser>("users").updateOne(
-                { _id: new ObjectId(user.id) },
-                {
-                  $set: {
-                    myFitnessPalUserId: session.userId,
-                    myFitnessPalUserName: session.user.name,
-                  },
+  const [
+    [todayDiaryEntry, ...diaryEntries],
+    allLocations,
+    nextSets,
+    eventsByCalendar,
+  ] = await Promise.all([
+    getDiaryEntries({ from }),
+    getAllWorkoutLocations(user),
+    getNextSets({ user, to: startOfDay(now) }),
+    getUserIcalEventsBetween(user.id, {
+      start: startOfDay(now),
+      end: addDays(endOfDay(now), 2),
+    }),
+    (async () => {
+      if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+        const myFitnessPalToken = user?.myFitnessPalToken;
+        if (myFitnessPalToken) {
+          try {
+            const session = await getMyFitnessPalSession(myFitnessPalToken);
+            await DB.collection<IUser>("users").updateOne(
+              { _id: new ObjectId(user.id) },
+              {
+                $set: {
+                  myFitnessPalUserId: session.userId,
+                  myFitnessPalUserName: session.user.name,
                 },
-              );
-            } catch {
-              /* empty */
-            }
+              },
+            );
+          } catch {
+            /* empty */
           }
         }
-      })(),
-    ]);
+      }
+    })(),
+  ]);
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
@@ -324,13 +327,7 @@ export default async function Page() {
         }}
       >
         <DiaryAgenda
-          diaryEntry={
-            (
-              await getDiaryEntries({
-                from: startOfDay(now),
-              })
-            )[0]!
-          }
+          diaryEntry={todayDiaryEntry!}
           calendarEvents={eventsByCalendar}
           user={user}
           locations={allLocations}
