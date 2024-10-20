@@ -7,15 +7,14 @@ import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import { getNextSets, Workouts } from "../../models/workout.server";
-import {
-  type Fitocracy,
-  workoutFromFitocracyWorkout,
-} from "../../sources/fitocracy";
+import { workoutFromFitocracyWorkout } from "../../sources/fitocracy";
+import { FitocracyWorkouts } from "../../sources/fitocracy.server";
 import {
   getMyFitnessPalSession,
   MyFitnessPalFoodEntries,
 } from "../../sources/myfitnesspal.server";
-import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
+import { workoutFromRunDouble } from "../../sources/rundouble";
+import { RunDoubleRuns } from "../../sources/rundouble.server";
 import {
   type TopLogger,
   workoutFromTopLoggerAscends,
@@ -26,7 +25,6 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
-import { FitocracyWorkouts } from "../../sources/fitocracy.server";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -52,9 +50,6 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const DB = await getDB();
-
-  const runsCollection =
-    DB.collection<RunDouble.MongoHistoryItem>("rundouble_runs");
 
   const now = TZDate.tz(timeZone);
   const todayStr = `${now.getFullYear()}-${
@@ -179,7 +174,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     async () => {
       if (!user.runDoubleId) return;
 
-      for await (const run of runsCollection.find({
+      for await (const run of RunDoubleRuns.find({
         userId: user.runDoubleId,
         completedAt: rangeToQuery(from, to),
       })) {

@@ -1,8 +1,7 @@
 import { auth } from "../../../auth";
-import { getDB } from "../../../dbConnect";
-import type { ScrapedAt, TomorrowIoMeta, TomorrowResponse } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { fetchTomorrowTimelineIntervals } from "../../../sources/tomorrow";
+import { TomorrowIntervals } from "../../../sources/tomorrow.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +15,6 @@ export const GET = () =>
     const geohash = user.geohash;
     if (!geohash) return new Response("No geohash", { status: 401 });
 
-    const DB = await getDB();
-    const forecastsCollection = DB.collection<
-      TomorrowResponse & ScrapedAt & TomorrowIoMeta
-    >("tomorrow_intervals");
-
     const uniqueGeohash4s = new Set<string>();
     for await (const user of Users.find()) {
       if (user.geohash) uniqueGeohash4s.add(user.geohash.slice(0, 4));
@@ -30,7 +24,7 @@ export const GET = () =>
 
       for (const interval of intervals) {
         const startTime = new Date(interval.startTime);
-        const updateResult = await forecastsCollection.updateOne(
+        const updateResult = await TomorrowIntervals.updateOne(
           { _io_geohash: geohash, startTime },
           {
             $set: {

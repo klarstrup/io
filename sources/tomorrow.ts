@@ -1,9 +1,9 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, endOfDay, startOfDay, subSeconds } from "date-fns";
-import { getDB } from "../dbConnect";
 import { dbFetch } from "../fetch";
-import type { MongoTomorrowInterval, TomorrowResponse } from "../lib";
+import type { ScrapedAt, TomorrowIoMeta, TomorrowResponse } from "../lib";
 import { decodeGeohash, DEFAULT_TIMEZONE, HOUR_IN_SECONDS } from "../utils";
+import { TomorrowIntervals } from "./tomorrow.server";
 
 export async function fetchTomorrowTimelineIntervals({
   geohash,
@@ -63,13 +63,15 @@ export async function getTomorrowForecasts({
 }) {
   if (!geohash) return;
 
-  const DB = await getDB();
+  const intervals: (TomorrowResponse &
+    ScrapedAt &
+    TomorrowIoMeta & { _id: string })[] = [];
 
-  return await DB.collection<MongoTomorrowInterval>("tomorrow_intervals")
-    .find({
-      _io_geohash: geohash.slice(0, 4),
-      startTime: { $gte: start, $lt: end },
-    })
-    .map((interval) => ({ ...interval, _id: interval._id.toString() }))
-    .toArray();
+  for await (const document of TomorrowIntervals.find({
+    _io_geohash: geohash.slice(0, 4),
+    startTime: { $gte: start, $lt: end },
+  })) {
+    intervals.push({ ...document, _id: document._id.toString() });
+  }
+  return intervals;
 }

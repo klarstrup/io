@@ -1,7 +1,7 @@
 import { auth } from "../../../auth";
 import { getDB } from "../../../dbConnect";
-import type { ScrapedAt } from "../../../lib";
-import { getRuns, type RunDouble } from "../../../sources/rundouble";
+import { getRuns } from "../../../sources/rundouble";
+import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +15,8 @@ export const GET = () =>
     const runDoubleId = user.runDoubleId;
     if (!runDoubleId) return new Response("No runDoubleId", { status: 401 });
 
-    const DB = await getDB();
-    const runsCollection = DB.collection<
-      RunDouble.MongoHistoryItem & ScrapedAt
-    >("rundouble_runs");
-
     for await (const run of getRuns(runDoubleId, { maxAge: 0 })) {
-      const updateResult = await runsCollection.updateOne(
+      const updateResult = await RunDoubleRuns.updateOne(
         { key: run.key },
         {
           $set: {
