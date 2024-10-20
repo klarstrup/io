@@ -1,10 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
-import type {
-  DiaryEntry,
-  MongoTomorrowInterval,
-  MongoVEventWithVCalendar,
-} from "../../lib";
+import type { DiaryEntry, MongoVEventWithVCalendar } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import {
   decodeGeohash,
@@ -23,14 +19,12 @@ export function DiaryAgenda({
   user,
   locations,
   nextSets,
-  weatherIntervals,
 }: {
   diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
   calendarEvents: MongoVEventWithVCalendar[];
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
-  weatherIntervals?: MongoTomorrowInterval[];
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
@@ -86,7 +80,7 @@ export function DiaryAgenda({
         </div>
         <DiaryAgendaEvents user={user} calendarEvents={calendarEvents} />
       </div>
-      <DiaryAgendaWeather user={user} weatherIntervals={weatherIntervals} />
+      <DiaryAgendaWeather user={user} />
     </div>
   );
 }

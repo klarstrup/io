@@ -1,9 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { isWithinInterval } from "date-fns";
+import { addHours, isWithinInterval } from "date-fns";
 import type { Session } from "next-auth";
 import Image from "next/image";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
-import type { MongoTomorrowInterval } from "../../lib";
+import { getTomorrowForecasts } from "../../sources/tomorrow";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -11,17 +11,18 @@ import {
   getSunset,
 } from "../../utils";
 
-export function DiaryAgendaWeather({
-  user,
-  weatherIntervals,
-}: {
-  user: Session["user"];
-  weatherIntervals?: MongoTomorrowInterval[];
-}) {
+export async function DiaryAgendaWeather({ user }: { user: Session["user"] }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const now = TZDate.tz(timeZone);
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
+
+  const weatherIntervals = await getTomorrowForecasts({
+    geohash: user.geohash,
+    start: now,
+    end: addHours(now, 12),
+  });
+
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,

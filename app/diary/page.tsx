@@ -1,12 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import {
-  addDays,
-  addHours,
-  endOfDay,
-  isAfter,
-  startOfDay,
-  subWeeks,
-} from "date-fns";
+import { addDays, endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../auth";
@@ -23,7 +16,6 @@ import { getUserIcalEventsBetween } from "../../sources/ical";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
-import { getTomorrowForecasts } from "../../sources/tomorrow";
 import {
   type TopLogger,
   workoutFromTopLoggerAscends,
@@ -280,47 +272,37 @@ export default async function Page() {
 
   const from = subWeeks(now, weeksPerPage);
   const to = startOfDay(now);
-  const [
-    diaryEntries,
-    allLocations,
-    nextSets,
-    eventsByCalendar,
-    weatherIntervals,
-  ] = await Promise.all([
-    getDiaryEntries({ from, to }),
-    getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(now) }),
-    getUserIcalEventsBetween(user.id, {
-      start: startOfDay(now),
-      end: addDays(endOfDay(now), 2),
-    }),
-    getTomorrowForecasts({
-      geohash: user.geohash,
-      start: now,
-      end: addHours(now, 12),
-    }),
-    (async () => {
-      if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
-        const myFitnessPalToken = user?.myFitnessPalToken;
-        if (myFitnessPalToken) {
-          try {
-            const session = await getMyFitnessPalSession(myFitnessPalToken);
-            await DB.collection<IUser>("users").updateOne(
-              { _id: new ObjectId(user.id) },
-              {
-                $set: {
-                  myFitnessPalUserId: session.userId,
-                  myFitnessPalUserName: session.user.name,
+  const [diaryEntries, allLocations, nextSets, eventsByCalendar] =
+    await Promise.all([
+      getDiaryEntries({ from, to }),
+      getAllWorkoutLocations(user),
+      getNextSets({ user, to: startOfDay(now) }),
+      getUserIcalEventsBetween(user.id, {
+        start: startOfDay(now),
+        end: addDays(endOfDay(now), 2),
+      }),
+      (async () => {
+        if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
+          const myFitnessPalToken = user?.myFitnessPalToken;
+          if (myFitnessPalToken) {
+            try {
+              const session = await getMyFitnessPalSession(myFitnessPalToken);
+              await DB.collection<IUser>("users").updateOne(
+                { _id: new ObjectId(user.id) },
+                {
+                  $set: {
+                    myFitnessPalUserId: session.userId,
+                    myFitnessPalUserName: session.user.name,
+                  },
                 },
-              },
-            );
-          } catch {
-            /* empty */
+              );
+            } catch {
+              /* empty */
+            }
           }
         }
-      }
-    })(),
-  ]);
+      })(),
+    ]);
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
@@ -353,7 +335,6 @@ export default async function Page() {
           user={user}
           locations={allLocations}
           nextSets={nextSets}
-          weatherIntervals={weatherIntervals}
         />
       </div>
       <div
