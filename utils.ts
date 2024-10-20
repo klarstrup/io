@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import {
   addDays,
   type ContextOptions,
@@ -337,7 +338,7 @@ function calculate(
   longitude: number,
   isSunrise: boolean,
   zenith: number,
-  date: Date,
+  date: TZDate,
 ): Date {
   const dayOfYear = getDayOfYear(date);
   const hoursFromMeridian = longitude / DEGREES_PER_HOUR;
@@ -382,27 +383,20 @@ function calculate(
     date.getDate(),
   );
 
-  // Created date will be set to local (system) time zone.
-  return new Date(utcMidnight + time * MSEC_IN_HOUR);
+  return new TZDate(utcMidnight + time * MSEC_IN_HOUR, "Etc/UTC");
 }
 
 /**
  * Calculate Sunrise time for given longitude, latitude, zenith and date
  */
-export const getSunrise = (
-  latitude: number,
-  longitude: number,
-  date = new Date(),
-) => calculate(latitude, longitude, true, DEFAULT_ZENITH, date);
+export const getSunrise = (latitude: number, longitude: number, date: TZDate) =>
+  calculate(latitude, longitude, true, DEFAULT_ZENITH, date);
 
 /**
  * Calculate Sunset time for given longitude, latitude, zenith and date
  */
-export const getSunset = (
-  latitude: number,
-  longitude: number,
-  date = new Date(),
-) => calculate(latitude, longitude, false, DEFAULT_ZENITH, date);
+export const getSunset = (latitude: number, longitude: number, date: TZDate) =>
+  calculate(latitude, longitude, false, DEFAULT_ZENITH, date);
 
 const getRoundingMethod =
   (method: RoundingMethod | undefined): ((number: number) => number) =>

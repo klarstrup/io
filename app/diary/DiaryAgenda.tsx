@@ -38,25 +38,25 @@ export async function DiaryAgenda({
 
   const { food, workouts } = diaryEntry || {};
 
-  const now = TZDate.tz(timeZone);
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    now,
+    new TZDate(date, timeZone),
   );
   const sunset = getSunset(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    now,
+    new TZDate(date, timeZone),
   );
 
+  const now = TZDate.tz(timeZone);
   const isToday =
     date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
   const [locations, nextSets] = await Promise.all([
     getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(now) }),
+    getNextSets({ user, to: startOfDay(new TZDate(date, timeZone)) }),
   ]);
 
   return (
@@ -64,21 +64,19 @@ export async function DiaryAgenda({
       key={date}
       className="flex h-full max-h-full flex-col overflow-x-hidden overflow-y-scroll bg-white p-4 shadow-lg shadow-slate-600"
     >
-      <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-2 leading-none">
-        {isToday ? <span className="text-xl">Today</span> : null}
-        <span className="text-xl font-semibold">{date}</span>
-        <span className="ml-2 whitespace-nowrap text-xs">
+      <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-2 text-xl leading-none">
+        {isToday ? <span>Today</span> : null}
+        <span className="font-semibold">{date}</span>
+        <span className="ml-2 whitespace-nowrap">
           ☀️
           {sunrise.toLocaleTimeString("en-DK", {
             hour: "numeric",
             minute: "2-digit",
-            timeZone,
           })}
           -
           {sunset.toLocaleTimeString("en-DK", {
             hour: "numeric",
             minute: "2-digit",
-            timeZone,
           })}
           🌙
         </span>
