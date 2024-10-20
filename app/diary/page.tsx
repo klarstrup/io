@@ -1,17 +1,11 @@
 import { TZDate } from "@date-fns/tz";
-import { isAfter, startOfDay, subWeeks } from "date-fns";
-import { ObjectId } from "mongodb";
-import type { Session } from "next-auth";
+import { endOfDay, isAfter, startOfDay, subWeeks } from "date-fns";
 import { auth } from "../../auth";
 import type { DiaryEntry } from "../../lib";
-import { Users } from "../../models/user.server";
-import { getNextSets, Workouts } from "../../models/workout.server";
+import { Workouts } from "../../models/workout.server";
 import { workoutFromFitocracyWorkout } from "../../sources/fitocracy";
 import { FitocracyWorkouts } from "../../sources/fitocracy.server";
-import {
-  getMyFitnessPalSession,
-  MyFitnessPalFoodEntries,
-} from "../../sources/myfitnesspal.server";
+import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
 import { workoutFromRunDouble } from "../../sources/rundouble";
 import { RunDoubleRuns } from "../../sources/rundouble.server";
 import {
@@ -40,14 +34,6 @@ type DayStr = `${number}-${number}-${number}`;
 
 const rangeToQuery = (from: Date, to?: Date) =>
   to ? { $gte: from, $lt: to } : { $gte: from };
-
-const getAllWorkoutLocations = async (user: Session["user"]) =>
-  (
-    await Workouts.distinct("location", {
-      userId: user.id,
-      deletedAt: { $exists: false },
-    })
-  ).filter((loc): loc is string => Boolean(loc));
 
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
@@ -257,32 +243,7 @@ export default async function Page({
     `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
   const from = subWeeks(now, weeksPerPage);
-  const [diaryEntries, allLocations, nextSets] = await Promise.all([
-    getDiaryEntries({ from }),
-    getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(now) }),
-    (async () => {
-      if (!user.myFitnessPalUserId || !user.myFitnessPalUserName) {
-        const myFitnessPalToken = user?.myFitnessPalToken;
-        if (myFitnessPalToken) {
-          try {
-            const session = await getMyFitnessPalSession(myFitnessPalToken);
-            await Users.updateOne(
-              { _id: new ObjectId(user.id) },
-              {
-                $set: {
-                  myFitnessPalUserId: session.userId,
-                  myFitnessPalUserName: session.user.name,
-                },
-              },
-            );
-          } catch {
-            /* empty */
-          }
-        }
-      }
-    })(),
-  ]);
+  const diaryEntries = await getDiaryEntries({ from });
 
   const initialCursor = JSON.stringify({
     from: subWeeks(from, weeksPerPage),
@@ -293,16 +254,18 @@ export default async function Page({
     <div className="min-h-[100vh]">
       <UserStuff />
       <div className="flex min-h-[100vh] items-start">
-        <div className="w-1/3 self-stretch">
+        <div className="max-h-[100vh] w-1/3 self-stretch">
           <DiaryAgenda
             date={date}
             diaryEntry={
-              (diaryEntries.find(([dateStr]) => dateStr === date) ??
-                diaryEntries[0])?.[1]
+              (
+                await getDiaryEntries({
+                  from: startOfDay(new Date(date)),
+                  to: endOfDay(new Date(date)),
+                })
+              )[0]?.[1]
             }
             user={user}
-            locations={allLocations}
-            nextSets={nextSets}
           />
         </div>
         <div

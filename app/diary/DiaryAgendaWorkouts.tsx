@@ -3,7 +3,7 @@ import { TZDate } from "@date-fns/tz";
 import { compareAsc, differenceInDays, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import { useState } from "react";
-import { FieldSetY } from "../../components/FieldSet";
+import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 import type { DiaryEntry } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
@@ -37,8 +37,14 @@ export function DiaryAgendaWorkouts({
     <FieldSetY className="flex-1">
       <legend className="ml-2">
         <big>Workouts</big>
+        <button
+          onClick={() => setIsAddingWorkout(true)}
+          className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-sm font-semibold"
+        >
+          ➕
+        </button>
       </legend>
-      {isAddingWorkout ? null : workouts?.length ? (
+      {workouts?.length ? (
         Array.from(workouts)
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
           ?.map((workout) => (
@@ -72,7 +78,7 @@ export function DiaryAgendaWorkouts({
         </div>
       )}
       {isAddingWorkout ? (
-        <fieldset className="w-full">
+        <FieldSetX className="w-full">
           <legend>New workout</legend>
           <WorkoutForm
             date={date}
@@ -81,7 +87,7 @@ export function DiaryAgendaWorkouts({
             nextSets={nextSets}
             onClose={() => setIsAddingWorkout(false)}
           />
-        </fieldset>
+        </FieldSetX>
       ) : null}
     </FieldSetY>
   );

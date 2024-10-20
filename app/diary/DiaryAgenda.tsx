@@ -1,9 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, subDays } from "date-fns";
+import { addDays, startOfDay, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import type { DiaryEntry } from "../../lib";
-import type { getNextSets } from "../../models/workout.server";
+import { getNextSets, Workouts } from "../../models/workout.server";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -15,20 +15,24 @@ import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
 
-const dateToString = (date: Date) =>
+const getAllWorkoutLocations = async (user: Session["user"]) =>
+  (
+    await Workouts.distinct("location", {
+      userId: user.id,
+      deletedAt: { $exists: false },
+    })
+  ).filter((loc): loc is string => Boolean(loc));
+
+const dateToString = (date: Date): `${number}-${number}-${number}` =>
   `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-export function DiaryAgenda({
+export async function DiaryAgenda({
   date,
   diaryEntry,
   user,
-  locations,
-  nextSets,
 }: {
   date: `${number}-${number}-${number}`;
   diaryEntry?: DiaryEntry;
   user: Session["user"];
-  locations: string[];
-  nextSets: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
@@ -50,10 +54,15 @@ export function DiaryAgenda({
   const isToday =
     date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
+  const [locations, nextSets] = await Promise.all([
+    getAllWorkoutLocations(user),
+    getNextSets({ user, to: startOfDay(now) }),
+  ]);
+
   return (
     <div
       key={date}
-      className="flex h-full flex-col overflow-x-hidden bg-white p-4 shadow-lg shadow-slate-600"
+      className="flex h-full max-h-full flex-col overflow-x-hidden overflow-y-scroll bg-white p-4 shadow-lg shadow-slate-600"
     >
       <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-2 leading-none">
         {isToday ? <span className="text-xl">Today</span> : null}

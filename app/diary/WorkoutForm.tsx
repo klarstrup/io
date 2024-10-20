@@ -127,7 +127,7 @@ export function WorkoutForm({
               : { exercises: [] },
           );
         })}
-        className="flex-1"
+        className="min-w-32 flex-1"
       >
         {onClose ? (
           <button type="button" onClick={onClose}>
