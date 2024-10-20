@@ -1,11 +1,10 @@
 import { isAfter } from "date-fns";
 import type { Session } from "next-auth";
-import { getDB } from "../dbConnect";
 import {
   exerciseIdsThatICareAbout,
-  Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../sources/fitocracy";
+import { FitocracyWorkouts } from "../sources/fitocracy.server";
 import { proxyCollection } from "../utils.server";
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData } from "./workout";
@@ -19,10 +18,6 @@ export async function getNextSets({
   user: Session["user"];
   to: Date;
 }) {
-  const DB = await getDB();
-  const fitocracyWorkoutsCollection =
-    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
-
   return (
     await Promise.all(
       exerciseIdsThatICareAbout.map(async (id) => {
@@ -37,7 +32,7 @@ export async function getNextSets({
         );
 
         const fitWorkout = user.fitocracyUserId
-          ? await fitocracyWorkoutsCollection.findOne(
+          ? await FitocracyWorkouts.findOne(
               {
                 user_id: user.fitocracyUserId,
                 "root_group.children.exercise.exercise_id": id,

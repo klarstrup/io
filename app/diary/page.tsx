@@ -26,6 +26,7 @@ import UserStuff from "../[[...slug]]/UserStuff";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryList } from "./DiaryEntryList";
+import { FitocracyWorkouts } from "../../sources/fitocracy.server";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -51,9 +52,6 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const DB = await getDB();
-
-  const workoutsCollection =
-    DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   const runsCollection =
     DB.collection<RunDouble.MongoHistoryItem>("rundouble_runs");
@@ -102,7 +100,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     async () => {
       if (!user.fitocracyUserId) return;
 
-      for await (const fitocracyWorkout of workoutsCollection.find({
+      for await (const fitocracyWorkout of FitocracyWorkouts.find({
         user_id: user.fitocracyUserId,
         workout_timestamp: rangeToQuery(from, to),
       })) {
