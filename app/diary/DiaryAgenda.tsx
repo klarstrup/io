@@ -54,30 +54,24 @@ export function DiaryAgenda({
       key={date}
       className="flex max-w-full flex-col overflow-x-hidden rounded-3xl bg-white p-4 shadow-lg shadow-slate-600"
     >
-      <div className="mb-2 ml-2 flex items-center">
-        <div className="flex flex-1 leading-none">
-          <big>
-            <big>
-              <big>
-                <b>Today</b> <span className="text-base">{date}</span>
-                <span className="ml-4 whitespace-nowrap text-xs">
-                  Daylight:{" "}
-                  {sunrise.toLocaleTimeString("en-DK", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    timeZone,
-                  })}
-                  -
-                  {sunset.toLocaleTimeString("en-DK", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    timeZone,
-                  })}
-                </span>
-              </big>
-            </big>
-          </big>
-        </div>
+      <div className="mb-2 ml-3 flex items-center leading-none">
+        <span className="text-xl">Today</span>
+        <span className="ml-2 text-xl font-semibold">{date}</span>
+        <span className="ml-4 whitespace-nowrap text-xs">
+          ☀️
+          {sunrise.toLocaleTimeString("en-DK", {
+            hour: "numeric",
+            minute: "2-digit",
+            timeZone,
+          })}
+          -
+          {sunset.toLocaleTimeString("en-DK", {
+            hour: "numeric",
+            minute: "2-digit",
+            timeZone,
+          })}
+          🌙
+        </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
         <div className="flex flex-[2] flex-col">
