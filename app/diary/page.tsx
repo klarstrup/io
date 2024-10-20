@@ -6,8 +6,7 @@ import { auth } from "../../auth";
 import { getDB } from "../../dbConnect";
 import type { DiaryEntry } from "../../lib";
 import type { IUser } from "../../models/user";
-import type { WorkoutData } from "../../models/workout";
-import { getNextSets } from "../../models/workout.server";
+import { getNextSets, Workouts } from "../../models/workout.server";
 import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
@@ -36,17 +35,13 @@ type DayStr = `${number}-${number}-${number}`;
 const rangeToQuery = (from: Date, to?: Date) =>
   to ? { $gte: from, $lt: to } : { $gte: from };
 
-const getAllWorkoutLocations = async (user: Session["user"]) => {
-  const DB = await getDB();
-  const workoutsCollection = DB.collection<WorkoutData>("workouts");
-
-  return (
-    await workoutsCollection.distinct("location", {
+const getAllWorkoutLocations = async (user: Session["user"]) =>
+  (
+    await Workouts.distinct("location", {
       userId: user.id,
       deletedAt: { $exists: false },
     })
   ).filter((loc): loc is string => Boolean(loc));
-};
 
 async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
@@ -95,7 +90,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
 
   await allPromises(
     async () => {
-      for await (const workout of DB.collection<WorkoutData>("workouts").find({
+      for await (const workout of Workouts.find({
         userId: user.id,
         deletedAt: { $exists: false },
         workedOutAt: rangeToQuery(from, to),

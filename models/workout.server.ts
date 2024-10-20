@@ -1,4 +1,5 @@
 import { isAfter } from "date-fns";
+import { Collection } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../dbConnect";
 import {
@@ -9,6 +10,38 @@ import {
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData } from "./workout";
 
+type ProxyCollection = Pick<
+  Collection<WorkoutData>,
+  | "distinct"
+  | "find"
+  | "findOne"
+  | "updateOne"
+  | "insertOne"
+  | "countDocuments"
+  | "updateMany"
+>;
+export const Workouts = new Proxy({} as ProxyCollection, {
+  get<K extends keyof ProxyCollection>(_target: unknown, property: K) {
+    if (property === "find") {
+      return async function* (...args: Parameters<ProxyCollection["find"]>) {
+        const DB = await getDB();
+
+        for await (const document of DB.collection("workouts").find(...args)) {
+          yield document;
+        }
+      };
+    }
+
+    return async function (...args: Parameters<ProxyCollection[K]>) {
+      const DB = await getDB();
+
+      // @ts-expect-error - ?
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return DB.collection("workouts")[property](...args);
+    };
+  },
+});
+
 export async function getNextSets({
   user,
   to,
@@ -17,14 +50,13 @@ export async function getNextSets({
   to: Date;
 }) {
   const DB = await getDB();
-  const workoutsCollection = DB.collection<WorkoutData>("workouts");
   const fitocracyWorkoutsCollection =
     DB.collection<Fitocracy.MongoWorkout>("fitocracy_workouts");
 
   return (
     await Promise.all(
       exerciseIdsThatICareAbout.map(async (id) => {
-        const workout = await workoutsCollection.findOne(
+        const workout = await Workouts.findOne(
           {
             userId: user.id,
             "exercises.exerciseId": id,

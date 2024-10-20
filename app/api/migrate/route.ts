@@ -1,5 +1,4 @@
-import { getDB } from "../../../dbConnect";
-import { WorkoutData } from "../../../models/workout";
+import { Workouts } from "../../../models/workout.server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -8,12 +7,8 @@ export async function GET() {
   //  const user = (await auth())?.user;
   //  if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const DB = await getDB();
-
-  const workoutsCollection = DB.collection<WorkoutData>("workouts");
-
   if (
-    !(await workoutsCollection.countDocuments({
+    !(await Workouts.countDocuments({
       "exercises.exercise_id": { $exists: true },
     }))
   ) {
@@ -21,7 +16,7 @@ export async function GET() {
   }
 
   console.log(
-    await workoutsCollection.updateMany(
+    await Workouts.updateMany(
       {},
       {
         $rename: {
@@ -36,7 +31,7 @@ export async function GET() {
   );
 
   console.log(
-    await workoutsCollection.updateMany({}, [
+    await Workouts.updateMany({}, [
       {
         $set: {
           exercises: {
