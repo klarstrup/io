@@ -1,9 +1,10 @@
 import { differenceInMonths, isFuture } from "date-fns";
 import { DateTime } from "luxon";
 import { auth } from "../../../auth";
-import { getDB } from "../../../dbConnect";
-import type { MyFitnessPal } from "../../../sources/myfitnesspal";
-import { getMyFitnessPalReport } from "../../../sources/myfitnesspal.server";
+import {
+  getMyFitnessPalReport,
+  MyFitnessPalFoodEntries,
+} from "../../../sources/myfitnesspal.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 const months = [
@@ -39,19 +40,13 @@ export const GET = () =>
 
     const userName = user.myFitnessPalUserName;
     if (!userName) return new Response("No userName", { status: 401 });
-
-    const DB = await getDB();
-    const foodEntries = DB.collection<MyFitnessPal.MongoFoodEntry>(
-      "myfitnesspal_food_entries",
-    );
-
     const now = new Date();
     yearLoop: for (const year of years) {
       for (const month of months) {
         if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
 
         if (differenceInMonths(now, new Date(year, Number(month) - 1)) > 1) {
-          const entriesForMonth = await foodEntries.countDocuments({
+          const entriesForMonth = await MyFitnessPalFoodEntries.countDocuments({
             user_id: userId,
             date: { $regex: new RegExp(`^${year}-${month}-`) },
           });
@@ -67,7 +62,7 @@ export const GET = () =>
 
         if (Array.isArray(reportEntries)) {
           // Wipe the month to be replaced with the new data
-          await foodEntries.deleteMany({
+          await MyFitnessPalFoodEntries.deleteMany({
             user_id: userId,
             date: { $regex: new RegExp(`^${year}-${month}-`) },
           });
@@ -76,7 +71,7 @@ export const GET = () =>
         for (const reportEntry of reportEntries) {
           if (reportEntry.food_entries) {
             for (const foodEntry of reportEntry.food_entries) {
-              await foodEntries.updateOne(
+              await MyFitnessPalFoodEntries.updateOne(
                 { id: foodEntry.id },
                 {
                   $set: {

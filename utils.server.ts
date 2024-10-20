@@ -10,6 +10,7 @@ type ProxyCollection<TSchema extends Document> = Pick<
   | "insertOne"
   | "countDocuments"
   | "updateMany"
+  | "deleteMany"
 >;
 export function proxyCollection<
   TSchema extends Document,

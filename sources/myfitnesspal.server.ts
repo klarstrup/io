@@ -2,6 +2,10 @@ import { endOfMonth, getDaysInMonth, startOfMonth } from "date-fns";
 import { dbFetch } from "../fetch";
 import { HOUR_IN_SECONDS, getMaxAgeFactor } from "../utils";
 import { MyFitnessPal } from "./myfitnesspal";
+import { proxyCollection } from "../utils.server";
+
+export const MyFitnessPalFoodEntries =
+  proxyCollection<MyFitnessPal.MongoFoodEntry>("myfitnesspal_food_entries");
 
 const fetchMyFitnessPal = async <T>(
   input: string | URL,

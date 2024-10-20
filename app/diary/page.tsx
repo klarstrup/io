@@ -11,8 +11,10 @@ import {
   type Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../../sources/fitocracy";
-import { MyFitnessPal } from "../../sources/myfitnesspal";
-import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
+import {
+  getMyFitnessPalSession,
+  MyFitnessPalFoodEntries,
+} from "../../sources/myfitnesspal.server";
 import { type RunDouble, workoutFromRunDouble } from "../../sources/rundouble";
 import {
   type TopLogger,
@@ -55,10 +57,6 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
 
   const runsCollection =
     DB.collection<RunDouble.MongoHistoryItem>("rundouble_runs");
-
-  const foodEntriesCollection = DB.collection<MyFitnessPal.MongoFoodEntry>(
-    "myfitnesspal_food_entries",
-  );
 
   const now = TZDate.tz(timeZone);
   const todayStr = `${now.getFullYear()}-${
@@ -118,7 +116,7 @@ async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     async () => {
       if (!user.myFitnessPalUserId) return;
 
-      for await (const foodEntry of foodEntriesCollection.find({
+      for await (const foodEntry of MyFitnessPalFoodEntries.find({
         user_id: user.myFitnessPalUserId,
         datetime: rangeToQuery(from, to),
       })) {
