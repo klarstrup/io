@@ -1,5 +1,4 @@
 import { isAfter } from "date-fns";
-import { Collection } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../dbConnect";
 import {
@@ -7,40 +6,11 @@ import {
   Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../sources/fitocracy";
+import { proxyCollection } from "../utils.server";
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData } from "./workout";
 
-type ProxyCollection = Pick<
-  Collection<WorkoutData>,
-  | "distinct"
-  | "find"
-  | "findOne"
-  | "updateOne"
-  | "insertOne"
-  | "countDocuments"
-  | "updateMany"
->;
-export const Workouts = new Proxy({} as ProxyCollection, {
-  get<K extends keyof ProxyCollection>(_target: unknown, property: K) {
-    if (property === "find") {
-      return async function* (...args: Parameters<ProxyCollection["find"]>) {
-        const DB = await getDB();
-
-        for await (const document of DB.collection("workouts").find(...args)) {
-          yield document;
-        }
-      };
-    }
-
-    return async function (...args: Parameters<ProxyCollection[K]>) {
-      const DB = await getDB();
-
-      // @ts-expect-error - ?
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return DB.collection("workouts")[property](...args);
-    };
-  },
-});
+export const Workouts = proxyCollection<WorkoutData>("workouts");
 
 export async function getNextSets({
   user,
