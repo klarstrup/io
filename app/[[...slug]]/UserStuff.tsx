@@ -14,16 +14,11 @@ import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 async function updateUser(formData: FormData) {
   "use server";
 
-  const session = await auth();
-  const db = await getDB();
+  const user = (await auth())?.user;
 
-  const user = session?.user.id
-    ? await db
-        .collection<IUser>("users")
-        .findOne({ _id: new ObjectId(session.user.id) })
-    : null;
   if (!user) throw new Error("No user found");
 
+  const db = await getDB();
   const newUser = { ...user };
 
   const geohash = formData.get("geohash");
@@ -81,7 +76,7 @@ async function updateUser(formData: FormData) {
 
   await db
     .collection<IUser>("users")
-    .updateOne({ _id: user._id }, { $set: newUser });
+    .updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
 
   // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
   // calling it at all will make the page rerender with the new data.
@@ -93,19 +88,12 @@ async function updateUser(formData: FormData) {
 }
 
 export default async function UserStuff() {
-  const session = await auth();
-  const db = await getDB();
-
-  const currentUser = session?.user.id
-    ? await db
-        .collection<IUser>("users")
-        .findOne({ _id: new ObjectId(session.user.id) })
-    : null;
+  const user = (await auth())?.user;
 
   let topLoggerUser: TopLogger.User | null = null;
   try {
-    if (currentUser?.topLoggerId) {
-      topLoggerUser = await fetchUser(currentUser.topLoggerId);
+    if (user?.topLoggerId) {
+      topLoggerUser = await fetchUser(user.topLoggerId);
     }
   } catch {
     topLoggerUser = null;
@@ -113,10 +101,9 @@ export default async function UserStuff() {
 
   let myFitnessPalUser: MyFitnessPal.User | null = null;
   try {
-    if (currentUser?.myFitnessPalToken) {
-      myFitnessPalUser = (
-        await getMyFitnessPalSession(currentUser.myFitnessPalToken)
-      ).user;
+    if (user?.myFitnessPalToken) {
+      myFitnessPalUser = (await getMyFitnessPalSession(user.myFitnessPalToken))
+        .user;
     }
   } catch {
     myFitnessPalUser = null;
@@ -124,8 +111,8 @@ export default async function UserStuff() {
 
   let runDoubleUser: RunDouble.User | null = null;
   try {
-    if (currentUser?.runDoubleId) {
-      runDoubleUser = await getRunDoubleUser(currentUser.runDoubleId);
+    if (user?.runDoubleId) {
+      runDoubleUser = await getRunDoubleUser(user.runDoubleId);
     }
   } catch {
     runDoubleUser = null;
@@ -182,14 +169,14 @@ export default async function UserStuff() {
           <Link href="/diary">Diary</Link>
           <Link href="/">Events</Link>
         </div>
-        {currentUser ? (
+        {user ? (
           <div>
             <span>
-              Hello, <strong>{currentUser.name}</strong>
-              <small>({currentUser.email})</small>!
+              Hello, <strong>{user.name}</strong>
+              <small>({user.email})</small>!
               {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
               <img
-                src={currentUser.image || ""}
+                src={user.image || ""}
                 width={48}
                 height={48}
                 style={{ borderRadius: "100%" }}
@@ -201,13 +188,13 @@ export default async function UserStuff() {
             <form action={updateUser}>
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>Location</legend>
-                <UserStuffGeohashInput geohash={currentUser.geohash} />
+                <UserStuffGeohashInput geohash={user.geohash} />
               </fieldset>
               <fieldset style={{ display: "flex", gap: "6px" }}>
                 <legend>Time Zone</legend>
                 <input
                   name="timeZone"
-                  defaultValue={currentUser.timeZone || ""}
+                  defaultValue={user.timeZone || ""}
                   className="flex-1"
                 />
               </fieldset>
@@ -215,7 +202,7 @@ export default async function UserStuff() {
                 <legend>TopLogger ID</legend>
                 <input
                   name="topLoggerId"
-                  defaultValue={currentUser.topLoggerId || ""}
+                  defaultValue={user.topLoggerId || ""}
                   className="flex-1"
                 />
                 {topLoggerUser ? (
@@ -235,7 +222,7 @@ export default async function UserStuff() {
                 <legend>MyFitnessPal Token</legend>
                 <input
                   name="myFitnessPalToken"
-                  defaultValue={currentUser.myFitnessPalToken || ""}
+                  defaultValue={user.myFitnessPalToken || ""}
                   className="flex-1"
                 />
                 {myFitnessPalUser ? (
@@ -255,7 +242,7 @@ export default async function UserStuff() {
                 <legend>RunDouble ID</legend>
                 <input
                   name="runDoubleId"
-                  defaultValue={currentUser.runDoubleId || ""}
+                  defaultValue={user.runDoubleId || ""}
                   className="flex-1"
                 />
                 {runDoubleUser ? (
@@ -275,11 +262,9 @@ export default async function UserStuff() {
                 <legend>iCal URLs</legend>
                 <textarea
                   name="icalUrls"
-                  defaultValue={currentUser.icalUrls?.join("\n") || ""}
+                  defaultValue={user.icalUrls?.join("\n") || ""}
                   className="flex-1"
-                  rows={
-                    currentUser.icalUrls ? currentUser.icalUrls.length + 2 : 5
-                  }
+                  rows={user.icalUrls ? user.icalUrls.length + 2 : 5}
                   placeholder={
                     "https://example.com/calendar.ics\nhttps://example.com/other.ics"
                   }
