@@ -27,8 +27,6 @@ export function DiaryEntryItem({
       key={date}
       href={date === pickedDate ? `/diary` : `/diary/${date}`}
       style={{
-        boxShadow: "0 0 2em rgba(0, 0, 0, 0.2)",
-        borderRadius: "1.5em",
         background: "white",
         display: "flex",
         flexDirection: "column",
