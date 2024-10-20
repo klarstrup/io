@@ -21,6 +21,7 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
         value={geohash || ""}
         readOnly
         disabled={isGettingCurrentPosition}
+        className="border-b-2 border-gray-200 focus:border-gray-500"
       />
       <button
         disabled={isGettingCurrentPosition}

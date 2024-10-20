@@ -57,9 +57,7 @@ export function DiaryEntryItem({
         display: "flex",
         flexDirection: "column",
         padding: "0.5em",
-        cursor: "pointer",
       }}
-      onClick={() => setIsExpanded(!isExpanded)}
       className={"diary-entry" + (isExpanded ? " expanded" : "")}
     >
       <div
@@ -68,7 +66,9 @@ export function DiaryEntryItem({
           marginLeft: "0.5em",
           display: "flex",
           alignItems: "center",
+          cursor: "pointer",
         }}
+        onClick={() => setIsExpanded(!isExpanded)}
       >
         <div
           style={{

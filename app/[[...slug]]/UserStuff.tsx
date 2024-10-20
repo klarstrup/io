@@ -191,7 +191,7 @@ export default async function UserStuff() {
                 <input
                   name="timeZone"
                   defaultValue={user.timeZone || ""}
-                  className="flex-1"
+                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
               </fieldset>
               <fieldset style={{ display: "flex", gap: "6px" }}>
@@ -199,7 +199,7 @@ export default async function UserStuff() {
                 <input
                   name="topLoggerId"
                   defaultValue={user.topLoggerId || ""}
-                  className="flex-1"
+                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
                 {topLoggerUser ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -219,7 +219,7 @@ export default async function UserStuff() {
                 <input
                   name="myFitnessPalToken"
                   defaultValue={user.myFitnessPalToken || ""}
-                  className="flex-1"
+                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
                 {myFitnessPalUser ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -239,7 +239,7 @@ export default async function UserStuff() {
                 <input
                   name="runDoubleId"
                   defaultValue={user.runDoubleId || ""}
-                  className="flex-1"
+                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
                 {runDoubleUser ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -259,7 +259,7 @@ export default async function UserStuff() {
                 <textarea
                   name="icalUrls"
                   defaultValue={user.icalUrls?.join("\n") || ""}
-                  className="flex-1"
+                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                   rows={user.icalUrls ? user.icalUrls.length + 2 : 5}
                   placeholder={
                     "https://example.com/calendar.ics\nhttps://example.com/other.ics"

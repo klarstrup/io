@@ -310,7 +310,7 @@ export default async function Page() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(12em, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(20em, 1fr))",
           gridTemplateRows: "masonry",
           gap: "1em",
           padding: "1em",
