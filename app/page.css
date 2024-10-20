@@ -8,6 +8,7 @@
 
 .diary-entry:hover {
   box-shadow: rgba(28, 28, 30, 0.45) 0px 0px 20px !important;
+  z-index: 10;
 }
 .diary-entry.expanded {
   box-shadow: rgba(28, 28, 30, 0.9) 0px 0px 20px !important;

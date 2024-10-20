@@ -2,9 +2,12 @@ import { TZDate } from "@date-fns/tz";
 import {
   endOfDay,
   getISOWeek,
+  getYear,
   isAfter,
   setISOWeek,
+  setYear,
   startOfDay,
+  subWeeks,
 } from "date-fns";
 import { auth } from "../../auth";
 import { DEFAULT_TIMEZONE } from "../../utils";
@@ -24,19 +27,26 @@ async function loadMoreData(cursor: string, params: Record<string, string>) {
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
 
-  const { isoWeek } = JSON.parse(cursor) as { isoWeek?: number };
-  if (!isoWeek) throw new Error("From not found");
-
-  const isAtLimit = isAfter(new Date(2013, 9), setISOWeek(new Date(), isoWeek));
+  const { isoYearAndWeek } = JSON.parse(cursor) as { isoYearAndWeek?: string };
+  if (!isoYearAndWeek) throw new Error("isoYearAndWeek not found");
+  const [isoYear, isoWeek] = isoYearAndWeek.split("-").map(Number) as [
+    number,
+    number,
+  ];
+  const weekDate = setYear(setISOWeek(new Date(), isoWeek), isoYear);
+  const isAtLimit = isAfter(new Date(2013, 9), weekDate);
 
   if (isAtLimit) return [null, null] as const;
 
-  const nextCursor = JSON.stringify({ isoWeek: isoWeek - 1 });
+  const next = subWeeks(weekDate, 1);
+  const nextCursor = JSON.stringify({
+    isoYearAndWeek: `${getYear(next)}-${getISOWeek(next)}`,
+  });
 
   return [
     <DiaryEntryWeek
       key={isoWeek}
-      isoWeek={isoWeek}
+      isoYearAndWeek={isoYearAndWeek}
       pickedDate={params.date as `${number}-${number}-${number}` | undefined}
     />,
     nextCursor,
@@ -69,7 +79,7 @@ export default async function Page({
     params.date ||
     `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
-  const isoWeek = getISOWeek(TZDate.tz(timeZone));
+  const isoYearAndWeek = `${getYear(now)}-${getISOWeek(now)}`;
 
   return (
     <div className="min-h-[100vh]">
@@ -90,7 +100,7 @@ export default async function Page({
           />
         </div>
         <div
-          className="flex-1"
+          className="flex flex-1 flex-col items-stretch"
           style={{
             overflowY: "scroll",
             maxHeight: "100vh",
@@ -99,9 +109,14 @@ export default async function Page({
           <LoadMore
             params={params}
             loadMoreAction={loadMoreData}
-            initialCursor={JSON.stringify({ isoWeek: isoWeek - 1 })}
+            initialCursor={JSON.stringify({
+              isoYearAndWeek: `${getYear(subWeeks(now, 1))}-${getISOWeek(subWeeks(now, 1))}`,
+            })}
           >
-            <DiaryEntryWeek pickedDate={params.date} isoWeek={isoWeek} />
+            <DiaryEntryWeek
+              pickedDate={params.date}
+              isoYearAndWeek={isoYearAndWeek}
+            />
           </LoadMore>
         </div>
       </div>

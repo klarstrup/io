@@ -6,12 +6,14 @@ import { WorkoutData } from "../../models/workout";
 
 export function DiaryEntryItem({
   pickedDate,
+  date,
   diaryEntry,
 }: {
   pickedDate?: `${number}-${number}-${number}`;
-  diaryEntry: [`${number}-${number}-${number}`, DiaryEntry];
+  date: `${number}-${number}-${number}`;
+  diaryEntry?: DiaryEntry;
 }) {
-  const [date, { food, workouts }] = diaryEntry;
+  const { food, workouts } = diaryEntry || {};
 
   const dayTotalEnergy = food?.reduce(
     (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
@@ -32,7 +34,7 @@ export function DiaryEntryItem({
         flexDirection: "column",
         padding: "0.5em",
       }}
-      className={"diary-entry"}
+      className={"diary-entry flex-1 border-[0.5px] border-black/25"}
     >
       <div
         style={{
@@ -53,7 +55,9 @@ export function DiaryEntryItem({
           }}
         >
           <big>
-            <b style={{ lineHeight: 1.25, whiteSpace: "nowrap" }}>{date}</b>
+            <b style={{ lineHeight: 1.25, whiteSpace: "nowrap" }}>
+              {date.split("-")[2]}
+            </b>
           </big>
         </div>
       </div>
