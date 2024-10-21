@@ -10,7 +10,7 @@ module.exports = {
     project: true,
     tsconfigRootDir: __dirname,
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ["@typescript-eslint", "eslint-plugin-react-compiler"],
   root: true,
   rules: {
     "no-unused-vars": "off",
@@ -22,6 +22,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/no-namespace": "off",
+    "react-compiler/react-compiler": "error",
   },
   ignorePatterns: [".eslintrc.js", "next.config.js"],
 };
