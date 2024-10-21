@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { DiaryEntry } from "../../lib";
 import { exercises, TagType } from "../../models/exercises";
 import { WorkoutData } from "../../models/workout";
+import { stringToColour } from "../../utils";
+import { TZDate } from "@date-fns/tz";
 
 export function DiaryEntryItem({
   pickedDate,
@@ -24,15 +26,29 @@ export function DiaryEntryItem({
     0,
   );
 
+  const now = new TZDate();
+  const isToday =
+    date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  const isFuture = new TZDate() < new TZDate(date);
+  if (isFuture) {
+    return <div className="flex-1 border-[0.5px] border-black/0">&nbsp;</div>;
+  }
   return (
     <Link
       key={date}
       href={date === pickedDate ? `/diary` : `/diary/${date}`}
       style={{
-        background: "white",
+        background: isFuture
+          ? "white"
+          : stringToColour(
+              new Date(date).toLocaleDateString("en-DK", { month: "long" }),
+              0.25,
+            ),
         display: "flex",
         flexDirection: "column",
         padding: "0.25em",
+        maxWidth: "calc(100% / 7)",
+        width: "calc(100% / 7)",
       }}
       className={"diary-entry flex-1 border-[0.5px] border-black/25"}
     >
@@ -44,19 +60,12 @@ export function DiaryEntryItem({
         }}
       >
         <div
-          style={{
-            flex: 1,
-            lineHeight: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className={
+            "flex flex-1 items-center justify-center text-lg leading-none " +
+            (isToday ? "font-bold" : "font-medium")
+          }
         >
-          <big>
-            <b style={{ lineHeight: 1.25, whiteSpace: "nowrap" }}>
-              {date.split("-")[2]}
-            </b>
-          </big>
+          {date.split("-")[2]}
         </div>
       </div>
       <div

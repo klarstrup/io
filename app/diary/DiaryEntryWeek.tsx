@@ -70,7 +70,7 @@ export async function DiaryEntryWeek({
             : null}
         </span>
       </div>
-      <div className="flex flex-1">
+      <div className="flex flex-1 bg-white">
         {eachDayOfInterval(weekInterval).map((dayte) => (
           <DiaryEntryItem
             key={dateToString(dayte)}

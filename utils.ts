@@ -424,3 +424,42 @@ export function roundToNearestDay<
 
   return addDays(startOfDay(date), roundingMethod(hours / 24) - 1);
 }
+
+export function stringToColours(inputString: string) {
+  let sum = 0;
+
+  for (let i = 0; i < inputString.length; i++) {
+    sum += inputString.charCodeAt(i);
+  }
+
+  const r = ~~(
+    Number(
+      "0." +
+        Math.sin(sum + 1)
+          .toString()
+          .substr(6),
+    ) * 256
+  );
+  const g = ~~(
+    Number(
+      "0." +
+        Math.sin(sum + 2)
+          .toString()
+          .substr(6),
+    ) * 256
+  );
+  const b = ~~(
+    Number(
+      "0." +
+        Math.sin(sum + 3)
+          .toString()
+          .substr(6),
+    ) * 256
+  );
+
+  return [r, g, b, 255];
+}
+export function stringToColour(inputString: string, alpha = 1) {
+  const [r, g, b] = stringToColours(inputString);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
