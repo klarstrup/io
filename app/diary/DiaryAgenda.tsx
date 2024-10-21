@@ -64,23 +64,27 @@ export async function DiaryAgenda({
       key={date}
       className="flex h-full max-h-full w-full max-w-full flex-col overflow-x-hidden overflow-y-scroll overscroll-contain bg-white p-2 shadow-lg shadow-slate-600"
     >
-      <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-2 text-xl leading-none">
+      <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-1 text-lg leading-none">
         {isToday ? <span>Today</span> : null}
-        <span className="font-semibold">{date}</span>
+        <span className={"font-semibold " + isToday ? "text-sm" : ""}>
+          {date}
+        </span>
         <span className="ml-2 whitespace-nowrap">
           ☀️
-          {sunrise.toLocaleTimeString("en-DK", {
-            hour: "numeric",
-            minute: "2-digit",
-          })}
-          -
-          {sunset.toLocaleTimeString("en-DK", {
-            hour: "numeric",
-            minute: "2-digit",
-          })}
+          <small>
+            {sunrise.toLocaleTimeString("en-DK", {
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+            -
+            {sunset.toLocaleTimeString("en-DK", {
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </small>
           🌙
         </span>
-        <span>
+        <span className="whitespace-nowrap">
           <Link href={`/diary/${dateToString(subDays(new Date(date), 1))}`}>
             ⬅️
           </Link>
@@ -91,8 +95,8 @@ export async function DiaryAgenda({
         </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
+        {isToday ? <DiaryAgendaEvents user={user} /> : null}
         <div className="flex flex-1 flex-col">
-          <DiaryAgendaFood date={date} food={food} />
           <DiaryAgendaWorkouts
             date={date}
             workouts={workouts}
@@ -100,8 +104,8 @@ export async function DiaryAgenda({
             locations={locations}
             nextSets={nextSets}
           />
+          <DiaryAgendaFood date={date} food={food} />
         </div>
-        {isToday ? <DiaryAgendaEvents user={user} /> : null}
       </div>
       {isToday ? <DiaryAgendaWeather user={user} /> : null}
     </div>
