@@ -62,7 +62,7 @@ export async function DiaryAgenda({
   return (
     <div
       key={date}
-      className="flex h-full max-h-full w-full max-w-full flex-col overflow-x-hidden overflow-y-scroll overscroll-contain bg-white p-2 shadow-lg shadow-slate-600"
+      className="flex h-full max-h-full w-full max-w-full flex-col overflow-x-hidden overflow-y-scroll overscroll-contain bg-white p-2"
     >
       <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-1 text-lg leading-none">
         {isToday ? <span>Today</span> : null}

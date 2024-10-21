@@ -82,10 +82,10 @@ export default async function Page({
   const isoYearAndWeek = `${getYear(now)}-${getISOWeek(now)}`;
 
   return (
-    <div className="overflow-hidden min-h-[100vh] max-h-[100vh]">
+    <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
       <UserStuff />
       <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
-        <div className="max-h-[100vh] self-stretch portrait:h-[66.666vh] landscape:w-1/3">
+        <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[80vh] portrait:border-b-[0.5px] landscape:w-1/3">
           <DiaryAgenda
             date={date}
             diaryEntry={
@@ -99,7 +99,7 @@ export default async function Page({
             user={user}
           />
         </div>
-        <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[33.333vh]">
+        <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
           <LoadMore
             params={params}
             loadMoreAction={loadMoreData}
