@@ -53,11 +53,10 @@ async function loadMoreData(cursor: string, params: Record<string, string>) {
   ] as const;
 }
 
-export default async function Page({
-  params,
-}: {
-  params: { date?: `${number}-${number}-${number}` };
+export default async function Page(props: {
+  params: Promise<{ date?: `${number}-${number}-${number}` }>;
 }) {
+  const params = await props.params;
   const user = (await auth())?.user;
 
   if (!user) {
@@ -65,6 +64,7 @@ export default async function Page({
       <div>
         <span>Hello, stranger!</span>
         <p>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/api/auth/signin">Sign in</a>
         </p>
       </div>

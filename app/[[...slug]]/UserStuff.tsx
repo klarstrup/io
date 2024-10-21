@@ -178,8 +178,10 @@ export default async function UserStuff() {
               />
             </span>
             <p>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/api/auth/signout">Sign out</a>
             </p>
+            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <form action={updateUser}>
               <FieldSetY className="flex items-center gap-1.5">
                 <legend>Location</legend>
@@ -272,6 +274,7 @@ export default async function UserStuff() {
           <div>
             <span>Hello, stranger!</span>
             <p>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/api/auth/signin">Sign in</a>
             </p>
           </div>

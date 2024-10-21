@@ -3,7 +3,7 @@ import { addDays } from "date-fns";
 import moment from "moment-timezone";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
-import * as zoneTable from "./windowsZones.json" assert { type: "json" };
+import * as zoneTable from "./windowsZones.json" with { type: "json" };
 
 /** **************
  *  A tolerant, minimal icalendar parser

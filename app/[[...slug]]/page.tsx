@@ -29,11 +29,11 @@ import UserStuff from "./UserStuff";
 
 const monthsPerPage = 2;
 
-export default async function Home({
-  params: { slug: [disciplinesString] = [] },
-}: {
-  params: { slug?: string[] };
+export default async function Home(props: {
+  params: Promise<{ slug?: string[] }>;
 }) {
+  const { slug: [disciplinesString] = [] } = await props.params;
+
   const disciplines: string[] | undefined =
     (disciplinesString !== "index" &&
       (disciplinesString as string | undefined)?.split("+")) ||

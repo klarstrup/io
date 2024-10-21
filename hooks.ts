@@ -1,3 +1,4 @@
+/* eslint-disable react-compiler/react-compiler */
 import { useEffect, useInsertionEffect, useRef, useState } from "react";
 
 type AnyFunction = (...args: unknown[]) => unknown;
@@ -288,7 +289,7 @@ export function useInView({
   onChange,
 }: IntersectionOptions = {}): InViewHookResponse {
   const [ref, setRef] = useState<Element | null>(null);
-  const callback = useRef<IntersectionOptions["onChange"]>();
+  const callback = useRef<IntersectionOptions["onChange"]>(undefined);
   const [state, setState] = useState<State>({
     inView: Boolean(initialInView),
     entry: undefined,
@@ -352,7 +353,7 @@ export function useInView({
   );
 
   const entryTarget = state.entry?.target;
-  const previousEntryTarget = useRef<Element>();
+  const previousEntryTarget = useRef<Element>(undefined);
   if (
     !ref &&
     entryTarget &&
