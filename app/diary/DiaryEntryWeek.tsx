@@ -32,6 +32,7 @@ export async function DiaryEntryWeek({
       <div>
         <span>Hello, stranger!</span>
         <p>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/api/auth/signin">Sign in</a>
         </p>
       </div>

@@ -6,7 +6,7 @@ import { differenceInDays, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import { useEffect, useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import Select from "react-select";
+import Select, { OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
@@ -23,9 +23,9 @@ import {
   type WorkoutData,
 } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
+import { DEFAULT_TIMEZONE } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
-import { DEFAULT_TIMEZONE } from "../../utils";
 
 function isValidDate(date: Date) {
   return !isNaN(date.getTime());
@@ -170,7 +170,12 @@ export function WorkoutForm({
               value={
                 field.value ? { label: field.value, value: field.value } : null
               }
-              onChange={(selected) => {
+              onChange={(
+                selected: OnChangeValue<
+                  { label: string; value: string },
+                  false
+                >,
+              ) => {
                 if (selected) field.onChange(selected.value);
               }}
             />
@@ -265,7 +270,9 @@ export function WorkoutForm({
                 }`,
                 value: id,
               }))}
-            onChange={(selected) => {
+            onChange={(
+              selected: OnChangeValue<{ label: string; value: number }, false>,
+            ) => {
               if (!selected) return;
 
               append({ exerciseId: selected.value, sets: [] });
