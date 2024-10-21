@@ -1,4 +1,6 @@
-export function jsonStreamResponse(generator: () => AsyncGenerator) {
+export function jsonStreamResponse(
+  generator: (flushJSON?: (data: unknown) => Promise<void>) => AsyncGenerator,
+) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
   const encoder = new TextEncoder();
@@ -14,7 +16,7 @@ export function jsonStreamResponse(generator: () => AsyncGenerator) {
   (async () => {
     await writer.write(encoder.encode("[\n"));
 
-    for await (const value of generator()) await flushJSON(value);
+    for await (const value of generator(flushJSON)) await flushJSON(value);
   })()
     .catch(async (error: Error) => {
       console.error(error);

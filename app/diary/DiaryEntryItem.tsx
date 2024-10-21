@@ -32,14 +32,12 @@ export function DiaryEntryItem({
         background: "white",
         display: "flex",
         flexDirection: "column",
-        padding: "0.5em",
+        padding: "0.25em",
       }}
       className={"diary-entry flex-1 border-[0.5px] border-black/25"}
     >
       <div
         style={{
-          marginBottom: "0.5em",
-          marginLeft: "0.5em",
           display: "flex",
           alignItems: "center",
           cursor: "pointer",
@@ -70,26 +68,25 @@ export function DiaryEntryItem({
         }}
       >
         <div>
-          <div
-            style={{
-              fontSize: "1em",
-              padding: "0.25em",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.25em",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {dayTotalEnergy && dayTotalProtein ? (
+          {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
+          {dayTotalEnergy && dayTotalProtein ? (
+            <div
+              style={{
+                fontSize: "0.25em",
+                padding: "0.25em",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.25em",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <small style={{ paddingLeft: "0.5em" }}>
                 <div>{Math.round(dayTotalEnergy)} kcal</div>
                 <div>{Math.round(dayTotalProtein)}g protein</div>
               </small>
-            ) : null}
-          </div>
-
-          {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </Link>
