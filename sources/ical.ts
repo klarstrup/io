@@ -12,7 +12,12 @@ import { RRule } from "rrule";
 import { auth } from "../auth";
 import { dbFetch } from "../fetch";
 import type { MongoVEventWithVCalendar } from "../lib";
-import { DEFAULT_TIMEZONE, MINUTE_IN_SECONDS, omit } from "../utils";
+import {
+  DEFAULT_TIMEZONE,
+  MINUTE_IN_SECONDS,
+  omit,
+  roundToNearestDay,
+} from "../utils";
 import {
   parseICS,
   type CalendarResponse,
@@ -118,7 +123,16 @@ export async function getUserIcalEventsBetween(
     }
     if (
       areIntervalsOverlapping(
-        { start: event.start, end: event.end },
+        {
+          start:
+            event.datetype === "date"
+              ? roundToNearestDay(event.start)
+              : event.start,
+          end:
+            event.datetype === "date"
+              ? roundToNearestDay(event.end)
+              : event.end,
+        },
         { start, end },
       )
     ) {
