@@ -27,7 +27,7 @@ export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
 
   return (
     <FieldSetY className="flex flex-1 flex-col">
-      <legend className="ml-2">
+      <legend className="ml-3">
         <big>Events</big>
       </legend>
       {Object.entries(
@@ -63,7 +63,7 @@ export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
         ),
       ).map(([dayName, events], i) => (
         <FieldSetX key={i}>
-          <legend className="ml-2">
+          <legend>
             <big>{dayName}</big>
           </legend>
           <ul>

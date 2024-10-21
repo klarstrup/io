@@ -35,12 +35,12 @@ export function DiaryAgendaWorkouts({
 
   return (
     <FieldSetY className="flex-1">
-      <legend className="ml-2">
+      <legend className="ml-3 flex items-center">
         <big>Workouts</big>
         {workouts?.length ? (
           <button
             onClick={() => setIsAddingWorkout(true)}
-            className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-sm font-semibold"
+            className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
           >
             ➕
           </button>

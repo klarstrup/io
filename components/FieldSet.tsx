@@ -5,7 +5,7 @@ export const FieldSetY = (props: HTMLProps<HTMLFieldSetElement>) => {
     <fieldset
       {...props}
       className={
-        "flex-1 rounded-lg border-x-0 border-y-4 border-gray-900/20 px-1 py-2 " +
+        "flex-1 rounded-lg border-x-0 border-y-4 border-gray-900/20 px-1 pb-2 pt-1 " +
         props.className
       }
     />
