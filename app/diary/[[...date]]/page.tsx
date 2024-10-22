@@ -24,7 +24,7 @@ import { getDiaryEntries } from "./getDiaryEntries";
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
 
-const WEEKS_PER_PAGE = 16;
+const WEEKS_PER_PAGE = 8;
 
 async function loadMoreData(
   cursor: { startIsoYearAndWeek: string; endIsoYearAndWeek: string },
