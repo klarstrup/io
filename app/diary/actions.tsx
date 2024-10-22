@@ -1,10 +1,13 @@
 "use server";
 
-import { ObjectId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
-import { type WorkoutData } from "../../models/workout";
+import type { WorkoutExerciseSet, WorkoutData } from "../../models/workout";
 import { Workouts } from "../../models/workout.server";
+import { FitocracyWorkouts } from "../../sources/fitocracy.server";
+import { workoutFromFitocracyWorkout } from "../../sources/fitocracy";
+import { exercises, InputType } from "../../models/exercises";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData,
@@ -37,4 +40,80 @@ export async function deleteWorkout(workoutId: string) {
   revalidatePath("/diary");
 
   return result.modifiedCount;
+}
+
+export async function getIsSetPR(
+  workout: WorkoutData,
+  exerciseId: WorkoutData["exercises"][number]["exerciseId"],
+  set: WorkoutExerciseSet,
+) {
+  const user = (await auth())?.user;
+  if (!user) return;
+
+  const exercise = exercises.find((e) => e.id === exerciseId);
+  if (!exercise) return;
+
+  const ioWorkouts = await Workouts.find({
+    userId: user.id,
+    "exercises.exerciseId": exerciseId,
+    workedOutAt: { $lt: workout.workedOutAt },
+  }).toArray();
+
+  const fitocracyWorkouts = user.fitocracyUserId
+    ? (
+        await FitocracyWorkouts.find({
+          user_id: user.fitocracyUserId,
+          "root_group.children.exercise.exercise_id": exerciseId,
+          workout_timestamp: { $lt: workout.workedOutAt },
+        }).toArray()
+      ).map((w) => workoutFromFitocracyWorkout(w))
+    : [];
+
+  const workouts = [...ioWorkouts, ...fitocracyWorkouts];
+
+  const repsInputIndex = exercise.inputs.findIndex(
+    (i) => i.type === InputType.Reps,
+  );
+  const weightInputIndex = exercise.inputs.findIndex(
+    (i) => i.type === InputType.Weight,
+  );
+
+  if (repsInputIndex === -1 || weightInputIndex === -1) return;
+
+  const reps = set.inputs[repsInputIndex]?.value || 0;
+
+  const weight = set.inputs[weightInputIndex]?.value || 0;
+
+  function theThing(ws: WithId<WorkoutData>[]) {
+    return ws.every((w) =>
+      w.exercises
+        .find((e) => e.exerciseId === exerciseId)
+        ?.sets.every((pastSet) => {
+          const pastReps = pastSet.inputs[repsInputIndex]?.value || 0;
+          const pastWeight = pastSet.inputs[weightInputIndex]?.value || 0;
+
+          return pastReps < reps || pastWeight < weight;
+        }),
+    );
+  }
+
+  const isAllTimePR = theThing(workouts);
+
+  const isYearPR = theThing(
+    workouts.filter(
+      (w) => w.workedOutAt > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+    ),
+  );
+
+  const is3MonthPR = theThing(
+    workouts.filter(
+      (w) => w.workedOutAt > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+    ),
+  );
+
+  return {
+    isAllTimePR,
+    isYearPR,
+    is3MonthPR,
+  };
 }
