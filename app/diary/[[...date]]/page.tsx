@@ -135,7 +135,7 @@ export default async function Page(props: {
           <LoadMore
             initialCursor={{
               startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
-              endIsoYearAndWeek: `${getYear(subWeeks(nowWeek, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(nowWeek, WEEKS_PER_PAGE))}`,
+              endIsoYearAndWeek: `${getYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
             }}
             params={params}
             loadMoreAction={loadMoreData}
