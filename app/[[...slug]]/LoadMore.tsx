@@ -2,23 +2,23 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useEvent, useInView } from "../../hooks";
 
-const LoadMore = ({
+function LoadMore<Cursor>({
   children,
   initialCursor,
   loadMoreAction,
   params,
 }: React.PropsWithChildren<{
-  initialCursor: string;
+  initialCursor: Cursor;
   loadMoreAction: (
-    cursor: string,
+    cursor: Cursor,
     params?: Record<string, string | string[]>,
-  ) => Promise<readonly [ReactNode | null, string | null]>;
+  ) => Promise<readonly [ReactNode | null, Cursor | null]>;
   params?: Record<string, string | string[]>;
-}>) => {
+}>) {
   const { ref, inView } = useInView();
   const [loadMoreNodes, setLoadMoreNodes] = useState<ReactNode[]>([]);
 
-  const [currentOffsetRef, setCurrentOffsetRef] = useState<string | undefined>(
+  const [currentOffsetRef, setCurrentOffsetRef] = useState<Cursor | undefined>(
     initialCursor,
   );
 
@@ -65,6 +65,6 @@ const LoadMore = ({
       ) : null}
     </>
   );
-};
+}
 
 export default LoadMore;

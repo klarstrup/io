@@ -21,13 +21,16 @@ import LoadMore from "../../[[...slug]]/LoadMore";
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
 
-async function loadMoreData(cursor: string, params: Record<string, string>) {
+async function loadMoreData(
+  cursor: { isoYearAndWeek: string },
+  params: Record<string, string>,
+) {
   "use server";
 
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
 
-  const { isoYearAndWeek } = JSON.parse(cursor) as { isoYearAndWeek?: string };
+  const { isoYearAndWeek } = cursor;
   if (!isoYearAndWeek) throw new Error("isoYearAndWeek not found");
   const [isoYear, isoWeek] = isoYearAndWeek.split("-").map(Number) as [
     number,
@@ -39,9 +42,9 @@ async function loadMoreData(cursor: string, params: Record<string, string>) {
   if (isAtLimit) return [null, null] as const;
 
   const next = subWeeks(weekDate, 1);
-  const nextCursor = JSON.stringify({
+  const nextCursor = {
     isoYearAndWeek: `${getYear(next)}-${getISOWeek(next)}`,
-  });
+  };
 
   return [
     <DiaryEntryWeek
@@ -103,9 +106,9 @@ export default async function Page(props: {
           <LoadMore
             params={params}
             loadMoreAction={loadMoreData}
-            initialCursor={JSON.stringify({
+            initialCursor={{
               isoYearAndWeek: `${getYear(subWeeks(now, 1))}-${getISOWeek(subWeeks(now, 1))}`,
-            })}
+            }}
           >
             <DiaryEntryWeek
               pickedDate={params.date?.[0]}
