@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import type { DiaryEntry } from "../../lib";
-import { exercises, TagType } from "../../models/exercises";
-import { WorkoutData } from "../../models/workout";
-import { stringToColour } from "../../utils";
+import type { DiaryEntry } from "../../../lib";
+import { exercises, TagType } from "../../../models/exercises";
+import { WorkoutData } from "../../../models/workout";
+import { stringToColour } from "../../../utils";
 import { TZDate } from "@date-fns/tz";
 
 export function DiaryEntryItem({

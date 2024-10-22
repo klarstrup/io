@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { WorkoutData, WorkoutExerciseSet } from "../../models/workout";
+import { WorkoutData, WorkoutExerciseSet } from "../../../models/workout";
 import { getIsSetPR } from "./actions";
 
 export function PR(props: {

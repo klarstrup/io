@@ -2,14 +2,14 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, startOfDay, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
-import type { DiaryEntry } from "../../lib";
-import { getNextSets, Workouts } from "../../models/workout.server";
+import type { DiaryEntry } from "../../../lib";
+import { getNextSets, Workouts } from "../../../models/workout.server";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
   getSunrise,
   getSunset,
-} from "../../utils";
+} from "../../../utils";
 import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";

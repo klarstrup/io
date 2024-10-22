@@ -2,13 +2,13 @@
 
 import { Session } from "next-auth";
 import { Fragment, useState } from "react";
-import { StealthButton } from "../../components/StealthButton";
-import Grade from "../../grades";
-import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
-import { WorkoutData, WorkoutSource } from "../../models/workout";
-import type { getNextSets } from "../../models/workout.server";
-import { seconds2time } from "../../utils";
-import ProblemByProblem from "../[[...slug]]/ProblemByProblem";
+import { StealthButton } from "../../../components/StealthButton";
+import Grade from "../../../grades";
+import { AssistType, exercises, InputType, Unit } from "../../../models/exercises";
+import { WorkoutData, WorkoutSource } from "../../../models/workout";
+import type { getNextSets } from "../../../models/workout.server";
+import { seconds2time } from "../../../utils";
+import ProblemByProblem from "../../[[...slug]]/ProblemByProblem";
 import { PR } from "./PR";
 import { WorkoutForm } from "./WorkoutForm";
 

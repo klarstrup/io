@@ -2,15 +2,15 @@ import { TZDate } from "@date-fns/tz";
 import { addHours, isWithinInterval } from "date-fns";
 import type { Session } from "next-auth";
 import Image from "next/image";
-import { FieldSetY } from "../../components/FieldSet";
-import * as weatherIconsByCode from "../../components/weather-icons/index";
-import { getTomorrowForecasts } from "../../sources/tomorrow";
+import { FieldSetY } from "../../../components/FieldSet";
+import * as weatherIconsByCode from "../../../components/weather-icons/index";
+import { getTomorrowForecasts } from "../../../sources/tomorrow";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
   getSunrise,
   getSunset,
-} from "../../utils";
+} from "../../../utils";
 
 export async function DiaryAgendaWeather({ user }: { user: Session["user"] }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;

@@ -11,9 +11,9 @@ const LoadMore = ({
   initialCursor: string;
   loadMoreAction: (
     cursor: string,
-    params?: Record<string, string>,
+    params?: Record<string, string | string[]>,
   ) => Promise<readonly [ReactNode | null, string | null]>;
-  params?: Record<string, string>;
+  params?: Record<string, string | string[]>;
 }>) => {
   const { ref, inView } = useInView();
   const [loadMoreNodes, setLoadMoreNodes] = useState<ReactNode[]>([]);

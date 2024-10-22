@@ -1,9 +1,9 @@
 import { TZDate } from "@date-fns/tz";
 import { formatDistanceStrict, startOfDay } from "date-fns";
-import { StealthButton } from "../../components/StealthButton";
-import { exercises } from "../../models/exercises";
-import type { getNextSets } from "../../models/workout.server";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { StealthButton } from "../../../components/StealthButton";
+import { exercises } from "../../../models/exercises";
+import type { getNextSets } from "../../../models/workout.server";
+import { DEFAULT_TIMEZONE } from "../../../utils";
 
 export function NextSets({
   nextSets,

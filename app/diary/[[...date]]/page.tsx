@@ -9,14 +9,14 @@ import {
   startOfDay,
   subWeeks,
 } from "date-fns";
-import { auth } from "../../auth";
-import { DEFAULT_TIMEZONE } from "../../utils";
-import LoadMore from "../[[...slug]]/LoadMore";
-import UserStuff from "../[[...slug]]/UserStuff";
-import "../page.css";
+import "../../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { getDiaryEntries } from "./getDiaryEntries";
+import { auth } from "../../../auth";
+import { DEFAULT_TIMEZONE } from "../../../utils";
+import UserStuff from "../../[[...slug]]/UserStuff";
+import LoadMore from "../../[[...slug]]/LoadMore";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -54,7 +54,7 @@ async function loadMoreData(cursor: string, params: Record<string, string>) {
 }
 
 export default async function Page(props: {
-  params: Promise<{ date?: `${number}-${number}-${number}` }>;
+  params: Promise<{ date?: `${number}-${number}-${number}`[] }>;
 }) {
   const params = await props.params;
   const user = (await auth())?.user;
@@ -76,7 +76,7 @@ export default async function Page(props: {
   const now = TZDate.tz(timeZone);
 
   const date =
-    params.date ||
+    params.date?.[0] ||
     `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
   const isoYearAndWeek = `${getYear(now)}-${getISOWeek(now)}`;
@@ -108,7 +108,7 @@ export default async function Page(props: {
             })}
           >
             <DiaryEntryWeek
-              pickedDate={params.date}
+              pickedDate={params.date?.[0]}
               isoYearAndWeek={isoYearAndWeek}
             />
           </LoadMore>

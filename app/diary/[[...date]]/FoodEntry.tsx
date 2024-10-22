@@ -1,5 +1,5 @@
-import type { DiaryEntry } from "../../lib";
-import { MyFitnessPal } from "../../sources/myfitnesspal";
+import type { DiaryEntry } from "../../../lib";
+import { MyFitnessPal } from "../../../sources/myfitnesspal";
 
 export function FoodEntry({
   foodEntries,

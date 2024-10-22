@@ -10,8 +10,8 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns";
-import { auth } from "../../auth";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { auth } from "../../../auth";
+import { DEFAULT_TIMEZONE } from "../../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 import { getDiaryEntries } from "./getDiaryEntries";
 

@@ -1,5 +1,5 @@
-import { FieldSetY } from "../../components/FieldSet";
-import type { DiaryEntry } from "../../lib";
+import { FieldSetY } from "../../../components/FieldSet";
+import type { DiaryEntry } from "../../../lib";
 import { FoodEntry } from "./FoodEntry";
 
 export function DiaryAgendaFood({
