@@ -1,28 +1,33 @@
 import { TZDate } from "@date-fns/tz";
 import {
+  eachWeekOfInterval,
   endOfDay,
+  endOfWeek,
   getISOWeek,
   getYear,
   isAfter,
   setISOWeek,
   setYear,
   startOfDay,
+  startOfWeek,
   subWeeks,
 } from "date-fns";
+import { auth } from "../../../auth";
+import { DEFAULT_TIMEZONE } from "../../../utils";
+import LoadMore from "../../[[...slug]]/LoadMore";
+import UserStuff from "../../[[...slug]]/UserStuff";
 import "../../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { getDiaryEntries } from "./getDiaryEntries";
-import { auth } from "../../../auth";
-import { DEFAULT_TIMEZONE } from "../../../utils";
-import UserStuff from "../../[[...slug]]/UserStuff";
-import LoadMore from "../../[[...slug]]/LoadMore";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
 
+const WEEKS_PER_PAGE = 16;
+
 async function loadMoreData(
-  cursor: { isoYearAndWeek: string },
+  cursor: { startIsoYearAndWeek: string; endIsoYearAndWeek: string },
   params: Record<string, string>,
 ) {
   "use server";
@@ -30,28 +35,48 @@ async function loadMoreData(
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
 
-  const { isoYearAndWeek } = cursor;
-  if (!isoYearAndWeek) throw new Error("isoYearAndWeek not found");
-  const [isoYear, isoWeek] = isoYearAndWeek.split("-").map(Number) as [
+  const { startIsoYearAndWeek, endIsoYearAndWeek } = cursor;
+  if (!startIsoYearAndWeek || !endIsoYearAndWeek)
+    throw new Error("isoYearAndWeek not found");
+
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const now = TZDate.tz(timeZone);
+  const nowWeek = startOfWeek(now, { weekStartsOn: 1 });
+
+  const [startIsoYear, startIsoWeek] = startIsoYearAndWeek
+    .split("-")
+    .map(Number) as [number, number];
+  const [endIsoYear, endIsoWeek] = endIsoYearAndWeek.split("-").map(Number) as [
     number,
     number,
   ];
-  const weekDate = setYear(setISOWeek(new Date(), isoWeek), isoYear);
-  const isAtLimit = isAfter(new Date(2013, 9), weekDate);
+  const startWeekDate = setYear(
+    setISOWeek(nowWeek, startIsoWeek),
+    startIsoYear,
+  );
+  const endWeekDate = setYear(setISOWeek(nowWeek, endIsoWeek), endIsoYear);
+  const isAtLimit = isAfter(new Date(2013, 9), startWeekDate);
 
   if (isAtLimit) return [null, null] as const;
 
-  const next = subWeeks(weekDate, 1);
+  const nextStart = subWeeks(endWeekDate, 1);
+  const nextEnd = subWeeks(endWeekDate, 1 + WEEKS_PER_PAGE);
   const nextCursor = {
-    isoYearAndWeek: `${getYear(next)}-${getISOWeek(next)}`,
+    startIsoYearAndWeek: `${getYear(nextStart)}-${getISOWeek(nextStart)}`,
+    endIsoYearAndWeek: `${getYear(nextEnd)}-${getISOWeek(nextEnd)}`,
   };
 
   return [
-    <DiaryEntryWeek
-      key={isoWeek}
-      isoYearAndWeek={isoYearAndWeek}
-      pickedDate={params.date as `${number}-${number}-${number}` | undefined}
-    />,
+    eachWeekOfInterval({
+      start: startWeekDate,
+      end: endWeekDate,
+    }).map((weekDate) => (
+      <DiaryEntryWeek
+        key={startIsoYearAndWeek + endIsoYearAndWeek}
+        isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+        pickedDate={params.date as `${number}-${number}-${number}` | undefined}
+      />
+    )),
     nextCursor,
   ] as const;
 }
@@ -75,14 +100,18 @@ export default async function Page(props: {
   }
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-
   const now = TZDate.tz(timeZone);
+  const nowWeek = endOfWeek(now, { weekStartsOn: 1 });
 
   const date =
     params.date?.[0] ||
     `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
-  const isoYearAndWeek = `${getYear(now)}-${getISOWeek(now)}`;
+  const start = nowWeek;
+  const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
+
+  const startIsoYearAndWeek = `${getYear(start)}-${getISOWeek(start)}`;
+  const endIsoYearAndWeek = `${getYear(end)}-${getISOWeek(end)}`;
 
   return (
     <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
@@ -104,16 +133,23 @@ export default async function Page(props: {
         </div>
         <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
           <LoadMore
+            initialCursor={{
+              startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
+              endIsoYearAndWeek: `${getYear(subWeeks(nowWeek, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(nowWeek, WEEKS_PER_PAGE))}`,
+            }}
             params={params}
             loadMoreAction={loadMoreData}
-            initialCursor={{
-              isoYearAndWeek: `${getYear(subWeeks(now, 1))}-${getISOWeek(subWeeks(now, 1))}`,
-            }}
           >
-            <DiaryEntryWeek
-              pickedDate={params.date?.[0]}
-              isoYearAndWeek={isoYearAndWeek}
-            />
+            {eachWeekOfInterval({
+              start,
+              end,
+            }).map((weekDate) => (
+              <DiaryEntryWeek
+                key={startIsoYearAndWeek + endIsoYearAndWeek}
+                isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                pickedDate={params.date?.[0]}
+              />
+            ))}
           </LoadMore>
         </div>
       </div>
