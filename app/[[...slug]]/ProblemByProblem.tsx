@@ -131,9 +131,9 @@ export default function ProblemByProblem({
   return (
     <div
       style={{
-        display: "flex",
-        flexWrap: "wrap",
+        display: "grid",
         gap: "2px",
+        gridTemplateColumns: "repeat(auto-fill, minmax(30px, 1fr))",
         marginTop: "2px",
       }}
     >
@@ -158,7 +158,6 @@ export default function ProblemByProblem({
             <Badge
               style={{
                 maxWidth: "100%",
-                width: "1.33em",
                 color:
                   color === "mint"
                     ? "#00E0E6"

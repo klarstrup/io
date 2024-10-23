@@ -343,9 +343,7 @@ export default async function TimelineEventContent({
         </div>
       ) : null}
       {problemByProblem?.length && isPast(start) ? (
-        <div style={{ maxWidth: "350px" }}>
-          <ProblemByProblem problemByProblem={problemByProblem} />
-        </div>
+        <ProblemByProblem problemByProblem={problemByProblem} />
       ) : null}
     </Fragment>
   );
