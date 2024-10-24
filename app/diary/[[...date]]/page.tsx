@@ -1,5 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import {
+  addWeeks,
   eachWeekOfInterval,
   endOfDay,
   endOfWeek,
@@ -107,50 +108,32 @@ export default async function Page(props: {
     params.date?.[0] ||
     `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
-  const start = nowWeek;
+  const start = addWeeks(nowWeek, 1);
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
 
-  const startIsoYearAndWeek = `${getYear(start)}-${getISOWeek(start)}`;
-  const endIsoYearAndWeek = `${getYear(end)}-${getISOWeek(end)}`;
+  const agendaEntry = (
+    await getDiaryEntries({
+      from: startOfDay(new Date(date)),
+      to: endOfDay(new Date(date)),
+    })
+  )[0]?.[1];
 
   return (
     <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
       <UserStuff />
       <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
         <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[80vh] portrait:border-b-[0.5px] landscape:w-1/3">
-          <DiaryAgenda
-            date={date}
-            diaryEntry={
-              (
-                await getDiaryEntries({
-                  from: startOfDay(new Date(date)),
-                  to: endOfDay(new Date(date)),
-                })
-              )[0]?.[1]
-            }
-            user={user}
-          />
+          <DiaryAgenda date={date} diaryEntry={agendaEntry} user={user} />
         </div>
         <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
           <LoadMore
             initialCursor={{
-              startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
-              endIsoYearAndWeek: `${getYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
+              startIsoYearAndWeek: `${getYear(start)}-${getISOWeek(start)}`,
+              endIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
             }}
             params={params}
             loadMoreAction={loadMoreData}
-          >
-            {eachWeekOfInterval({
-              start,
-              end,
-            }).map((weekDate) => (
-              <DiaryEntryWeek
-                key={startIsoYearAndWeek + endIsoYearAndWeek}
-                isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-                pickedDate={params.date?.[0]}
-              />
-            ))}
-          </LoadMore>
+          />
         </div>
       </div>
     </div>
