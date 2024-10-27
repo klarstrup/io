@@ -111,7 +111,33 @@ export default async function Page(props: {
 
   return (
     <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div
+            style={{
+              position: "fixed",
+              top: "4px",
+              right: "4px",
+              paddingLeft: "4px",
+              zIndex: 1337,
+            }}
+          >
+            <label
+              htmlFor="toggle"
+              style={{
+                position: "absolute",
+                top: "4px",
+                right: "4px",
+                zIndex: 1337,
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              🌞
+            </label>
+          </div>
+        }
+      >
         <UserStuff />
       </Suspense>
       <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
