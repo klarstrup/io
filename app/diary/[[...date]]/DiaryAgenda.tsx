@@ -1,11 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, startOfDay, subDays } from "date-fns";
+import { addDays, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../../components/FieldSet";
-import type { DiaryEntry } from "../../../lib";
-import { getNextSets, Workouts } from "../../../models/workout.server";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -15,25 +13,15 @@ import {
 import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
-import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
-
-const getAllWorkoutLocations = async (user: Session["user"]) =>
-  (
-    await Workouts.distinct("location", {
-      userId: user.id,
-      deletedAt: { $exists: false },
-    })
-  ).filter((loc): loc is string => Boolean(loc));
+import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
 
 const dateToString = (date: Date): `${number}-${number}-${number}` =>
   `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-export async function DiaryAgenda({
+export function DiaryAgenda({
   date,
-  diaryEntry,
   user,
 }: {
   date: `${number}-${number}-${number}`;
-  diaryEntry?: DiaryEntry;
   user: Session["user"];
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
@@ -53,11 +41,6 @@ export async function DiaryAgenda({
   const now = TZDate.tz(timeZone);
   const isToday =
     date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-
-  const [locations, nextSets] = await Promise.all([
-    getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(new TZDate(date, timeZone)) }),
-  ]);
 
   return (
     <div
@@ -105,13 +88,13 @@ export async function DiaryAgenda({
           </Suspense>
         ) : null}
         <div className="flex flex-1 flex-col">
-          <DiaryAgendaWorkouts
-            date={date}
-            workouts={diaryEntry?.workouts}
-            user={user}
-            locations={locations}
-            nextSets={nextSets}
-          />
+          <Suspense
+            fallback={
+              <FieldSetY className="flex flex-1 flex-col" legend="Workouts" />
+            }
+          >
+            <DiaryAgendaWorkoutsWrapper date={date} user={user} />
+          </Suspense>
           <Suspense
             fallback={
               <FieldSetY className="flex flex-1 flex-col" legend="Food" />
