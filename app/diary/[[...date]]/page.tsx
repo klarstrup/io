@@ -18,6 +18,7 @@ import UserStuff from "../../[[...slug]]/UserStuff";
 import "../../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
+import { Suspense } from "react";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -110,7 +111,9 @@ export default async function Page(props: {
 
   return (
     <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
-      <UserStuff />
+      <Suspense fallback={null}>
+        <UserStuff />
+      </Suspense>
       <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
         <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[80vh] portrait:border-b-[0.5px] landscape:w-1/3">
           <DiaryAgenda date={date} user={user} />
