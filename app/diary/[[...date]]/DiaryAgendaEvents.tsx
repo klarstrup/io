@@ -26,10 +26,7 @@ export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
   });
 
   return (
-    <FieldSetY className="flex flex-1 flex-col">
-      <legend className="ml-3">
-        <big>Events</big>
-      </legend>
+    <FieldSetY className="flex flex-1 flex-col" legend="Events">
       {Object.entries(
         calendarEvents.reduce(
           (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
@@ -62,10 +59,7 @@ export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
           {},
         ),
       ).map(([dayName, events], i) => (
-        <FieldSetX key={i}>
-          <legend>
-            <big>{dayName}</big>
-          </legend>
+        <FieldSetX key={i} legend={dayName}>
           <ul>
             {events.map((event, i) => {
               const duration = intervalToDuration(event);

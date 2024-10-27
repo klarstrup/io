@@ -98,11 +98,7 @@ export async function DiaryAgenda({
         {isToday ? (
           <Suspense
             fallback={
-              <FieldSetY className="flex flex-1 flex-col">
-                <legend className="ml-3">
-                  <big>Events</big>
-                </legend>
-              </FieldSetY>
+              <FieldSetY className="flex flex-1 flex-col" legend="Events" />
             }
           >
             <DiaryAgendaEvents user={user} />
@@ -118,11 +114,7 @@ export async function DiaryAgenda({
           />
           <Suspense
             fallback={
-              <FieldSetY className="flex flex-1 flex-col">
-                <legend className="ml-2">
-                  <big>Food</big>
-                </legend>
-              </FieldSetY>
+              <FieldSetY className="flex flex-1 flex-col" legend="Food" />
             }
           >
             <DiaryAgendaFood date={date} user={user} />
@@ -132,12 +124,7 @@ export async function DiaryAgenda({
       {isToday ? (
         <Suspense
           fallback={
-            <FieldSetY className="flex flex-1 flex-col">
-              <legend className="ml-2">
-                <big>Weather</big>
-              </legend>
-              <ul className="flex justify-around overflow-x-hidden"></ul>
-            </FieldSetY>
+            <FieldSetY className="flex flex-1 flex-col" legend="Weather" />
           }
         >
           <DiaryAgendaWeather user={user} />

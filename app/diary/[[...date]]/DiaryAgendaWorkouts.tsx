@@ -34,18 +34,22 @@ export function DiaryAgendaWorkouts({
   );
 
   return (
-    <FieldSetY className="flex-1">
-      <legend className="ml-3 flex items-center">
-        <big>Workouts</big>
-        {workouts?.length ? (
-          <button
-            onClick={() => setIsAddingWorkout(true)}
-            className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
-          >
-            ➕
-          </button>
-        ) : null}
-      </legend>
+    <FieldSetY
+      className="flex-1"
+      legend={
+        <div className="flex items-center">
+          Workouts
+          {workouts?.length ? (
+            <button
+              onClick={() => setIsAddingWorkout(true)}
+              className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
+            >
+              ➕
+            </button>
+          ) : null}
+        </div>
+      }
+    >
       {workouts?.length ? (
         Array.from(workouts)
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
@@ -80,8 +84,7 @@ export function DiaryAgendaWorkouts({
         </div>
       )}
       {isAddingWorkout ? (
-        <FieldSetX className="w-full">
-          <legend>New workout</legend>
+        <FieldSetX className="w-full" legend="New workout">
           <WorkoutForm
             date={date}
             user={user}

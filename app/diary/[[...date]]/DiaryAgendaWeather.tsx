@@ -37,10 +37,7 @@ export async function DiaryAgendaWeather({ user }: { user: Session["user"] }) {
   );
 
   return (
-    <FieldSetY className="flex flex-1 flex-col">
-      <legend className="ml-2">
-        <big>Weather</big>
-      </legend>
+    <FieldSetY className="flex flex-1 flex-col" legend="Weather">
       <ul className="flex justify-around overflow-x-hidden">
         {weatherIntervals?.map((interval, i) => {
           const extendedWeatherCode = `${interval.values.weatherCode}${

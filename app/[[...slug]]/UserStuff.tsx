@@ -183,20 +183,26 @@ export default async function UserStuff() {
             </p>
             {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <form action={updateUser}>
-              <FieldSetY className="flex items-center gap-1.5">
-                <legend>Location</legend>
+              <FieldSetY
+                className="flex items-center gap-1.5"
+                legend="Location"
+              >
                 <UserStuffGeohashInput geohash={user.geohash} />
               </FieldSetY>
-              <FieldSetY className="flex items-center gap-1.5">
-                <legend>Time Zone</legend>
+              <FieldSetY
+                className="flex items-center gap-1.5"
+                legend="Time Zone"
+              >
                 <input
                   name="timeZone"
                   defaultValue={user.timeZone || ""}
                   className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
               </FieldSetY>
-              <FieldSetX className="flex items-center gap-1.5">
-                <legend>TopLogger ID</legend>
+              <FieldSetX
+                className="flex items-center gap-1.5"
+                legend="TopLogger ID"
+              >
                 <input
                   name="topLoggerId"
                   defaultValue={user.topLoggerId || ""}
@@ -215,8 +221,10 @@ export default async function UserStuff() {
                   </span>
                 )}
               </FieldSetX>
-              <FieldSetX className="flex items-center gap-1.5">
-                <legend>MyFitnessPal Token</legend>
+              <FieldSetX
+                className="flex items-center gap-1.5"
+                legend="MyFitnessPal Token"
+              >
                 <input
                   name="myFitnessPalToken"
                   defaultValue={user.myFitnessPalToken || ""}
@@ -235,8 +243,10 @@ export default async function UserStuff() {
                   </span>
                 )}
               </FieldSetX>
-              <FieldSetX className="flex items-center gap-1.5">
-                <legend>RunDouble ID</legend>
+              <FieldSetX
+                className="flex items-center gap-1.5"
+                legend="RunDouble ID"
+              >
                 <input
                   name="runDoubleId"
                   defaultValue={user.runDoubleId || ""}
@@ -255,8 +265,10 @@ export default async function UserStuff() {
                   </span>
                 )}
               </FieldSetX>
-              <FieldSetX className="flex items-center gap-1.5">
-                <legend>iCal URLs</legend>
+              <FieldSetX
+                className="flex items-center gap-1.5"
+                legend="iCal URLs"
+              >
                 <textarea
                   name="icalUrls"
                   defaultValue={user.icalUrls?.join("\n") || ""}

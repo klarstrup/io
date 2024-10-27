@@ -44,16 +44,19 @@ export async function DiaryAgendaFood({
   );
 
   return (
-    <FieldSetY>
-      <legend className="ml-2">
-        <big>Food</big>{" "}
-        {dayTotalEnergy && dayTotalProtein ? (
-          <small>
-            {Math.round(dayTotalEnergy)} kcal, {Math.round(dayTotalProtein)}g
-            protein
-          </small>
-        ) : null}
-      </legend>
+    <FieldSetY
+      legend={
+        <>
+          Food{" "}
+          {dayTotalEnergy && dayTotalProtein ? (
+            <small>
+              {Math.round(dayTotalEnergy)} kcal, {Math.round(dayTotalProtein)}g
+              protein
+            </small>
+          ) : null}
+        </>
+      }
+    >
       {food ? (
         <FoodEntry foodEntries={food} />
       ) : (
