@@ -38,8 +38,6 @@ export async function DiaryAgenda({
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
-  const { food, workouts } = diaryEntry || {};
-
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
@@ -113,12 +111,22 @@ export async function DiaryAgenda({
         <div className="flex flex-1 flex-col">
           <DiaryAgendaWorkouts
             date={date}
-            workouts={workouts}
+            workouts={diaryEntry?.workouts}
             user={user}
             locations={locations}
             nextSets={nextSets}
           />
-          <DiaryAgendaFood date={date} food={food} />
+          <Suspense
+            fallback={
+              <FieldSetY className="flex flex-1 flex-col">
+                <legend className="ml-2">
+                  <big>Food</big>
+                </legend>
+              </FieldSetY>
+            }
+          >
+            <DiaryAgendaFood date={date} user={user} />
+          </Suspense>
         </div>
       </div>
       {isToday ? (

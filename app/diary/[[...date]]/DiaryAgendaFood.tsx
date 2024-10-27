@@ -1,14 +1,39 @@
+import { TZDate } from "@date-fns/tz";
+import { endOfDay, startOfDay } from "date-fns";
+import { Session } from "next-auth";
 import { FieldSetY } from "../../../components/FieldSet";
-import type { DiaryEntry } from "../../../lib";
+import { MyFitnessPal } from "../../../sources/myfitnesspal";
+import { MyFitnessPalFoodEntries } from "../../../sources/myfitnesspal.server";
+import { DEFAULT_TIMEZONE } from "../../../utils";
 import { FoodEntry } from "./FoodEntry";
 
-export function DiaryAgendaFood({
+const rangeToQuery = (from: Date, to?: Date) =>
+  to ? { $gte: from, $lt: to } : { $gte: from };
+
+export async function DiaryAgendaFood({
   date,
-  food,
+  user,
 }: {
-  food: DiaryEntry["food"];
+  user: Session["user"];
   date: `${number}-${number}-${number}`;
 }) {
+  if (!user.myFitnessPalUserId) return;
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+
+  const food: (MyFitnessPal.MongoFoodEntry & { _id: string })[] = [];
+  for await (const foodEntry of MyFitnessPalFoodEntries.find({
+    user_id: user.myFitnessPalUserId,
+    datetime: rangeToQuery(
+      startOfDay(new TZDate(date, timeZone)),
+      endOfDay(new TZDate(date, timeZone)),
+    ),
+  })) {
+    food.push({
+      ...foodEntry,
+      _id: foodEntry._id.toString(),
+    });
+  }
+
   const dayTotalEnergy = food?.reduce(
     (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
     0,
