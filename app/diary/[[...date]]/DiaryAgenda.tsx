@@ -2,6 +2,8 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, startOfDay, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
+import { Suspense } from "react";
+import { FieldSetY } from "../../../components/FieldSet";
 import type { DiaryEntry } from "../../../lib";
 import { getNextSets, Workouts } from "../../../models/workout.server";
 import {
@@ -95,7 +97,19 @@ export async function DiaryAgenda({
         </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
-        {isToday ? <DiaryAgendaEvents user={user} /> : null}
+        {isToday ? (
+          <Suspense
+            fallback={
+              <FieldSetY className="flex flex-1 flex-col">
+                <legend className="ml-3">
+                  <big>Events</big>
+                </legend>
+              </FieldSetY>
+            }
+          >
+            <DiaryAgendaEvents user={user} />
+          </Suspense>
+        ) : null}
         <div className="flex flex-1 flex-col">
           <DiaryAgendaWorkouts
             date={date}
@@ -107,7 +121,20 @@ export async function DiaryAgenda({
           <DiaryAgendaFood date={date} food={food} />
         </div>
       </div>
-      {isToday ? <DiaryAgendaWeather user={user} /> : null}
+      {isToday ? (
+        <Suspense
+          fallback={
+            <FieldSetY className="flex flex-1 flex-col">
+              <legend className="ml-2">
+                <big>Weather</big>
+              </legend>
+              <ul className="flex justify-around overflow-x-hidden"></ul>
+            </FieldSetY>
+          }
+        >
+          <DiaryAgendaWeather user={user} />
+        </Suspense>
+      ) : null}
     </div>
   );
 }
