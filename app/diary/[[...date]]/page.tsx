@@ -71,7 +71,7 @@ async function loadMoreData(
       end: endWeekDate,
     }).map((weekDate) => (
       <DiaryEntryWeekWrapper
-        key={startIsoYearAndWeek + endIsoYearAndWeek}
+        key={String(weekDate)}
         isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
         pickedDate={params.date as `${number}-${number}-${number}` | undefined}
       />
@@ -108,9 +108,6 @@ export default async function Page(props: {
 
   const start = nowWeek;
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
-
-  const startIsoYearAndWeek = `${getYear(start)}-${getISOWeek(start)}`;
-  const endIsoYearAndWeek = `${getYear(end)}-${getISOWeek(end)}`;
 
   return (
     <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
@@ -161,7 +158,7 @@ export default async function Page(props: {
               end,
             }).map((weekDate) => (
               <Suspense
-                key={startIsoYearAndWeek + endIsoYearAndWeek}
+                key={String(weekDate)}
                 fallback={
                   <DiaryEntryWeek
                     isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
