@@ -1,6 +1,5 @@
 import { TZDate } from "@date-fns/tz";
 import {
-  addWeeks,
   eachWeekOfInterval,
   endOfWeek,
   getISOWeek,
@@ -11,6 +10,7 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns";
+import { Suspense } from "react";
 import { auth } from "../../../auth";
 import { DEFAULT_TIMEZONE } from "../../../utils";
 import LoadMore from "../../[[...slug]]/LoadMore";
@@ -18,12 +18,12 @@ import UserStuff from "../../[[...slug]]/UserStuff";
 import "../../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
-import { Suspense } from "react";
+import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
 
-const WEEKS_PER_PAGE = 4;
+const WEEKS_PER_PAGE = 16;
 
 async function loadMoreData(
   cursor: { startIsoYearAndWeek: string; endIsoYearAndWeek: string },
@@ -70,7 +70,7 @@ async function loadMoreData(
       start: startWeekDate,
       end: endWeekDate,
     }).map((weekDate) => (
-      <DiaryEntryWeek
+      <DiaryEntryWeekWrapper
         key={startIsoYearAndWeek + endIsoYearAndWeek}
         isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
         pickedDate={params.date as `${number}-${number}-${number}` | undefined}
@@ -106,8 +106,11 @@ export default async function Page(props: {
     params.date?.[0] ||
     `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
-  const start = addWeeks(nowWeek, 1);
+  const start = nowWeek;
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
+
+  const startIsoYearAndWeek = `${getYear(start)}-${getISOWeek(start)}`;
+  const endIsoYearAndWeek = `${getYear(end)}-${getISOWeek(end)}`;
 
   return (
     <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
@@ -147,12 +150,36 @@ export default async function Page(props: {
         <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
           <LoadMore
             initialCursor={{
-              startIsoYearAndWeek: `${getYear(start)}-${getISOWeek(start)}`,
-              endIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
+              startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
+              endIsoYearAndWeek: `${getYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
             }}
             params={params}
             loadMoreAction={loadMoreData}
-          />
+          >
+            {eachWeekOfInterval({
+              start,
+              end,
+            }).map((weekDate) => (
+              <Suspense
+                fallback={
+                  <DiaryEntryWeek
+                    isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                    pickedDate={
+                      params.date as `${number}-${number}-${number}` | undefined
+                    }
+                  />
+                }
+              >
+                <DiaryEntryWeekWrapper
+                  key={startIsoYearAndWeek + endIsoYearAndWeek}
+                  isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                  pickedDate={
+                    params.date as `${number}-${number}-${number}` | undefined
+                  }
+                />
+              </Suspense>
+            ))}
+          </LoadMore>
         </div>
       </div>
     </div>

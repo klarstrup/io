@@ -11,9 +11,9 @@ import {
   subWeeks,
 } from "date-fns";
 import { auth } from "../../../auth";
+import { DiaryEntry } from "../../../lib";
 import { DEFAULT_TIMEZONE } from "../../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
-import { getDiaryEntries } from "./getDiaryEntries";
 
 const dateToString = (date: Date): `${number}-${number}-${number}` =>
   `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
@@ -21,9 +21,11 @@ const dateToString = (date: Date): `${number}-${number}-${number}` =>
 export async function DiaryEntryWeek({
   isoYearAndWeek,
   pickedDate,
+  diaryEntries,
 }: {
   isoYearAndWeek: string;
   pickedDate?: `${number}-${number}-${number}`;
+  diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
 }) {
   const user = (await auth())?.user;
 
@@ -51,14 +53,10 @@ export async function DiaryEntryWeek({
     start: startOfWeek(weekDate, { weekStartsOn: 1 }),
     end: endOfWeek(weekDate, { weekStartsOn: 1 }),
   };
-  const diaryEntries = await getDiaryEntries({
-    from: weekInterval.start,
-    to: weekInterval.end,
-  });
 
   return (
     <div key={getISOWeek(weekDate)} className="flex flex-1">
-      <div className="flex w-12 flex-col items-center justify-center border-black/25 border-[0.5px]">
+      <div className="flex w-12 flex-col items-center justify-center border-[0.5px] border-black/25">
         <span>{getISOWeek(weekDate)}</span>
         <span className="text-xs font-bold">
           {getYear(weekDate) !== getYear(subWeeks(weekDate, 1))
@@ -76,7 +74,7 @@ export async function DiaryEntryWeek({
           <DiaryEntryItem
             key={dateToString(dayte)}
             diaryEntry={
-              diaryEntries.find(([date]) => date === dateToString(dayte))?.[1]
+              diaryEntries?.find(([date]) => date === dateToString(dayte))?.[1]
             }
             date={dateToString(dayte)}
             pickedDate={pickedDate}
