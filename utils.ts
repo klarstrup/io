@@ -463,3 +463,18 @@ export function stringToColour(inputString: string, alpha = 1) {
   const [r, g, b] = stringToColours(inputString);
   return `rgba(${r},${g},${b},${alpha})`;
 }
+
+const schemeCategory10 = [
+  "#4074E2",
+  "#ff7f0e",
+  "#2ca02c",
+  "#d62728",
+  "#9467bd",
+  "#8c564b",
+  "#e377c2",
+  "#7f7f7f",
+  "#bcbd22",
+  "#17becf",
+];
+export const getSchemeCategory10Color = (index: number) =>
+  schemeCategory10[index % schemeCategory10.length]!;

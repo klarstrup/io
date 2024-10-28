@@ -1,10 +1,10 @@
 "use client";
+import { TZDate } from "@date-fns/tz";
 import Link from "next/link";
 import type { DiaryEntry } from "../../../lib";
 import { exercises, TagType } from "../../../models/exercises";
 import { WorkoutData } from "../../../models/workout";
-import { stringToColour } from "../../../utils";
-import { TZDate } from "@date-fns/tz";
+import { getSchemeCategory10Color } from "../../../utils";
 
 export function DiaryEntryItem({
   pickedDate,
@@ -40,10 +40,7 @@ export function DiaryEntryItem({
       style={{
         background: isFuture
           ? "white"
-          : stringToColour(
-              new Date(date).toLocaleDateString("en-DK", { month: "long" }),
-              0.25,
-            ),
+          : getSchemeCategory10Color(Number(date.split("-")[1]))+"50",
         display: "flex",
         flexDirection: "column",
         padding: "0.25em",
