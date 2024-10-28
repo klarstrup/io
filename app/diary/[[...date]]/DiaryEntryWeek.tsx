@@ -1,12 +1,14 @@
 import { TZDate } from "@date-fns/tz";
 import {
+  addMonths,
   eachDayOfInterval,
   endOfWeek,
   getISOWeek,
-  getMonth,
   getYear,
+  isWithinInterval,
   setISOWeek,
   setYear,
+  startOfMonth,
   startOfWeek,
   subWeeks,
 } from "date-fns";
@@ -64,9 +66,18 @@ export async function DiaryEntryWeek({
             : null}
         </span>
         <span className="text-xs font-bold">
-          {getMonth(weekDate) !== getMonth(subWeeks(weekDate, 1))
-            ? weekDate.toLocaleDateString("en-DK", { month: "short" })
-            : null}
+          {isWithinInterval(startOfMonth(weekDate), weekInterval)
+            ? weekDate.toLocaleDateString("en-DK", {
+                month: "short",
+              })
+            : isWithinInterval(
+                  startOfMonth(addMonths(weekDate, 1)),
+                  weekInterval,
+                )
+              ? addMonths(weekDate, 1).toLocaleDateString("en-DK", {
+                  month: "short",
+                })
+              : null}
         </span>
       </div>
       <div className="flex flex-1 bg-white">
