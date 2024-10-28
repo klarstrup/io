@@ -84,7 +84,9 @@ export default async function Page(props: {
   params: Promise<{ date?: `${number}-${number}-${number}`[] }>;
 }) {
   const params = await props.params;
+  console.time("Diary auth()");
   const user = (await auth())?.user;
+  console.timeEnd("Diary auth()");
 
   if (!user) {
     return (
