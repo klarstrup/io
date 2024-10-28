@@ -161,6 +161,7 @@ export default async function Page(props: {
               end,
             }).map((weekDate) => (
               <Suspense
+                key={startIsoYearAndWeek + endIsoYearAndWeek}
                 fallback={
                   <DiaryEntryWeek
                     isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
@@ -171,7 +172,6 @@ export default async function Page(props: {
                 }
               >
                 <DiaryEntryWeekWrapper
-                  key={startIsoYearAndWeek + endIsoYearAndWeek}
                   isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
                   pickedDate={
                     params.date as `${number}-${number}-${number}` | undefined
