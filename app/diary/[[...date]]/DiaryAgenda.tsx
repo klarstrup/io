@@ -68,11 +68,19 @@ export function DiaryAgenda({
           🌙
         </span>
         <span className="whitespace-nowrap">
-          <Link href={`/diary/${dateToString(subDays(new Date(date), 1))}`}>
+          <Link
+            prefetch={false}
+            href={`/diary/${dateToString(subDays(new Date(date), 1))}`}
+          >
             ⬅️
           </Link>
-          <Link href={`/diary`}>🗓️</Link>
-          <Link href={`/diary/${dateToString(addDays(new Date(date), 1))}`}>
+          <Link prefetch={false} href={`/diary`}>
+            🗓️
+          </Link>
+          <Link
+            prefetch={false}
+            href={`/diary/${dateToString(addDays(new Date(date), 1))}`}
+          >
             ➡️
           </Link>
         </span>
