@@ -76,7 +76,7 @@ export function DiaryEntryItem({
           flexWrap: "wrap",
         }}
       >
-        <div className="min-h-8">
+        <div className="min-h-20">
           {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
           {dayTotalEnergy && dayTotalProtein ? (
             <div
