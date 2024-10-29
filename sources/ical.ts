@@ -142,7 +142,10 @@ export async function getUserIcalEventsBetween(
       for (const rruleDate of rruleDates) {
         if (
           event.recurrences?.some(
-            (recurrence) => recurrence.start.getTime() === rruleDate.getTime(),
+            (recurrence) =>
+              // These should be the same date, but timezones get fucked for whatever reason
+              recurrence.recurrenceid?.toLocaleDateString() ===
+              rruleDate.toLocaleDateString(),
           )
         ) {
           continue;

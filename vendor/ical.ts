@@ -100,7 +100,7 @@ export interface VEvent extends BaseComponent {
   organizer: Organizer;
   exdate: Record<string, DateWithTimeZone>;
   geo?: { lat: number; lon: number };
-  recurrenceid: unknown;
+  recurrenceid?: Date;
   completed: DateWithTimeZone;
 
   alarms?: VAlarm[];
