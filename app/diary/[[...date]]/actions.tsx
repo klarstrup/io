@@ -117,3 +117,7 @@ export async function getIsSetPR(
     is3MonthPR,
   };
 }
+
+export async function revalidateDiary() {
+  revalidatePath("/diary/[[...date]]", "page");
+}

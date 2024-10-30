@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { encodeGeohash } from "../../utils";
+import useInterval from "../../hooks/useInterval";
+import { encodeGeohash, HOUR_IN_SECONDS } from "../../utils";
+import { revalidateDiary } from "../diary/[[...date]]/actions";
 
 export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   const [geohash, setGeohash] = useState<string | null>(props.geohash ?? null);
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
     useState<boolean>(false);
+
+  useInterval(
+    () => {
+      void revalidateDiary();
+    },
+    (HOUR_IN_SECONDS * 1000) / 2,
+  );
 
   return (
     <div
