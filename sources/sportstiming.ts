@@ -263,7 +263,9 @@ export async function getSportsTimingEventResults(
                   ? "E & J"
                   : eventId === 4923
                     ? "Tjek"
-                    : null,
+                    : eventId === 12920
+                      ? "S"
+                      : null,
     noParticipants,
     start:
       ioResult?.StartTime && ioResult.StartTime > 0
