@@ -42,7 +42,7 @@
     "@typescript-eslint/eslint-plugin": "^8.12.2",
     "@typescript-eslint/parser": "^8.12.2",
     "dayjs": "^1.11.13",
-    "eslint": "^9.13.0",
+    "eslint": "^8.57.1",
     "eslint-plugin-react-compiler": "^19.0.0-beta-8a03594-20241020",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
