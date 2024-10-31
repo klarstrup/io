@@ -11,7 +11,7 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
     useState<boolean>(false);
 
-  useInterval(router.refresh, (HOUR_IN_SECONDS * 1000) / 3);
+  useInterval(() => router.refresh(), (HOUR_IN_SECONDS * 1000) / 3);
 
   return (
     <div
