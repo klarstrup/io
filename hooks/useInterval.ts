@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 type Callback<A> = (...args: A[]) => void;
-export default function useInterval<A = any>(
+export default function useInterval<A = unknown>(
   callback: Callback<A>,
   delay?: number | null,
   ...args: A[]
@@ -20,6 +20,7 @@ export default function useInterval<A = any>(
       const id = setInterval(tick, delay);
       return () => clearInterval(id);
     }
+    // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [delay]);
 }

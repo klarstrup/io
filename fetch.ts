@@ -165,10 +165,12 @@ const rawDbFetch = async <T = string>(
       } catch {
         /* empty */
       }
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
       if (parsedError) throw parsedError;
 
       throw new Error(error);
     }
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw error || new Error("???");
   }
 
