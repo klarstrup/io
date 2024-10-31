@@ -3,11 +3,11 @@
 import { ObjectId, type WithId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../auth";
-import type { WorkoutExerciseSet, WorkoutData } from "../../../models/workout";
-import { Workouts } from "../../../models/workout.server";
-import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
-import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
 import { exercises, InputType } from "../../../models/exercises";
+import type { WorkoutData, WorkoutExerciseSet } from "../../../models/workout";
+import { Workouts } from "../../../models/workout.server";
+import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
+import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData,
@@ -116,8 +116,4 @@ export async function getIsSetPR(
     isYearPR,
     is3MonthPR,
   };
-}
-
-export async function revalidateDiary() {
-  revalidatePath("/diary/[[...date]]", "page");
 }
