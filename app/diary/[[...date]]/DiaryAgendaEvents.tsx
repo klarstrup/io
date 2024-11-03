@@ -16,14 +16,23 @@ import type { MongoVEventWithVCalendar } from "../../../lib";
 import { getUserIcalEventsBetween } from "../../../sources/ical";
 import { DEFAULT_TIMEZONE, roundToNearestDay } from "../../../utils";
 
-export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
+export async function DiaryAgendaEvents({
+  date,
+  user,
+}: {
+  date: `${number}-${number}-${number}`;
+  user: Session["user"];
+}) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-
+  const tzDate = new TZDate(date, timeZone);
   const now = TZDate.tz(timeZone);
-
+  const todayDate = `${now.getFullYear()}-${
+    now.getMonth() + 1
+  }-${now.getDate()}`;
+  const isToday = date === todayDate;
   const calendarEvents = await getUserIcalEventsBetween(user.id, {
-    start: startOfDay(now),
-    end: addDays(endOfDay(now), 2),
+    start: startOfDay(tzDate),
+    end: addDays(endOfDay(tzDate), 2),
   });
 
   return (
@@ -37,19 +46,19 @@ export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
                   event.datetype === "date"
                     ? roundToNearestDay(event.start)
                     : event.start,
-                  startOfDay(now),
+                  startOfDay(tzDate),
                 ]),
                 end: min([
                   event.datetype === "date"
                     ? roundToNearestDay(event.end)
                     : event.end,
-                  addDays(endOfDay(now), 2),
+                  addDays(endOfDay(tzDate), 2),
                 ]),
               },
               { in: tz(timeZone) },
             ).filter(
               (date) =>
-                isAfter(event.end, now) &&
+                isAfter(event.end, isToday ? now : tzDate) &&
                 differenceInHours(event.end, date) > 2,
             )) {
               const calName = date.toLocaleDateString("da-DK", {

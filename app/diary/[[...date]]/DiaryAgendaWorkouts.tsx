@@ -63,6 +63,16 @@ export function DiaryAgendaWorkouts({
               nextSets={nextSets}
             />
           ))
+      ) : isAddingWorkout && !workouts?.length ? (
+        <FieldSetX className="w-full" legend="New workout">
+          <WorkoutForm
+            date={date}
+            user={user}
+            locations={locations}
+            nextSets={nextSets}
+            onClose={() => setIsAddingWorkout(false)}
+          />
+        </FieldSetX>
       ) : (
         <div className="flex h-full flex-wrap items-center justify-around">
           <div className="flex flex-col items-center justify-center">
@@ -84,7 +94,7 @@ export function DiaryAgendaWorkouts({
           ) : null}
         </div>
       )}
-      {isAddingWorkout ? (
+      {isAddingWorkout && workouts?.length ? (
         <FieldSetX className="w-full" legend="New workout">
           <WorkoutForm
             date={date}

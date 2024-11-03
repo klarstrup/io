@@ -86,15 +86,13 @@ export function DiaryAgenda({
         </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
-        {isToday ? (
-          <Suspense
-            fallback={
-              <FieldSetY className="flex flex-1 flex-col" legend="Events" />
-            }
-          >
-            <DiaryAgendaEvents user={user} />
-          </Suspense>
-        ) : null}
+        <Suspense
+          fallback={
+            <FieldSetY className="flex flex-1 flex-col" legend="Events" />
+          }
+        >
+          <DiaryAgendaEvents user={user} date={date} />
+        </Suspense>
         <div className="flex flex-1 flex-col">
           <Suspense
             fallback={
