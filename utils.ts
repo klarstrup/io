@@ -499,6 +499,7 @@ const duration = pauses.reduce(
 
 console.log({
   start,
+  end,
   pauses,
   months: duration / 1000 / DAY_IN_SECONDS / 31,
   weeks: duration / 1000 / WEEK_IN_SECONDS,
