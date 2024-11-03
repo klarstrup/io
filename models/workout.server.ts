@@ -77,9 +77,15 @@ export async function getNextSets({
         ({ type }) => type === InputType.Reps,
       );
       const heaviestSet = exercise.sets.reduce((acc, set) => {
+        const setReps = set.inputs[repsInputIndex]!.value;
         const setWeight = set.inputs[weightInputIndex]!.value;
         const accWeight = acc?.inputs[weightInputIndex]!.value;
-        return setWeight && accWeight && setWeight > accWeight ? set : acc;
+        return setWeight &&
+          accWeight &&
+          setWeight > accWeight &&
+          setReps >= WORKING_SET_REPS
+          ? set
+          : acc;
       }, exercise.sets[0]);
 
       const workingSets = exercise.sets.filter(
@@ -88,23 +94,13 @@ export async function getNextSets({
           heaviestSet?.inputs[weightInputIndex]!.value,
       );
 
-      let successful = true;
-      if (
-        workingSets.length >= WORKING_SETS ||
-        (exercise.exerciseId === DEADLIFT_ID &&
-          workingSets.length >= WORKING_SETS_FOR_DEADLIFT)
-      ) {
-        if (
-          workingSets.every(
-            (sets) => sets.inputs[repsInputIndex]!.value < WORKING_SET_REPS,
-          )
-        ) {
-          successful = false;
-        }
-      } else {
-        successful = false;
-      }
-
+      const successful =
+        (workingSets.length >= WORKING_SETS ||
+          (exercise.exerciseId === DEADLIFT_ID &&
+            workingSets.length >= WORKING_SETS_FOR_DEADLIFT)) &&
+        workingSets.every(
+          (sets) => sets.inputs[repsInputIndex]!.value >= WORKING_SET_REPS,
+        );
       const goalWeight = successful
         ? ([1, 183, 532].includes(exercise.exerciseId)
             ? WEIGHT_INCREMENT
