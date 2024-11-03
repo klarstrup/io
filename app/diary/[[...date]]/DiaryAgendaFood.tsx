@@ -57,7 +57,7 @@ export async function DiaryAgendaFood({
         </>
       }
     >
-      {food ? (
+      {food.length ? (
         <FoodEntry foodEntries={food} />
       ) : (
         <div className="flex h-full flex-col items-center justify-center">
