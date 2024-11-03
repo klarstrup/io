@@ -1,17 +1,23 @@
 import { TZDate } from "@date-fns/tz";
 import { formatDistanceStrict, startOfDay } from "date-fns";
+import { Session } from "next-auth";
 import { StealthButton } from "../../../components/StealthButton";
 import { exercises } from "../../../models/exercises";
 import type { getNextSets } from "../../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../../utils";
 
 export function NextSets({
+  user,
+  date,
   nextSets,
   onAddExercise,
 }: {
+  user: Session["user"];
+  date: `${number}-${number}-${number}`;
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
   onAddExercise?: (exerciseId: number) => void;
 }) {
+  const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
   return (
     <ol style={{ paddingInlineStart: "20px" }}>
       {nextSets.map(
@@ -45,11 +51,10 @@ export function NextSets({
               <small>
                 <small>
                   Last set{" "}
-                  {formatDistanceStrict(
-                    workedOutAt,
-                    startOfDay(TZDate.tz(DEFAULT_TIMEZONE)),
-                    { addSuffix: true, roundingMethod: "floor" },
-                  )}{" "}
+                  {formatDistanceStrict(workedOutAt, startOfDay(tzDate), {
+                    addSuffix: true,
+                    roundingMethod: "floor",
+                  })}{" "}
                 </small>
               </small>
             </li>

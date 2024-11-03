@@ -53,7 +53,7 @@ export function WorkoutForm({
 }: {
   user: Session["user"];
   workout?: WorkoutData & { _id?: string };
-  date?: string;
+  date: `${number}-${number}-${number}`;
   onClose?: () => void;
   locations: string[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
@@ -63,6 +63,7 @@ export function WorkoutForm({
   const todayDate = `${now.getFullYear()}-${
     now.getMonth() + 1
   }-${now.getDate()}`;
+  const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
 
   const {
     handleSubmit,
@@ -83,7 +84,8 @@ export function WorkoutForm({
 
   const dueSets = nextSets
     ?.filter(
-      (nextSet) => differenceInDays(startOfDay(now), nextSet.workedOutAt) > 3,
+      (nextSet) =>
+        differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) > 3,
     )
     .filter(
       (nextSet) =>
@@ -149,7 +151,7 @@ export function WorkoutForm({
         <input
           type="date"
           {...register("workedOutAt", { valueAsDate: true })}
-          defaultValue={String(dateToInputDate(workout?.workedOutAt ?? now))}
+          defaultValue={String(dateToInputDate(workout?.workedOutAt ?? tzDate))}
           hidden={!workout && todayDate !== date}
           className="border-b-2 border-gray-200 focus:border-gray-500"
         />
@@ -285,6 +287,8 @@ export function WorkoutForm({
           <div>
             <b>Due Sets:</b>
             <NextSets
+              user={user}
+              date={date}
               nextSets={dueSets}
               onAddExercise={(exerciseId) => {
                 const exerciseDefinition = exercises.find(
@@ -327,15 +331,18 @@ export function WorkoutForm({
         ) : null}
         {nextSets?.filter(
           (nextSet) =>
-            differenceInDays(startOfDay(now), nextSet.workedOutAt) <= 3,
+            differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) <= 3,
         ).length ? (
           <div>
             <small>
               <b>Future Sets:</b>
               <NextSets
+                user={user}
+                date={date}
                 nextSets={nextSets.filter(
                   (nextSet) =>
-                    differenceInDays(startOfDay(now), nextSet.workedOutAt) <= 3,
+                    differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) <=
+                    3,
                 )}
               />
             </small>

@@ -4,7 +4,12 @@ import { Session } from "next-auth";
 import { Fragment, useState } from "react";
 import { StealthButton } from "../../../components/StealthButton";
 import Grade from "../../../grades";
-import { AssistType, exercises, InputType, Unit } from "../../../models/exercises";
+import {
+  AssistType,
+  exercises,
+  InputType,
+  Unit,
+} from "../../../models/exercises";
 import { WorkoutData, WorkoutSource } from "../../../models/workout";
 import type { getNextSets } from "../../../models/workout.server";
 import { seconds2time } from "../../../utils";
@@ -25,11 +30,13 @@ function decimalAsTime(dec: number) {
 
 export default function WorkoutEntry({
   workout,
+  date,
   user,
   locations,
   nextSets,
 }: {
   workout: WorkoutData & { _id: string };
+  date: `${number}-${number}-${number}`;
   user: Session["user"];
   locations: string[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
@@ -90,6 +97,7 @@ export default function WorkoutEntry({
       </small>
       {isEditing ? (
         <WorkoutForm
+          date={date}
           user={user}
           workout={workout}
           locations={locations}

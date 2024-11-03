@@ -6,7 +6,6 @@ import {
   endOfDay,
   intervalToDuration,
   isAfter,
-  isFuture,
   max,
   min,
   startOfDay,

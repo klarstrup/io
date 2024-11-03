@@ -28,12 +28,9 @@ export function DiaryAgendaWorkouts({
 
   const [isAddingWorkout, setIsAddingWorkout] = useState(false);
 
+  const tzDate = new TZDate(date, timeZone);
   const dueSets = nextSets?.filter(
-    (nextSet) =>
-      differenceInDays(
-        startOfDay(new TZDate(date, timeZone)),
-        nextSet.workedOutAt,
-      ) > 3,
+    (nextSet) => differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) > 3,
   );
 
   return (
@@ -59,6 +56,7 @@ export function DiaryAgendaWorkouts({
           ?.map((workout) => (
             <WorkoutEntry
               key={workout._id}
+              date={date}
               user={user}
               workout={workout}
               locations={locations}
@@ -81,7 +79,7 @@ export function DiaryAgendaWorkouts({
           {dueSets?.length ? (
             <div>
               <b>Due Sets:</b>
-              <NextSets nextSets={dueSets} />
+              <NextSets user={user} date={date} nextSets={dueSets} />
             </div>
           ) : null}
         </div>
