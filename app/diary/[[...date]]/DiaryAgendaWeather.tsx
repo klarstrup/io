@@ -12,17 +12,28 @@ import {
   getSunset,
 } from "../../../utils";
 
-export async function DiaryAgendaWeather({ user }: { user: Session["user"] }) {
+export async function DiaryAgendaWeather({
+  user,
+  date,
+}: {
+  user: Session["user"];
+  date: `${number}-${number}-${number}`;
+}) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const now = TZDate.tz(timeZone);
+  const tzDate = new TZDate(date, timeZone);
+  const todayDate = `${now.getFullYear()}-${
+    now.getMonth() + 1
+  }-${now.getDate()}`;
+  const isToday = date === todayDate;
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
 
   const weatherIntervals =
     (await getTomorrowForecasts({
       geohash: user.geohash,
-      start: now,
-      end: addHours(now, 12),
+      start: isToday ? now : tzDate,
+      end: addHours(isToday ? now : tzDate, 12),
     })) ?? [];
 
   const sunrise = getSunrise(

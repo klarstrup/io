@@ -19,14 +19,11 @@ export async function DiaryAgendaFood({
 }) {
   if (!user.myFitnessPalUserId) return;
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-
+  const tzDate = new TZDate(date, timeZone);
   const food: (MyFitnessPal.MongoFoodEntry & { _id: string })[] = [];
   for await (const foodEntry of MyFitnessPalFoodEntries.find({
     user_id: user.myFitnessPalUserId,
-    datetime: rangeToQuery(
-      startOfDay(new TZDate(date, timeZone)),
-      endOfDay(new TZDate(date, timeZone)),
-    ),
+    datetime: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
   })) {
     food.push({
       ...foodEntry,
