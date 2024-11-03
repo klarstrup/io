@@ -62,22 +62,22 @@ export async function getNextSets({
         ({ exerciseId }) => exerciseId === id,
       )!;
       const exerciseDefinition = exercises.find((ex) => ex.id === id)!;
-      const exerciseWeightInputIndex = exerciseDefinition.inputs.findIndex(
+      const weightInputIndex = exerciseDefinition.inputs.findIndex(
         ({ type }) => type === InputType.Weight,
       );
-      const exerciseRepsInputIndex = exerciseDefinition.inputs.findIndex(
+      const repsInputIndex = exerciseDefinition.inputs.findIndex(
         ({ type }) => type === InputType.Reps,
       );
       const heaviestSet = exercise.sets.reduce((acc, set) => {
-        const setWeight = set.inputs[exerciseWeightInputIndex]!.value;
-        const accWeight = acc?.inputs[exerciseWeightInputIndex]!.value;
+        const setWeight = set.inputs[weightInputIndex]!.value;
+        const accWeight = acc?.inputs[weightInputIndex]!.value;
         return setWeight && accWeight && setWeight > accWeight ? set : acc;
       }, exercise.sets[0]);
 
       const workingSets = exercise.sets.filter(
         (set) =>
-          set.inputs[exerciseWeightInputIndex]!.value ===
-          heaviestSet?.inputs[exerciseWeightInputIndex]!.value,
+          set.inputs[weightInputIndex]!.value ===
+          heaviestSet?.inputs[weightInputIndex]!.value,
       );
 
       let successful = true;
@@ -86,9 +86,7 @@ export async function getNextSets({
         (exercise.exerciseId === 3 && workingSets.length >= 1)
       ) {
         if (
-          workingSets.every(
-            (sets) => sets.inputs[exerciseRepsInputIndex]!.value < 5,
-          )
+          workingSets.every((sets) => sets.inputs[repsInputIndex]!.value < 5)
         ) {
           successful = false;
         }
@@ -98,8 +96,8 @@ export async function getNextSets({
 
       const goalWeight = successful
         ? ([1, 183, 532].includes(exercise.exerciseId) ? 1.25 : 2.5) +
-          (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0)
-        : 0.9 * (heaviestSet?.inputs[exerciseWeightInputIndex]?.value || 0);
+          (heaviestSet?.inputs[weightInputIndex]?.value || 0)
+        : 0.9 * (heaviestSet?.inputs[weightInputIndex]?.value || 0);
 
       return {
         workedOutAt: workout.workedOutAt,
