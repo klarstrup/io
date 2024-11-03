@@ -11,6 +11,14 @@ import type { WorkoutData } from "./workout";
 
 export const Workouts = proxyCollection<WorkoutData>("workouts");
 
+const DEADLIFT_ID = 3;
+const WORKING_SET_REPS = 5;
+const WORKING_SETS = 3;
+const WORKING_SETS_FOR_DEADLIFT = 1;
+const WEIGHT_INCREMENT = 1.25;
+const WEIGHT_INCREMENT_FOR_LEGS = 2.5;
+const FAILURE_DELOAD_FACTOR = 0.9;
+
 export async function getNextSets({
   user,
   to,
@@ -82,11 +90,14 @@ export async function getNextSets({
 
       let successful = true;
       if (
-        workingSets.length >= 3 ||
-        (exercise.exerciseId === 3 && workingSets.length >= 1)
+        workingSets.length >= WORKING_SETS ||
+        (exercise.exerciseId === DEADLIFT_ID &&
+          workingSets.length >= WORKING_SETS_FOR_DEADLIFT)
       ) {
         if (
-          workingSets.every((sets) => sets.inputs[repsInputIndex]!.value < 5)
+          workingSets.every(
+            (sets) => sets.inputs[repsInputIndex]!.value < WORKING_SET_REPS,
+          )
         ) {
           successful = false;
         }
@@ -95,16 +106,19 @@ export async function getNextSets({
       }
 
       const goalWeight = successful
-        ? ([1, 183, 532].includes(exercise.exerciseId) ? 1.25 : 2.5) +
+        ? ([1, 183, 532].includes(exercise.exerciseId)
+            ? WEIGHT_INCREMENT
+            : WEIGHT_INCREMENT_FOR_LEGS) +
           (heaviestSet?.inputs[weightInputIndex]?.value || 0)
-        : 0.9 * (heaviestSet?.inputs[weightInputIndex]?.value || 0);
+        : FAILURE_DELOAD_FACTOR *
+          (heaviestSet?.inputs[weightInputIndex]?.value || 0);
 
       return {
         workedOutAt: workout.workedOutAt,
         exerciseId: exercise.exerciseId,
         successful,
-        nextWorkingSets: exercise.exerciseId === 3 ? 1 : 3,
-        nextWorkingSetsReps: 5,
+        nextWorkingSets: exercise.exerciseId === DEADLIFT_ID ? 1 : 3,
+        nextWorkingSetsReps: WORKING_SET_REPS,
         nextWorkingSetsWeight:
           String(goalWeight).endsWith(".25") ||
           String(goalWeight).endsWith(".75")
