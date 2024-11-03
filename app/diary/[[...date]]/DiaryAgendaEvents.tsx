@@ -5,6 +5,8 @@ import {
   eachDayOfInterval,
   endOfDay,
   intervalToDuration,
+  isAfter,
+  isFuture,
   max,
   min,
   startOfDay,
@@ -46,7 +48,11 @@ export async function DiaryAgendaEvents({ user }: { user: Session["user"] }) {
                 ]),
               },
               { in: tz(timeZone) },
-            ).filter((date) => differenceInHours(event.end, date) > 2)) {
+            ).filter(
+              (date) =>
+                isAfter(event.end, now) &&
+                differenceInHours(event.end, date) > 2,
+            )) {
               const calName = date.toLocaleDateString("da-DK", {
                 timeZone,
               });
