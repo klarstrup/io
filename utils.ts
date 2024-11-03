@@ -478,31 +478,3 @@ const schemeCategory10 = [
 ];
 export const getSchemeCategory10Color = (index: number) =>
   schemeCategory10[index % schemeCategory10.length]!;
-
-const start = new Date(2024, 8, 30, 21, 30);
-const end = new Date(2024, 10, 1, 22, 50);
-const pauses = [
-  { start: new Date(2024, 9, 8, 20, 12), end: new Date(2024, 9, 8, 20, 18) },
-  { start: new Date(2024, 9, 11, 17, 13), end: new Date(2024, 9, 11, 17, 16) },
-  { start: new Date(2024, 9, 11, 20, 25), end: new Date(2024, 9, 11, 21, 5) },
-  { start: new Date(2024, 9, 12, 9, 25), end: new Date(2024, 9, 12, 9, 55) },
-  { start: new Date(2024, 9, 13, 16, 42), end: new Date(2024, 9, 20, 20, 42) },
-  { start: new Date(2024, 9, 24, 12, 59), end: new Date(2024, 9, 24, 13, 2) },
-  { start: new Date(2024, 9, 28, 21, 0), end: new Date(2024, 9, 28, 21, 5) },
-  { start: new Date(2024, 9, 31, 14, 5), end: new Date(2024, 9, 31, 14, 8) },
-  { start: new Date(2024, 9, 31, 21, 40), end: new Date(2024, 9, 31, 22, 30) },
-];
-const duration = pauses.reduce(
-  (acc, interval) => acc - (interval.end.getTime() - interval.start.getTime()),
-  end.getTime() - start.getTime(),
-);
-
-console.log({
-  start,
-  end,
-  pauses,
-  months: duration / 1000 / DAY_IN_SECONDS / 31,
-  weeks: duration / 1000 / WEEK_IN_SECONDS,
-  days: duration / 1000 / DAY_IN_SECONDS,
-  hours: duration / 1000 / HOUR_IN_SECONDS,
-});
