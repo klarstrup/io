@@ -425,7 +425,7 @@ export function roundToNearestDay<
   return addDays(startOfDay(date), roundingMethod(hours / 24) - 1);
 }
 
-export function stringToColours(inputString: string) {
+function stringToColours(inputString: string) {
   let sum = 0;
 
   for (let i = 0; i < inputString.length; i++) {
@@ -457,7 +457,7 @@ export function stringToColours(inputString: string) {
     ) * 256
   );
 
-  return [r, g, b, 255];
+  return [r, g, b, 255] as const;
 }
 export function stringToColour(inputString: string, alpha = 1) {
   const [r, g, b] = stringToColours(inputString);
@@ -480,7 +480,7 @@ export const getSchemeCategory10Color = (index: number) =>
   schemeCategory10[index % schemeCategory10.length]!;
 
 const start = new Date(2024, 8, 30, 21, 30);
-const now = new Date();
+const end = new Date(2024, 10, 1, 22, 50);
 const pauses = [
   { start: new Date(2024, 9, 8, 20, 12), end: new Date(2024, 9, 8, 20, 18) },
   { start: new Date(2024, 9, 11, 17, 13), end: new Date(2024, 9, 11, 17, 16) },
@@ -489,10 +489,12 @@ const pauses = [
   { start: new Date(2024, 9, 13, 16, 42), end: new Date(2024, 9, 20, 20, 42) },
   { start: new Date(2024, 9, 24, 12, 59), end: new Date(2024, 9, 24, 13, 2) },
   { start: new Date(2024, 9, 28, 21, 0), end: new Date(2024, 9, 28, 21, 5) },
+  { start: new Date(2024, 9, 31, 14, 5), end: new Date(2024, 9, 31, 14, 8) },
+  { start: new Date(2024, 9, 31, 21, 40), end: new Date(2024, 9, 31, 22, 30) },
 ];
 const duration = pauses.reduce(
   (acc, interval) => acc - (interval.end.getTime() - interval.start.getTime()),
-  now.getTime() - start.getTime(),
+  end.getTime() - start.getTime(),
 );
 
 console.log({

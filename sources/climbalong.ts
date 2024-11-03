@@ -532,7 +532,7 @@ async function getIoClimbAlongCompetitionScores(
           }
         }
       }
-      return [topMemo, zoneMemo];
+      return [topMemo, zoneMemo] as const;
     },
     [new Map<string, number>(), new Map<string, number>()],
   );
