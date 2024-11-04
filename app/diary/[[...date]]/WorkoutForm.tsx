@@ -8,6 +8,7 @@ import { useEffect, useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import Select, { OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
+import { FieldSetX } from "../../../components/FieldSet";
 import { StealthButton } from "../../../components/StealthButton";
 import { frenchRounded } from "../../../grades";
 import {
@@ -58,11 +59,6 @@ export function WorkoutForm({
   locations: string[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
-  const timeZone = user.timeZone ?? DEFAULT_TIMEZONE;
-  const now = TZDate.tz(timeZone);
-  const todayDate = `${now.getFullYear()}-${
-    now.getMonth() + 1
-  }-${now.getDate()}`;
   const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
 
   const {
@@ -129,61 +125,82 @@ export function WorkoutForm({
               : { exercises: [] },
           );
         })}
-        className="min-w-32 flex-1"
+        className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
-        {onClose ? (
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-        ) : null}
-        <button type="submit" disabled={!isDirty || isSubmitting}>
-          {workout ? "Update" : "Create"}
-        </button>
-        {workout?._id ? (
+        <div className="flex items-center justify-evenly">
+          {onClose ? (
+            <button type="button" onClick={onClose}>
+              ❌
+            </button>
+          ) : null}
           <button
-            disabled={isSubmitting}
-            type="button"
-            onClick={() => deleteWorkout(workout._id!)}
+            type="submit"
+            disabled={!isDirty || isSubmitting}
+            className={
+              "rounded-xl bg-[#ff0] px-3 py-1 text-lg font-semibold leading-none"
+            }
           >
-            Delete
+            {workout ? "Update" : "Create"}
           </button>
-        ) : null}
-        <input
-          type="date"
-          {...register("workedOutAt", { valueAsDate: true })}
-          defaultValue={String(dateToInputDate(workout?.workedOutAt ?? tzDate))}
-          hidden={!workout && todayDate !== date}
-          className="border-b-2 border-gray-200 focus:border-gray-500"
-        />
-        <Controller
-          name="location"
-          control={control}
-          render={({ field }) => (
-            <Creatable<{ label: string; value: string }, false>
-              placeholder="Pick location..."
-              isDisabled={isSubmitting}
-              isMulti={false}
-              isClearable={true}
-              options={locations.map((location) => ({
-                label: location,
-                value: location,
-              }))}
-              {...field}
-              value={
-                field.value ? { label: field.value, value: field.value } : null
-              }
-              onChange={(
-                selected: OnChangeValue<
-                  { label: string; value: string },
-                  false
-                >,
-              ) => {
-                if (selected) field.onChange(selected.value);
+          {workout?._id ? (
+            <button
+              disabled={isSubmitting}
+              type="button"
+              onClick={async () => {
+                if (window.confirm("Are you sure you want to delete this?")) {
+                  await deleteWorkout(workout._id!);
+                }
               }}
-            />
+            >
+              🚮
+            </button>
+          ) : (
+            <div />
           )}
-        />
-        <div>
+        </div>
+        <div className="flex">
+          <Controller
+            name="location"
+            control={control}
+            render={({ field }) => (
+              <Creatable<{ label: string; value: string }, false>
+                className="flex-1"
+                placeholder="Pick location..."
+                isDisabled={isSubmitting}
+                isMulti={false}
+                isClearable={true}
+                options={locations.map((location) => ({
+                  label: location,
+                  value: location,
+                }))}
+                {...field}
+                value={
+                  field.value
+                    ? { label: field.value, value: field.value }
+                    : null
+                }
+                onChange={(
+                  selected: OnChangeValue<
+                    { label: string; value: string },
+                    false
+                  >,
+                ) => {
+                  field.onChange(selected?.value || null);
+                }}
+              />
+            )}
+          />
+          <input
+            type="date"
+            {...register("workedOutAt", { valueAsDate: true })}
+            defaultValue={String(
+              dateToInputDate(workout?.workedOutAt ?? tzDate),
+            )}
+            hidden={!workout}
+            className="border-b-2 border-gray-200 focus:border-gray-500"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
           {fields.map((field, index) => {
             const exercise = exercises.find(
               (exercise) => exercise.id === field.exerciseId,
@@ -195,52 +212,58 @@ export function WorkoutForm({
               (nextSet) => nextSet.exerciseId === exercise.id,
             );
             return (
-              <fieldset key={field.id} className="flex flex-col">
-                <legend className="flex-1 text-sm font-semibold">
-                  {exercise.name}{" "}
-                  <StealthButton
-                    onClick={() => remove(index)}
-                    disabled={isSubmitting}
-                    className="leading-[0]"
-                  >
-                    ❌
-                  </StealthButton>
-                  <StealthButton
-                    onClick={() => {
-                      const newIndex = index - 1;
-                      const destination = fields[newIndex]!;
-                      const source = fields[index]!;
-                      update(index, destination);
-                      update(newIndex, source);
-                    }}
-                    disabled={index === 0 || isSubmitting}
-                    className="leading-[0]"
-                  >
-                    ⬆️
-                  </StealthButton>
-                  <StealthButton
-                    onClick={() => {
-                      const newIndex = index + 1;
-                      const destination = fields[newIndex]!;
-                      const source = fields[index]!;
-                      update(index, destination);
-                      update(newIndex, source);
-                    }}
-                    disabled={index === fields.length - 1 || isSubmitting}
-                    className="leading-[0]"
-                  >
-                    ⬇️
-                  </StealthButton>
-                </legend>
+              <FieldSetX
+                key={field.id}
+                className="flex flex-col"
+                legend={
+                  <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
+                    <span>{exercise.name}</span>
+                    <StealthButton
+                      onClick={() => remove(index)}
+                      disabled={isSubmitting}
+                      className="leading-[0]"
+                    >
+                      ❌
+                    </StealthButton>
+                    <StealthButton
+                      onClick={() => {
+                        const newIndex = index - 1;
+                        const destination = fields[newIndex]!;
+                        const source = fields[index]!;
+                        update(index, destination);
+                        update(newIndex, source);
+                      }}
+                      disabled={index === 0 || isSubmitting}
+                      className="leading-[0]"
+                    >
+                      ⬆️
+                    </StealthButton>
+                    <StealthButton
+                      onClick={() => {
+                        const newIndex = index + 1;
+                        const destination = fields[newIndex]!;
+                        const source = fields[index]!;
+                        update(index, destination);
+                        update(newIndex, source);
+                      }}
+                      disabled={index === fields.length - 1 || isSubmitting}
+                      className="leading-[0]"
+                    >
+                      ⬇️
+                    </StealthButton>
+                  </div>
+                }
+              >
                 {nextExerciseSet ? (
-                  <div>
-                    <small>
-                      Goal {nextExerciseSet.nextWorkingSets}x
+                  <div className="text-xs">
+                    Goal{" "}
+                    <span className="text-sm">
+                      {nextExerciseSet.nextWorkingSets}x
                       {nextExerciseSet.nextWorkingSetsReps}x
                       {nextExerciseSet.nextWorkingSetsWeight}
-                      kg based on last set{" "}
-                      {nextExerciseSet.workedOutAt.toLocaleDateString("da-DK")}
-                    </small>
+                    </span>
+                    kg based on last set{" "}
+                    {nextExerciseSet.workedOutAt.toLocaleDateString("da-DK")}
                   </div>
                 ) : null}
                 <SetsForm
@@ -249,7 +272,7 @@ export function WorkoutForm({
                   parentIndex={index}
                   exercise={exercise}
                 />
-              </fieldset>
+              </FieldSetX>
             );
           })}
           <Select
@@ -282,7 +305,7 @@ export function WorkoutForm({
           />
         </div>
       </form>
-      <div>
+      <div className="min-w-[50%]">
         {dueSets?.length ? (
           <div>
             <b>Due Sets:</b>
@@ -483,9 +506,7 @@ function SetsForm({
       <tbody>
         {sets.map((set, index) => (
           <tr key={set.id}>
-            <td style={{ fontSize: "0.8em", paddingRight: "2px" }}>
-              {index + 1}.
-            </td>
+            <td className="pr-0.5 text-sm">{index + 1}.</td>
             <InputsForm
               control={control}
               register={register}
@@ -501,6 +522,7 @@ function SetsForm({
                 >
                   ❌
                 </StealthButton>
+                {/*
                 <StealthButton
                   onClick={() => {
                     const newIndex = index - 1;
@@ -527,6 +549,7 @@ function SetsForm({
                 >
                   ⬇️
                 </StealthButton>
+                */}
               </div>
             </td>
           </tr>
