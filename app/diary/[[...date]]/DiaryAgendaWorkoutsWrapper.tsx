@@ -26,13 +26,11 @@ export async function DiaryAgendaWorkoutsWrapper({
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
+  const tzDate = new TZDate(date, timeZone);
   const [locations, nextSets, diaryEntries] = await Promise.all([
     getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(new TZDate(date, timeZone)) }),
-    getDiaryEntries({
-      from: startOfDay(new Date(date)),
-      to: endOfDay(new Date(date)),
-    }),
+    getNextSets({ user, to: startOfDay(tzDate) }),
+    getDiaryEntries({ from: startOfDay(tzDate), to: endOfDay(tzDate) }),
   ]);
 
   const workoutsExerciseSetPRs: Record<
