@@ -14,7 +14,6 @@ import { WorkoutData, WorkoutSource } from "../../../models/workout";
 import type { getNextSets } from "../../../models/workout.server";
 import { seconds2time } from "../../../utils";
 import ProblemByProblem from "../../[[...slug]]/ProblemByProblem";
-import { PR } from "./PR";
 import { WorkoutForm } from "./WorkoutForm";
 
 function pad(i: number, width: number, z = "0") {
@@ -30,12 +29,18 @@ function decimalAsTime(dec: number) {
 
 export default function WorkoutEntry({
   workout,
+  exerciseSetPRs,
   date,
   user,
   locations,
   nextSets,
 }: {
   workout: WorkoutData & { _id: string };
+  exerciseSetPRs?: {
+    isAllTimePR: boolean;
+    isYearPR: boolean;
+    is3MonthPR: boolean;
+  }[][];
   date: `${number}-${number}-${number}`;
   user: Session["user"];
   locations: string[];
@@ -239,11 +244,20 @@ export default function WorkoutEntry({
                               </Fragment>
                             );
                           })}{" "}
-                          <PR
-                            workout={workout}
-                            exerciseId={exercise.id}
-                            set={set}
-                          />
+                          {exerciseSetPRs?.[exerciseIndex]?.[setIndex] ? (
+                            <sup className="text-[10px] font-bold">
+                              {exerciseSetPRs[exerciseIndex][setIndex]
+                                .isAllTimePR
+                                ? "AtPR"
+                                : exerciseSetPRs[exerciseIndex][setIndex]
+                                      .isYearPR
+                                  ? "1yPR"
+                                  : exerciseSetPRs[exerciseIndex][setIndex]
+                                        .is3MonthPR
+                                    ? "3mPR"
+                                    : null}
+                            </sup>
+                          ) : null}
                         </div>
                       </li>
                     ))}

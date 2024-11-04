@@ -14,12 +14,21 @@ import { WorkoutForm } from "./WorkoutForm";
 export function DiaryAgendaWorkouts({
   date,
   workouts,
+  workoutsExerciseSetPRs,
   user,
   locations,
   nextSets,
 }: {
   date: `${number}-${number}-${number}`;
   workouts: DiaryEntry["workouts"];
+  workoutsExerciseSetPRs?: Record<
+    string,
+    {
+      isAllTimePR: boolean;
+      isYearPR: boolean;
+      is3MonthPR: boolean;
+    }[][]
+  >;
   user: Session["user"];
   locations: string[];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
@@ -55,6 +64,7 @@ export function DiaryAgendaWorkouts({
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
           ?.map((workout) => (
             <WorkoutEntry
+              exerciseSetPRs={workoutsExerciseSetPRs?.[workout._id]}
               key={workout._id}
               date={date}
               user={user}
