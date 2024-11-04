@@ -11,7 +11,7 @@
     "restore-local-from-dump": "mongorestore -h 127.0.0.1 --port 27017 --drop --nsFrom=\"self.*\" --nsTo=\"test.*\""
   },
   "dependencies": {
-    "@auth/mongodb-adapter": "3.7.2",
+    "@auth/mongodb-adapter": "3.7.3",
     "@date-fns/tz": "^1.2.0",
     "@types/uuid": "^10.0.0",
     "@vercel/analytics": "^1.3.2",
@@ -39,8 +39,8 @@
     "@types/node": "^20.14.9",
     "@types/react": "npm:types-react@rc",
     "@types/react-dom": "npm:types-react-dom@rc",
-    "@typescript-eslint/eslint-plugin": "^8.12.2",
-    "@typescript-eslint/parser": "^8.12.2",
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
     "dayjs": "^1.11.13",
     "eslint": "^8.57.1",
     "eslint-plugin-react-compiler": "^19.0.0-beta-8a03594-20241020",
