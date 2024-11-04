@@ -70,7 +70,7 @@ export function DiaryEntryItem({
         <div
           className={
             "flex flex-1 items-center justify-center text-lg leading-none " +
-            (isToday ? "font-bold" : "font-medium")
+            (isToday ? "font-bold" : "font-normal")
           }
         >
           {date.split("-")[2]}
