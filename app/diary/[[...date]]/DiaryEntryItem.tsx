@@ -51,9 +51,7 @@ export function DiaryEntryItem({
       prefetch={false}
       href={date === pickedDate ? `/diary` : `/diary/${date}`}
       style={{
-        background: isFuture
-          ? "white"
-          : getSchemeCategory10Color(Number(date.split("-")[1])) + "50",
+        background: getSchemeCategory10Color(Number(date.split("-")[1])) + "50",
         display: "flex",
         flexDirection: "column",
         padding: "0.25em",
