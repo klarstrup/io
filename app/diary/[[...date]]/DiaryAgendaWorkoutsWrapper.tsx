@@ -42,6 +42,7 @@ export async function DiaryAgendaWorkoutsWrapper({
     }[][]
   > = {};
 
+  console.time("getIsSetPR");
   for (const workout of diaryEntries[0]?.[1]?.workouts ?? []) {
     if (!workoutsExerciseSetPRs[workout._id]) {
       workoutsExerciseSetPRs[workout._id] = [];
@@ -55,16 +56,13 @@ export async function DiaryAgendaWorkoutsWrapper({
       }[] = [];
       for (const set of exercise.sets) {
         exerciseSetsPRs.push(
-          (await getIsSetPR(workout, exercise.exerciseId, set)) ?? {
-            isAllTimePR: false,
-            isYearPR: false,
-            is3MonthPR: false,
-          },
+          await getIsSetPR(workout, exercise.exerciseId, set),
         );
       }
       workoutsExerciseSetPRs[workout._id]!.push(exerciseSetsPRs);
     }
   }
+  console.timeEnd("getIsSetPR");
 
   return (
     <DiaryAgendaWorkouts

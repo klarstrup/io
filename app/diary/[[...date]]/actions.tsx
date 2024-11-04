@@ -42,16 +42,21 @@ export async function deleteWorkout(workoutId: string) {
   return result.modifiedCount;
 }
 
+const noPR = {
+  isAllTimePR: false,
+  isYearPR: false,
+  is3MonthPR: false,
+};
 export async function getIsSetPR(
   workout: WorkoutData,
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
   set: WorkoutExerciseSet,
 ) {
   const user = (await auth())?.user;
-  if (!user) return;
+  if (!user) return noPR;
 
   const exercise = exercises.find((e) => e.id === exerciseId);
-  if (!exercise) return;
+  if (!exercise) return noPR;
 
   const ioWorkouts = await Workouts.find({
     userId: user.id,
@@ -78,7 +83,7 @@ export async function getIsSetPR(
     (i) => i.type === InputType.Weight,
   );
 
-  if (repsInputIndex === -1 || weightInputIndex === -1) return;
+  if (repsInputIndex === -1 || weightInputIndex === -1) return noPR;
 
   const reps = set.inputs[repsInputIndex]?.value || 0;
 
