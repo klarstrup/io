@@ -76,7 +76,7 @@ export function DiaryAgendaWorkouts({
       ) : (
         <div className="flex h-full flex-wrap items-center justify-around">
           <div className="flex flex-col items-center justify-center">
-            <p className="mb-2">No workout logged </p>
+            <p className="mb-2 whitespace-nowrap">No workout logged</p>
             <div>
               <button
                 onClick={() => setIsAddingWorkout(true)}
