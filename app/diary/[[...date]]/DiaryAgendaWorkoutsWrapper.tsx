@@ -2,6 +2,8 @@ import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import { getNextSets, Workouts } from "../../../models/workout.server";
+import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
+import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { DEFAULT_TIMEZONE } from "../../../utils";
 import { getIsSetPR } from "./actions";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
@@ -49,6 +51,24 @@ export async function DiaryAgendaWorkoutsWrapper({
     }
 
     for (const exercise of workout.exercises) {
+      const ioWorkouts = await Workouts.find({
+        userId: user.id,
+        "exercises.exerciseId": exercise.exerciseId,
+        workedOutAt: { $lt: workout.workedOutAt },
+      }).toArray();
+
+      const fitocracyWorkouts = user.fitocracyUserId
+        ? (
+            await FitocracyWorkouts.find({
+              user_id: user.fitocracyUserId,
+              "root_group.children.exercise.exercise_id": exercise.exerciseId,
+              workout_timestamp: { $lt: workout.workedOutAt },
+            }).toArray()
+          ).map((w) => workoutFromFitocracyWorkout(w))
+        : [];
+
+      const precedingWorkouts = [...ioWorkouts, ...fitocracyWorkouts];
+
       const exerciseSetsPRs: {
         isAllTimePR: boolean;
         isYearPR: boolean;
@@ -56,7 +76,7 @@ export async function DiaryAgendaWorkoutsWrapper({
       }[] = [];
       for (const set of exercise.sets) {
         exerciseSetsPRs.push(
-          await getIsSetPR(workout, exercise.exerciseId, set),
+          await getIsSetPR(precedingWorkouts, exercise.exerciseId, set),
         );
       }
       workoutsExerciseSetPRs[workout._id]!.push(exerciseSetsPRs);

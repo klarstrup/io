@@ -6,8 +6,6 @@ import { auth } from "../../../auth";
 import { exercises, InputType } from "../../../models/exercises";
 import type { WorkoutData, WorkoutExerciseSet } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
-import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
-import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData,
@@ -47,34 +45,14 @@ const noPR = {
   isYearPR: false,
   is3MonthPR: false,
 };
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function getIsSetPR(
-  workout: WorkoutData,
+  precedingWorkouts: WithId<WorkoutData>[],
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
   set: WorkoutExerciseSet,
 ) {
-  const user = (await auth())?.user;
-  if (!user) return noPR;
-
   const exercise = exercises.find((e) => e.id === exerciseId);
   if (!exercise) return noPR;
-
-  const ioWorkouts = await Workouts.find({
-    userId: user.id,
-    "exercises.exerciseId": exerciseId,
-    workedOutAt: { $lt: workout.workedOutAt },
-  }).toArray();
-
-  const fitocracyWorkouts = user.fitocracyUserId
-    ? (
-        await FitocracyWorkouts.find({
-          user_id: user.fitocracyUserId,
-          "root_group.children.exercise.exercise_id": exerciseId,
-          workout_timestamp: { $lt: workout.workedOutAt },
-        }).toArray()
-      ).map((w) => workoutFromFitocracyWorkout(w))
-    : [];
-
-  const workouts = [...ioWorkouts, ...fitocracyWorkouts];
 
   const repsInputIndex = exercise.inputs.findIndex(
     (i) => i.type === InputType.Reps,
@@ -102,16 +80,16 @@ export async function getIsSetPR(
     );
   }
 
-  const isAllTimePR = theThing(workouts);
+  const isAllTimePR = theThing(precedingWorkouts);
 
   const isYearPR = theThing(
-    workouts.filter(
+    precedingWorkouts.filter(
       (w) => w.workedOutAt > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
     ),
   );
 
   const is3MonthPR = theThing(
-    workouts.filter(
+    precedingWorkouts.filter(
       (w) => w.workedOutAt > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
     ),
   );
