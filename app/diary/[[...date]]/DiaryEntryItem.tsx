@@ -40,8 +40,8 @@ export function DiaryEntryItem({
   const isToday =
     date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
   const isFuture = now < tzDate;
-  if (isToday) console.log({ now, tzDate, isToday, isFuture });
-  if (isFuture) {
+
+  if (isFuture && !isToday) {
     return <div className="flex-1 border-[0.5px] border-black/0">&nbsp;</div>;
   }
 
