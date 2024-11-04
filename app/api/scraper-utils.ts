@@ -1,5 +1,5 @@
 export function jsonStreamResponse(
-  generator: (flushJSON?: (data: unknown) => Promise<void>) => AsyncGenerator,
+  generator: (flushJSON: (data: unknown) => Promise<void>) => AsyncGenerator,
 ) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
