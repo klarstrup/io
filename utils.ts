@@ -35,6 +35,19 @@ export function unique<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
+export function uniqueBy<T>(arr: T[], predicate: (item: T) => unknown): T[] {
+  return Array.from(
+    arr
+      .reduce((map, item) => {
+        const key = predicate(item);
+        if (!map.has(key)) map.set(key, item);
+
+        return map;
+      }, new Map<unknown, T>())
+      .values(),
+  );
+}
+
 export function chunk<I>(rawArr: I[], size: number) {
   if (!Array.isArray(rawArr)) throw new Error("Expected an array");
 

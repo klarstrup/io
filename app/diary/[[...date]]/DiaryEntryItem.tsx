@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { DiaryEntry } from "../../../lib";
 import { exercises, TagType } from "../../../models/exercises";
 import { WorkoutData } from "../../../models/workout";
-import { getSchemeCategory10Color } from "../../../utils";
+import { getSchemeCategory10Color, uniqueBy } from "../../../utils";
 
 export function DiaryEntryItem({
   pickedDate,
@@ -126,53 +126,61 @@ function WorkoutsSummary({
         lineHeight: 1,
       }}
     >
-      {Array.from(exercisesDone)
-        .sort()
-        .map((exerciseId) => {
-          const exercise = exercises.find(({ id }) => exerciseId === id)!;
+      {uniqueBy(
+        Array.from(exercisesDone)
+          .sort()
+          .map((exerciseId) => {
+            const exercise = exercises.find(({ id }) => exerciseId === id)!;
 
-          return (
-            <span key={exercise.id} title={exercise.name}>
-              {exercise.name === "Bouldering" ? (
-                "🧗‍♀️"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Equipment && tag.name === "Barbell",
-                ) ? (
-                "🏋️‍♀️"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Equipment &&
-                    (tag.name === "Dumbbell" ||
-                      tag.name === "EZ Bar" ||
-                      tag.name === "Cables" ||
-                      tag.name === "Machine"),
-                ) ? (
-                "💪"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.MuscleGroup && tag.name === "Cardio",
-                ) ? (
-                "🏃‍♀️"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Type && tag.name === "Calisthenics",
-                ) ? (
-                "🤸🏻"
-              ) : (
-                <span
-                  style={{
-                    fontSize: "0.125em",
-                    display: "inline-block",
-                    maxWidth: "12em",
-                  }}
-                >
-                  {exercise.name}
-                </span>
-              )}
-            </span>
-          );
-        })}
+            return {
+              id: exercise.id,
+              name: exercise.name,
+              icon:
+                exercise.name === "Bouldering" ? (
+                  "🧗‍♀️"
+                ) : exercise.tags?.some(
+                    (tag) =>
+                      tag.type === TagType.Equipment && tag.name === "Barbell",
+                  ) ? (
+                  "🏋️‍♀️"
+                ) : exercise.tags?.some(
+                    (tag) =>
+                      tag.type === TagType.Equipment &&
+                      (tag.name === "Dumbbell" ||
+                        tag.name === "EZ Bar" ||
+                        tag.name === "Cables" ||
+                        tag.name === "Machine"),
+                  ) ? (
+                  "💪"
+                ) : exercise.tags?.some(
+                    (tag) =>
+                      tag.type === TagType.MuscleGroup && tag.name === "Cardio",
+                  ) ? (
+                  "🏃‍♀️"
+                ) : exercise.tags?.some(
+                    (tag) =>
+                      tag.type === TagType.Type && tag.name === "Calisthenics",
+                  ) ? (
+                  "🤸🏻"
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "0.125em",
+                      display: "inline-block",
+                      maxWidth: "12em",
+                    }}
+                  >
+                    {exercise.name}
+                  </span>
+                ),
+            };
+          }),
+        ({ icon }) => icon,
+      ).map(({ id, name, icon }) => (
+        <span key={id} title={name}>
+          {icon}
+        </span>
+      ))}
     </div>
   );
 }
