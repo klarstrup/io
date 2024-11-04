@@ -111,7 +111,7 @@ export async function DiaryAgendaEvents({
                       {duration.seconds ? `${duration.seconds}s` : null}
                     </div>
                   </div>{" "}
-                  <div className="max-w-64">
+                  <div className="max-w-56">
                     <div className="overflow-hidden text-ellipsis whitespace-nowrap">
                       {event.summary}
                     </div>
