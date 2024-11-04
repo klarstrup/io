@@ -69,30 +69,30 @@ export async function getIsSetPR(
 
   const reps = getSetReps(set);
   const weight = getSetWeight(set);
-
-  const theThing = (ws: WithId<WorkoutData>[]) =>
-    ws.every((w) =>
-      w.exercises
-        .find((e) => e.exerciseId === exerciseId)
-        ?.sets.every(
-          (pastSet) =>
-            getSetReps(pastSet) < reps || getSetWeight(pastSet) < weight,
-        ),
-    );
-
-  console.time("getIsSetPR iteration");
-  const isAllTimePR = theThing(precedingWorkouts);
-
   const now1YearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-  const isYearPR = theThing(
-    precedingWorkouts.filter((w) => w.workedOutAt > now1YearAgo),
-  );
-
   const now3MonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const is3MonthPR = theThing(
-    precedingWorkouts.filter((w) => w.workedOutAt > now3MonthsAgo),
-  );
-  console.timeEnd("getIsSetPR iteration");
+  let isAllTimePR = true;
+  let isYearPR = true;
+  let is3MonthPR = true;
+  for (const workout of precedingWorkouts) {
+    for (const exercise of workout.exercises) {
+      if (exercise.exerciseId !== exerciseId) continue;
+
+      for (const set of exercise.sets) {
+        if (!(getSetReps(set) < reps || getSetWeight(set) < weight)) {
+          isAllTimePR = false;
+
+          if (workout.workedOutAt > now1YearAgo) {
+            isYearPR = false;
+          }
+
+          if (workout.workedOutAt > now3MonthsAgo) {
+            is3MonthPR = false;
+          }
+        }
+      }
+    }
+  }
 
   return {
     isAllTimePR,
