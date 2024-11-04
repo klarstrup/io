@@ -12,7 +12,7 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns";
-import { auth } from "../../../auth";
+import { Session } from "next-auth";
 import { DiaryEntry } from "../../../lib";
 import { DEFAULT_TIMEZONE } from "../../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
@@ -20,29 +20,17 @@ import { DiaryEntryItem } from "./DiaryEntryItem";
 const dateToString = (date: Date): `${number}-${number}-${number}` =>
   `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-export async function DiaryEntryWeek({
+export function DiaryEntryWeek({
+  user,
   isoYearAndWeek,
   pickedDate,
   diaryEntries,
 }: {
+  user: Session["user"];
   isoYearAndWeek: string;
   pickedDate?: `${number}-${number}-${number}`;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
 }) {
-  const user = (await auth())?.user;
-
-  if (!user) {
-    return (
-      <div>
-        <span>Hello, stranger!</span>
-        <p>
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/api/auth/signin">Sign in</a>
-        </p>
-      </div>
-    );
-  }
-
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const [isoYear, isoWeek] = isoYearAndWeek.split("-").map(Number) as [
@@ -83,6 +71,7 @@ export async function DiaryEntryWeek({
       <div className="flex flex-1 bg-white">
         {eachDayOfInterval(weekInterval).map((dayte) => (
           <DiaryEntryItem
+            user={user}
             key={dateToString(dayte)}
             diaryEntry={
               diaryEntries?.find(([date]) => date === dateToString(dayte))?.[1]

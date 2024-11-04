@@ -4,13 +4,20 @@ import Link from "next/link";
 import type { DiaryEntry } from "../../../lib";
 import { exercises, TagType } from "../../../models/exercises";
 import { WorkoutData } from "../../../models/workout";
-import { getSchemeCategory10Color, uniqueBy } from "../../../utils";
+import {
+  DEFAULT_TIMEZONE,
+  getSchemeCategory10Color,
+  uniqueBy,
+} from "../../../utils";
+import { Session } from "next-auth";
 
 export function DiaryEntryItem({
+  user,
   pickedDate,
   date,
   diaryEntry,
 }: {
+  user: Session["user"];
   pickedDate?: `${number}-${number}-${number}`;
   date: `${number}-${number}-${number}`;
   diaryEntry?: DiaryEntry;
@@ -26,13 +33,14 @@ export function DiaryEntryItem({
     0,
   );
 
-  const now = new TZDate();
+  const now = TZDate.tz(user.timeZone || DEFAULT_TIMEZONE);
   const isToday =
     date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  const isFuture = new TZDate() < new TZDate(date);
+  const isFuture = now < new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
   if (isFuture) {
     return <div className="flex-1 border-[0.5px] border-black/0">&nbsp;</div>;
   }
+
   return (
     <Link
       key={date}

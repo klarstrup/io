@@ -71,6 +71,7 @@ async function loadMoreData(
       end: endWeekDate,
     }).map((weekDate) => (
       <DiaryEntryWeekWrapper
+        user={user}
         key={String(weekDate)}
         isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
         pickedDate={params.date as `${number}-${number}-${number}` | undefined}
@@ -163,6 +164,7 @@ export default async function Page(props: {
                 key={String(weekDate)}
                 fallback={
                   <DiaryEntryWeek
+                    user={user}
                     isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
                     pickedDate={
                       params.date as `${number}-${number}-${number}` | undefined
@@ -171,6 +173,7 @@ export default async function Page(props: {
                 }
               >
                 <DiaryEntryWeekWrapper
+                  user={user}
                   isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
                   pickedDate={
                     params.date as `${number}-${number}-${number}` | undefined
