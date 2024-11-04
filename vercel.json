@@ -3,7 +3,27 @@
   "crons": [
     {
       "path": "/api/cron",
-      "schedule": "0 10 * * *"
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/ical_scrape",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/myfitnesspal_scrape",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/rundouble_scrape",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/tomorrow_scrape",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/toplogger_scrape",
+      "schedule": "0 5 * * *"
     }
   ]
 }
