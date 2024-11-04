@@ -34,7 +34,10 @@ export function DiaryEntryItem({
   );
 
   const now = TZDate.tz(user.timeZone || DEFAULT_TIMEZONE);
-  const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
+  const tzDate = new TZDate(
+    date,
+    user.timeZone || DEFAULT_TIMEZONE,
+  ).withTimeZone(user.timeZone || DEFAULT_TIMEZONE);
   const isToday =
     date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
   const isFuture = now < tzDate;
