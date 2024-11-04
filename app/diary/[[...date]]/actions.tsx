@@ -60,39 +60,39 @@ export async function getIsSetPR(
   const weightInputIndex = exercise.inputs.findIndex(
     (i) => i.type === InputType.Weight,
   );
-
   if (repsInputIndex === -1 || weightInputIndex === -1) return noPR;
 
-  const reps = set.inputs[repsInputIndex]?.value || 0;
+  const getSetReps = (s: WorkoutExerciseSet) =>
+    s.inputs[repsInputIndex]?.value || 0;
+  const getSetWeight = (s: WorkoutExerciseSet) =>
+    s.inputs[weightInputIndex]?.value || 0;
 
-  const weight = set.inputs[weightInputIndex]?.value || 0;
+  const reps = getSetReps(set);
+  const weight = getSetWeight(set);
 
-  function theThing(ws: WithId<WorkoutData>[]) {
-    return ws.every((w) =>
+  const theThing = (ws: WithId<WorkoutData>[]) =>
+    ws.every((w) =>
       w.exercises
         .find((e) => e.exerciseId === exerciseId)
-        ?.sets.every((pastSet) => {
-          const pastReps = pastSet.inputs[repsInputIndex]?.value || 0;
-          const pastWeight = pastSet.inputs[weightInputIndex]?.value || 0;
-
-          return pastReps < reps || pastWeight < weight;
-        }),
+        ?.sets.every(
+          (pastSet) =>
+            getSetReps(pastSet) < reps || getSetWeight(pastSet) < weight,
+        ),
     );
-  }
 
+  console.time("getIsSetPR iteration");
   const isAllTimePR = theThing(precedingWorkouts);
 
+  const now1YearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
   const isYearPR = theThing(
-    precedingWorkouts.filter(
-      (w) => w.workedOutAt > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
-    ),
+    precedingWorkouts.filter((w) => w.workedOutAt > now1YearAgo),
   );
 
+  const now3MonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   const is3MonthPR = theThing(
-    precedingWorkouts.filter(
-      (w) => w.workedOutAt > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-    ),
+    precedingWorkouts.filter((w) => w.workedOutAt > now3MonthsAgo),
   );
+  console.timeEnd("getIsSetPR iteration");
 
   return {
     isAllTimePR,
