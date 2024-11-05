@@ -129,13 +129,13 @@ export default function WorkoutEntry({
             )!;
             return (
               <div key={exerciseIndex}>
-                <span style={{ fontWeight: 600, fontSize: "0.9em" }}>
+                <div className="text-sm font-bold leading-none">
                   {
                     [exercise.name, ...exercise.aliases]
                       .filter((name) => name.length >= 4)
                       .sort((a, b) => a.length - b.length)[0]!
                   }
-                </span>
+                </div>
                 {exercise.id === 2001 ? (
                   (() => {
                     const colorOptions =
@@ -195,7 +195,7 @@ export default function WorkoutEntry({
                           memo.push(
                             <tr
                               key={setIndex}
-                              className="whitespace-nowrap text-lg"
+                              className="whitespace-nowrap text-lg leading-tight"
                             >
                               {repeatCount &&
                               !set.inputs.some(
