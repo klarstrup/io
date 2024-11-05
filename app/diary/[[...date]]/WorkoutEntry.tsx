@@ -295,7 +295,7 @@ export default function WorkoutEntry({
                                     ),
                                 )
                                 .map(({ element, input, index }, elIndex) => (
-                                  <>
+                                  <Fragment key={index}>
                                     {elIndex > 0 &&
                                     !isNaN(input.value) &&
                                     input.value !== undefined &&
@@ -316,7 +316,7 @@ export default function WorkoutEntry({
                                             : " × "
                                       : ""}
                                     {element}
-                                  </>
+                                  </Fragment>
                                 ))}
                               {setPR ? (
                                 <span
