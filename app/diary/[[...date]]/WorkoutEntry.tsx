@@ -1,7 +1,7 @@
 "use client";
 
 import { Session } from "next-auth";
-import { Fragment, useState } from "react";
+import { Fragment, ReactNode, useState } from "react";
 import { StealthButton } from "../../../components/StealthButton";
 import Grade from "../../../grades";
 import {
@@ -10,9 +10,14 @@ import {
   InputType,
   Unit,
 } from "../../../models/exercises";
-import { WorkoutData, WorkoutSource } from "../../../models/workout";
+import {
+  WorkoutData,
+  WorkoutExerciseSet,
+  WorkoutExerciseSetInput,
+  WorkoutSource,
+} from "../../../models/workout";
 import type { getNextSets } from "../../../models/workout.server";
-import { seconds2time } from "../../../utils";
+import { omit, seconds2time } from "../../../utils";
 import ProblemByProblem from "../../[[...slug]]/ProblemByProblem";
 import { WorkoutForm } from "./WorkoutForm";
 
@@ -156,111 +161,154 @@ export default function WorkoutEntry({
                     );
                   })()
                 ) : (
-                  <ol
-                    style={{
-                      paddingInlineStart:
-                        workoutGroup.sets.length === 1 ? 0 : "1em",
-                    }}
-                  >
-                    {workoutGroup.sets.map((set, setIndex) => (
-                      <li
-                        key={setIndex}
-                        style={{
-                          listStyleType:
-                            workoutGroup.sets.length === 1 ? "none" : "decimal",
-                          fontSize: "0.8em",
-                        }}
-                      >
-                        <div
-                          style={{ fontSize: "1.25em", whiteSpace: "nowrap" }}
-                        >
-                          {set.inputs.map((input, index) => {
-                            const inputDefinition = exercise.inputs[index]!;
-                            const inputOptions =
-                              inputDefinition.type === InputType.Options &&
-                              "options" in inputDefinition &&
-                              inputDefinition.options;
+                  <ol>
+                    {workoutGroup.sets.reduce(
+                      (memo: ReactNode[], set, setIndex) => {
+                        const previousSet = workoutGroup.sets[setIndex - 1];
+                        const nextSet = workoutGroup.sets[setIndex + 1];
 
-                            const inputType = inputDefinition.type;
-                            return (
-                              <Fragment key={index}>
-                                {index > 0 &&
-                                !isNaN(input.value) &&
-                                input.value !== undefined &&
-                                input.value !== null &&
-                                (inputType === InputType.Weightassist
-                                  ? input.value !== 0
-                                  : true)
-                                  ? inputType === InputType.Options
-                                    ? ", "
-                                    : input.assistType === AssistType.Assisted
-                                      ? " - "
-                                      : input.assistType === AssistType.Weighted
-                                        ? " + "
-                                        : " × "
-                                  : ""}
-                                <span
-                                  style={{
-                                    fontVariantNumeric: "tabular-nums",
-                                  }}
-                                >
-                                  {inputType === InputType.Pace ? (
-                                    <>
-                                      {decimalAsTime(input.value)}
-                                      <small>min/km</small>
-                                    </>
-                                  ) : inputType === InputType.Time ? (
-                                    seconds2time(Math.round(input.value))
-                                  ) : inputType === InputType.Distance ? (
-                                    <>
-                                      {(input.unit === Unit.M
-                                        ? input.value / 1000
-                                        : input.value
-                                      ).toLocaleString("en-DK", {
-                                        unit: "kilometer",
-                                        maximumSignificantDigits: 2,
-                                      })}
-                                      <small>km</small>
-                                    </>
-                                  ) : inputType === InputType.Options &&
-                                    inputOptions ? (
-                                    String(inputOptions[input.value]?.value)
-                                  ) : input.unit === Unit.FrenchRounded ? (
-                                    new Grade(input.value).name
-                                  ) : !isNaN(input.value) &&
+                        if (nextSet && isEquivalentSet(set, nextSet)) {
+                          return memo;
+                        }
+                        let repeatCount: number | null = null;
+                        if (previousSet && isEquivalentSet(set, previousSet)) {
+                          repeatCount = 1;
+
+                          for (
+                            let i = setIndex - 1;
+                            i >= 0 &&
+                            workoutGroup.sets[i] &&
+                            isEquivalentSet(set, workoutGroup.sets[i]!);
+                            i--
+                          ) {
+                            repeatCount++;
+                          }
+                        }
+
+                        memo.push(
+                          <li
+                            key={setIndex}
+                            style={{
+                              listStyleType: "none",
+                              fontSize: "0.8em",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "1.25em",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              <small>
+                                {repeatCount
+                                  ? `${setIndex + 2 - repeatCount}-${setIndex + 1}`
+                                  : setIndex + 1}
+                                .
+                              </small>{" "}
+                              {repeatCount ? (
+                                <Fragment>{repeatCount} × </Fragment>
+                              ) : null}{" "}
+                              {set.inputs.map((input, index) => {
+                                const inputDefinition = exercise.inputs[index]!;
+                                const inputOptions =
+                                  inputDefinition.type === InputType.Options &&
+                                  "options" in inputDefinition &&
+                                  inputDefinition.options;
+
+                                const inputType = inputDefinition.type;
+                                return (
+                                  <Fragment key={index}>
+                                    {index > 0 &&
+                                    !isNaN(input.value) &&
                                     input.value !== undefined &&
                                     input.value !== null &&
                                     (inputType === InputType.Weightassist
                                       ? input.value !== 0
-                                      : true) ? (
-                                    <>
-                                      {input.value}
-                                      {input.unit !== Unit.Reps ? (
-                                        <small>{input.unit}</small>
+                                      : true)
+                                      ? inputType === InputType.Options
+                                        ? ", "
+                                        : input.assistType ===
+                                            AssistType.Assisted
+                                          ? " - "
+                                          : input.assistType ===
+                                              AssistType.Weighted
+                                            ? " + "
+                                            : " × "
+                                      : ""}
+                                    <span
+                                      style={{
+                                        fontVariantNumeric: "tabular-nums",
+                                      }}
+                                    >
+                                      {inputType === InputType.Pace ? (
+                                        <>
+                                          {decimalAsTime(input.value)}
+                                          <small>min/km</small>
+                                        </>
+                                      ) : inputType === InputType.Time ? (
+                                        seconds2time(Math.round(input.value))
+                                      ) : inputType === InputType.Distance ? (
+                                        <>
+                                          {(input.unit === Unit.M
+                                            ? input.value / 1000
+                                            : input.value
+                                          ).toLocaleString("en-DK", {
+                                            unit: "kilometer",
+                                            maximumSignificantDigits: 2,
+                                          })}
+                                          <small>km</small>
+                                        </>
+                                      ) : inputType === InputType.Options &&
+                                        inputOptions ? (
+                                        String(inputOptions[input.value]?.value)
+                                      ) : input.unit === Unit.FrenchRounded ? (
+                                        new Grade(input.value).name
+                                      ) : !isNaN(input.value) &&
+                                        input.value !== undefined &&
+                                        input.value !== null &&
+                                        (inputType === InputType.Weightassist
+                                          ? input.value !== 0
+                                          : true) ? (
+                                        <>
+                                          {input.value}
+                                          {!(
+                                            input.unit === Unit.Reps &&
+                                            set.inputs.some(
+                                              (_, i) =>
+                                                exercise.inputs[i]?.type ===
+                                                InputType.Weight,
+                                            )
+                                          ) ? (
+                                            <small>{input.unit}</small>
+                                          ) : null}
+                                        </>
                                       ) : null}
-                                    </>
-                                  ) : null}
-                                </span>
-                              </Fragment>
-                            );
-                          })}{" "}
-                          {exerciseSetPRs?.[exerciseIndex]?.[setIndex] ? (
-                            <sup className="text-[10px] font-bold">
-                              {exerciseSetPRs[exerciseIndex][setIndex]
-                                .isAllTimePR
-                                ? "AtPR"
-                                : exerciseSetPRs[exerciseIndex][setIndex]
-                                      .isYearPR
-                                  ? "1yPR"
-                                  : exerciseSetPRs[exerciseIndex][setIndex]
-                                        .is3MonthPR
-                                    ? "3mPR"
-                                    : null}
-                            </sup>
-                          ) : null}
-                        </div>
-                      </li>
-                    ))}
+                                    </span>
+                                  </Fragment>
+                                );
+                              })}{" "}
+                              {exerciseSetPRs?.[exerciseIndex]?.[setIndex] ? (
+                                <sup className="text-[10px] font-bold">
+                                  {exerciseSetPRs[exerciseIndex][setIndex]
+                                    .isAllTimePR
+                                    ? "AtPR"
+                                    : exerciseSetPRs[exerciseIndex][setIndex]
+                                          .isYearPR
+                                      ? "1yPR"
+                                      : exerciseSetPRs[exerciseIndex][setIndex]
+                                            .is3MonthPR
+                                        ? "3mPR"
+                                        : null}
+                                </sup>
+                              ) : null}
+                            </div>
+                          </li>,
+                        );
+
+                        return memo;
+                      },
+                      [],
+                    )}
                   </ol>
                 )}
               </div>
@@ -269,5 +317,15 @@ export default function WorkoutEntry({
         </div>
       )}
     </div>
+  );
+}
+
+const normalizeInput = (input: WorkoutExerciseSetInput) =>
+  // @ts-expect-error -- old data might have input id
+  omit(input, "id");
+function isEquivalentSet(setA: WorkoutExerciseSet, setB: WorkoutExerciseSet) {
+  return (
+    JSON.stringify(setA.inputs.map(normalizeInput)) ===
+    JSON.stringify(setB.inputs.map(normalizeInput))
   );
 }
