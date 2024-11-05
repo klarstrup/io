@@ -65,20 +65,15 @@ export async function getIsSetPR(
     for (const workoutExercise of workout.exercises) {
       if (workoutExercise.exerciseId !== exerciseId) continue;
 
-      for (const { inputs } of workoutExercise.sets) {
-        if (
-          inputs.some(({ value }, index) => {
-            const inputType = inputTypes[index]!;
-            const inputValue = inputValues[index]!;
+      setLoop: for (const { inputs } of workoutExercise.sets) {
+        for (const [index, { value }] of inputs.entries()) {
+          const inputType = inputTypes[index]!;
+          const inputValue = inputValues[index]!;
 
-            if (inputType === InputType.Time || inputType === InputType.Pace) {
-              return value > inputValue;
-            }
-
-            return value < inputValue;
-          })
-        ) {
-          continue;
+          if (inputType === InputType.Time || inputType === InputType.Pace) {
+            if (value > inputValue) continue setLoop;
+          }
+          if (value < inputValue) continue setLoop;
         }
 
         isAllTimePR = false;
