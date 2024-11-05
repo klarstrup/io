@@ -8,14 +8,14 @@ import { MyFitnessPalFoodEntries } from "../../../sources/myfitnesspal.server";
 import { workoutFromRunDouble } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import {
-    type TopLogger,
-    workoutFromTopLoggerAscends,
+  type TopLogger,
+  workoutFromTopLoggerAscends,
 } from "../../../sources/toplogger";
 import {
-    TopLoggerAscends,
-    TopLoggerClimbs,
-    TopLoggerGyms,
-    TopLoggerHolds,
+  TopLoggerAscends,
+  TopLoggerClimbs,
+  TopLoggerGyms,
+  TopLoggerHolds,
 } from "../../../sources/toplogger.server";
 import { allPromises, DEFAULT_TIMEZONE } from "../../../utils";
 
@@ -152,7 +152,11 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         userId: user.runDoubleId,
         completedAt: rangeToQuery(from, to),
       })) {
-        addDiaryEntry(run.completedAt, "workouts", workoutFromRunDouble(run));
+        const workout = workoutFromRunDouble(run);
+        addDiaryEntry(run.completedAt, "workouts", {
+          ...workout,
+          _id: workout._id.toString(),
+        });
       }
     },
   );

@@ -1,3 +1,4 @@
+import type { WithId } from "mongodb";
 import { dbFetch } from "../fetch";
 import { Unit } from "../models/exercises";
 import { type WorkoutData, WorkoutSource } from "../models/workout";
@@ -191,10 +192,10 @@ export const getRunDoubleUser = async (
 };
 
 export function workoutFromRunDouble(
-  run: RunDouble.HistoryItem,
-): WorkoutData & { _id: string } {
+  run: WithId<RunDouble.MongoHistoryItem>,
+): WithId<WorkoutData> {
   return {
-    _id: `rundouble-${run.key}`,
+    _id: run._id,
     exercises: [
       {
         exerciseId: 518,
