@@ -86091,4 +86091,76 @@ export const exercises = [
       },
     ],
   },
+  {
+    aliases: [],
+    id: 2002,
+    inputs: [
+      {
+        allowed_units: [
+          {
+            conversion_factor: 1.0,
+            name: Unit.Reps,
+          },
+        ],
+        bounds: {
+          maximum: 100.0,
+          minimum: 1.0,
+        },
+        display_name: Unit.Reps,
+        hidden_by_default: false,
+        id: 0,
+        imperial_unit: Unit.Reps,
+        input_ordinal: 1,
+        metric_unit: Unit.Reps,
+        type: InputType.Reps,
+      },
+    ],
+    instructions: [
+      {
+        value:
+          "Start by grabbing the bar or rings slightly outside of shoulder width. Tuck your knees to your chest and activate your lats as if you were trying to pull the bar towards the floor, keep your arms straight the whole time. You should now be hanging upside down with your feet either between the rings or close enough to touch the bar. Keep going and allow your arms to travel behind you into shoulder extension. Once your arms are fully stretched then unfurl your body and point your feet towards the ground. This is the first half of the movement. Reverse the movement by tucking your knees back to your chest, activate your arms and shoulders, and pull yourself back through until your end in a straight arm hang.",
+      },
+    ],
+    is_hidden: false,
+    is_popular: true,
+    name: "Skin The Cat",
+    tags: [
+      {
+        name: "Hips",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Pull-Up Bar",
+        type: TagType.Equipment,
+      },
+      {
+        name: "Lower Abdominals",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "abs",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Abdominals",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Shoulders",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Intermediate",
+        type: TagType.ExperienceLevel,
+      },
+      {
+        name: "Body Weight",
+        type: TagType.Equipment,
+      },
+      {
+        name: "Calisthenics",
+        type: TagType.Type,
+      },
+    ],
+  },
 ] as ExerciseData[];
