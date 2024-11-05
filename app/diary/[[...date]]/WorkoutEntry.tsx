@@ -20,6 +20,7 @@ import type { getNextSets } from "../../../models/workout.server";
 import { omit, seconds2time } from "../../../utils";
 import ProblemByProblem from "../../[[...slug]]/ProblemByProblem";
 import { WorkoutForm } from "./WorkoutForm";
+import { FieldSetX } from "../../../components/FieldSet";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);
@@ -54,57 +55,51 @@ export default function WorkoutEntry({
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div
+    <FieldSetX
       key={workout._id}
-      style={{
-        marginBottom: "4px",
-        borderLeft: "0.25em solid #a0a0a0a0",
-        paddingLeft: "0.5em",
-        borderRight: "0.25em solid #a0a0a0a0",
-        paddingRight: "0.5em",
-        borderRadius: "0.5em",
-      }}
+      legend={
+        <small className="-ml-2">
+          {workout.source === WorkoutSource.Self || !workout.source ? (
+            <>
+              <small>You</small>
+              {!isEditing ? (
+                <>
+                  {" "}
+                  <small>-</small>{" "}
+                  <StealthButton
+                    onClick={() => setIsEditing(!isEditing)}
+                    style={{
+                      fontSize: "12px",
+                      color: "#edab00",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Edit
+                  </StealthButton>
+                </>
+              ) : null}
+            </>
+          ) : workout.source === WorkoutSource.Fitocracy ? (
+            <small>Fitocracy</small>
+          ) : workout.source === WorkoutSource.MyFitnessPal ? (
+            <small>MyFitnessPal</small>
+          ) : workout.source === WorkoutSource.RunDouble ? (
+            <small>RunDouble</small>
+          ) : workout.source === WorkoutSource.TopLogger ? (
+            <small>TopLogger</small>
+          ) : null}
+          {workout.location ? (
+            <>
+              {" "}
+              <small>
+                <small>@</small>
+              </small>{" "}
+              <small>{workout.location}</small>
+            </>
+          ) : null}
+        </small>
+      }
     >
-      <small>
-        {workout.source === WorkoutSource.Self || !workout.source ? (
-          <>
-            <small>You</small>
-            {!isEditing ? (
-              <>
-                {" "}
-                <small>-</small>{" "}
-                <StealthButton
-                  onClick={() => setIsEditing(!isEditing)}
-                  style={{
-                    fontSize: "12px",
-                    color: "#edab00",
-                    fontWeight: 600,
-                  }}
-                >
-                  Edit
-                </StealthButton>
-              </>
-            ) : null}
-          </>
-        ) : workout.source === WorkoutSource.Fitocracy ? (
-          <small>Fitocracy</small>
-        ) : workout.source === WorkoutSource.MyFitnessPal ? (
-          <small>MyFitnessPal</small>
-        ) : workout.source === WorkoutSource.RunDouble ? (
-          <small>RunDouble</small>
-        ) : workout.source === WorkoutSource.TopLogger ? (
-          <small>TopLogger</small>
-        ) : null}
-        {workout.location ? (
-          <>
-            {" "}
-            <small>
-              <small>@</small>
-            </small>{" "}
-            <small>{workout.location}</small>
-          </>
-        ) : null}
-      </small>
       {isEditing ? (
         <WorkoutForm
           date={date}
@@ -372,7 +367,7 @@ export default function WorkoutEntry({
           })}
         </div>
       )}
-    </div>
+    </FieldSetX>
   );
 }
 
