@@ -440,7 +440,6 @@ function SetsForm({
                       sets[sets.length - 1]?.inputs[inputIndex];
 
                     return {
-                      id: input.id,
                       value: lastSetInput?.value ?? 0,
                       unit:
                         lastSetInput?.unit ??
@@ -575,13 +574,13 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
 }) {
-  return exercise.inputs.map((input) => (
-    <td key={input.id}>
+  return exercise.inputs.map((input, index) => (
+    <td key={index}>
       <div className="flex">
         {input.type === InputType.Options && input.options ? (
           <select
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
             )}
             className="flex-1"
           >
@@ -596,7 +595,7 @@ function InputsForm({
         {input.type === InputType.Weightassist && input.options ? (
           <select
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.assistType`,
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
             )}
             className="flex-1"
           >
@@ -612,7 +611,7 @@ function InputsForm({
           input.type === InputType.Grade ? (
             <select
               {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
               )}
             >
               {input.hidden_by_default ? <option value={""}>---</option> : null}
@@ -625,7 +624,7 @@ function InputsForm({
           ) : (
             <input
               {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${input.id}.value`,
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
                 { valueAsNumber: true },
               )}
               type="number"
