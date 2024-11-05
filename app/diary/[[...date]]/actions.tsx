@@ -62,8 +62,8 @@ export async function getIsSetPR(
   let isAllTimePR = true;
   let isYearPR = true;
   let is3MonthPR = true;
-  for (const workout of precedingWorkouts) {
-    for (const workoutExercise of workout.exercises) {
+  for (const precedingWorkout of precedingWorkouts) {
+    for (const workoutExercise of precedingWorkout.exercises) {
       if (workoutExercise.exerciseId !== exerciseId) continue;
 
       setLoop: for (const { inputs } of workoutExercise.sets) {
@@ -71,19 +71,22 @@ export async function getIsSetPR(
           const inputType = inputTypes[index]!;
           const inputValue = inputValues[index]!;
 
-          if (inputType === InputType.Time || inputType === InputType.Pace) {
-            if (value > inputValue) continue setLoop;
+          if (
+            inputType === InputType.Pace || inputType === InputType.Time
+              ? value > inputValue
+              : value < inputValue
+          ) {
+            continue setLoop;
           }
-          if (value < inputValue) continue setLoop;
         }
 
         isAllTimePR = false;
 
-        if (workout.workedOutAt > now1YearAgo) {
+        if (precedingWorkout.workedOutAt > now1YearAgo) {
           isYearPR = false;
         }
 
-        if (workout.workedOutAt > now3MonthsAgo) {
+        if (precedingWorkout.workedOutAt > now3MonthsAgo) {
           is3MonthPR = false;
         }
       }
@@ -101,10 +104,13 @@ export async function getIsSetPR(
         const inputType = inputTypes[index]!;
         const inputValue = inputValues[index]!;
 
-        if (inputType === InputType.Time || inputType === InputType.Pace) {
-          if (value > inputValue) continue setLoop;
+        if (
+          inputType === InputType.Pace || inputType === InputType.Time
+            ? value > inputValue
+            : value < inputValue
+        ) {
+          continue setLoop;
         }
-        if (value < inputValue) continue setLoop;
       }
 
       isAllTimePR = false;
