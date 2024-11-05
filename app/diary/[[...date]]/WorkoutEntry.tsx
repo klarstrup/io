@@ -185,6 +185,9 @@ export default function WorkoutEntry({
                           }
                         }
 
+                        const setPR =
+                          exerciseSetPRs?.[exerciseIndex]?.[setIndex];
+
                         memo.push(
                           <li
                             key={setIndex}
@@ -283,31 +286,24 @@ export default function WorkoutEntry({
                                   </Fragment>
                                 );
                               })}{" "}
-                              {exerciseSetPRs?.[exerciseIndex]?.[setIndex] ? (
+                              {setPR ? (
                                 <span
                                   className="text-[10px] leading-[0]"
                                   title={
-                                    exerciseSetPRs[exerciseIndex][setIndex]
-                                      .isAllTimePR
+                                    setPR.isAllTimePR
                                       ? "All-time PR"
-                                      : exerciseSetPRs[exerciseIndex][setIndex]
-                                            .isYearPR
+                                      : setPR.isYearPR
                                         ? "Year PR"
-                                        : exerciseSetPRs[exerciseIndex][
-                                              setIndex
-                                            ].is3MonthPR
+                                        : setPR.is3MonthPR
                                           ? "3-month PR"
                                           : ""
                                   }
                                 >
-                                  {exerciseSetPRs[exerciseIndex][setIndex]
-                                    .isAllTimePR
+                                  {setPR.isAllTimePR
                                     ? "🥇"
-                                    : exerciseSetPRs[exerciseIndex][setIndex]
-                                          .isYearPR
+                                    : setPR.isYearPR
                                       ? "🥈"
-                                      : exerciseSetPRs[exerciseIndex][setIndex]
-                                            .is3MonthPR
+                                      : setPR.is3MonthPR
                                         ? "🥉"
                                         : null}
                                 </span>
