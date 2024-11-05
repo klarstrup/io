@@ -45,7 +45,7 @@ const noPR = {
   isYearPR: false,
   is3MonthPR: false,
 };
-// eslint-disable-next-line @typescript-eslint/require-await
+// eslint-disable-next-line @typescript-eslint/require-await -- server actions need to be async
 export async function getIsSetPR(
   precedingWorkouts: WithId<WorkoutData>[],
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
@@ -54,41 +54,41 @@ export async function getIsSetPR(
   const exercise = exercises.find((e) => e.id === exerciseId);
   if (!exercise) return noPR;
 
-  const repsInputIndex = exercise.inputs.findIndex(
-    (i) => i.type === InputType.Reps,
-  );
-  const weightInputIndex = exercise.inputs.findIndex(
-    (i) => i.type === InputType.Weight,
-  );
-  if (repsInputIndex === -1 || weightInputIndex === -1) return noPR;
-
-  const getSetReps = (s: WorkoutExerciseSet) =>
-    s.inputs[repsInputIndex]?.value || 0;
-  const getSetWeight = (s: WorkoutExerciseSet) =>
-    s.inputs[weightInputIndex]?.value || 0;
-
-  const reps = getSetReps(set);
-  const weight = getSetWeight(set);
+  const inputValues = set.inputs.map((input) => input.value || 0);
+  const inputTypes = exercise.inputs.map((input) => input.type);
   const now1YearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
   const now3MonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   let isAllTimePR = true;
   let isYearPR = true;
   let is3MonthPR = true;
   for (const workout of precedingWorkouts) {
-    for (const exercise of workout.exercises) {
-      if (exercise.exerciseId !== exerciseId) continue;
+    for (const workoutExercise of workout.exercises) {
+      if (workoutExercise.exerciseId !== exerciseId) continue;
 
-      for (const set of exercise.sets) {
-        if (!(getSetReps(set) < reps || getSetWeight(set) < weight)) {
-          isAllTimePR = false;
+      for (const { inputs } of workoutExercise.sets) {
+        if (
+          inputs.some(({ value }, index) => {
+            const inputType = inputTypes[index]!;
+            const inputValue = inputValues[index]!;
 
-          if (workout.workedOutAt > now1YearAgo) {
-            isYearPR = false;
-          }
+            if (inputType === InputType.Time || inputType === InputType.Pace) {
+              return value > inputValue;
+            }
 
-          if (workout.workedOutAt > now3MonthsAgo) {
-            is3MonthPR = false;
-          }
+            return value < inputValue;
+          })
+        ) {
+          continue;
+        }
+
+        isAllTimePR = false;
+
+        if (workout.workedOutAt > now1YearAgo) {
+          isYearPR = false;
+        }
+
+        if (workout.workedOutAt > now3MonthsAgo) {
+          is3MonthPR = false;
         }
       }
     }

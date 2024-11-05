@@ -4,6 +4,8 @@ import type { Session } from "next-auth";
 import { getNextSets, Workouts } from "../../../models/workout.server";
 import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
+import { workoutFromRunDouble } from "../../../sources/rundouble";
+import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DEFAULT_TIMEZONE } from "../../../utils";
 import { getIsSetPR } from "./actions";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
@@ -64,7 +66,21 @@ export async function DiaryAgendaWorkoutsWrapper({
           ).map((w) => workoutFromFitocracyWorkout(w))
         : [];
 
-      const precedingWorkouts = [...ioWorkouts, ...fitocracyWorkouts];
+      const rundoubleWorkouts =
+        user.runDoubleId && exercise.exerciseId === 518
+          ? (
+              await RunDoubleRuns.find({
+                userId: user.runDoubleId,
+                completedAt: { $lt: workout.workedOutAt },
+              }).toArray()
+            ).map((w) => workoutFromRunDouble(w))
+          : [];
+
+      const precedingWorkouts = [
+        ...ioWorkouts,
+        ...fitocracyWorkouts,
+        ...rundoubleWorkouts,
+      ];
 
       const exerciseSetsPRs: {
         isAllTimePR: boolean;
