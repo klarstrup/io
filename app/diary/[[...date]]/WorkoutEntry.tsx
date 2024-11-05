@@ -128,11 +128,10 @@ export default function WorkoutEntry({
             return (
               <div key={exerciseIndex}>
                 <div className="text-sm font-bold leading-none">
-                  {
-                    [exercise.name, ...exercise.aliases]
-                      .filter((name) => name.length >= 4)
-                      .sort((a, b) => a.length - b.length)[0]!
-                  }
+                  {[exercise.name, ...exercise.aliases]
+                    .filter((name) => name.length >= 4)
+                    .sort((a, b) => a.length - b.length)[0]!
+                    .replace("Barbell", "")}
                 </div>
                 {exercise.id === 2001 ? (
                   (() => {
