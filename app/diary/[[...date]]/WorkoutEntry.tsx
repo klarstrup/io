@@ -211,24 +211,101 @@ export default function WorkoutEntry({
                                   ×{" "}
                                 </Fragment>
                               ) : null}
-                              {set.inputs.map((input, index) => {
-                                const inputDefinition = exercise.inputs[index]!;
-                                const inputOptions =
-                                  inputDefinition.type === InputType.Options &&
-                                  "options" in inputDefinition &&
-                                  inputDefinition.options;
+                              {set.inputs
+                                .map((input, index) => {
+                                  const inputDefinition =
+                                    exercise.inputs[index]!;
+                                  const inputOptions =
+                                    inputDefinition.type ===
+                                      InputType.Options &&
+                                    "options" in inputDefinition &&
+                                    inputDefinition.options;
 
-                                const inputType = inputDefinition.type;
-                                return (
-                                  <Fragment key={index}>
-                                    {index > 0 &&
+                                  const inputType = inputDefinition.type;
+                                  return {
+                                    input,
+                                    index,
+                                    element: (
+                                      <Fragment key={index}>
+                                        <span className="tabular-nums">
+                                          {inputType === InputType.Pace ? (
+                                            <>
+                                              {decimalAsTime(input.value)}
+                                              <small>min/km</small>
+                                            </>
+                                          ) : inputType === InputType.Time ? (
+                                            seconds2time(
+                                              Math.round(input.value),
+                                            )
+                                          ) : inputType ===
+                                            InputType.Distance ? (
+                                            <>
+                                              {(input.unit === Unit.M
+                                                ? input.value / 1000
+                                                : input.value
+                                              ).toLocaleString("en-DK", {
+                                                unit: "kilometer",
+                                                maximumSignificantDigits: 2,
+                                              })}
+                                              <small>km</small>
+                                            </>
+                                          ) : inputType === InputType.Options &&
+                                            inputOptions ? (
+                                            String(
+                                              inputOptions[input.value]?.value,
+                                            )
+                                          ) : input.unit ===
+                                            Unit.FrenchRounded ? (
+                                            new Grade(input.value).name
+                                          ) : !isNaN(input.value) &&
+                                            input.value !== undefined &&
+                                            input.value !== null &&
+                                            (inputType ===
+                                            InputType.Weightassist
+                                              ? input.value !== 0
+                                              : true) ? (
+                                            <>
+                                              {input.value}
+                                              {!(
+                                                input.unit === Unit.Reps &&
+                                                set.inputs.some(
+                                                  (_, i) =>
+                                                    exercise.inputs[i]?.type ===
+                                                    InputType.Weight,
+                                                )
+                                              ) ? (
+                                                <small>{input.unit}</small>
+                                              ) : null}
+                                            </>
+                                          ) : null}
+                                        </span>
+                                      </Fragment>
+                                    ),
+                                  };
+                                })
+                                .sort(
+                                  (a, b) =>
+                                    Number(
+                                      exercise.inputs[b.index]?.type ===
+                                        InputType.Reps,
+                                    ) -
+                                    Number(
+                                      exercise.inputs[a.index]?.type ===
+                                        InputType.Reps,
+                                    ),
+                                )
+                                .map(({ element, input, index }, elIndex) => (
+                                  <>
+                                    {elIndex > 0 &&
                                     !isNaN(input.value) &&
                                     input.value !== undefined &&
                                     input.value !== null &&
-                                    (inputType === InputType.Weightassist
+                                    (exercise.inputs[index]?.type ===
+                                    InputType.Weightassist
                                       ? input.value !== 0
                                       : true)
-                                      ? inputType === InputType.Options
+                                      ? exercise.inputs[index]?.type ===
+                                        InputType.Options
                                         ? ", "
                                         : input.assistType ===
                                             AssistType.Assisted
@@ -238,54 +315,9 @@ export default function WorkoutEntry({
                                             ? " + "
                                             : " × "
                                       : ""}
-                                    <span className="tabular-nums">
-                                      {inputType === InputType.Pace ? (
-                                        <>
-                                          {decimalAsTime(input.value)}
-                                          <small>min/km</small>
-                                        </>
-                                      ) : inputType === InputType.Time ? (
-                                        seconds2time(Math.round(input.value))
-                                      ) : inputType === InputType.Distance ? (
-                                        <>
-                                          {(input.unit === Unit.M
-                                            ? input.value / 1000
-                                            : input.value
-                                          ).toLocaleString("en-DK", {
-                                            unit: "kilometer",
-                                            maximumSignificantDigits: 2,
-                                          })}
-                                          <small>km</small>
-                                        </>
-                                      ) : inputType === InputType.Options &&
-                                        inputOptions ? (
-                                        String(inputOptions[input.value]?.value)
-                                      ) : input.unit === Unit.FrenchRounded ? (
-                                        new Grade(input.value).name
-                                      ) : !isNaN(input.value) &&
-                                        input.value !== undefined &&
-                                        input.value !== null &&
-                                        (inputType === InputType.Weightassist
-                                          ? input.value !== 0
-                                          : true) ? (
-                                        <>
-                                          {input.value}
-                                          {!(
-                                            input.unit === Unit.Reps &&
-                                            set.inputs.some(
-                                              (_, i) =>
-                                                exercise.inputs[i]?.type ===
-                                                InputType.Weight,
-                                            )
-                                          ) ? (
-                                            <small>{input.unit}</small>
-                                          ) : null}
-                                        </>
-                                      ) : null}
-                                    </span>
-                                  </Fragment>
-                                );
-                              })}{" "}
+                                    {element}
+                                  </>
+                                ))}
                               {setPR ? (
                                 <span
                                   className="text-[10px] leading-[0]"
