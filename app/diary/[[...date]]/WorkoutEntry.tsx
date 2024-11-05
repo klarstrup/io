@@ -57,6 +57,7 @@ export default function WorkoutEntry({
   return (
     <FieldSetX
       key={workout._id}
+      className="min-w-[50%]"
       legend={
         <small className="-ml-2">
           {workout.source === WorkoutSource.Self || !workout.source ? (
@@ -115,7 +116,9 @@ export default function WorkoutEntry({
             display: "grid",
             gap: "8px 4px",
             gridTemplateColumns:
-              workout.exercises.length > 1 ? "50% 50%" : undefined,
+              workout.exercises.length > 1
+                ? "repeat(auto-fit, minmax(128px, 1fr))"
+                : "100%",
           }}
         >
           {workout.exercises.map((workoutGroup, exerciseIndex) => {
@@ -156,7 +159,7 @@ export default function WorkoutEntry({
                     );
                   })()
                 ) : (
-                  <table className="inline-table w-auto">
+                  <table className="inline-table w-auto max-w-0">
                     <tbody>
                       {workoutGroup.sets.reduce(
                         (memo: ReactNode[], set, setIndex) => {
@@ -204,14 +207,12 @@ export default function WorkoutEntry({
                                   >
                                     {repeatCount}
                                   </td>
-                                  <td width="0.01%" className="p-0">
-                                    ×
-                                  </td>
+                                  <td className="p-0">×</td>
                                 </Fragment>
                               ) : (
                                 <Fragment>
-                                  <td width="0.01%" className="p-0" />
-                                  <td width="0.01%" className="p-0" />
+                                  <td className="p-0" />
+                                  <td className="p-0" />
                                 </Fragment>
                               )}
                               {set.inputs
@@ -293,7 +294,7 @@ export default function WorkoutEntry({
                                 )
                                 .map(({ element, input, index }, elIndex) => (
                                   <Fragment key={index}>
-                                    <td width="0.01%" className="p-0 px-0.5">
+                                    <td className="p-0 px-0.5">
                                       {elIndex > 0 &&
                                       !isNaN(input.value) &&
                                       input.value !== undefined &&

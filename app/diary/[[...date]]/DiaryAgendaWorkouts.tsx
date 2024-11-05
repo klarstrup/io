@@ -58,6 +58,11 @@ export function DiaryAgendaWorkouts({
           ) : null}
         </div>
       }
+      style={{
+        display: "grid",
+        gap: "8px 4px",
+        gridTemplateColumns: "repeat(auto-fit, minmax(256px, 1fr))",
+      }}
     >
       {workouts?.length ? (
         Array.from(workouts)
