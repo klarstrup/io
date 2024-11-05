@@ -197,15 +197,6 @@ export default function WorkoutEntry({
                               key={setIndex}
                               className="whitespace-nowrap text-lg"
                             >
-                              <td
-                                className="p-0 pr-1 text-right text-xs tabular-nums"
-                                width="0.01%"
-                              >
-                                {repeatCount
-                                  ? `${setIndex + 2 - repeatCount}-${setIndex + 1}`
-                                  : setIndex + 1}
-                                .
-                              </td>
                               {repeatCount &&
                               !set.inputs.some(
                                 (_, i) =>
