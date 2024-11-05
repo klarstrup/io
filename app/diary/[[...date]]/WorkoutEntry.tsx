@@ -193,21 +193,21 @@ export default function WorkoutEntry({
                               fontSize: "0.8em",
                             }}
                           >
-                            <div
-                              style={{
-                                fontSize: "1.25em",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              <small>
+                            <div className="flex items-center gap-1 whitespace-nowrap text-lg">
+                              <span className="text-xs tabular-nums">
                                 {repeatCount
                                   ? `${setIndex + 2 - repeatCount}-${setIndex + 1}`
                                   : setIndex + 1}
                                 .
-                              </small>{" "}
+                              </span>
                               {repeatCount ? (
-                                <Fragment>{repeatCount} × </Fragment>
-                              ) : null}{" "}
+                                <Fragment>
+                                  <span className="tabular-nums">
+                                    {repeatCount}
+                                  </span>{" "}
+                                  ×{" "}
+                                </Fragment>
+                              ) : null}
                               {set.inputs.map((input, index) => {
                                 const inputDefinition = exercise.inputs[index]!;
                                 const inputOptions =
@@ -235,11 +235,7 @@ export default function WorkoutEntry({
                                             ? " + "
                                             : " × "
                                       : ""}
-                                    <span
-                                      style={{
-                                        fontVariantNumeric: "tabular-nums",
-                                      }}
-                                    >
+                                    <span className="tabular-nums">
                                       {inputType === InputType.Pace ? (
                                         <>
                                           {decimalAsTime(input.value)}
@@ -288,18 +284,33 @@ export default function WorkoutEntry({
                                 );
                               })}{" "}
                               {exerciseSetPRs?.[exerciseIndex]?.[setIndex] ? (
-                                <sup className="text-[10px] font-bold">
+                                <span
+                                  className="text-[10px] leading-[0]"
+                                  title={
+                                    exerciseSetPRs[exerciseIndex][setIndex]
+                                      .isAllTimePR
+                                      ? "All-time PR"
+                                      : exerciseSetPRs[exerciseIndex][setIndex]
+                                            .isYearPR
+                                        ? "Year PR"
+                                        : exerciseSetPRs[exerciseIndex][
+                                              setIndex
+                                            ].is3MonthPR
+                                          ? "3-month PR"
+                                          : ""
+                                  }
+                                >
                                   {exerciseSetPRs[exerciseIndex][setIndex]
                                     .isAllTimePR
-                                    ? "AtPR"
+                                    ? "🥇"
                                     : exerciseSetPRs[exerciseIndex][setIndex]
                                           .isYearPR
-                                      ? "1yPR"
+                                      ? "🥈"
                                       : exerciseSetPRs[exerciseIndex][setIndex]
                                             .is3MonthPR
-                                        ? "3mPR"
+                                        ? "🥉"
                                         : null}
-                                </sup>
+                                </span>
                               ) : null}
                             </div>
                           </li>,
