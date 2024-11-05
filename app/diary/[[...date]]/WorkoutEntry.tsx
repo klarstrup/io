@@ -186,8 +186,11 @@ export default function WorkoutEntry({
                             }
                           }
 
+                          // PRs are only reported for the first set of a repeated set
                           const setPR =
-                            exerciseSetPRs?.[exerciseIndex]?.[setIndex];
+                            exerciseSetPRs?.[exerciseIndex]?.[
+                              setIndex - (repeatCount ? repeatCount - 1 : 0)
+                            ];
 
                           memo.push(
                             <tr

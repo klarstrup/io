@@ -47,6 +47,7 @@ const noPR = {
 };
 // eslint-disable-next-line @typescript-eslint/require-await -- server actions need to be async
 export async function getIsSetPR(
+  workout: WorkoutData,
   precedingWorkouts: WithId<WorkoutData>[],
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
   set: WorkoutExerciseSet,
@@ -85,6 +86,35 @@ export async function getIsSetPR(
         if (workout.workedOutAt > now3MonthsAgo) {
           is3MonthPR = false;
         }
+      }
+    }
+  }
+
+  for (const workoutExercise of workout.exercises) {
+    if (workoutExercise.exerciseId !== exerciseId) continue;
+
+    setLoop: for (const exerciseSet of workoutExercise.sets) {
+      // Optimistic identity check
+      if (exerciseSet === set) break;
+
+      for (const [index, { value }] of exerciseSet.inputs.entries()) {
+        const inputType = inputTypes[index]!;
+        const inputValue = inputValues[index]!;
+
+        if (inputType === InputType.Time || inputType === InputType.Pace) {
+          if (value > inputValue) continue setLoop;
+        }
+        if (value < inputValue) continue setLoop;
+      }
+
+      isAllTimePR = false;
+
+      if (workout.workedOutAt > now1YearAgo) {
+        isYearPR = false;
+      }
+
+      if (workout.workedOutAt > now3MonthsAgo) {
+        is3MonthPR = false;
       }
     }
   }

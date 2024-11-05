@@ -89,7 +89,12 @@ export async function DiaryAgendaWorkoutsWrapper({
       }[] = [];
       for (const set of exercise.sets) {
         exerciseSetsPRs.push(
-          await getIsSetPR(precedingWorkouts, exercise.exerciseId, set),
+          await getIsSetPR(
+            workout,
+            precedingWorkouts,
+            exercise.exerciseId,
+            set,
+          ),
         );
       }
       workoutsExerciseSetPRs[workout._id]!.push(exerciseSetsPRs);
