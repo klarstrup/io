@@ -2,8 +2,6 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
-import { Suspense } from "react";
-import { FieldSetY } from "../../components/FieldSet";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -88,57 +86,13 @@ export function DiaryAgenda({
         )}
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
-        <Suspense
-          fallback={
-            <FieldSetY
-              className="flex min-w-[50%] flex-1 flex-col items-center justify-center"
-              legend="Events"
-            >
-              Loading...
-            </FieldSetY>
-          }
-        >
-          <DiaryAgendaEvents user={user} date={date} />
-        </Suspense>
+        <DiaryAgendaEvents user={user} date={date} />
         <div className="flex flex-1 flex-col">
-          <Suspense
-            fallback={
-              <FieldSetY
-                className="flex min-w-[50%] flex-1 flex-col items-center justify-center"
-                legend="Workouts"
-              >
-                Loading...
-              </FieldSetY>
-            }
-          >
-            <DiaryAgendaWorkoutsWrapper date={date} user={user} />
-          </Suspense>
-          <Suspense
-            fallback={
-              <FieldSetY
-                className="v flex flex-1 flex-col items-center justify-center"
-                legend="Food"
-              >
-                Loading...
-              </FieldSetY>
-            }
-          >
-            <DiaryAgendaFood date={date} user={user} />
-          </Suspense>
+          <DiaryAgendaWorkoutsWrapper date={date} user={user} />
+          <DiaryAgendaFood date={date} user={user} />
         </div>
       </div>
-      <Suspense
-        fallback={
-          <FieldSetY
-            className="flex flex-1 flex-col items-center justify-center"
-            legend="Weather"
-          >
-            Loading...
-          </FieldSetY>
-        }
-      >
-        <DiaryAgendaWeather date={date} user={user} />
-      </Suspense>
+      <DiaryAgendaWeather date={date} user={user} />
     </div>
   );
 }
