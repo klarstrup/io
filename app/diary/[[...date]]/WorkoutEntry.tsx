@@ -2,6 +2,8 @@
 
 import { Session } from "next-auth";
 import { Fragment, ReactNode, useState } from "react";
+import { FieldSetX } from "../../../components/FieldSet";
+import ProblemByProblem from "../../../components/ProblemByProblem";
 import { StealthButton } from "../../../components/StealthButton";
 import Grade from "../../../grades";
 import {
@@ -18,9 +20,7 @@ import {
 } from "../../../models/workout";
 import type { getNextSets } from "../../../models/workout.server";
 import { omit, seconds2time } from "../../../utils";
-import ProblemByProblem from "../../[[...slug]]/ProblemByProblem";
 import { WorkoutForm } from "./WorkoutForm";
-import { FieldSetX } from "../../../components/FieldSet";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);

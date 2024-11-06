@@ -2,6 +2,7 @@
 import { differenceInDays, isPast, subDays } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
+import ProblemByProblem from "../../components/ProblemByProblem";
 import {
   EventEntry,
   EventSource,
@@ -14,7 +15,6 @@ import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
 import { DEFAULT_TIMEZONE, seconds2time } from "../../utils";
-import ProblemByProblem from "./ProblemByProblem";
 
 const sex = true;
 

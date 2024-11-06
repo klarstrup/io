@@ -1,7 +1,7 @@
-import { SVGProps } from "react";
-import Grade from "../../grades";
-import { type getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
-import { type getIoTopLoggerGroupEvent } from "../../sources/toplogger";
+import type { SVGProps } from "react";
+import Grade from "../grades";
+import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
+import { type getIoTopLoggerGroupEvent } from "../sources/toplogger";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
