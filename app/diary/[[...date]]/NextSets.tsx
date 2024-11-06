@@ -55,10 +55,11 @@ export function NextSets({
                   </span>{" "}
                   <span className="text-xs">
                     Last set{" "}
-                    {formatDistanceStrict(workedOutAt, startOfDay(tzDate), {
-                      addSuffix: true,
-                      roundingMethod: "floor",
-                    })}{" "}
+                    {formatDistanceStrict(
+                      startOfDay(workedOutAt),
+                      startOfDay(tzDate),
+                      { addSuffix: true, roundingMethod: "floor" },
+                    )}{" "}
                   </span>
                 </div>
               </div>
