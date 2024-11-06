@@ -30,10 +30,15 @@ export async function DiaryAgendaEvents({
     now.getMonth() + 1
   }-${now.getDate()}`;
   const isToday = date === todayDate;
-  const calendarEvents = await getUserIcalEventsBetween(user.id, {
+
+  const fetchingInterval = {
     start: startOfDay(tzDate),
     end: addDays(endOfDay(tzDate), 7),
-  });
+  };
+  const calendarEvents = await getUserIcalEventsBetween(
+    user.id,
+    fetchingInterval,
+  );
 
   return (
     <FieldSetY className="flex min-w-[50%] flex-1 flex-col" legend="Events">
@@ -46,13 +51,13 @@ export async function DiaryAgendaEvents({
                   event.datetype === "date"
                     ? roundToNearestDay(event.start)
                     : event.start,
-                  startOfDay(tzDate),
+                  fetchingInterval.start,
                 ]),
                 end: min([
                   event.datetype === "date"
                     ? roundToNearestDay(event.end)
                     : event.end,
-                  addDays(endOfDay(tzDate), 7),
+                  fetchingInterval.end,
                 ]),
               },
               { in: tz(timeZone) },
@@ -73,82 +78,82 @@ export async function DiaryAgendaEvents({
           { [date]: [] },
         ),
       )
-      .slice(0, 4)
-      .map(([dayName, events], i) => (
-        <FieldSetX
-          key={i}
-          legend={
-            !isToday
-              ? new TZDate(dayName, timeZone).toLocaleDateString("da-DK")
-              : `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}` ===
-                  dayName
-                ? "Today"
-                : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
-                    weekday: "long",
-                  })
-          }
-        >
-          <ul>
-            {events.length ? (
-              events.map((event, i) => {
-                const duration = intervalToDuration(event);
+        .slice(0, 4)
+        .map(([dayName, events], i) => (
+          <FieldSetX
+            key={i}
+            legend={
+              !isToday
+                ? new TZDate(dayName, timeZone).toLocaleDateString("da-DK")
+                : `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}` ===
+                    dayName
+                  ? "Today"
+                  : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
+                      weekday: "long",
+                    })
+            }
+          >
+            <ul>
+              {events.length ? (
+                events.map((event, i) => {
+                  const duration = intervalToDuration(event);
 
-                return (
-                  <li key={i} className="flex items-center gap-2">
-                    <div className="text-center">
-                      <div className="font-semibold tabular-nums">
-                        {event.datetype === "date-time" ? (
-                          event.start.toLocaleTimeString("en-DK", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            timeZone,
-                          })
-                        ) : (
-                          <>
-                            Day{" "}
-                            {eachDayOfInterval(event, { in: tz(timeZone) })
-                              .filter(
-                                (date) =>
-                                  differenceInHours(event.end, date) > 2,
-                              )
-                              .findIndex(
-                                (date) =>
-                                  `${date.getFullYear()}-${
-                                    date.getMonth() + 1
-                                  }-${date.getDate()}` === dayName,
-                              ) + 1}
-                          </>
-                        )}{" "}
+                  return (
+                    <li key={i} className="flex items-center gap-2">
+                      <div className="text-center">
+                        <div className="font-semibold tabular-nums">
+                          {event.datetype === "date-time" ? (
+                            event.start.toLocaleTimeString("en-DK", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone,
+                            })
+                          ) : (
+                            <>
+                              Day{" "}
+                              {eachDayOfInterval(event, { in: tz(timeZone) })
+                                .filter(
+                                  (date) =>
+                                    differenceInHours(event.end, date) > 2,
+                                )
+                                .findIndex(
+                                  (date) =>
+                                    `${date.getFullYear()}-${
+                                      date.getMonth() + 1
+                                    }-${date.getDate()}` === dayName,
+                                ) + 1}
+                            </>
+                          )}{" "}
+                        </div>
+                        <div className="whitespace-nowrap text-xs">
+                          {duration.days ? `${duration.days}d` : null}
+                          {duration.hours ? `${duration.hours}h` : null}
+                          {duration.minutes ? `${duration.minutes}m` : null}
+                          {duration.seconds ? `${duration.seconds}s` : null}
+                        </div>
+                      </div>{" "}
+                      <div className="max-w-52">
+                        <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                          {event.summary}
+                        </div>
+                        <div
+                          className="overflow-hidden text-ellipsis whitespace-nowrap text-xs"
+                          title={event.location}
+                        >
+                          <i>{event.location || <>&nbsp;</>}</i>
+                        </div>
                       </div>
-                      <div className="whitespace-nowrap text-xs">
-                        {duration.days ? `${duration.days}d` : null}
-                        {duration.hours ? `${duration.hours}h` : null}
-                        {duration.minutes ? `${duration.minutes}m` : null}
-                        {duration.seconds ? `${duration.seconds}s` : null}
-                      </div>
-                    </div>{" "}
-                    <div className="max-w-52">
-                      <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-                        {event.summary}
-                      </div>
-                      <div
-                        className="overflow-hidden text-ellipsis whitespace-nowrap text-xs"
-                        title={event.location}
-                      >
-                        <i>{event.location || <>&nbsp;</>}</i>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })
-            ) : (
-              <li>
-                <i>Nothing scheduled</i>
-              </li>
-            )}
-          </ul>
-        </FieldSetX>
-      ))}
+                    </li>
+                  );
+                })
+              ) : (
+                <li>
+                  <i>Nothing scheduled</i>
+                </li>
+              )}
+            </ul>
+          </FieldSetX>
+        ))}
     </FieldSetY>
   );
 }
