@@ -23,9 +23,9 @@ import {
 } from "../../sources/toplogger";
 import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
 import "../page.css";
-import LoadMore from "./LoadMore";
+import LoadMore from "../../components/LoadMore";
 import { TimelineEventsList } from "./TimelineEventsList";
-import UserStuff from "./UserStuff";
+import UserStuff from "../../components/UserStuff";
 
 const monthsPerPage = 2;
 

@@ -1,6 +1,6 @@
 import Script from "next/script";
+import UserStuff from "../../components/UserStuff";
 import "../page.css";
-import UserStuff from "../[[...slug]]/UserStuff";
 
 export default function Page() {
   return (

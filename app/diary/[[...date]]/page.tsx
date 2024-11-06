@@ -12,9 +12,9 @@ import {
 } from "date-fns";
 import { Suspense } from "react";
 import { auth } from "../../../auth";
+import LoadMore from "../../../components/LoadMore";
+import UserStuff from "../../../components/UserStuff";
 import { DEFAULT_TIMEZONE } from "../../../utils";
-import LoadMore from "../../[[...slug]]/LoadMore";
-import UserStuff from "../../[[...slug]]/UserStuff";
 import "../../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";

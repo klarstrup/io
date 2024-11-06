@@ -1,15 +1,15 @@
 import { ObjectId } from "mongodb";
 import { revalidateTag } from "next/cache";
 import Link from "next/link";
-import { auth } from "../../auth";
-import { Users } from "../../models/user.server";
-import { MyFitnessPal } from "../../sources/myfitnesspal";
-import { getMyFitnessPalSession } from "../../sources/myfitnesspal.server";
-import { RunDouble, getRunDoubleUser } from "../../sources/rundouble";
-import { TopLogger, fetchUser } from "../../sources/toplogger";
-import { decodeGeohash } from "../../utils";
+import { auth } from "../auth";
+import { Users } from "../models/user.server";
+import { MyFitnessPal } from "../sources/myfitnesspal";
+import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
+import { RunDouble, getRunDoubleUser } from "../sources/rundouble";
+import { TopLogger, fetchUser } from "../sources/toplogger";
+import { decodeGeohash } from "../utils";
+import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
-import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 
 async function updateUser(formData: FormData) {
   "use server";

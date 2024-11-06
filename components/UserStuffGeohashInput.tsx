@@ -1,9 +1,8 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import useInterval from "../../hooks/useInterval";
-import { encodeGeohash, HOUR_IN_SECONDS } from "../../utils";
+import useInterval from "../hooks/useInterval";
+import { encodeGeohash, HOUR_IN_SECONDS } from "../utils";
 
 export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   const router = useRouter();

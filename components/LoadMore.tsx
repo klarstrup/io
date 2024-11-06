@@ -1,6 +1,6 @@
 "use client";
 import { ReactNode, useEffect, useState } from "react";
-import { useEvent, useInView } from "../../hooks";
+import { useEvent, useInView } from "../hooks";
 
 function LoadMore<Cursor>({
   children,
