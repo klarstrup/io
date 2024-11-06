@@ -96,10 +96,10 @@ export async function DiaryAgendaEvents({
                 return (
                   <li key={i} className="flex items-center gap-2">
                     <div className="text-center">
-                      <div className="font-semibold">
+                      <div className="font-semibold tabular-nums">
                         {event.datetype === "date-time" ? (
                           event.start.toLocaleTimeString("en-DK", {
-                            hour: "numeric",
+                            hour: "2-digit",
                             minute: "2-digit",
                             timeZone,
                           })
