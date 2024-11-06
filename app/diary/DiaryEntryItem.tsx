@@ -1,24 +1,22 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
+import type { Session } from "next-auth";
 import Link from "next/link";
-import type { DiaryEntry } from "../../../lib";
-import { exercises, TagType } from "../../../models/exercises";
-import { WorkoutData } from "../../../models/workout";
+import type { DiaryEntry } from "../../lib";
+import { exercises, TagType } from "../../models/exercises";
+import { WorkoutData } from "../../models/workout";
 import {
   DEFAULT_TIMEZONE,
   getSchemeCategory10Color,
   uniqueBy,
-} from "../../../utils";
-import { Session } from "next-auth";
+} from "../../utils";
 
 export function DiaryEntryItem({
   user,
-  pickedDate,
   date,
   diaryEntry,
 }: {
   user: Session["user"];
-  pickedDate?: `${number}-${number}-${number}`;
   date: `${number}-${number}-${number}`;
   diaryEntry?: DiaryEntry;
 }) {
@@ -49,7 +47,7 @@ export function DiaryEntryItem({
     <Link
       key={date}
       prefetch={false}
-      href={date === pickedDate ? `/diary` : `/diary/${date}`}
+      href={`/diary/${date}`}
       style={{
         background: getSchemeCategory10Color(Number(date.split("-")[1])) + "50",
         display: "flex",

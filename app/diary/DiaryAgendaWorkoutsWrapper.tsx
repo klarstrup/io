@@ -1,23 +1,15 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
-import { getNextSets, Workouts } from "../../../models/workout.server";
-import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
-import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
-import { workoutFromRunDouble } from "../../../sources/rundouble";
-import { RunDoubleRuns } from "../../../sources/rundouble.server";
-import { DEFAULT_TIMEZONE } from "../../../utils";
+import { getNextSets, Workouts } from "../../models/workout.server";
+import { workoutFromFitocracyWorkout } from "../../sources/fitocracy";
+import { FitocracyWorkouts } from "../../sources/fitocracy.server";
+import { workoutFromRunDouble } from "../../sources/rundouble";
+import { RunDoubleRuns } from "../../sources/rundouble.server";
+import { DEFAULT_TIMEZONE } from "../../utils";
 import { getIsSetPR } from "./actions";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
 import { getDiaryEntries } from "./getDiaryEntries";
-
-const getAllWorkoutLocations = async (user: Session["user"]) =>
-  (
-    await Workouts.distinct("location", {
-      userId: user.id,
-      deletedAt: { $exists: false },
-    })
-  ).filter((loc): loc is string => Boolean(loc));
 
 export async function DiaryAgendaWorkoutsWrapper({
   date,
@@ -29,8 +21,7 @@ export async function DiaryAgendaWorkoutsWrapper({
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
-  const [locations, nextSets, diaryEntries] = await Promise.all([
-    getAllWorkoutLocations(user),
+  const [nextSets, diaryEntries] = await Promise.all([
     getNextSets({ user, to: startOfDay(tzDate) }),
     getDiaryEntries({ from: startOfDay(tzDate), to: endOfDay(tzDate) }),
   ]);
@@ -107,7 +98,6 @@ export async function DiaryAgendaWorkoutsWrapper({
       workoutsExerciseSetPRs={workoutsExerciseSetPRs}
       workouts={diaryEntries[0]?.[1]?.workouts}
       user={user}
-      locations={locations}
       nextSets={nextSets}
     />
   );

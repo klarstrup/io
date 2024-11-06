@@ -12,9 +12,9 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns";
-import { Session } from "next-auth";
-import { DiaryEntry } from "../../../lib";
-import { DEFAULT_TIMEZONE } from "../../../utils";
+import type { Session } from "next-auth";
+import { DiaryEntry } from "../../lib";
+import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 
 const dateToString = (date: Date): `${number}-${number}-${number}` =>
@@ -23,12 +23,10 @@ const dateToString = (date: Date): `${number}-${number}-${number}` =>
 export function DiaryEntryWeek({
   user,
   isoYearAndWeek,
-  pickedDate,
   diaryEntries,
 }: {
   user: Session["user"];
   isoYearAndWeek: string;
-  pickedDate?: `${number}-${number}-${number}`;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
@@ -77,7 +75,6 @@ export function DiaryEntryWeek({
               diaryEntries?.find(([date]) => date === dateToString(dayte))?.[1]
             }
             date={dateToString(dayte)}
-            pickedDate={pickedDate}
           />
         ))}
       </div>

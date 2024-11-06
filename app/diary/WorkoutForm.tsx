@@ -3,28 +3,30 @@
 
 import { TZDate } from "@date-fns/tz";
 import { differenceInDays, startOfDay } from "date-fns";
+import { Route } from "next";
 import type { Session } from "next-auth";
+import { useRouter } from "next/navigation";
 import { useEffect, useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import Select, { OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
-import { FieldSetX } from "../../../components/FieldSet";
-import { StealthButton } from "../../../components/StealthButton";
-import { frenchRounded } from "../../../grades";
+import { FieldSetX } from "../../components/FieldSet";
+import { StealthButton } from "../../components/StealthButton";
+import { frenchRounded } from "../../grades";
 import {
   exercises,
   InputType,
   Unit,
   type ExerciseData,
-} from "../../../models/exercises";
+} from "../../models/exercises";
 import {
-  WorkoutExerciseSet,
-  WorkoutExerciseSetInput,
+  type WorkoutExerciseSet,
+  type WorkoutExerciseSetInput,
   WorkoutSource,
   type WorkoutData,
-} from "../../../models/workout";
-import type { getNextSets } from "../../../models/workout.server";
-import { DEFAULT_TIMEZONE } from "../../../utils";
+} from "../../models/workout";
+import type { getNextSets } from "../../models/workout.server";
+import { DEFAULT_TIMEZONE } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
 
@@ -44,21 +46,22 @@ export function dateToInputDate(date?: Date) {
   return date.toJSON().slice(0, 10) as unknown as Date;
 }
 
-export function WorkoutForm({
+export function WorkoutForm<R extends string>({
   user,
   workout,
   date,
-  onClose,
+  dismissTo,
   locations,
   nextSets,
 }: {
   user: Session["user"];
   workout?: WorkoutData & { _id?: string };
   date: `${number}-${number}-${number}`;
-  onClose?: () => void;
+  dismissTo: Route<R>;
   locations: string[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
+  const router = useRouter();
   const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
 
   const {
@@ -115,7 +118,9 @@ export function WorkoutForm({
           };
           console.log({ workout, data, newWorkout });
           await upsertWorkout(newWorkout);
-          onClose?.();
+
+          router.push(dismissTo);
+
           reset(
             workout
               ? {
@@ -128,11 +133,14 @@ export function WorkoutForm({
         className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
         <div className="flex items-center justify-evenly">
-          {onClose ? (
-            <button type="button" onClick={onClose}>
-              ❌
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              router.push(dismissTo);
+            }}
+          >
+            ❌
+          </button>
           <button
             type="submit"
             disabled={!isDirty || isSubmitting}

@@ -1,5 +1,5 @@
 import type { Session } from "next-auth";
-import type { DiaryEntry } from "../../../lib";
+import type { DiaryEntry } from "../../lib";
 
 export function EntryAdder({
   diaryEntry,

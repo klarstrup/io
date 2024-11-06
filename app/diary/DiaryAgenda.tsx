@@ -3,13 +3,13 @@ import { addDays, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
-import { FieldSetY } from "../../../components/FieldSet";
+import { FieldSetY } from "../../components/FieldSet";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
   getSunrise,
   getSunset,
-} from "../../../utils";
+} from "../../utils";
 import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
@@ -67,23 +67,25 @@ export function DiaryAgenda({
           </small>
           🌙
         </span>
-        <span className="whitespace-nowrap">
-          <Link
-            prefetch={false}
-            href={`/diary/${dateToString(subDays(new Date(date), 1))}`}
-          >
-            ⬅️
-          </Link>
-          <Link prefetch={false} href={`/diary`}>
-            🗓️
-          </Link>
-          <Link
-            prefetch={false}
-            href={`/diary/${dateToString(addDays(new Date(date), 1))}`}
-          >
-            ➡️
-          </Link>
-        </span>
+        {isToday ? null : (
+          <span className="whitespace-nowrap">
+            <Link
+              prefetch={false}
+              href={`/diary/${dateToString(subDays(new Date(date), 1))}`}
+            >
+              ⬅️
+            </Link>
+            <Link prefetch={false} href={`/diary`}>
+              🗓️
+            </Link>
+            <Link
+              prefetch={false}
+              href={`/diary/${dateToString(addDays(new Date(date), 1))}`}
+            >
+              ➡️
+            </Link>
+          </span>
+        )}
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
         <Suspense

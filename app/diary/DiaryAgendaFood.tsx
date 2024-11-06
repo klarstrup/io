@@ -1,10 +1,10 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
-import { Session } from "next-auth";
-import { FieldSetY } from "../../../components/FieldSet";
-import { MyFitnessPal } from "../../../sources/myfitnesspal";
-import { MyFitnessPalFoodEntries } from "../../../sources/myfitnesspal.server";
-import { DEFAULT_TIMEZONE } from "../../../utils";
+import type { Session } from "next-auth";
+import { FieldSetY } from "../../components/FieldSet";
+import { MyFitnessPal } from "../../sources/myfitnesspal";
+import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
+import { DEFAULT_TIMEZONE } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
 
 const rangeToQuery = (from: Date, to?: Date) =>

@@ -11,11 +11,11 @@ import {
   subWeeks,
 } from "date-fns";
 import { Suspense } from "react";
-import { auth } from "../../../auth";
-import LoadMore from "../../../components/LoadMore";
-import UserStuff from "../../../components/UserStuff";
-import { DEFAULT_TIMEZONE } from "../../../utils";
-import "../../page.css";
+import { auth } from "../../auth";
+import LoadMore from "../../components/LoadMore";
+import UserStuff from "../../components/UserStuff";
+import { DEFAULT_TIMEZONE } from "../../utils";
+import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
@@ -25,10 +25,10 @@ export const revalidate = 3600; // 1 hour
 
 const WEEKS_PER_PAGE = 16;
 
-async function loadMoreData(
-  cursor: { startIsoYearAndWeek: string; endIsoYearAndWeek: string },
-  params: Record<string, string>,
-) {
+async function loadMoreData(cursor: {
+  startIsoYearAndWeek: string;
+  endIsoYearAndWeek: string;
+}) {
   "use server";
 
   const user = (await auth())?.user;
@@ -74,17 +74,15 @@ async function loadMoreData(
         user={user}
         key={String(weekDate)}
         isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-        pickedDate={params.date as `${number}-${number}-${number}` | undefined}
       />
     )),
     nextCursor,
   ] as const;
 }
 
-export default async function Page(props: {
-  params: Promise<{ date?: `${number}-${number}-${number}`[] }>;
+export default async function DiaryLayout(props: {
+  children: React.ReactNode;
 }) {
-  const params = await props.params;
   const user = (await auth())?.user;
 
   if (!user) {
@@ -104,84 +102,78 @@ export default async function Page(props: {
   const nowWeek = endOfWeek(now, { weekStartsOn: 1 });
 
   const date =
-    params.date?.[0] ||
-    `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-
+    `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}` as const;
   const start = nowWeek;
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
 
   return (
-    <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
-      <Suspense
-        fallback={
-          <div
-            style={{
-              position: "fixed",
-              top: "4px",
-              right: "4px",
-              paddingLeft: "4px",
-              zIndex: 1337,
-            }}
-          >
-            <label
-              htmlFor="toggle"
+    <>
+      {props.children}
+      <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
+        <Suspense
+          fallback={
+            <div
               style={{
-                position: "absolute",
+                position: "fixed",
                 top: "4px",
                 right: "4px",
+                paddingLeft: "4px",
                 zIndex: 1337,
-                cursor: "pointer",
-                userSelect: "none",
               }}
             >
-              🌞
-            </label>
+              <label
+                htmlFor="toggle"
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  right: "4px",
+                  zIndex: 1337,
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}
+              >
+                🌞
+              </label>
+            </div>
+          }
+        >
+          <UserStuff />
+        </Suspense>
+        <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
+          <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[80vh] portrait:border-b-[0.5px] landscape:w-1/3">
+            <DiaryAgenda date={date} user={user} />
           </div>
-        }
-      >
-        <UserStuff />
-      </Suspense>
-      <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
-        <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[80vh] portrait:border-b-[0.5px] landscape:w-1/3">
-          <DiaryAgenda date={date} user={user} />
-        </div>
-        <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
-          <LoadMore
-            initialCursor={{
-              startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
-              endIsoYearAndWeek: `${getYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
-            }}
-            params={params}
-            loadMoreAction={loadMoreData}
-          >
-            {eachWeekOfInterval({
-              start,
-              end,
-            }).map((weekDate) => (
-              <Suspense
-                key={String(weekDate)}
-                fallback={
-                  <DiaryEntryWeek
+          <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
+            <LoadMore
+              initialCursor={{
+                startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
+                endIsoYearAndWeek: `${getYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
+              }}
+              loadMoreAction={loadMoreData}
+            >
+              {eachWeekOfInterval({
+                start,
+                end,
+              }).map((weekDate) => (
+                <Suspense
+                  key={String(weekDate)}
+                  fallback={
+                    <DiaryEntryWeek
+                      user={user}
+                      isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                    />
+                  }
+                >
+                  <DiaryEntryWeekWrapper
                     user={user}
                     isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-                    pickedDate={
-                      params.date as `${number}-${number}-${number}` | undefined
-                    }
                   />
-                }
-              >
-                <DiaryEntryWeekWrapper
-                  user={user}
-                  isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-                  pickedDate={
-                    params.date as `${number}-${number}-${number}` | undefined
-                  }
-                />
-              </Suspense>
-            ))}
-          </LoadMore>
+                </Suspense>
+              ))}
+            </LoadMore>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

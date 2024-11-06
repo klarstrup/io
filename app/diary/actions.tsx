@@ -2,10 +2,10 @@
 
 import { ObjectId, type WithId } from "mongodb";
 import { revalidatePath } from "next/cache";
-import { auth } from "../../../auth";
-import { exercises, InputType } from "../../../models/exercises";
-import type { WorkoutData, WorkoutExerciseSet } from "../../../models/workout";
-import { Workouts } from "../../../models/workout.server";
+import { auth } from "../../auth";
+import { exercises, InputType } from "../../models/exercises";
+import type { WorkoutData, WorkoutExerciseSet } from "../../models/workout";
+import { Workouts } from "../../models/workout.server";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData,

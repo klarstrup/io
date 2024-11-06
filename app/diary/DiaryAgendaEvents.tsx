@@ -11,10 +11,10 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
-import { FieldSetX, FieldSetY } from "../../../components/FieldSet";
-import type { MongoVEventWithVCalendar } from "../../../lib";
-import { getUserIcalEventsBetween } from "../../../sources/ical";
-import { DEFAULT_TIMEZONE, roundToNearestDay } from "../../../utils";
+import { FieldSetX, FieldSetY } from "../../components/FieldSet";
+import type { MongoVEventWithVCalendar } from "../../lib";
+import { getUserIcalEventsBetween } from "../../sources/ical";
+import { DEFAULT_TIMEZONE, roundToNearestDay } from "../../utils";
 
 export async function DiaryAgendaEvents({
   date,
