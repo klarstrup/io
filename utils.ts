@@ -435,7 +435,7 @@ export function roundToNearestDay<
 
   const roundingMethod = getRoundingMethod(options?.roundingMethod ?? "round");
 
-  return addDays(startOfDay(date), roundingMethod(hours / 24) - 1);
+  return addDays(startOfDay(date), roundingMethod(hours / 24));
 }
 
 function stringToColours(inputString: string) {
@@ -488,6 +488,6 @@ const schemeCategory10 = [
   "#7f7f7f",
   "#bcbd22",
   "#17becf",
-];
+] as const;
 export const getSchemeCategory10Color = (index: number) =>
   schemeCategory10[index % schemeCategory10.length]!;
