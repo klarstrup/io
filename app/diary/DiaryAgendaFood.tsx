@@ -42,6 +42,7 @@ export async function DiaryAgendaFood({
 
   return (
     <FieldSetY
+      className="min-w-[50%]"
       legend={
         <>
           Food{" "}

@@ -91,7 +91,7 @@ export function DiaryAgenda({
         <Suspense
           fallback={
             <FieldSetY
-              className="flex flex-1 flex-col items-center justify-center"
+              className="flex min-w-[50%] flex-1 flex-col items-center justify-center"
               legend="Events"
             >
               Loading...
@@ -104,7 +104,7 @@ export function DiaryAgenda({
           <Suspense
             fallback={
               <FieldSetY
-                className="flex flex-1 flex-col items-center justify-center"
+                className="flex min-w-[50%] flex-1 flex-col items-center justify-center"
                 legend="Workouts"
               >
                 Loading...
@@ -116,7 +116,7 @@ export function DiaryAgenda({
           <Suspense
             fallback={
               <FieldSetY
-                className="flex flex-1 flex-col items-center justify-center"
+                className="v flex flex-1 flex-col items-center justify-center"
                 legend="Food"
               >
                 Loading...

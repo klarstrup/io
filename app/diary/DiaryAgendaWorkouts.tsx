@@ -38,7 +38,7 @@ export function DiaryAgendaWorkouts({
 
   return (
     <FieldSetY
-      className="flex-1"
+      className="min-w-[50%] flex-1"
       legend={
         <div className="flex items-center">
           Workouts
