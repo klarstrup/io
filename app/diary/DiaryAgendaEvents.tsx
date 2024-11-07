@@ -43,7 +43,7 @@ export async function DiaryAgendaEvents({
   );
 
   return (
-    <FieldSetY className="flex min-w-[50%] flex-1 flex-col" legend="Events">
+    <FieldSetY className="min-w-[50%] flex-1" legend="Events">
       {Object.entries(
         calendarEvents.reduce(
           (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
@@ -101,7 +101,7 @@ export async function DiaryAgendaEvents({
                   const duration = intervalToDuration(event);
 
                   return (
-                    <li key={i} className="flex items-center gap-2">
+                    <li key={i} className="flex gap-2">
                       <div className="text-center">
                         <div className="font-semibold tabular-nums">
                           {event.datetype === "date-time" ? (
@@ -133,15 +133,10 @@ export async function DiaryAgendaEvents({
                           {duration.minutes ? `${duration.minutes}m` : null}
                           {duration.seconds ? `${duration.seconds}s` : null}
                         </div>
-                      </div>{" "}
-                      <div className="max-w-52">
-                        <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-                          {event.summary}
-                        </div>
-                        <div
-                          className="overflow-hidden text-ellipsis whitespace-nowrap text-xs"
-                          title={event.location}
-                        >
+                      </div>
+                      <div className="flex-1">
+                        <div>{event.summary}</div>
+                        <div className="text-[0.666rem]" title={event.location}>
                           <i>{event.location || <>&nbsp;</>}</i>
                         </div>
                       </div>
