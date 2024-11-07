@@ -165,6 +165,10 @@ export function WorkoutForm<R extends string>({
           await upsertWorkout(newWorkout);
 
           router.push(dismissTo);
+
+          // Wait forever, presuming this component unmounts when the above push completes. (LET ME AWAIT THIS NEXT.JS???)
+          await new Promise(() => {});
+
           return;
           reset(
             workout
