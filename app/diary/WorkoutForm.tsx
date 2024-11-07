@@ -157,6 +157,8 @@ export function WorkoutForm<R extends string>({
               onClick={async () => {
                 if (window.confirm("Are you sure you want to delete this?")) {
                   await deleteWorkout(workout._id!);
+                  router.push(dismissTo);
+                  return;
                 }
               }}
             >
