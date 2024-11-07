@@ -13,6 +13,7 @@ import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
+import { useEvent } from "../../hooks";
 import {
   exercises,
   InputType,
@@ -20,10 +21,10 @@ import {
   type ExerciseData,
 } from "../../models/exercises";
 import {
-  type WorkoutExerciseSet,
-  type WorkoutExerciseSetInput,
   WorkoutSource,
   type WorkoutData,
+  type WorkoutExerciseSet,
+  type WorkoutExerciseSetInput,
 } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
@@ -92,6 +93,50 @@ export function WorkoutForm<R extends string>({
           (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId,
         ),
     );
+
+  const futureSets = nextSets
+    ?.filter(
+      (nextSet) =>
+        differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) <= 3,
+    )
+    .filter(
+      (nextSet) =>
+        !watch("exercises")?.some(
+          (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId,
+        ),
+    );
+
+  const handleAddExercise = useEvent((exerciseId: number) => {
+    if (!dueSets) return;
+
+    const exerciseDefinition = exercises.find(
+      (exercise) => exercise.id === exerciseId,
+    )!;
+
+    const goalWeight = dueSets.find(
+      (nextSet) => nextSet.exerciseId === exerciseId,
+    )?.nextWorkingSetsWeight;
+
+    const warmupIncrement = ((goalWeight ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
+
+    const setWeights: number[] = [goalWeight ?? NaN];
+    while (setWeights[setWeights.length - 1]! > 20 + warmupIncrement) {
+      setWeights.push(setWeights[setWeights.length - 1]! - warmupIncrement);
+    }
+
+    const sets = setWeights.reverse().map(
+      (setWeight): WorkoutExerciseSet => ({
+        inputs: exerciseDefinition.inputs.map(
+          (input): WorkoutExerciseSetInput => ({
+            value: input.type === InputType.Weight ? setWeight : NaN,
+            unit: input.metric_unit,
+          }),
+        ),
+      }),
+    );
+
+    append({ exerciseId, sets });
+  });
 
   return (
     <div
@@ -323,60 +368,19 @@ export function WorkoutForm<R extends string>({
               user={user}
               date={date}
               nextSets={dueSets}
-              onAddExercise={(exerciseId) => {
-                const exerciseDefinition = exercises.find(
-                  (exercise) => exercise.id === exerciseId,
-                )!;
-
-                const goalWeight = dueSets.find(
-                  (nextSet) => nextSet.exerciseId === exerciseId,
-                )?.nextWorkingSetsWeight;
-
-                const warmupIncrement =
-                  ((goalWeight ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
-
-                const setWeights: number[] = [goalWeight ?? NaN];
-                while (
-                  setWeights[setWeights.length - 1]! >
-                  20 + warmupIncrement
-                ) {
-                  setWeights.push(
-                    setWeights[setWeights.length - 1]! - warmupIncrement,
-                  );
-                }
-
-                const sets = setWeights.reverse().map(
-                  (setWeight): WorkoutExerciseSet => ({
-                    inputs: exerciseDefinition.inputs.map(
-                      (input): WorkoutExerciseSetInput => ({
-                        value:
-                          input.type === InputType.Weight ? setWeight : NaN,
-                        unit: input.metric_unit,
-                      }),
-                    ),
-                  }),
-                );
-
-                append({ exerciseId, sets });
-              }}
+              onAddExercise={handleAddExercise}
             />
           </div>
         ) : null}
-        {nextSets?.filter(
-          (nextSet) =>
-            differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) <= 3,
-        ).length ? (
+        {futureSets?.length ? (
           <div>
             <small>
               <b>Future Sets:</b>
               <NextSets
                 user={user}
                 date={date}
-                nextSets={nextSets.filter(
-                  (nextSet) =>
-                    differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) <=
-                    3,
-                )}
+                nextSets={futureSets}
+                onAddExercise={handleAddExercise}
               />
             </small>
           </div>

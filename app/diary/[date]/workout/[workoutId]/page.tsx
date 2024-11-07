@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { startOfDay } from "date-fns";
+import { endOfDay } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { auth } from "../../../../../auth";
@@ -36,7 +36,7 @@ export default async function DiaryWorkoutModal(props: {
   const tzDate = new TZDate(date, timeZone);
   const [locations, nextSets] = await Promise.all([
     getAllWorkoutLocations(user),
-    getNextSets({ user, to: startOfDay(tzDate) }),
+    getNextSets({ user, to: endOfDay(tzDate) }),
   ]);
 
   const dismissTo = isToday ? "/diary" : (`/diary/${date}` as const);

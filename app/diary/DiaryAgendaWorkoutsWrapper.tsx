@@ -22,7 +22,7 @@ export async function DiaryAgendaWorkoutsWrapper({
 
   const tzDate = new TZDate(date, timeZone);
   const [nextSets, diaryEntries] = await Promise.all([
-    getNextSets({ user, to: startOfDay(tzDate) }),
+    getNextSets({ user, to: endOfDay(tzDate) }),
     getDiaryEntries({ from: startOfDay(tzDate), to: endOfDay(tzDate) }),
   ]);
 
