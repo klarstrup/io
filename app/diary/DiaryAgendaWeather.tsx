@@ -48,7 +48,7 @@ export async function DiaryAgendaWeather({
   );
 
   return (
-    <FieldSetY className="flex flex-1 flex-col" legend="Weather">
+    <FieldSetY className="flex flex-none flex-col" legend="Weather">
       <ul className="flex justify-around overflow-x-hidden">
         {weatherIntervals?.map((interval, i) => {
           const extendedWeatherCode = `${interval.values.weatherCode}${
