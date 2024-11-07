@@ -120,7 +120,7 @@ export function WorkoutForm<R extends string>({
           await upsertWorkout(newWorkout);
 
           router.push(dismissTo);
-
+          return;
           reset(
             workout
               ? {
