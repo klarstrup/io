@@ -19,9 +19,11 @@ import { DEFAULT_TIMEZONE, roundToNearestDay } from "../../utils";
 export async function DiaryAgendaEvents({
   date,
   user,
+  onlyGivenDay,
 }: {
   date: `${number}-${number}-${number}`;
   user: Session["user"];
+  onlyGivenDay?: boolean;
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
@@ -33,7 +35,7 @@ export async function DiaryAgendaEvents({
 
   const fetchingInterval = {
     start: startOfDay(tzDate),
-    end: addDays(endOfDay(tzDate), 7),
+    end: onlyGivenDay ? endOfDay(tzDate) : addDays(endOfDay(tzDate), 7),
   };
   const calendarEvents = await getUserIcalEventsBetween(
     user.id,

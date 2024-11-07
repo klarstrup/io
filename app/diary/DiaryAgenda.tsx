@@ -18,9 +18,11 @@ const dateToString = (date: Date): `${number}-${number}-${number}` =>
 export function DiaryAgenda({
   date,
   user,
+  isModal,
 }: {
   date: `${number}-${number}-${number}`;
   user: Session["user"];
+  isModal?: boolean;
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
@@ -86,7 +88,7 @@ export function DiaryAgenda({
         )}
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
-        <DiaryAgendaEvents user={user} date={date} />
+        <DiaryAgendaEvents user={user} date={date} onlyGivenDay={isModal} />
         <div className="flex flex-1 flex-col">
           <DiaryAgendaWorkoutsWrapper date={date} user={user} />
           <DiaryAgendaFood date={date} user={user} />
