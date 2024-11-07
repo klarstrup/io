@@ -10,7 +10,7 @@ export function Modal<R extends string>({
 }) {
   return (
     <div className="fixed inset-0 z-20 flex max-h-svh items-center justify-center backdrop-blur-sm">
-      <div className="z-10 flex max-h-[95vh] max-w-[95vw] flex-col">
+      <div className="z-10 flex max-h-[95dvh] max-w-[95dvw] flex-col">
         {children}
       </div>
       <Link href={dismissTo} className="absolute inset-0" />
