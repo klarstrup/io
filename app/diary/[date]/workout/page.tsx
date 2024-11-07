@@ -15,7 +15,7 @@ const getAllWorkoutLocations = async (user: Session["user"]) =>
     })
   ).filter((loc): loc is string => Boolean(loc));
 
-export default async function DiaryModal(props: {
+export default async function DiaryNewWorkoutModal(props: {
   params: Promise<{
     date: `${number}-${number}-${number}`;
   }>;
