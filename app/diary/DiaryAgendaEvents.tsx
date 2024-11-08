@@ -73,11 +73,14 @@ export async function DiaryAgendaEvents({
               }-${date.getDate()}`;
 
               if (!memo[calName]) memo[calName] = [];
-              //if (
-              //  !Object.values(memo).some((events) =>
-              //    events.some((e) => e.uid === event.uid),
-              //)
-              {
+              if (
+                !(
+                  differenceInHours(event.end, event.start) < 24 &&
+                  Object.values(memo).some((events) =>
+                    events.some((e) => e.uid === event.uid),
+                  )
+                )
+              ) {
                 memo[calName].push(event);
               }
             }
