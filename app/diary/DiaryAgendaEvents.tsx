@@ -73,7 +73,13 @@ export async function DiaryAgendaEvents({
               }-${date.getDate()}`;
 
               if (!memo[calName]) memo[calName] = [];
-              memo[calName].push(event);
+              //if (
+              //  !Object.values(memo).some((events) =>
+              //    events.some((e) => e.uid === event.uid),
+              //)
+              {
+                memo[calName].push(event);
+              }
             }
             return memo;
           },
@@ -94,50 +100,63 @@ export async function DiaryAgendaEvents({
                       weekday: "long",
                     })
             }
+            className="w-full"
           >
             <ul>
               {events.length ? (
-                events.map((event, i) => {
+                events.map((event) => {
                   const duration = intervalToDuration(event);
 
+                  const days = eachDayOfInterval(event, {
+                    in: tz(timeZone),
+                  }).filter((date) => differenceInHours(event.end, date) > 2);
+                  const dayNo =
+                    days.findIndex(
+                      (date) =>
+                        `${date.getFullYear()}-${
+                          date.getMonth() + 1
+                        }-${date.getDate()}` === dayName,
+                    ) + 1;
+                  const isLastDay = dayNo === days.length;
+
                   return (
-                    <li key={i} className="flex gap-2">
+                    <li key={event.uid} className="flex gap-2">
                       <div className="text-center">
-                        <div className="font-semibold tabular-nums">
-                          {event.datetype === "date-time" ? (
+                        <div className="font-semibold tabular-nums leading-snug">
+                          {event.datetype === "date-time" && dayNo === 1 ? (
                             event.start.toLocaleTimeString("en-DK", {
                               hour: "2-digit",
                               minute: "2-digit",
                               timeZone,
                             })
                           ) : (
-                            <>
-                              Day{" "}
-                              {eachDayOfInterval(event, { in: tz(timeZone) })
-                                .filter(
-                                  (date) =>
-                                    differenceInHours(event.end, date) > 2,
-                                )
-                                .findIndex(
-                                  (date) =>
-                                    `${date.getFullYear()}-${
-                                      date.getMonth() + 1
-                                    }-${date.getDate()}` === dayName,
-                                ) + 1}
-                            </>
+                            <>Day {dayNo}</>
                           )}{" "}
                         </div>
-                        <div className="whitespace-nowrap text-xs">
-                          {duration.days ? `${duration.days}d` : null}
-                          {duration.hours ? `${duration.hours}h` : null}
-                          {duration.minutes ? `${duration.minutes}m` : null}
-                          {duration.seconds ? `${duration.seconds}s` : null}
+                        <div className="whitespace-nowrap text-[0.666rem] tabular-nums">
+                          {dayNo === 1 ? (
+                            <>
+                              {duration.days ? `${duration.days}d` : null}
+                              {duration.hours ? `${duration.hours}h` : null}
+                              {duration.minutes ? `${duration.minutes}m` : null}
+                              {duration.seconds ? `${duration.seconds}s` : null}
+                            </>
+                          ) : isLastDay ? (
+                            <>
+                              -
+                              {event.end.toLocaleTimeString("en-DK", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone,
+                              })}
+                            </>
+                          ) : null}
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div>{event.summary}</div>
-                        <div className="text-[0.666rem]" title={event.location}>
-                          <i>{event.location || <>&nbsp;</>}</i>
+                        <div className="leading-snug">{event.summary}</div>
+                        <div className="text-[0.666rem] italic leading-tight">
+                          {event.location || <>&nbsp;</>}
                         </div>
                       </div>
                     </li>
