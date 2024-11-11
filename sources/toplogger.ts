@@ -20,7 +20,7 @@ import {
   ThousandDivideByScore,
   type DateInterval,
 } from "../lib";
-import { exercises } from "../models/exercises";
+import { Unit, exercises } from "../models/exercises";
 import {
   WorkoutExerciseSet,
   WorkoutSource,
@@ -897,7 +897,7 @@ export function workoutFromTopLoggerAscends(
             ({ checks, climb: { grade, hold_id } }): WorkoutExerciseSet => ({
               inputs: [
                 // Grade
-                { value: Number(grade) },
+                { value: Number(grade), unit: Unit.FrenchRounded },
                 // Color
                 {
                   value:

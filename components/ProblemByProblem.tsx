@@ -119,23 +119,21 @@ const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
 
 export default function ProblemByProblem({
   problemByProblem,
+  className,
 }: {
   problemByProblem: Awaited<
     ReturnType<
       typeof getIoClimbAlongCompetitionEvent | typeof getIoTopLoggerGroupEvent
     >
   >["problemByProblem"];
+  className?: string;
 }) {
   if (!problemByProblem?.length) return null;
 
   return (
     <div
-      style={{
-        display: "grid",
-        gap: "2px",
-        gridTemplateColumns: "repeat(auto-fill, minmax(30px, 1fr))",
-        marginTop: "2px",
-      }}
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(30px, 1fr))" }}
+      className={"mt-0.5 grid gap-0.5 " + (className ? className : "")}
     >
       {Array.from(problemByProblem)
         .sort((a, b) => Number(b.attempt) - Number(a.attempt))

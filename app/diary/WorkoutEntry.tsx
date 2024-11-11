@@ -194,19 +194,17 @@ function WorkoutEntryExercise({
       exercise.inputs[1].options;
 
     return (
-      <div style={{ fontSize: "1.5em" }}>
-        <ProblemByProblem
-          problemByProblem={workoutExercise.sets.map((set, i) => ({
-            grade: set.inputs[0]!.value,
-            color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
-            flash: set.inputs[2]!.value === 0,
-            top: set.inputs[2]!.value <= 1,
-            zone: set.inputs[2]!.value <= 2,
-            number: String(i + 1),
-            attempt: true,
-          }))}
-        />
-      </div>
+      <ProblemByProblem
+        problemByProblem={workoutExercise.sets.map((set, i) => ({
+          grade: set.inputs[0]!.value,
+          color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
+          flash: set.inputs[2]!.value === 0,
+          top: set.inputs[2]!.value <= 1,
+          zone: set.inputs[2]!.value <= 2,
+          number: String(i + 1),
+          attempt: true,
+        }))}
+      />
     );
   }
 

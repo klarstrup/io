@@ -86049,6 +86049,7 @@ export const exercises = [
         id: 1,
         input_ordinal: 2,
         options: [
+          // Don't mess with the order of these colors
           { value: "mint" },
           { value: "green" },
           { value: "yellow" },
@@ -86068,6 +86069,7 @@ export const exercises = [
         id: 2,
         input_ordinal: 3,
         default_value: 1,
+        // Don't mess with the order of these options
         options: [{ value: "flash" }, { value: "top" }, { value: "zone" }],
         type: InputType.Options,
       },
