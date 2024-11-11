@@ -17,7 +17,7 @@ import {
   TopLoggerGyms,
   TopLoggerHolds,
 } from "../../sources/toplogger.server";
-import { allPromises, DEFAULT_TIMEZONE } from "../../utils";
+import { allPromises, dateToString, DEFAULT_TIMEZONE } from "../../utils";
 
 type DayStr = `${number}-${number}-${number}`;
 
@@ -39,17 +39,13 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
     key: K,
     entry: NonNullable<DiaryEntry[K]>[number],
   ) {
-    const dayStr: DayStr = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`;
+    const dayStr: DayStr = dateToString(date);
     let day = diary[dayStr];
-    if (!day) {
-      day = {};
-    }
+    if (!day) day = {};
+
     let dayEntries = day[key];
-    if (!dayEntries) {
-      dayEntries = [];
-    }
+    if (!dayEntries) dayEntries = [];
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
     dayEntries.push(entry as any);
     day[key] = dayEntries;
@@ -117,12 +113,8 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         ascends.reduce(
           (acc, ascend) => {
             if (!ascend.date_logged) return acc;
-            const date = `${ascend.date_logged.getFullYear()}-${
-              ascend.date_logged.getMonth() + 1
-            }-${ascend.date_logged.getDate()}`;
-            if (!acc[date]) {
-              acc[date] = [];
-            }
+            const date = dateToString(ascend.date_logged);
+            if (!acc[date]) acc[date] = [];
             acc[date].push(ascend);
 
             return acc;
@@ -131,18 +123,18 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
         ),
       );
       for (const dayAscends of ascendsByDay) {
-        addDiaryEntry(
-          dayAscends[0]!.date_logged,
-          "workouts",
-          workoutFromTopLoggerAscends(
-            dayAscends.map((ascend) => ({
-              ...ascend,
-              climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-            })),
-            holds,
-            gyms,
-          ),
+        const workout = workoutFromTopLoggerAscends(
+          dayAscends.map((ascend) => ({
+            ...ascend,
+            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+          })),
+          holds,
+          gyms,
         );
+        addDiaryEntry(dayAscends[0]!.date_logged, "workouts", {
+          ...workout,
+          _id: workout._id.toString(),
+        });
       }
     },
     async () => {

@@ -14,11 +14,8 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
-
-const dateToString = (date: Date): `${number}-${number}-${number}` =>
-  `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
 export function DiaryEntryWeek({
   user,

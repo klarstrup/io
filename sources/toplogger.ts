@@ -8,6 +8,7 @@ import {
   isWithinInterval,
   subHours,
 } from "date-fns";
+import { ObjectId, type WithId } from "mongodb";
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
@@ -874,7 +875,7 @@ export function workoutFromTopLoggerAscends(
   ascends: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
   holds: TopLogger.Hold[],
   gyms: TopLogger.GymSingle[],
-): WorkoutData & { _id: string } {
+): WithId<WorkoutData> {
   const firstAscend = ascends[0];
   if (!firstAscend) throw new Error("No ascends");
 
@@ -886,7 +887,7 @@ export function workoutFromTopLoggerAscends(
     exercise.inputs[1].options;
 
   return {
-    _id: String(firstAscend.id),
+    _id: new ObjectId(firstAscend.id),
     exercises: [
       {
         exerciseId: 2001,

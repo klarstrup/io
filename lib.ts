@@ -176,3 +176,15 @@ export interface MongoTomorrowInterval
     TomorrowIoMeta {
   startTime: Date;
 }
+
+export enum PRType {
+  AllTime = "allTimePR",
+  OneYear = "oneYearPR",
+  ThreeMonths = "threeMonthPR",
+}
+
+export function isPRType(value: unknown): value is PRType {
+  return (
+    typeof value === "string" && Object.values(PRType).includes(value as PRType)
+  );
+}

@@ -5,6 +5,7 @@ import { TZDate } from "@date-fns/tz";
 import { differenceInDays, startOfDay } from "date-fns";
 import { Route } from "next";
 import type { Session } from "next-auth";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -276,7 +277,12 @@ export function WorkoutForm<R extends string>({
                 className="flex flex-col"
                 legend={
                   <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
-                    <span>{exercise.name}</span>
+                    <Link
+                      href={`/diary/exercises/${exercise.id}`}
+                      style={{ color: "#edab00" }}
+                    >
+                      {exercise.name}
+                    </Link>
                     <StealthButton
                       onClick={() => remove(index)}
                       disabled={isSubmitting}

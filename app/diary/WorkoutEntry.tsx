@@ -3,19 +3,15 @@ import { Fragment, type ReactNode } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import ProblemByProblem from "../../components/ProblemByProblem";
 import Grade from "../../grades";
-import {
-  AssistType,
-  exercises,
-  InputType,
-  Unit,
-} from "../../models/exercises";
+import { PRType } from "../../lib";
+import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import {
   type WorkoutData,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
-import { omit, seconds2time } from "../../utils";
+import { dateToString, omit, seconds2time } from "../../utils";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);
@@ -29,59 +25,67 @@ function decimalAsTime(dec: number) {
 }
 
 export default function WorkoutEntry({
+  showDate,
+  showExerciseName = true,
   workout,
   exerciseSetPRs,
-  date,
+  onlyPRs,
 }: {
+  showDate?: boolean;
+  showExerciseName?: boolean;
   workout: WorkoutData & { _id: string };
-  exerciseSetPRs?: {
-    isAllTimePR: boolean;
-    isYearPR: boolean;
-    is3MonthPR: boolean;
-  }[][];
-  date: `${number}-${number}-${number}`;
+  exerciseSetPRs?: Record<PRType, boolean>[][];
+  onlyPRs?: PRType;
 }) {
   return (
     <FieldSetX
       key={workout._id}
       className="min-w-[50%]"
       legend={
-        <small className="-ml-2">
-          {workout.source === WorkoutSource.Self || !workout.source ? (
-            <>
-              <small>You</small>
-              <>
-                {" "}
-                <small>-</small>{" "}
-                <Link
-                  href={`/diary/${date}/workout/${workout._id}`}
-                  style={{
-                    fontSize: "12px",
-                    color: "#edab00",
-                    fontWeight: 600,
-                  }}
-                >
-                  Edit
-                </Link>
-              </>
-            </>
-          ) : workout.source === WorkoutSource.Fitocracy ? (
-            <small>Fitocracy</small>
-          ) : workout.source === WorkoutSource.MyFitnessPal ? (
-            <small>MyFitnessPal</small>
-          ) : workout.source === WorkoutSource.RunDouble ? (
-            <small>RunDouble</small>
-          ) : workout.source === WorkoutSource.TopLogger ? (
-            <small>TopLogger</small>
+        <small className="-ml-2 block leading-none">
+          {showDate ? (
+            <Link
+              href={`/diary/${dateToString(workout.workedOutAt)}`}
+              style={{ color: "#edab00" }}
+              className="block text-xs font-semibold"
+            >
+              <small>{dateToString(workout.workedOutAt)}</small>
+            </Link>
           ) : null}
-          {workout.location ? (
-            <>
-              {" "}
-              <small>
-                <small>@</small>
-              </small>{" "}
+          {workout.location && showExerciseName ? (
+            <div>
               <small>{workout.location}</small>
-            </>
+            </div>
+          ) : null}
+          {showExerciseName ? (
+            <div>
+              {workout.source === WorkoutSource.Self || !workout.source ? (
+                <>
+                  <small>You</small>
+                  <>
+                    {" "}
+                    <small>-</small>{" "}
+                    <Link
+                      href={`/diary/${dateToString(
+                        workout.workedOutAt,
+                      )}/workout/${workout._id}`}
+                      style={{ color: "#edab00" }}
+                      className="text-xs font-semibold"
+                    >
+                      Edit
+                    </Link>
+                  </>
+                </>
+              ) : workout.source === WorkoutSource.Fitocracy ? (
+                <small>Fitocracy</small>
+              ) : workout.source === WorkoutSource.MyFitnessPal ? (
+                <small>MyFitnessPal</small>
+              ) : workout.source === WorkoutSource.RunDouble ? (
+                <small>RunDouble</small>
+              ) : workout.source === WorkoutSource.TopLogger ? (
+                <small>TopLogger</small>
+              ) : null}
+            </div>
           ) : null}
         </small>
       }
@@ -102,12 +106,18 @@ export default function WorkoutEntry({
           )!;
           return (
             <div key={exerciseIndex}>
-              <div className="text-sm font-bold leading-none">
-                {[exercise.name, ...exercise.aliases]
-                  .filter((name) => name.length >= 4)
-                  .sort((a, b) => a.length - b.length)[0]!
-                  .replace("Barbell", "")}
-              </div>
+              {showExerciseName ? (
+                <Link
+                  href={`/diary/exercises/${exercise.id}`}
+                  style={{ color: "#edab00" }}
+                  className="block text-sm font-bold leading-none"
+                >
+                  {[exercise.name, ...exercise.aliases]
+                    .filter((name) => name.length >= 4)
+                    .sort((a, b) => a.length - b.length)[0]!
+                    .replace("Barbell", "")}
+                </Link>
+              ) : null}
               {exercise.id === 2001 ? (
                 (() => {
                   const colorOptions =
@@ -163,6 +173,7 @@ export default function WorkoutEntry({
                           exerciseSetPRs?.[exerciseIndex]?.[
                             setIndex - (repeatCount ? repeatCount - 1 : 0)
                           ];
+                        if (onlyPRs && !setPR?.[onlyPRs]) return memo;
 
                         memo.push(
                           <tr
@@ -298,20 +309,20 @@ export default function WorkoutEntry({
                               <td
                                 className="p-0 pl-1 text-left text-[10px] leading-[0]"
                                 title={
-                                  setPR.isAllTimePR
+                                  setPR.allTimePR
                                     ? "All-time PR"
-                                    : setPR.isYearPR
+                                    : setPR.oneYearPR
                                       ? "Year PR"
-                                      : setPR.is3MonthPR
+                                      : setPR.threeMonthPR
                                         ? "3-month PR"
                                         : undefined
                                 }
                               >
-                                {setPR.isAllTimePR
+                                {setPR.allTimePR
                                   ? "🥇"
-                                  : setPR.isYearPR
+                                  : setPR.oneYearPR
                                     ? "🥈"
-                                    : setPR.is3MonthPR
+                                    : setPR.threeMonthPR
                                       ? "🥉"
                                       : null}
                               </td>

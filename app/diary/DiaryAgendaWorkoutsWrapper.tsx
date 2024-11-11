@@ -1,13 +1,13 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
-import { getNextSets, Workouts } from "../../models/workout.server";
+import { PRType } from "../../lib";
+import { getIsSetPR, getNextSets, Workouts } from "../../models/workout.server";
 import { workoutFromFitocracyWorkout } from "../../sources/fitocracy";
 import { FitocracyWorkouts } from "../../sources/fitocracy.server";
 import { workoutFromRunDouble } from "../../sources/rundouble";
 import { RunDoubleRuns } from "../../sources/rundouble.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
-import { getIsSetPR } from "./actions";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
 import { getDiaryEntries } from "./getDiaryEntries";
 
@@ -26,14 +26,8 @@ export async function DiaryAgendaWorkoutsWrapper({
     getDiaryEntries({ from: startOfDay(tzDate), to: endOfDay(tzDate) }),
   ]);
 
-  const workoutsExerciseSetPRs: Record<
-    string,
-    {
-      isAllTimePR: boolean;
-      isYearPR: boolean;
-      is3MonthPR: boolean;
-    }[][]
-  > = {};
+  const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
+    {};
 
   for (const workout of diaryEntries[0]?.[1]?.workouts ?? []) {
     if (!workoutsExerciseSetPRs[workout._id]) {
@@ -73,14 +67,11 @@ export async function DiaryAgendaWorkoutsWrapper({
         ...rundoubleWorkouts,
       ];
 
-      const exerciseSetsPRs: {
-        isAllTimePR: boolean;
-        isYearPR: boolean;
-        is3MonthPR: boolean;
-      }[] = [];
+      const exerciseSetsPRs: Record<PRType, boolean>[] = [];
       for (const set of exercise.sets) {
         exerciseSetsPRs.push(
-          await getIsSetPR(
+          getIsSetPR(
+            workout.workedOutAt,
             workout,
             precedingWorkouts,
             exercise.exerciseId,

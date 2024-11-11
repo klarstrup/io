@@ -3,7 +3,7 @@ import { compareAsc, differenceInDays, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { FieldSetY } from "../../components/FieldSet";
-import type { DiaryEntry } from "../../lib";
+import type { DiaryEntry, PRType } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { NextSets } from "./NextSets";
@@ -18,14 +18,7 @@ export function DiaryAgendaWorkouts({
 }: {
   date: `${number}-${number}-${number}`;
   workouts: DiaryEntry["workouts"];
-  workoutsExerciseSetPRs?: Record<
-    string,
-    {
-      isAllTimePR: boolean;
-      isYearPR: boolean;
-      is3MonthPR: boolean;
-    }[][]
-  >;
+  workoutsExerciseSetPRs?: Record<string, Record<PRType, boolean>[][]>;
   user: Session["user"];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
 }) {
@@ -65,7 +58,6 @@ export function DiaryAgendaWorkouts({
             <WorkoutEntry
               exerciseSetPRs={workoutsExerciseSetPRs?.[workout._id]}
               key={workout._id}
-              date={date}
               workout={workout}
             />
           ))

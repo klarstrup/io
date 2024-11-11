@@ -1,4 +1,4 @@
-import { isAfter } from "date-fns";
+import { isAfter, subMonths, subYears } from "date-fns";
 import type { Session } from "next-auth";
 import {
   exerciseIdsThatICareAbout,
@@ -7,7 +7,9 @@ import {
 import { FitocracyWorkouts } from "../sources/fitocracy.server";
 import { proxyCollection } from "../utils.server";
 import { exercises, InputType } from "./exercises";
-import type { WorkoutData } from "./workout";
+import type { WorkoutData, WorkoutExerciseSet } from "./workout";
+import { PRType } from "../lib";
+import { WithId } from "mongodb";
 
 export const Workouts = proxyCollection<WorkoutData>("workouts");
 
@@ -127,4 +129,97 @@ export async function getNextSets({
     })
     .filter(Boolean)
     .sort((a, b) => a.workedOutAt.getTime() - b.workedOutAt.getTime());
+}
+
+const noPR = {
+  allTimePR: false,
+  oneYearPR: false,
+  threeMonthPR: false,
+} satisfies Record<PRType, boolean>;
+
+export function getIsSetPR(
+  date: Date,
+  workout: WorkoutData,
+  precedingWorkouts: WithId<WorkoutData>[],
+  exerciseId: WorkoutData["exercises"][number]["exerciseId"],
+  set: WorkoutExerciseSet,
+) {
+  const exercise = exercises.find((e) => e.id === exerciseId);
+  if (!exercise) return noPR;
+
+  const inputValues = set.inputs.map((input) => input.value || 0);
+  const inputTypes = exercise.inputs.map((input) => input.type);
+  const now1YearAgo = subYears(date, 1);
+  const now3MonthsAgo = subMonths(date, 3);
+  let allTimePR = true;
+  let oneYearPR = true;
+  let threeMonthPR = true;
+  for (const precedingWorkout of precedingWorkouts) {
+    for (const workoutExercise of precedingWorkout.exercises) {
+      if (workoutExercise.exerciseId !== exerciseId) continue;
+
+      setLoop: for (const { inputs } of workoutExercise.sets) {
+        for (const [index, { value }] of inputs.entries()) {
+          const inputType = inputTypes[index]!;
+          const inputValue = inputValues[index]!;
+
+          if (
+            inputType === InputType.Pace || inputType === InputType.Time
+              ? value > inputValue
+              : value < inputValue
+          ) {
+            continue setLoop;
+          }
+        }
+
+        allTimePR = false;
+
+        if (precedingWorkout.workedOutAt > now1YearAgo) {
+          oneYearPR = false;
+        }
+
+        if (precedingWorkout.workedOutAt > now3MonthsAgo) {
+          threeMonthPR = false;
+        }
+      }
+    }
+  }
+
+  for (const workoutExercise of workout.exercises) {
+    if (workoutExercise.exerciseId !== exerciseId) continue;
+
+    setLoop: for (const exerciseSet of workoutExercise.sets) {
+      // Optimistic identity check
+      if (exerciseSet === set) break;
+
+      for (const [index, { value }] of exerciseSet.inputs.entries()) {
+        const inputType = inputTypes[index]!;
+        const inputValue = inputValues[index]!;
+
+        if (
+          inputType === InputType.Pace || inputType === InputType.Time
+            ? value > inputValue
+            : value < inputValue
+        ) {
+          continue setLoop;
+        }
+      }
+
+      allTimePR = false;
+
+      if (workout.workedOutAt > now1YearAgo) {
+        oneYearPR = false;
+      }
+
+      if (workout.workedOutAt > now3MonthsAgo) {
+        threeMonthPR = false;
+      }
+    }
+  }
+
+  return {
+    allTimePR,
+    oneYearPR,
+    threeMonthPR,
+  };
 }
