@@ -173,16 +173,27 @@ function WorkoutEntryExerciseSetRow({
   );
 }
 
-function climbingSetsAverage(sets: WorkoutExerciseSet[]) {
-  return (
-    sets
-      .map((set) => set.inputs[0]!.value)
-      .reduce((avg, value) => {
-        avg += value;
-        return avg;
-      }) / sets.length
-  );
-}
+const average = (arr: number[]) => arr.reduce((a, b) => a + b) / arr.length;
+
+const asc = (arr: number[]) => arr.sort((a: number, b: number) => a - b);
+const desc = (arr: number[]) => arr.sort((a: number, b: number) => b - a);
+const quantile = (arr: number[], q: number) => {
+  const sorted = asc(arr);
+
+  let pos = (sorted.length - 1) * q;
+  if (pos % 1 === 0) {
+    return sorted[pos]!;
+  }
+
+  pos = Math.floor(pos);
+  if (sorted[pos + 1] !== undefined) {
+    return (sorted[pos]! + sorted[pos + 1]!) / 2;
+  }
+
+  return sorted[pos]!;
+};
+
+const averageGrade = false;
 
 export function WorkoutEntryExercise({
   exercise,
@@ -198,6 +209,17 @@ export function WorkoutEntryExercise({
   onlyPRs?: PRType;
 }) {
   if (exercise.id === 2001) {
+    if (averageGrade) {
+      const values = sets.map((set) => set.inputs[0]!.value);
+      if (values.filter((value) => value).length) {
+        return new Grade(
+          average(desc(values).slice(0, Math.floor(values.length / 5) + 1)) ||
+            quantile(values, 0.95),
+        ).name;
+      }
+      return null;
+    }
+
     const colorOptions =
       exercise.inputs[1] &&
       "options" in exercise.inputs[1] &&
@@ -284,7 +306,7 @@ export default function WorkoutEntry({
   return (
     <FieldSetX
       key={workout._id}
-      className={"min-w-[50%]" + (showDate ? " w-full" : "")}
+      className={"min-w-[50%] " + (showDate ? "w-full" : "")}
       legend={
         <small className="-ml-2 block leading-none">
           {showDate ? (
