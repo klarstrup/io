@@ -6,6 +6,7 @@ import type { DiaryEntry } from "../../lib";
 import { exercises, TagType } from "../../models/exercises";
 import { WorkoutData } from "../../models/workout";
 import {
+  dateToString,
   DEFAULT_TIMEZONE,
   getSchemeCategory10Color,
   uniqueBy,
@@ -35,8 +36,7 @@ export function DiaryEntryItem({
   const tzDate = new TZDate(date).withTimeZone(
     user.timeZone || DEFAULT_TIMEZONE,
   );
-  const isToday =
-    date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  const isToday = date === dateToString(now);
   const isFuture = now < tzDate;
 
   if (isFuture && !isToday) {

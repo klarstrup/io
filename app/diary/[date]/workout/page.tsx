@@ -4,7 +4,7 @@ import type { Session } from "next-auth";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
 import { getNextSets, Workouts } from "../../../../models/workout.server";
-import { DEFAULT_TIMEZONE } from "../../../../utils";
+import { dateToString, DEFAULT_TIMEZONE } from "../../../../utils";
 import { WorkoutForm } from "../../WorkoutForm";
 
 const getAllWorkoutLocations = async (user: Session["user"]) =>
@@ -26,9 +26,7 @@ export default async function DiaryNewWorkoutModal(props: {
   if (!user) return null;
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-  const now = TZDate.tz(timeZone);
-  const nowDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  const isToday = date === nowDate;
+  const isToday = date === dateToString(TZDate.tz(timeZone));
 
   const tzDate = new TZDate(date, timeZone);
   const [locations, nextSets] = await Promise.all([

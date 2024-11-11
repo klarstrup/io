@@ -14,7 +14,7 @@ import { Suspense } from "react";
 import { auth } from "../../auth";
 import LoadMore from "../../components/LoadMore";
 import UserStuff from "../../components/UserStuff";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
@@ -101,8 +101,7 @@ export default async function DiaryLayout(props: {
   const now = TZDate.tz(timeZone);
   const nowWeek = endOfWeek(now, { weekStartsOn: 1 });
 
-  const date =
-    `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}` as const;
+  const date = dateToString(now);
   const start = nowWeek;
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
 

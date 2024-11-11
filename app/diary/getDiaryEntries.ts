@@ -30,9 +30,7 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const now = TZDate.tz(timeZone);
-  const todayStr = `${now.getFullYear()}-${
-    now.getMonth() + 1
-  }-${now.getDate()}`;
+  const todayStr = dateToString(now);
   const diary: Record<DayStr, DiaryEntry> = !to ? { [todayStr]: {} } : {};
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
     date: Date,

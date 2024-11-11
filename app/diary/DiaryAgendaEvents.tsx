@@ -14,7 +14,7 @@ import type { Session } from "next-auth";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 import type { MongoVEventWithVCalendar } from "../../lib";
 import { getUserIcalEventsBetween } from "../../sources/ical";
-import { DEFAULT_TIMEZONE, roundToNearestDay } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE, roundToNearestDay } from "../../utils";
 
 export async function DiaryAgendaEvents({
   date,
@@ -28,10 +28,8 @@ export async function DiaryAgendaEvents({
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
   const now = TZDate.tz(timeZone);
-  const todayDate = `${now.getFullYear()}-${
-    now.getMonth() + 1
-  }-${now.getDate()}`;
-  const isToday = date === todayDate;
+  const todayStr = dateToString(now);
+  const isToday = date === todayStr;
 
   const fetchingInterval = {
     start: startOfDay(tzDate),
@@ -68,9 +66,7 @@ export async function DiaryAgendaEvents({
                 isAfter(event.end, isToday ? now : tzDate) &&
                 differenceInHours(event.end, date) > 2,
             )) {
-              const calName = `${date.getFullYear()}-${
-                date.getMonth() + 1
-              }-${date.getDate()}`;
+              const calName = dateToString(date);
 
               if (!memo[calName]) memo[calName] = [];
               if (
@@ -96,8 +92,7 @@ export async function DiaryAgendaEvents({
             legend={
               !isToday
                 ? new TZDate(dayName, timeZone).toLocaleDateString("da-DK")
-                : `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}` ===
-                    dayName
+                : todayStr === dayName
                   ? "Today"
                   : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
                       weekday: "long",
@@ -114,12 +109,8 @@ export async function DiaryAgendaEvents({
                     in: tz(timeZone),
                   }).filter((date) => differenceInHours(event.end, date) > 2);
                   const dayNo =
-                    days.findIndex(
-                      (date) =>
-                        `${date.getFullYear()}-${
-                          date.getMonth() + 1
-                        }-${date.getDate()}` === dayName,
-                    ) + 1;
+                    days.findIndex((date) => dateToString(date) === dayName) +
+                    1;
                   const isLastDay = dayNo === days.length;
 
                   return (

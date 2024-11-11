@@ -6,6 +6,7 @@ import { FieldSetY } from "../../components/FieldSet";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { getTomorrowForecasts } from "../../sources/tomorrow";
 import {
+  dateToString,
   decodeGeohash,
   DEFAULT_TIMEZONE,
   getSunrise,
@@ -23,10 +24,7 @@ export async function DiaryAgendaWeather({
 
   const now = TZDate.tz(timeZone);
   const tzDate = new TZDate(date, timeZone);
-  const todayDate = `${now.getFullYear()}-${
-    now.getMonth() + 1
-  }-${now.getDate()}`;
-  const isToday = date === todayDate;
+  const isToday = date === dateToString(now);
   const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
 
   const weatherIntervals =

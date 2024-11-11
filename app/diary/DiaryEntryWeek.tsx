@@ -64,16 +64,18 @@ export function DiaryEntryWeek({
         </span>
       </div>
       <div className="flex flex-1 bg-white">
-        {eachDayOfInterval(weekInterval).map((dayte) => (
-          <DiaryEntryItem
-            user={user}
-            key={dateToString(dayte)}
-            diaryEntry={
-              diaryEntries?.find(([date]) => date === dateToString(dayte))?.[1]
-            }
-            date={dateToString(dayte)}
-          />
-        ))}
+        {eachDayOfInterval(weekInterval).map((dayte) => {
+          const dateStr = dateToString(dayte);
+
+          return (
+            <DiaryEntryItem
+              user={user}
+              key={dateStr}
+              diaryEntry={diaryEntries?.find(([date]) => date === dateStr)?.[1]}
+              date={dateStr}
+            />
+          );
+        })}
       </div>
     </div>
   );

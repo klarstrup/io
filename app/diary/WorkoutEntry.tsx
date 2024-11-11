@@ -269,6 +269,7 @@ export default function WorkoutEntry({
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
+  const workoutDateStr = dateToString(workout.workedOutAt);
   return (
     <FieldSetX
       key={workout._id}
@@ -277,11 +278,11 @@ export default function WorkoutEntry({
         <small className="-ml-2 block leading-none">
           {showDate ? (
             <Link
-              href={`/diary/${dateToString(workout.workedOutAt)}`}
+              href={`/diary/${workoutDateStr}`}
               style={{ color: "#edab00" }}
               className="block text-xs font-semibold"
             >
-              <small>{dateToString(workout.workedOutAt)}</small>
+              <small>{workoutDateStr}</small>
             </Link>
           ) : null}
           {workout.location && showExerciseName ? (
@@ -298,9 +299,7 @@ export default function WorkoutEntry({
                     {" "}
                     <small>-</small>{" "}
                     <Link
-                      href={`/diary/${dateToString(
-                        workout.workedOutAt,
-                      )}/workout/${workout._id}`}
+                      href={`/diary/${workoutDateStr}/workout/${workout._id}`}
                       style={{ color: "#edab00" }}
                       className="text-xs font-semibold"
                     >

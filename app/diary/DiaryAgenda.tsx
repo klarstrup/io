@@ -3,6 +3,7 @@ import { addDays, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import {
+  dateToString,
   decodeGeohash,
   DEFAULT_TIMEZONE,
   getSunrise,
@@ -13,8 +14,6 @@ import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
 
-const dateToString = (date: Date): `${number}-${number}-${number}` =>
-  `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 export function DiaryAgenda({
   date,
   user,
@@ -38,9 +37,7 @@ export function DiaryAgenda({
     new TZDate(date, timeZone),
   );
 
-  const now = TZDate.tz(timeZone);
-  const isToday =
-    date === `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  const isToday = date === dateToString(TZDate.tz(timeZone));
 
   return (
     <div
