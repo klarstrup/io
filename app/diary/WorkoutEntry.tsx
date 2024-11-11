@@ -7,7 +7,6 @@ import { PRType } from "../../lib";
 import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import {
   type WorkoutData,
-  type WorkoutExercise,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
   WorkoutSource,
@@ -174,15 +173,15 @@ function WorkoutEntryExerciseSetRow({
   );
 }
 
-function WorkoutEntryExercise({
+export function WorkoutEntryExercise({
   exercise,
-  workoutExercise,
+  sets,
   exerciseIndex,
   exerciseSetPRs,
   onlyPRs,
 }: {
   exercise: (typeof exercises)[number];
-  workoutExercise: WorkoutExercise;
+  sets: WorkoutExerciseSet[];
   exerciseIndex: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
@@ -195,7 +194,7 @@ function WorkoutEntryExercise({
 
     return (
       <ProblemByProblem
-        problemByProblem={workoutExercise.sets.map((set, i) => ({
+        problemByProblem={sets.map((set, i) => ({
           grade: set.inputs[0]!.value,
           color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
           flash: set.inputs[2]!.value === 0,
@@ -211,9 +210,9 @@ function WorkoutEntryExercise({
   return (
     <table className="inline-table w-auto max-w-0">
       <tbody>
-        {workoutExercise.sets.reduce((memo: ReactNode[], set, setIndex) => {
-          const previousSet = workoutExercise.sets[setIndex - 1];
-          const nextSet = workoutExercise.sets[setIndex + 1];
+        {sets.reduce((memo: ReactNode[], set, setIndex) => {
+          const previousSet = sets[setIndex - 1];
+          const nextSet = sets[setIndex + 1];
 
           if (nextSet && isEquivalentSet(set, nextSet)) {
             return memo;
@@ -224,9 +223,7 @@ function WorkoutEntryExercise({
 
             for (
               let i = setIndex - 1;
-              i >= 0 &&
-              workoutExercise.sets[i] &&
-              isEquivalentSet(set, workoutExercise.sets[i]!);
+              i >= 0 && sets[i] && isEquivalentSet(set, sets[i]!);
               i--
             ) {
               repeatCount++;
@@ -353,7 +350,7 @@ export default function WorkoutEntry({
               ) : null}
               <WorkoutEntryExercise
                 exercise={exercise}
-                workoutExercise={workoutExercise}
+                sets={workoutExercise.sets}
                 exerciseIndex={exerciseIndex}
                 exerciseSetPRs={exerciseSetPRs}
                 onlyPRs={onlyPRs}
