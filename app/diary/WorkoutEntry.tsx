@@ -284,7 +284,7 @@ export default function WorkoutEntry({
   return (
     <FieldSetX
       key={workout._id}
-      className="min-w-[50%]"
+      className={"min-w-[50%]" + (showDate ? " w-full" : "")}
       legend={
         <small className="-ml-2 block leading-none">
           {showDate ? (
