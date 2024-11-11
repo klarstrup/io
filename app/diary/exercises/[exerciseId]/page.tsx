@@ -1,4 +1,4 @@
-import type { WithId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import { Fragment } from "react";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
@@ -28,8 +28,13 @@ export default async function DiaryExerciseModal(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const exerciseId = Number((await props.params).exerciseId);
+
   const prTypeRaw = (await props.searchParams).prType;
   const prType = isPRType(prTypeRaw) ? prTypeRaw : null;
+
+  const mergeWorkoutsRaw = (await props.searchParams).mergeWorkouts;
+  const mergeWorkouts = mergeWorkoutsRaw === "true";
+
   const exercise = exercises.find((e) => e.id === exerciseId);
   const user = (await auth())?.user;
   if (!user || !exercise) return null;
@@ -101,7 +106,7 @@ export default async function DiaryExerciseModal(props: {
     }
   }
 
-  const allWorkoutsOfExercise = [
+  let allWorkoutsOfExercise = [
     ...workoutsWithExercise,
     ...fitocracyWorkoutsWithExercise,
     ...rundoubleWorkouts,
@@ -112,6 +117,39 @@ export default async function DiaryExerciseModal(props: {
       exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
     }))
     .sort((a, b) => b.workedOutAt.getTime() - a.workedOutAt.getTime());
+
+  if (mergeWorkouts) {
+    allWorkoutsOfExercise = [
+      allWorkoutsOfExercise.reduce(
+        (acc: WithId<WorkoutData>, workout) => {
+          for (const exercise of workout.exercises) {
+            const existingExercise = acc.exercises.find(
+              (e) => e.exerciseId === exercise.exerciseId,
+            );
+
+            if (existingExercise) {
+              existingExercise.sets.push(...exercise.sets.reverse());
+            } else {
+              acc.exercises.push({
+                ...exercise,
+                sets: exercise.sets.reverse(),
+              });
+            }
+          }
+
+          return acc;
+        },
+        {
+          _id: new ObjectId(),
+          workedOutAt: new Date(),
+          exercises: [],
+          userId: user.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ),
+    ] as const;
+  }
 
   const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
     {};
@@ -166,6 +204,15 @@ export default async function DiaryExerciseModal(props: {
               <option value={PRType.OneYear}>Year PR workouts</option>
               <option value={PRType.ThreeMonths}>3 Month PR workouts</option>
             </select>
+            <label>
+              <input
+                type="checkbox"
+                name="mergeWorkouts"
+                value="true"
+                defaultChecked={mergeWorkouts}
+              />{" "}
+              Merge workouts
+            </label>
             <button type="submit" className="rounded-md bg-gray-100 px-2">
               Filter
             </button>
@@ -195,7 +242,7 @@ export default async function DiaryExerciseModal(props: {
                     workoutsExerciseSetPRs?.[workout._id.toString()]
                   }
                   onlyPRs={prType || undefined}
-                  showDate
+                  showDate={!mergeWorkouts}
                   workout={{ ...workout, _id: String(workout._id) }}
                 />
               </li>
