@@ -96,7 +96,7 @@ export default function WorkoutEntry({
           gap: "8px 4px",
           gridTemplateColumns:
             workout.exercises.length > 1
-              ? "repeat(auto-fit, minmax(132px, 1fr))"
+              ? "repeat(auto-fit, minmax(130px, 1fr))"
               : "100%",
         }}
       >
