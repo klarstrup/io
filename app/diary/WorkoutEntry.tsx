@@ -192,6 +192,8 @@ export function WorkoutEntryExercise({
       "options" in exercise.inputs[1] &&
       exercise.inputs[1].options;
 
+    if (!colorOptions) return null;
+
     return (
       <ProblemByProblem
         problemByProblem={sets.map((set, i) => ({
