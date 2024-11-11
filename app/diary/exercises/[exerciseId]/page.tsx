@@ -155,7 +155,7 @@ export default async function DiaryExerciseModal(props: {
         </p>
         <div className="mt-4 flex items-center gap-2">
           <h2 className="text-xl font-semibold">Workouts</h2>
-          <form method="GET">
+          <form method="GET" className="flex gap-2">
             <select
               className="rounded-md bg-gray-100 p-1"
               name="prType"
@@ -166,7 +166,7 @@ export default async function DiaryExerciseModal(props: {
               <option value={PRType.OneYear}>Year PR workouts</option>
               <option value={PRType.ThreeMonths}>3 Month PR workouts</option>
             </select>
-            <button type="submit" className="rounded-md bg-gray-100 p-1">
+            <button type="submit" className="rounded-md bg-gray-100 px-2">
               Filter
             </button>
           </form>
