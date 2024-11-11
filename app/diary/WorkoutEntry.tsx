@@ -173,6 +173,17 @@ function WorkoutEntryExerciseSetRow({
   );
 }
 
+function climbingSetsAverage(sets: WorkoutExerciseSet[]) {
+  return (
+    sets
+      .map((set) => set.inputs[0]!.value)
+      .reduce((avg, value) => {
+        avg += value;
+        return avg;
+      }) / sets.length
+  );
+}
+
 export function WorkoutEntryExercise({
   exercise,
   sets,
