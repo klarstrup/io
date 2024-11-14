@@ -5,22 +5,7 @@ import { Modal } from "../../../../components/Modal";
 import { isPRType, PRType } from "../../../../lib";
 import { exercises } from "../../../../models/exercises";
 import type { WorkoutData } from "../../../../models/workout";
-import { getIsSetPR, Workouts } from "../../../../models/workout.server";
-import { workoutFromFitocracyWorkout } from "../../../../sources/fitocracy";
-import { FitocracyWorkouts } from "../../../../sources/fitocracy.server";
-import { workoutFromRunDouble } from "../../../../sources/rundouble";
-import { RunDoubleRuns } from "../../../../sources/rundouble.server";
-import {
-  TopLogger,
-  workoutFromTopLoggerAscends,
-} from "../../../../sources/toplogger";
-import {
-  TopLoggerAscends,
-  TopLoggerClimbs,
-  TopLoggerGyms,
-  TopLoggerHolds,
-} from "../../../../sources/toplogger.server";
-import { dateToString } from "../../../../utils";
+import { getAllWorkouts, getIsSetPR } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
 
 export default async function DiaryExerciseModal(props: {
@@ -39,79 +24,7 @@ export default async function DiaryExerciseModal(props: {
   const user = (await auth())?.user;
   if (!user || !exercise) return null;
 
-  const workoutsWithExercise = await Workouts.find({
-    "exercises.exerciseId": exerciseId,
-    deletedAt: { $exists: false },
-    userId: user.id,
-  }).toArray();
-  const fitocracyWorkoutsWithExercise = user.fitocracyUserId
-    ? (
-        await FitocracyWorkouts.find({
-          user_id: user.fitocracyUserId,
-          "root_group.children.exercise.exercise_id": exerciseId,
-        }).toArray()
-      ).map((w) => workoutFromFitocracyWorkout(w))
-    : [];
-  const rundoubleWorkouts =
-    user.runDoubleId && exerciseId === 518
-      ? (
-          await RunDoubleRuns.find({
-            userId: user.runDoubleId,
-          }).toArray()
-        ).map((w) => workoutFromRunDouble(w))
-      : [];
-
-  if (!user.topLoggerId) return;
-
-  const toploggerWorkouts: WithId<WorkoutData>[] = [];
-
-  if (exerciseId === 2001 && user.topLoggerId) {
-    const [holds, gyms, ascends] = await Promise.all([
-      TopLoggerHolds.find().toArray(),
-      TopLoggerGyms.find().toArray(),
-      TopLoggerAscends.find({ user_id: user.topLoggerId }).toArray(),
-    ]);
-
-    const climbs = await TopLoggerClimbs.find({
-      id: { $in: ascends.map(({ climb_id }) => climb_id) },
-    }).toArray();
-
-    const ascendsByDay = Object.values(
-      ascends.reduce(
-        (acc, ascend) => {
-          if (!ascend.date_logged) return acc;
-          const date = dateToString(ascend.date_logged);
-
-          if (!acc[date]) acc[date] = [];
-
-          acc[date].push(ascend);
-
-          return acc;
-        },
-        {} as Record<string, TopLogger.AscendSingle[]>,
-      ),
-    );
-
-    for (const dayAscends of ascendsByDay) {
-      toploggerWorkouts.push(
-        workoutFromTopLoggerAscends(
-          dayAscends.map((ascend) => ({
-            ...ascend,
-            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-          })),
-          holds,
-          gyms,
-        ),
-      );
-    }
-  }
-
-  let allWorkoutsOfExercise = [
-    ...workoutsWithExercise,
-    ...fitocracyWorkoutsWithExercise,
-    ...rundoubleWorkouts,
-    ...toploggerWorkouts,
-  ]
+  let allWorkoutsOfExercise = (await getAllWorkouts({ user, exerciseId }))
     .map((workout) => ({
       ...workout,
       exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),

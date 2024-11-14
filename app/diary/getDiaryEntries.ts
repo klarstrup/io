@@ -1,22 +1,8 @@
 import { TZDate } from "@date-fns/tz";
 import { auth } from "../../auth";
 import type { DiaryEntry } from "../../lib";
-import { Workouts } from "../../models/workout.server";
-import { workoutFromFitocracyWorkout } from "../../sources/fitocracy";
-import { FitocracyWorkouts } from "../../sources/fitocracy.server";
+import { getAllWorkouts } from "../../models/workout.server";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
-import { workoutFromRunDouble } from "../../sources/rundouble";
-import { RunDoubleRuns } from "../../sources/rundouble.server";
-import {
-  type TopLogger,
-  workoutFromTopLoggerAscends,
-} from "../../sources/toplogger";
-import {
-  TopLoggerAscends,
-  TopLoggerClimbs,
-  TopLoggerGyms,
-  TopLoggerHolds,
-} from "../../sources/toplogger.server";
 import { allPromises, dateToString, DEFAULT_TIMEZONE } from "../../utils";
 
 type DayStr = `${number}-${number}-${number}`;
@@ -53,32 +39,6 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
 
   await allPromises(
     async () => {
-      for await (const workout of Workouts.find({
-        userId: user.id,
-        deletedAt: { $exists: false },
-        workedOutAt: rangeToQuery(from, to),
-      })) {
-        addDiaryEntry(workout.workedOutAt, "workouts", {
-          ...workout,
-          _id: workout._id.toString(),
-        });
-      }
-    },
-    async () => {
-      if (!user.fitocracyUserId) return;
-
-      for await (const fitocracyWorkout of FitocracyWorkouts.find({
-        user_id: user.fitocracyUserId,
-        workout_timestamp: rangeToQuery(from, to),
-      })) {
-        const workout = workoutFromFitocracyWorkout(fitocracyWorkout);
-        addDiaryEntry(workout.workedOutAt, "workouts", {
-          ...workout,
-          _id: workout._id.toString(),
-        });
-      }
-    },
-    async () => {
       if (!user.myFitnessPalUserId) return;
 
       for await (const foodEntry of MyFitnessPalFoodEntries.find({
@@ -92,58 +52,11 @@ export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
       }
     },
     async () => {
-      if (!user.topLoggerId) return;
-
-      const [holds, gyms, ascends] = await Promise.all([
-        TopLoggerHolds.find().toArray(),
-        TopLoggerGyms.find().toArray(),
-        TopLoggerAscends.find({
-          user_id: user.topLoggerId,
-          date_logged: rangeToQuery(from, to),
-        }).toArray(),
-      ]);
-
-      const climbs = await TopLoggerClimbs.find({
-        id: { $in: ascends.map(({ climb_id }) => climb_id) },
-      }).toArray();
-
-      const ascendsByDay = Object.values(
-        ascends.reduce(
-          (acc, ascend) => {
-            if (!ascend.date_logged) return acc;
-            const date = dateToString(ascend.date_logged);
-            if (!acc[date]) acc[date] = [];
-            acc[date].push(ascend);
-
-            return acc;
-          },
-          {} as Record<string, TopLogger.AscendSingle[]>,
-        ),
-      );
-      for (const dayAscends of ascendsByDay) {
-        const workout = workoutFromTopLoggerAscends(
-          dayAscends.map((ascend) => ({
-            ...ascend,
-            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-          })),
-          holds,
-          gyms,
-        );
-        addDiaryEntry(dayAscends[0]!.date_logged, "workouts", {
-          ...workout,
-          _id: workout._id.toString(),
-        });
-      }
-    },
-    async () => {
-      if (!user.runDoubleId) return;
-
-      for await (const run of RunDoubleRuns.find({
-        userId: user.runDoubleId,
-        completedAt: rangeToQuery(from, to),
+      for (const workout of await getAllWorkouts({
+        user,
+        workedOutAt: rangeToQuery(from, to),
       })) {
-        const workout = workoutFromRunDouble(run);
-        addDiaryEntry(run.completedAt, "workouts", {
+        addDiaryEntry(workout.workedOutAt, "workouts", {
           ...workout,
           _id: workout._id.toString(),
         });

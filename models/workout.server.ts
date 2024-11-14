@@ -1,17 +1,132 @@
 import { isAfter, subMonths, subYears } from "date-fns";
+import type { Condition, WithId } from "mongodb";
 import type { Session } from "next-auth";
+import type { PRType } from "../lib";
 import {
   exerciseIdsThatICareAbout,
+  Fitocracy,
   workoutFromFitocracyWorkout,
 } from "../sources/fitocracy";
 import { FitocracyWorkouts } from "../sources/fitocracy.server";
+import { type RunDouble, workoutFromRunDouble } from "../sources/rundouble";
+import { RunDoubleRuns } from "../sources/rundouble.server";
+import {
+  type TopLogger,
+  workoutFromTopLoggerAscends,
+} from "../sources/toplogger";
+import {
+  TopLoggerAscends,
+  TopLoggerClimbs,
+  TopLoggerGyms,
+  TopLoggerHolds,
+} from "../sources/toplogger.server";
+import { dateToString } from "../utils";
 import { proxyCollection } from "../utils.server";
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData, WorkoutExerciseSet } from "./workout";
-import { PRType } from "../lib";
-import { WithId } from "mongodb";
 
 export const Workouts = proxyCollection<WorkoutData>("workouts");
+
+export async function getAllWorkouts({
+  user,
+  exerciseId,
+  workedOutAt,
+}: {
+  user: Session["user"];
+  exerciseId?: number;
+  workedOutAt?: Condition<Date>;
+}) {
+  const allWorkouts: WithId<WorkoutData>[] = [];
+
+  const workoutsQuery: Condition<WorkoutData> = {
+    userId: user.id,
+    deletedAt: { $exists: false },
+  };
+  if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
+  if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
+
+  for await (const workout of Workouts.find(workoutsQuery)) {
+    allWorkouts.push(workout);
+  }
+
+  if (user.fitocracyUserId) {
+    const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
+      user_id: user.fitocracyUserId,
+    };
+    if (exerciseId) {
+      fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
+        exerciseId;
+    }
+    if (workedOutAt) {
+      fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
+    }
+
+    for await (const fitocracyWorkout of FitocracyWorkouts.find(
+      fitocracyWorkoutsQuery,
+    )) {
+      allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
+    }
+  }
+
+  if (user.runDoubleId && (exerciseId === 518 || !exerciseId)) {
+    const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
+      userId: user.runDoubleId,
+    };
+    if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
+
+    for await (const runDoubleRun of RunDoubleRuns.find(runDoubleRunsQuery)) {
+      allWorkouts.push(workoutFromRunDouble(runDoubleRun));
+    }
+  }
+
+  if ((exerciseId === 2001 || !exerciseId) && user.topLoggerId) {
+    const ascendsQuery: Condition<TopLogger.AscendSingle> = {
+      user_id: user.topLoggerId,
+    };
+    if (workedOutAt) ascendsQuery.date_logged = workedOutAt;
+
+    const [holds, gyms, ascends] = await Promise.all([
+      TopLoggerHolds.find().toArray(),
+      TopLoggerGyms.find().toArray(),
+      TopLoggerAscends.find(ascendsQuery).toArray(),
+    ]);
+
+    const climbs = await TopLoggerClimbs.find({
+      id: { $in: ascends.map(({ climb_id }) => climb_id) },
+    }).toArray();
+
+    const ascendsByDay = Object.values(
+      ascends.reduce(
+        (acc, ascend) => {
+          if (!ascend.date_logged) return acc;
+          const date = dateToString(ascend.date_logged);
+
+          if (!acc[date]) acc[date] = [];
+
+          acc[date].push(ascend);
+
+          return acc;
+        },
+        {} as Record<string, TopLogger.AscendSingle[]>,
+      ),
+    );
+
+    for (const dayAscends of ascendsByDay) {
+      allWorkouts.push(
+        workoutFromTopLoggerAscends(
+          dayAscends.map((ascend) => ({
+            ...ascend,
+            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+          })),
+          holds,
+          gyms,
+        ),
+      );
+    }
+  }
+
+  return allWorkouts;
+}
 
 const DEADLIFT_ID = 3;
 const WORKING_SET_REPS = 5;
