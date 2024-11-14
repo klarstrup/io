@@ -42,10 +42,10 @@ function WorkoutEntryExerciseSetRow({
         (_, i) => exercise.inputs[i]?.type === InputType.Reps,
       ) ? (
         <Fragment>
-          <td className="p-0 tabular-nums" width="0.01%">
+          <td className="p-0 text-right tabular-nums" width="0.01%">
             {repeatCount}
           </td>
-          <td className="p-0">×</td>
+          <td className="px-0.5 py-0">×</td>
         </Fragment>
       ) : (
         <Fragment>
@@ -86,7 +86,7 @@ function WorkoutEntryExerciseSetRow({
                     <small>km</small>
                   </>
                 ) : inputType === InputType.Options && inputOptions ? (
-                  String(inputOptions[input.value]?.value)
+                  String(inputOptions[input.value]?.value ?? "")
                 ) : input.unit === Unit.FrenchRounded ? (
                   new Grade(input.value).name
                 ) : !isNaN(input.value) &&
@@ -245,9 +245,9 @@ export function WorkoutEntryExercise({
   return (
     <table className="inline-table w-auto max-w-0">
       <tbody>
-        {sets.reduce((memo: ReactNode[], set, setIndex) => {
-          const previousSet = sets[setIndex - 1];
-          const nextSet = sets[setIndex + 1];
+        {sets.reduce((memo: ReactNode[], set, setIndex, setList) => {
+          const previousSet = setList[setIndex - 1];
+          const nextSet = setList[setIndex + 1];
 
           if (nextSet && isEquivalentSet(set, nextSet)) {
             return memo;
@@ -258,7 +258,7 @@ export function WorkoutEntryExercise({
 
             for (
               let i = setIndex - 1;
-              i >= 0 && sets[i] && isEquivalentSet(set, sets[i]!);
+              i >= 0 && setList[i] && isEquivalentSet(set, setList[i]!);
               i--
             ) {
               repeatCount++;
