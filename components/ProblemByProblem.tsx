@@ -147,7 +147,7 @@ function ProblemBadge({
   return (
     <Badge
       style={{
-        maxWidth: "50%",
+        maxWidth: "100%",
         color:
           color === "mint"
             ? "#00E0E6"
@@ -231,7 +231,7 @@ export default function ProblemByProblem({
 
     return (
       <div
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(60px, 1fr))" }}
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))" }}
         className={"mt-0.5 grid gap-0.5 content-between justify-between " + (className ? className : "")}
       >
         {Array.from(grouped)
