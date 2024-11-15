@@ -42,7 +42,7 @@ const FlashBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       dominantBaseline="central"
       textAnchor="middle"
       fill="#ffff00"
-      fontSize="28px"
+      fontSize="26px"
     >
       ⚡️
     </text>
@@ -117,80 +117,144 @@ const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
   </svg>
 );
 
-export default function ProblemByProblem({
-  problemByProblem,
-  className,
+function ProblemBadge({
+  number,
+  flash,
+  top,
+  zone,
+  attempt,
+  grade,
+  color,
 }: {
-  problemByProblem: Awaited<
+  number?: string;
+  flash: boolean;
+  top: boolean;
+  zone: boolean;
+  attempt: boolean;
+  grade?: number;
+  color?: string;
+}) {
+  const Badge = flash
+    ? FlashBadge
+    : top
+      ? TopBadge
+      : zone
+        ? ZoneBadge
+        : attempt
+          ? AttemptBadge
+          : NoAttemptBadge;
+
+  return (
+    <Badge
+      style={{
+        maxWidth: "50%",
+        color:
+          color === "mint"
+            ? "#00E0E6"
+            : color === "yellow"
+              ? "#FFDE00"
+              : color === "green"
+                ? "#0CE600"
+                : color === "red"
+                  ? "#E60000"
+                  : color === "purple"
+                    ? "#800080"
+                    : color === "orange"
+                      ? "#FF9B2F"
+                      : color === "white"
+                        ? "#FFEFC1"
+                        : color || "#c84821",
+      }}
+      key={number}
+      grade={grade ? new Grade(grade).name : undefined}
+      title={`${number}${
+        number && grade ? `(${new Grade(grade).name})` : ""
+      }${!number && grade ? new Grade(grade).name : ""}: ${
+        flash
+          ? "flash"
+          : top
+            ? "top"
+            : zone
+              ? "zone"
+              : attempt
+                ? "no send"
+                : "no attempt"
+      }`}
+    />
+  );
+}
+
+type PP = NonNullable<
+  Awaited<
     ReturnType<
       typeof getIoClimbAlongCompetitionEvent | typeof getIoTopLoggerGroupEvent
     >
-  >["problemByProblem"];
+  >["problemByProblem"]
+>[number];
+
+export default function ProblemByProblem({
+  problemByProblem,
+  className,
+  groupByGradeAndFlash,
+  groupByColorAndFlash,
+}: {
+  problemByProblem: PP[];
   className?: string;
+  groupByGradeAndFlash?: boolean;
+  groupByColorAndFlash?: boolean;
 }) {
   if (!problemByProblem?.length) return null;
+
+  const sortedProblems = Array.from(problemByProblem)
+    .sort((a, b) => Number(b.attempt) - Number(a.attempt))
+    .sort((a, b) => Number(b.zone) - Number(a.zone))
+    .sort((a, b) => Number(b.flash) - Number(a.flash))
+    .sort((a, b) => Number(b.grade) - Number(a.grade))
+    .sort((a, b) => Number(b.top) - Number(a.top));
+
+  if (groupByGradeAndFlash || groupByColorAndFlash) {
+    const grouped = new Map<string, [PP, ...PP[]]>();
+    for (const problem of sortedProblems) {
+      const gradeOrColor = groupByGradeAndFlash
+        ? problem.grade
+        : groupByColorAndFlash
+          ? problem.color
+          : "";
+      const flash = problem.flash;
+      const key = `${gradeOrColor}-${flash}`;
+      if (!grouped.has(key)) {
+        grouped.set(key, [problem]);
+      } else {
+        grouped.get(key)!.push(problem);
+      }
+    }
+
+    return (
+      <div
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(60px, 1fr))" }}
+        className={"mt-0.5 grid gap-0.5 content-between justify-between " + (className ? className : "")}
+      >
+        {Array.from(grouped)
+          .sort((a, b) => Number(b[1][0].grade) - Number(a[1][0].grade))
+          .map(([, problems], i) => (
+            <div key={i} className="flex items-center">
+              <span>{problems.length}</span>
+              <span className="px-0.5 py-0">×</span>
+              <ProblemBadge {...problems[0]} />
+            </div>
+          ))}
+      </div>
+    );
+  }
 
   return (
     <div
       style={{ gridTemplateColumns: "repeat(auto-fill, minmax(30px, 1fr))" }}
       className={"mt-0.5 grid gap-0.5 " + (className ? className : "")}
     >
-      {Array.from(problemByProblem)
-        .sort((a, b) => Number(b.attempt) - Number(a.attempt))
-        .sort((a, b) => Number(b.zone) - Number(a.zone))
-        .sort((a, b) => Number(b.flash) - Number(a.flash))
-        .sort((a, b) => Number(b.grade) - Number(a.grade))
-        .sort((a, b) => Number(b.top) - Number(a.top))
-        .map(({ number, flash, top, zone, attempt, grade, color }) => {
-          const Badge = flash
-            ? FlashBadge
-            : top
-              ? TopBadge
-              : zone
-                ? ZoneBadge
-                : attempt
-                  ? AttemptBadge
-                  : NoAttemptBadge;
-
-          return (
-            <Badge
-              style={{
-                maxWidth: "100%",
-                color:
-                  color === "mint"
-                    ? "#00E0E6"
-                    : color === "yellow"
-                      ? "#FFDE00"
-                      : color === "green"
-                        ? "#0CE600"
-                        : color === "red"
-                          ? "#E60000"
-                          : color === "purple"
-                            ? "#800080"
-                            : color === "orange"
-                              ? "#FF9B2F"
-                              : color === "white"
-                                ? "#FFEFC1"
-                                : color || "#c84821",
-              }}
-              key={number}
-              grade={grade ? new Grade(grade).name : undefined}
-              title={`${number}${
-                number && grade ? `(${new Grade(grade).name})` : ""
-              }${!number && grade ? new Grade(grade).name : ""}: ${
-                flash
-                  ? "flash"
-                  : top
-                    ? "top"
-                    : zone
-                      ? "zone"
-                      : attempt
-                        ? "no send"
-                        : "no attempt"
-              }`}
-            />
-          );
-        })}
+      {sortedProblems.map((problem, i) => (
+        <ProblemBadge key={i} {...problem} />
+      ))}
     </div>
   );
 }
