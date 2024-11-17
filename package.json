@@ -20,6 +20,8 @@
     "dataloader": "^2.2.2",
     "date-fns": "^4.1.0",
     "eslint-config-next": "^15.0.3",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6",
     "ical-generator": "^8.0.1",
     "luxon": "^3.5.0",
     "mongodb": "^6.10.0",

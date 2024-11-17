@@ -494,3 +494,26 @@ const schemeCategory10 = [
 ] as const;
 export const getSchemeCategory10Color = (index: number) =>
   schemeCategory10[index % schemeCategory10.length]!;
+
+export const isNonEmptyArray = <T>(
+  value?: ArrayLike<T>,
+): value is [T, ...T[]] => Array.isArray(value) && value.length > 0;
+
+export const isNonNullObject = (
+  obj: unknown,
+): obj is Record<string | number, unknown> =>
+  obj !== null && typeof obj === "object";
+
+export const isPlainObject = (
+  obj: unknown,
+): obj is Record<string | number, unknown> => {
+  if (obj !== null && typeof obj === "object") {
+    const prototype = Object.getPrototypeOf(obj) as unknown;
+
+    if (prototype === Object.prototype || prototype === null) {
+      return true;
+    }
+  }
+
+  return false;
+};

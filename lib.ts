@@ -177,14 +177,43 @@ export interface MongoTomorrowInterval
   startTime: Date;
 }
 
+export interface TopLoggerAuthToken {
+  token: string;
+  expiresAt: string;
+  __typename: "AuthToken";
+}
+
+export interface TopLoggerAuthTokens {
+  access: TopLoggerAuthToken;
+  refresh: TopLoggerAuthToken;
+  __typename: "AuthTokens";
+}
+
+export const isAuthTokens = (obj: unknown): obj is TopLoggerAuthTokens =>
+  Boolean(
+    obj &&
+      typeof obj === "object" &&
+      "access" in obj &&
+      typeof obj.access === "object" &&
+      obj.access &&
+      "token" in obj.access &&
+      typeof obj.access.token === "string" &&
+      "expiresAt" in obj.access &&
+      typeof obj.access.expiresAt === "string" &&
+      "refresh" in obj &&
+      typeof obj.refresh === "object" &&
+      obj.refresh &&
+      "token" in obj.refresh &&
+      typeof obj.refresh.token === "string" &&
+      "expiresAt" in obj.refresh &&
+      typeof obj.refresh.expiresAt === "string",
+  );
+
 export enum PRType {
   AllTime = "allTimePR",
   OneYear = "oneYearPR",
   ThreeMonths = "threeMonthPR",
 }
 
-export function isPRType(value: unknown): value is PRType {
-  return (
-    typeof value === "string" && Object.values(PRType).includes(value as PRType)
-  );
-}
+export const isPRType = (value: unknown): value is PRType =>
+  typeof value === "string" && Object.values(PRType).includes(value as PRType);

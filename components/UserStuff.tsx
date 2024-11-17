@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../auth";
+import { isAuthTokens } from "../lib";
 import { Users } from "../models/user.server";
 import { MyFitnessPal } from "../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
@@ -53,6 +54,16 @@ async function updateUser(formData: FormData) {
     newUser.topLoggerId = topLoggerId.trim()
       ? Number(topLoggerId.trim())
       : null;
+  }
+
+  const topLoggerAuthTokens = formData.get("topLoggerAuthTokens");
+  if (typeof topLoggerAuthTokens === "string") {
+    try {
+      const authTokens = JSON.parse(topLoggerAuthTokens.trim()) as unknown;
+      if (isAuthTokens(authTokens)) newUser.topLoggerAuthTokens = authTokens;
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const myFitnessPalToken = formData.get("myFitnessPalToken");
@@ -220,6 +231,23 @@ export default async function UserStuff() {
                     ❌
                   </span>
                 )}
+              </FieldSetX>
+              <FieldSetX
+                className="flex flex-col items-center gap-1.5"
+                legend="TopLogger GQL User"
+              >
+                <label>
+                  <code>tl-auth</code>
+                  <input
+                    name="topLoggerAuthTokens"
+                    defaultValue={
+                      (user.topLoggerAuthTokens &&
+                        JSON.stringify(user.topLoggerAuthTokens)) ||
+                      ""
+                    }
+                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                  />
+                </label>
               </FieldSetX>
               <FieldSetX
                 className="flex items-center gap-1.5"

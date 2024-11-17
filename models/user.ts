@@ -1,3 +1,5 @@
+import type { TopLoggerAuthTokens } from "../lib";
+
 export interface IUser {
   name: string;
   email: string;
@@ -8,6 +10,7 @@ export interface IUser {
   fitocracySessionId?: string | null;
   fitocracyUserId?: number;
   topLoggerId?: number | null;
+  topLoggerAuthTokens?: TopLoggerAuthTokens;
   myFitnessPalToken?: string | null;
   myFitnessPalUserName?: string;
   myFitnessPalUserId?: string;
