@@ -313,13 +313,16 @@ export const dereferenceDocument = async <
         GraphQLID,
         GraphQLTypeName,
       ];
-      const keyDoc = await TopLoggerGraphQL.findOne({ __typename, id });
+      const keyDoc = await TopLoggerGraphQL.findOne<MongoGraphQLObject>({
+        __typename,
+        id,
+      });
       if (!keyDoc) {
         throw new Error(
           `Failed to dereference ${key} of ${doc.__typename}:${doc.id}`,
         );
       }
-      doc[key] = keyDoc;
+      doc[key] = await dereferenceDocument(keyDoc);
     }
   }
 
