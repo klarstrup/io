@@ -47,7 +47,7 @@ class ApolloError extends Error {
     | null;
 
   // Constructs an instance of ApolloError given serialized GraphQL errors.
-   // Note that one of these has to be a valid
+  // Note that one of these has to be a valid
   // value or the constructed error will be meaningless.
   constructor({ graphQLErrors, errorMessage }: ApolloErrorOptions) {
     super(errorMessage);
