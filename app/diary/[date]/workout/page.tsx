@@ -1,6 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay } from "date-fns";
 import type { Session } from "next-auth";
+import { Suspense } from "react";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
 import { getNextSets, Workouts } from "../../../../models/workout.server";
@@ -38,14 +39,16 @@ export default async function DiaryNewWorkoutModal(props: {
 
   return (
     <Modal dismissTo={dismissTo}>
-      <div className="h-full overflow-auto overscroll-contain rounded-xl bg-white p-4 shadow-xl shadow-black/50">
-        <WorkoutForm
-          date={date}
-          user={user}
-          locations={locations}
-          nextSets={nextSets}
-          dismissTo={dismissTo}
-        />
+      <div className="h-screen w-screen max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-4 shadow-xl shadow-black/50">
+        <Suspense>
+          <WorkoutForm
+            date={date}
+            user={user}
+            locations={locations}
+            nextSets={nextSets}
+            dismissTo={dismissTo}
+          />
+        </Suspense>
       </div>
     </Modal>
   );

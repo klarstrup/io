@@ -2,6 +2,8 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
+import { Suspense } from "react";
+import { FieldSetY } from "../../components/FieldSet";
 import {
   dateToString,
   decodeGeohash,
@@ -85,13 +87,38 @@ export function DiaryAgenda({
         )}
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
-        <DiaryAgendaEvents user={user} date={date} onlyGivenDay={isModal} />
+        <Suspense
+          fallback={
+            <FieldSetY className="min-w-[50%] flex-1" legend="Events" />
+          }
+        >
+          <DiaryAgendaEvents user={user} date={date} onlyGivenDay={isModal} />
+        </Suspense>
         <div className="flex flex-1 flex-col">
-          <DiaryAgendaWorkoutsWrapper date={date} user={user} />
-          <DiaryAgendaFood date={date} user={user} />
+          <Suspense
+            fallback={
+              <FieldSetY
+                className="min-w-[50%] flex-1"
+                legend={<div className="flex items-center">Workouts</div>}
+              />
+            }
+          >
+            <DiaryAgendaWorkoutsWrapper date={date} user={user} />
+          </Suspense>
+          <Suspense
+            fallback={<FieldSetY className="min-w-[50%]" legend={<>Food</>} />}
+          >
+            <DiaryAgendaFood date={date} user={user} />
+          </Suspense>
         </div>
       </div>
-      <DiaryAgendaWeather date={date} user={user} />
+      <Suspense
+        fallback={
+          <FieldSetY className="flex flex-none flex-col" legend="Weather" />
+        }
+      >
+        <DiaryAgendaWeather date={date} user={user} />
+      </Suspense>
     </div>
   );
 }
