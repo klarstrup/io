@@ -224,7 +224,6 @@ const climbUsersQuery = gql`
           nameLoc
           __typename
         }
-        holdColorId
         holdColor {
           id
           color
@@ -402,7 +401,7 @@ export const GET = () =>
             pagination: {
               page,
               orderBy: [
-                { key: "tickType", order: "asc" },
+                { key: "tickType", order: "desc" },
                 { key: "tickedFirstAtDate", order: "desc" },
               ],
             },
