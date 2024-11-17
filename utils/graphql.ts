@@ -1,18 +1,19 @@
 import {
-  DefinitionNode,
-  DirectiveNode,
-  DocumentNode,
-  FieldNode,
-  FragmentDefinitionNode,
-  GraphQLErrorExtensions,
-  GraphQLFormattedError,
+  type DefinitionNode,
+  type DirectiveNode,
+  type DocumentNode,
+  type FieldNode,
+  type FragmentDefinitionNode,
+  type GraphQLErrorExtensions,
+  type GraphQLFormattedError,
   Kind,
-  OperationDefinitionNode,
+  type OperationDefinitionNode,
   print,
-  SelectionNode,
-  SelectionSetNode,
-  ValueNode,
+  type SelectionNode,
+  type SelectionSetNode,
+  type ValueNode,
 } from "graphql";
+import { isNonEmptyArray, isNonNullObject } from "../utils";
 
 interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
@@ -101,27 +102,6 @@ export const isReference = (obj: unknown): obj is Reference =>
       typeof obj.__ref === "string",
   );
 
-export function isNonEmptyArray<T>(value?: ArrayLike<T>): value is [T, ...T[]] {
-  return Array.isArray(value) && value.length > 0;
-}
-
-export function isNonNullObject(
-  obj: unknown,
-): obj is Record<string | number, unknown> {
-  return obj !== null && typeof obj === "object";
-}
-
-export function isPlainObject(
-  obj: unknown,
-): obj is Record<string | number, unknown> {
-  return (
-    obj !== null &&
-    typeof obj === "object" &&
-    (Object.getPrototypeOf(obj) === Object.prototype ||
-      Object.getPrototypeOf(obj) === null)
-  );
-}
-
 export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
   const errors = getGraphQLErrorsFromResult(result);
   return isNonEmptyArray(errors);
@@ -207,13 +187,14 @@ export type NormFieldValue =
   | boolean
   | number
   | null
+  | Reference
   | NormFieldValueArray;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NormFieldValueArray extends ReadonlyArray<NormFieldValue> {}
 
 export interface NormObj {
-  readonly [field: string]: null | NormFieldValue;
+  readonly [field: string]: null | NormFieldValue | Reference;
 }
 
 /**
@@ -269,11 +250,10 @@ export function getDocumentDefinitions(
       selections: operationDefinition!.selectionSet.selections,
     },
   };
-  return [fragmentMap, rootFieldNode];
+  return [fragmentMap, rootFieldNode] as const;
 }
 
 export function expandFragments(
-  resolveType: ResolveType,
   obj: ResponseObject,
   selectionNodes: ReadonlyArray<SelectionNode>,
   fragmentMap: FragmentMap,
@@ -293,7 +273,6 @@ export function expandFragments(
         if (fragmentTypeName === objTypeName) {
           fieldNodes.push(
             ...expandFragments(
-              resolveType,
               obj,
               selectionNode.selectionSet.selections,
               fragmentMap,
@@ -311,7 +290,6 @@ export function expandFragments(
         if (fragmentTypeName === objTypeName) {
           fieldNodes.push(
             ...expandFragments(
-              resolveType,
               obj,
               fragment.selectionSet.selections,
               fragmentMap,
@@ -371,7 +349,7 @@ export function fieldNameWithArguments(
   return fieldNode.name.value + "(" + hashedArgs + ")";
 }
 
-export const defaultGetObjectId: GetObjectId = (object: {
+const defaultGetObjectId: GetObjectId = (object: {
   readonly id: string;
   readonly __typename?: string;
 }): GetObjectToIdResult => {
@@ -380,7 +358,7 @@ export const defaultGetObjectId: GetObjectId = (object: {
     : `${object.__typename}:${object.id}`;
 };
 
-export const defaultResolveType: ResolveType = (object: {
+const resolveType: ResolveType = (object: {
   readonly __typename?: string;
 }): string => {
   if (object.__typename === undefined) {
@@ -513,8 +491,6 @@ export function normalize(
   query: DocumentNode,
   variables: Variables | undefined,
   data: RootFields,
-  getObjectId: GetObjectId = defaultGetObjectId,
-  resolveType: ResolveType = defaultResolveType,
 ): NormMap {
   const [fragmentMap, rootFieldNode] = getDocumentDefinitions(
     query.definitions,
@@ -553,7 +529,6 @@ export function normalize(
       }
       // Expand any fragments
       const expandedSelections = expandFragments(
-        resolveType,
         // @ts-expect-error -- ?
         responseObjectOrArray,
         fieldNode.selectionSet.selections,
@@ -609,19 +584,26 @@ export function normalize(
     // Add to the parent, either field or an array
     if (Array.isArray(parentNormObjOrArray)) {
       const parentArray = parentNormObjOrArray;
-      parentArray.unshift(keyOrNewParentArray);
+      parentArray.unshift(
+        typeof keyOrNewParentArray === "string"
+          ? makeReference(keyOrNewParentArray)
+          : keyOrNewParentArray,
+      );
     } else {
       const key =
         fieldNode.arguments && fieldNode.arguments.length > 0
           ? fieldNameWithArguments(fieldNode, variables)
           : fieldNode.name.value;
       const parentNormObj = parentNormObjOrArray as ParentNormObj;
-      parentNormObj[key] = keyOrNewParentArray;
+      parentNormObj[key] =
+        typeof keyOrNewParentArray === "string"
+          ? makeReference(keyOrNewParentArray)
+          : keyOrNewParentArray;
     }
 
     // Use fake objectId function only for the first iteration, then switch to the real one
     if (firstIteration) {
-      getObjectIdToUse = getObjectId;
+      getObjectIdToUse = defaultGetObjectId;
       firstIteration = false;
     }
   }

@@ -411,9 +411,7 @@ export const GET = () =>
       );
       const graphqlResponse2 = await fetchQueries(queries);
 
-      await flushJSON(graphqlResponse2);
-
-      console.log(
+      await flushJSON(
         normalize(queries[0]![0], queries[0]![1], graphqlResponse2[0]!.data!),
       );
 
