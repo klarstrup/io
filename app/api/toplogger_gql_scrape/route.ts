@@ -15,19 +15,197 @@ import { jsonStreamResponse } from "../scraper-utils";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+const climbsQuery = gql`
+  query climbs(
+    $gymId: ID!
+    $climbType: ClimbType!
+    $isReported: Boolean
+    $userId: ID
+    $compRoundId: ID
+  ) {
+    climbs(
+      gymId: $gymId
+      climbType: $climbType
+      isReported: $isReported
+      compRoundId: $compRoundId
+    ) {
+      data {
+        ...climb
+        ...climbWithClimbUser
+        ...climbWithCompRoundClimb
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment climbGroupClimb on ClimbGroupClimb {
+    id
+    climbGroupId
+    order
+    __typename
+  }
+
+  fragment climbUser on ClimbUser {
+    id
+    climbId
+    grade
+    rating
+    project
+    votedRenew
+    tickType
+    totalTries
+    triedFirstAtDate
+    tickedFirstAtDate
+    compClimbUser(compRoundId: $compRoundId) {
+      id
+      points
+      pointsJson
+      tickType
+      __typename
+    }
+    __typename
+  }
+
+  fragment compRoundClimb on CompRoundClimb {
+    id
+    points
+    pointsJson
+    leadRequired
+    __typename
+  }
+
+  fragment climb on Climb {
+    id
+    climbType
+    positionX
+    positionY
+    gradeAuto
+    grade
+    gradeVotesCount
+    gradeUsersVsAdmin
+    picPath
+    label
+    name
+    zones
+    remarksLoc
+    suitableForKids
+    clips
+    holds
+    height
+    overhang
+    leadEnabled
+    leadRequired
+    ratingsAverage
+    ticksCount
+    inAt
+    outAt
+    outPlannedAt
+    order
+    setterName
+    climbSetters {
+      id
+      gymAdmin {
+        id
+        name
+        picPath
+        __typename
+      }
+      __typename
+    }
+    wallId
+    wall {
+      id
+      nameLoc
+      labelX
+      labelY
+      __typename
+    }
+    wallSectionId
+    wallSection {
+      id
+      name
+      routesEnabled
+      positionX
+      positionY
+      __typename
+    }
+    holdColorId
+    holdColor {
+      id
+      color
+      colorSecondary
+      nameLoc
+      order
+      __typename
+    }
+    climbGroupClimbs {
+      ...climbGroupClimb
+      __typename
+    }
+    climbTagClimbs {
+      id
+      climbTagId
+      order
+      climbTag {
+        id
+        type
+        nameLoc
+        icon
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbWithClimbUser on Climb {
+    id
+    climbUser(userId: $userId) {
+      ...climbUser
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbWithCompRoundClimb on Climb {
+    id
+    compRoundClimb(compRoundId: $compRoundId) {
+      ...compRoundClimb
+      __typename
+    }
+    __typename
+  }
+`;
+
 const climbUsersQuery = gql`
   query climbUsers(
     $gymId: ID
     $userId: ID
     $pagination: PaginationInputClimbUsers
   ) {
-    climbUsers(gymId: $gymId, userId: $userId, pagination: $pagination) {
+    climbUsers(
+      gymId: $gymId
+      userId: $userId
+      pagination: $pagination
+      pointsMin: 1
+    ) {
       data {
         id
         tickType
         points
         pointsBonus
         pointsExpireAtDate
+        climbId
+        grade
+        rating
+        project
+        votedRenew
+        tickType
+        totalTries
+        triedFirstAtDate
+        tickedFirstAtDate
+
         climb {
           id
           name
@@ -46,10 +224,13 @@ const climbUsersQuery = gql`
           nameLoc
           __typename
         }
+        holdColorId
         holdColor {
           id
           color
           colorSecondary
+          nameLoc
+          order
           __typename
         }
         __typename
@@ -213,12 +394,20 @@ export const GET = () =>
 
     for (const pageNumbers of pageNumberss) {
       const graphqlResponse2 = await fetchQueries(
-        pageNumbers
-          .slice(0, 1)
-          .map((page) => [
-            climbUsersQuery,
-            { gymId: "rl63cez60dc4xo95uw3ta", userId, pagination: { page } },
-          ]),
+        pageNumbers.slice(0, 1).map((page) => [
+          climbUsersQuery,
+          {
+            gymId: "rl63cez60dc4xo95uw3ta",
+            userId,
+            pagination: {
+              page,
+              orderBy: [
+                { key: "tickType", order: "asc" },
+                { key: "tickedFirstAtDate", order: "desc" },
+              ],
+            },
+          },
+        ]),
       );
 
       await flushJSON(graphqlResponse2);
