@@ -296,7 +296,7 @@ interface TopLoggerClimbUserDereferenced
   holdColor: HoldColor;
 }
 
-export const TopLoggerGraphQL = proxyCollection<
+const TopLoggerGraphQL = proxyCollection<
   (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
 >("toplogger_graphql");
 
