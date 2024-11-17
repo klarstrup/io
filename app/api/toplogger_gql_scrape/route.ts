@@ -300,7 +300,7 @@ const TopLoggerGraphQL = proxyCollection<
   (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
 >("toplogger_graphql");
 
-export const dereferenceDocument = async <
+const dereferenceDocument = async <
   D extends MongoGraphQLObject,
   R extends MongoGraphQLObject,
 >(
