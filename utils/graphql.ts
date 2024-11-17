@@ -622,7 +622,7 @@ export interface MongoGraphQLObject {
   id: string;
 }
 
-const dereferenceDocument = async <
+export const dereferenceDocument = async <
   D extends MongoGraphQLObject,
   R extends MongoGraphQLObject,
 >(
@@ -664,7 +664,7 @@ const parseDateFields = (doc: Record<string, unknown>) => {
   return doc;
 };
 
-const TopLoggerGraphQL = proxyCollection<
+export const TopLoggerGraphQL = proxyCollection<
   (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
 >("toplogger_graphql");
 

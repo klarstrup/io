@@ -12,6 +12,7 @@ import {
   type MongoGraphQLObject,
   normalizeAndUpsertQueryData,
   type Reference,
+  TopLoggerGraphQL,
 } from "../../../utils/graphql";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -297,6 +298,11 @@ export const GET = () =>
         "No auth tokens or refresh token expired, please add auth tokens",
       );
     }
+
+    await TopLoggerGraphQL.createIndexes([{ key: { __typename: 1, id: 1 } }]);
+    await TopLoggerGraphQL.createIndexes([
+      { key: { __typename: 1, userId: 1 } },
+    ]);
 
     if (new Date(authTokens.access.expiresAt) < new Date()) {
       const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
