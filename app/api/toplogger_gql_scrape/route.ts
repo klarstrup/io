@@ -5,10 +5,13 @@ import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { chunk } from "../../../utils";
+import { proxyCollection } from "../../../utils.server";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
   normalize,
+  RootFields,
+  Variables,
   type GraphQLRequestTuple,
 } from "../../../utils/graphql";
 import { jsonStreamResponse } from "../scraper-utils";
@@ -240,6 +243,27 @@ const climbUsersQuery = gql`
   }
 `;
 
+export const TopLoggerGraphQL =
+  proxyCollection<Record<string, unknown>>("toplogger_graphql");
+
+async function normalizeAndUpsertQueryData(
+  query: DocumentNode,
+  variables: Variables | undefined,
+  data: RootFields,
+) {
+  const objects = Object.values(normalize(query, variables, data)).filter(
+    (o) => o.__typename && o.id,
+  );
+  for (const object of objects) {
+    await TopLoggerGraphQL.updateOne(
+      { __typename: object.__typename, id: object.id },
+      { $set: object },
+      { upsert: true },
+    );
+  }
+  return objects;
+}
+
 export const GET = () =>
   // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* (flushJSON) {
@@ -361,6 +385,7 @@ export const GET = () =>
           $userId: ID
           $pagination: PaginationInputClimbUsers
         ) {
+          __typename
           climbUsers(gymId: $gymId, userId: $userId, pagination: $pagination) {
             pagination {
               total
@@ -412,7 +437,11 @@ export const GET = () =>
       const graphqlResponse2 = await fetchQueries(queries);
 
       await flushJSON(
-        normalize(queries[0]![0], queries[0]![1], graphqlResponse2[0]!.data!),
+        await normalizeAndUpsertQueryData(
+          queries[0]![0],
+          queries[0]![1],
+          graphqlResponse2[0]!.data!,
+        ),
       );
 
       break; // Only fetch the first page while developing
