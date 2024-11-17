@@ -32,16 +32,10 @@ class ApolloError extends Error {
   public name: string;
   public message: string;
   public graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
-  public protocolErrors: ReadonlyArray<{
-    message: string;
-    extensions?: GraphQLErrorExtensions[];
-  }>;
-  public clientErrors: ReadonlyArray<Error>;
-  public networkError: Error | null;
   /**
    * Indicates the specific original cause of the error.
    *
-   * This field contains the first available `networkError`, `graphQLError`, `protocolError`, `clientError`, or `null` if none are available.
+   * This field contains the first available `graphQLError`, or `null` if none are available.
    */
   public cause:
     | ({
@@ -52,9 +46,8 @@ class ApolloError extends Error {
       } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">)
     | null;
 
-  // Constructs an instance of ApolloError given serialized GraphQL errors,
-  // client errors, protocol errors or network errors.
-  // Note that one of these has to be a valid
+  // Constructs an instance of ApolloError given serialized GraphQL errors.
+   // Note that one of these has to be a valid
   // value or the constructed error will be meaningless.
   constructor({ graphQLErrors, errorMessage }: ApolloErrorOptions) {
     super(errorMessage);
