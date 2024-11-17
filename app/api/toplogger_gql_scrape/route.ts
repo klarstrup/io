@@ -243,8 +243,31 @@ const climbUsersQuery = gql`
   }
 `;
 
-export const TopLoggerGraphQL =
-  proxyCollection<Record<string, unknown>>("toplogger_graphql");
+export interface MongoGraphQLObject {
+  __typename: string;
+  id: string;
+}
+
+interface TopLoggerClimbUser extends MongoGraphQLObject {
+  __typename: "ClimbUser";
+  id: string;
+  tickType: string;
+  points: number;
+  pointsBonus: number;
+  pointsExpireAtDate: string;
+  climbId: string;
+  grade: string;
+  rating: number;
+  project: string;
+  votedRenew: boolean;
+  totalTries: number;
+  triedFirstAtDate: string;
+  tickedFirstAtDate: string;
+}
+
+export const TopLoggerGraphQL = proxyCollection<
+  (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
+>("toplogger_graphql");
 
 async function normalizeAndUpsertQueryData(
   query: DocumentNode,
@@ -256,11 +279,12 @@ async function normalizeAndUpsertQueryData(
   );
   for (const object of objects) {
     await TopLoggerGraphQL.updateOne(
-      { __typename: object.__typename, id: object.id },
+      { __typename: object.__typename as string, id: object.id as string },
       { $set: object },
       { upsert: true },
     );
   }
+
   return objects;
 }
 
