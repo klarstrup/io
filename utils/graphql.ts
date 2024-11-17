@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import {
   type DefinitionNode,
   type DirectiveNode,
@@ -13,7 +14,9 @@ import {
   type SelectionSetNode,
   type ValueNode,
 } from "graphql";
+import { TopLoggerClimbUser } from "../app/api/toplogger_gql_scrape/route";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
+import { proxyCollection } from "../utils.server";
 
 interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
@@ -612,4 +615,74 @@ export function normalize(
   }
 
   return normMap as NormMap;
+}
+
+export interface MongoGraphQLObject {
+  __typename: string;
+  id: string;
+}
+
+const dereferenceDocument = async <
+  D extends MongoGraphQLObject,
+  R extends MongoGraphQLObject,
+>(
+  docRaw: D,
+): Promise<R> => {
+  const doc = { ...docRaw } as D & R;
+
+  for (const key in doc) {
+    if (isReference(doc[key])) {
+      const [__typename, id] = doc[key].__ref.split(":") as [
+        GraphQLID,
+        GraphQLTypeName,
+      ];
+      const keyDoc = await TopLoggerGraphQL.findOne<MongoGraphQLObject>({
+        __typename,
+        id,
+      });
+      if (!keyDoc) {
+        throw new Error(
+          `Failed to dereference ${key} of ${doc.__typename}:${doc.id}`,
+        );
+      }
+      doc[key] = await dereferenceDocument(keyDoc);
+    }
+  }
+
+  return doc as R;
+};
+
+const parseDateFields = (doc: Record<string, unknown>) => {
+  for (const key in doc) {
+    const value = doc[key];
+    if (typeof value === "string") {
+      if (value.match(/^\d{4}-\d{2}-\d{2}/)) {
+        doc[key] = TZDate.tz("Etc/UTC", value);
+      }
+    }
+  }
+  return doc;
+};
+
+const TopLoggerGraphQL = proxyCollection<
+  (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
+>("toplogger_graphql");
+
+export async function normalizeAndUpsertQueryData(
+  query: DocumentNode,
+  variables: Variables | undefined,
+  data: RootFields,
+) {
+  const objects = Object.values(normalize(query, variables, data)).filter(
+    (o) => o.__typename && o.id,
+  );
+  for (const object of objects) {
+    await TopLoggerGraphQL.updateOne(
+      { __typename: object.__typename as string, id: object.id as string },
+      { $set: parseDateFields(object) },
+      { upsert: true },
+    );
+  }
+
+  return objects;
 }

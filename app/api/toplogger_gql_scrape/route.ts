@@ -1,4 +1,3 @@
-import { TZDate } from "@date-fns/tz";
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
@@ -6,18 +5,13 @@ import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { chunk } from "../../../utils";
-import { proxyCollection } from "../../../utils.server";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
-  type GraphQLID,
   type GraphQLRequestTuple,
-  type GraphQLTypeName,
-  isReference,
-  normalize,
+  type MongoGraphQLObject,
+  normalizeAndUpsertQueryData,
   type Reference,
-  type RootFields,
-  type Variables,
 } from "../../../utils/graphql";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -250,12 +244,7 @@ const climbUsersQuery = gql`
   }
 `;
 
-export interface MongoGraphQLObject {
-  __typename: string;
-  id: string;
-}
-
-interface TopLoggerClimbUser extends MongoGraphQLObject {
+export interface TopLoggerClimbUser extends MongoGraphQLObject {
   __typename: "ClimbUser";
   id: string;
   tickType: string;
@@ -289,76 +278,11 @@ interface HoldColor extends MongoGraphQLObject {
   nameLoc: string;
 }
 
-interface TopLoggerClimbUserDereferenced
+export interface TopLoggerClimbUserDereferenced
   extends Omit<TopLoggerClimbUser, "climb" | "wall" | "holdColor"> {
   climb: Climb;
   wall: Wall;
   holdColor: HoldColor;
-}
-
-const TopLoggerGraphQL = proxyCollection<
-  (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
->("toplogger_graphql");
-
-const dereferenceDocument = async <
-  D extends MongoGraphQLObject,
-  R extends MongoGraphQLObject,
->(
-  docRaw: D,
-): Promise<R> => {
-  const doc = { ...docRaw } as D & R;
-
-  for (const key in doc) {
-    if (isReference(doc[key])) {
-      const [__typename, id] = doc[key].__ref.split(":") as [
-        GraphQLID,
-        GraphQLTypeName,
-      ];
-      const keyDoc = await TopLoggerGraphQL.findOne<MongoGraphQLObject>({
-        __typename,
-        id,
-      });
-      if (!keyDoc) {
-        throw new Error(
-          `Failed to dereference ${key} of ${doc.__typename}:${doc.id}`,
-        );
-      }
-      doc[key] = await dereferenceDocument(keyDoc);
-    }
-  }
-
-  return doc as R;
-};
-
-const parseDateFields = (doc: Record<string, unknown>) => {
-  for (const key in doc) {
-    const value = doc[key];
-    if (typeof value === "string") {
-      if (value.match(/^\d{4}-\d{2}-\d{2}/)) {
-        doc[key] = TZDate.tz("Etc/UTC", value);
-      }
-    }
-  }
-  return doc;
-};
-
-async function normalizeAndUpsertQueryData(
-  query: DocumentNode,
-  variables: Variables | undefined,
-  data: RootFields,
-) {
-  const objects = Object.values(normalize(query, variables, data)).filter(
-    (o) => o.__typename && o.id,
-  );
-  for (const object of objects) {
-    await TopLoggerGraphQL.updateOne(
-      { __typename: object.__typename as string, id: object.id as string },
-      { $set: parseDateFields(object) },
-      { upsert: true },
-    );
-  }
-
-  return objects;
 }
 
 export const GET = () =>
@@ -483,7 +407,12 @@ export const GET = () =>
           $pagination: PaginationInputClimbUsers
         ) {
           __typename
-          climbUsers(gymId: $gymId, userId: $userId, pagination: $pagination) {
+          climbUsers(
+            gymId: $gymId
+            userId: $userId
+            pagination: $pagination
+            pointsMin: 1
+          ) {
             pagination {
               total
               __typename
@@ -515,7 +444,7 @@ export const GET = () =>
     await flushJSON({ pageNumberss });
 
     for (const pageNumbers of pageNumberss) {
-      const queries = pageNumbers.slice(0, 1).map(
+      const queries = pageNumbers.map(
         (page): GraphQLRequestTuple => [
           climbUsersQuery,
           {
@@ -533,19 +462,25 @@ export const GET = () =>
       );
       const graphqlResponse2 = await fetchQueries(queries);
 
-      await flushJSON(
-        await normalizeAndUpsertQueryData(
-          queries[0]![0],
-          queries[0]![1],
-          graphqlResponse2[0]!.data!,
-        ),
-      );
+      for (let i = 0; i < queries.length; i++) {
+        const [query, variables] = queries[i]!;
+        const response = graphqlResponse2[i]!;
+
+        const insertedDocuments = await normalizeAndUpsertQueryData(
+          query,
+          variables,
+          response.data!,
+        );
+
+        await flushJSON(`Inserted ${insertedDocuments.length} documents`);
+      }
 
       break; // Only fetch the first page while developing
 
       await new Promise((resolve) => setTimeout(resolve, 30000));
     }
 
+    /*
     const rawDoc = await TopLoggerGraphQL.findOne<TopLoggerClimbUser>({
       __typename: "ClimbUser",
       userId,
@@ -559,4 +494,5 @@ export const GET = () =>
     >(rawDoc);
 
     await flushJSON({ doc });
+    */
   });
