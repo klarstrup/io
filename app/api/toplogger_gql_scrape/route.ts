@@ -8,6 +8,7 @@ import { chunk } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
+  normalize,
   type GraphQLRequestTuple,
 } from "../../../utils/graphql";
 import { jsonStreamResponse } from "../scraper-utils";
@@ -392,8 +393,8 @@ export const GET = () =>
     await flushJSON({ pageNumberss });
 
     for (const pageNumbers of pageNumberss) {
-      const graphqlResponse2 = await fetchQueries(
-        pageNumbers.slice(0, 1).map((page) => [
+      const queries = pageNumbers.slice(0, 1).map(
+        (page): GraphQLRequestTuple => [
           climbUsersQuery,
           {
             gymId: "rl63cez60dc4xo95uw3ta",
@@ -406,10 +407,15 @@ export const GET = () =>
               ],
             },
           },
-        ]),
+        ],
       );
+      const graphqlResponse2 = await fetchQueries(queries);
 
       await flushJSON(graphqlResponse2);
+
+      console.log(
+        normalize(queries[0]![0], queries[0]![1], graphqlResponse2[0]!.data!),
+      );
 
       break; // Only fetch the first page while developing
 
