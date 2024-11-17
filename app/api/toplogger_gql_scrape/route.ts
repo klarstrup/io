@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
@@ -329,6 +330,18 @@ export const dereferenceDocument = async <
   return doc as R;
 };
 
+const parseDateFields = (doc: Record<string, unknown>) => {
+  for (const key in doc) {
+    const value = doc[key];
+    if (value === "string") {
+      if (value.match(/^\d{4}-\d{2}-\d{2}/)) {
+        doc[key] = TZDate.tz("Etc/UTC", value);
+      }
+    }
+  }
+  return doc;
+};
+
 async function normalizeAndUpsertQueryData(
   query: DocumentNode,
   variables: Variables | undefined,
@@ -340,7 +353,7 @@ async function normalizeAndUpsertQueryData(
   for (const object of objects) {
     await TopLoggerGraphQL.updateOne(
       { __typename: object.__typename as string, id: object.id as string },
-      { $set: object },
+      { $set: parseDateFields(object) },
       { upsert: true },
     );
   }
