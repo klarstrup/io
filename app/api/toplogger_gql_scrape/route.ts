@@ -1,4 +1,4 @@
-import type { DocumentNode } from "graphql";
+import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
@@ -9,10 +9,14 @@ import { proxyCollection } from "../../../utils.server";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
-  normalize,
-  RootFields,
-  Variables,
+  type GraphQLID,
   type GraphQLRequestTuple,
+  type GraphQLTypeName,
+  isReference,
+  normalize,
+  type Reference,
+  type RootFields,
+  type Variables,
 } from "../../../utils/graphql";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -196,6 +200,7 @@ const climbUsersQuery = gql`
     ) {
       data {
         id
+        userId
         tickType
         points
         pointsBonus
@@ -214,6 +219,7 @@ const climbUsersQuery = gql`
           id
           name
           grade
+          inAt
           outAt
           gym {
             id
@@ -263,11 +269,62 @@ interface TopLoggerClimbUser extends MongoGraphQLObject {
   totalTries: number;
   triedFirstAtDate: string;
   tickedFirstAtDate: string;
+  // Object fields
+  climb: Reference;
+  wall: Reference;
+  holdColor: Reference;
+}
+
+interface Climb extends MongoGraphQLObject {
+  grade: number;
+}
+
+interface Wall extends MongoGraphQLObject {
+  nameLoc: string;
+}
+
+interface HoldColor extends MongoGraphQLObject {
+  color: string;
+  nameLoc: string;
+}
+
+interface TopLoggerClimbUserDereferenced
+  extends Omit<TopLoggerClimbUser, "climb" | "wall" | "holdColor"> {
+  climb: Climb;
+  wall: Wall;
+  holdColor: HoldColor;
 }
 
 export const TopLoggerGraphQL = proxyCollection<
   (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
 >("toplogger_graphql");
+
+export const dereferenceDocument = async <
+  D extends MongoGraphQLObject,
+  R extends MongoGraphQLObject,
+>(
+  docRaw: D,
+): Promise<R> => {
+  const doc = { ...docRaw } as D & R;
+
+  for (const key in doc) {
+    if (isReference(doc[key])) {
+      const [__typename, id] = doc[key].__ref.split(":") as [
+        GraphQLID,
+        GraphQLTypeName,
+      ];
+      const keyDoc = await TopLoggerGraphQL.findOne({ __typename, id });
+      if (!keyDoc) {
+        throw new Error(
+          `Failed to dereference ${key} of ${doc.__typename}:${doc.id}`,
+        );
+      }
+      doc[key] = keyDoc;
+    }
+  }
+
+  return doc as R;
+};
 
 async function normalizeAndUpsertQueryData(
   query: DocumentNode,
@@ -472,4 +529,18 @@ export const GET = () =>
 
       await new Promise((resolve) => setTimeout(resolve, 30000));
     }
+
+    const rawDoc = await TopLoggerGraphQL.findOne<TopLoggerClimbUser>({
+      __typename: "ClimbUser",
+      userId,
+    });
+
+    if (!rawDoc) throw new Error("Failed to find climb ClimbUser for user");
+
+    const doc = await dereferenceDocument<
+      TopLoggerClimbUser,
+      TopLoggerClimbUserDereferenced
+    >(rawDoc);
+
+    await flushJSON({ doc });
   });

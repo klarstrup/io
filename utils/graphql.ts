@@ -88,11 +88,14 @@ interface FetchResult<TData = Record<string, unknown>> {
   errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
-interface Reference {
-  readonly __ref: string;
+export type GraphQLTypeName = string;
+export type GraphQLID = string;
+export type RefString = `${GraphQLTypeName}:${GraphQLID}`;
+export interface Reference {
+  readonly __ref: RefString;
 }
 
-export const makeReference = (id: string): Reference => ({ __ref: String(id) });
+export const makeReference = (__ref: RefString): Reference => ({ __ref });
 
 export const isReference = (obj: unknown): obj is Reference =>
   Boolean(
@@ -586,7 +589,7 @@ export function normalize(
       const parentArray = parentNormObjOrArray;
       parentArray.unshift(
         typeof keyOrNewParentArray === "string"
-          ? makeReference(keyOrNewParentArray)
+          ? makeReference(keyOrNewParentArray as RefString)
           : keyOrNewParentArray,
       );
     } else {
@@ -597,7 +600,7 @@ export function normalize(
       const parentNormObj = parentNormObjOrArray as ParentNormObj;
       parentNormObj[key] =
         typeof keyOrNewParentArray === "string"
-          ? makeReference(keyOrNewParentArray)
+          ? makeReference(keyOrNewParentArray as RefString)
           : keyOrNewParentArray;
     }
 
