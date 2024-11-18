@@ -10,7 +10,14 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
     useState<boolean>(false);
 
-  useInterval(() => router.refresh(), (HOUR_IN_SECONDS * 1000) / 3);
+  useInterval(
+    () => {
+      router.refresh();
+
+      void fetch("/api/cron").catch((error) => console.error(error)); // Throwaway request to trigger a random scraper
+    },
+    (HOUR_IN_SECONDS * 1000) / 3,
+  );
 
   return (
     <div
