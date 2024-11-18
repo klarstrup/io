@@ -480,16 +480,16 @@ export const GET = () =>
     if (
       !userMeResponse.data!.userMe ||
       !(typeof userMeResponse.data!.userMe === "object") ||
-      !("gymUserFavorites" in userMeResponse.data!.userMe!) ||
-      !userMeResponse.data!.userMe!.gymUserFavorites ||
-      !Array.isArray(userMeResponse.data!.userMe!.gymUserFavorites)
+      !("gymUserFavorites" in userMeResponse.data!.userMe) ||
+      !userMeResponse.data!.userMe.gymUserFavorites ||
+      !Array.isArray(userMeResponse.data!.userMe.gymUserFavorites)
     ) {
       throw new Error("No gymUserFavorites");
     }
 
     const gyms = (
-      userMeResponse.data!.userMe!.gymUserFavorites as { gym: Gym }[]
-    ).map((guf) => guf.gym as Gym);
+      userMeResponse.data!.userMe.gymUserFavorites as { gym: Gym }[]
+    ).map((guf) => guf.gym);
 
     await flushJSON({ gyms });
 
