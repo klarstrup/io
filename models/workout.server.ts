@@ -318,7 +318,7 @@ export async function getNextSets({
     .sort((a, b) => a.workedOutAt.getTime() - b.workedOutAt.getTime());
 }
 
-const noPR = {
+export const noPR = {
   allTimePR: false,
   oneYearPR: false,
   threeMonthPR: false,

@@ -6,6 +6,7 @@ import {
   getAllWorkouts,
   getIsSetPR,
   getNextSets,
+  noPR,
 } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
@@ -35,6 +36,12 @@ export async function DiaryAgendaWorkoutsWrapper({
     }
 
     for (const exercise of workout.exercises) {
+      if (exercise.exerciseId === 2001) {
+        workoutsExerciseSetPRs[workout._id]!.push(
+          Array.from({ length: exercise.sets.length }, () => noPR),
+        );
+      }
+
       const precedingWorkouts = await getAllWorkouts({
         user,
         exerciseId: exercise.exerciseId,
