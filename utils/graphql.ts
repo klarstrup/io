@@ -682,15 +682,31 @@ export async function normalizeAndUpsertQueryData(
   const objects = Object.values(normalize(query, variables, data)).filter(
     (o) => o.__typename && o.id,
   );
+  const updateResults: {
+    /** The number of documents that matched the filter */
+    matchedCount: number;
+    /** The number of documents that were modified */
+    modifiedCount: number;
+    /** The number of documents that were upserted */
+    upsertedCount: number;
+  } = {
+    matchedCount: 0,
+    modifiedCount: 0,
+    upsertedCount: 0,
+  };
   for (const object of objects) {
-    await TopLoggerGraphQL.updateOne(
+    const updateResult = await TopLoggerGraphQL.updateOne(
       { __typename: object.__typename as string, id: object.id as string },
       { $set: parseDateFields(object) },
       { upsert: true },
     );
+
+    updateResults.matchedCount += updateResult.matchedCount;
+    updateResults.modifiedCount += updateResult.modifiedCount;
+    updateResults.upsertedCount += updateResult.upsertedCount;
   }
 
-  return objects;
+  return updateResults;
 }
 
 export function workoutFromTopLoggerClimbUsers(

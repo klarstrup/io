@@ -19,14 +19,11 @@ import {
   TopLoggerHolds,
   TopLoggerUsers,
 } from "../../../sources/toplogger.server";
-import { HOUR_IN_SECONDS, chunk, shuffle } from "../../../utils";
+import { HOUR_IN_SECONDS, randomSlice } from "../../../utils";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-const randomSlice = <T>(array: T[], slices: number) =>
-  shuffle(chunk(array, Math.ceil(array.length / slices)))[0] || [];
 
 export const GET = () =>
   // eslint-disable-next-line require-yield

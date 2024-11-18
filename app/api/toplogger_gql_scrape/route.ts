@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
-import { chunk } from "../../../utils";
+import { chunk, shuffle } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -510,7 +510,7 @@ export const GET = () =>
 
     await flushJSON({ gyms });
 
-    for (const gym of gyms) {
+    for (const gym of shuffle(gyms)) {
       await ensureAuthTokens();
 
       const graphqlTotalResponse = await fetchQuery(
@@ -550,59 +550,34 @@ export const GET = () =>
 
       await flushJSON({ total });
 
-      const pageNumberss = chunk(
-        Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-        20,
+      const pageNumbers = shuffle(
+        chunk(
+          Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+          20,
+        ),
+      )[0]!;
+
+      await flushJSON({ pageNumbers });
+
+      const queries = pageNumbers.map(
+        (page): GraphQLRequestTuple => [
+          climbUsersQuery,
+          { gymId: gym.id, userId, pagination: { page } },
+        ],
       );
+      const graphqlResponse2 = await fetchQueries(queries);
 
-      await flushJSON({ pageNumberss });
+      for (let i = 0; i < queries.length; i++) {
+        const [query, variables] = queries[i]!;
+        const response = graphqlResponse2[i]!;
 
-      for (const pageNumbers of pageNumberss) {
-        const queries = pageNumbers.map(
-          (page): GraphQLRequestTuple => [
-            climbUsersQuery,
-            {
-              gymId: gym.id,
-              userId,
-              pagination: {
-                page,
-                orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
-              },
-            },
-          ],
+        const updateResult = await normalizeAndUpsertQueryData(
+          query,
+          variables,
+          response.data!,
         );
-        const graphqlResponse2 = await fetchQueries(queries);
 
-        for (let i = 0; i < queries.length; i++) {
-          const [query, variables] = queries[i]!;
-          const response = graphqlResponse2[i]!;
-
-          const insertedDocuments = await normalizeAndUpsertQueryData(
-            query,
-            variables,
-            response.data!,
-          );
-
-          await flushJSON(`Inserted ${insertedDocuments.length} documents`);
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 30000));
+        await flushJSON(updateResult);
       }
-
-      /*
-    const rawDoc = await TopLoggerGraphQL.findOne<TopLoggerClimbUser>({
-      __typename: "ClimbUser",
-      userId,
-    });
-
-    if (!rawDoc) throw new Error("Failed to find climb ClimbUser for user");
-
-    const doc = await dereferenceDocument<
-      TopLoggerClimbUser,
-      TopLoggerClimbUserDereferenced
-    >(rawDoc);
-
-    await flushJSON({ doc });
-    */
     }
   });
