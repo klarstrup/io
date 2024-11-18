@@ -26,7 +26,7 @@
     "luxon": "^3.5.0",
     "mongodb": "^6.10.0",
     "next": "^15.0.3",
-    "next-auth": "^5.0.0-beta.20",
+    "next-auth": "^5.0.0-beta.25",
     "postcss": "^8.4.49",
     "react": "npm:react@rc",
     "react-dom": "npm:react-dom@rc",
