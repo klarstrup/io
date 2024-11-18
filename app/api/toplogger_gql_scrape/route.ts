@@ -514,7 +514,7 @@ export const GET = () =>
 
     await flushJSON({ gyms });
 
-    for (const gym of shuffle(gyms)) {
+    for (const gym of shuffle(gyms).slice(0, 2)) {
       await ensureAuthTokens();
 
       const graphqlTotalResponse = await fetchQuery(
