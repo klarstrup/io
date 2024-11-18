@@ -206,6 +206,7 @@ export default function ProblemByProblem({
   if (!problemByProblem?.length) return null;
 
   const sortedProblems = Array.from(problemByProblem)
+    .sort((a, b) => (a.color && b.color ? a.color.localeCompare(b.color) : 0))
     .sort((a, b) => Number(b.attempt) - Number(a.attempt))
     .sort((a, b) => Number(b.zone) - Number(a.zone))
     .sort((a, b) => Number(b.flash) - Number(a.flash))
@@ -232,7 +233,10 @@ export default function ProblemByProblem({
     return (
       <div
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))" }}
-        className={"mt-0.5 grid gap-0.5 content-between justify-between " + (className ? className : "")}
+        className={
+          "mt-0.5 grid content-between justify-between gap-0.5 " +
+          (className ? className : "")
+        }
       >
         {Array.from(grouped)
           .sort((a, b) => Number(b[1][0].grade) - Number(a[1][0].grade))
