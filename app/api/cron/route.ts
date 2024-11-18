@@ -1,5 +1,16 @@
-import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
+
+const scraperEndpoints = [
+  "ical_scrape",
+  "myfitnesspal_scrape",
+  "rundouble_scrape",
+  "tomorrow_scrape",
+  "toplogger_gql_scrape",
+] as const;
 
 export function GET() {
-  return NextResponse.json({ ok: true });
+  const scraperEndoint =
+    scraperEndpoints[Math.floor(Math.random() * scraperEndpoints.length)]!;
+
+  redirect(`/api/${scraperEndoint}`);
 }
