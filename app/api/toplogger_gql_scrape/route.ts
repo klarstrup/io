@@ -481,15 +481,15 @@ export const GET = () =>
       !userMeResponse.data!.userMe ||
       !(typeof userMeResponse.data!.userMe === "object") ||
       !("gymUserFavorites" in userMeResponse.data!.userMe!) ||
-      !userMeResponse.data!.userMe!.gymUserFavorites || 
+      !userMeResponse.data!.userMe!.gymUserFavorites ||
       !Array.isArray(userMeResponse.data!.userMe!.gymUserFavorites)
     ) {
       throw new Error("No gymUserFavorites");
     }
 
-    const gyms = userMeResponse.data!.userMe!.gymUserFavorites.map(
-      (guf) => guf.gym as Gym,
-    );
+    const gyms = (
+      userMeResponse.data!.userMe!.gymUserFavorites as { gym: Gym }[]
+    ).map((guf) => guf.gym as Gym);
 
     await flushJSON({ gyms });
 
