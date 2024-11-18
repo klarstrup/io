@@ -40,6 +40,7 @@ export async function DiaryAgendaWorkoutsWrapper({
         workoutsExerciseSetPRs[workout._id]!.push(
           Array.from({ length: exercise.sets.length }, () => noPR),
         );
+        continue;
       }
 
       const precedingWorkouts = await getAllWorkouts({
