@@ -35,8 +35,6 @@ export async function DiaryAgendaWorkoutsWrapper({
     }
 
     for (const exercise of workout.exercises) {
-      if (exercise.exerciseId === 2001) continue;
-
       const precedingWorkouts = await getAllWorkouts({
         user,
         exerciseId: exercise.exerciseId,
