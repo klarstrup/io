@@ -310,8 +310,12 @@ export const GET = () =>
       );
     }
 
-    await TopLoggerGraphQL.createIndexes([{ key: { __typename: 1, id: 1 } }]);
     await TopLoggerGraphQL.createIndexes([
+      { key: { __typename: 1 } },
+      { key: { id: 1 } },
+      { key: { userId: 1 } },
+      { key: { tickedFirstAtDate: 1 } },
+      { key: { __typename: 1, id: 1 } },
       { key: { __typename: 1, userId: 1 } },
     ]);
 
