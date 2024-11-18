@@ -315,55 +315,72 @@ export const GET = () =>
       { key: { __typename: 1, userId: 1 } },
     ]);
 
-    if (new Date(authTokens.access.expiresAt) < new Date()) {
-      const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
-        gql`
-          mutation ($refreshToken: JWT!) {
-            authSigninRefreshToken(refreshToken: $refreshToken) {
-              access {
-                token
-                expiresAt
-                __typename
-              }
-              refresh {
-                token
-                expiresAt
-                __typename
-              }
-              __typename
-            }
-          }
-        `,
-        { refreshToken: authTokens.refresh.token },
-        "https://app.toplogger.nu/graphql",
-        { headers: { authorization: `Bearer ${authTokens.refresh.token}` } },
-      );
+    let headers = { authorization: `Bearer ${authTokens.access.token}` };
 
-      if (
-        typeof authSigninRefreshTokenResponse === "object" &&
-        authSigninRefreshTokenResponse &&
-        "data" in authSigninRefreshTokenResponse &&
-        typeof authSigninRefreshTokenResponse.data === "object" &&
-        authSigninRefreshTokenResponse.data &&
-        "authSigninRefreshToken" in authSigninRefreshTokenResponse.data &&
-        typeof authSigninRefreshTokenResponse.data.authSigninRefreshToken ===
-          "object" &&
-        isAuthTokens(authSigninRefreshTokenResponse.data.authSigninRefreshToken)
-      ) {
-        authTokens = authSigninRefreshTokenResponse.data.authSigninRefreshToken;
-        await Users.updateOne(
-          { _id: new ObjectId(user.id) },
-          { $set: { topLoggerAuthTokens: authTokens } },
-        );
-        await flushJSON("Updated authTokens with refresh token");
-      } else {
-        throw new Error("Failed to refresh token");
+    async function ensureAuthTokens() {
+      if (!authTokens) {
+        throw new Error("No auth tokens");
       }
+      if (!user) {
+        throw new Error("No user");
+      }
+
+      if (new Date(authTokens.access.expiresAt) < new Date()) {
+        const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
+          gql`
+            mutation ($refreshToken: JWT!) {
+              authSigninRefreshToken(refreshToken: $refreshToken) {
+                access {
+                  token
+                  expiresAt
+                  __typename
+                }
+                refresh {
+                  token
+                  expiresAt
+                  __typename
+                }
+                __typename
+              }
+            }
+          `,
+          { refreshToken: authTokens.refresh.token },
+          "https://app.toplogger.nu/graphql",
+          { headers: { authorization: `Bearer ${authTokens.refresh.token}` } },
+        );
+
+        if (
+          typeof authSigninRefreshTokenResponse === "object" &&
+          authSigninRefreshTokenResponse &&
+          "data" in authSigninRefreshTokenResponse &&
+          typeof authSigninRefreshTokenResponse.data === "object" &&
+          authSigninRefreshTokenResponse.data &&
+          "authSigninRefreshToken" in authSigninRefreshTokenResponse.data &&
+          typeof authSigninRefreshTokenResponse.data.authSigninRefreshToken ===
+            "object" &&
+          isAuthTokens(
+            authSigninRefreshTokenResponse.data.authSigninRefreshToken,
+          )
+        ) {
+          authTokens =
+            authSigninRefreshTokenResponse.data.authSigninRefreshToken;
+          await Users.updateOne(
+            { _id: new ObjectId(user.id) },
+            { $set: { topLoggerAuthTokens: authTokens } },
+          );
+          await flushJSON("Updated authTokens with refresh token");
+        } else {
+          throw new Error("Failed to refresh token");
+        }
+      }
+
+      await flushJSON({ authTokens });
+
+      headers = { authorization: `Bearer ${authTokens.access.token}` };
     }
 
-    await flushJSON({ authTokens });
+    await ensureAuthTokens();
 
-    const headers = { authorization: `Bearer ${authTokens.access.token}` };
     const fetchQuery = <
       TData = Record<string, unknown>,
       TVariables extends Record<string, unknown> = Record<string, unknown>,
@@ -494,6 +511,8 @@ export const GET = () =>
     await flushJSON({ gyms });
 
     for (const gym of gyms) {
+      await ensureAuthTokens();
+
       const graphqlTotalResponse = await fetchQuery(
         gql`
           query climbUsers(
