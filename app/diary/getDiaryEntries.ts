@@ -8,7 +8,7 @@ import { allPromises, dateToString, DEFAULT_TIMEZONE } from "../../utils";
 type DayStr = `${number}-${number}-${number}`;
 
 const rangeToQuery = (from: Date, to?: Date) =>
-  to ? { $gte: from, $lt: to } : { $gte: from };
+  to ? { $gte: from, $lte: to } : { $gte: from };
 
 export async function getDiaryEntries({ from, to }: { from: Date; to?: Date }) {
   const user = (await auth())?.user;
