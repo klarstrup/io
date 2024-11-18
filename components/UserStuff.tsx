@@ -56,6 +56,11 @@ async function updateUser(formData: FormData) {
       : null;
   }
 
+  const topLoggerGraphQLId = formData.get("topLoggerGraphQLId");
+  if (typeof topLoggerGraphQLId === "string") {
+    newUser.topLoggerGraphQLId = topLoggerGraphQLId.trim() || null;
+  }
+
   const topLoggerAuthTokens = formData.get("topLoggerAuthTokens");
   if (typeof topLoggerAuthTokens === "string") {
     try {
@@ -236,6 +241,14 @@ export default async function UserStuff() {
                 className="flex flex-col items-center gap-1.5"
                 legend="TopLogger GQL User"
               >
+                <label>
+                  <code>TopLogger GraphQL ID</code>
+                  <input
+                    name="topLoggerGraphQLId"
+                    defaultValue={user.topLoggerGraphQLId || ""}
+                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                  />
+                </label>
                 <label>
                   <code>tl-auth</code>
                   <input

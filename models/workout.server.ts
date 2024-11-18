@@ -1,6 +1,10 @@
 import { isAfter, subMonths, subYears } from "date-fns";
 import type { Condition, WithId } from "mongodb";
 import type { Session } from "next-auth";
+import {
+  TopLoggerClimbUser,
+  TopLoggerClimbUserDereferenced,
+} from "../app/api/toplogger_gql_scrape/route";
 import type { PRType } from "../lib";
 import {
   exerciseIdsThatICareAbout,
@@ -22,6 +26,11 @@ import {
 } from "../sources/toplogger.server";
 import { dateToString } from "../utils";
 import { proxyCollection } from "../utils.server";
+import {
+  dereferenceDocument,
+  TopLoggerGraphQL,
+  workoutFromTopLoggerClimbUsers,
+} from "../utils/graphql";
 import { exercises, InputType } from "./exercises";
 import type { WorkoutData, WorkoutExerciseSet } from "./workout";
 
@@ -88,7 +97,9 @@ export async function getAllWorkouts({
     const [holds, gyms, ascends] = await Promise.all([
       TopLoggerHolds.find().toArray(),
       TopLoggerGyms.find().toArray(),
-      TopLoggerAscends.find(ascendsQuery).toArray(),
+      TopLoggerAscends.find(ascendsQuery, {
+        sort: { date_logged: 1 },
+      }).toArray(),
     ]);
 
     const climbs = await TopLoggerClimbs.find({
@@ -114,14 +125,75 @@ export async function getAllWorkouts({
     for (const dayAscends of ascendsByDay) {
       allWorkouts.push(
         workoutFromTopLoggerAscends(
-          dayAscends.map((ascend) => ({
-            ...ascend,
-            climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-          })),
-          holds,
+          dayAscends
+            .map((ascend) => ({
+              ...ascend,
+              climb: climbs.find(({ id }) => id === ascend.climb_id)!,
+            }))
+            .sort((a, b) => Number(b.climb.grade) - Number(a.climb.grade)),
+          holds.sort((a, b) =>
+            a.brand.toLowerCase().localeCompare(b.brand.toLowerCase()),
+          ),
           gyms,
         ),
       );
+    }
+  }
+
+  if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
+    const climbUsersQuery: Condition<TopLoggerClimbUser> = {
+      __typename: "ClimbUser",
+      userId: user.topLoggerGraphQLId,
+    };
+
+    if (workedOutAt) {
+      climbUsersQuery.tickedFirstAtDate = workedOutAt;
+    }
+
+    const climbUsers = await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>(
+      climbUsersQuery,
+      { sort: { tickedFirstAtDate: 1 } },
+    ).toArray();
+
+    const dereferencedClimbUsers = await Promise.all(
+      climbUsers.map((climbUser) =>
+        dereferenceDocument<
+          WithId<TopLoggerClimbUser>,
+          WithId<TopLoggerClimbUserDereferenced>
+        >(climbUser),
+      ),
+    );
+
+    const climbUsersByDay = Object.values(
+      dereferencedClimbUsers
+        .sort((a, b) =>
+          a.holdColor.nameLoc
+            .toLowerCase()
+            .localeCompare(b.holdColor.nameLoc.toLowerCase()),
+        )
+        .sort((a, b) => a.climb.grade - b.climb.grade)
+        .reduce(
+          (acc, climbUser) => {
+            if (!climbUser.tickedFirstAtDate) return acc;
+            const date = dateToString(climbUser.tickedFirstAtDate);
+
+            if (!Array.isArray(acc[date])) {
+              acc[date] = [climbUser];
+            } else {
+              acc[date].push(climbUser);
+            }
+
+            return acc;
+          },
+          {} as Record<
+            `${number}-${number}-${number}`,
+            WithId<TopLoggerClimbUserDereferenced>[]
+          >,
+        ),
+    );
+
+    for (const climbUsersOfDay of climbUsersByDay) {
+      allWorkouts.push(workoutFromTopLoggerClimbUsers(climbUsersOfDay));
     }
   }
 

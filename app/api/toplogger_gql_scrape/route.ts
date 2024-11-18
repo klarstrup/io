@@ -248,18 +248,19 @@ const climbUsersQuery = gql`
 export interface TopLoggerClimbUser extends MongoGraphQLObject {
   __typename: "ClimbUser";
   id: string;
-  tickType: string;
+  userId: string;
+  tickType: number;
   points: number;
   pointsBonus: number;
-  pointsExpireAtDate: string;
+  pointsExpireAtDate: Date;
   climbId: string;
   grade: string;
   rating: number;
   project: string;
   votedRenew: boolean;
   totalTries: number;
-  triedFirstAtDate: string;
-  tickedFirstAtDate: string;
+  triedFirstAtDate: Date;
+  tickedFirstAtDate: Date;
   // Object fields
   climb: Reference;
   wall: Reference;
@@ -268,6 +269,16 @@ export interface TopLoggerClimbUser extends MongoGraphQLObject {
 
 interface Climb extends MongoGraphQLObject {
   grade: number;
+  gym: Reference;
+}
+
+interface ClimbDereferenced extends Omit<Climb, "gym"> {
+  gym: Gym;
+}
+
+interface Gym extends MongoGraphQLObject {
+  name: string;
+  nameSlug: string;
 }
 
 interface Wall extends MongoGraphQLObject {
@@ -281,7 +292,7 @@ interface HoldColor extends MongoGraphQLObject {
 
 export interface TopLoggerClimbUserDereferenced
   extends Omit<TopLoggerClimbUser, "climb" | "wall" | "holdColor"> {
-  climb: Climb;
+  climb: ClimbDereferenced;
   wall: Wall;
   holdColor: HoldColor;
 }
@@ -373,6 +384,49 @@ export const GET = () =>
         headers,
       });
 
+    const userMeStoreQuery = gql`
+      query userMeStore {
+        userMe {
+          ...userMeStore
+          __typename
+        }
+      }
+
+      fragment userMeStore on UserMe {
+        id
+        locale
+        gradingSystemRoutes
+        gradingSystemBoulders
+        anonymous
+        profileReviewed
+        avatarUploadPath
+        firstName
+        lastName
+        fullName
+        gender
+        email
+        gym {
+          id
+          name
+          nameSlug
+          iconPath
+          __typename
+        }
+        gymUserFavorites {
+          id
+          gym {
+            id
+            name
+            nameSlug
+            iconPath
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+    `;
+
     const userMeResponse = await fetchQuery(gql`
       query {
         userMe {
@@ -396,6 +450,24 @@ export const GET = () =>
           gradingSystemBoulders
           gradingSystemRoutes
           __typename
+
+          gym {
+            id
+            name
+            nameSlug
+            iconPath
+            __typename
+          }
+          gymUserFavorites {
+            id
+            gym {
+              id
+              name
+              nameSlug
+              iconPath
+              __typename
+            }
+          }
         }
       }
     `);
@@ -405,88 +477,100 @@ export const GET = () =>
 
     await flushJSON({ userId });
 
-    const graphqlTotalResponse = await fetchQuery(
-      gql`
-        query climbUsers(
-          $gymId: ID
-          $userId: ID
-          $pagination: PaginationInputClimbUsers
-        ) {
-          __typename
-          climbUsers(
-            gymId: $gymId
-            userId: $userId
-            pagination: $pagination
-            pointsMin: 1
-          ) {
-            pagination {
-              total
-              __typename
-            }
-            __typename
-          }
-        }
-      `,
-      {
-        gymId: "rl63cez60dc4xo95uw3ta",
-        userId,
-        pagination: { page: 1, perPage: 1 },
-      },
-    );
-
-    const total = (
-      graphqlTotalResponse as {
-        data: { climbUsers: { pagination: { total: number } } };
-      }
-    ).data.climbUsers.pagination.total;
-
-    await flushJSON({ total });
-
-    const pageNumberss = chunk(
-      Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-      20,
-    ).slice(0, 1);
-
-    await flushJSON({ pageNumberss });
-
-    for (const pageNumbers of pageNumberss) {
-      const queries = pageNumbers.map(
-        (page): GraphQLRequestTuple => [
-          climbUsersQuery,
-          {
-            gymId: "rl63cez60dc4xo95uw3ta",
-            userId,
-            pagination: {
-              page,
-              orderBy: [
-                { key: "tickType", order: "desc" },
-                { key: "tickedFirstAtDate", order: "desc" },
-              ],
-            },
-          },
-        ],
-      );
-      const graphqlResponse2 = await fetchQueries(queries);
-
-      for (let i = 0; i < queries.length; i++) {
-        const [query, variables] = queries[i]!;
-        const response = graphqlResponse2[i]!;
-
-        const insertedDocuments = await normalizeAndUpsertQueryData(
-          query,
-          variables,
-          response.data!,
-        );
-
-        await flushJSON(`Inserted ${insertedDocuments.length} documents`);
-      }
-
-      break; // Only fetch the first page while developing
-
-      await new Promise((resolve) => setTimeout(resolve, 30000));
+    if (
+      !userMeResponse.data!.userMe ||
+      !(typeof userMeResponse.data!.userMe === "object") ||
+      !("gymUserFavorites" in userMeResponse.data!.userMe!) ||
+      !userMeResponse.data!.userMe!.gymUserFavorites ||
+      !Array.isArray(userMeResponse.data!.userMe!.gymUserFavorites)
+    ) {
+      throw new Error("No gymUserFavorites");
     }
 
-    /*
+    const gyms: Gym[] = userMeResponse.data!.userMe!.gymUserFavorites.map(
+      (guf) => guf.gym,
+    );
+
+    await flushJSON({ gyms });
+
+    for (const gym of gyms) {
+      const graphqlTotalResponse = await fetchQuery(
+        gql`
+          query climbUsers(
+            $gymId: ID
+            $userId: ID
+            $pagination: PaginationInputClimbUsers
+          ) {
+            __typename
+            climbUsers(
+              gymId: $gymId
+              userId: $userId
+              pagination: $pagination
+              pointsMin: 1
+            ) {
+              pagination {
+                total
+                __typename
+              }
+              __typename
+            }
+          }
+        `,
+        {
+          gymId: gym.id,
+          userId,
+          pagination: { page: 1, perPage: 1 },
+        },
+      );
+
+      const total = (
+        graphqlTotalResponse as {
+          data: { climbUsers: { pagination: { total: number } } };
+        }
+      ).data.climbUsers.pagination.total;
+
+      await flushJSON({ total });
+
+      const pageNumberss = chunk(
+        Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+        20,
+      );
+
+      await flushJSON({ pageNumberss });
+
+      for (const pageNumbers of pageNumberss) {
+        const queries = pageNumbers.map(
+          (page): GraphQLRequestTuple => [
+            climbUsersQuery,
+            {
+              gymId: gym.id,
+              userId,
+              pagination: {
+                page,
+                orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
+              },
+            },
+          ],
+        );
+        const graphqlResponse2 = await fetchQueries(queries);
+
+        for (let i = 0; i < queries.length; i++) {
+          const [query, variables] = queries[i]!;
+          const response = graphqlResponse2[i]!;
+
+          const insertedDocuments = await normalizeAndUpsertQueryData(
+            query,
+            variables,
+            response.data!,
+          );
+
+          await flushJSON(`Inserted ${insertedDocuments.length} documents`);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 30000));
+      }
+
+      /*
     const rawDoc = await TopLoggerGraphQL.findOne<TopLoggerClimbUser>({
       __typename: "ClimbUser",
       userId,
@@ -501,4 +585,5 @@ export const GET = () =>
 
     await flushJSON({ doc });
     */
+    }
   });

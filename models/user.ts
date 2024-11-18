@@ -10,6 +10,7 @@ export interface IUser {
   fitocracySessionId?: string | null;
   fitocracyUserId?: number;
   topLoggerId?: number | null;
+  topLoggerGraphQLId?: string | null;
   topLoggerAuthTokens?: TopLoggerAuthTokens;
   myFitnessPalToken?: string | null;
   myFitnessPalUserName?: string;
