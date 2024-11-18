@@ -38,7 +38,7 @@ export async function DiaryAgendaWorkoutsWrapper({
       const precedingWorkouts = await getAllWorkouts({
         user,
         exerciseId: exercise.exerciseId,
-        workedOutAt: { $lte: workout.workedOutAt },
+        workedOutAt: { $lt: workout.workedOutAt },
       });
 
       const exerciseSetsPRs: Record<PRType, boolean>[] = [];
