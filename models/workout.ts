@@ -19,6 +19,10 @@ export interface WorkoutData {
   location?: string;
 }
 
+export interface WorkoutDataShallow extends Omit<WorkoutData, "exercises"> {
+  exercises: Omit<WorkoutExercise, "sets">[];
+}
+
 export interface WorkoutExercise {
   exerciseId: number;
   sets: WorkoutExerciseSet[];

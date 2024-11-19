@@ -3,7 +3,7 @@ import { endOfWeek, setISOWeek, setYear, startOfWeek } from "date-fns";
 import type { Session } from "next-auth";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
-import { getDiaryEntries } from "./getDiaryEntries";
+import { getDiaryEntriesShallow } from "./getDiaryEntries";
 
 export async function DiaryEntryWeekWrapper({
   user,
@@ -21,7 +21,7 @@ export async function DiaryEntryWeekWrapper({
 
   const weekDate = setYear(setISOWeek(TZDate.tz(timeZone), isoWeek), isoYear);
 
-  const diaryEntries = await getDiaryEntries({
+  const diaryEntries = await getDiaryEntriesShallow({
     from: startOfWeek(weekDate, { weekStartsOn: 1 }),
     to: endOfWeek(weekDate, { weekStartsOn: 1 }),
   });

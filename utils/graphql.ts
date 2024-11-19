@@ -15,9 +15,16 @@ import {
   type ValueNode,
 } from "graphql";
 import type { WithId } from "mongodb";
-import type { TopLoggerClimbUserDereferenced } from "../app/api/toplogger_gql_scrape/route";
+import type {
+  TopLoggerClimbUser,
+  TopLoggerClimbUserDereferenced,
+} from "../app/api/toplogger_gql_scrape/route";
 import { exercises, Unit } from "../models/exercises";
-import { type WorkoutData, WorkoutSource } from "../models/workout";
+import {
+  type WorkoutData,
+  type WorkoutDataShallow,
+  WorkoutSource,
+} from "../models/workout";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
 import { proxyCollection } from "../utils.server";
 
@@ -745,6 +752,23 @@ export function workoutFromTopLoggerClimbUsers(
       },
     ],
     location: firstClimbUser.climb.gym.name,
+    userId: firstClimbUser.userId,
+    createdAt: firstClimbUser.tickedFirstAtDate,
+    updatedAt: firstClimbUser.tickedFirstAtDate,
+    workedOutAt: firstClimbUser.tickedFirstAtDate,
+    source: WorkoutSource.TopLogger,
+  };
+}
+
+export function workoutWithoutSetsFromTopLoggerClimbUsers(
+  climbUsers: WithId<TopLoggerClimbUser>[],
+): WithId<WorkoutDataShallow> {
+  const firstClimbUser = climbUsers[0];
+  if (!firstClimbUser) throw new Error("No climb users provided");
+
+  return {
+    _id: firstClimbUser._id,
+    exercises: [{ exerciseId: 2001 }],
     userId: firstClimbUser.userId,
     createdAt: firstClimbUser.tickedFirstAtDate,
     updatedAt: firstClimbUser.tickedFirstAtDate,

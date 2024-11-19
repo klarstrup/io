@@ -20,9 +20,14 @@ import {
   dereferenceDocument,
   TopLoggerGraphQL,
   workoutFromTopLoggerClimbUsers,
+  workoutWithoutSetsFromTopLoggerClimbUsers,
 } from "../utils/graphql";
 import { exercises, InputType } from "./exercises";
-import type { WorkoutData, WorkoutExerciseSet } from "./workout";
+import type {
+  WorkoutData,
+  WorkoutDataShallow,
+  WorkoutExerciseSet,
+} from "./workout";
 
 export const Workouts = proxyCollection<WorkoutData>("workouts");
 
@@ -48,7 +53,15 @@ export async function getAllWorkouts({
     allWorkouts.push(workout);
   }
 
-  if (user.fitocracyUserId) {
+  const skipPostFitocracyWorkouts =
+    workedOutAt &&
+    (("$gte" in workedOutAt &&
+      workedOutAt.$gte &&
+      isAfter(workedOutAt.$gte, new Date(2024, 6, 15))) ||
+      ("$gt" in workedOutAt &&
+        workedOutAt.$gt &&
+        isAfter(workedOutAt.$gt, new Date(2024, 6, 15))));
+  if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
     const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
       user_id: user.fitocracyUserId,
     };
@@ -132,6 +145,112 @@ export async function getAllWorkouts({
 
     for (const climbUsersOfDay of climbUsersByDay) {
       allWorkouts.push(workoutFromTopLoggerClimbUsers(climbUsersOfDay));
+    }
+  }
+
+  return allWorkouts;
+}
+
+export async function getAllWorkoutsWithoutSets({
+  user,
+  exerciseId,
+  workedOutAt,
+}: {
+  user: Session["user"];
+  exerciseId?: number;
+  workedOutAt?: Condition<Date>;
+}) {
+  const allWorkouts: WithId<WorkoutDataShallow>[] = [];
+
+  const workoutsQuery: Condition<WorkoutDataShallow> = {
+    userId: user.id,
+    deletedAt: { $exists: false },
+  };
+  if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
+  if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
+
+  for await (const workout of Workouts.find(workoutsQuery)) {
+    allWorkouts.push(workout);
+  }
+
+  const skipPostFitocracyWorkouts =
+    workedOutAt &&
+    (("$gte" in workedOutAt &&
+      workedOutAt.$gte &&
+      isAfter(workedOutAt.$gte, new Date(2024, 6, 15))) ||
+      ("$gt" in workedOutAt &&
+        workedOutAt.$gt &&
+        isAfter(workedOutAt.$gt, new Date(2024, 6, 15))));
+  if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
+    const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
+      user_id: user.fitocracyUserId,
+    };
+    if (exerciseId) {
+      fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
+        exerciseId;
+    }
+    if (workedOutAt) {
+      fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
+    }
+
+    for await (const fitocracyWorkout of FitocracyWorkouts.find(
+      fitocracyWorkoutsQuery,
+    )) {
+      allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
+    }
+  }
+
+  if (user.runDoubleId && (exerciseId === 518 || !exerciseId)) {
+    const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
+      userId: user.runDoubleId,
+    };
+    if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
+
+    for await (const runDoubleRun of RunDoubleRuns.find(runDoubleRunsQuery)) {
+      allWorkouts.push(workoutFromRunDouble(runDoubleRun));
+    }
+  }
+
+  if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
+    const climbUsersQuery: Condition<TopLoggerClimbUser> = {
+      __typename: "ClimbUser",
+      userId: user.topLoggerGraphQLId,
+    };
+
+    if (workedOutAt) {
+      climbUsersQuery.tickedFirstAtDate = workedOutAt;
+    }
+
+    const climbUsers =
+      await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>(
+        climbUsersQuery,
+      ).toArray();
+
+    const climbUsersByDay = Object.values(
+      climbUsers.reduce(
+        (acc, climbUser) => {
+          if (!climbUser.tickedFirstAtDate) return acc;
+          const date = dateToString(climbUser.tickedFirstAtDate);
+
+          if (!Array.isArray(acc[date])) {
+            acc[date] = [climbUser];
+          } else {
+            acc[date].push(climbUser);
+          }
+
+          return acc;
+        },
+        {} as Record<
+          `${number}-${number}-${number}`,
+          WithId<TopLoggerClimbUser>[]
+        >,
+      ),
+    );
+
+    for (const climbUsersOfDay of climbUsersByDay) {
+      allWorkouts.push(
+        workoutWithoutSetsFromTopLoggerClimbUsers(climbUsersOfDay),
+      );
     }
   }
 
