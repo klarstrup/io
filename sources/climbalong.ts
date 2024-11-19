@@ -765,5 +765,4 @@ export const ioClimbAlongEventsWithIds = [
   [148],
   [150],
   [151],
-  [154],
 ] as const;
