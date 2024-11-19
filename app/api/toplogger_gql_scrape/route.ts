@@ -1,6 +1,7 @@
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
+import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -603,10 +604,7 @@ export const GET = () =>
           {
             gymId: gym.id,
             userId,
-            pagination: {
-              page,
-              orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
-            },
+            pagination: { page },
           },
         ],
       );
