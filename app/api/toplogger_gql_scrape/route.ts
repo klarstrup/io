@@ -319,8 +319,8 @@ export const GET = () =>
       { key: { __typename: 1, userId: 1 } },
     ]);
 
-    let headers = { authorization: `Bearer ${authTokens.access.token}` };
-
+    let headers: HeadersInit = {};
+    await flushJSON({ authTokens });
     async function ensureAuthTokens() {
       if (!authTokens) {
         throw new Error("No auth tokens");
@@ -514,7 +514,7 @@ export const GET = () =>
 
     await flushJSON({ gyms });
 
-    for (const gym of shuffle(gyms).slice(0, 2)) {
+    for (const gym of shuffle(gyms)) {
       await ensureAuthTokens();
 
       const graphqlTotalResponse = await fetchQuery(
@@ -554,11 +554,9 @@ export const GET = () =>
 
       await flushJSON({ total });
 
-      const pageNumbers = shuffle(
-        chunk(
-          Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-          20,
-        ),
+      const pageNumbers = chunk(
+        Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+        10,
       )[0]!;
 
       await flushJSON({ pageNumbers });
@@ -566,7 +564,14 @@ export const GET = () =>
       const queries = pageNumbers.map(
         (page): GraphQLRequestTuple => [
           climbUsersQuery,
-          { gymId: gym.id, userId, pagination: { page } },
+          {
+            gymId: gym.id,
+            userId,
+            pagination: {
+              page,
+              orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
+            },
+          },
         ],
       );
       const graphqlResponse2 = await fetchQueries(queries);
