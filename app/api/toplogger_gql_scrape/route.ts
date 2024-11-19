@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
-import { chunk, shuffle } from "../../../utils";
+import { randomSlice, shuffle } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -549,9 +549,8 @@ export const GET = () =>
       userMeResponse.data!.userMe.gymUserFavorites as { gym: Gym }[]
     ).map((guf) => guf.gym);
 
-    await flushJSON({ gyms });
-
     for (const gym of shuffle(gyms)) {
+      await flushJSON({ gym });
       await ensureAuthTokens();
 
       const graphqlTotalResponse = await fetchQuery(
@@ -591,10 +590,10 @@ export const GET = () =>
 
       await flushJSON({ total });
 
-      const pageNumbers = chunk(
+      const pageNumbers = randomSlice(
         Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-        5,
-      )[0]!;
+        16,
+      );
 
       await flushJSON({ pageNumbers });
 

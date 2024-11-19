@@ -15,10 +15,7 @@ import {
   type ValueNode,
 } from "graphql";
 import type { WithId } from "mongodb";
-import type {
-  TopLoggerClimbUser,
-  TopLoggerClimbUserDereferenced,
-} from "../app/api/toplogger_gql_scrape/route";
+import type { TopLoggerClimbUserDereferenced } from "../app/api/toplogger_gql_scrape/route";
 import { exercises, Unit } from "../models/exercises";
 import { type WorkoutData, WorkoutSource } from "../models/workout";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
@@ -670,9 +667,8 @@ const parseDateFields = (doc: Record<string, unknown>) => {
   return doc;
 };
 
-export const TopLoggerGraphQL = proxyCollection<
-  (MongoGraphQLObject & { [key: string]: unknown }) | TopLoggerClimbUser
->("toplogger_graphql");
+export const TopLoggerGraphQL =
+  proxyCollection<MongoGraphQLObject>("toplogger_graphql");
 
 export async function normalizeAndUpsertQueryData(
   query: DocumentNode,
