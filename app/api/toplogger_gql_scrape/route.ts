@@ -1,7 +1,6 @@
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
-import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -592,7 +591,13 @@ export const GET = () =>
       await flushJSON({ total });
 
       const pageNumbers = randomSlice(
-        Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+        [
+          ...Array.from({ length: 10 }, (_, i) => i + 1),
+          ...Array.from({ length: 10 }, (_, i) => i + 1),
+          ...Array.from({ length: 10 }, (_, i) => i + 1),
+          ...Array.from({ length: 10 }, (_, i) => i + 1),
+          ...Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+        ],
         16,
       );
 
