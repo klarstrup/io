@@ -1,4 +1,3 @@
-import Script from "next/script";
 import UserStuff from "../../components/UserStuff";
 import "../page.css";
 
@@ -16,7 +15,7 @@ export default function Page() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <h2>TopLogger</h2>
         <iframe
-          src="/api/toplogger_scrape"
+          src="/api/toplogger_gql_scrape"
           style={{ height: "100%", width: "100%", flex: 1 }}
         />
       </div>
@@ -41,13 +40,6 @@ export default function Page() {
           style={{ height: "100%", width: "100%", flex: 1 }}
         />
       </div>
-      {/*
-      <Script key="reload" id="reload">
-        {
-          "setInterval(()=>Array.from(window.frames).forEach(window=>window.location.reload()), 1000*60);"
-        }
-      </Script>
-      */}
     </center>
   );
 }

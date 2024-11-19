@@ -7,7 +7,6 @@ import { Users } from "../models/user.server";
 import { MyFitnessPal } from "../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
 import { RunDouble, getRunDoubleUser } from "../sources/rundouble";
-import { TopLogger, fetchUser } from "../sources/toplogger";
 import { decodeGeohash } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
@@ -102,15 +101,6 @@ async function updateUser(formData: FormData) {
 
 export default async function UserStuff() {
   const user = (await auth())?.user;
-
-  let topLoggerUser: TopLogger.User | null = null;
-  try {
-    if (user?.topLoggerId) {
-      topLoggerUser = await fetchUser(user.topLoggerId);
-    }
-  } catch {
-    topLoggerUser = null;
-  }
 
   let myFitnessPalUser: MyFitnessPal.User | null = null;
   try {
@@ -224,18 +214,6 @@ export default async function UserStuff() {
                   defaultValue={user.topLoggerId || ""}
                   className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                 />
-                {topLoggerUser ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt="TopLogger Avatar"
-                    src={topLoggerUser.avatar}
-                    className="h-6 max-h-6 w-6 max-w-6 rounded-full"
-                  />
-                ) : (
-                  <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
-                    ❌
-                  </span>
-                )}
               </FieldSetX>
               <FieldSetX
                 className="flex flex-col items-center gap-1.5"

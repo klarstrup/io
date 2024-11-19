@@ -6,7 +6,7 @@ import {
 } from "ical-generator";
 import { DateTime } from "luxon";
 import { NextResponse } from "next/server";
-import { EventEntry } from "../../lib";
+import type { EventEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import {
   getIoClimbAlongCompetitionEventEntry,
@@ -17,11 +17,7 @@ import {
   getSportsTimingEventEntry,
   ioSportsTimingEventsWithIds,
 } from "../../sources/sportstiming";
-import {
-  TopLogger,
-  fetchUser,
-  getTopLoggerGroupEventEntry,
-} from "../../sources/toplogger";
+import { getTopLoggerGroupEventEntry } from "../../sources/toplogger";
 import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
@@ -32,24 +28,15 @@ export const revalidate = 600; // 10 minutes
 export async function GET() {
   const user = await Users.findOne();
 
-  let topLoggerUser: TopLogger.User | null = null;
-  try {
-    topLoggerUser = user?.topLoggerId
-      ? await fetchUser(user.topLoggerId)
-      : null;
-  } catch {
-    /* */
-  }
-  const topLoggerUserId = topLoggerUser?.id;
-
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
   eventsPromises.push(
     ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
       getIoClimbAlongCompetitionEventEntry(eventId, ioId),
     ),
-    ...(
-      await TopLoggerGroupUsers.find({ user_id: topLoggerUserId }).toArray()
+    ...(user?.topLoggerId
+      ? await TopLoggerGroupUsers.find({ user_id: user.topLoggerId }).toArray()
+      : []
     ).map(({ group_id, user_id }) =>
       getTopLoggerGroupEventEntry(group_id, user_id),
     ),

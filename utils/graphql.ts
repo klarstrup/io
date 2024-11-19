@@ -753,6 +753,6 @@ export function workoutFromTopLoggerClimbUsers(
     createdAt: firstClimbUser.tickedFirstAtDate,
     updatedAt: firstClimbUser.tickedFirstAtDate,
     workedOutAt: firstClimbUser.tickedFirstAtDate,
-    source: WorkoutSource.TopLogger2,
+    source: WorkoutSource.TopLogger,
   };
 }

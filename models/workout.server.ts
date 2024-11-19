@@ -14,16 +14,6 @@ import {
 import { FitocracyWorkouts } from "../sources/fitocracy.server";
 import { type RunDouble, workoutFromRunDouble } from "../sources/rundouble";
 import { RunDoubleRuns } from "../sources/rundouble.server";
-import {
-  type TopLogger,
-  workoutFromTopLoggerAscends,
-} from "../sources/toplogger";
-import {
-  TopLoggerAscends,
-  TopLoggerClimbs,
-  TopLoggerGyms,
-  TopLoggerHolds,
-} from "../sources/toplogger.server";
 import { dateToString } from "../utils";
 import { proxyCollection } from "../utils.server";
 import {
@@ -85,58 +75,6 @@ export async function getAllWorkouts({
 
     for await (const runDoubleRun of RunDoubleRuns.find(runDoubleRunsQuery)) {
       allWorkouts.push(workoutFromRunDouble(runDoubleRun));
-    }
-  }
-
-  if ((exerciseId === 2001 || !exerciseId) && user.topLoggerId) {
-    const ascendsQuery: Condition<TopLogger.AscendSingle> = {
-      user_id: user.topLoggerId,
-    };
-    if (workedOutAt) ascendsQuery.date_logged = workedOutAt;
-
-    const [holds, gyms, ascends] = await Promise.all([
-      TopLoggerHolds.find().toArray(),
-      TopLoggerGyms.find().toArray(),
-      TopLoggerAscends.find(ascendsQuery, {
-        sort: { date_logged: 1 },
-      }).toArray(),
-    ]);
-
-    const climbs = await TopLoggerClimbs.find({
-      id: { $in: ascends.map(({ climb_id }) => climb_id) },
-    }).toArray();
-
-    const ascendsByDay = Object.values(
-      ascends.reduce(
-        (acc, ascend) => {
-          if (!ascend.date_logged) return acc;
-          const date = dateToString(ascend.date_logged);
-
-          if (!acc[date]) acc[date] = [];
-
-          acc[date].push(ascend);
-
-          return acc;
-        },
-        {} as Record<string, TopLogger.AscendSingle[]>,
-      ),
-    );
-
-    for (const dayAscends of ascendsByDay) {
-      allWorkouts.push(
-        workoutFromTopLoggerAscends(
-          dayAscends
-            .map((ascend) => ({
-              ...ascend,
-              climb: climbs.find(({ id }) => id === ascend.climb_id)!,
-            }))
-            .sort((a, b) => Number(b.climb.grade) - Number(a.climb.grade)),
-          holds.sort((a, b) =>
-            a.brand.toLowerCase().localeCompare(b.brand.toLowerCase()),
-          ),
-          gyms,
-        ),
-      );
     }
   }
 

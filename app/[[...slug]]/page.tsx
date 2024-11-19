@@ -5,6 +5,8 @@ import {
   isWithinInterval,
   subMonths,
 } from "date-fns";
+import LoadMore from "../../components/LoadMore";
+import UserStuff from "../../components/UserStuff";
 import type { EventEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import {
@@ -16,16 +18,10 @@ import {
   getSportsTimingEventEntry,
   ioSportsTimingEventsWithIds,
 } from "../../sources/sportstiming";
-import {
-  TopLogger,
-  fetchUser,
-  getTopLoggerGroupEventEntry,
-} from "../../sources/toplogger";
+import { getTopLoggerGroupEventEntry } from "../../sources/toplogger";
 import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
 import "../page.css";
-import LoadMore from "../../components/LoadMore";
 import { TimelineEventsList } from "./TimelineEventsList";
-import UserStuff from "../../components/UserStuff";
 
 const monthsPerPage = 2;
 
@@ -102,16 +98,6 @@ const getData = async (
 ) => {
   const user = await Users.findOne();
 
-  let topLoggerUser: TopLogger.User | null = null;
-  try {
-    topLoggerUser = user?.topLoggerId
-      ? await fetchUser(user.topLoggerId)
-      : null;
-  } catch {
-    /* */
-  }
-  const topLoggerUserId = topLoggerUser?.id;
-
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
   if (disciplines?.includes("bouldering") || !disciplines?.length) {
@@ -119,8 +105,10 @@ const getData = async (
       ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
         getIoClimbAlongCompetitionEventEntry(eventId, ioId),
       ),
-      ...(topLoggerUserId
-        ? await TopLoggerGroupUsers.find({ user_id: topLoggerUserId }).toArray()
+      ...(user?.topLoggerId
+        ? await TopLoggerGroupUsers.find({
+            user_id: user.topLoggerId,
+          }).toArray()
         : []
       ).map(({ group_id, user_id }) =>
         getTopLoggerGroupEventEntry(group_id, user_id),

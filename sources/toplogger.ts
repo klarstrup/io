@@ -1,4 +1,3 @@
-import DataLoader from "dataloader";
 import {
   addHours,
   isAfter,
@@ -8,25 +7,17 @@ import {
   isWithinInterval,
   subHours,
 } from "date-fns";
-import { ObjectId, type WithId } from "mongodb";
-import { dbFetch } from "../fetch";
 import {
-  EventEntry,
+  type DateInterval,
+  type EventEntry,
   EventSource,
-  PointsScore,
+  type PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
-  Score,
-  ThousandDivideByScore,
-  type DateInterval,
+  type Score,
+  type ThousandDivideByScore,
 } from "../lib";
-import { Unit, exercises } from "../models/exercises";
-import {
-  WorkoutExerciseSet,
-  WorkoutSource,
-  type WorkoutData,
-} from "../models/workout";
-import { RelativeURL, percentile } from "../utils";
+import { percentile } from "../utils";
 import {
   TopLoggerAscends,
   TopLoggerClimbs,
@@ -346,207 +337,6 @@ export namespace TopLogger {
   }
 }
 
-const fetchTopLogger = async <T>(
-  input: string | URL,
-  init?: RequestInit | null,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => dbFetch<T>(new URL(input, "https://api.toplogger.nu/"), init, dbOptions);
-
-interface JSONParams {
-  filters?: Record<
-    string,
-    | boolean
-    | string
-    | string[]
-    | number
-    | number[]
-    | undefined
-    | Record<
-        string,
-        boolean | string | string[] | number | number[] | undefined
-      >
-  >;
-  includes?: string | string[];
-}
-
-export const fetchGroup = (
-  id: number,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchTopLogger<TopLogger.GroupSingle>(
-    `/v1/groups/${id}.json`,
-    null,
-    dbOptions,
-  );
-const fetchGyms = (
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/v1/gyms.json`);
-  if (jsonParams) {
-    url.searchParams.set("json_params", JSON.stringify(jsonParams));
-  }
-
-  return fetchTopLogger<TopLogger.GymMultiple[]>(url, undefined, dbOptions);
-};
-export const gymLoader = new DataLoader(
-  (ids: number[]) =>
-    fetchGyms({ filters: { id: ids } }).then((items) =>
-      ids.map((id) => items.find((item) => item.id === id) || null),
-    ),
-  { cache: false },
-);
-
-const fetchGymClimbs = (
-  gymId: number,
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/v1/gyms/${gymId}/climbs.json`);
-  if (jsonParams) {
-    url.searchParams.set("json_params", JSON.stringify(jsonParams));
-  }
-
-  return fetchTopLogger<TopLogger.ClimbMultiple[]>(url, null, dbOptions);
-};
-
-export const fetchGymHolds = (
-  gymId: number,
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/v1/gyms/${gymId}/holds.json`);
-  if (jsonParams) {
-    url.searchParams.set("json_params", JSON.stringify(jsonParams));
-  }
-
-  return fetchTopLogger<TopLogger.Hold[]>(url, null, dbOptions);
-};
-export const fetchGymHold = (
-  gymId: number,
-  holdId: number,
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/v1/gyms/${gymId}/holds/${holdId}.json`);
-  if (jsonParams) {
-    url.searchParams.set("json_params", JSON.stringify(jsonParams));
-  }
-
-  return fetchTopLogger<TopLogger.Hold>(url, null, dbOptions);
-};
-
-const gymClimbByIdLoadersByGym: Record<
-  number,
-  DataLoader<number, TopLogger.ClimbMultiple | null, number>
-> = {};
-
-export const fetchGymClimbById = (
-  gymId: number,
-  climbId: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  let gymClimbByIdLoader = gymClimbByIdLoadersByGym[gymId];
-  if (!gymClimbByIdLoader) {
-    gymClimbByIdLoader = new DataLoader(
-      (ids: number[]) =>
-        fetchGymClimbs(gymId, { filters: { id: ids } }, dbFetchOptions).then(
-          (items) =>
-            ids.map((id) => items.find((item) => item.id === id) || null),
-        ),
-      { cache: false },
-    );
-    gymClimbByIdLoadersByGym[gymId] = gymClimbByIdLoader;
-  }
-  return gymClimbByIdLoader.load(climbId);
-};
-
-export const fetchUser = (
-  id: number,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => fetchTopLogger<TopLogger.User>(`/v1/users/${id}.json`, null, dbOptions);
-export const fetchAscends = (
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/v1/ascends.json`);
-  url.searchParams.set("serialize_checks", "true");
-  if (jsonParams) {
-    url.searchParams.set("json_params", JSON.stringify(jsonParams));
-  }
-
-  return fetchTopLogger<TopLogger.AscendSingle[]>(url, null, dbOptions);
-};
-export const fetchGroupsUsers = <T = TopLogger.GroupUserMultiple>(
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL("/v1/group_users.json");
-  url.searchParams.set("serializeall", "false");
-  if (jsonParams) {
-    url.searchParams.set("json_params", JSON.stringify(jsonParams));
-  }
-
-  return fetchTopLogger<T[]>(url, null, dbOptions);
-};
-
-export const fetchGymGymGroups = (
-  gymId: number,
-  jsonParams?: JSONParams,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/v1/gyms/${gymId}/gym_groups.json`);
-  url.searchParams.set("serializeall", "false");
-
-  url.searchParams.set(
-    "json_params",
-    JSON.stringify({ deleted: false, live: true, ...jsonParams }),
-  );
-
-  return fetchTopLogger<TopLogger.GymGroup[]>(url, null, dbOptions);
-};
-
-export const fetchGroupClimbs = async (
-  group: TopLogger.GroupSingle,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const gyms = (
-    await gymLoader.loadMany(group.gym_groups.map(({ gym_id }) => gym_id))
-  ).filter((gym): gym is TopLogger.GymMultiple =>
-    Boolean(gym && !(gym instanceof Error)),
-  );
-
-  if (group.climb_groups.length) {
-    const climbPromises: Promise<TopLogger.ClimbMultiple | null>[] = [];
-
-    for (const { climb_id } of group.climb_groups) {
-      for (const gym of gyms) {
-        climbPromises.push(fetchGymClimbById(gym.id, climb_id, dbOptions));
-      }
-    }
-
-    return (await Promise.all(climbPromises)).filter(Boolean);
-  }
-
-  const climbs: TopLogger.ClimbMultiple[] = [];
-  for (const gym of gyms) {
-    for (const climb of await fetchGymClimbs(gym.id, undefined, dbOptions)) {
-      if (
-        (climb.name || climb.number) &&
-        climb.date_live_start &&
-        isWithinInterval(new Date(climb.date_live_start), {
-          start: subHours(new Date(group.date_loggable_start), 16),
-          end: addHours(new Date(group.date_loggable_end), 21),
-        })
-      ) {
-        climbs.push(climb);
-      }
-    }
-  }
-
-  return climbs;
-};
-
 const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
   if (group.climb_groups.length) {
     return await TopLoggerClimbs.find({
@@ -604,11 +394,9 @@ export async function getIoTopLoggerGroupEvent(
     end: group.date_loggable_end,
   };
 
-  const gyms = (
-    await Promise.all(
-      group.gym_groups.map(({ gym_id }) => gymLoader.load(gym_id)),
-    )
-  ).filter(Boolean);
+  const gyms = await TopLoggerGyms.find({
+    id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) },
+  }).toArray();
 
   const climbs = await getGroupClimbs(group);
 
@@ -869,60 +657,4 @@ export async function getTopLoggerGroupEventEntry(
     start: group.date_loggable_start,
     end: group.date_loggable_end,
   } as const;
-}
-
-export function workoutFromTopLoggerAscends(
-  ascends: (TopLogger.AscendSingle & { climb: TopLogger.ClimbMultiple })[],
-  holds: TopLogger.Hold[],
-  gyms: TopLogger.GymSingle[],
-): WithId<WorkoutData> {
-  const firstAscend = ascends[0];
-  if (!firstAscend) throw new Error("No ascends");
-
-  const exercise = exercises.find(({ id }) => id === 2001)!;
-
-  const colorOptions =
-    exercise.inputs[1] &&
-    "options" in exercise.inputs[1] &&
-    exercise.inputs[1].options;
-
-  return {
-    _id: new ObjectId(firstAscend.id),
-    exercises: [
-      {
-        exerciseId: 2001,
-        sets: ascends
-          .filter(({ checks }) => checks >= 1)
-          .map(
-            ({ checks, climb: { grade, hold_id } }): WorkoutExerciseSet => ({
-              inputs: [
-                // Grade
-                { value: Number(grade), unit: Unit.FrenchRounded },
-                // Color
-                {
-                  value:
-                    (colorOptions
-                      ? colorOptions?.findIndex(
-                          ({ value }) =>
-                            value ===
-                            holds
-                              .find(({ id }) => id === hold_id)
-                              ?.brand?.toLowerCase(),
-                        )
-                      : undefined) ?? NaN,
-                },
-                // Sent-ness
-                { value: checks === 2 ? 0 : 1 },
-              ],
-            }),
-          ),
-      },
-    ],
-    location: gyms.find(({ id }) => id === firstAscend.climb.gym_id)?.name,
-    userId: String(firstAscend.user_id),
-    createdAt: firstAscend.date_logged,
-    updatedAt: firstAscend.date_logged,
-    workedOutAt: firstAscend.date_logged,
-    source: WorkoutSource.TopLogger,
-  };
 }
