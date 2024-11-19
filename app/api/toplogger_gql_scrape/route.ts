@@ -197,7 +197,6 @@ const climbUsersQuery = gql`
       data {
         id
         userId
-        tickType
         points
         pointsBonus
         pointsExpireAtDate
@@ -207,20 +206,49 @@ const climbUsersQuery = gql`
         project
         votedRenew
         tickType
+        ticked
         totalTries
         triedFirstAtDate
         tickedFirstAtDate
 
         climb {
           id
-          name
+          climbType
+          positionX
+          positionY
+          gradeAuto
           grade
+          gradeVotesCount
+          gradeUsersVsAdmin
+          picPath
+          label
+          name
+          zones
+          remarksLoc
+          suitableForKids
+          clips
+          holds
+          height
+          overhang
+          leadEnabled
+          leadRequired
+          ratingsAverage
+          ticksCount
           inAt
           outAt
+          outPlannedAt
+          order
+          setterName
           gym {
             id
             name
             nameSlug
+            markBoulderNewDays
+            markRouteNewDays
+            markBoulderOutSoonDays
+            markRouteOutSoonDays
+            settingsLogBoulders
+            settingsLogRoutes
             __typename
           }
           __typename
@@ -228,6 +256,15 @@ const climbUsersQuery = gql`
         wall {
           id
           nameLoc
+          idOnFloorplan
+          height
+          overhang
+          bouldersEnabled
+          routesEnabled
+          climbTypeDefault
+          labelX
+          labelY
+          order
           __typename
         }
         holdColor {
@@ -556,7 +593,7 @@ export const GET = () =>
 
       const pageNumbers = chunk(
         Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-        10,
+        1,
       )[0]!;
 
       await flushJSON({ pageNumbers });
