@@ -349,6 +349,7 @@ export const GET = () =>
       { key: { tickedFirstAtDate: 1 } },
       { key: { __typename: 1, id: 1 } },
       { key: { __typename: 1, userId: 1 } },
+      { key: { __typename: 1, userId: 1, tickedFirstAtDate: 1 } },
     ]);
 
     let headers: HeadersInit = {};
