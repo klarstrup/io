@@ -593,7 +593,7 @@ export const GET = () =>
 
       const pageNumbers = chunk(
         Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-        1,
+        5,
       )[0]!;
 
       await flushJSON({ pageNumbers });
