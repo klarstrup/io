@@ -230,7 +230,7 @@ export function WorkoutEntryExercise({
     return (
       <ProblemByProblem
         groupByGradeAndFlash={sets.every((set) => set.inputs[0]!.value)}
-        groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value)}
+        groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value > -1)}
         problemByProblem={sets.map((set, i) => ({
           grade: set.inputs[0]!.value,
           color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
