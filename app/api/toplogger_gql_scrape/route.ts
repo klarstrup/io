@@ -188,12 +188,7 @@ const climbUsersQuery = gql`
     $userId: ID
     $pagination: PaginationInputClimbUsers
   ) {
-    climbUsers(
-      gymId: $gymId
-      userId: $userId
-      pagination: $pagination
-      pointsMin: 1
-    ) {
+    climbUsers(gymId: $gymId, userId: $userId, pagination: $pagination) {
       data {
         id
         userId
@@ -410,12 +405,11 @@ export const GET = () =>
             { $set: { topLoggerAuthTokens: authTokens } },
           );
           await flushJSON("Updated authTokens with refresh token");
+          await flushJSON({ authTokens });
         } else {
           throw new Error("Failed to refresh token");
         }
       }
-
-      await flushJSON({ authTokens });
 
       headers = { authorization: `Bearer ${authTokens.access.token}` };
     }
@@ -565,7 +559,6 @@ export const GET = () =>
               gymId: $gymId
               userId: $userId
               pagination: $pagination
-              pointsMin: 1
             ) {
               pagination {
                 total
