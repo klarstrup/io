@@ -9,6 +9,7 @@ import type { PRType } from "../lib";
 import {
   exerciseIdsThatICareAbout,
   Fitocracy,
+  theDayFitocracyDied,
   workoutFromFitocracyWorkout,
 } from "../sources/fitocracy";
 import { FitocracyWorkouts } from "../sources/fitocracy.server";
@@ -177,10 +178,10 @@ export async function getAllWorkoutsWithoutSets({
     workedOutAt &&
     (("$gte" in workedOutAt &&
       workedOutAt.$gte &&
-      isAfter(workedOutAt.$gte, new Date(2024, 6, 15))) ||
+      isAfter(workedOutAt.$gte, theDayFitocracyDied)) ||
       ("$gt" in workedOutAt &&
         workedOutAt.$gt &&
-        isAfter(workedOutAt.$gt, new Date(2024, 6, 15))));
+        isAfter(workedOutAt.$gt, theDayFitocracyDied)));
   if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
     const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
       user_id: user.fitocracyUserId,
