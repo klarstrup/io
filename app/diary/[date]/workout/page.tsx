@@ -1,20 +1,14 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay } from "date-fns";
-import type { Session } from "next-auth";
 import { Suspense } from "react";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
-import { getNextSets, Workouts } from "../../../../models/workout.server";
+import {
+  getAllWorkoutLocations,
+  getNextSets,
+} from "../../../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../utils";
 import { WorkoutForm } from "../../WorkoutForm";
-
-const getAllWorkoutLocations = async (user: Session["user"]) =>
-  (
-    await Workouts.distinct("location", {
-      userId: user.id,
-      deletedAt: { $exists: false },
-    })
-  ).filter((loc): loc is string => Boolean(loc));
 
 export default async function DiaryNewWorkoutModal(props: {
   params: Promise<{

@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import type { WorkoutData } from "../../models/workout";
-import { Workouts } from "../../models/workout.server";
+import { updateLocationCounts, Workouts } from "../../models/workout.server";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData,
@@ -21,6 +21,8 @@ export async function upsertWorkout(
     const newWorkout = await Workouts.insertOne(workout);
     _id = newWorkout.insertedId;
   }
+
+  void updateLocationCounts(user.id);
 
   revalidatePath("/diary");
   return String(_id);

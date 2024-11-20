@@ -3,6 +3,7 @@
 
 import { TZDate } from "@date-fns/tz";
 import {
+  compareAsc,
   differenceInDays,
   formatDistanceToNowStrict,
   startOfDay,
@@ -32,7 +33,10 @@ import {
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
 } from "../../models/workout";
-import type { getNextSets } from "../../models/workout.server";
+import type {
+  getNextSets,
+  IWorkoutLocationsView,
+} from "../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
@@ -65,7 +69,7 @@ export function WorkoutForm<R extends string>({
   workout?: WorkoutData & { _id?: string };
   date: `${number}-${number}-${number}`;
   dismissTo: Route<R>;
-  locations: string[];
+  locations: IWorkoutLocationsView[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const router = useRouter();
@@ -208,7 +212,7 @@ export function WorkoutForm<R extends string>({
             type="submit"
             disabled={!isDirty || isSubmitting}
             className={
-              "rounded-xl bg-[#ff0] px-3 py-1 text-lg font-semibold leading-none disabled:opacity-50 disabled:bg-gray-200"
+              "rounded-xl bg-[#ff0] px-3 py-1 text-lg font-semibold leading-none disabled:bg-gray-200 disabled:opacity-50"
             }
           >
             {workout ? "Update" : "Create"}
@@ -242,10 +246,12 @@ export function WorkoutForm<R extends string>({
                 isDisabled={isSubmitting}
                 isMulti={false}
                 isClearable={true}
-                options={locations.map((location) => ({
-                  label: location,
-                  value: location,
-                }))}
+                options={locations
+                  .sort((a, b) => compareAsc(b.mostRecentVisit, a.mostRecentVisit))
+                  .map(({ location, visitCount }) => ({
+                    label: `${location} (${visitCount})`,
+                    value: location,
+                  }))}
                 {...field}
                 value={
                   field.value

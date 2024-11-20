@@ -5,6 +5,7 @@ import {
   TopLoggerClimbUser,
   TopLoggerClimbUserDereferenced,
 } from "../app/api/toplogger_gql_scrape/route";
+import { getDB } from "../dbConnect";
 import type { PRType } from "../lib";
 import {
   exerciseIdsThatICareAbout,
@@ -472,3 +473,42 @@ export function getIsSetPR(
     threeMonthPR,
   };
 }
+
+export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
+  await getDB().then((db) =>
+    db
+      .collection<WorkoutData>("workouts")
+      .aggregate([
+        { $match: { userId, location: { $exists: true, $ne: null } } },
+        {
+          $group: {
+            _id: { location: "$location" },
+            location: { $first: "$location" },
+            userId: { $first: "$userId" },
+            visitCount: { $count: {} },
+            mostRecentVisit: { $max: "$workedOutAt" },
+          },
+        },
+        { $merge: { into: "workout_locations_view", whenMatched: "replace" } },
+      ])
+      .toArray(),
+  );
+
+export interface IWorkoutLocationsView {
+  location: string;
+  userId: string;
+  visitCount: number;
+  mostRecentVisit: Date;
+}
+
+export const WorkoutLocationsView = proxyCollection<IWorkoutLocationsView>(
+  "workout_locations_view",
+);
+
+export const getAllWorkoutLocations = async (user: Session["user"]) =>
+  (await WorkoutLocationsView.find({ userId: user.id }).toArray()).map(
+    (location) => ({
+      ...location,
+      _id: location._id.toString(),
+    }),
+  );
