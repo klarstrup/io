@@ -29,6 +29,8 @@ export interface WorkoutExercise {
 }
 
 export interface WorkoutExerciseSet {
+  createdAt?: Date;
+  updatedAt?: Date;
   inputs: WorkoutExerciseSetInput[];
 }
 

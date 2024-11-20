@@ -2,19 +2,24 @@
 "use client";
 
 import { TZDate } from "@date-fns/tz";
-import { differenceInDays, startOfDay } from "date-fns";
+import {
+  differenceInDays,
+  formatDistanceToNowStrict,
+  startOfDay,
+} from "date-fns";
 import { Route } from "next";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useId, useState } from "react";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import Select, { OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import { useEvent } from "../../hooks";
+import useInterval from "../../hooks/useInterval";
 import {
   exercises,
   InputType,
@@ -133,6 +138,8 @@ export function WorkoutForm<R extends string>({
 
     const sets = setWeights.reverse().map(
       (setWeight): WorkoutExerciseSet => ({
+        createdAt: new Date(),
+        updatedAt: new Date(),
         inputs: exerciseDefinition.inputs.map(
           (input): WorkoutExerciseSetInput => ({
             value: input.type === InputType.Weight ? setWeight : NaN,
@@ -201,7 +208,7 @@ export function WorkoutForm<R extends string>({
             type="submit"
             disabled={!isDirty || isSubmitting}
             className={
-              "rounded-xl bg-[#ff0] px-3 py-1 text-lg font-semibold leading-none"
+              "rounded-xl bg-[#ff0] px-3 py-1 text-lg font-semibold leading-none disabled:opacity-50 disabled:bg-gray-200"
             }
           >
             {workout ? "Update" : "Create"}
@@ -464,6 +471,13 @@ function SetsForm({
     });
   }, [exercise.inputs, sets, update]);
 
+  const watchedSets = useWatch({
+    control,
+    name: `exercises.${parentIndex}.sets`,
+  });
+
+  const lastSet = watchedSets[watchedSets.length - 1];
+
   return (
     <table
       style={{
@@ -479,6 +493,8 @@ function SetsForm({
             <StealthButton
               onClick={() =>
                 append({
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
                   inputs: exercise.inputs.map((input, inputIndex) => {
                     const lastSetInput =
                       sets[sets.length - 1]?.inputs[inputIndex];
@@ -511,6 +527,7 @@ function SetsForm({
                       sets.forEach((set, setIndex) => {
                         update(setIndex, {
                           ...set,
+                          updatedAt: new Date(),
                           inputs: set.inputs.map((setInput, setInputIndex) =>
                             setInputIndex === inputIndex
                               ? { ...setInput, unit }
@@ -521,12 +538,11 @@ function SetsForm({
                     }}
                   >
                     {[...input.allowed_units]
-                      .sort((a, b) => {
-                        return (
+                      .sort(
+                        (a, b) =>
                           (a.name === input.metric_unit ? -1 : 1) -
-                          (b.name === input.metric_unit ? -1 : 1)
-                        );
-                      })
+                          (b.name === input.metric_unit ? -1 : 1),
+                      )
                       .map((unit) => (
                         <option key={unit.name} value={unit.name}>
                           {unit.name}
@@ -598,13 +614,42 @@ function SetsForm({
           </tr>
         ))}
       </tbody>
+      {lastSet?.updatedAt ? (
+        <tfoot>
+          <tr>
+            <td colSpan={exercise.inputs.length + 2}>
+              <TimeSince date={lastSet.updatedAt} />
+            </td>
+          </tr>
+        </tfoot>
+      ) : null}
     </table>
+  );
+}
+
+function TimeSince({ date }: { date: Date }) {
+  const [, setState] = useState({});
+
+  useInterval(() => {
+    setState({});
+  }, 1000);
+
+  return (
+    <small>
+      Last updated{" "}
+      <span className="tabular-nums">
+        {formatDistanceToNowStrict(date, {
+          addSuffix: true,
+        })}
+      </span>
+    </small>
   );
 }
 
 function InputsForm({
   parentIndex,
   setIndex,
+  control,
   register,
   exercise,
 }: {
@@ -618,6 +663,13 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
 }) {
+  const { fields: sets, update } = useFieldArray({
+    control,
+    name: `exercises.${parentIndex}.sets`,
+  });
+  const updateSet = () =>
+    update(setIndex, { ...sets[setIndex]!, updatedAt: new Date() });
+
   return exercise.inputs.map((input, index) => (
     <td key={index}>
       <div className="flex">
@@ -669,7 +721,7 @@ function InputsForm({
             <input
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { valueAsNumber: true },
+                { valueAsNumber: true, onChange: () => updateSet() },
               )}
               type="number"
               onFocus={(e) => e.target.select()}
