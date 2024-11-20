@@ -192,6 +192,20 @@ type PP = NonNullable<
   >["problemByProblem"]
 >[number];
 
+// TODO: different gym color order per gym
+const colorsByGrade = [
+  "mint",
+  "green",
+  "yellow",
+  "orange",
+  "blue",
+  "purple",
+  "red",
+  "black",
+  "pink",
+  "white",
+];
+
 export default function ProblemByProblem({
   problemByProblem,
   className,
@@ -206,10 +220,17 @@ export default function ProblemByProblem({
   if (!problemByProblem?.length) return null;
 
   const sortedProblems = Array.from(problemByProblem)
-    .sort((a, b) => (a.color && b.color ? a.color.localeCompare(b.color) : 0))
     .sort((a, b) => Number(b.attempt) - Number(a.attempt))
     .sort((a, b) => Number(b.zone) - Number(a.zone))
     .sort((a, b) => Number(b.flash) - Number(a.flash))
+    .sort((a, b) =>
+      a.color &&
+      b.color &&
+      colorsByGrade.includes(a.color) &&
+      colorsByGrade.includes(b.color)
+        ? colorsByGrade.indexOf(b.color) - colorsByGrade.indexOf(a.color)
+        : 0,
+    )
     .sort((a, b) => Number(b.grade) - Number(a.grade))
     .sort((a, b) => Number(b.top) - Number(a.top));
 
