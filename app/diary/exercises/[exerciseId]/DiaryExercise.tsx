@@ -63,29 +63,32 @@ export default async function DiaryExercise({
   const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
     {};
 
-  for (const workout of allWorkoutsOfExercise) {
-    if (!workoutsExerciseSetPRs[workout._id.toString()]) {
-      workoutsExerciseSetPRs[workout._id.toString()] = [];
-    }
+  if (exerciseId !== 2001 || prType) {
+    for (const workout of allWorkoutsOfExercise) {
+      if (!workoutsExerciseSetPRs[workout._id.toString()]) {
+        workoutsExerciseSetPRs[workout._id.toString()] = [];
+      }
 
-    const precedingWorkouts = allWorkoutsOfExercise.filter(
-      (w) => w.workedOutAt < workout.workedOutAt,
-    );
-
-    const exerciseSetsPRs: Record<PRType, boolean>[] = [];
-    for (const set of workout.exercises.find((e) => e.exerciseId === exerciseId)
-      ?.sets ?? []) {
-      exerciseSetsPRs.push(
-        getIsSetPR(
-          workout.workedOutAt,
-          workout,
-          precedingWorkouts,
-          exerciseId,
-          set,
-        ),
+      const precedingWorkouts = allWorkoutsOfExercise.filter(
+        (w) => w.workedOutAt < workout.workedOutAt,
       );
+
+      const exerciseSetsPRs: Record<PRType, boolean>[] = [];
+      for (const set of workout.exercises.find(
+        (e) => e.exerciseId === exerciseId,
+      )?.sets ?? []) {
+        exerciseSetsPRs.push(
+          getIsSetPR(
+            workout.workedOutAt,
+            workout,
+            precedingWorkouts,
+            exerciseId,
+            set,
+          ),
+        );
+      }
+      workoutsExerciseSetPRs[workout._id.toString()]!.push(exerciseSetsPRs);
     }
-    workoutsExerciseSetPRs[workout._id.toString()]!.push(exerciseSetsPRs);
   }
 
   return (
@@ -101,7 +104,7 @@ export default async function DiaryExercise({
       </p>
       <div className="mt-4 flex items-center gap-2">
         <h2 className="text-xl font-semibold">Workouts</h2>
-        <form method="GET" className="flex gap-2 flex-wrap">
+        <form method="GET" className="flex flex-wrap gap-2">
           <select
             className="rounded-md bg-gray-100 p-1"
             name="prType"
