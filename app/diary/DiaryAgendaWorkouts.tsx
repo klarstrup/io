@@ -26,7 +26,9 @@ export function DiaryAgendaWorkouts({
 
   const tzDate = new TZDate(date, timeZone);
   const dueSets = nextSets?.filter(
-    (nextSet) => differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) > 3,
+    (nextSet) =>
+      differenceInDays(startOfDay(tzDate), nextSet.workedOutAt || new Date(0)) >
+      3,
   );
 
   return (

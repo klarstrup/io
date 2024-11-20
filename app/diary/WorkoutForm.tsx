@@ -28,7 +28,7 @@ import {
   type WorkoutExerciseSetInput,
 } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
 
@@ -86,7 +86,10 @@ export function WorkoutForm<R extends string>({
   const dueSets = nextSets
     ?.filter(
       (nextSet) =>
-        differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) > 3,
+        differenceInDays(
+          startOfDay(tzDate),
+          nextSet.workedOutAt || new Date(0),
+        ) > 3,
     )
     .filter(
       (nextSet) =>
@@ -98,7 +101,10 @@ export function WorkoutForm<R extends string>({
   const futureSets = nextSets
     ?.filter(
       (nextSet) =>
-        differenceInDays(startOfDay(tzDate), nextSet.workedOutAt) <= 3,
+        differenceInDays(
+          startOfDay(tzDate),
+          nextSet.workedOutAt || new Date(0),
+        ) <= 3,
     )
     .filter(
       (nextSet) =>
@@ -327,8 +333,22 @@ export function WorkoutForm<R extends string>({
                       {nextExerciseSet.nextWorkingSetsReps}x
                       {nextExerciseSet.nextWorkingSetsWeight}
                     </span>
-                    kg based on last set{" "}
-                    {nextExerciseSet.workedOutAt.toLocaleDateString("da-DK")}
+                    kg
+                    {nextExerciseSet.workedOutAt ? (
+                      <>
+                        {" "}
+                        based on{" "}
+                        <Link
+                          href={`/diary/${dateToString(nextExerciseSet.workedOutAt)}`}
+                          style={{ color: "#edab00" }}
+                        >
+                          last set{" "}
+                          {nextExerciseSet.workedOutAt.toLocaleDateString(
+                            "da-DK",
+                          )}
+                        </Link>
+                      </>
+                    ) : null}
                   </div>
                 ) : null}
                 <SetsForm

@@ -1,6 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
+import Link from "next/link";
 import { StealthButton } from "../../components/StealthButton";
 import { exercises } from "../../models/exercises";
 import type { getNextSets } from "../../models/workout.server";
@@ -40,12 +41,17 @@ export function NextSets({
               ) : null}
               <div className="leading-none">
                 <span className="whitespace-nowrap font-semibold">
-                  {
-                    [exercise.name, ...exercise.aliases]
-                      .filter((name) => name.length >= 4)
-                      .sort((a, b) => a.length - b.length)[0]!
-                  }{" "}
-                  {successful ? null : " (failed)"}
+                  <Link
+                    href={`/diary/exercises/${exercise.id}`}
+                    style={{ color: "#edab00" }}
+                  >
+                    {
+                      [exercise.name, ...exercise.aliases]
+                        .filter((name) => name.length >= 4)
+                        .sort((a, b) => a.length - b.length)[0]!
+                    }
+                  </Link>{" "}
+                  {successful === false ? " (failed)" : null}
                 </span>{" "}
                 <div className="whitespace-nowrap">
                   <span className="text-sm">
@@ -55,11 +61,13 @@ export function NextSets({
                   </span>{" "}
                   <span className="text-xs">
                     Last set{" "}
-                    {formatDistanceStrict(
-                      startOfDay(workedOutAt),
-                      startOfDay(tzDate),
-                      { addSuffix: true, roundingMethod: "floor" },
-                    )}{" "}
+                    {workedOutAt
+                      ? formatDistanceStrict(
+                          startOfDay(workedOutAt),
+                          startOfDay(tzDate),
+                          { addSuffix: true, roundingMethod: "floor" },
+                        )
+                      : "never"}
                   </span>
                 </div>
               </div>
