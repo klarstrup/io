@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { auth } from "../../../../../auth";
 import { Modal } from "../../../../../components/Modal";
 import {
+  getAllWorkoutExercises,
   getAllWorkoutLocations,
   getNextSets,
   Workouts,
@@ -27,8 +28,9 @@ export default async function DiaryWorkoutModal(props: {
   const isToday = date === dateToString(TZDate.tz(timeZone));
 
   const tzDate = new TZDate(date, timeZone);
-  const [locations, nextSets] = await Promise.all([
+  const [locations, exercisesStats, nextSets] = await Promise.all([
     getAllWorkoutLocations(user),
+    getAllWorkoutExercises(user),
     getNextSets({ user, to: endOfDay(tzDate) }),
   ]);
 
@@ -42,6 +44,7 @@ export default async function DiaryWorkoutModal(props: {
           user={user}
           workout={{ ...workout, _id: workout._id.toString() }}
           locations={locations}
+          exercisesStats={exercisesStats}
           dismissTo={dismissTo}
           nextSets={nextSets}
         />

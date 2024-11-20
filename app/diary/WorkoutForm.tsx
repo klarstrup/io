@@ -3,7 +3,7 @@
 
 import { TZDate } from "@date-fns/tz";
 import {
-  compareAsc,
+  compareDesc,
   differenceInDays,
   formatDistanceToNowStrict,
   startOfDay,
@@ -35,6 +35,7 @@ import {
 } from "../../models/workout";
 import type {
   getNextSets,
+  IWorkoutExercisesView,
   IWorkoutLocationsView,
 } from "../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
@@ -63,6 +64,7 @@ export function WorkoutForm<R extends string>({
   date,
   dismissTo,
   locations,
+  exercisesStats,
   nextSets,
 }: {
   user: Session["user"];
@@ -70,6 +72,7 @@ export function WorkoutForm<R extends string>({
   date: `${number}-${number}-${number}`;
   dismissTo: Route<R>;
   locations: IWorkoutLocationsView[];
+  exercisesStats: IWorkoutExercisesView[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const router = useRouter();
@@ -247,7 +250,9 @@ export function WorkoutForm<R extends string>({
                 isMulti={false}
                 isClearable={true}
                 options={locations
-                  .sort((a, b) => compareAsc(b.mostRecentVisit, a.mostRecentVisit))
+                  .sort((a, b) =>
+                    compareDesc(a.mostRecentVisit, b.mostRecentVisit),
+                  )
                   .map(({ location, visitCount }) => ({
                     label: `${location} (${visitCount})`,
                     value: location,
@@ -378,19 +383,32 @@ export function WorkoutForm<R extends string>({
             isDisabled={isSubmitting}
             placeholder="Add exercise..."
             options={exercises
+              .map((exercise) => ({
+                ...exercise,
+                stats: exercisesStats.find(
+                  (stat) => stat.exerciseId === exercise.id,
+                ),
+              }))
+              .sort((a, b) =>
+                compareDesc(
+                  a.stats?.workedOutAt ?? new Date(0),
+                  b.stats?.workedOutAt ?? new Date(0),
+                ),
+              )
               .filter(
                 ({ id }) => !fields.some((field) => field.exerciseId === id),
               )
-              .map(({ id, name, aliases }) => ({
-                label: `${name} ${
-                  aliases.length > 1
-                    ? `(${new Intl.ListFormat("en-DK", {
-                        type: "disjunction",
-                      }).format(aliases)})`
-                    : aliases.length === 1
-                      ? `(${aliases[0]})`
-                      : ""
-                }`,
+              .map(({ id, name, aliases, stats }) => ({
+                label:
+                  `${name} ${
+                    aliases.length > 1
+                      ? `(${new Intl.ListFormat("en-DK", {
+                          type: "disjunction",
+                        }).format(aliases)})`
+                      : aliases.length === 1
+                        ? `(${aliases[0]})`
+                        : ""
+                  }` + (stats ? ` (${stats.exerciseCount})` : ""),
                 value: id,
               }))}
             onChange={(

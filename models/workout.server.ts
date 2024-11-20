@@ -482,7 +482,7 @@ export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
         { $match: { userId, location: { $exists: true, $ne: null } } },
         {
           $group: {
-            _id: { location: "$location" },
+            _id: { location: "$location", userId: "$userId" },
             location: { $first: "$location" },
             userId: { $first: "$userId" },
             visitCount: { $count: {} },
@@ -507,6 +507,83 @@ export const WorkoutLocationsView = proxyCollection<IWorkoutLocationsView>(
 
 export const getAllWorkoutLocations = async (user: Session["user"]) =>
   (await WorkoutLocationsView.find({ userId: user.id }).toArray()).map(
+    (location) => ({
+      ...location,
+      _id: location._id.toString(),
+    }),
+  );
+
+export const updateExerciseCounts = async (
+  userId: Session["user"]["id"],
+  fitocracyUserId?: Session["user"]["fitocracyUserId"],
+) =>
+  await getDB().then((db) =>
+    db
+      .collection<WorkoutData>("workouts")
+      .aggregate([
+        {
+          $unionWith: {
+            coll: "fitocracy_workouts",
+            pipeline: [
+              { $match: { user_id: fitocracyUserId } },
+              { $set: { workedOutAt: "$workout_timestamp" } },
+              {
+                $set: {
+                  exercises: {
+                    $map: {
+                      input: "$root_group.children.exercise",
+                      as: "exercise",
+                      in: { exerciseId: "$$exercise.exercise_id" },
+                    },
+                  },
+                },
+              },
+              {
+                $replaceWith: {
+                  $setField: {
+                    field: "userId",
+                    input: "$$ROOT",
+                    value: userId,
+                  },
+                },
+              },
+            ],
+          },
+        },
+        { $match: { userId } },
+        { $unwind: "$exercises" },
+        {
+          $group: {
+            _id: { exerciseId: "$exercises.exerciseId", userId },
+            exerciseId: { $first: "$exercises.exerciseId" },
+            userId: { $first: "$userId" },
+            exerciseCount: { $count: {} },
+            workedOutAt: { $max: "$workedOutAt" },
+          },
+        },
+        {
+          $replaceWith: {
+            $setField: { field: "userId", input: "$$ROOT", value: userId },
+          },
+        },
+        { $merge: { into: "workout_exercises_view", whenMatched: "replace" } },
+      ])
+      .toArray(),
+  );
+
+export interface IWorkoutExercisesView {
+  userId: string;
+  exerciseId: number;
+  exerciseCount: number;
+  workedOutAt: Date;
+}
+
+export const WorkoutExercisesView = proxyCollection<IWorkoutExercisesView>(
+  "workout_exercises_view",
+);
+
+export const getAllWorkoutExercises = async (user: Session["user"]) =>
+  (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
     (location) => ({
       ...location,
       _id: location._id.toString(),

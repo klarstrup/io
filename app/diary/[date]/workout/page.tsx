@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
 import {
+  getAllWorkoutExercises,
   getAllWorkoutLocations,
   getNextSets,
 } from "../../../../models/workout.server";
@@ -24,8 +25,9 @@ export default async function DiaryNewWorkoutModal(props: {
   const isToday = date === dateToString(TZDate.tz(timeZone));
 
   const tzDate = new TZDate(date, timeZone);
-  const [locations, nextSets] = await Promise.all([
+  const [locations, exercisesStats, nextSets] = await Promise.all([
     getAllWorkoutLocations(user),
+    getAllWorkoutExercises(user),
     getNextSets({ user, to: endOfDay(tzDate) }),
   ]);
 
@@ -39,6 +41,7 @@ export default async function DiaryNewWorkoutModal(props: {
             date={date}
             user={user}
             locations={locations}
+            exercisesStats={exercisesStats}
             nextSets={nextSets}
             dismissTo={dismissTo}
           />

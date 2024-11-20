@@ -4,7 +4,11 @@ import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import type { WorkoutData } from "../../models/workout";
-import { updateLocationCounts, Workouts } from "../../models/workout.server";
+import {
+  updateExerciseCounts,
+  updateLocationCounts,
+  Workouts,
+} from "../../models/workout.server";
 
 export async function upsertWorkout(
   workout: (WorkoutData & { _id: string }) | WorkoutData,
@@ -23,6 +27,7 @@ export async function upsertWorkout(
   }
 
   void updateLocationCounts(user.id);
+  void updateExerciseCounts(user.id, user.fitocracyUserId);
 
   revalidatePath("/diary");
   return String(_id);
