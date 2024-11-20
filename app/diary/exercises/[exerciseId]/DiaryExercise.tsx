@@ -101,7 +101,7 @@ export default async function DiaryExercise({
       </p>
       <div className="mt-4 flex items-center gap-2">
         <h2 className="text-xl font-semibold">Workouts</h2>
-        <form method="GET" className="flex gap-2">
+        <form method="GET" className="flex gap-2 flex-wrap">
           <select
             className="rounded-md bg-gray-100 p-1"
             name="prType"
