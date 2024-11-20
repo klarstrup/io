@@ -28412,7 +28412,7 @@ export const exercises = [
     name: "Zercher Squat",
   },
   {
-    aliases: ["Barbell Albanian Squat"],
+    aliases: [],
     id: 474,
     inputs: [
       {
@@ -28583,7 +28583,7 @@ export const exercises = [
     name: "Barbell Split Squat",
   },
   {
-    aliases: ["Dumbbell Pitcher Squats", "Dumbbell Albanian Squat"],
+    aliases: [],
     id: 477,
     inputs: [
       {
