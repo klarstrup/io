@@ -689,6 +689,9 @@ function TimeSince({ date }: { date: Date }) {
   );
 }
 
+const setValueAs = (v: unknown) =>
+  v === "" || Number.isNaN(Number(v)) ? null : Number(v);
+
 function InputsForm({
   parentIndex,
   setIndex,
@@ -712,8 +715,9 @@ function InputsForm({
   });
   const updateSet = () =>
     update(setIndex, { ...sets[setIndex]!, updatedAt: new Date() });
-  const handleChange = useEvent(() => updateSet());
+  const onChange = useEvent(() => updateSet());
 
+  console.log(sets);
   return exercise.inputs.map((input, index) => (
     <td key={index}>
       <div className="flex">
@@ -721,11 +725,11 @@ function InputsForm({
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-              { onChange: handleChange },
+              { setValueAs, onChange },
             )}
             className="flex-1"
           >
-            {input.hidden_by_default ? <option value={""}>---</option> : null}
+            {input.hidden_by_default ? <option value="">---</option> : null}
             {input.options.map((option, i) => (
               <option key={option.value} value={i}>
                 {option.value}
@@ -737,7 +741,7 @@ function InputsForm({
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
-              { onChange: handleChange },
+              { setValueAs, onChange },
             )}
             className="flex-1"
           >
@@ -754,7 +758,7 @@ function InputsForm({
             <select
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { onChange: handleChange },
+                { setValueAs, onChange },
               )}
             >
               {input.hidden_by_default ? <option value={""}>---</option> : null}
@@ -768,7 +772,7 @@ function InputsForm({
             <input
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { valueAsNumber: true, onChange: handleChange },
+                { setValueAs, onChange },
               )}
               type="number"
               onFocus={(e) => e.target.select()}
