@@ -35,6 +35,7 @@ export default async function DiaryWorkout(props: {
 
   return (
     <WorkoutForm
+      key={workout._id.toString() + workout.updatedAt.toString()}
       date={date}
       user={user}
       workout={{ ...workout, _id: workout._id.toString() }}

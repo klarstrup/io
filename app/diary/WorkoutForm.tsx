@@ -185,9 +185,9 @@ export function WorkoutForm<R extends string>({
             location: data.location ?? workout?.location,
           };
           console.log({ workout, data, newWorkout });
-          await upsertWorkout(newWorkout);
+          const newWorkoutId = await upsertWorkout(newWorkout);
 
-          router.push(dismissTo);
+          if (!workout) router.push(`/diary/${date}/workout/${newWorkoutId}`);
 
           // Wait forever, presuming this component unmounts when the above push completes. (LET ME AWAIT THIS NEXT.JS???)
           await new Promise(() => {});
@@ -205,12 +205,7 @@ export function WorkoutForm<R extends string>({
         className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
         <div className="flex items-center justify-evenly">
-          <button
-            type="button"
-            onClick={() => {
-              router.push(dismissTo);
-            }}
-          >
+          <button type="button" onClick={() => router.push(dismissTo)}>
             ❌
           </button>
           <button
