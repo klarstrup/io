@@ -15,15 +15,15 @@ export function Modal<R extends string>({
     <div className="max-h-vh fixed inset-0 z-20 flex items-center justify-center backdrop-blur-sm">
       <div
         className={
-          "z-10 flex max-h-[95vh] max-w-[95vw] flex-col " + (className || "")
+          "z-10 flex max-h-[90vh] max-w-[90vw] flex-col " + (className || "")
         }
       >
         {children}
       </div>
       {dismissTo ? (
-        <Link href={dismissTo} className="absolute inset-0" />
+        <Link href={dismissTo} className="absolute inset-0 bg-black/50" />
       ) : (
-        <BackButton className="absolute inset-0" />
+        <BackButton className="absolute inset-0 bg-black/50" />
       )}
     </div>
   );
