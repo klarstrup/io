@@ -234,9 +234,9 @@ export function WorkoutEntryExercise({
         problemByProblem={sets.map((set, i) => ({
           grade: set.inputs[0]!.value,
           color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
-          flash: set.inputs[2]!.value === 0,
-          top: set.inputs[2]!.value <= 1,
-          zone: set.inputs[2]!.value <= 2,
+          flash: Number(set.inputs[2]!.value) === 0,
+          top: Number(set.inputs[2]!.value) <= 1,
+          zone: Number(set.inputs[2]!.value) <= 2,
           number: String(i + 1),
           attempt: true,
         }))}
