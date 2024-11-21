@@ -712,6 +712,7 @@ function InputsForm({
   });
   const updateSet = () =>
     update(setIndex, { ...sets[setIndex]!, updatedAt: new Date() });
+  const handleChange = useEvent(() => updateSet());
 
   return exercise.inputs.map((input, index) => (
     <td key={index}>
@@ -720,6 +721,7 @@ function InputsForm({
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+              { onChange: handleChange },
             )}
             className="flex-1"
           >
@@ -735,6 +737,7 @@ function InputsForm({
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
+              { onChange: handleChange },
             )}
             className="flex-1"
           >
@@ -751,6 +754,7 @@ function InputsForm({
             <select
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+                { onChange: handleChange },
               )}
             >
               {input.hidden_by_default ? <option value={""}>---</option> : null}
@@ -764,7 +768,7 @@ function InputsForm({
             <input
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { valueAsNumber: true, onChange: () => updateSet() },
+                { valueAsNumber: true, onChange: handleChange },
               )}
               type="number"
               onFocus={(e) => e.target.select()}
