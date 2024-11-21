@@ -685,18 +685,10 @@ function TimeSince({ date }: { date: Date }) {
           addSuffix: true,
         })}
       </span>
-      <Test />
     </small>
   );
 }
 
-function a() {
-  console.log("B");
-}
-
-function Test() {
-  return <span ref={a}>Test</span>;
-}
 function InputsForm({
   parentIndex,
   setIndex,

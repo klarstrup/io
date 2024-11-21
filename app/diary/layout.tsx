@@ -83,9 +83,7 @@ async function loadMoreData(cursor: {
 export default async function DiaryLayout(props: {
   children: React.ReactNode;
 }) {
-  console.time("DiaryLayout.user");
   const user = (await auth())?.user;
-  console.timeEnd("DiaryLayout.user");
 
   if (!user) {
     return (
