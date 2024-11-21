@@ -1,7 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
-import { PRType } from "../../lib";
 import {
   getAllWorkouts,
   getIsSetPR,
@@ -29,44 +28,33 @@ export async function DiaryAgendaWorkoutsWrapper({
     }),
   ]);
 
-  const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
-    {};
+  const workoutsExerciseSetPRs = await Promise.all(
+    workouts.map((workout) =>
+      Promise.all(
+        workout.exercises.map(async (exercise) => {
+          if (exercise.exerciseId === 2001) {
+            return Array.from({ length: exercise.sets.length }, () => noPR);
+          }
 
-  for (const workout of workouts ?? []) {
-    const workoutId = workout._id.toString();
-    if (!workoutsExerciseSetPRs[workoutId]) {
-      workoutsExerciseSetPRs[workoutId] = [];
-    }
+          const precedingWorkouts = await getAllWorkouts({
+            user,
+            exerciseId: exercise.exerciseId,
+            workedOutAt: { $lt: workout.workedOutAt },
+          });
 
-    for (const exercise of workout.exercises) {
-      if (exercise.exerciseId === 2001) {
-        workoutsExerciseSetPRs[workoutId].push(
-          Array.from({ length: exercise.sets.length }, () => noPR),
-        );
-        continue;
-      }
-
-      const precedingWorkouts = await getAllWorkouts({
-        user,
-        exerciseId: exercise.exerciseId,
-        workedOutAt: { $lt: workout.workedOutAt },
-      });
-
-      const exerciseSetsPRs: Record<PRType, boolean>[] = [];
-      for (const set of exercise.sets) {
-        exerciseSetsPRs.push(
-          getIsSetPR(
-            workout.workedOutAt,
-            workout,
-            precedingWorkouts,
-            exercise.exerciseId,
-            set,
-          ),
-        );
-      }
-      workoutsExerciseSetPRs[workoutId].push(exerciseSetsPRs);
-    }
-  }
+          return exercise.sets.map((set) =>
+            getIsSetPR(
+              workout.workedOutAt,
+              workout,
+              precedingWorkouts,
+              exercise.exerciseId,
+              set,
+            ),
+          );
+        }),
+      ),
+    ),
+  );
 
   return (
     <DiaryAgendaWorkouts

@@ -20,7 +20,7 @@ export function DiaryAgendaWorkouts({
 }: {
   date: `${number}-${number}-${number}`;
   workouts: WithId<WorkoutData>[];
-  workoutsExerciseSetPRs?: Record<string, Record<PRType, boolean>[][]>;
+  workoutsExerciseSetPRs?: Record<PRType, boolean>[][][];
   user: Session["user"];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
 }) {
@@ -62,7 +62,9 @@ export function DiaryAgendaWorkouts({
             const _id = workout._id.toString();
             return (
               <WorkoutEntry
-                exerciseSetPRs={workoutsExerciseSetPRs?.[_id]}
+                exerciseSetPRs={
+                  workoutsExerciseSetPRs?.[workouts.indexOf(workout)]
+                }
                 key={_id}
                 workout={{ ...workout, _id }}
               />
