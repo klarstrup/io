@@ -520,3 +520,6 @@ export const isPlainObject = (
 
   return false;
 };
+
+export const rangeToQuery = (from: Date, to?: Date) =>
+  to ? { $gte: from, $lte: to } : { $gte: from };

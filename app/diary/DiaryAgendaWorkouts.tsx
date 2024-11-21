@@ -1,9 +1,11 @@
 import { TZDate } from "@date-fns/tz";
 import { compareAsc, differenceInDays, startOfDay } from "date-fns";
+import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { FieldSetY } from "../../components/FieldSet";
-import type { DiaryEntry, PRType } from "../../lib";
+import type { PRType } from "../../lib";
+import type { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { NextSets } from "./NextSets";
@@ -17,7 +19,7 @@ export function DiaryAgendaWorkouts({
   nextSets,
 }: {
   date: `${number}-${number}-${number}`;
-  workouts: DiaryEntry["workouts"];
+  workouts: WithId<WorkoutData>[];
   workoutsExerciseSetPRs?: Record<string, Record<PRType, boolean>[][]>;
   user: Session["user"];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
@@ -56,13 +58,16 @@ export function DiaryAgendaWorkouts({
       {workouts?.length ? (
         Array.from(workouts)
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
-          ?.map((workout) => (
-            <WorkoutEntry
-              exerciseSetPRs={workoutsExerciseSetPRs?.[workout._id]}
-              key={workout._id}
-              workout={workout}
-            />
-          ))
+          ?.map((workout) => {
+            const _id = workout._id.toString();
+            return (
+              <WorkoutEntry
+                exerciseSetPRs={workoutsExerciseSetPRs?.[_id]}
+                key={_id}
+                workout={{ ...workout, _id }}
+              />
+            );
+          })
       ) : (
         <div className="flex h-full flex-wrap items-center justify-around">
           <div className="flex flex-col items-center justify-center">

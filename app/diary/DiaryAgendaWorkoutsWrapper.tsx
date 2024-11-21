@@ -8,9 +8,8 @@ import {
   getNextSets,
   noPR,
 } from "../../models/workout.server";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { DEFAULT_TIMEZONE, rangeToQuery } from "../../utils";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
-import { getDiaryEntries } from "./getDiaryEntries";
 
 export async function DiaryAgendaWorkoutsWrapper({
   date,
@@ -22,22 +21,26 @@ export async function DiaryAgendaWorkoutsWrapper({
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
-  const [nextSets, diaryEntries] = await Promise.all([
+  const [nextSets, workouts] = await Promise.all([
     getNextSets({ user, to: endOfDay(tzDate) }),
-    getDiaryEntries({ from: startOfDay(tzDate), to: endOfDay(tzDate) }),
+    getAllWorkouts({
+      user,
+      workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
+    }),
   ]);
 
   const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
     {};
 
-  for (const workout of diaryEntries[0]?.[1]?.workouts ?? []) {
-    if (!workoutsExerciseSetPRs[workout._id]) {
-      workoutsExerciseSetPRs[workout._id] = [];
+  for (const workout of workouts ?? []) {
+    const workoutId = workout._id.toString();
+    if (!workoutsExerciseSetPRs[workoutId]) {
+      workoutsExerciseSetPRs[workoutId] = [];
     }
 
     for (const exercise of workout.exercises) {
       if (exercise.exerciseId === 2001) {
-        workoutsExerciseSetPRs[workout._id]!.push(
+        workoutsExerciseSetPRs[workoutId].push(
           Array.from({ length: exercise.sets.length }, () => noPR),
         );
         continue;
@@ -61,7 +64,7 @@ export async function DiaryAgendaWorkoutsWrapper({
           ),
         );
       }
-      workoutsExerciseSetPRs[workout._id]!.push(exerciseSetsPRs);
+      workoutsExerciseSetPRs[workoutId].push(exerciseSetsPRs);
     }
   }
 
@@ -69,7 +72,7 @@ export async function DiaryAgendaWorkoutsWrapper({
     <DiaryAgendaWorkouts
       date={date}
       workoutsExerciseSetPRs={workoutsExerciseSetPRs}
-      workouts={diaryEntries[0]?.[1]?.workouts}
+      workouts={workouts}
       user={user}
       nextSets={nextSets}
     />

@@ -4,11 +4,8 @@ import type { Session } from "next-auth";
 import { FieldSetY } from "../../components/FieldSet";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import { DEFAULT_TIMEZONE, rangeToQuery } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
-
-const rangeToQuery = (from: Date, to?: Date) =>
-  to ? { $gte: from, $lt: to } : { $gte: from };
 
 export async function DiaryAgendaFood({
   date,
