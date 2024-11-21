@@ -717,7 +717,6 @@ function InputsForm({
     update(setIndex, { ...sets[setIndex]!, updatedAt: new Date() });
   const onChange = useEvent(() => updateSet());
 
-  console.log(sets);
   return exercise.inputs.map((input, index) => (
     <td key={index}>
       <div className="flex">
