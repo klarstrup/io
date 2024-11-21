@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
-import Select, { OnChangeValue } from "react-select";
+import Select, { components, OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
@@ -159,6 +159,8 @@ export function WorkoutForm<R extends string>({
     append({ exerciseId, sets });
   });
 
+  const locationInstanceId = useId();
+
   return (
     <div
       style={{
@@ -245,10 +247,19 @@ export function WorkoutForm<R extends string>({
             render={({ field }) => (
               <Creatable<{ label: string; value: string }, false>
                 className="flex-1"
+                instanceId={locationInstanceId}
                 placeholder="Pick location..."
                 isDisabled={isSubmitting}
                 isMulti={false}
                 isClearable={true}
+                components={{
+                  Input: (props) => (
+                    <components.Input
+                      {...props}
+                      aria-activedescendant={undefined}
+                    />
+                  ),
+                }}
                 options={locations
                   .sort((a, b) =>
                     compareDesc(a.mostRecentVisit, b.mostRecentVisit),
@@ -379,6 +390,14 @@ export function WorkoutForm<R extends string>({
             );
           })}
           <Select
+            components={{
+              Input: (props) => (
+                <components.Input
+                  {...props}
+                  aria-activedescendant={undefined}
+                />
+              ),
+            }}
             instanceId={useId()}
             isDisabled={isSubmitting}
             placeholder="Add exercise..."
@@ -666,10 +685,18 @@ function TimeSince({ date }: { date: Date }) {
           addSuffix: true,
         })}
       </span>
+      <Test />
     </small>
   );
 }
 
+function a() {
+  console.log("B");
+}
+
+function Test() {
+  return <span ref={a}>Test</span>;
+}
 function InputsForm({
   parentIndex,
   setIndex,
