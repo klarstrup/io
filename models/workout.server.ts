@@ -1,7 +1,7 @@
 import { isAfter, subMonths, subYears } from "date-fns";
 import type { Condition, WithId } from "mongodb";
 import type { Session } from "next-auth";
-import {
+import type {
   TopLoggerClimbUser,
   TopLoggerClimbUserDereferenced,
 } from "../app/api/toplogger_gql_scrape/route";
@@ -9,11 +9,17 @@ import { getDB } from "../dbConnect";
 import type { PRType } from "../lib";
 import {
   exerciseIdsThatICareAbout,
-  Fitocracy,
+  type Fitocracy,
   theDayFitocracyDied,
   workoutFromFitocracyWorkout,
 } from "../sources/fitocracy";
 import { FitocracyWorkouts } from "../sources/fitocracy.server";
+import {
+  type KilterBoard,
+  KilterBoardAscents,
+  workoutFromKilterBoardAscents,
+  workoutWithoutSetsFromKilterBoardAscents,
+} from "../sources/kilterboard";
 import { type RunDouble, workoutFromRunDouble } from "../sources/rundouble";
 import { RunDoubleRuns } from "../sources/rundouble.server";
 import { dateToString } from "../utils";
@@ -150,6 +156,46 @@ export async function getAllWorkouts({
     }
   }
 
+  if (exerciseId === 2001 || !exerciseId) {
+    const ascentsQuery: Condition<KilterBoard.Ascent> = {
+      user_id: 158721,
+    };
+
+    if (workedOutAt) {
+      ascentsQuery.climbed_at = workedOutAt;
+    }
+
+    const ascents =
+      await KilterBoardAscents.find<WithId<KilterBoard.Ascent>>(
+        ascentsQuery,
+      ).toArray();
+
+    const ascentsByDay = Object.values(
+      ascents.reduce(
+        (acc, ascent) => {
+          if (!ascent.climbed_at) return acc;
+          const date = dateToString(ascent.climbed_at);
+
+          if (!Array.isArray(acc[date])) {
+            acc[date] = [ascent];
+          } else {
+            acc[date].push(ascent);
+          }
+
+          return acc;
+        },
+        {} as Record<
+          `${number}-${number}-${number}`,
+          WithId<KilterBoard.Ascent>[]
+        >,
+      ),
+    );
+
+    for (const ascentsOfDay of ascentsByDay) {
+      allWorkouts.push(workoutFromKilterBoardAscents(ascentsOfDay));
+    }
+  }
+
   return allWorkouts;
 }
 
@@ -253,6 +299,44 @@ export async function getAllWorkoutsWithoutSets({
       allWorkouts.push(
         workoutWithoutSetsFromTopLoggerClimbUsers(climbUsersOfDay),
       );
+    }
+  }
+
+  if (exerciseId === 2001 || !exerciseId) {
+    const ascentsQuery: Condition<KilterBoard.Ascent> = { user_id: 158721 };
+
+    if (workedOutAt) {
+      ascentsQuery.climbed_at = workedOutAt;
+    }
+
+    const ascents =
+      await KilterBoardAscents.find<WithId<KilterBoard.Ascent>>(
+        ascentsQuery,
+      ).toArray();
+
+    const ascentsByDay = Object.values(
+      ascents.reduce(
+        (acc, ascent) => {
+          if (!ascent.climbed_at) return acc;
+          const date = dateToString(ascent.climbed_at);
+
+          if (!Array.isArray(acc[date])) {
+            acc[date] = [ascent];
+          } else {
+            acc[date].push(ascent);
+          }
+
+          return acc;
+        },
+        {} as Record<
+          `${number}-${number}-${number}`,
+          WithId<KilterBoard.Ascent>[]
+        >,
+      ),
+    );
+
+    for (const ascentsOfDay of ascentsByDay) {
+      allWorkouts.push(workoutWithoutSetsFromKilterBoardAscents(ascentsOfDay));
     }
   }
 

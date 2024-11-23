@@ -5,6 +5,7 @@ export enum WorkoutSource {
   MyFitnessPal = "myfitnesspal",
   RunDouble = "rundouble",
   TopLogger = "toplogger",
+  KilterBoard = "kilterboard",
   Self = "self",
 }
 
