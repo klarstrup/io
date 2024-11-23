@@ -584,20 +584,16 @@ export const GET = () =>
 
       await flushJSON({ total });
 
-      const pageNumbers = randomSlice(
-        [
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: 10 }, (_, i) => i + 1),
-          ...Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-        ],
-        24,
-      );
+      const pageNumbers = [
+        ...Array.from({ length: 5 }, (_, i) => i + 1),
+        ...randomSlice(
+          Array.from(
+            { length: Math.ceil(total / 10) - 5 },
+            (_, i) => i + 1 + 5,
+          ),
+          48,
+        ),
+      ];
 
       await flushJSON({ pageNumbers });
 
