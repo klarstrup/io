@@ -1,13 +1,24 @@
 import { TZDate } from "@date-fns/tz";
-import { compareAsc, differenceInDays, startOfDay } from "date-fns";
+import {
+  compareAsc,
+  differenceInDays,
+  formatDistanceStrict,
+  startOfDay,
+  subMonths,
+} from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
+import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import type { PRType } from "../../lib";
 import type { WorkoutData } from "../../models/workout";
-import type { getNextSets } from "../../models/workout.server";
-import { DEFAULT_TIMEZONE } from "../../utils";
+import {
+  getAllWorkouts,
+  type getNextSets,
+  type IWorkoutLocationsView,
+} from "../../models/workout.server";
+import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 
@@ -89,8 +100,104 @@ export function DiaryAgendaWorkouts({
               <NextSets user={user} date={date} nextSets={dueSets} />
             </div>
           ) : null}
+          <Suspense>
+            <LeastRecentGym user={user} date={date} />
+          </Suspense>
         </div>
       )}
     </FieldSetY>
+  );
+}
+
+const nearestLiftingLocationToBoulderingLocation: Record<
+  string,
+  string | null
+> = {
+  "Boulders Hvidovre": "PureGym Friheden Butikscenter",
+  "Boulders Sydhavn": "PureGym Sjælør",
+  "Boulders Valby": "PureGym Mosedalvej",
+  "Boulders Amager": null,
+  "Beta Boulders West": "PureGym C.F. Richs Vej",
+  "Beta Boulders South": "PureGym Sjælør",
+  "Beta Boulders Osterbro": "PureGym Æbeløgade",
+};
+
+async function LeastRecentGym({
+  user,
+  date,
+}: {
+  user: Session["user"];
+  date: string;
+}) {
+  console.time("boulderingCounts");
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const tzDate = new TZDate(date, timeZone);
+  const boulderingsInThePast3Months = await getAllWorkouts({
+    user,
+    exerciseId: 2001,
+    workedOutAt: { $gte: subMonths(tzDate, 6), $lte: tzDate },
+  });
+  const leastRecentBoulderingLocations = [
+    "Boulders Hvidovre",
+    "Boulders Sydhavn",
+    "Boulders Valby",
+    "Boulders Amager",
+    "Beta Boulders West",
+    "Beta Boulders South",
+    "Beta Boulders Osterbro",
+  ]
+    .map((location) =>
+      boulderingsInThePast3Months.find(
+        (workout) => workout.location === location,
+      ),
+    )
+    .filter((workout): workout is WithId<WorkoutData> => Boolean(workout))
+    .sort((a, b) => a.workedOutAt.getTime() - b.workedOutAt.getTime())
+    .map(
+      (workout): IWorkoutLocationsView => ({
+        userId: user.id,
+        location: workout.location!,
+        mostRecentVisit: workout.workedOutAt,
+      }),
+    );
+
+  console.timeEnd("boulderingCounts");
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold">Least recent boulder gyms</h2>
+      <ul>
+        {leastRecentBoulderingLocations.slice(0, 3).map((location) => (
+          <li key={location.location}>
+            <span className="text-lg">{location.location}</span> -{" "}
+            <Link
+              href={`/diary/${dateToString(location.mostRecentVisit)}`}
+              className="text-xs"
+              style={{ color: "#edab00" }}
+            >
+              {location.mostRecentVisit
+                ? formatDistanceStrict(
+                    startOfDay(location.mostRecentVisit),
+                    startOfDay(tzDate),
+                    { addSuffix: true, roundingMethod: "floor" },
+                  )
+                : "never"}
+            </Link>
+            {nearestLiftingLocationToBoulderingLocation[location.location] ? (
+              <div>
+                <span className="text-xs">Closest lifting gym: </span>
+                <span className="text-sm">
+                  {
+                    nearestLiftingLocationToBoulderingLocation[
+                      location.location
+                    ]
+                  }
+                </span>
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

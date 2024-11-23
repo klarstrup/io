@@ -1,4 +1,4 @@
-import { isAfter, subMonths, subYears } from "date-fns";
+import { compareDesc, isAfter, subMonths, subYears } from "date-fns";
 import type { Condition, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import type {
@@ -46,7 +46,7 @@ export async function getAllWorkouts({
 }: {
   user: Session["user"];
   exerciseId?: number;
-  workedOutAt?: Condition<Date>;
+  workedOutAt?: Condition<WorkoutData["workedOutAt"]>;
 }) {
   const allWorkouts: WithId<WorkoutData>[] = [];
 
@@ -196,7 +196,7 @@ export async function getAllWorkouts({
     }
   }
 
-  return allWorkouts;
+  return allWorkouts.sort((a, b) => compareDesc(a.workedOutAt, b.workedOutAt));
 }
 
 export async function getAllWorkoutsWithoutSets({
@@ -581,7 +581,7 @@ export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
 export interface IWorkoutLocationsView {
   location: string;
   userId: string;
-  visitCount: number;
+  visitCount?: number;
   mostRecentVisit: Date;
 }
 
