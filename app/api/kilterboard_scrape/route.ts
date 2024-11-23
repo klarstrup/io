@@ -32,11 +32,13 @@ export const GET = () =>
       await KilterBoardAscents.updateOne(
         { uuid: ascent.uuid },
         {
-          ...ascent,
-          grade: difficultyToGradeMap[ascent.difficulty] as number,
-          climbed_at: new Date(ascent.climbed_at),
-          created_at: new Date(ascent.created_at),
-          updated_at: new Date(ascent.updated_at),
+          $set: {
+            ...ascent,
+            grade: difficultyToGradeMap[ascent.difficulty] as number,
+            climbed_at: new Date(ascent.climbed_at),
+            created_at: new Date(ascent.created_at),
+            updated_at: new Date(ascent.updated_at),
+          },
         },
         { upsert: true },
       );
