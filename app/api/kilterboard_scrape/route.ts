@@ -29,13 +29,17 @@ export const GET = () =>
     ).ascents;
 
     for (const ascent of ascents) {
-      await KilterBoardAscents.insertOne({
-        ...ascent,
-        grade: difficultyToGradeMap[ascent.difficulty] as number,
-        climbed_at: new Date(ascent.climbed_at),
-        created_at: new Date(ascent.created_at),
-        updated_at: new Date(ascent.updated_at),
-      });
+      await KilterBoardAscents.updateOne(
+        { uuid: ascent.uuid },
+        {
+          ...ascent,
+          grade: difficultyToGradeMap[ascent.difficulty] as number,
+          climbed_at: new Date(ascent.climbed_at),
+          created_at: new Date(ascent.created_at),
+          updated_at: new Date(ascent.updated_at),
+        },
+        { upsert: true },
+      );
     }
 
     await flushJSON({ ascents });
