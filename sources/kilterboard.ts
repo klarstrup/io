@@ -41,7 +41,6 @@ export function workoutFromKilterBoardAscents(
 
   return {
     _id: firstAscent._id,
-    location: "Kilter Board",
     exercises: [
       {
         exerciseId: 2001,
@@ -73,7 +72,6 @@ export function workoutWithoutSetsFromKilterBoardAscents(
 
   return {
     _id: firstAscent._id,
-    location: "Kilter Board",
     exercises: [{ exerciseId: 2001 }],
     userId: String(firstAscent.user_id),
     createdAt: firstAscent.created_at,
