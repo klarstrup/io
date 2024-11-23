@@ -350,8 +350,8 @@ export default function WorkoutEntry({
                 <small>RunDouble</small>
               ) : workout.source === WorkoutSource.TopLogger ? (
                 <small>TopLogger</small>
-              ) : workout.source === WorkoutSource.TopLogger ? (
-                <small>TopLogger</small>
+              ) : workout.source === WorkoutSource.KilterBoard ? (
+                <small>Kilter Board</small>
               ) : null}
             </div>
           ) : null}
