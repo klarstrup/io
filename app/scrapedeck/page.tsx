@@ -1,45 +1,23 @@
 import UserStuff from "../../components/UserStuff";
+import { scraperEndpoints } from "../api/scraper-utils";
 import "../page.css";
 
 export default function Page() {
   return (
     <center style={{ display: "flex", width: "100%", height: "100%" }}>
       <UserStuff />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <h2>MyFitnessPal</h2>
-        <iframe
-          src="/api/myfitnesspal_scrape"
-          style={{ height: "100%", width: "100%", flex: 1 }}
-        />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <h2>TopLogger</h2>
-        <iframe
-          src="/api/toplogger_gql_scrape"
-          style={{ height: "100%", width: "100%", flex: 1 }}
-        />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <h2>RunDouble</h2>
-        <iframe
-          src="/api/rundouble_scrape"
-          style={{ height: "100%", width: "100%", flex: 1 }}
-        />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <h2>iCal</h2>
-        <iframe
-          src="/api/ical_scrape"
-          style={{ height: "100%", width: "100%", flex: 1 }}
-        />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <h2>Tomorrow</h2>
-        <iframe
-          src="/api/tomorrow_scrape"
-          style={{ height: "100%", width: "100%", flex: 1 }}
-        />
-      </div>
+      {scraperEndpoints.map((scraperEndpoint) => (
+        <div
+          key={scraperEndpoint}
+          style={{ flex: 1, display: "flex", flexDirection: "column" }}
+        >
+          <h2>{scraperEndpoint}</h2>
+          <iframe
+            src={`/api/${scraperEndpoint}`}
+            style={{ height: "100%", width: "100%", flex: 1 }}
+          />
+        </div>
+      ))}
     </center>
   );
 }

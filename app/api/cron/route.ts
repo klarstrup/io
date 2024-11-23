@@ -1,12 +1,5 @@
 import { redirect } from "next/navigation";
-
-const scraperEndpoints = [
-  "ical_scrape",
-  "myfitnesspal_scrape",
-  "rundouble_scrape",
-  "tomorrow_scrape",
-  "toplogger_gql_scrape",
-] as const;
+import { scraperEndpoints } from "../scraper-utils";
 
 export function GET() {
   const scraperEndoint =
