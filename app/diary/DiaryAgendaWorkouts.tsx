@@ -169,20 +169,22 @@ async function LeastRecentGym({
       <ul className="flex flex-col gap-1">
         {leastRecentBoulderingLocations.slice(0, 3).map((location) => (
           <li key={location.location} className="leading-none">
-            <span className="font-semibold">{location.location}</span> -{" "}
-            <Link
-              href={`/diary/${dateToString(location.mostRecentVisit)}`}
-              className="text-xs"
-              style={{ color: "#edab00" }}
-            >
-              {location.mostRecentVisit
-                ? formatDistanceStrict(
-                    startOfDay(location.mostRecentVisit),
-                    startOfDay(tzDate),
-                    { addSuffix: true, roundingMethod: "floor" },
-                  )
-                : "never"}
-            </Link>
+            <div className="flex gap-1 items-center">
+              <span className="font-semibold">{location.location}</span> -{" "}
+              <Link
+                href={`/diary/${dateToString(location.mostRecentVisit)}`}
+                className="text-xs"
+                style={{ color: "#edab00" }}
+              >
+                {location.mostRecentVisit
+                  ? formatDistanceStrict(
+                      startOfDay(location.mostRecentVisit),
+                      startOfDay(tzDate),
+                      { addSuffix: true, roundingMethod: "floor" },
+                    )
+                  : "never"}
+              </Link>
+            </div>
             {nearestLiftingLocationToBoulderingLocation[location.location] ? (
               <div>
                 <span className="text-xs">Closest lifting gym: </span>
