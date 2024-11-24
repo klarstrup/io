@@ -2,6 +2,7 @@ import type { SVGProps } from "react";
 import Grade from "../grades";
 import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
 import { type getIoTopLoggerGroupEvent } from "../sources/toplogger";
+import { countBy } from "../utils";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
@@ -261,13 +262,23 @@ export default function ProblemByProblem({
       >
         {Array.from(grouped)
           .sort((a, b) => Number(b[1][0].grade) - Number(a[1][0].grade))
-          .map(([, problems], i) => (
-            <div key={i} className="flex items-center">
-              <span>{problems.length}</span>
-              <span className="px-0.5 py-0">×</span>
-              <ProblemBadge {...problems[0]} />
-            </div>
-          ))}
+          .map(([, problems], i) => {
+            const mostCommonColor = Object.entries(
+              countBy(problems, "color"),
+            ).sort((a, b) => Number(b[1]) - Number(a[1]))[0]![0];
+
+            return (
+              <div key={i} className="flex items-center">
+                <span>{problems.length}</span>
+                <span className="px-0.5 py-0">×</span>
+                <ProblemBadge
+                  {...problems.find(
+                    (problem) => problem.color === mostCommonColor,
+                  )!}
+                />
+              </div>
+            );
+          })}
       </div>
     );
   }

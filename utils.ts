@@ -523,3 +523,15 @@ export const isPlainObject = (
 
 export const rangeToQuery = (from: Date, to?: Date) =>
   to ? { $gte: from, $lte: to } : { $gte: from };
+
+export function countBy<T extends { [K in keyof T]: T[K] }, K extends keyof T>(
+  list: T[],
+  prop: K,
+): { [key in T[K]]: number } {
+  const acc = {} as { [key in T[K]]: number };
+  for (let i = 0; i < list.length; i++) {
+    const key = list[i]![prop];
+    acc[key] = (acc[key] ?? 0) + 1;
+  }
+  return acc;
+}
