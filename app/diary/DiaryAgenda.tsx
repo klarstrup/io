@@ -98,7 +98,7 @@ export function DiaryAgenda({
           <Suspense
             fallback={
               <FieldSetY
-                className="min-w-[50%] flex-1"
+                className="min-w-[50%] flex-[2]"
                 legend={<div className="flex items-center">Workouts</div>}
               />
             }
@@ -106,7 +106,7 @@ export function DiaryAgenda({
             <DiaryAgendaWorkoutsWrapper date={date} user={user} />
           </Suspense>
           <Suspense
-            fallback={<FieldSetY className="min-w-[50%]" legend={<>Food</>} />}
+            fallback={<FieldSetY className="min-w-[50%] flex-[1]" legend={<>Food</>} />}
           >
             <DiaryAgendaFood date={date} user={user} />
           </Suspense>
@@ -114,7 +114,7 @@ export function DiaryAgenda({
       </div>
       <Suspense
         fallback={
-          <FieldSetY className="flex flex-none flex-col" legend="Weather" />
+          <FieldSetY className="flex flex-none flex-col min-h-32" legend="Weather" />
         }
       >
         <DiaryAgendaWeather date={date} user={user} />
