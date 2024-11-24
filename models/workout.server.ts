@@ -31,10 +31,11 @@ import {
   workoutWithoutSetsFromTopLoggerClimbUsers,
 } from "../utils/graphql";
 import { exercises, InputType } from "./exercises";
-import type {
-  WorkoutData,
-  WorkoutDataShallow,
-  WorkoutExerciseSet,
+import {
+  isClimbingExercise,
+  type WorkoutData,
+  type WorkoutDataShallow,
+  type WorkoutExerciseSet,
 } from "./workout";
 
 export const Workouts = proxyCollection<WorkoutData>("workouts");
@@ -384,18 +385,63 @@ export async function getNextSets({
         const fitocracyWorkout =
           fitWorkout && workoutFromFitocracyWorkout(fitWorkout);
 
-        const recentmostWorkout =
-          workout && fitocracyWorkout
-            ? isAfter(workout.workedOutAt, fitocracyWorkout.workedOutAt)
-              ? workout
-              : fitocracyWorkout
-            : (workout ?? fitocracyWorkout ?? null);
+        const kilterboardAscent =
+          id === 2003
+            ? await KilterBoardAscents.findOne(
+                { user_id: 158721, climbed_at: { $lte: to } },
+                { sort: { climbed_at: -1 } },
+              )
+            : null;
+        const kilterboardWorkout =
+          kilterboardAscent &&
+          workoutFromKilterBoardAscents([kilterboardAscent]);
 
-        return [id, recentmostWorkout] as const;
+        const toploggerClimbUser =
+          id === 2001
+            ? await TopLoggerGraphQL.findOne<TopLoggerClimbUser>(
+                {
+                  __typename: "ClimbUser",
+                  userId: user.topLoggerGraphQLId,
+                  tickedFirstAtDate: { $lte: to },
+                },
+                { sort: { tickedFirstAtDate: -1 } },
+              )
+            : null;
+        const toploggerWorkout =
+          toploggerClimbUser &&
+          workoutFromTopLoggerClimbUsers([
+            await dereferenceDocument(toploggerClimbUser),
+          ]);
+
+        const recentMostWorkout =
+          [
+            workout,
+            fitocracyWorkout,
+            kilterboardWorkout,
+            toploggerWorkout,
+          ].sort((a, b) =>
+            compareDesc(
+              a?.workedOutAt ?? new Date(0),
+              b?.workedOutAt ?? new Date(0),
+            ),
+          )[0] || null;
+
+        return [id, recentMostWorkout] as const;
       }),
     )
   )
     .map(([id, workout]) => {
+      if (isClimbingExercise(id)) {
+        return {
+          workedOutAt: workout?.workedOutAt || null,
+          exerciseId: id,
+          successful: true,
+          nextWorkingSets: NaN,
+          nextWorkingSetsReps: NaN,
+          nextWorkingSetsWeight: NaN,
+        };
+      }
+
       const exercise = workout?.exercises.find(
         ({ exerciseId }) => exerciseId === id,
       );
@@ -407,22 +453,25 @@ export async function getNextSets({
         ({ type }) => type === InputType.Reps,
       );
       const heaviestSet = exercise?.sets.reduce((acc, set) => {
-        const setReps = set.inputs[repsInputIndex]!.value;
-        const setWeight = set.inputs[weightInputIndex]!.value;
-        const accWeight = acc?.inputs[weightInputIndex]!.value;
+        const setReps = set.inputs[repsInputIndex]?.value;
+        const setWeight = set.inputs[weightInputIndex]?.value;
+        const accWeight = acc?.inputs[weightInputIndex]?.value;
         return setWeight &&
           accWeight &&
+          setReps &&
           setWeight > accWeight &&
           setReps >= WORKING_SET_REPS
           ? set
           : acc;
       }, exercise.sets[0]);
 
-      const workingSets = exercise?.sets.filter(
-        (set) =>
-          set.inputs[weightInputIndex]!.value ===
-          heaviestSet?.inputs[weightInputIndex]!.value,
-      );
+      const workingSets =
+        heaviestSet &&
+        exercise?.sets.filter(
+          (set) =>
+            set.inputs[weightInputIndex]?.value ===
+            heaviestSet.inputs[weightInputIndex]?.value,
+        );
 
       const successful =
         workingSets &&
@@ -430,7 +479,9 @@ export async function getNextSets({
           (id === DEADLIFT_ID &&
             workingSets.length >= WORKING_SETS_FOR_DEADLIFT)) &&
         workingSets.every(
-          (sets) => sets.inputs[repsInputIndex]!.value >= WORKING_SET_REPS,
+          (sets) =>
+            sets.inputs[repsInputIndex] &&
+            sets.inputs[repsInputIndex].value >= WORKING_SET_REPS,
         );
       const goalWeight = heaviestSet
         ? successful
