@@ -129,7 +129,6 @@ async function LeastRecentGym({
   user: Session["user"];
   date: string;
 }) {
-  console.time("boulderingCounts");
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
   const boulderingsInThePast3Months = await getAllWorkouts({
@@ -161,15 +160,13 @@ async function LeastRecentGym({
       }),
     );
 
-  console.timeEnd("boulderingCounts");
-
   return (
     <div>
       <h2 className="text-lg font-semibold">Least recent boulder gyms:</h2>
       <ul className="flex flex-col gap-1">
         {leastRecentBoulderingLocations.slice(0, 3).map((location) => (
           <li key={location.location} className="leading-none">
-            <div className="flex gap-1 items-center">
+            <div className="flex items-center gap-1">
               <span className="font-semibold">{location.location}</span> -{" "}
               <Link
                 href={`/diary/${dateToString(location.mostRecentVisit)}`}
