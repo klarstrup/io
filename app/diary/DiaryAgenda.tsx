@@ -66,25 +66,23 @@ export function DiaryAgenda({
           </small>
           🌙
         </span>
-        {isToday ? null : (
-          <span className="whitespace-nowrap">
-            <Link
-              prefetch={false}
-              href={`/diary/${dateToString(subDays(new Date(date), 1))}`}
-            >
-              ⬅️
-            </Link>
-            <Link prefetch={false} href={`/diary`}>
-              🗓️
-            </Link>
-            <Link
-              prefetch={false}
-              href={`/diary/${dateToString(addDays(new Date(date), 1))}`}
-            >
-              ➡️
-            </Link>
-          </span>
-        )}
+        <span className="whitespace-nowrap">
+          <Link
+            prefetch={false}
+            href={`/diary/${dateToString(subDays(new Date(date), 1))}`}
+          >
+            ⬅️
+          </Link>
+          <Link prefetch={false} href={`/diary`}>
+            🗓️
+          </Link>
+          <Link
+            prefetch={false}
+            href={`/diary/${dateToString(addDays(new Date(date), 1))}`}
+          >
+            ➡️
+          </Link>
+        </span>
       </div>
       <div className="flex flex-1 flex-wrap gap-2">
         <Suspense
@@ -106,7 +104,9 @@ export function DiaryAgenda({
             <DiaryAgendaWorkoutsWrapper date={date} user={user} />
           </Suspense>
           <Suspense
-            fallback={<FieldSetY className="min-w-[50%] flex-[1]" legend={<>Food</>} />}
+            fallback={
+              <FieldSetY className="min-w-[50%] flex-[1]" legend={<>Food</>} />
+            }
           >
             <DiaryAgendaFood date={date} user={user} />
           </Suspense>
@@ -114,7 +114,10 @@ export function DiaryAgenda({
       </div>
       <Suspense
         fallback={
-          <FieldSetY className="flex flex-none flex-col min-h-32" legend="Weather" />
+          <FieldSetY
+            className="flex min-h-32 flex-none flex-col"
+            legend="Weather"
+          />
         }
       >
         <DiaryAgendaWeather date={date} user={user} />
