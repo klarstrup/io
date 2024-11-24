@@ -2,13 +2,7 @@
 "use client";
 
 import { TZDate } from "@date-fns/tz";
-import {
-  compareDesc,
-  differenceInDays,
-  formatDistanceToNowStrict,
-  isValid,
-  startOfDay,
-} from "date-fns";
+import { compareDesc, formatDistanceToNowStrict, isValid } from "date-fns";
 import { Route } from "next";
 import type { Session } from "next-auth";
 import Link from "next/link";
@@ -29,6 +23,7 @@ import {
   type ExerciseData,
 } from "../../models/exercises";
 import {
+  isNextSetDue,
   WorkoutSource,
   type WorkoutData,
   type WorkoutExerciseSet,
@@ -92,13 +87,7 @@ export function WorkoutForm<R extends string>({
   });
 
   const dueSets = nextSets
-    ?.filter(
-      (nextSet) =>
-        differenceInDays(
-          startOfDay(tzDate),
-          nextSet.workedOutAt || new Date(0),
-        ) > 3,
-    )
+    ?.filter((nextSet) => isNextSetDue(tzDate, nextSet))
     .filter(
       (nextSet) =>
         !watch("exercises")?.some(
@@ -107,13 +96,7 @@ export function WorkoutForm<R extends string>({
     );
 
   const futureSets = nextSets
-    ?.filter(
-      (nextSet) =>
-        differenceInDays(
-          startOfDay(tzDate),
-          nextSet.workedOutAt || new Date(0),
-        ) <= 3,
-    )
+    ?.filter((nextSet) => !isNextSetDue(tzDate, nextSet))
     .filter(
       (nextSet) =>
         !watch("exercises")?.some(

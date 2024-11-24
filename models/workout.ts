@@ -1,4 +1,7 @@
+import { TZDate } from "@date-fns/tz";
+import { differenceInDays, startOfDay } from "date-fns";
 import type { AssistType, Unit } from "./exercises";
+import type { getNextSets } from "./workout.server";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -46,3 +49,10 @@ export interface WorkoutExerciseSetInput {
 // problem by problem format.
 export const isClimbingExercise = (exerciseId: number) =>
   exerciseId === 2001 || exerciseId === 2003;
+
+export const isNextSetDue = (
+  tzDate: TZDate,
+  nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
+) =>
+  differenceInDays(startOfDay(tzDate), nextSet.workedOutAt || new Date(0)) >
+  (nextSet.exerciseId === 2001 ? 1 : nextSet.exerciseId === 2003 ? 2 : 3);

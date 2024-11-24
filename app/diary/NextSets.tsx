@@ -54,20 +54,31 @@ export function NextSets({
                   {successful === false ? " (failed)" : null}
                 </span>{" "}
                 <div className="whitespace-nowrap">
-                  <span className="text-sm">
-                    {nextWorkingSets}x{nextWorkingSetsReps}x
-                    {nextWorkingSetsWeight}
-                    kg
-                  </span>{" "}
+                  {nextWorkingSets &&
+                  nextWorkingSetsReps &&
+                  nextWorkingSetsWeight ? (
+                    <span className="text-sm">
+                      {nextWorkingSets}x{nextWorkingSetsReps}x
+                      {nextWorkingSetsWeight}
+                      kg
+                    </span>
+                  ) : null}{" "}
                   <span className="text-xs">
                     Last set{" "}
-                    {workedOutAt
-                      ? formatDistanceStrict(
+                    {workedOutAt ? (
+                      <Link
+                        href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
+                        style={{ color: "#edab00" }}
+                      >
+                        {formatDistanceStrict(
                           startOfDay(workedOutAt),
                           startOfDay(tzDate),
                           { addSuffix: true, roundingMethod: "floor" },
-                        )
-                      : "never"}
+                        )}
+                      </Link>
+                    ) : (
+                      "never"
+                    )}
                   </span>
                 </div>
               </div>

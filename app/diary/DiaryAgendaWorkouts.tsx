@@ -1,7 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import {
   compareAsc,
-  differenceInDays,
   formatDistanceStrict,
   startOfDay,
   subMonths,
@@ -12,7 +11,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import type { PRType } from "../../lib";
-import type { WorkoutData } from "../../models/workout";
+import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
   getAllWorkouts,
   type getNextSets,
@@ -38,11 +37,7 @@ export function DiaryAgendaWorkouts({
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
-  const dueSets = nextSets?.filter(
-    (nextSet) =>
-      differenceInDays(startOfDay(tzDate), nextSet.workedOutAt || new Date(0)) >
-      3,
-  );
+  const dueSets = nextSets?.filter((nextSet) => isNextSetDue(tzDate, nextSet));
 
   return (
     <FieldSetY
