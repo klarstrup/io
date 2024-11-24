@@ -86083,14 +86083,9 @@ export const exercises = [
     is_popular: false,
     name: "Bouldering",
     tags: [
-      {
-        name: "Calisthenics",
-        type: TagType.Type,
-      },
-      {
-        name: "Body Weight",
-        type: TagType.Equipment,
-      },
+      { name: "Climbing", type: TagType.Type },
+      { name: "Calisthenics", type: TagType.Type },
+      { name: "Body Weight", type: TagType.Equipment },
     ],
   },
   {
@@ -86217,6 +86212,7 @@ export const exercises = [
     is_popular: false,
     name: "Board Climbing",
     tags: [
+      { name: "Climbing", type: TagType.Type },
       { name: "Calisthenics", type: TagType.Type },
       { name: "Body Weight", type: TagType.Equipment },
     ],
