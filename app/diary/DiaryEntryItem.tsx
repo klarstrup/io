@@ -4,7 +4,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import type { DiaryEntry } from "../../lib";
 import { exercises, TagType } from "../../models/exercises";
-import { WorkoutData } from "../../models/workout";
+import { isClimbingExercise, WorkoutData } from "../../models/workout";
 import {
   dateToString,
   DEFAULT_TIMEZONE,
@@ -143,44 +143,43 @@ function WorkoutsSummary({
             return {
               id: exercise.id,
               name: exercise.name,
-              icon:
-                exercise.name === "Bouldering" ? (
-                  "🧗‍♀️"
-                ) : exercise.tags?.some(
-                    (tag) =>
-                      tag.type === TagType.Equipment && tag.name === "Barbell",
-                  ) ? (
-                  "🏋️‍♀️"
-                ) : exercise.tags?.some(
-                    (tag) =>
-                      tag.type === TagType.Equipment &&
-                      (tag.name === "Dumbbell" ||
-                        tag.name === "EZ Bar" ||
-                        tag.name === "Cables" ||
-                        tag.name === "Machine"),
-                  ) ? (
-                  "💪"
-                ) : exercise.tags?.some(
-                    (tag) =>
-                      tag.type === TagType.MuscleGroup && tag.name === "Cardio",
-                  ) ? (
-                  "🏃‍♀️"
-                ) : exercise.tags?.some(
-                    (tag) =>
-                      tag.type === TagType.Type && tag.name === "Calisthenics",
-                  ) ? (
-                  "🤸🏻"
-                ) : (
-                  <span
-                    style={{
-                      fontSize: "0.125em",
-                      display: "inline-block",
-                      maxWidth: "12em",
-                    }}
-                  >
-                    {exercise.name}
-                  </span>
-                ),
+              icon: isClimbingExercise(exercise.id) ? (
+                "🧗‍♀️"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.Equipment && tag.name === "Barbell",
+                ) ? (
+                "🏋️‍♀️"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.Equipment &&
+                    (tag.name === "Dumbbell" ||
+                      tag.name === "EZ Bar" ||
+                      tag.name === "Cables" ||
+                      tag.name === "Machine"),
+                ) ? (
+                "💪"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.MuscleGroup && tag.name === "Cardio",
+                ) ? (
+                "🏃‍♀️"
+              ) : exercise.tags?.some(
+                  (tag) =>
+                    tag.type === TagType.Type && tag.name === "Calisthenics",
+                ) ? (
+                "🤸🏻"
+              ) : (
+                <span
+                  style={{
+                    fontSize: "0.125em",
+                    display: "inline-block",
+                    maxWidth: "12em",
+                  }}
+                >
+                  {exercise.name}
+                </span>
+              ),
             };
           }),
         ({ icon }) => icon,

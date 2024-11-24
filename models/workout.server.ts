@@ -156,7 +156,7 @@ export async function getAllWorkouts({
     }
   }
 
-  if (exerciseId === 2001 || !exerciseId) {
+  if (exerciseId === 2003 || !exerciseId) {
     const ascentsQuery: Condition<KilterBoard.Ascent> = {
       user_id: 158721,
     };
@@ -302,7 +302,7 @@ export async function getAllWorkoutsWithoutSets({
     }
   }
 
-  if (exerciseId === 2001 || !exerciseId) {
+  if (exerciseId === 2003 || !exerciseId) {
     const ascentsQuery: Condition<KilterBoard.Ascent> = { user_id: 158721 };
 
     if (workedOutAt) {

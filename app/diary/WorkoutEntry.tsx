@@ -6,6 +6,7 @@ import Grade from "../../grades";
 import { PRType } from "../../lib";
 import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import {
+  isClimbingExercise,
   type WorkoutData,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
@@ -208,7 +209,7 @@ export function WorkoutEntryExercise({
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
-  if (exercise.id === 2001) {
+  if (isClimbingExercise(exercise.id)) {
     if (averageGrade) {
       const values = sets.map((set) => set.inputs[0]!.value);
       if (values.filter((value) => value).length) {

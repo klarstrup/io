@@ -9,6 +9,7 @@ import {
 } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE, rangeToQuery } from "../../utils";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
+import { isClimbingExercise } from "../../models/workout";
 
 export async function DiaryAgendaWorkoutsWrapper({
   date,
@@ -32,7 +33,7 @@ export async function DiaryAgendaWorkoutsWrapper({
     workouts.map((workout) =>
       Promise.all(
         workout.exercises.map(async (exercise) => {
-          if (exercise.exerciseId === 2001) {
+          if (isClimbingExercise(exercise.exerciseId)) {
             return Array.from({ length: exercise.sets.length }, () => noPR);
           }
 

@@ -36,14 +36,14 @@ export const KilterBoardAscents = proxyCollection<KilterBoard.Ascent>(
 export function workoutFromKilterBoardAscents(
   ascents: WithId<KilterBoard.Ascent>[],
 ): WithId<WorkoutData> {
-  const firstAscent = ascents[0];
-  if (!firstAscent) throw new Error("No climb users provided");
+  const [firstAscent] = ascents;
+  if (!firstAscent) throw new Error("No ascents provided");
 
   return {
     _id: firstAscent._id,
     exercises: [
       {
-        exerciseId: 2001,
+        exerciseId: 2003,
         sets: ascents.map(({ grade }) => ({
           inputs: [
             // Grade
@@ -65,14 +65,14 @@ export function workoutFromKilterBoardAscents(
 }
 
 export function workoutWithoutSetsFromKilterBoardAscents(
-  climbUsers: WithId<KilterBoard.Ascent>[],
+  ascents: WithId<KilterBoard.Ascent>[],
 ): WithId<WorkoutDataShallow> {
-  const firstAscent = climbUsers[0];
-  if (!firstAscent) throw new Error("No climb users provided");
+  const [firstAscent] = ascents;
+  if (!firstAscent) throw new Error("No ascents provided");
 
   return {
     _id: firstAscent._id,
-    exercises: [{ exerciseId: 2001 }],
+    exercises: [{ exerciseId: 2003 }],
     userId: String(firstAscent.user_id),
     createdAt: firstAscent.created_at,
     updatedAt: firstAscent.updated_at,

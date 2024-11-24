@@ -3,7 +3,10 @@ import { Fragment } from "react";
 import { auth } from "../../../../auth";
 import { PRType } from "../../../../lib";
 import { exercises } from "../../../../models/exercises";
-import type { WorkoutData } from "../../../../models/workout";
+import {
+  isClimbingExercise,
+  type WorkoutData,
+} from "../../../../models/workout";
 import { getAllWorkouts, getIsSetPR } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
 
@@ -63,7 +66,7 @@ export default async function DiaryExercise({
   const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
     {};
 
-  if (exerciseId !== 2001 || prType) {
+  if (!isClimbingExercise(exerciseId) || prType) {
     for (const workout of allWorkoutsOfExercise) {
       if (!workoutsExerciseSetPRs[workout._id.toString()]) {
         workoutsExerciseSetPRs[workout._id.toString()] = [];

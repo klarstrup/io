@@ -40,3 +40,9 @@ export interface WorkoutExerciseSetInput {
   value: number;
   assistType?: AssistType;
 }
+
+// This is a helper function to determine if an exercise is a climbing exercise,
+// meaning that its set inputs are a specific shape and can be presented in a
+// problem by problem format.
+export const isClimbingExercise = (exerciseId: number) =>
+  exerciseId === 2001 || exerciseId === 2003;
