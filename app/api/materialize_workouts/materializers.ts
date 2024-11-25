@@ -1,3 +1,4 @@
+import { eachMonthOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import {
@@ -13,7 +14,7 @@ import {
 } from "../../../sources/kilterboard";
 import { workoutFromRunDouble } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
-import { dateToString } from "../../../utils";
+import { dateToString, shuffle } from "../../../utils";
 import {
   dereferenceDocument,
   TopLoggerGraphQL,
@@ -31,29 +32,33 @@ export async function* materializeAllToploggerWorkouts({
 }) {
   if (!user.topLoggerGraphQLId) return;
 
-  const climbUsers = await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>({
-    __typename: "ClimbUser",
-    userId: user.topLoggerGraphQLId,
-  }).toArray();
+  for (const month of shuffle(
+    eachMonthOfInterval({
+      start: new Date("2021-01-01"),
+      end: new Date(),
+    }),
+  )) {
+    yield month;
+    const climbUsers = await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>({
+      __typename: "ClimbUser",
+      userId: user.topLoggerGraphQLId,
+      tickedFirstAtDate: {
+        $gte: startOfMonth(month),
+        $lt: endOfMonth(month),
+      },
+    }).toArray();
 
-  const dereferencedClimbUsers = await Promise.all(
-    climbUsers.map((climbUser) =>
-      dereferenceDocument<
-        WithId<TopLoggerClimbUser>,
-        WithId<TopLoggerClimbUserDereferenced>
-      >(climbUser),
-    ),
-  );
+    const dereferencedClimbUsers = await Promise.all(
+      climbUsers.map((climbUser) =>
+        dereferenceDocument<
+          WithId<TopLoggerClimbUser>,
+          WithId<TopLoggerClimbUserDereferenced>
+        >(climbUser),
+      ),
+    );
 
-  const climbUsersByDay = Object.values(
-    dereferencedClimbUsers
-      .sort((a, b) =>
-        a.holdColor.nameLoc
-          .toLowerCase()
-          .localeCompare(b.holdColor.nameLoc.toLowerCase()),
-      )
-      .sort((a, b) => a.climb.grade - b.climb.grade)
-      .reduce(
+    const climbUsersByDay = Object.values(
+      dereferencedClimbUsers.reduce(
         (acc, climbUser) => {
           if (!climbUser.tickedFirstAtDate) return acc;
           const date = dateToString(climbUser.tickedFirstAtDate);
@@ -71,16 +76,17 @@ export async function* materializeAllToploggerWorkouts({
           WithId<TopLoggerClimbUserDereferenced>[]
         >,
       ),
-  );
-
-  for (const climbUsersOfDay of climbUsersByDay) {
-    const workout = workoutFromTopLoggerClimbUsers(user, climbUsersOfDay);
-
-    yield await MaterializedWorkoutsView.updateOne(
-      { id: workout.id },
-      { $set: workout },
-      { upsert: true },
     );
+
+    for (const climbUsersOfDay of climbUsersByDay) {
+      const workout = workoutFromTopLoggerClimbUsers(user, climbUsersOfDay);
+
+      yield await MaterializedWorkoutsView.updateOne(
+        { id: workout.id },
+        { $set: workout },
+        { upsert: true },
+      );
+    }
   }
 }
 
