@@ -139,10 +139,10 @@ export default async function DiaryLayout(props: {
           <UserStuff />
         </Suspense>
         <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
-          <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[80vh] portrait:border-b-[0.5px] landscape:w-1/3">
+          <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[75vh] portrait:border-b-[0.5px] landscape:w-1/3">
             <DiaryAgenda date={date} user={user} />
           </div>
-          <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[20vh]">
+          <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[25vh]">
             <LoadMore
               initialCursor={{
                 startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,

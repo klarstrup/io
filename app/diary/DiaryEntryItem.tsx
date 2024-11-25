@@ -39,9 +39,7 @@ export function DiaryEntryItem({
   const isToday = date === dateToString(now);
   const isFuture = now < tzDate;
 
-  if (isFuture && !isToday) {
-    return <div className="flex-1 border-[0.5px] border-black/0">&nbsp;</div>;
-  }
+  if (isFuture && !isToday) return null;
 
   return (
     <Link
@@ -50,13 +48,10 @@ export function DiaryEntryItem({
       href={`/diary/${date}`}
       style={{
         background: getSchemeCategory10Color(Number(date.split("-")[1])) + "50",
-        display: "flex",
-        flexDirection: "column",
-        padding: "0.25em",
-        maxWidth: "calc(100% / 7)",
-        width: "calc(100% / 7)",
       }}
-      className={"diary-entry flex-1 border-[0.5px] border-black/25"}
+      className={
+        "diary-entry flex flex-1 flex-col border-[0.5px] border-black/25 p-1"
+      }
     >
       <div
         style={{
@@ -67,42 +62,21 @@ export function DiaryEntryItem({
       >
         <div
           className={
-            "flex flex-1 items-center justify-center text-lg leading-none " +
+            "flex flex-1 items-center justify-center leading-none " +
             (isToday ? "font-bold" : "font-normal")
           }
         >
           {date.split("-")[2]}
         </div>
       </div>
-      <div
-        style={{
-          flex: "1",
-          display: "flex",
-          flexDirection: "column",
-          flexWrap: "wrap",
-        }}
-      >
-        <div className="min-h-20">
-          {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
-          {dayTotalEnergy && dayTotalProtein ? (
-            <div
-              style={{
-                fontSize: "0.25em",
-                padding: "0.25em",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "0.25em",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <small style={{ paddingLeft: "0.5em" }}>
-                <div>{Math.round(dayTotalEnergy)} kcal</div>
-                <div>{Math.round(dayTotalProtein)}g protein</div>
-              </small>
-            </div>
-          ) : null}
-        </div>
+      <div className="flex min-h-20 flex-1 flex-col flex-wrap">
+        {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
+        {dayTotalEnergy && dayTotalProtein ? (
+          <div className="flex flex-wrap items-center justify-center gap-1 p-1 text-center text-[0.25em]">
+            <div>{Math.round(dayTotalEnergy)} kcal</div>
+            <div>{Math.round(dayTotalProtein)}g protein</div>
+          </div>
+        ) : null}
       </div>
     </Link>
   );

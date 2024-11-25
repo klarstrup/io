@@ -40,8 +40,14 @@ export function DiaryEntryWeek({
   };
 
   return (
-    <div key={getISOWeek(weekDate)} className="flex flex-1">
-      <div className="flex w-12 flex-col items-center justify-center border-[0.5px] border-black/25">
+    <div
+      key={getISOWeek(weekDate)}
+      className="grid flex-1 grid-cols-8 bg-white"
+    >
+      <div
+        className="flex flex-1 flex-col items-center justify-center border-[0.5px] border-black/25"
+        style={{ background: "#edab00" }}
+      >
         <span>{getISOWeek(weekDate)}</span>
         <span className="text-xs font-bold">
           {getYear(weekDate) !== getYear(subWeeks(weekDate, 1))
@@ -63,20 +69,17 @@ export function DiaryEntryWeek({
               : null}
         </span>
       </div>
-      <div className="flex flex-1 bg-white">
-        {eachDayOfInterval(weekInterval).map((dayte) => {
-          const dateStr = dateToString(dayte);
+      {eachDayOfInterval(weekInterval).map((dayte) => {
+        const dateStr = dateToString(dayte);
 
-          return (
-            <DiaryEntryItem
-              user={user}
-              key={dateStr}
-              diaryEntry={diaryEntries?.find(([date]) => date === dateStr)?.[1]}
-              date={dateStr}
-            />
-          );
-        })}
-      </div>
+        return (
+          <DiaryEntryItem
+            user={user}
+            diaryEntry={diaryEntries?.find(([date]) => date === dateStr)?.[1]}
+            date={dateStr}
+          />
+        );
+      })}
     </div>
   );
 }
