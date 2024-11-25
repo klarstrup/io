@@ -747,7 +747,7 @@ export interface IWorkoutLocationsView {
   location: string;
   userId: string;
   visitCount?: number;
-  mostRecentVisit: Date;
+  mostRecentVisit: Date | null;
 }
 
 export const WorkoutLocationsView = proxyCollection<IWorkoutLocationsView>(

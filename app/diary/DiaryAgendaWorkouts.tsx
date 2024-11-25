@@ -137,26 +137,21 @@ async function LeastRecentGym({
         "Beta Boulders South",
         "Beta Boulders Osterbro",
       ].map(async (location) => {
-        const boulderingInThePast3Months = await getMostRecentWorkout({
+        const boulderingInThePast = await getMostRecentWorkout({
           user,
           exerciseId: 2001,
           location,
-          workedOutAt: { $gte: subMonths(tzDate, 3), $lte: tzDate },
+          workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
         });
 
-        return boulderingInThePast3Months;
+        return {
+          userId: user.id,
+          location,
+          mostRecentVisit: boulderingInThePast?.workedOutAt || null,
+        } satisfies IWorkoutLocationsView;
       }),
     )
-  )
-    .filter((workout): workout is WithId<WorkoutData> => Boolean(workout))
-    .sort((a, b) => a.workedOutAt.getTime() - b.workedOutAt.getTime())
-    .map(
-      (workout): IWorkoutLocationsView => ({
-        userId: user.id,
-        location: workout.location!,
-        mostRecentVisit: workout.workedOutAt,
-      }),
-    );
+  ).sort((a, b) => compareAsc(a.mostRecentVisit || 0, b.mostRecentVisit || 0));
 
   return (
     <div>
@@ -166,19 +161,23 @@ async function LeastRecentGym({
           <li key={location.location} className="leading-none">
             <div className="flex items-center gap-1">
               <span className="font-semibold">{location.location}</span> -{" "}
-              <Link
-                href={`/diary/${dateToString(location.mostRecentVisit)}`}
-                className="text-xs"
-                style={{ color: "#edab00" }}
-              >
-                {location.mostRecentVisit
-                  ? formatDistanceStrict(
-                      startOfDay(location.mostRecentVisit),
-                      startOfDay(tzDate),
-                      { addSuffix: true, roundingMethod: "floor" },
-                    )
-                  : "never"}
-              </Link>
+              {location.mostRecentVisit ? (
+                <Link
+                  href={`/diary/${dateToString(location.mostRecentVisit)}`}
+                  className="text-xs"
+                  style={{ color: "#edab00" }}
+                >
+                  {location.mostRecentVisit
+                    ? formatDistanceStrict(
+                        startOfDay(location.mostRecentVisit),
+                        startOfDay(tzDate),
+                        { addSuffix: true, roundingMethod: "floor" },
+                      )
+                    : "never"}
+                </Link>
+              ) : (
+                <span className="text-xs">not visited in the past month</span>
+              )}
             </div>
             {nearestLiftingLocationToBoulderingLocation[location.location] ? (
               <div>
