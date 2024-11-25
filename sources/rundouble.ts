@@ -1,4 +1,5 @@
 import type { WithId } from "mongodb";
+import type { Session } from "next-auth";
 import { dbFetch } from "../fetch";
 import { Unit } from "../models/exercises";
 import { type WorkoutData, WorkoutSource } from "../models/workout";
@@ -192,10 +193,11 @@ export const getRunDoubleUser = async (
 };
 
 export function workoutFromRunDouble(
+  user: Session["user"],
   run: WithId<RunDouble.MongoHistoryItem>,
-): WithId<WorkoutData> {
+): WorkoutData {
   return {
-    _id: run._id,
+    id: run.key.toString(),
     exercises: [
       {
         exerciseId: 518,
@@ -210,7 +212,7 @@ export function workoutFromRunDouble(
         ],
       },
     ],
-    userId: "rundouble",
+    userId: user.id,
     createdAt: new Date(run.completedLong),
     updatedAt: new Date(run.completedLong),
     workedOutAt: new Date(run.completedLong),

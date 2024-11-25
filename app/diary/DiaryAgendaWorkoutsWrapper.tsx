@@ -1,15 +1,15 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
+import { isClimbingExercise } from "../../models/workout";
 import {
-  getAllWorkouts,
   getIsSetPR,
   getNextSets,
+  MaterializedWorkoutsView,
   noPR,
 } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE, rangeToQuery } from "../../utils";
 import { DiaryAgendaWorkouts } from "./DiaryAgendaWorkouts";
-import { isClimbingExercise } from "../../models/workout";
 
 export async function DiaryAgendaWorkoutsWrapper({
   date,
@@ -23,10 +23,13 @@ export async function DiaryAgendaWorkoutsWrapper({
   const tzDate = new TZDate(date, timeZone);
   const [nextSets, workouts] = await Promise.all([
     getNextSets({ user, to: endOfDay(tzDate) }),
-    getAllWorkouts({
-      user,
-      workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
-    }),
+    MaterializedWorkoutsView.find(
+      {
+        userId: user.id,
+        workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
+      },
+      { sort: { workedOutAt: -1 } },
+    ).toArray(),
   ]);
 
   const workoutsExerciseSetPRs = await Promise.all(
@@ -37,11 +40,14 @@ export async function DiaryAgendaWorkoutsWrapper({
             return Array.from({ length: exercise.sets.length }, () => noPR);
           }
 
-          const precedingWorkouts = await getAllWorkouts({
-            user,
-            exerciseId: exercise.exerciseId,
-            workedOutAt: { $lt: workout.workedOutAt },
-          });
+          const precedingWorkouts = await MaterializedWorkoutsView.find(
+            {
+              userId: user.id,
+              "exercises.exerciseId": exercise.exerciseId,
+              workedOutAt: { $lt: workout.workedOutAt },
+            },
+            { sort: { workedOutAt: -1 } },
+          ).toArray();
 
           return exercise.sets.map((set) =>
             getIsSetPR(

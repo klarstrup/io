@@ -9,9 +9,12 @@ import {
   updateLocationCounts,
   Workouts,
 } from "../../models/workout.server";
+import { materializeAllIoWorkouts } from "../api/materialize_workouts/materializers";
 
 export async function upsertWorkout(
-  workout: (WorkoutData & { _id: string }) | WorkoutData,
+  workout:
+    | (Omit<WorkoutData, "id"> & { _id: string })
+    | Omit<WorkoutData, "id">,
 ) {
   const user = (await auth())?.user;
   if (!user || workout.userId !== user.id) throw new Error("Unauthorized");
@@ -28,6 +31,8 @@ export async function upsertWorkout(
 
   void updateLocationCounts(user.id);
   void updateExerciseCounts(user.id, user.fitocracyUserId);
+
+  void Array.fromAsync(materializeAllIoWorkouts({ user }));
 
   revalidatePath("/diary");
   return String(_id);

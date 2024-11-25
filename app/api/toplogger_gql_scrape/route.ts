@@ -14,6 +14,7 @@ import {
   type Reference,
   TopLoggerGraphQL,
 } from "../../../utils/graphql";
+import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -622,4 +623,6 @@ export const GET = () =>
         await flushJSON(updateResult);
       }
     }
+
+    yield await Array.fromAsync(materializeAllToploggerWorkouts({ user }));
   });

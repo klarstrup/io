@@ -152,8 +152,12 @@ export function WorkoutForm<R extends string>({
       <form
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(async (data) => {
-          const newWorkout: WorkoutData & { _id?: string } = {
+          const newWorkout: Omit<WorkoutData, "id"> & {
+            _id?: string;
+            id?: string;
+          } = {
             _id: workout?._id,
+            id: workout?.id,
             userId: user.id,
             // Shit that will change
             workedOutAt: data.workedOutAt ?? workout?.workedOutAt,

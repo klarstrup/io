@@ -1,10 +1,8 @@
 import type { WithId } from "mongodb";
+import type { Session } from "next-auth";
 import { Unit } from "../models/exercises";
-import {
-  type WorkoutData,
-  type WorkoutDataShallow,
-  WorkoutSource,
-} from "../models/workout";
+import { type WorkoutData, WorkoutSource } from "../models/workout";
+import { dateToString } from "../utils";
 import { proxyCollection } from "../utils.server";
 
 export namespace KilterBoard {
@@ -34,13 +32,14 @@ export const KilterBoardAscents = proxyCollection<KilterBoard.Ascent>(
 );
 
 export function workoutFromKilterBoardAscents(
+  user: Session["user"],
   ascents: WithId<KilterBoard.Ascent>[],
-): WithId<WorkoutData> {
+): WorkoutData {
   const [firstAscent] = ascents;
   if (!firstAscent) throw new Error("No ascents provided");
 
   return {
-    _id: firstAscent._id,
+    id: `${WorkoutSource.TopLogger}:${firstAscent.user_id}:${dateToString(firstAscent.climbed_at)}`,
     exercises: [
       {
         exerciseId: 2003,
@@ -56,24 +55,7 @@ export function workoutFromKilterBoardAscents(
         })),
       },
     ],
-    userId: String(firstAscent.user_id),
-    createdAt: firstAscent.created_at,
-    updatedAt: firstAscent.updated_at,
-    workedOutAt: firstAscent.climbed_at,
-    source: WorkoutSource.KilterBoard,
-  };
-}
-
-export function workoutWithoutSetsFromKilterBoardAscents(
-  ascents: WithId<KilterBoard.Ascent>[],
-): WithId<WorkoutDataShallow> {
-  const [firstAscent] = ascents;
-  if (!firstAscent) throw new Error("No ascents provided");
-
-  return {
-    _id: firstAscent._id,
-    exercises: [{ exerciseId: 2003 }],
-    userId: String(firstAscent.user_id),
+    userId: user.id,
     createdAt: firstAscent.created_at,
     updatedAt: firstAscent.updated_at,
     workedOutAt: firstAscent.climbed_at,

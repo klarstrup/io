@@ -1,11 +1,12 @@
 import type { WithId } from "mongodb";
+import type { Session } from "next-auth";
 import { Unit } from "../models/exercises";
 import {
-  WorkoutExercise,
-  WorkoutExerciseSet,
-  WorkoutExerciseSetInput,
   WorkoutSource,
   type WorkoutData,
+  type WorkoutExercise,
+  type WorkoutExerciseSet,
+  type WorkoutExerciseSetInput,
 } from "../models/workout";
 
 export namespace Fitocracy {
@@ -278,8 +279,9 @@ export const theDayFitocracyDied = new Date(2024, 6, 15);
 export const exerciseIdsThatICareAbout = [1, 2, 3, 183, 474, 532, 2001, 2003];
 
 export function workoutFromFitocracyWorkout(
+  user: Session["user"],
   workout: WithId<Fitocracy.MongoWorkout>,
-): WithId<WorkoutData> {
+): WorkoutData {
   const exercises = workout.root_group.children.map(
     ({ exercise }): WorkoutExercise => ({
       exerciseId: exercise.exercise_id,
@@ -298,9 +300,9 @@ export function workoutFromFitocracyWorkout(
   );
 
   return {
-    _id: workout._id,
+    id: workout.id.toString(),
     exercises,
-    userId: String(workout.root_group.id),
+    userId: user.id,
     createdAt: new Date(workout.updated_timestamp),
     updatedAt: new Date(workout.updated_timestamp),
     workedOutAt: new Date(workout.workout_timestamp),

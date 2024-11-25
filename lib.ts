@@ -1,4 +1,4 @@
-import type { WorkoutData, WorkoutDataShallow } from "./models/workout";
+import type { WorkoutData } from "./models/workout";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
 import type { VCalendar, VEvent } from "./vendor/ical";
 
@@ -115,10 +115,6 @@ export type EventEntry =
 
 export interface DiaryEntry {
   workouts?: (WorkoutData & { _id: string })[];
-  food?: (MyFitnessPal.FoodEntry & { _id: string })[];
-}
-export interface DiaryEntryShallow {
-  workouts?: (WorkoutDataShallow & { _id: string })[];
   food?: (MyFitnessPal.FoodEntry & { _id: string })[];
 }
 

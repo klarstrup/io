@@ -13,9 +13,9 @@ import { FieldSetY } from "../../components/FieldSet";
 import type { PRType } from "../../lib";
 import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
-  getMostRecentWorkout,
+  MaterializedWorkoutsView,
   type getNextSets,
-  type IWorkoutLocationsView,
+  type IWorkoutLocationsView
 } from "../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import { NextSets } from "./NextSets";
@@ -137,12 +137,15 @@ async function LeastRecentGym({
         "Beta Boulders South",
         "Beta Boulders Osterbro",
       ].map(async (location) => {
-        const boulderingInThePast = await getMostRecentWorkout({
-          user,
-          exerciseId: 2001,
-          location,
-          workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
-        });
+        const boulderingInThePast = await MaterializedWorkoutsView.findOne(
+          {
+            userId: user.id,
+            "exercises.exerciseId": 2001,
+            location,
+            workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
+          },
+          { sort: { workedOutAt: -1 } },
+        );
 
         return {
           userId: user.id,

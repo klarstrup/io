@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { auth } from "../../auth";
-import type { DiaryEntry, DiaryEntryShallow } from "../../lib";
-import { getAllWorkoutsWithoutSets } from "../../models/workout.server";
+import type { DiaryEntry } from "../../lib";
+import { MaterializedWorkoutsView } from "../../models/workout.server";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
 import {
   allPromises,
@@ -25,13 +25,11 @@ export async function getDiaryEntriesShallow({
 
   const now = TZDate.tz(timeZone);
   const todayStr = dateToString(now);
-  const diary: Record<DayStr, DiaryEntryShallow> = !to
-    ? { [todayStr]: {} }
-    : {};
+  const diary: Record<DayStr, DiaryEntry> = !to ? { [todayStr]: {} } : {};
   function addDiaryEntry<K extends keyof (typeof diary)[keyof typeof diary]>(
     date: Date,
     key: K,
-    entry: NonNullable<DiaryEntryShallow[K]>[number],
+    entry: NonNullable<DiaryEntry[K]>[number],
   ) {
     const dayStr: DayStr = dateToString(date);
     let day = diary[dayStr];
@@ -62,8 +60,8 @@ export async function getDiaryEntriesShallow({
       }
     },
     async () => {
-      for (const workout of await getAllWorkoutsWithoutSets({
-        user,
+      for await (const workout of MaterializedWorkoutsView.find({
+        userId: user.id,
         workedOutAt: rangeToQuery(from, to),
       })) {
         addDiaryEntry(workout.workedOutAt, "workouts", {

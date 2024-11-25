@@ -13,7 +13,10 @@ export enum WorkoutSource {
 }
 
 export interface WorkoutData {
+  // String that uniquely and reproducibly identifies this workout
+  id: string;
   exercises: WorkoutExercise[];
+  // Io ID, not source user ID
   userId: string; // This is a string because it's a MongoDB ObjectId
   createdAt: Date;
   updatedAt: Date;
@@ -21,10 +24,6 @@ export interface WorkoutData {
   deletedAt?: Date;
   source?: WorkoutSource;
   location?: string;
-}
-
-export interface WorkoutDataShallow extends Omit<WorkoutData, "exercises"> {
-  exercises: Omit<WorkoutExercise, "sets">[];
 }
 
 export interface WorkoutExercise {

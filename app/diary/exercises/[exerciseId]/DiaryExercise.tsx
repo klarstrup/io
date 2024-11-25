@@ -7,7 +7,10 @@ import {
   isClimbingExercise,
   type WorkoutData,
 } from "../../../../models/workout";
-import { getAllWorkouts, getIsSetPR } from "../../../../models/workout.server";
+import {
+  getIsSetPR,
+  MaterializedWorkoutsView,
+} from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
 
 export default async function DiaryExercise({
@@ -23,12 +26,18 @@ export default async function DiaryExercise({
   const user = (await auth())?.user;
   if (!user || !exercise) return null;
 
-  let allWorkoutsOfExercise = (await getAllWorkouts({ user, exerciseId }))
-    .map((workout) => ({
-      ...workout,
-      exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
-    }))
-    .sort((a, b) => b.workedOutAt.getTime() - a.workedOutAt.getTime());
+  let allWorkoutsOfExercise = (
+    await MaterializedWorkoutsView.find(
+      {
+        userId: user.id,
+        "exercises.exerciseId": exerciseId,
+      },
+      { sort: { workedOutAt: -1 } },
+    ).toArray()
+  ).map((workout) => ({
+    ...workout,
+    exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
+  }));
 
   if (mergeWorkouts) {
     allWorkoutsOfExercise = [
@@ -53,6 +62,7 @@ export default async function DiaryExercise({
         },
         {
           _id: new ObjectId(),
+          id: new ObjectId().toString(),
           workedOutAt: new Date(),
           exercises: [],
           userId: user.id,

@@ -38,7 +38,11 @@ export default async function DiaryWorkout(props: {
       key={workout._id.toString() + workout.updatedAt.toString()}
       date={date}
       user={user}
-      workout={{ ...workout, _id: workout._id.toString() }}
+      workout={{
+        ...workout,
+        id: workout._id.toString(),
+        _id: workout._id.toString(),
+      }}
       locations={locations}
       exercisesStats={exercisesStats}
       dismissTo={dismissTo}

@@ -15,17 +15,16 @@ import {
   type ValueNode,
 } from "graphql";
 import type { WithId } from "mongodb";
+import type { Session } from "next-auth";
 import type {
-  TopLoggerClimbUser,
-  TopLoggerClimbUserDereferenced,
+  TopLoggerClimbUserDereferenced
 } from "../app/api/toplogger_gql_scrape/route";
 import { exercises, Unit } from "../models/exercises";
 import {
   type WorkoutData,
-  type WorkoutDataShallow,
-  WorkoutSource,
+  WorkoutSource
 } from "../models/workout";
-import { isNonEmptyArray, isNonNullObject } from "../utils";
+import { dateToString, isNonEmptyArray, isNonNullObject } from "../utils";
 import { proxyCollection } from "../utils.server";
 
 interface ApolloErrorOptions {
@@ -713,8 +712,9 @@ export async function normalizeAndUpsertQueryData(
 }
 
 export function workoutFromTopLoggerClimbUsers(
+  user: Session["user"],
   climbUsers: WithId<TopLoggerClimbUserDereferenced>[],
-): WithId<WorkoutData> {
+): WorkoutData {
   const firstClimbUser = climbUsers[0];
   if (!firstClimbUser) throw new Error("No climb users provided");
 
@@ -726,7 +726,7 @@ export function workoutFromTopLoggerClimbUsers(
     exercise.inputs[1].options;
 
   return {
-    _id: firstClimbUser._id,
+    id: `${WorkoutSource.TopLogger}:${firstClimbUser.userId}:${dateToString(firstClimbUser.tickedFirstAtDate)}`,
     exercises: [
       {
         exerciseId: 2001,
@@ -752,24 +752,7 @@ export function workoutFromTopLoggerClimbUsers(
       },
     ],
     location: firstClimbUser.climb.gym.name,
-    userId: firstClimbUser.userId,
-    createdAt: firstClimbUser.tickedFirstAtDate,
-    updatedAt: firstClimbUser.tickedFirstAtDate,
-    workedOutAt: firstClimbUser.tickedFirstAtDate,
-    source: WorkoutSource.TopLogger,
-  };
-}
-
-export function workoutWithoutSetsFromTopLoggerClimbUsers(
-  climbUsers: WithId<TopLoggerClimbUser>[],
-): WithId<WorkoutDataShallow> {
-  const firstClimbUser = climbUsers[0];
-  if (!firstClimbUser) throw new Error("No climb users provided");
-
-  return {
-    _id: firstClimbUser._id,
-    exercises: [{ exerciseId: 2001 }],
-    userId: firstClimbUser.userId,
+    userId: user.id,
     createdAt: firstClimbUser.tickedFirstAtDate,
     updatedAt: firstClimbUser.tickedFirstAtDate,
     workedOutAt: firstClimbUser.tickedFirstAtDate,
