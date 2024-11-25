@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
-import { randomSlice, shuffle } from "../../../utils";
+import { arrayFromAsyncIterable, randomSlice, shuffle } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -624,5 +624,7 @@ export const GET = () =>
       }
     }
 
-    yield await Array.fromAsync(materializeAllToploggerWorkouts({ user }));
+    yield await arrayFromAsyncIterable(
+      materializeAllToploggerWorkouts({ user }),
+    );
   });

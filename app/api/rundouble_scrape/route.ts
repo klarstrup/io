@@ -1,6 +1,7 @@
 import { auth } from "../../../auth";
 import { getRuns } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
+import { arrayFromAsyncIterable } from "../../../utils";
 import { materializeAllRunDoubleWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -34,5 +35,7 @@ export const GET = () =>
       if (!updateResult.upsertedCount) break;
     }
 
-    yield await Array.fromAsync(materializeAllRunDoubleWorkouts({ user }));
+    yield await arrayFromAsyncIterable(
+      materializeAllRunDoubleWorkouts({ user }),
+    );
   });

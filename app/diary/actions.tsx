@@ -9,6 +9,7 @@ import {
   updateLocationCounts,
   Workouts,
 } from "../../models/workout.server";
+import { arrayFromAsyncIterable } from "../../utils";
 import { materializeAllIoWorkouts } from "../api/materialize_workouts/materializers";
 
 export async function upsertWorkout(
@@ -32,7 +33,7 @@ export async function upsertWorkout(
   void updateLocationCounts(user.id);
   void updateExerciseCounts(user.id, user.fitocracyUserId);
 
-  void Array.fromAsync(materializeAllIoWorkouts({ user }));
+  void arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
 
   revalidatePath("/diary");
   return String(_id);

@@ -4,6 +4,7 @@ import {
   type KilterBoard,
   KilterBoardAscents,
 } from "../../../sources/kilterboard";
+import { arrayFromAsyncIterable } from "../../../utils";
 import { materializeAllKilterBoardWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -47,5 +48,7 @@ export const GET = () =>
 
     await flushJSON({ ascents });
 
-    yield await Array.fromAsync(materializeAllKilterBoardWorkouts({ user }));
+    yield await arrayFromAsyncIterable(
+      materializeAllKilterBoardWorkouts({ user }),
+    );
   });
