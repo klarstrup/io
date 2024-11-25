@@ -18,6 +18,18 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
+    await MaterializedWorkoutsView.createIndexes([
+      { key: { id: 1 }, unique: true },
+      { key: { userId: 1 } },
+      { key: { userId: -1 } },
+      { key: { workedOutAt: 1 } },
+      { key: { workedOutAt: -1 } },
+      { key: { location: 1 } },
+      { key: { location: -1 } },
+      { key: { "exercises.exerciseId": 1 } },
+      { key: { "exercises.exerciseId": -1 } },
+    ]);
+
     const ioUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllIoWorkouts({
       user,
