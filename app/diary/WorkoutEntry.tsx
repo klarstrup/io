@@ -335,7 +335,7 @@ export default function WorkoutEntry({
                     {" "}
                     <small>-</small>{" "}
                     <Link
-                      href={`/diary/${workoutDateStr}/workout/${workout._id}`}
+                      href={`/diary/${workoutDateStr}/workout/${workout.id}`}
                       style={{ color: "#edab00" }}
                       className="text-xs font-semibold"
                     >
