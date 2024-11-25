@@ -34,7 +34,7 @@ export const percentile = (rank: number, tally: number) =>
     maximumSignificantDigits: 2,
   });
 
-export function unique<T>(arr: T[]): T[] {
+export function unique<T>(arr: T[] | Readonly<T[]>): T[] {
   return Array.from(new Set(arr));
 }
 
