@@ -17,7 +17,9 @@ export const GET = () =>
     for await (const workoutUpdateResult of materializeAllToploggerWorkouts({
       user,
     })) {
-      toploggerUpdateResult.addUpdateResult(workoutUpdateResult);
+      if ("matchedCount" in workoutUpdateResult) {
+        toploggerUpdateResult.addUpdateResult(workoutUpdateResult);
+      }
     }
     yield { toploggerUpdateResult };
   });
