@@ -236,7 +236,7 @@ export function WorkoutForm<R extends string>({
                 }}
                 options={locations
                   .sort((a, b) =>
-                    compareDesc(a.mostRecentVisit, b.mostRecentVisit),
+                    compareDesc(a.mostRecentVisit ?? 0, b.mostRecentVisit ?? 0),
                   )
                   .map(({ location, visitCount }) => ({
                     label: `${location} (${visitCount})`,
