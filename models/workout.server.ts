@@ -22,7 +22,7 @@ import {
 } from "../sources/kilterboard";
 import { type RunDouble, workoutFromRunDouble } from "../sources/rundouble";
 import { RunDoubleRuns } from "../sources/rundouble.server";
-import { dateToString } from "../utils";
+import { allPromises, dateToString } from "../utils";
 import { proxyCollection } from "../utils.server";
 import {
   dereferenceDocument,
@@ -51,151 +51,160 @@ export async function getAllWorkouts({
 }) {
   const allWorkouts: WithId<WorkoutData>[] = [];
 
-  const workoutsQuery: Condition<WorkoutData> = {
-    userId: user.id,
-    deletedAt: { $exists: false },
-  };
-  if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
-  if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
+  await allPromises(
+    async () => {
+      const workoutsQuery: Condition<WorkoutData> = {
+        userId: user.id,
+        deletedAt: { $exists: false },
+      };
+      if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
+      if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
 
-  for await (const workout of Workouts.find(workoutsQuery)) {
-    allWorkouts.push(workout);
-  }
+      for await (const workout of Workouts.find(workoutsQuery)) {
+        allWorkouts.push(workout);
+      }
+    },
+    async () => {
+      const skipPostFitocracyWorkouts =
+        workedOutAt &&
+        (("$gte" in workedOutAt &&
+          workedOutAt.$gte &&
+          isAfter(workedOutAt.$gte, new Date(2024, 6, 15))) ||
+          ("$gt" in workedOutAt &&
+            workedOutAt.$gt &&
+            isAfter(workedOutAt.$gt, new Date(2024, 6, 15))));
+      if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
+        const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
+          user_id: user.fitocracyUserId,
+        };
+        if (exerciseId) {
+          fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
+            exerciseId;
+        }
+        if (workedOutAt) {
+          fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
+        }
 
-  const skipPostFitocracyWorkouts =
-    workedOutAt &&
-    (("$gte" in workedOutAt &&
-      workedOutAt.$gte &&
-      isAfter(workedOutAt.$gte, new Date(2024, 6, 15))) ||
-      ("$gt" in workedOutAt &&
-        workedOutAt.$gt &&
-        isAfter(workedOutAt.$gt, new Date(2024, 6, 15))));
-  if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
-    const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
-      user_id: user.fitocracyUserId,
-    };
-    if (exerciseId) {
-      fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
-        exerciseId;
-    }
-    if (workedOutAt) {
-      fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
-    }
+        for await (const fitocracyWorkout of FitocracyWorkouts.find(
+          fitocracyWorkoutsQuery,
+        )) {
+          allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
+        }
+      }
+    },
+    async () => {
+      if (user.runDoubleId && (exerciseId === 518 || !exerciseId)) {
+        const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
+          userId: user.runDoubleId,
+        };
+        if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
 
-    for await (const fitocracyWorkout of FitocracyWorkouts.find(
-      fitocracyWorkoutsQuery,
-    )) {
-      allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
-    }
-  }
+        for await (const runDoubleRun of RunDoubleRuns.find(
+          runDoubleRunsQuery,
+        )) {
+          allWorkouts.push(workoutFromRunDouble(runDoubleRun));
+        }
+      }
+    },
+    async () => {
+      if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
+        const climbUsersQuery: Condition<TopLoggerClimbUser> = {
+          __typename: "ClimbUser",
+          userId: user.topLoggerGraphQLId,
+        };
 
-  if (user.runDoubleId && (exerciseId === 518 || !exerciseId)) {
-    const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
-      userId: user.runDoubleId,
-    };
-    if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
+        if (workedOutAt) {
+          climbUsersQuery.tickedFirstAtDate = workedOutAt;
+        }
 
-    for await (const runDoubleRun of RunDoubleRuns.find(runDoubleRunsQuery)) {
-      allWorkouts.push(workoutFromRunDouble(runDoubleRun));
-    }
-  }
+        const climbUsers = await TopLoggerGraphQL.find<
+          WithId<TopLoggerClimbUser>
+        >(climbUsersQuery, { sort: { tickedFirstAtDate: 1 } }).toArray();
 
-  if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
-    const climbUsersQuery: Condition<TopLoggerClimbUser> = {
-      __typename: "ClimbUser",
-      userId: user.topLoggerGraphQLId,
-    };
+        const dereferencedClimbUsers = await Promise.all(
+          climbUsers.map((climbUser) =>
+            dereferenceDocument<
+              WithId<TopLoggerClimbUser>,
+              WithId<TopLoggerClimbUserDereferenced>
+            >(climbUser),
+          ),
+        );
 
-    if (workedOutAt) {
-      climbUsersQuery.tickedFirstAtDate = workedOutAt;
-    }
+        const climbUsersByDay = Object.values(
+          dereferencedClimbUsers
+            .sort((a, b) =>
+              a.holdColor.nameLoc
+                .toLowerCase()
+                .localeCompare(b.holdColor.nameLoc.toLowerCase()),
+            )
+            .sort((a, b) => a.climb.grade - b.climb.grade)
+            .reduce(
+              (acc, climbUser) => {
+                if (!climbUser.tickedFirstAtDate) return acc;
+                const date = dateToString(climbUser.tickedFirstAtDate);
 
-    const climbUsers = await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>(
-      climbUsersQuery,
-      { sort: { tickedFirstAtDate: 1 } },
-    ).toArray();
+                if (!Array.isArray(acc[date])) {
+                  acc[date] = [climbUser];
+                } else {
+                  acc[date].push(climbUser);
+                }
 
-    const dereferencedClimbUsers = await Promise.all(
-      climbUsers.map((climbUser) =>
-        dereferenceDocument<
-          WithId<TopLoggerClimbUser>,
-          WithId<TopLoggerClimbUserDereferenced>
-        >(climbUser),
-      ),
-    );
+                return acc;
+              },
+              {} as Record<
+                `${number}-${number}-${number}`,
+                WithId<TopLoggerClimbUserDereferenced>[]
+              >,
+            ),
+        );
 
-    const climbUsersByDay = Object.values(
-      dereferencedClimbUsers
-        .sort((a, b) =>
-          a.holdColor.nameLoc
-            .toLowerCase()
-            .localeCompare(b.holdColor.nameLoc.toLowerCase()),
-        )
-        .sort((a, b) => a.climb.grade - b.climb.grade)
-        .reduce(
-          (acc, climbUser) => {
-            if (!climbUser.tickedFirstAtDate) return acc;
-            const date = dateToString(climbUser.tickedFirstAtDate);
+        for (const climbUsersOfDay of climbUsersByDay) {
+          allWorkouts.push(workoutFromTopLoggerClimbUsers(climbUsersOfDay));
+        }
+      }
+    },
+    async () => {
+      if (exerciseId === 2003 || !exerciseId) {
+        const ascentsQuery: Condition<KilterBoard.Ascent> = {
+          user_id: 158721,
+        };
 
-            if (!Array.isArray(acc[date])) {
-              acc[date] = [climbUser];
-            } else {
-              acc[date].push(climbUser);
-            }
+        if (workedOutAt) {
+          ascentsQuery.climbed_at = workedOutAt;
+        }
 
-            return acc;
-          },
-          {} as Record<
-            `${number}-${number}-${number}`,
-            WithId<TopLoggerClimbUserDereferenced>[]
-          >,
-        ),
-    );
+        const ascents =
+          await KilterBoardAscents.find<WithId<KilterBoard.Ascent>>(
+            ascentsQuery,
+          ).toArray();
 
-    for (const climbUsersOfDay of climbUsersByDay) {
-      allWorkouts.push(workoutFromTopLoggerClimbUsers(climbUsersOfDay));
-    }
-  }
+        const ascentsByDay = Object.values(
+          ascents.reduce(
+            (acc, ascent) => {
+              if (!ascent.climbed_at) return acc;
+              const date = dateToString(ascent.climbed_at);
 
-  if (exerciseId === 2003 || !exerciseId) {
-    const ascentsQuery: Condition<KilterBoard.Ascent> = {
-      user_id: 158721,
-    };
+              if (!Array.isArray(acc[date])) {
+                acc[date] = [ascent];
+              } else {
+                acc[date].push(ascent);
+              }
 
-    if (workedOutAt) {
-      ascentsQuery.climbed_at = workedOutAt;
-    }
+              return acc;
+            },
+            {} as Record<
+              `${number}-${number}-${number}`,
+              WithId<KilterBoard.Ascent>[]
+            >,
+          ),
+        );
 
-    const ascents =
-      await KilterBoardAscents.find<WithId<KilterBoard.Ascent>>(
-        ascentsQuery,
-      ).toArray();
-
-    const ascentsByDay = Object.values(
-      ascents.reduce(
-        (acc, ascent) => {
-          if (!ascent.climbed_at) return acc;
-          const date = dateToString(ascent.climbed_at);
-
-          if (!Array.isArray(acc[date])) {
-            acc[date] = [ascent];
-          } else {
-            acc[date].push(ascent);
-          }
-
-          return acc;
-        },
-        {} as Record<
-          `${number}-${number}-${number}`,
-          WithId<KilterBoard.Ascent>[]
-        >,
-      ),
-    );
-
-    for (const ascentsOfDay of ascentsByDay) {
-      allWorkouts.push(workoutFromKilterBoardAscents(ascentsOfDay));
-    }
-  }
+        for (const ascentsOfDay of ascentsByDay) {
+          allWorkouts.push(workoutFromKilterBoardAscents(ascentsOfDay));
+        }
+      }
+    },
+  );
 
   return allWorkouts.sort((a, b) => compareDesc(a.workedOutAt, b.workedOutAt));
 }
@@ -211,137 +220,298 @@ export async function getAllWorkoutsWithoutSets({
 }) {
   const allWorkouts: WithId<WorkoutDataShallow>[] = [];
 
-  const workoutsQuery: Condition<WorkoutDataShallow> = {
-    userId: user.id,
-    deletedAt: { $exists: false },
-  };
-  if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
-  if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
+  await allPromises(
+    async () => {
+      const workoutsQuery: Condition<WorkoutDataShallow> = {
+        userId: user.id,
+        deletedAt: { $exists: false },
+      };
+      if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
+      if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
 
-  for await (const workout of Workouts.find(workoutsQuery)) {
-    allWorkouts.push(workout);
-  }
+      for await (const workout of Workouts.find(workoutsQuery)) {
+        allWorkouts.push(workout);
+      }
+    },
+    async () => {
+      const skipPostFitocracyWorkouts =
+        workedOutAt &&
+        (("$gte" in workedOutAt &&
+          workedOutAt.$gte &&
+          isAfter(workedOutAt.$gte, theDayFitocracyDied)) ||
+          ("$gt" in workedOutAt &&
+            workedOutAt.$gt &&
+            isAfter(workedOutAt.$gt, theDayFitocracyDied)));
+      if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
+        const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
+          user_id: user.fitocracyUserId,
+        };
+        if (exerciseId) {
+          fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
+            exerciseId;
+        }
+        if (workedOutAt) {
+          fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
+        }
 
-  const skipPostFitocracyWorkouts =
-    workedOutAt &&
-    (("$gte" in workedOutAt &&
-      workedOutAt.$gte &&
-      isAfter(workedOutAt.$gte, theDayFitocracyDied)) ||
-      ("$gt" in workedOutAt &&
-        workedOutAt.$gt &&
-        isAfter(workedOutAt.$gt, theDayFitocracyDied)));
-  if (user.fitocracyUserId && !skipPostFitocracyWorkouts) {
-    const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
-      user_id: user.fitocracyUserId,
-    };
-    if (exerciseId) {
-      fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
-        exerciseId;
-    }
-    if (workedOutAt) {
-      fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
-    }
+        for await (const fitocracyWorkout of FitocracyWorkouts.find(
+          fitocracyWorkoutsQuery,
+        )) {
+          allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
+        }
+      }
+    },
+    async () => {
+      if (user.runDoubleId && (exerciseId === 518 || !exerciseId)) {
+        const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
+          userId: user.runDoubleId,
+        };
+        if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
 
-    for await (const fitocracyWorkout of FitocracyWorkouts.find(
-      fitocracyWorkoutsQuery,
-    )) {
-      allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
-    }
-  }
+        for await (const runDoubleRun of RunDoubleRuns.find(
+          runDoubleRunsQuery,
+        )) {
+          allWorkouts.push(workoutFromRunDouble(runDoubleRun));
+        }
+      }
+    },
+    async () => {
+      if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
+        const climbUsersQuery: Condition<TopLoggerClimbUser> = {
+          __typename: "ClimbUser",
+          userId: user.topLoggerGraphQLId,
+        };
 
-  if (user.runDoubleId && (exerciseId === 518 || !exerciseId)) {
-    const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
-      userId: user.runDoubleId,
-    };
-    if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
+        if (workedOutAt) {
+          climbUsersQuery.tickedFirstAtDate = workedOutAt;
+        }
 
-    for await (const runDoubleRun of RunDoubleRuns.find(runDoubleRunsQuery)) {
-      allWorkouts.push(workoutFromRunDouble(runDoubleRun));
-    }
-  }
+        const climbUsers =
+          await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>(
+            climbUsersQuery,
+          ).toArray();
 
-  if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
-    const climbUsersQuery: Condition<TopLoggerClimbUser> = {
-      __typename: "ClimbUser",
-      userId: user.topLoggerGraphQLId,
-    };
+        const climbUsersByDay = Object.values(
+          climbUsers.reduce(
+            (acc, climbUser) => {
+              if (!climbUser.tickedFirstAtDate) return acc;
+              const date = dateToString(climbUser.tickedFirstAtDate);
 
-    if (workedOutAt) {
-      climbUsersQuery.tickedFirstAtDate = workedOutAt;
-    }
+              if (!Array.isArray(acc[date])) {
+                acc[date] = [climbUser];
+              } else {
+                acc[date].push(climbUser);
+              }
 
-    const climbUsers =
-      await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>(
-        climbUsersQuery,
-      ).toArray();
+              return acc;
+            },
+            {} as Record<
+              `${number}-${number}-${number}`,
+              WithId<TopLoggerClimbUser>[]
+            >,
+          ),
+        );
 
-    const climbUsersByDay = Object.values(
-      climbUsers.reduce(
-        (acc, climbUser) => {
-          if (!climbUser.tickedFirstAtDate) return acc;
-          const date = dateToString(climbUser.tickedFirstAtDate);
+        for (const climbUsersOfDay of climbUsersByDay) {
+          allWorkouts.push(
+            workoutWithoutSetsFromTopLoggerClimbUsers(climbUsersOfDay),
+          );
+        }
+      }
+    },
+    async () => {
+      if (exerciseId === 2003 || !exerciseId) {
+        const ascentsQuery: Condition<KilterBoard.Ascent> = { user_id: 158721 };
 
-          if (!Array.isArray(acc[date])) {
-            acc[date] = [climbUser];
-          } else {
-            acc[date].push(climbUser);
-          }
+        if (workedOutAt) {
+          ascentsQuery.climbed_at = workedOutAt;
+        }
 
-          return acc;
-        },
-        {} as Record<
-          `${number}-${number}-${number}`,
-          WithId<TopLoggerClimbUser>[]
-        >,
-      ),
-    );
+        const ascents =
+          await KilterBoardAscents.find<WithId<KilterBoard.Ascent>>(
+            ascentsQuery,
+          ).toArray();
 
-    for (const climbUsersOfDay of climbUsersByDay) {
-      allWorkouts.push(
-        workoutWithoutSetsFromTopLoggerClimbUsers(climbUsersOfDay),
-      );
-    }
-  }
+        const ascentsByDay = Object.values(
+          ascents.reduce(
+            (acc, ascent) => {
+              if (!ascent.climbed_at) return acc;
+              const date = dateToString(ascent.climbed_at);
 
-  if (exerciseId === 2003 || !exerciseId) {
-    const ascentsQuery: Condition<KilterBoard.Ascent> = { user_id: 158721 };
+              if (!Array.isArray(acc[date])) {
+                acc[date] = [ascent];
+              } else {
+                acc[date].push(ascent);
+              }
 
-    if (workedOutAt) {
-      ascentsQuery.climbed_at = workedOutAt;
-    }
+              return acc;
+            },
+            {} as Record<
+              `${number}-${number}-${number}`,
+              WithId<KilterBoard.Ascent>[]
+            >,
+          ),
+        );
 
-    const ascents =
-      await KilterBoardAscents.find<WithId<KilterBoard.Ascent>>(
-        ascentsQuery,
-      ).toArray();
-
-    const ascentsByDay = Object.values(
-      ascents.reduce(
-        (acc, ascent) => {
-          if (!ascent.climbed_at) return acc;
-          const date = dateToString(ascent.climbed_at);
-
-          if (!Array.isArray(acc[date])) {
-            acc[date] = [ascent];
-          } else {
-            acc[date].push(ascent);
-          }
-
-          return acc;
-        },
-        {} as Record<
-          `${number}-${number}-${number}`,
-          WithId<KilterBoard.Ascent>[]
-        >,
-      ),
-    );
-
-    for (const ascentsOfDay of ascentsByDay) {
-      allWorkouts.push(workoutWithoutSetsFromKilterBoardAscents(ascentsOfDay));
-    }
-  }
+        for (const ascentsOfDay of ascentsByDay) {
+          allWorkouts.push(
+            workoutWithoutSetsFromKilterBoardAscents(ascentsOfDay),
+          );
+        }
+      }
+    },
+  );
 
   return allWorkouts;
+}
+
+export async function getMostRecentWorkout({
+  user,
+  exerciseId,
+  workedOutAt,
+  location,
+}: {
+  user: Session["user"];
+  exerciseId?: number;
+  workedOutAt?: Condition<WorkoutData["workedOutAt"]>;
+  location?: Condition<WorkoutData["location"]>;
+}) {
+  const allWorkouts: WithId<WorkoutData>[] = [];
+
+  await allPromises(
+    async () => {
+      const workoutsQuery: Condition<WorkoutData> = {
+        userId: user.id,
+        deletedAt: { $exists: false },
+      };
+      if (exerciseId) workoutsQuery["exercises.exerciseId"] = exerciseId;
+      if (workedOutAt) workoutsQuery.workedOutAt = workedOutAt;
+      if (location) workoutsQuery.location = location;
+
+      const workout = await Workouts.findOne(workoutsQuery, {
+        sort: { workedOutAt: -1 },
+      });
+      if (workout) allWorkouts.push(workout);
+    },
+    async () => {
+      const skipPostFitocracyWorkouts =
+        workedOutAt &&
+        (("$gte" in workedOutAt &&
+          workedOutAt.$gte &&
+          isAfter(workedOutAt.$gte, new Date(2024, 6, 15))) ||
+          ("$gt" in workedOutAt &&
+            workedOutAt.$gt &&
+            isAfter(workedOutAt.$gt, new Date(2024, 6, 15))));
+      if (!location && user.fitocracyUserId && !skipPostFitocracyWorkouts) {
+        const fitocracyWorkoutsQuery: Condition<Fitocracy.MongoWorkout> = {
+          user_id: user.fitocracyUserId,
+        };
+        if (exerciseId) {
+          fitocracyWorkoutsQuery["root_group.children.exercise.exercise_id"] =
+            exerciseId;
+        }
+        if (workedOutAt) {
+          fitocracyWorkoutsQuery.workout_timestamp = workedOutAt;
+        }
+
+        const fitocracyWorkout = await FitocracyWorkouts.findOne(
+          fitocracyWorkoutsQuery,
+        );
+        if (fitocracyWorkout) {
+          allWorkouts.push(workoutFromFitocracyWorkout(fitocracyWorkout));
+        }
+      }
+    },
+    async () => {
+      if (
+        !location &&
+        user.runDoubleId &&
+        (exerciseId === 518 || !exerciseId)
+      ) {
+        const runDoubleRunsQuery: Condition<RunDouble.MongoHistoryItem> = {
+          userId: user.runDoubleId,
+        };
+        if (workedOutAt) runDoubleRunsQuery.completedAt = workedOutAt;
+
+        for await (const runDoubleRun of RunDoubleRuns.find(
+          runDoubleRunsQuery,
+        )) {
+          allWorkouts.push(workoutFromRunDouble(runDoubleRun));
+        }
+      }
+    },
+    async () => {
+      if ((exerciseId === 2001 || !exerciseId) && user.topLoggerGraphQLId) {
+        const climbUsersQuery: Condition<TopLoggerClimbUser> = {
+          __typename: "ClimbUser",
+          userId: user.topLoggerGraphQLId,
+        };
+
+        if (workedOutAt) {
+          climbUsersQuery.tickedFirstAtDate = workedOutAt;
+        }
+
+        if (location) {
+          for await (const climbUser of (await getDB())
+            .collection("toplogger_graphql")
+            .aggregate<
+              WithId<TopLoggerClimbUser>
+            >([{ $match: climbUsersQuery }, { $sample: { size: 50 } }, { $sort: { tickedFirstAtDate: -1 } }])) {
+            const dereferencedClimbUser = await dereferenceDocument<
+              WithId<TopLoggerClimbUser>,
+              WithId<TopLoggerClimbUserDereferenced>
+            >(climbUser);
+
+            const workout = workoutFromTopLoggerClimbUsers([
+              dereferencedClimbUser,
+            ]);
+
+            if (location) {
+              if (workout.location !== location) continue;
+            }
+
+            allWorkouts.push(workout);
+          }
+        } else {
+          const climbUser = await TopLoggerGraphQL.findOne<
+            WithId<TopLoggerClimbUser>
+          >(climbUsersQuery, { sort: { tickedFirstAtDate: -1 } });
+          if (climbUser) {
+            const dereferencedClimbUser = await dereferenceDocument<
+              WithId<TopLoggerClimbUser>,
+              WithId<TopLoggerClimbUserDereferenced>
+            >(climbUser);
+
+            const workout = workoutFromTopLoggerClimbUsers([
+              dereferencedClimbUser,
+            ]);
+
+            allWorkouts.push(workout);
+          }
+        }
+      }
+    },
+    async () => {
+      if (!location && (exerciseId === 2003 || !exerciseId)) {
+        const ascentsQuery: Condition<KilterBoard.Ascent> = {
+          user_id: 158721,
+        };
+
+        if (workedOutAt) ascentsQuery.climbed_at = workedOutAt;
+
+        const ascent = await KilterBoardAscents.findOne<
+          WithId<KilterBoard.Ascent>
+        >(ascentsQuery, { sort: { climbed_at: -1 } });
+
+        if (ascent) allWorkouts.push(workoutFromKilterBoardAscents([ascent]));
+      }
+    },
+  );
+
+  return (
+    allWorkouts.sort((a, b) => compareDesc(a.workedOutAt, b.workedOutAt))[0] ??
+    null
+  );
 }
 
 const DEADLIFT_ID = 3;
@@ -361,73 +531,17 @@ export async function getNextSets({
 }) {
   return (
     await Promise.all(
-      exerciseIdsThatICareAbout.map(async (id) => {
-        const workout = await Workouts.findOne(
-          {
-            userId: user.id,
-            "exercises.exerciseId": id,
-            deletedAt: { $exists: false },
-            workedOutAt: { $lte: to },
-          },
-          { sort: { workedOutAt: -1 } },
-        );
-
-        const fitWorkout = user.fitocracyUserId
-          ? await FitocracyWorkouts.findOne(
-              {
-                user_id: user.fitocracyUserId,
-                "root_group.children.exercise.exercise_id": id,
-                workout_timestamp: { $lte: to },
-              },
-              { sort: { workout_timestamp: -1 } },
-            )
-          : null;
-        const fitocracyWorkout =
-          fitWorkout && workoutFromFitocracyWorkout(fitWorkout);
-
-        const kilterboardAscent =
-          id === 2003
-            ? await KilterBoardAscents.findOne(
-                { user_id: 158721, climbed_at: { $lte: to } },
-                { sort: { climbed_at: -1 } },
-              )
-            : null;
-        const kilterboardWorkout =
-          kilterboardAscent &&
-          workoutFromKilterBoardAscents([kilterboardAscent]);
-
-        const toploggerClimbUser =
-          id === 2001
-            ? await TopLoggerGraphQL.findOne<TopLoggerClimbUser>(
-                {
-                  __typename: "ClimbUser",
-                  userId: user.topLoggerGraphQLId,
-                  tickedFirstAtDate: { $lte: to },
-                },
-                { sort: { tickedFirstAtDate: -1 } },
-              )
-            : null;
-        const toploggerWorkout =
-          toploggerClimbUser &&
-          workoutFromTopLoggerClimbUsers([
-            await dereferenceDocument(toploggerClimbUser),
-          ]);
-
-        const recentMostWorkout =
+      exerciseIdsThatICareAbout.map(
+        async (exerciseId) =>
           [
-            workout,
-            fitocracyWorkout,
-            kilterboardWorkout,
-            toploggerWorkout,
-          ].sort((a, b) =>
-            compareDesc(
-              a?.workedOutAt ?? new Date(0),
-              b?.workedOutAt ?? new Date(0),
-            ),
-          )[0] || null;
-
-        return [id, recentMostWorkout] as const;
-      }),
+            exerciseId,
+            await getMostRecentWorkout({
+              user,
+              exerciseId,
+              workedOutAt: { $lte: to },
+            }),
+          ] as const,
+      ),
     )
   )
     .map(([id, workout]) => {

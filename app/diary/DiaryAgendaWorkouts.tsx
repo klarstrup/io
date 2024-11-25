@@ -13,7 +13,7 @@ import { FieldSetY } from "../../components/FieldSet";
 import type { PRType } from "../../lib";
 import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
-  getAllWorkouts,
+  getMostRecentWorkout,
   type getNextSets,
   type IWorkoutLocationsView,
 } from "../../models/workout.server";
@@ -126,25 +126,28 @@ async function LeastRecentGym({
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
-  const boulderingsInThePast3Months = await getAllWorkouts({
-    user,
-    exerciseId: 2001,
-    workedOutAt: { $gte: subMonths(tzDate, 6), $lte: tzDate },
-  });
-  const leastRecentBoulderingLocations = [
-    "Boulders Hvidovre",
-    "Boulders Sydhavn",
-    "Boulders Valby",
-    "Boulders Amager",
-    "Beta Boulders West",
-    "Beta Boulders South",
-    "Beta Boulders Osterbro",
-  ]
-    .map((location) =>
-      boulderingsInThePast3Months.find(
-        (workout) => workout.location === location,
-      ),
+  const leastRecentBoulderingLocations = (
+    await Promise.all(
+      [
+        "Boulders Hvidovre",
+        "Boulders Sydhavn",
+        "Boulders Valby",
+        "Boulders Amager",
+        "Beta Boulders West",
+        "Beta Boulders South",
+        "Beta Boulders Osterbro",
+      ].map(async (location) => {
+        const boulderingInThePast3Months = await getMostRecentWorkout({
+          user,
+          exerciseId: 2001,
+          location,
+          workedOutAt: { $gte: subMonths(tzDate, 3), $lte: tzDate },
+        });
+
+        return boulderingInThePast3Months;
+      }),
     )
+  )
     .filter((workout): workout is WithId<WorkoutData> => Boolean(workout))
     .sort((a, b) => a.workedOutAt.getTime() - b.workedOutAt.getTime())
     .map(
