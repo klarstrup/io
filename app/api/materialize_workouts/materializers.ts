@@ -1,4 +1,4 @@
-import type { WithId } from "mongodb";
+import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import {
   MaterializedWorkoutsView,
@@ -177,5 +177,29 @@ export async function* materializeAllKilterBoardWorkouts({
       { $set: workout },
       { upsert: true },
     );
+  }
+}
+
+export class UpdateResultKeeper {
+  matchedCount = 0;
+  modifiedCount = 0;
+  upsertedCount = 0;
+  upsertedIds: ObjectId[] = [];
+
+  addUpdateResult(updateResult: UpdateResult) {
+    this.matchedCount += updateResult.matchedCount;
+    this.modifiedCount += updateResult.modifiedCount;
+    this.upsertedCount += updateResult.upsertedCount;
+    if (updateResult.upsertedId) {
+      this.upsertedIds.push(updateResult.upsertedId);
+    }
+  }
+  toJSON() {
+    return {
+      matchedCount: this.matchedCount,
+      modifiedCount: this.modifiedCount,
+      upsertedCount: this.upsertedCount,
+      upsertedIds: this.upsertedIds,
+    };
   }
 }
