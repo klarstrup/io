@@ -15,7 +15,7 @@ import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
   MaterializedWorkoutsView,
   type getNextSets,
-  type IWorkoutLocationsView
+  type IWorkoutLocationsView,
 } from "../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import { NextSets } from "./NextSets";
@@ -41,7 +41,7 @@ export function DiaryAgendaWorkouts({
 
   return (
     <FieldSetY
-      className="min-w-[50%] flex-[2]"
+      className="grid min-w-[50%] flex-[2] gap-x-2 gap-y-1"
       legend={
         <div className="flex items-center">
           Workouts
@@ -55,11 +55,7 @@ export function DiaryAgendaWorkouts({
           ) : null}
         </div>
       }
-      style={{
-        display: "grid",
-        gap: "8px 4px",
-        gridTemplateColumns: "repeat(auto-fit, minmax(256px, 1fr))",
-      }}
+      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(256px, 1fr))" }}
     >
       {workouts?.length ? (
         Array.from(workouts)

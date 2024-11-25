@@ -74,6 +74,7 @@ export function DiaryEntryWeek({
 
         return (
           <DiaryEntryItem
+            key={dateStr}
             user={user}
             diaryEntry={diaryEntries?.find(([date]) => date === dateStr)?.[1]}
             date={dateStr}

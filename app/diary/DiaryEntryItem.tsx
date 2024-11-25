@@ -53,13 +53,7 @@ export function DiaryEntryItem({
         "diary-entry flex flex-1 flex-col border-[0.5px] border-black/25 p-1"
       }
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          cursor: "pointer",
-        }}
-      >
+      <div className="flex cursor-pointer items-center">
         <div
           className={
             "flex flex-1 items-center justify-center leading-none " +
