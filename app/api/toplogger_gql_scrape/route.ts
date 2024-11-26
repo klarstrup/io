@@ -1,10 +1,11 @@
+import { addDays } from "date-fns";
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
-import { arrayFromAsyncIterable, randomSlice, shuffle } from "../../../utils";
+import { randomSlice, shuffle } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -14,7 +15,6 @@ import {
   type Reference,
   TopLoggerGraphQL,
 } from "../../../utils/graphql";
-import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -188,8 +188,14 @@ const climbUsersQuery = gql`
     $gymId: ID
     $userId: ID
     $pagination: PaginationInputClimbUsers
+    $pointsExpireAtDateMin: DateTime
   ) {
-    climbUsers(gymId: $gymId, userId: $userId, pagination: $pagination) {
+    climbUsers(
+      gymId: $gymId
+      userId: $userId
+      pagination: $pagination
+      pointsExpireAtDateMin: $pointsExpireAtDateMin
+    ) {
       data {
         id
         userId
@@ -598,16 +604,33 @@ export const GET = () =>
 
       await flushJSON({ pageNumbers });
 
-      const queries = pageNumbers.map(
-        (page): GraphQLRequestTuple => [
+      const queries = [
+        [
           climbUsersQuery,
           {
             gymId: gym.id,
             userId,
-            pagination: { page },
+            pagination: {
+              page: 1,
+              orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
+            },
+            pointsExpireAtDateMin: addDays(new Date(), 1),
           },
-        ],
-      );
+        ] satisfies GraphQLRequestTuple,
+        ...pageNumbers.map(
+          (page): GraphQLRequestTuple => [
+            climbUsersQuery,
+            {
+              gymId: gym.id,
+              userId,
+              pagination: {
+                page,
+                orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
+              },
+            },
+          ],
+        ),
+      ];
       const graphqlResponse2 = await fetchQueries(queries);
 
       for (let i = 0; i < queries.length; i++) {
@@ -623,8 +646,4 @@ export const GET = () =>
         await flushJSON(updateResult);
       }
     }
-
-    yield await arrayFromAsyncIterable(
-      materializeAllToploggerWorkouts({ user }),
-    );
   });

@@ -41,8 +41,8 @@ export async function* materializeAllToploggerWorkouts({
   for (const month of [
     ...eachMonthOfInterval({
       start: subMonths(startOfMonth(new Date()), 1),
-      end: addMonths(endOfMonth(new Date()), 1),
-    }),
+      end: addMonths(endOfMonth(new Date()), 0),
+    }).reverse(),
     ...shuffle(
       eachMonthOfInterval({
         start: new Date("2021-01-01"),
@@ -92,13 +92,14 @@ export async function* materializeAllToploggerWorkouts({
 
     for (const climbUsersOfDay of climbUsersByDay) {
       const workout = workoutFromTopLoggerClimbUsers(user, climbUsersOfDay);
-
+      console.log(workout);
       yield await MaterializedWorkoutsView.updateOne(
         { id: workout.id },
         { $set: workout },
         { upsert: true },
       );
     }
+    return;
   }
 }
 
