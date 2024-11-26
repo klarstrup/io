@@ -1,4 +1,9 @@
-import { eachMonthOfInterval, endOfMonth, startOfMonth } from "date-fns";
+import {
+  eachMonthOfInterval,
+  endOfMonth,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
 import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import {
@@ -32,12 +37,18 @@ export async function* materializeAllToploggerWorkouts({
 }) {
   if (!user.topLoggerGraphQLId) return;
 
-  for (const month of shuffle(
-    eachMonthOfInterval({
-      start: new Date("2021-01-01"),
-      end: new Date(),
+  for (const month of [
+    ...eachMonthOfInterval({
+      start: subMonths(startOfMonth(new Date()), 1),
+      end: endOfMonth(new Date()),
     }),
-  )) {
+    ...shuffle(
+      eachMonthOfInterval({
+        start: new Date("2021-01-01"),
+        end: subMonths(endOfMonth(new Date()), 2),
+      }),
+    ),
+  ]) {
     yield month;
     const climbUsers = await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>({
       __typename: "ClimbUser",
