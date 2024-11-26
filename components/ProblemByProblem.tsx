@@ -228,7 +228,8 @@ export default function ProblemByProblem({
       a.color &&
       b.color &&
       colorsByGrade.includes(a.color) &&
-      colorsByGrade.includes(b.color)
+      colorsByGrade.includes(b.color) &&
+      !groupByGradeAndFlash
         ? colorsByGrade.indexOf(b.color) - colorsByGrade.indexOf(a.color)
         : 0,
     )
@@ -254,7 +255,7 @@ export default function ProblemByProblem({
 
     return (
       <div
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))" }}
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))" }}
         className={
           "mt-0.5 grid content-between justify-between gap-0.5 " +
           (className ? className : "")
@@ -272,9 +273,7 @@ export default function ProblemByProblem({
                 <span>{problems.length}</span>
                 <span className="px-0.5 py-0">×</span>
                 <ProblemBadge
-                  {...problems.find(
-                    (problem) => problem.color === mostCommonColor,
-                  )!}
+                  {...problems.find(({ color }) => color === mostCommonColor)!}
                 />
               </div>
             );
