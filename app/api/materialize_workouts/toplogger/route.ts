@@ -19,6 +19,8 @@ export const GET = () =>
     })) {
       if ("matchedCount" in workoutUpdateResult) {
         toploggerUpdateResult.addUpdateResult(workoutUpdateResult);
+      } else {
+        yield workoutUpdateResult;
       }
     }
     yield { toploggerUpdateResult };

@@ -1,4 +1,5 @@
 import {
+  addMonths,
   eachMonthOfInterval,
   endOfMonth,
   startOfMonth,
@@ -40,7 +41,7 @@ export async function* materializeAllToploggerWorkouts({
   for (const month of [
     ...eachMonthOfInterval({
       start: subMonths(startOfMonth(new Date()), 1),
-      end: endOfMonth(new Date()),
+      end: addMonths(endOfMonth(new Date()), 1),
     }),
     ...shuffle(
       eachMonthOfInterval({
