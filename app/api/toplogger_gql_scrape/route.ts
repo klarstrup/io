@@ -582,51 +582,84 @@ export const GET = () =>
           pagination: { page: 1, perPage: 1 },
         },
       );
-
+      const graphqlCurrentTotalResponse = await fetchQuery(
+        gql`
+          query climbUsers(
+            $gymId: ID
+            $userId: ID
+            $pagination: PaginationInputClimbUsers
+            $pointsExpireAtDateMin: DateTime
+          ) {
+            __typename
+            climbUsers(
+              gymId: $gymId
+              userId: $userId
+              pagination: $pagination
+              pointsExpireAtDateMin: $pointsExpireAtDateMin
+            ) {
+              pagination {
+                total
+                __typename
+              }
+              __typename
+            }
+          }
+        `,
+        {
+          gymId: gym.id,
+          userId,
+          pagination: { page: 1, perPage: 1 },
+          pointsExpireAtDateMin: addDays(new Date(), 1),
+        },
+      );
       const total = (
         graphqlTotalResponse as {
           data: { climbUsers: { pagination: { total: number } } };
         }
       ).data.climbUsers.pagination.total;
+      const currentTotal = (
+        graphqlCurrentTotalResponse as {
+          data: { climbUsers: { pagination: { total: number } } };
+        }
+      ).data.climbUsers.pagination.total;
 
-      await flushJSON({ total });
+      await flushJSON({ total, currentTotal });
 
-      const pageNumbers = [
-        ...Array.from({ length: 5 }, (_, i) => i + 1),
-        ...randomSlice(
-          Array.from(
-            { length: Math.ceil(total / 10) - 5 },
-            (_, i) => i + 1 + 5,
-          ),
-          48,
+      const currentPageNumbers: number[] = [
+        ...Array.from(
+          { length: Math.ceil(currentTotal / 10) },
+          (_, i) => i + 1,
         ),
       ];
+      const pageNumbers: number[] = randomSlice(
+        Array.from(
+          { length: Math.ceil((total - currentTotal) / 10) },
+          (_, i) => i + 1 + Math.ceil(currentTotal / 10),
+        ),
+        48,
+      );
 
-      await flushJSON({ pageNumbers });
+      await flushJSON({ currentPageNumbers, pageNumbers });
 
       const queries = [
-        [
-          climbUsersQuery,
-          {
-            gymId: gym.id,
-            userId,
-            pagination: {
-              page: 1,
-              orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
+        ...currentPageNumbers.map(
+          (page): GraphQLRequestTuple => [
+            climbUsersQuery,
+            {
+              gymId: gym.id,
+              userId,
+              pagination: { page },
+              pointsExpireAtDateMin: addDays(new Date(), 1),
             },
-            pointsExpireAtDateMin: addDays(new Date(), 1),
-          },
-        ] satisfies GraphQLRequestTuple,
+          ],
+        ),
         ...pageNumbers.map(
           (page): GraphQLRequestTuple => [
             climbUsersQuery,
             {
               gymId: gym.id,
               userId,
-              pagination: {
-                page,
-                orderBy: [{ key: "tickedFirstAtDate", order: "desc" }],
-              },
+              pagination: { page },
             },
           ],
         ),

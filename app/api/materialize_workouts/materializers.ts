@@ -99,7 +99,6 @@ export async function* materializeAllToploggerWorkouts({
         { upsert: true },
       );
     }
-    return;
   }
 }
 
