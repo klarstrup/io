@@ -41,7 +41,7 @@ export function DiaryAgendaWorkouts({
 
   return (
     <FieldSetY
-      className="grid min-w-[50%] flex-[2] gap-x-2 gap-y-1"
+      className="grid flex-1 gap-x-2 gap-y-1"
       legend={
         <div className="flex items-center">
           Workouts

@@ -39,7 +39,7 @@ export async function DiaryAgendaFood({
 
   return (
     <FieldSetY
-      className="min-w-[50%] flex-[1]"
+      className="min-w-[250px] flex-[1]"
       legend={
         <>
           Food{" "}

@@ -41,7 +41,7 @@ export async function DiaryAgendaEvents({
   );
 
   return (
-    <FieldSetY className="min-w-[50%] flex-1" legend="Events">
+    <FieldSetY className="min-w-[250px] flex-1" legend="Events">
       {Object.entries(
         calendarEvents.reduce(
           (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
