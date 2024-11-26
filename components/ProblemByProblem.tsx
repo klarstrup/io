@@ -244,7 +244,7 @@ export default function ProblemByProblem({
           ? problem.color
           : "";
       const flash = problem.flash;
-      const key = `${gradeOrColor}-${flash}`;
+      const key = `${groupByGradeAndFlash && problem.grade ? new Grade(problem.grade).name : gradeOrColor}-${flash}`;
       if (!grouped.has(key)) {
         grouped.set(key, [problem]);
       } else {
