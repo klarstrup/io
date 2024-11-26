@@ -16,14 +16,9 @@ import {
 } from "graphql";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
-import type {
-  TopLoggerClimbUserDereferenced
-} from "../app/api/toplogger_gql_scrape/route";
+import type { TopLoggerClimbUserDereferenced } from "../app/api/toplogger_gql_scrape/route";
 import { exercises, Unit } from "../models/exercises";
-import {
-  type WorkoutData,
-  WorkoutSource
-} from "../models/workout";
+import { type WorkoutData, WorkoutSource } from "../models/workout";
 import { dateToString, isNonEmptyArray, isNonNullObject } from "../utils";
 import { proxyCollection } from "../utils.server";
 
@@ -144,6 +139,7 @@ export const fetchGraphQLQuery = async <
     headers: { "Content-Type": "application/json", ...init?.headers },
     body: JSON.stringify({ variables, query: print(query) }),
     method: "POST",
+    next: { revalidate: 0 },
   });
 
   const result = (await response.json()) as FetchResult<TData>;
@@ -174,6 +170,7 @@ export const fetchGraphQLQueries = async <
       })),
     ),
     method: "POST",
+    next: { revalidate: 0 },
   });
 
   const results = (await response.json()) as FetchResult<TData>[];
