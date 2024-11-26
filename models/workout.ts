@@ -54,4 +54,4 @@ export const isNextSetDue = (
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) =>
   differenceInDays(startOfDay(tzDate), nextSet.workedOutAt || new Date(0)) >
-  (nextSet.exerciseId === 2001 ? 1 : nextSet.exerciseId === 2003 ? 2 : 3);
+  (nextSet.exerciseId === 2001 ? 1 : nextSet.exerciseId === 2003 ? 3 : 4);
