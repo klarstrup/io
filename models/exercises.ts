@@ -28467,6 +28467,52 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Barbell Bulgarian Split Squat",
+    tags: [
+      {
+        name: "Legs",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Lower Back",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Crossfit",
+        type: TagType.Program,
+      },
+      {
+        name: "Calves",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Glutes",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Quadriceps",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Strength",
+        type: TagType.Type,
+      },
+      {
+        name: "Intermediate",
+        type: TagType.ExperienceLevel,
+      },
+      {
+        name: "Quads",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Barbell",
+        type: TagType.Equipment,
+      },
+      {
+        name: "Hamstrings",
+        type: TagType.MuscleGroup,
+      },
+    ],
   },
   {
     aliases: [],
