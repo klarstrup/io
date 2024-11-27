@@ -67,8 +67,8 @@ export function DiaryEntryItem({
         {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
         {dayTotalEnergy && dayTotalProtein ? (
           <div className="flex flex-wrap items-center justify-center gap-1 p-1 text-center text-[0.25em]">
-            <div>{Math.round(dayTotalEnergy)} kcal</div>
-            <div>{Math.round(dayTotalProtein)}g protein</div>
+            <div>{(dayTotalEnergy / 1000).toFixed(2)}mc</div>
+            <div>{(dayTotalProtein / 100).toFixed(2)}hp</div>
           </div>
         ) : null}
       </div>
