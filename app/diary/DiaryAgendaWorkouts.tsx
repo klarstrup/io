@@ -170,7 +170,7 @@ async function LeastRecentGym({
                     ? formatDistanceStrict(
                         startOfDay(location.mostRecentVisit),
                         startOfDay(tzDate),
-                        { addSuffix: true, roundingMethod: "floor" },
+                        { addSuffix: true, roundingMethod: "ceil" },
                       )
                     : "never"}
                 </Link>

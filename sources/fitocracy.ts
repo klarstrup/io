@@ -276,7 +276,9 @@ export namespace Fitocracy {
 
 export const theDayFitocracyDied = new Date(2024, 6, 15);
 
-export const exerciseIdsThatICareAbout = [1, 2, 3, 183, 474, 532, 2001, 2003];
+export const exerciseIdsThatICareAbout = [
+  1, 2, 3, 183, 288, 474, 532, 2001, 2003,
+];
 
 export function workoutFromFitocracyWorkout(
   user: Session["user"],
