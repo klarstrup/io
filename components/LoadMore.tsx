@@ -39,18 +39,13 @@ function LoadMore<Cursor>({
     setCurrentOffsetRef(next);
   });
 
-  useEffect(
-    function A() {
-      const signal = new AbortController();
+  useEffect(() => {
+    const signal = new AbortController();
 
-      if (inView) void loadMore(signal);
+    if (inView) void loadMore(signal);
 
-      return () => {
-        signal.abort();
-      };
-    },
-    [inView, loadMore, loadMoreNodes.length],
-  );
+    return () => signal.abort();
+  }, [inView, loadMore, loadMoreNodes.length]);
 
   return (
     <>

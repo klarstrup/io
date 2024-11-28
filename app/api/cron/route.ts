@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
-import { scraperEndpoints } from "../scraper-utils";
+import { scraperAndMaterializerEndpoints } from "../scraper-utils";
 
 export function GET() {
-  const scraperEndoint =
-    scraperEndpoints[Math.floor(Math.random() * scraperEndpoints.length)]!;
+  const endoint =
+    scraperAndMaterializerEndpoints[
+      Math.floor(Math.random() * scraperAndMaterializerEndpoints.length)
+    ]!;
 
-  redirect(`/api/${scraperEndoint}`);
+  redirect(`/api/${endoint}`);
 }

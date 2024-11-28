@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import useInterval from "../hooks/useInterval";
-import { encodeGeohash, HOUR_IN_SECONDS } from "../utils";
+import { encodeGeohash, MINUTE_IN_SECONDS } from "../utils";
 
 export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   const router = useRouter();
@@ -10,14 +10,11 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
     useState<boolean>(false);
 
-  useInterval(
-    () => {
-      router.refresh();
+  useInterval(() => {
+    router.refresh();
 
-      void fetch("/api/cron").catch((error) => console.error(error)); // Throwaway request to trigger a random scraper
-    },
-    (HOUR_IN_SECONDS * 1000) / 3,
-  );
+    void fetch("/api/cron").catch((error) => console.error(error)); // Throwaway request to trigger a random scraper
+  }, MINUTE_IN_SECONDS * 10);
 
   return (
     <div
