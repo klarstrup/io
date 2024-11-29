@@ -60,7 +60,7 @@ export const GET = () =>
     for await (const workoutUpdateResult of materializeAllRunDoubleWorkouts({
       user,
     })) {
-      runDoubleUpdateResult.addUpdateResult(workoutUpdateResult);
+      yield workoutUpdateResult;
     }
     yield { runDoubleUpdateResult };
 

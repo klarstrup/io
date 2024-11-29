@@ -8,6 +8,7 @@ import {
 import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
+import { Unit } from "../../../models/exercises";
 import { WorkoutData } from "../../../models/workout";
 import { MaterializedWorkoutsView } from "../../../models/workout.server";
 import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
@@ -17,8 +18,7 @@ import {
   KilterBoardAscents,
   workoutFromKilterBoardAscents,
 } from "../../../sources/kilterboard";
-import { workoutFromRunDouble } from "../../../sources/rundouble";
-import { RunDoubleRuns } from "../../../sources/rundouble.server";
+import { RunDouble } from "../../../sources/rundouble";
 import { dateToString, shuffle } from "../../../utils";
 import {
   dereferenceDocument,
@@ -162,17 +162,58 @@ export async function* materializeAllRunDoubleWorkouts({
 }) {
   if (!user.runDoubleId) return;
 
-  for await (const runDoubleRun of RunDoubleRuns.find({
-    userId: user.runDoubleId,
-  })) {
-    const workout = workoutFromRunDouble(user, runDoubleRun);
+  yield "materializeAllRunDoubleWorkouts: start";
+  const t = new Date();
+  const db = await getDB();
 
-    yield await MaterializedWorkoutsView.updateOne(
-      { id: workout.id },
-      { $set: workout },
-      { upsert: true },
-    );
-  }
+  yield await db
+    .collection<RunDouble.MongoHistoryItem>("rundouble_runs")
+    .aggregate([
+      { $match: { userId: user.runDoubleId } },
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: "$key" },
+          userId: { $literal: user.id },
+          createdAt: "$completedAt",
+          updatedAt: "$completedAt",
+          workedOutAt: "$completedAt",
+          source: { $literal: "rundouble" },
+          exercises: [
+            {
+              exerciseId: 518,
+              sets: [
+                {
+                  inputs: [
+                    {
+                      unit: Unit.SEC,
+                      value: { $divide: ["$runTime", 1000] },
+                    },
+                    { unit: Unit.M, value: "$runDistance" },
+                    {
+                      unit: Unit.MinKM,
+                      value: { $divide: [0.6215, "$runPace"] },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ])
+    .toArray();
+
+  yield "materializeAllRunDoubleWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
 }
 
 export async function* materializeAllKilterBoardWorkouts({

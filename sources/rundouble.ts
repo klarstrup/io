@@ -213,9 +213,9 @@ export function workoutFromRunDouble(
       },
     ],
     userId: user.id,
-    createdAt: new Date(run.completedLong),
-    updatedAt: new Date(run.completedLong),
-    workedOutAt: new Date(run.completedLong),
+    createdAt: run.completedAt,
+    updatedAt: run.completedAt,
+    workedOutAt: run.completedAt,
     source: WorkoutSource.RunDouble,
   };
 }
