@@ -7,7 +7,6 @@ import {
   materializeAllKilterBoardWorkouts,
   materializeAllRunDoubleWorkouts,
   materializeAllToploggerWorkouts,
-  UpdateResultKeeper,
 } from "./materializers";
 
 export const dynamic = "force-dynamic";

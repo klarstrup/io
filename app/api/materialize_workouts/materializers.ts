@@ -1,17 +1,10 @@
-import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
 import { Unit } from "../../../models/exercises";
 import { WorkoutData, WorkoutSource } from "../../../models/workout";
-import { MaterializedWorkoutsView } from "../../../models/workout.server";
 import { Fitocracy } from "../../../sources/fitocracy";
-import {
-  type KilterBoard,
-  KilterBoardAscents,
-  workoutFromKilterBoardAscents,
-} from "../../../sources/kilterboard";
+import { type KilterBoard } from "../../../sources/kilterboard";
 import { RunDouble } from "../../../sources/rundouble";
-import { dateToString } from "../../../utils";
 import type { MongoGraphQLObject } from "../../../utils/graphql";
 
 export async function* materializeAllToploggerWorkouts({
@@ -434,61 +427,4 @@ export async function* materializeAllKilterBoardWorkouts({
   yield "materializeAllKilterBoardWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
-  return;
-  const ascents = await KilterBoardAscents.find({ user_id: 158721 }).toArray();
-
-  const ascentsByDay = Object.values(
-    ascents.reduce(
-      (acc, ascent) => {
-        if (!ascent.climbed_at) return acc;
-        const date = dateToString(ascent.climbed_at);
-
-        if (!Array.isArray(acc[date])) {
-          acc[date] = [ascent];
-        } else {
-          acc[date].push(ascent);
-        }
-
-        return acc;
-      },
-      {} as Record<
-        `${number}-${number}-${number}`,
-        WithId<KilterBoard.Ascent>[]
-      >,
-    ),
-  );
-
-  for (const ascentsOfDay of ascentsByDay) {
-    const workout = workoutFromKilterBoardAscents(user, ascentsOfDay);
-
-    yield await MaterializedWorkoutsView.updateOne(
-      { id: workout.id },
-      { $set: workout },
-      { upsert: true },
-    );
-  }
-}
-
-export class UpdateResultKeeper {
-  matchedCount = 0;
-  modifiedCount = 0;
-  upsertedCount = 0;
-  upsertedIds: ObjectId[] = [];
-
-  addUpdateResult(updateResult: UpdateResult) {
-    this.matchedCount += updateResult.matchedCount;
-    this.modifiedCount += updateResult.modifiedCount;
-    this.upsertedCount += updateResult.upsertedCount;
-    if (updateResult.upsertedId) {
-      this.upsertedIds.push(updateResult.upsertedId);
-    }
-  }
-  toJSON() {
-    return {
-      matchedCount: this.matchedCount,
-      modifiedCount: this.modifiedCount,
-      upsertedCount: this.upsertedCount,
-      upsertedIds: this.upsertedIds,
-    };
-  }
 }
