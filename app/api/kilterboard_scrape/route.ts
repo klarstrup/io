@@ -4,6 +4,7 @@ import {
   type KilterBoard,
   KilterBoardAscents,
 } from "../../../sources/kilterboard";
+import { materializeAllKilterBoardWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -45,4 +46,6 @@ export const GET = () =>
     }
 
     await flushJSON({ ascents });
+
+    yield* materializeAllKilterBoardWorkouts({ user });
   });

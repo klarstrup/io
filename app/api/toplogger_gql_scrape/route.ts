@@ -16,6 +16,7 @@ import {
   TopLoggerGraphQL,
 } from "../../../utils/graphql";
 import { jsonStreamResponse } from "../scraper-utils";
+import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -679,4 +680,6 @@ export const GET = () =>
         await flushJSON(updateResult);
       }
     }
+
+    yield* materializeAllToploggerWorkouts({ user });
   });
