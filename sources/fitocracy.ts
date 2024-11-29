@@ -277,7 +277,17 @@ export namespace Fitocracy {
 export const theDayFitocracyDied = new Date(2024, 6, 15);
 
 export const exerciseIdsThatICareAbout = [
-  1, 2, 3, 183, 288, 474, 532, 2001, 2003,
+  // 1, // bench
+  // 2, // squat
+  3, // deadlift
+  // 183, // ohp
+  251, // tricep dips
+  288, // pullups
+  474, // bulgarians
+  532, // Pendlay Row
+  994, // arnold press
+  2001, // bouldering
+  2003, // board climbing
 ];
 
 export function workoutFromFitocracyWorkout(
