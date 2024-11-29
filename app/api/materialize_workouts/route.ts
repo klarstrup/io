@@ -58,13 +58,11 @@ export const GET = () =>
       yield workoutUpdateResult;
     }
 
-    const kilterBoardUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllKilterBoardWorkouts({
       user,
     })) {
-      kilterBoardUpdateResult.addUpdateResult(workoutUpdateResult);
+      yield workoutUpdateResult;
     }
-    yield { kilterBoardUpdateResult };
 
     yield {
       "MaterializedWorkoutsView.countDocuments()":
