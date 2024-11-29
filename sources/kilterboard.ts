@@ -39,7 +39,7 @@ export function workoutFromKilterBoardAscents(
   if (!firstAscent) throw new Error("No ascents provided");
 
   return {
-    id: `${WorkoutSource.TopLogger}:${firstAscent.user_id}:${dateToString(firstAscent.climbed_at)}`,
+    id: `${WorkoutSource.KilterBoard}:${firstAscent.user_id}:${dateToString(firstAscent.climbed_at)}`,
     exercises: [
       {
         exerciseId: 2003,
