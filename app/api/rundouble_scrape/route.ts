@@ -1,8 +1,6 @@
 import { auth } from "../../../auth";
 import { getRuns } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
-import { arrayFromAsyncIterable } from "../../../utils";
-import { materializeAllRunDoubleWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +32,4 @@ export const GET = () =>
 
       if (!updateResult.upsertedCount) break;
     }
-
-    yield await arrayFromAsyncIterable(
-      materializeAllRunDoubleWorkouts({ user }),
-    );
   });
