@@ -305,9 +305,9 @@ export function workoutFromFitocracyWorkout(
     id: workout.id.toString(),
     exercises,
     userId: user.id,
-    createdAt: new Date(workout.updated_timestamp),
-    updatedAt: new Date(workout.updated_timestamp),
-    workedOutAt: new Date(workout.workout_timestamp),
+    createdAt: workout.updated_timestamp,
+    updatedAt: workout.updated_timestamp,
+    workedOutAt: workout.workout_timestamp,
     source: WorkoutSource.Fitocracy,
   };
 }

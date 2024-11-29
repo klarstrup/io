@@ -30,13 +30,11 @@ export const GET = () =>
       { key: { "exercises.exerciseId": -1 } },
     ]);
 
-    const ioUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllIoWorkouts({
       user,
     })) {
       yield workoutUpdateResult;
     }
-    yield { ioUpdateResult };
 
     const toploggerUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllToploggerWorkouts({
@@ -48,21 +46,17 @@ export const GET = () =>
     }
     yield { toploggerUpdateResult };
 
-    const fitocracyUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllFitocracyWorkouts({
       user,
     })) {
-      fitocracyUpdateResult.addUpdateResult(workoutUpdateResult);
+      yield workoutUpdateResult;
     }
-    yield { fitocracyUpdateResult };
 
-    const runDoubleUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllRunDoubleWorkouts({
       user,
     })) {
       yield workoutUpdateResult;
     }
-    yield { runDoubleUpdateResult };
 
     const kilterBoardUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllKilterBoardWorkouts({

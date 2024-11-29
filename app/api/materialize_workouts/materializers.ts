@@ -9,10 +9,9 @@ import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
 import { Unit } from "../../../models/exercises";
-import { WorkoutData } from "../../../models/workout";
+import { WorkoutData, WorkoutSource } from "../../../models/workout";
 import { MaterializedWorkoutsView } from "../../../models/workout.server";
-import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
-import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
+import { Fitocracy } from "../../../sources/fitocracy";
 import {
   type KilterBoard,
   KilterBoardAscents,
@@ -142,17 +141,66 @@ export async function* materializeAllFitocracyWorkouts({
 }) {
   if (!user.fitocracyUserId) return;
 
-  for await (const fitocracyWorkout of FitocracyWorkouts.find({
-    user_id: user.fitocracyUserId,
-  })) {
-    const workout = workoutFromFitocracyWorkout(user, fitocracyWorkout);
+  yield "materializeAllFitocracyWorkouts: start";
+  const t = new Date();
+  const db = await getDB();
 
-    yield await MaterializedWorkoutsView.updateOne(
-      { id: workout.id },
-      { $set: workout },
-      { upsert: true },
-    );
-  }
+  yield await db
+    .collection<Fitocracy.MongoWorkout>("fitocracy_workouts")
+    .aggregate([
+      { $match: { user_id: user.fitocracyUserId } },
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: "$id" },
+          userId: { $literal: user.id },
+          createdAt: "$updated_timestamp",
+          updatedAt: "$updated_timestamp",
+          workedOutAt: "$workout_timestamp",
+          source: { $literal: WorkoutSource.Fitocracy },
+          exercises: {
+            $map: {
+              input: "$root_group.children",
+              as: "child",
+              in: {
+                exerciseId: "$$child.exercise.exercise_id",
+                sets: {
+                  $map: {
+                    input: "$$child.exercise.sets",
+                    as: "set",
+                    in: {
+                      inputs: {
+                        $map: {
+                          input: "$$set.inputs",
+                          as: "input",
+                          in: {
+                            unit: "$$input.unit",
+                            value: "$$input.value",
+                            assistType: "$$input.assist_type",
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ])
+    .toArray();
+
+  yield "materializeAllFitocracyWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
 }
 
 export async function* materializeAllRunDoubleWorkouts({
@@ -178,7 +226,7 @@ export async function* materializeAllRunDoubleWorkouts({
           createdAt: "$completedAt",
           updatedAt: "$completedAt",
           workedOutAt: "$completedAt",
-          source: { $literal: "rundouble" },
+          source: { $literal: WorkoutSource.RunDouble },
           exercises: [
             {
               exerciseId: 518,
