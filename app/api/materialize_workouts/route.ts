@@ -30,11 +30,10 @@ export const GET = () =>
       { key: { "exercises.exerciseId": -1 } },
     ]);
 
-    for await (const workoutUpdateResult of materializeAllIoWorkouts({
-      user,
-    })) {
-      yield workoutUpdateResult;
-    }
+    yield "materializeAllWorkouts: start";
+    const t = Date.now();
+
+    yield* materializeAllIoWorkouts({ user });
 
     const toploggerUpdateResult = new UpdateResultKeeper();
     for await (const workoutUpdateResult of materializeAllToploggerWorkouts({
@@ -46,23 +45,13 @@ export const GET = () =>
     }
     yield { toploggerUpdateResult };
 
-    for await (const workoutUpdateResult of materializeAllFitocracyWorkouts({
-      user,
-    })) {
-      yield workoutUpdateResult;
-    }
+    yield* materializeAllFitocracyWorkouts({ user });
 
-    for await (const workoutUpdateResult of materializeAllRunDoubleWorkouts({
-      user,
-    })) {
-      yield workoutUpdateResult;
-    }
+    yield* materializeAllRunDoubleWorkouts({ user });
 
-    for await (const workoutUpdateResult of materializeAllKilterBoardWorkouts({
-      user,
-    })) {
-      yield workoutUpdateResult;
-    }
+    yield* materializeAllKilterBoardWorkouts({ user });
+
+    yield `materializeAllWorkouts: done in ${Date.now() - t}ms`;
 
     yield {
       "MaterializedWorkoutsView.countDocuments()":

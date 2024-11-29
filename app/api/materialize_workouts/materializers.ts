@@ -90,7 +90,7 @@ export async function* materializeAllToploggerWorkouts({
 
     for (const climbUsersOfDay of climbUsersByDay) {
       const workout = workoutFromTopLoggerClimbUsers(user, climbUsersOfDay);
-      console.log(workout);
+
       yield await MaterializedWorkoutsView.updateOne(
         { id: workout.id },
         { $set: workout },
