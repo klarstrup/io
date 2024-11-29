@@ -18,14 +18,6 @@ export const MaterializedWorkoutsView = proxyCollection<WorkoutData>(
   "materialized_workouts_view",
 );
 
-const DEADLIFT_ID = 3;
-const WORKING_SET_REPS = 5;
-const WORKING_SETS = 3;
-const WORKING_SETS_FOR_DEADLIFT = 1;
-const WEIGHT_INCREMENT = 1.25;
-const WEIGHT_INCREMENT_FOR_LEGS = 2.5;
-const FAILURE_DELOAD_FACTOR = 0.9;
-
 export async function getNextSets({
   user,
   to,
@@ -35,38 +27,43 @@ export async function getNextSets({
 }) {
   return (
     await Promise.all(
-      exerciseIdsThatICareAbout.map(
-        async (exerciseId) =>
-          [
-            exerciseId,
-            await MaterializedWorkoutsView.findOne(
-              {
-                userId: user.id,
-                "exercises.exerciseId": exerciseId,
-                workedOutAt: { $lte: to },
-              },
-              { sort: { workedOutAt: -1 } },
-            ),
-          ] as const,
-      ),
+      exerciseIdsThatICareAbout
+        .filter((scheduleEntry) => scheduleEntry.enabled)
+        .map(
+          async (scheduleEntry) =>
+            [
+              scheduleEntry,
+              await MaterializedWorkoutsView.findOne(
+                {
+                  userId: user.id,
+                  "exercises.exerciseId": scheduleEntry.exerciseId,
+                  workedOutAt: { $lte: to },
+                },
+                { sort: { workedOutAt: -1 } },
+              ),
+            ] as const,
+        ),
     )
   )
-    .map(([id, workout]) => {
-      if (isClimbingExercise(id)) {
+    .map(([scheduleEntry, workout]) => {
+      if (isClimbingExercise(scheduleEntry.exerciseId)) {
         return {
           workedOutAt: workout?.workedOutAt || null,
-          exerciseId: id,
+          exerciseId: scheduleEntry.exerciseId,
           successful: true,
           nextWorkingSets: NaN,
           nextWorkingSetsReps: NaN,
           nextWorkingSetsWeight: NaN,
+          scheduleEntry,
         };
       }
 
       const exercise = workout?.exercises.find(
-        ({ exerciseId }) => exerciseId === id,
+        ({ exerciseId }) => exerciseId === scheduleEntry.exerciseId,
       );
-      const exerciseDefinition = exercises.find((ex) => ex.id === id)!;
+      const exerciseDefinition = exercises.find(
+        (ex) => ex.id === scheduleEntry.exerciseId,
+      )!;
       const weightInputIndex = exerciseDefinition.inputs.findIndex(
         ({ type }) => type === InputType.Weight,
       );
@@ -80,54 +77,52 @@ export async function getNextSets({
         return setWeight &&
           accWeight &&
           setReps &&
+          scheduleEntry.workingReps &&
           setWeight > accWeight &&
-          setReps >= WORKING_SET_REPS
+          setReps >= scheduleEntry.workingReps
           ? set
           : acc;
       }, exercise.sets[0]);
 
+      const heaviestSetWeight = heaviestSet?.inputs[weightInputIndex]?.value;
+
       const workingSets =
-        heaviestSet &&
+        heaviestSetWeight &&
         exercise?.sets.filter(
-          (set) =>
-            set.inputs[weightInputIndex]?.value ===
-            heaviestSet.inputs[weightInputIndex]?.value,
+          (set) => set.inputs[weightInputIndex]?.value === heaviestSetWeight,
         );
 
       const successful =
         workingSets &&
-        (workingSets.length >= WORKING_SETS ||
-          (id === DEADLIFT_ID &&
-            workingSets.length >= WORKING_SETS_FOR_DEADLIFT)) &&
+        scheduleEntry.workingSets &&
+        scheduleEntry.workingReps &&
+        workingSets.length >= scheduleEntry.workingSets &&
         workingSets.every(
           (sets) =>
             sets.inputs[repsInputIndex] &&
-            sets.inputs[repsInputIndex].value >= WORKING_SET_REPS,
+            sets.inputs[repsInputIndex].value >= scheduleEntry.workingReps,
         );
-      const goalWeight = heaviestSet
-        ? successful
-          ? ([1, 183, 474, 532].includes(id)
-              ? WEIGHT_INCREMENT
-              : WEIGHT_INCREMENT_FOR_LEGS) +
-            (heaviestSet?.inputs[weightInputIndex]?.value || 0)
-          : FAILURE_DELOAD_FACTOR *
-            (heaviestSet?.inputs[weightInputIndex]?.value || 0)
-        : 20;
+      const goalWeight =
+        scheduleEntry.deloadFactor && scheduleEntry.increment
+          ? heaviestSetWeight
+            ? successful
+              ? scheduleEntry.increment + heaviestSetWeight
+              : scheduleEntry.deloadFactor * heaviestSetWeight
+            : scheduleEntry.baseWeight
+          : null;
 
       return {
         workedOutAt: workout?.workedOutAt || null,
-        exerciseId: id,
+        exerciseId: scheduleEntry.exerciseId,
         successful,
-        nextWorkingSets: id === DEADLIFT_ID ? 1 : 3,
-        nextWorkingSetsReps: WORKING_SET_REPS,
-        nextWorkingSetsWeight:
-          String(goalWeight).endsWith(".25") ||
-          String(goalWeight).endsWith(".75")
-            ? String(goalWeight).endsWith("2.25") ||
-              String(goalWeight).endsWith("4.75")
-              ? goalWeight + 0.25
-              : goalWeight - 0.25
-            : goalWeight,
+        nextWorkingSets: scheduleEntry.workingSets,
+        nextWorkingSetsReps: scheduleEntry.workingReps,
+        nextWorkingSetsWeight: goalWeight
+          ? goalWeight - Math.round(goalWeight) < 0.5
+            ? Math.round(goalWeight)
+            : goalWeight
+          : goalWeight,
+        scheduleEntry,
       };
     })
     .filter(Boolean)

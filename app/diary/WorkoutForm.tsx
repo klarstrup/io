@@ -334,16 +334,16 @@ export function WorkoutForm<R extends string>({
               >
                 {nextExerciseSet &&
                 nextExerciseSet.nextWorkingSets &&
-                nextExerciseSet.nextWorkingSetsReps &&
-                nextExerciseSet.nextWorkingSetsWeight ? (
+                nextExerciseSet.nextWorkingSetsReps ? (
                   <div className="text-xs">
                     Goal{" "}
                     <span className="text-sm">
                       {nextExerciseSet.nextWorkingSets}x
-                      {nextExerciseSet.nextWorkingSetsReps}x
-                      {nextExerciseSet.nextWorkingSetsWeight}
+                      {nextExerciseSet.nextWorkingSetsReps}
+                      {nextExerciseSet.nextWorkingSetsWeight ? (
+                        <>x{nextExerciseSet.nextWorkingSetsWeight}kg</>
+                      ) : null}
                     </span>
-                    kg
                     {nextExerciseSet.workedOutAt ? (
                       <>
                         {" "}

@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { differenceInDays, startOfDay } from "date-fns";
+import { type Duration, intervalToDuration, startOfDay } from "date-fns";
 import type { AssistType, Unit } from "./exercises";
 import type { getNextSets } from "./workout.server";
 
@@ -49,9 +49,23 @@ export interface WorkoutExerciseSetInput {
 export const isClimbingExercise = (exerciseId: number) =>
   exerciseId === 2001 || exerciseId === 2003;
 
+const isDurationGreater = (a: Duration, b: Duration) =>
+  a.years! > b.years! ||
+  a.months! > b.months! ||
+  a.weeks! > b.weeks! ||
+  a.days! > b.days! ||
+  a.hours! > b.hours! ||
+  a.minutes! > b.minutes! ||
+  a.seconds! > b.seconds!;
+
 export const isNextSetDue = (
   tzDate: TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) =>
-  differenceInDays(startOfDay(tzDate), nextSet.workedOutAt || new Date(0)) >
-  (nextSet.exerciseId === 2001 ? 1 : nextSet.exerciseId === 2003 ? 4 : 5);
+  isDurationGreater(
+    intervalToDuration({
+      start: nextSet.workedOutAt || new Date(0),
+      end: startOfDay(tzDate),
+    }),
+    nextSet.scheduleEntry.frequency,
+  );

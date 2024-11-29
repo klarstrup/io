@@ -1,3 +1,4 @@
+import type { Duration } from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import { Unit } from "../models/exercises";
@@ -276,19 +277,119 @@ export namespace Fitocracy {
 
 export const theDayFitocracyDied = new Date(2024, 6, 15);
 
+export interface ExerciseScheduleEntry {
+  exerciseId: number;
+  enabled: boolean;
+  frequency: Duration;
+  increment?: number;
+  workingSets?: number;
+  workingReps?: number;
+  deloadFactor?: number;
+  baseWeight?: number;
+}
+
 export const exerciseIdsThatICareAbout = [
-  // 1, // bench
-  // 2, // squat
-  3, // deadlift
-  // 183, // ohp
-  251, // tricep dips
-  288, // pullups
-  474, // bulgarians
-  532, // Pendlay Row
-  994, // arnold press
-  2001, // bouldering
-  2003, // board climbing
-];
+  {
+    exerciseId: 1, // bench
+    enabled: false,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 20,
+  },
+  {
+    exerciseId: 2, // squat
+    enabled: false,
+    frequency: { days: 3 },
+    increment: 2.5,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 20,
+  },
+  {
+    exerciseId: 3, // deadlift
+    enabled: true,
+    frequency: { days: 5 },
+    increment: 2.5,
+    workingSets: 1,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 60,
+  },
+  {
+    exerciseId: 183, // ohp
+    enabled: false,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 20,
+  },
+  {
+    exerciseId: 251, // tricep dips
+    enabled: true,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 0,
+  },
+  {
+    exerciseId: 288, // pullups
+    enabled: true,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 0,
+  },
+  {
+    exerciseId: 474, // bulgarians
+    enabled: true,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 20,
+  },
+  {
+    exerciseId: 532, // Pendlay Row
+    enabled: true,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 20,
+  },
+  {
+    exerciseId: 181, // arnold press
+    enabled: true,
+    frequency: { days: 5 },
+    increment: 1.25,
+    workingSets: 3,
+    workingReps: 5,
+    deloadFactor: 0.9,
+    baseWeight: 5,
+  },
+  {
+    exerciseId: 2001, // bouldering
+    enabled: true,
+    frequency: { days: 1 },
+  },
+  {
+    exerciseId: 2003, // board climbing
+    enabled: true,
+    frequency: { days: 4 },
+  },
+] satisfies ExerciseScheduleEntry[];
 
 export function workoutFromFitocracyWorkout(
   user: Session["user"],
