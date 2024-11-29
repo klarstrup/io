@@ -8,18 +8,6 @@ export const scraperEndpoints = [
   "kilterboard_scrape",
 ] as const;
 
-export const materializerEndpoints = [
-  "materialize_workouts/io",
-  "materialize_workouts/kilterboard",
-  "materialize_workouts/rundouble",
-  "materialize_workouts/toplogger",
-] as const;
-
-export const scraperAndMaterializerEndpoints = [
-  ...scraperEndpoints,
-  ...materializerEndpoints,
-] as const;
-
 export function jsonStreamResponse(
   generator: (flushJSON: (data: unknown) => Promise<void>) => AsyncGenerator,
 ) {
