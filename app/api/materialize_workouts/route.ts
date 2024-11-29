@@ -34,7 +34,7 @@ export const GET = () =>
     for await (const workoutUpdateResult of materializeAllIoWorkouts({
       user,
     })) {
-      ioUpdateResult.addUpdateResult(workoutUpdateResult);
+      yield workoutUpdateResult;
     }
     yield { ioUpdateResult };
 

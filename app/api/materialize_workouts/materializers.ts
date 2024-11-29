@@ -7,10 +7,9 @@ import {
 } from "date-fns";
 import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
-import {
-  MaterializedWorkoutsView,
-  Workouts,
-} from "../../../models/workout.server";
+import { getDB } from "../../../dbConnect";
+import { WorkoutData } from "../../../models/workout";
+import { MaterializedWorkoutsView } from "../../../models/workout.server";
 import { workoutFromFitocracyWorkout } from "../../../sources/fitocracy";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import {
@@ -107,16 +106,33 @@ export async function* materializeAllIoWorkouts({
 }: {
   user: Session["user"];
 }) {
-  for await (const { _id, ...workout } of Workouts.find({
-    userId: user.id,
-    deletedAt: { $exists: false },
-  })) {
-    yield await MaterializedWorkoutsView.updateOne(
-      { id: _id.toString() },
-      { $set: { ...workout, id: _id.toString() } },
-      { upsert: true },
-    );
-  }
+  yield "materializeAllIoWorkouts: start";
+  const t = new Date();
+  const db = await getDB();
+
+  yield await db
+    .collection<WorkoutData>("workouts")
+    .aggregate([
+      { $match: { userId: user.id, deletedAt: { $exists: false } } },
+      {
+        $addFields: {
+          id: { $toString: "$_id" },
+          _id: "$$REMOVE",
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ])
+    .toArray();
+
+  yield "materializeAllIoWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
 }
 
 export async function* materializeAllFitocracyWorkouts({
