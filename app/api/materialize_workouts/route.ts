@@ -35,15 +35,7 @@ export const GET = () =>
 
     yield* materializeAllIoWorkouts({ user });
 
-    const toploggerUpdateResult = new UpdateResultKeeper();
-    for await (const workoutUpdateResult of materializeAllToploggerWorkouts({
-      user,
-    })) {
-      if ("matchedCount" in workoutUpdateResult) {
-        toploggerUpdateResult.addUpdateResult(workoutUpdateResult);
-      }
-    }
-    yield { toploggerUpdateResult };
+    yield* materializeAllToploggerWorkouts({ user });
 
     yield* materializeAllFitocracyWorkouts({ user });
 

@@ -1,10 +1,3 @@
-import {
-  addMonths,
-  eachMonthOfInterval,
-  endOfMonth,
-  startOfMonth,
-  subMonths,
-} from "date-fns";
 import type { ObjectId, UpdateResult, WithId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
@@ -18,16 +11,8 @@ import {
   workoutFromKilterBoardAscents,
 } from "../../../sources/kilterboard";
 import { RunDouble } from "../../../sources/rundouble";
-import { dateToString, shuffle } from "../../../utils";
-import {
-  dereferenceDocument,
-  TopLoggerGraphQL,
-  workoutFromTopLoggerClimbUsers,
-} from "../../../utils/graphql";
-import type {
-  TopLoggerClimbUser,
-  TopLoggerClimbUserDereferenced,
-} from "../toplogger_gql_scrape/route";
+import { dateToString } from "../../../utils";
+import type { MongoGraphQLObject } from "../../../utils/graphql";
 
 export async function* materializeAllToploggerWorkouts({
   user,
@@ -36,68 +21,181 @@ export async function* materializeAllToploggerWorkouts({
 }) {
   if (!user.topLoggerGraphQLId) return;
 
-  for (const month of [
-    ...eachMonthOfInterval({
-      start: subMonths(startOfMonth(new Date()), 1),
-      end: addMonths(endOfMonth(new Date()), 0),
-    }).reverse(),
-    ...shuffle(
-      eachMonthOfInterval({
-        start: new Date("2021-01-01"),
-        end: subMonths(endOfMonth(new Date()), 2),
-      }),
-    ),
-  ]) {
-    yield month;
-    const climbUsers = await TopLoggerGraphQL.find<WithId<TopLoggerClimbUser>>({
-      __typename: "ClimbUser",
-      userId: user.topLoggerGraphQLId,
-      tickedFirstAtDate: {
-        $gte: startOfMonth(month),
-        $lt: endOfMonth(month),
-      },
-    }).toArray();
+  yield "materializeAllToploggerWorkouts: start";
+  const t = new Date();
+  const db = await getDB();
 
-    const dereferencedClimbUsers = await Promise.all(
-      climbUsers.map((climbUser) =>
-        dereferenceDocument<
-          WithId<TopLoggerClimbUser>,
-          WithId<TopLoggerClimbUserDereferenced>
-        >(climbUser),
-      ),
-    );
-
-    const climbUsersByDay = Object.values(
-      dereferencedClimbUsers.reduce(
-        (acc, climbUser) => {
-          if (!climbUser.tickedFirstAtDate) return acc;
-          const date = dateToString(climbUser.tickedFirstAtDate);
-
-          if (!Array.isArray(acc[date])) {
-            acc[date] = [climbUser];
-          } else {
-            acc[date].push(climbUser);
-          }
-
-          return acc;
+  yield await db
+    .collection<MongoGraphQLObject>("toplogger_graphql")
+    .aggregate([
+      {
+        $match: {
+          __typename: "ClimbUser",
+          userId: user.topLoggerGraphQLId,
+          tickedFirstAtDate: { $gt: new Date(0) },
         },
-        {} as Record<
-          `${number}-${number}-${number}`,
-          WithId<TopLoggerClimbUserDereferenced>[]
-        >,
-      ),
-    );
+      },
+      {
+        $set: {
+          climbId: {
+            $replaceOne: {
+              input: "$climb.__ref",
+              find: "Climb:",
+              replacement: "",
+            },
+          },
+          holdColorId: {
+            $replaceOne: {
+              input: "$holdColor.__ref",
+              find: "HoldColor:",
+              replacement: "",
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "toplogger_graphql",
+          localField: "climbId",
+          foreignField: "id",
+          as: "climb",
+        },
+      },
+      {
+        $lookup: {
+          from: "toplogger_graphql",
+          localField: "holdColorId",
+          foreignField: "id",
+          as: "holdColor",
+        },
+      },
+      {
+        $set: {
+          climb: { $arrayElemAt: ["$climb", 0] },
+          holdColor: { $arrayElemAt: ["$holdColor", 0] },
+        },
+      },
+      {
+        $set: {
+          gymId: {
+            $replaceOne: {
+              input: "$climb.gym.__ref",
+              find: "Gym:",
+              replacement: "",
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "toplogger_graphql",
+          localField: "gymId",
+          foreignField: "id",
+          as: "gym",
+        },
+      },
+      {
+        $set: {
+          gym: { $arrayElemAt: ["$gym", 0] },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$tickedFirstAtDate" },
+          },
+          climbUsers: { $push: "$$ROOT" },
+        },
+      },
+      {
+        $project: {
+          id: {
+            $concat: [
+              { $literal: WorkoutSource.TopLogger },
+              ":",
+              { $literal: user.topLoggerGraphQLId },
+              ":",
+              {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+                },
+              },
+            ],
+          },
+          _id: 0,
+          userId: { $literal: user.id },
+          createdAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+          updatedAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+          workedOutAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+          source: { $literal: WorkoutSource.TopLogger },
+          location: { $arrayElemAt: ["$climbUsers.gym.name", 0] },
+          exercises: [
+            {
+              exerciseId: 2001,
+              sets: {
+                $map: {
+                  input: "$climbUsers",
+                  as: "climbUser",
+                  in: {
+                    inputs: [
+                      // Grade
+                      {
+                        value: { $divide: ["$$climbUser.climb.grade", 100] },
+                        unit: Unit.FrenchRounded,
+                      },
+                      // Color
+                      {
+                        value: {
+                          $indexOfArray: [
+                            [
+                              // Don't mess with the order of these colors
+                              "mint",
+                              "green",
+                              "yellow",
+                              "blue",
+                              "orange",
+                              "red",
+                              "black",
+                              "pink",
+                              "white",
+                              "purple",
+                            ],
+                            { $toLower: "$$climbUser.holdColor.nameLoc" },
+                          ],
+                        },
+                      },
+                      // Sent-ness
+                      {
+                        value: {
+                          $cond: {
+                            if: { $eq: ["$$climbUser.tickType", 2] },
+                            then: 0,
+                            else: 1,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ])
+    .toArray();
 
-    for (const climbUsersOfDay of climbUsersByDay) {
-      const workout = workoutFromTopLoggerClimbUsers(user, climbUsersOfDay);
-
-      yield await MaterializedWorkoutsView.updateOne(
-        { id: workout.id },
-        { $set: workout },
-        { upsert: true },
-      );
-    }
-  }
+  yield "materializeAllToploggerWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
 }
 
 export async function* materializeAllIoWorkouts({
