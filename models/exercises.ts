@@ -86263,4 +86263,61 @@ export const exercises = [
       { name: "Body Weight", type: TagType.Equipment },
     ],
   },
+  {
+    aliases: [],
+    id: 2004,
+    inputs: [
+      {
+        allowed_units: [{ conversion_factor: 1.0, name: Unit.FrenchRounded }],
+        bounds: { minimum: 2, maximum: 9.5 },
+        display_name: "Grade",
+        hidden_by_default: true,
+        id: 0,
+        input_ordinal: 1,
+        imperial_unit: Unit.FrenchRounded,
+        metric_unit: Unit.FrenchRounded,
+        type: InputType.Grade,
+      },
+      {
+        display_name: "Color",
+        hidden_by_default: true,
+        id: 1,
+        input_ordinal: 2,
+        options: [
+          // Don't mess with the order of these colors
+          { value: "mint" },
+          { value: "green" },
+          { value: "yellow" },
+          { value: "blue" },
+          { value: "orange" },
+          { value: "red" },
+          { value: "black" },
+          { value: "pink" },
+          { value: "white" },
+          { value: "purple" },
+        ],
+        type: InputType.Options,
+      },
+      {
+        display_name: "Send",
+        hidden_by_default: false,
+        id: 2,
+        input_ordinal: 3,
+        default_value: 1,
+        // Don't mess with the order of these options
+        options: [{ value: "flash" }, { value: "top" }, { value: "zone" }],
+        type: InputType.Options,
+      },
+    ],
+    instructions: [{ value: "Like regular bouldering, but each hold must be touched by a foot before a hand." }],
+    // This is meant for scraped readonly workouts and should not be used for user input
+    is_hidden: true,
+    is_popular: false,
+    name: "Feet First Bouldering",
+    tags: [
+      { name: "Climbing", type: TagType.Type },
+      { name: "Calisthenics", type: TagType.Type },
+      { name: "Body Weight", type: TagType.Equipment },
+    ],
+  },
 ] as ExerciseData[];

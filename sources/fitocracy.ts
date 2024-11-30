@@ -387,7 +387,12 @@ export const exerciseIdsThatICareAbout = [
   {
     exerciseId: 2003, // board climbing
     enabled: true,
-    frequency: { days: 4 },
+    frequency: { days: 6 },
+  },
+  {
+    exerciseId: 2004, // feet first bouldering
+    enabled: true,
+    frequency: { days: 6 },
   },
 ] satisfies ExerciseScheduleEntry[];
 
