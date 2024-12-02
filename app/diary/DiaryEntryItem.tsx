@@ -136,7 +136,7 @@ function WorkoutsSummary({
                   (tag) =>
                     tag.type === TagType.Type && tag.name === "Calisthenics",
                 ) ? (
-                "🤸🏻"
+                "🤸‍♀️"
               ) : (
                 <span
                   style={{
