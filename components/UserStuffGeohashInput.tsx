@@ -20,11 +20,7 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-      }}
-    >
+    <>
       <input
         type="text"
         placeholder="Geohash"
@@ -32,7 +28,7 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
         value={geohash || ""}
         readOnly
         disabled={isGettingCurrentPosition}
-        className="border-b-2 border-gray-200 focus:border-gray-500"
+        className="flex-1 border-b-2 border-gray-200 focus:border-gray-500 w-full"
       />
       <button
         disabled={isGettingCurrentPosition}
@@ -51,6 +47,6 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
       >
         🌍
       </button>
-    </div>
+    </>
   );
 }

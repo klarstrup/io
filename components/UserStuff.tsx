@@ -200,22 +200,18 @@ export default async function UserStuff() {
                   value="Update"
                   className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
                 />
-                <FieldSetY
-                  className="flex items-center gap-1.5"
-                  legend="Location"
-                >
-                  <UserStuffGeohashInput geohash={user.geohash} />
-                </FieldSetY>
-                <FieldSetY
-                  className="flex items-center gap-1.5"
-                  legend="Time Zone"
-                >
-                  <input
-                    name="timeZone"
-                    defaultValue={user.timeZone || ""}
-                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                  />
-                </FieldSetY>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <FieldSetY legend="Location" className="flex">
+                    <UserStuffGeohashInput geohash={user.geohash} />
+                  </FieldSetY>
+                  <FieldSetY legend="Time Zone">
+                    <input
+                      name="timeZone"
+                      defaultValue={user.timeZone || ""}
+                      className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                    />
+                  </FieldSetY>
+                </div>
                 <FieldSetX
                   className="flex items-center gap-1.5"
                   legend="TopLogger ID"
