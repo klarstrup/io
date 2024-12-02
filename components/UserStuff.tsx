@@ -5,6 +5,7 @@ import { auth } from "../auth";
 import { isAuthTokens } from "../lib";
 import { exercises } from "../models/exercises";
 import { Users } from "../models/user.server";
+import { getAllWorkoutExercises } from "../models/workout.server";
 import {
   exerciseIdsThatICareAbout,
   type ExerciseSchedule,
@@ -15,6 +16,7 @@ import { RunDouble, getRunDoubleUser } from "../sources/rundouble";
 import { decodeGeohash, omit } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
+import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -306,6 +308,12 @@ export default async function UserStuff() {
                   />
                 </FieldSetX>
               </form>
+            </FieldSetX>
+            <FieldSetX legend="Workout Schedule" className="w-full">
+              <UserStuffWorkoutScheduleForm
+                exercisesStats={await getAllWorkoutExercises(user)}
+                user={user}
+              />
             </FieldSetX>
             <FieldSetX
               className="grid grid-cols-2 gap-1"

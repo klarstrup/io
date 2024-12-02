@@ -3,12 +3,14 @@
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
+import { Users } from "../../models/user.server";
 import type { WorkoutData } from "../../models/workout";
 import {
   updateExerciseCounts,
   updateLocationCounts,
   Workouts,
 } from "../../models/workout.server";
+import type { ExerciseSchedule } from "../../sources/fitocracy";
 import { arrayFromAsyncIterable } from "../../utils";
 import { materializeAllIoWorkouts } from "../api/materialize_workouts/materializers";
 
@@ -50,4 +52,20 @@ export async function deleteWorkout(workoutId: string) {
   revalidatePath("/diary");
 
   return result.modifiedCount;
+}
+
+export async function updateUserExerciseSchedules(
+  userId: string,
+  schedules: ExerciseSchedule[],
+) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  await Users.updateOne(
+    { _id: new ObjectId(user.id) },
+    { $set: { exerciseSchedules: schedules } },
+  );
+
+  return (await Users.findOne({ _id: new ObjectId(user.id) }))!
+    .exerciseSchedules;
 }
