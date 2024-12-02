@@ -100,81 +100,97 @@ export default function UserStuffWorkoutScheduleForm({
                         .sort((a, b) => a.length - b.length)[0]!
                         .replace("Barbell", "")}
                     </Link>
+                    <label>
+                      <input
+                        type="checkbox"
+                        {...register(`exerciseSchedules.${index}.enabled`)}
+                      />{" "}
+                      Enabled
+                    </label>
                   </div>
                 }
                 className="flex flex-col gap-1"
               >
-                <label>
-                  <input
-                    type="checkbox"
-                    {...register(`exerciseSchedules.${index}.enabled`)}
-                  />{" "}
-                  Enabled
-                </label>
-                <select
-                  {...register(`exerciseSchedules.${index}.frequency.days`, {
-                    valueAsNumber: true,
-                  })}
-                  className="flex-1"
-                >
-                  <option value={1}>Daily</option>
-                  <option value={2}>Every other day</option>
-                  <option value={3}>Every third day</option>
-                  <option value={4}>Every fourth day</option>
-                  <option value={5}>Every fifth day</option>
-                  <option value={6}>Every sixth day</option>
-                  <option value={7}>Weekly</option>
-                </select>
-                <div className="flex whitespace-nowrap">
-                  Working Sets:{" "}
-                  <input
-                    type="number"
-                    {...register(`exerciseSchedules.${index}.workingSets`, {
-                      valueAsNumber: true,
-                    })}
-                    className="w-1/3"
-                  />{" "}
-                  x{" "}
-                  <input
-                    type="number"
-                    {...register(`exerciseSchedules.${index}.workingReps`, {
-                      valueAsNumber: true,
-                    })}
-                    className="w-1/3"
-                  />{" "}
-                  Reps
-                </div>
-                <label>
-                  Deload Factor:{" "}
-                  <input
-                    type="number"
-                    step={0.01}
-                    {...register(`exerciseSchedules.${index}.deloadFactor`, {
-                      valueAsNumber: true,
-                    })}
-                  />
-                </label>
-                <div className="flex gap-1">
-                  <label>
-                    Base Weight:{" "}
-                    <input
-                      type="number"
-                      {...register(`exerciseSchedules.${index}.baseWeight`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </label>
-                  <label>
-                    Increment:{" "}
-                    <input
-                      type="number"
-                      step={0.01}
-                      {...register(`exerciseSchedules.${index}.increment`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </label>
-                </div>
+                {watch("exerciseSchedules")?.[index]?.enabled ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-1 text-sm">
+                      <label>
+                        Frequency:{" "}
+                        <select
+                          {...register(
+                            `exerciseSchedules.${index}.frequency.days`,
+                            { valueAsNumber: true },
+                          )}
+                          className="w-full flex-1"
+                        >
+                          <option value={1}>Daily</option>
+                          <option value={2}>2 days</option>
+                          <option value={3}>3 days</option>
+                          <option value={4}>4 days</option>
+                          <option value={5}>5 days</option>
+                          <option value={6}>6 days</option>
+                          <option value={7}>Weekly</option>
+                        </select>
+                      </label>
+                      <label>
+                        Sets:{" "}
+                        <input
+                          type="number"
+                          {...register(
+                            `exerciseSchedules.${index}.workingSets`,
+                            { valueAsNumber: true },
+                          )}
+                          className="w-full"
+                        />
+                      </label>
+                      <label>
+                        Reps:{" "}
+                        <input
+                          type="number"
+                          {...register(
+                            `exerciseSchedules.${index}.workingReps`,
+                            { valueAsNumber: true },
+                          )}
+                          className="w-full"
+                        />
+                      </label>
+                      <label>
+                        Base Weight:{" "}
+                        <input
+                          type="number"
+                          {...register(
+                            `exerciseSchedules.${index}.baseWeight`,
+                            { valueAsNumber: true },
+                          )}
+                          className="w-full"
+                        />
+                      </label>
+                      <label>
+                        Increment:{" "}
+                        <input
+                          type="number"
+                          step={0.01}
+                          {...register(`exerciseSchedules.${index}.increment`, {
+                            valueAsNumber: true,
+                          })}
+                          className="w-full"
+                        />
+                      </label>
+                      <label>
+                        Deload:{" "}
+                        <input
+                          type="number"
+                          step={0.01}
+                          {...register(
+                            `exerciseSchedules.${index}.deloadFactor`,
+                            { valueAsNumber: true },
+                          )}
+                          className="w-full"
+                        />
+                      </label>
+                    </div>
+                  </>
+                ) : null}
               </FieldSetX>
             );
           })}
