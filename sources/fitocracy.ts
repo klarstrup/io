@@ -277,7 +277,7 @@ export namespace Fitocracy {
 
 export const theDayFitocracyDied = new Date(2024, 6, 15);
 
-export interface ExerciseScheduleEntry {
+export interface ExerciseSchedule {
   exerciseId: number;
   enabled: boolean;
   frequency: Duration;
@@ -394,7 +394,7 @@ export const exerciseIdsThatICareAbout = [
     enabled: true,
     frequency: { days: 6 },
   },
-] satisfies ExerciseScheduleEntry[];
+] satisfies ExerciseSchedule[];
 
 export function workoutFromFitocracyWorkout(
   user: Session["user"],

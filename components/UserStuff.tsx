@@ -7,7 +7,7 @@ import { exercises } from "../models/exercises";
 import { Users } from "../models/user.server";
 import {
   exerciseIdsThatICareAbout,
-  type ExerciseScheduleEntry,
+  type ExerciseSchedule,
 } from "../sources/fitocracy";
 import { MyFitnessPal } from "../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
@@ -310,7 +310,7 @@ export default async function UserStuff() {
               legend="Workout Schedule"
             >
               {exerciseIdsThatICareAbout.map(
-                (scheduleEntry: ExerciseScheduleEntry) => {
+                (scheduleEntry: ExerciseSchedule) => {
                   const exercise = exercises.find(
                     (exercise) => exercise.id === scheduleEntry.exerciseId,
                   )!;

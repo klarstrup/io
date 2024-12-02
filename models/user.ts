@@ -1,4 +1,5 @@
 import type { TopLoggerAuthTokens } from "../lib";
+import type { ExerciseSchedule } from "../sources/fitocracy";
 
 export interface IUser {
   name: string;
@@ -17,4 +18,5 @@ export interface IUser {
   myFitnessPalUserId?: string;
   runDoubleId?: string | null;
   icalUrls?: string[];
+  exerciseSchedules?: ExerciseSchedule[];
 }
