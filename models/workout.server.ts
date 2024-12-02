@@ -86,10 +86,11 @@ export async function getNextSets({
       const heaviestSetWeight = heaviestSet?.inputs[weightInputIndex]?.value;
 
       const workingSets =
-        heaviestSetWeight &&
-        exercise?.sets.filter(
-          (set) => set.inputs[weightInputIndex]?.value === heaviestSetWeight,
-        );
+        (heaviestSetWeight &&
+          exercise?.sets.filter(
+            (set) => set.inputs[weightInputIndex]?.value === heaviestSetWeight,
+          )) ||
+        null;
 
       const successful =
         workingSets &&
@@ -101,11 +102,17 @@ export async function getNextSets({
             sets.inputs[repsInputIndex] &&
             sets.inputs[repsInputIndex].value >= scheduleEntry.workingReps!,
         );
+
+      const finalWorkingSetReps =
+        workingSets?.[workingSets.length - 1]?.inputs[repsInputIndex]?.value;
+
       const goalWeight =
         scheduleEntry.deloadFactor && scheduleEntry.increment
           ? heaviestSetWeight
             ? successful
-              ? scheduleEntry.increment + heaviestSetWeight
+              ? finalWorkingSetReps === scheduleEntry.workingReps! * 2
+                ? scheduleEntry.increment * 2 + heaviestSetWeight
+                : scheduleEntry.increment + heaviestSetWeight
               : scheduleEntry.deloadFactor * heaviestSetWeight
             : scheduleEntry.baseWeight
           : null;
@@ -117,7 +124,7 @@ export async function getNextSets({
         nextWorkingSets: scheduleEntry.workingSets,
         nextWorkingSetsReps: scheduleEntry.workingReps,
         nextWorkingSetsWeight: goalWeight
-          ? goalWeight - Math.round(goalWeight) < 0.5
+          ? Math.abs(goalWeight - Math.round(goalWeight)) < 0.5
             ? Math.round(goalWeight)
             : goalWeight
           : goalWeight,
