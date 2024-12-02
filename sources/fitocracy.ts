@@ -373,7 +373,7 @@ export const exerciseIdsThatICareAbout = [
     exerciseId: 181, // arnold press
     enabled: true,
     frequency: { days: 5 },
-    increment: 1.25,
+    increment: 2,
     workingSets: 3,
     workingReps: 5,
     deloadFactor: 0.9,
