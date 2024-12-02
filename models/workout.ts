@@ -56,14 +56,14 @@ const daysInMs = 24 * 60 * 60 * 1000;
 const hoursInMs = 60 * 60 * 1000;
 const minutesInMs = 60 * 1000;
 const secondsInMs = 1000;
-const isDurationGreater = (a: Duration, b: Duration) =>
+const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
   (a.years ?? 0) * yearsInMs +
     (a.months ?? 0) * monthsInMs +
     (a.weeks ?? 0) * weeksInMs +
     (a.days ?? 0) * daysInMs +
     (a.hours ?? 0) * hoursInMs +
     (a.minutes ?? 0) * minutesInMs +
-    (a.seconds ?? 0) * secondsInMs >
+    (a.seconds ?? 0) * secondsInMs >=
   (b.years ?? 0) * yearsInMs +
     (b.months ?? 0) * monthsInMs +
     (b.weeks ?? 0) * weeksInMs +
@@ -76,9 +76,9 @@ export const isNextSetDue = (
   tzDate: TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) =>
-  isDurationGreater(
+  isDurationGreaterOrEqual(
     intervalToDuration({
-      start: nextSet.workedOutAt || new Date(0),
+      start: startOfDay(nextSet.workedOutAt || new Date(0)),
       end: startOfDay(tzDate),
     }),
     nextSet.scheduleEntry.frequency,
