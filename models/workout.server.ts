@@ -3,7 +3,6 @@ import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../dbConnect";
 import type { PRType } from "../lib";
-import { exerciseIdsThatICareAbout } from "../sources/fitocracy";
 import { proxyCollection } from "../utils.server";
 import { exercises, InputType } from "./exercises";
 import {
@@ -27,7 +26,7 @@ export async function getNextSets({
 }) {
   return (
     await Promise.all(
-      exerciseIdsThatICareAbout
+      (user.exerciseSchedules || [])
         .filter((scheduleEntry) => scheduleEntry.enabled)
         .map(
           async (scheduleEntry) =>
@@ -100,7 +99,7 @@ export async function getNextSets({
         workingSets.every(
           (sets) =>
             sets.inputs[repsInputIndex] &&
-            sets.inputs[repsInputIndex].value >= scheduleEntry.workingReps,
+            sets.inputs[repsInputIndex].value >= scheduleEntry.workingReps!,
         );
       const goalWeight =
         scheduleEntry.deloadFactor && scheduleEntry.increment

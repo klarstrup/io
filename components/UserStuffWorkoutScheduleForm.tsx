@@ -66,7 +66,13 @@ export default function UserStuffWorkoutScheduleForm({
             disabled={!isDirty || isSubmitting}
             className={
               "rounded-md px-4 py-2 text-sm font-semibold " +
-              (isDirty ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600")
+              (isDirty
+                ? "bg-blue-600 text-white"
+                : "bg-gray-300 text-gray-600") +
+              " hover:bg-blue-700 hover:text-white" +
+              (isSubmitting ? " cursor-not-allowed" : "") +
+              (isDirty ? " cursor-pointer" : "") +
+              (isSubmitting ? " opacity-50" : "")
             }
           >
             Update
@@ -89,7 +95,10 @@ export default function UserStuffWorkoutScheduleForm({
                       href={`/diary/exercises/${exercise.id}`}
                       style={{ color: "#edab00" }}
                     >
-                      {exercise.name}
+                      {[exercise.name, ...exercise.aliases]
+                        .filter((name) => name.length >= 4)
+                        .sort((a, b) => a.length - b.length)[0]!
+                        .replace("Barbell", "")}
                     </Link>
                   </div>
                 }
@@ -223,9 +232,6 @@ export default function UserStuffWorkoutScheduleForm({
             }}
           />
         </div>
-        <pre className="text-xs">
-          {JSON.stringify(watch().exerciseSchedules, null, 2)}
-        </pre>
       </form>
     </div>
   );

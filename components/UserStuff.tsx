@@ -3,17 +3,12 @@ import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../auth";
 import { isAuthTokens } from "../lib";
-import { exercises } from "../models/exercises";
 import { Users } from "../models/user.server";
 import { getAllWorkoutExercises } from "../models/workout.server";
-import {
-  exerciseIdsThatICareAbout,
-  type ExerciseSchedule,
-} from "../sources/fitocracy";
-import { MyFitnessPal } from "../sources/myfitnesspal";
+import type { MyFitnessPal } from "../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
-import { RunDouble, getRunDoubleUser } from "../sources/rundouble";
-import { decodeGeohash, omit } from "../utils";
+import { type RunDouble, getRunDoubleUser } from "../sources/rundouble";
+import { decodeGeohash } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
@@ -314,39 +309,6 @@ export default async function UserStuff() {
                 exercisesStats={await getAllWorkoutExercises(user)}
                 user={user}
               />
-            </FieldSetX>
-            <FieldSetX
-              className="grid grid-cols-2 gap-1"
-              legend="Workout Schedule"
-            >
-              {exerciseIdsThatICareAbout.map(
-                (scheduleEntry: ExerciseSchedule) => {
-                  const exercise = exercises.find(
-                    (exercise) => exercise.id === scheduleEntry.exerciseId,
-                  )!;
-                  return (
-                    <FieldSetY
-                      key={scheduleEntry.exerciseId}
-                      legend={
-                        <small>
-                          {[exercise.name, ...exercise.aliases]
-                            .filter((name) => name.length >= 4)
-                            .sort((a, b) => a.length - b.length)[0]!
-                            .replace("Barbell", "")}
-                        </small>
-                      }
-                    >
-                      <pre className="text-xs">
-                        {JSON.stringify(
-                          omit(scheduleEntry, "exerciseId"),
-                          null,
-                          2,
-                        )}
-                      </pre>
-                    </FieldSetY>
-                  );
-                },
-              )}
             </FieldSetX>
           </div>
         ) : (
