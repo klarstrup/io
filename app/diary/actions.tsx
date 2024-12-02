@@ -33,7 +33,7 @@ export async function upsertWorkout(
   }
 
   void updateLocationCounts(user.id);
-  void updateExerciseCounts(user.id, user.fitocracyUserId);
+  void updateExerciseCounts(user.id);
 
   await arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
 

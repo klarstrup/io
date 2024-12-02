@@ -227,7 +227,7 @@ export function getIsSetPR(
 export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
   await getDB().then((db) =>
     db
-      .collection<WorkoutData>("workouts")
+      .collection<WorkoutData>("materialized_workouts_view")
       .aggregate([
         { $match: { userId, location: { $exists: true, $ne: null } } },
         {
@@ -263,43 +263,11 @@ export const getAllWorkoutLocations = async (user: Session["user"]) =>
     }),
   );
 
-export const updateExerciseCounts = async (
-  userId: Session["user"]["id"],
-  fitocracyUserId?: Session["user"]["fitocracyUserId"],
-) =>
+export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
   await getDB().then((db) =>
     db
-      .collection<WorkoutData>("workouts")
+      .collection<WorkoutData>("materialized_workouts_view")
       .aggregate([
-        {
-          $unionWith: {
-            coll: "fitocracy_workouts",
-            pipeline: [
-              { $match: { user_id: fitocracyUserId } },
-              { $set: { workedOutAt: "$workout_timestamp" } },
-              {
-                $set: {
-                  exercises: {
-                    $map: {
-                      input: "$root_group.children.exercise",
-                      as: "exercise",
-                      in: { exerciseId: "$$exercise.exercise_id" },
-                    },
-                  },
-                },
-              },
-              {
-                $replaceWith: {
-                  $setField: {
-                    field: "userId",
-                    input: "$$ROOT",
-                    value: userId,
-                  },
-                },
-              },
-            ],
-          },
-        },
         { $match: { userId } },
         { $unwind: "$exercises" },
         {
