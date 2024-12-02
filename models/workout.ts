@@ -49,14 +49,28 @@ export interface WorkoutExerciseSetInput {
 export const isClimbingExercise = (exerciseId: number) =>
   exerciseId === 2001 || exerciseId === 2003;
 
+const yearsInMs = 365.25 * 24 * 60 * 60 * 1000;
+const monthsInMs = 30.44 * 24 * 60 * 60 * 1000;
+const weeksInMs = 7 * 24 * 60 * 60 * 1000;
+const daysInMs = 24 * 60 * 60 * 1000;
+const hoursInMs = 60 * 60 * 1000;
+const minutesInMs = 60 * 1000;
+const secondsInMs = 1000;
 const isDurationGreater = (a: Duration, b: Duration) =>
-  a.years! > b.years! ||
-  a.months! > b.months! ||
-  a.weeks! > b.weeks! ||
-  a.days! > b.days! ||
-  a.hours! > b.hours! ||
-  a.minutes! > b.minutes! ||
-  a.seconds! > b.seconds!;
+  (a.years ?? 0) * yearsInMs +
+    (a.months ?? 0) * monthsInMs +
+    (a.weeks ?? 0) * weeksInMs +
+    (a.days ?? 0) * daysInMs +
+    (a.hours ?? 0) * hoursInMs +
+    (a.minutes ?? 0) * minutesInMs +
+    (a.seconds ?? 0) * secondsInMs >
+  (b.years ?? 0) * yearsInMs +
+    (b.months ?? 0) * monthsInMs +
+    (b.weeks ?? 0) * weeksInMs +
+    (b.days ?? 0) * daysInMs +
+    (b.hours ?? 0) * hoursInMs +
+    (b.minutes ?? 0) * minutesInMs +
+    (b.seconds ?? 0) * secondsInMs;
 
 export const isNextSetDue = (
   tzDate: TZDate,
