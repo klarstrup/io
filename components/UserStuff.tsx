@@ -195,6 +195,11 @@ export default async function UserStuff() {
             <FieldSetX legend="Settings">
               {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
               <form action={updateUser}>
+                <input
+                  type="submit"
+                  value="Update"
+                  className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+                />
                 <FieldSetY
                   className="flex items-center gap-1.5"
                   legend="Location"
@@ -304,7 +309,6 @@ export default async function UserStuff() {
                     }
                   />
                 </FieldSetX>
-                <input type="submit" value="Update" />
               </form>
             </FieldSetX>
             <FieldSetX
