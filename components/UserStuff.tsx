@@ -192,119 +192,121 @@ export default async function UserStuff() {
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/api/auth/signout">Sign out</a>
             </p>
-            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-            <form action={updateUser}>
-              <FieldSetY
-                className="flex items-center gap-1.5"
-                legend="Location"
-              >
-                <UserStuffGeohashInput geohash={user.geohash} />
-              </FieldSetY>
-              <FieldSetY
-                className="flex items-center gap-1.5"
-                legend="Time Zone"
-              >
-                <input
-                  name="timeZone"
-                  defaultValue={user.timeZone || ""}
-                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                />
-              </FieldSetY>
-              <FieldSetX
-                className="flex items-center gap-1.5"
-                legend="TopLogger ID"
-              >
-                <input
-                  name="topLoggerId"
-                  defaultValue={user.topLoggerId || ""}
-                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                />
-              </FieldSetX>
-              <FieldSetX
-                className="flex flex-col items-center gap-1.5"
-                legend="TopLogger GQL User"
-              >
-                <label>
-                  <code>TopLogger GraphQL ID</code>
+            <FieldSetX legend="Settings">
+              {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+              <form action={updateUser}>
+                <FieldSetY
+                  className="flex items-center gap-1.5"
+                  legend="Location"
+                >
+                  <UserStuffGeohashInput geohash={user.geohash} />
+                </FieldSetY>
+                <FieldSetY
+                  className="flex items-center gap-1.5"
+                  legend="Time Zone"
+                >
                   <input
-                    name="topLoggerGraphQLId"
-                    defaultValue={user.topLoggerGraphQLId || ""}
+                    name="timeZone"
+                    defaultValue={user.timeZone || ""}
                     className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                   />
-                </label>
-                <label>
-                  <code>tl-auth</code>
+                </FieldSetY>
+                <FieldSetX
+                  className="flex items-center gap-1.5"
+                  legend="TopLogger ID"
+                >
                   <input
-                    name="topLoggerAuthTokens"
-                    defaultValue={
-                      (user.topLoggerAuthTokens &&
-                        JSON.stringify(user.topLoggerAuthTokens)) ||
-                      ""
+                    name="topLoggerId"
+                    defaultValue={user.topLoggerId || ""}
+                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                  />
+                </FieldSetX>
+                <FieldSetX
+                  className="flex flex-col items-center gap-1.5"
+                  legend="TopLogger GQL User"
+                >
+                  <label>
+                    <code>TopLogger GraphQL ID</code>
+                    <input
+                      name="topLoggerGraphQLId"
+                      defaultValue={user.topLoggerGraphQLId || ""}
+                      className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                    />
+                  </label>
+                  <label>
+                    <code>tl-auth</code>
+                    <input
+                      name="topLoggerAuthTokens"
+                      defaultValue={
+                        (user.topLoggerAuthTokens &&
+                          JSON.stringify(user.topLoggerAuthTokens)) ||
+                        ""
+                      }
+                      className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                    />
+                  </label>
+                </FieldSetX>
+                <FieldSetX
+                  className="flex items-center gap-1.5"
+                  legend="MyFitnessPal Token"
+                >
+                  <input
+                    name="myFitnessPalToken"
+                    defaultValue={user.myFitnessPalToken || ""}
+                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                  />
+                  {myFitnessPalUser ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt="MyFitnessPal Avatar"
+                      src={myFitnessPalUser.image}
+                      className="h-6 max-h-6 w-6 max-w-6 rounded-full"
+                    />
+                  ) : (
+                    <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
+                      ❌
+                    </span>
+                  )}
+                </FieldSetX>
+                <FieldSetX
+                  className="flex items-center gap-1.5"
+                  legend="RunDouble ID"
+                >
+                  <input
+                    name="runDoubleId"
+                    defaultValue={user.runDoubleId || ""}
+                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                  />
+                  {runDoubleUser ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt="MyFitnessPal Avatar"
+                      src={`https://gravatar.com/avatar/${runDoubleUser.gravatarHash}`}
+                      className="h-6 max-h-6 w-6 max-w-6 rounded-full"
+                    />
+                  ) : (
+                    <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
+                      ❌
+                    </span>
+                  )}
+                </FieldSetX>
+                <FieldSetX
+                  className="flex items-center gap-1.5"
+                  legend="iCal URLs"
+                >
+                  <textarea
+                    name="icalUrls"
+                    defaultValue={user.icalUrls?.join("\n") || ""}
+                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
+                    rows={user.icalUrls ? user.icalUrls.length + 2 : 5}
+                    placeholder={
+                      "https://example.com/calendar.ics\nhttps://example.com/other.ics"
                     }
-                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                   />
-                </label>
-              </FieldSetX>
-              <FieldSetX
-                className="flex items-center gap-1.5"
-                legend="MyFitnessPal Token"
-              >
-                <input
-                  name="myFitnessPalToken"
-                  defaultValue={user.myFitnessPalToken || ""}
-                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                />
-                {myFitnessPalUser ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt="MyFitnessPal Avatar"
-                    src={myFitnessPalUser.image}
-                    className="h-6 max-h-6 w-6 max-w-6 rounded-full"
-                  />
-                ) : (
-                  <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
-                    ❌
-                  </span>
-                )}
-              </FieldSetX>
-              <FieldSetX
-                className="flex items-center gap-1.5"
-                legend="RunDouble ID"
-              >
-                <input
-                  name="runDoubleId"
-                  defaultValue={user.runDoubleId || ""}
-                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                />
-                {runDoubleUser ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt="MyFitnessPal Avatar"
-                    src={`https://gravatar.com/avatar/${runDoubleUser.gravatarHash}`}
-                    className="h-6 max-h-6 w-6 max-w-6 rounded-full"
-                  />
-                ) : (
-                  <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
-                    ❌
-                  </span>
-                )}
-              </FieldSetX>
-              <FieldSetX
-                className="flex items-center gap-1.5"
-                legend="iCal URLs"
-              >
-                <textarea
-                  name="icalUrls"
-                  defaultValue={user.icalUrls?.join("\n") || ""}
-                  className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                  rows={user.icalUrls ? user.icalUrls.length + 2 : 5}
-                  placeholder={
-                    "https://example.com/calendar.ics\nhttps://example.com/other.ics"
-                  }
-                />
-              </FieldSetX>
-              <input type="submit" value="Update" />
-            </form>
+                </FieldSetX>
+                <input type="submit" value="Update" />
+              </form>
+            </FieldSetX>
             <FieldSetX
               className="grid grid-cols-2 gap-1"
               legend="Workout Schedule"
