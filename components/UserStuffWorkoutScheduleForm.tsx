@@ -29,7 +29,7 @@ export default function UserStuffWorkoutScheduleForm({
     defaultValues: { exerciseSchedules: user?.exerciseSchedules ?? [] },
   });
 
-  const { fields, append, update, remove } = useFieldArray({
+  const { fields, append } = useFieldArray({
     control,
     name: "exerciseSchedules",
   });
