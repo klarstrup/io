@@ -45,11 +45,6 @@ async function updateUser(formData: FormData) {
     }
   }
 
-  const fitocracySessionId = formData.get("fitocracySessionId");
-  if (typeof fitocracySessionId === "string") {
-    newUser.fitocracySessionId = fitocracySessionId.trim() || null;
-  }
-
   const topLoggerId = formData.get("topLoggerId");
   if (typeof topLoggerId === "string") {
     newUser.topLoggerId = topLoggerId.trim()

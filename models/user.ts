@@ -9,8 +9,6 @@ export interface IUser {
   emailVerified: boolean;
   geohash?: string | null;
   timeZone?: string | null;
-  fitocracySessionId?: string | null;
-  fitocracyUserId?: number;
   topLoggerId?: number | null;
   topLoggerGraphQLId?: string | null;
   topLoggerAuthTokens?: TopLoggerAuthTokens;

@@ -231,44 +231,48 @@ export async function* materializeAllFitocracyWorkouts({
 }: {
   user: Session["user"];
 }) {
-  if (!user.fitocracyUserId) return;
-
   yield "materializeAllFitocracyWorkouts: start";
   const t = new Date();
   const db = await getDB();
 
-  yield await db
-    .collection<Fitocracy.MongoWorkout>("fitocracy_workouts")
-    .aggregate([
-      { $match: { user_id: user.fitocracyUserId } },
-      {
-        $project: {
-          _id: 0,
-          id: { $toString: "$id" },
-          userId: { $literal: user.id },
-          createdAt: "$updated_timestamp",
-          updatedAt: "$updated_timestamp",
-          workedOutAt: "$workout_timestamp",
-          source: { $literal: WorkoutSource.Fitocracy },
-          exercises: {
-            $map: {
-              input: "$root_group.children",
-              as: "child",
-              in: {
-                exerciseId: "$$child.exercise.exercise_id",
-                sets: {
-                  $map: {
-                    input: "$$child.exercise.sets",
-                    as: "set",
-                    in: {
-                      inputs: {
-                        $map: {
-                          input: "$$set.inputs",
-                          as: "input",
-                          in: {
-                            unit: "$$input.unit",
-                            value: "$$input.value",
-                            assistType: "$$input.assist_type",
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.Fitocracy) continue;
+
+    const fitocracyUserId = dataSource.config.userId;
+
+    yield await db
+      .collection<Fitocracy.MongoWorkout>("fitocracy_workouts")
+      .aggregate([
+        { $match: { user_id: fitocracyUserId } },
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: "$id" },
+            userId: { $literal: user.id },
+            createdAt: "$updated_timestamp",
+            updatedAt: "$updated_timestamp",
+            workedOutAt: "$workout_timestamp",
+            source: { $literal: WorkoutSource.Fitocracy },
+            exercises: {
+              $map: {
+                input: "$root_group.children",
+                as: "child",
+                in: {
+                  exerciseId: "$$child.exercise.exercise_id",
+                  sets: {
+                    $map: {
+                      input: "$$child.exercise.sets",
+                      as: "set",
+                      in: {
+                        inputs: {
+                          $map: {
+                            input: "$$set.inputs",
+                            as: "input",
+                            in: {
+                              unit: "$$input.unit",
+                              value: "$$input.value",
+                              assistType: "$$input.assist_type",
+                            },
                           },
                         },
                       },
@@ -279,16 +283,16 @@ export async function* materializeAllFitocracyWorkouts({
             },
           },
         },
-      },
-      {
-        $merge: {
-          into: "materialized_workouts_view",
-          whenMatched: "replace",
-          on: "id",
+        {
+          $merge: {
+            into: "materialized_workouts_view",
+            whenMatched: "replace",
+            on: "id",
+          },
         },
-      },
-    ])
-    .toArray();
+      ])
+      .toArray();
+  }
 
   yield "materializeAllFitocracyWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
