@@ -33,7 +33,7 @@ export const GET = () =>
       const existingEventsCount = await IcalEvents.countDocuments(ioIcalMeta);
 
       // This accounts for a situation where we ingest an empty or otherwise malformed iCal feed
-      if (existingEventsCount * 0.5 > events.length) {
+      if (existingEventsCount * 0.25 > events.length) {
         console.log(
           `Existing events count(${existingEventsCount}) is much greater than new events count(${events.length}) for icalUrlHash: ${icalUrlHash}, skipping`,
         );
