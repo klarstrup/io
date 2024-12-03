@@ -7,7 +7,6 @@ import { Users } from "../models/user.server";
 import { getAllWorkoutExercises } from "../models/workout.server";
 import type { MyFitnessPal } from "../sources/myfitnesspal";
 import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
-import { type RunDouble, getRunDoubleUser } from "../sources/rundouble";
 import { decodeGeohash } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
@@ -77,10 +76,6 @@ async function updateUser(formData: FormData) {
   if (typeof myFitnessPalToken === "string") {
     newUser.myFitnessPalToken = myFitnessPalToken.trim() || null;
   }
-  const runDoubleId = formData.get("runDoubleId");
-  if (typeof runDoubleId === "string") {
-    newUser.runDoubleId = runDoubleId.trim() || null;
-  }
 
   await Users.updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
 
@@ -104,15 +99,6 @@ export default async function UserStuff() {
     }
   } catch {
     myFitnessPalUser = null;
-  }
-
-  let runDoubleUser: RunDouble.User | null = null;
-  try {
-    if (user?.runDoubleId) {
-      runDoubleUser = await getRunDoubleUser(user.runDoubleId);
-    }
-  } catch {
-    runDoubleUser = null;
   }
 
   return (
@@ -253,28 +239,6 @@ export default async function UserStuff() {
                     <img
                       alt="MyFitnessPal Avatar"
                       src={myFitnessPalUser.image}
-                      className="h-6 max-h-6 w-6 max-w-6 rounded-full"
-                    />
-                  ) : (
-                    <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
-                      ❌
-                    </span>
-                  )}
-                </FieldSetX>
-                <FieldSetX
-                  className="flex items-center gap-1.5"
-                  legend="RunDouble ID"
-                >
-                  <input
-                    name="runDoubleId"
-                    defaultValue={user.runDoubleId || ""}
-                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                  />
-                  {runDoubleUser ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      alt="MyFitnessPal Avatar"
-                      src={`https://gravatar.com/avatar/${runDoubleUser.gravatarHash}`}
                       className="h-6 max-h-6 w-6 max-w-6 rounded-full"
                     />
                   ) : (

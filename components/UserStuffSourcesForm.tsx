@@ -241,7 +241,7 @@ export default function UserStuffSourcesForm({
                 createdAt: new Date(),
                 lastAttemptedAt: null,
                 lastSuccessfulAt: null,
-                lastSuccesfulRuntime: null,
+                lastSuccessfulRuntime: null,
                 lastResult: null,
                 lastFailedAt: null,
                 lastFailedRuntime: null,

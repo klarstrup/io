@@ -2,9 +2,10 @@ import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
 import { Unit } from "../../../models/exercises";
 import { WorkoutData, WorkoutSource } from "../../../models/workout";
-import { Fitocracy } from "../../../sources/fitocracy";
-import { type KilterBoard } from "../../../sources/kilterboard";
-import { RunDouble } from "../../../sources/rundouble";
+import type { Fitocracy } from "../../../sources/fitocracy";
+import type { KilterBoard } from "../../../sources/kilterboard";
+import type { RunDouble } from "../../../sources/rundouble";
+import { DataSource } from "../../../sources/utils";
 import type { MongoGraphQLObject } from "../../../utils/graphql";
 
 export async function* materializeAllToploggerWorkouts({
@@ -299,56 +300,58 @@ export async function* materializeAllRunDoubleWorkouts({
 }: {
   user: Session["user"];
 }) {
-  if (!user.runDoubleId) return;
-
   yield "materializeAllRunDoubleWorkouts: start";
   const t = new Date();
   const db = await getDB();
 
-  yield await db
-    .collection<RunDouble.MongoHistoryItem>("rundouble_runs")
-    .aggregate([
-      { $match: { userId: user.runDoubleId } },
-      {
-        $project: {
-          _id: 0,
-          id: { $toString: "$key" },
-          userId: { $literal: user.id },
-          createdAt: "$completedAt",
-          updatedAt: "$completedAt",
-          workedOutAt: "$completedAt",
-          source: { $literal: WorkoutSource.RunDouble },
-          exercises: [
-            {
-              exerciseId: 518,
-              sets: [
-                {
-                  inputs: [
-                    {
-                      unit: Unit.SEC,
-                      value: { $divide: ["$runTime", 1000] },
-                    },
-                    { unit: Unit.M, value: "$runDistance" },
-                    {
-                      unit: Unit.MinKM,
-                      value: { $divide: [0.6215, "$runPace"] },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.RunDouble) continue;
+
+    yield await db
+      .collection<RunDouble.MongoHistoryItem>("rundouble_runs")
+      .aggregate([
+        { $match: { userId: dataSource.config.id } },
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: "$key" },
+            userId: { $literal: user.id },
+            createdAt: "$completedAt",
+            updatedAt: "$completedAt",
+            workedOutAt: "$completedAt",
+            source: { $literal: WorkoutSource.RunDouble },
+            exercises: [
+              {
+                exerciseId: 518,
+                sets: [
+                  {
+                    inputs: [
+                      {
+                        unit: Unit.SEC,
+                        value: { $divide: ["$runTime", 1000] },
+                      },
+                      { unit: Unit.M, value: "$runDistance" },
+                      {
+                        unit: Unit.MinKM,
+                        value: { $divide: [0.6215, "$runPace"] },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
         },
-      },
-      {
-        $merge: {
-          into: "materialized_workouts_view",
-          whenMatched: "replace",
-          on: "id",
+        {
+          $merge: {
+            into: "materialized_workouts_view",
+            whenMatched: "replace",
+            on: "id",
+          },
         },
-      },
-    ])
-    .toArray();
+      ])
+      .toArray();
+  }
 
   yield "materializeAllRunDoubleWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +

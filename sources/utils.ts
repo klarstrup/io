@@ -33,7 +33,7 @@ export interface UserDataSourceMeta {
   createdAt: Date;
   lastAttemptedAt: Date | null;
   lastSuccessfulAt: Date | null;
-  lastSuccesfulRuntime: number | null;
+  lastSuccessfulRuntime: number | null;
   lastResult: string | null;
   lastFailedAt: Date | null;
   lastFailedRuntime: number | null;

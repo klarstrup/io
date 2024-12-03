@@ -72,7 +72,7 @@ export const GET = () =>
         {
           $set: {
             "dataSources.$[source].lastSuccessfulAt": new Date(),
-            "dataSources.$[source].lastSuccesfulRuntime": Date.now() - runtime,
+            "dataSources.$[source].lastSuccessfulRuntime": Date.now() - runtime,
             "dataSources.$[source].lastResult": "success",
           },
         },

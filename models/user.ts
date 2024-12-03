@@ -17,7 +17,6 @@ export interface IUser {
   myFitnessPalToken?: string | null;
   myFitnessPalUserName?: string;
   myFitnessPalUserId?: string;
-  runDoubleId?: string | null;
   exerciseSchedules?: ExerciseSchedule[];
   dataSources?: UserDataSource[];
 }
