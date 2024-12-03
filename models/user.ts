@@ -1,5 +1,6 @@
 import type { TopLoggerAuthTokens } from "../lib";
 import type { ExerciseSchedule } from "../sources/fitocracy";
+import type { UserDataSource } from "../sources/utils";
 
 export interface IUser {
   name: string;
@@ -17,6 +18,6 @@ export interface IUser {
   myFitnessPalUserName?: string;
   myFitnessPalUserId?: string;
   runDoubleId?: string | null;
-  icalUrls?: string[];
   exerciseSchedules?: ExerciseSchedule[];
+  dataSources?: UserDataSource[];
 }

@@ -11,6 +11,7 @@ import {
   Workouts,
 } from "../../models/workout.server";
 import type { ExerciseSchedule } from "../../sources/fitocracy";
+import type { UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable } from "../../utils";
 import { materializeAllIoWorkouts } from "../api/materialize_workouts/materializers";
 
@@ -68,4 +69,19 @@ export async function updateUserExerciseSchedules(
 
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!
     .exerciseSchedules;
+}
+
+export async function updateUserDataSources(
+  userId: string,
+  dataSources: UserDataSource[],
+) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  await Users.updateOne(
+    { _id: new ObjectId(user.id) },
+    { $set: { dataSources } },
+  );
+
+  return (await Users.findOne({ _id: new ObjectId(user.id) }))!.dataSources;
 }

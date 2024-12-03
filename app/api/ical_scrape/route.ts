@@ -1,11 +1,14 @@
 import { createHash } from "crypto";
+import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
+import { Users } from "../../../models/user.server";
 import {
   extractIcalCalendarAndEvents,
   fetchAndParseIcal,
 } from "../../../sources/ical";
 import { IcalEvents } from "../../../sources/ical.server";
+import { DataSource } from "../../../sources/utils";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +19,25 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
-    for (const icalUrl of user.icalUrls ?? []) {
-      const icalData = await fetchAndParseIcal(icalUrl);
+    const userIcalSources = user.dataSources?.filter(
+      (source) => source.source === DataSource.ICal,
+    );
+
+    for (const {
+      id,
+      config: { url },
+    } of userIcalSources ?? []) {
+      await Users.updateOne(
+        { _id: new ObjectId(user.id) },
+        { $set: { "dataSources.$[source].lastAttemptedAt": new Date() } },
+        { arrayFilters: [{ "source.id": id }] },
+      );
+      const runtime = Date.now();
+
+      const icalData = await fetchAndParseIcal(url);
 
       const icalUrlHash = createHash("sha256")
-        .update(icalUrl + user.id)
+        .update(url + user.id)
         .digest("hex");
 
       const _io_scrapedAt = new Date();
@@ -48,6 +65,18 @@ export const GET = () =>
           _io_scrapedAt,
           ...ioIcalMeta,
         })),
+      );
+
+      await Users.updateOne(
+        { _id: new ObjectId(user.id) },
+        {
+          $set: {
+            "dataSources.$[source].lastSuccessfulAt": new Date(),
+            "dataSources.$[source].lastSuccesfulRuntime": Date.now() - runtime,
+            "dataSources.$[source].lastResult": "success",
+          },
+        },
+        { arrayFilters: [{ "source.id": id }] },
       );
 
       yield {

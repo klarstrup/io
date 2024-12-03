@@ -11,6 +11,7 @@ import { type RunDouble, getRunDoubleUser } from "../sources/rundouble";
 import { decodeGeohash } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
+import UserStuffSourcesForm from "./UserStuffSourcesForm";
 import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
 
 async function updateUser(formData: FormData) {
@@ -79,15 +80,6 @@ async function updateUser(formData: FormData) {
   const runDoubleId = formData.get("runDoubleId");
   if (typeof runDoubleId === "string") {
     newUser.runDoubleId = runDoubleId.trim() || null;
-  }
-
-  const icalUrls = formData.get("icalUrls");
-  if (typeof icalUrls === "string") {
-    newUser.icalUrls = icalUrls
-      .trim()
-      .split("\n")
-      .map((url) => url.trim())
-      .filter((url) => url);
   }
 
   await Users.updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
@@ -189,6 +181,9 @@ export default async function UserStuff() {
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/api/auth/signout">Sign out</a>
             </p>
+            <FieldSetX legend="Data Sources">
+              <UserStuffSourcesForm user={user} />
+            </FieldSetX>
             <FieldSetX legend="Settings">
               {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
               <form action={updateUser}>
@@ -287,20 +282,6 @@ export default async function UserStuff() {
                       ❌
                     </span>
                   )}
-                </FieldSetX>
-                <FieldSetX
-                  className="flex items-center gap-1.5"
-                  legend="iCal URLs"
-                >
-                  <textarea
-                    name="icalUrls"
-                    defaultValue={user.icalUrls?.join("\n") || ""}
-                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                    rows={user.icalUrls ? user.icalUrls.length + 2 : 5}
-                    placeholder={
-                      "https://example.com/calendar.ics\nhttps://example.com/other.ics"
-                    }
-                  />
                 </FieldSetX>
               </form>
             </FieldSetX>

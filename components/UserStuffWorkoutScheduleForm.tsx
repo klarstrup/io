@@ -9,7 +9,7 @@ import { updateUserExerciseSchedules } from "../app/diary/actions";
 import { exercises } from "../models/exercises";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
-import { FieldSetX } from "./FieldSet";
+import { FieldSetY } from "./FieldSet";
 
 export default function UserStuffWorkoutScheduleForm({
   user,
@@ -87,7 +87,7 @@ export default function UserStuffWorkoutScheduleForm({
               throw new Error(`Exercise with ID ${field.exerciseId} not found`);
             }
             return (
-              <FieldSetX
+              <FieldSetY
                 key={field.id}
                 legend={
                   <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
@@ -191,7 +191,7 @@ export default function UserStuffWorkoutScheduleForm({
                     </div>
                   </>
                 ) : null}
-              </FieldSetX>
+              </FieldSetY>
             );
           })}
           <Select
