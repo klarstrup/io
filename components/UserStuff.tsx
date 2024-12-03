@@ -5,8 +5,6 @@ import { auth } from "../auth";
 import { isAuthTokens } from "../lib";
 import { Users } from "../models/user.server";
 import { getAllWorkoutExercises } from "../models/workout.server";
-import type { MyFitnessPal } from "../sources/myfitnesspal";
-import { getMyFitnessPalSession } from "../sources/myfitnesspal.server";
 import { decodeGeohash } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
@@ -67,11 +65,6 @@ async function updateUser(formData: FormData) {
     }
   }
 
-  const myFitnessPalToken = formData.get("myFitnessPalToken");
-  if (typeof myFitnessPalToken === "string") {
-    newUser.myFitnessPalToken = myFitnessPalToken.trim() || null;
-  }
-
   await Users.updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
 
   // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
@@ -85,16 +78,6 @@ async function updateUser(formData: FormData) {
 
 export default async function UserStuff() {
   const user = (await auth())?.user;
-
-  let myFitnessPalUser: MyFitnessPal.User | null = null;
-  try {
-    if (user?.myFitnessPalToken) {
-      myFitnessPalUser = (await getMyFitnessPalSession(user.myFitnessPalToken))
-        .user;
-    }
-  } catch {
-    myFitnessPalUser = null;
-  }
 
   return (
     <div
@@ -219,28 +202,6 @@ export default async function UserStuff() {
                       className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
                     />
                   </label>
-                </FieldSetX>
-                <FieldSetX
-                  className="flex items-center gap-1.5"
-                  legend="MyFitnessPal Token"
-                >
-                  <input
-                    name="myFitnessPalToken"
-                    defaultValue={user.myFitnessPalToken || ""}
-                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                  />
-                  {myFitnessPalUser ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      alt="MyFitnessPal Avatar"
-                      src={myFitnessPalUser.image}
-                      className="h-6 max-h-6 w-6 max-w-6 rounded-full"
-                    />
-                  ) : (
-                    <span className="flex h-6 max-h-6 w-6 max-w-6 items-center justify-center rounded-full">
-                      ❌
-                    </span>
-                  )}
                 </FieldSetX>
               </form>
             </FieldSetX>

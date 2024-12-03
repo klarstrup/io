@@ -4,6 +4,7 @@ import type { Session } from "next-auth";
 import { FieldSetY } from "../../components/FieldSet";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
+import { DataSource } from "../../sources/utils";
 import { DEFAULT_TIMEZONE, rangeToQuery } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
 
@@ -14,18 +15,27 @@ export async function DiaryAgendaFood({
   user: Session["user"];
   date: `${number}-${number}-${number}`;
 }) {
-  if (!user.myFitnessPalUserId) return;
+  if (
+    !user.dataSources?.some(
+      (dataSource) => dataSource.source === DataSource.MyFitnessPal,
+    )
+  )
+    return;
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
   const food: (MyFitnessPal.MongoFoodEntry & { _id: string })[] = [];
-  for await (const foodEntry of MyFitnessPalFoodEntries.find({
-    user_id: user.myFitnessPalUserId,
-    datetime: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
-  })) {
-    food.push({
-      ...foodEntry,
-      _id: foodEntry._id.toString(),
-    });
+  for (const dataSource of user.dataSources) {
+    if (dataSource.source !== DataSource.MyFitnessPal) continue;
+
+    for await (const foodEntry of MyFitnessPalFoodEntries.find({
+      user_id: dataSource.config.userId,
+      datetime: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
+    })) {
+      food.push({
+        ...foodEntry,
+        _id: foodEntry._id.toString(),
+      });
+    }
   }
 
   const dayTotalEnergy = food?.reduce(

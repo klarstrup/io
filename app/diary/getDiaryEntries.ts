@@ -3,6 +3,7 @@ import { auth } from "../../auth";
 import type { DiaryEntry } from "../../lib";
 import { MaterializedWorkoutsView } from "../../models/workout.server";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
+import { DataSource } from "../../sources/utils";
 import {
   allPromises,
   dateToString,
@@ -47,16 +48,17 @@ export async function getDiaryEntriesShallow({
 
   await allPromises(
     async () => {
-      if (!user.myFitnessPalUserId) return;
-
-      for await (const foodEntry of MyFitnessPalFoodEntries.find({
-        user_id: user.myFitnessPalUserId,
-        datetime: rangeToQuery(from, to),
-      })) {
-        addDiaryEntry(foodEntry.datetime, "food", {
-          ...foodEntry,
-          _id: foodEntry._id.toString(),
-        });
+      for (const dataSource of user.dataSources || []) {
+        if (dataSource.source !== DataSource.MyFitnessPal) continue;
+        for await (const foodEntry of MyFitnessPalFoodEntries.find({
+          user_id: dataSource.config.userId,
+          datetime: rangeToQuery(from, to),
+        })) {
+          addDiaryEntry(foodEntry.datetime, "food", {
+            ...foodEntry,
+            _id: foodEntry._id.toString(),
+          });
+        }
       }
     },
     async () => {

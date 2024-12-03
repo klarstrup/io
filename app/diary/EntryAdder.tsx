@@ -1,5 +1,6 @@
 import type { Session } from "next-auth";
 import type { DiaryEntry } from "../../lib";
+import { DataSource } from "../../sources/utils";
 
 export function EntryAdder({
   diaryEntry,
@@ -38,7 +39,11 @@ export function EntryAdder({
     >
       <option value="">➕</option>
       <option value="workout">Workout</option>
-      {user.myFitnessPalToken ? <option value="food">Food</option> : null}
+      {user.dataSources?.some(
+        (dataSource) => dataSource.source === DataSource.MyFitnessPal,
+      ) ? (
+        <option value="food">Food</option>
+      ) : null}
     </select>
   );
 }

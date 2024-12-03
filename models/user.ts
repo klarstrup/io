@@ -12,9 +12,6 @@ export interface IUser {
   topLoggerId?: number | null;
   topLoggerGraphQLId?: string | null;
   topLoggerAuthTokens?: TopLoggerAuthTokens;
-  myFitnessPalToken?: string | null;
-  myFitnessPalUserName?: string;
-  myFitnessPalUserId?: string;
   exerciseSchedules?: ExerciseSchedule[];
   dataSources?: UserDataSource[];
 }
