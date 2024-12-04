@@ -18,16 +18,14 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
-    const userIcalSources = user.dataSources?.filter(
-      (source) => source.source === DataSource.ICal,
-    );
+    for (const dataSource of user.dataSources ?? []) {
+      if (dataSource.source !== DataSource.ICal) continue;
 
-    for (const dataSource of userIcalSources ?? []) {
-      yield* wrapSource(dataSource, user, async function* () {
-        const icalData = await fetchAndParseIcal(dataSource.config.url);
+      yield* wrapSource(dataSource, user, async function* ({ url }) {
+        const icalData = await fetchAndParseIcal(url);
 
         const icalUrlHash = createHash("sha256")
-          .update(dataSource.config.url + user.id)
+          .update(url + user.id)
           .digest("hex");
 
         const _io_scrapedAt = new Date();

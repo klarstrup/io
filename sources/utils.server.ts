@@ -3,10 +3,10 @@ import { Session } from "next-auth";
 import { Users } from "../models/user.server";
 import { UserDataSource } from "./utils";
 
-export async function* wrapSource<T, TReturn, TNext>(
-  dataSource: UserDataSource,
+export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
+  dataSource: DS,
   user: Session["user"],
-  fn: () => AsyncGenerator<T, TReturn, TNext>,
+  fn: (config: DS["config"]) => AsyncGenerator<T, TReturn, TNext>,
 ) {
   const attemptedAt = new Date();
   await Users.updateOne(
@@ -15,7 +15,7 @@ export async function* wrapSource<T, TReturn, TNext>(
     { arrayFilters: [{ "source.id": dataSource.id }] },
   );
   try {
-    yield* fn();
+    yield* fn(dataSource.config);
 
     const successfulAt = new Date();
     await Users.updateOne(

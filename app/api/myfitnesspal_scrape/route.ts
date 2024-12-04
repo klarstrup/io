@@ -37,63 +37,65 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.MyFitnessPal) continue;
 
-      yield* wrapSource(dataSource, user, async function* () {
-        const { token, userName, userId } = dataSource.config;
+      yield* wrapSource(
+        dataSource,
+        user,
+        async function* ({ token, userName, userId }) {
+          const now = new Date();
+          yearLoop: for (const year of years) {
+            for (const month of months) {
+              if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
 
-        const now = new Date();
-        yearLoop: for (const year of years) {
-          for (const month of months) {
-            if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
+              if (
+                differenceInMonths(now, new Date(year, Number(month) - 1)) > 1
+              ) {
+                const entriesForMonth =
+                  await MyFitnessPalFoodEntries.countDocuments({
+                    user_id: userId,
+                    date: { $regex: new RegExp(`^${year}-${month}-`) },
+                  });
 
-            if (
-              differenceInMonths(now, new Date(year, Number(month) - 1)) > 1
-            ) {
-              const entriesForMonth =
-                await MyFitnessPalFoodEntries.countDocuments({
+                if (entriesForMonth > 0) continue;
+              }
+              const reportEntries = await getMyFitnessPalReport(
+                token,
+                userName,
+                year,
+                month,
+              );
+
+              if (Array.isArray(reportEntries)) {
+                // Wipe the month to be replaced with the new data
+                await MyFitnessPalFoodEntries.deleteMany({
                   user_id: userId,
                   date: { $regex: new RegExp(`^${year}-${month}-`) },
                 });
-
-              if (entriesForMonth > 0) continue;
-            }
-            const reportEntries = await getMyFitnessPalReport(
-              token,
-              userName,
-              year,
-              month,
-            );
-
-            if (Array.isArray(reportEntries)) {
-              // Wipe the month to be replaced with the new data
-              await MyFitnessPalFoodEntries.deleteMany({
-                user_id: userId,
-                date: { $regex: new RegExp(`^${year}-${month}-`) },
-              });
-            }
-            if (!reportEntries.length) continue;
-            for (const reportEntry of reportEntries) {
-              if (reportEntry.food_entries) {
-                for (const foodEntry of reportEntry.food_entries) {
-                  await MyFitnessPalFoodEntries.updateOne(
-                    { id: foodEntry.id },
-                    {
-                      $set: {
-                        ...foodEntry,
-                        user_id: userId,
-                        datetime: DateTime.fromISO(foodEntry.date, {
-                          zone: "utc",
-                        }).toJSDate(),
+              }
+              if (!reportEntries.length) continue;
+              for (const reportEntry of reportEntries) {
+                if (reportEntry.food_entries) {
+                  for (const foodEntry of reportEntry.food_entries) {
+                    await MyFitnessPalFoodEntries.updateOne(
+                      { id: foodEntry.id },
+                      {
+                        $set: {
+                          ...foodEntry,
+                          user_id: userId,
+                          datetime: DateTime.fromISO(foodEntry.date, {
+                            zone: "utc",
+                          }).toJSDate(),
+                        },
                       },
-                    },
-                    { upsert: true },
-                  );
-                }
+                      { upsert: true },
+                    );
+                  }
 
-                yield reportEntry.date;
+                  yield reportEntry.date;
+                }
               }
             }
           }
-        }
-      });
+        },
+      );
     }
   });

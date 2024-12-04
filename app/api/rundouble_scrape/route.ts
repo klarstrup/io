@@ -17,16 +17,14 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.RunDouble) continue;
 
-      yield* wrapSource(dataSource, user, async function* () {
-        const runDoubleId = dataSource.config.id;
-
-        for await (const run of getRuns(runDoubleId, { maxAge: 0 })) {
+      yield* wrapSource(dataSource, user, async function* ({ id }) {
+        for await (const run of getRuns(id, { maxAge: 0 })) {
           const updateResult = await RunDoubleRuns.updateOne(
             { key: run.key },
             {
               $set: {
                 ...run,
-                userId: runDoubleId,
+                userId: id,
                 completedAt: new Date(run.completedLong),
                 _io_scrapedAt: new Date(),
               },

@@ -185,8 +185,7 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.TopLogger) continue;
 
-      yield* wrapSource(dataSource, user, async function* () {
-        let authTokens = dataSource.config.authTokens;
+      yield* wrapSource(dataSource, user, async function* ({ authTokens }) {
         if (
           !authTokens ||
           new Date(authTokens.refresh.expiresAt) < new Date()
