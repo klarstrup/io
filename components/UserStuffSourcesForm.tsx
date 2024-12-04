@@ -1,5 +1,4 @@
 "use client";
-import { formatDistanceToNowStrict } from "date-fns";
 import { Session } from "next-auth";
 import { ReactElement, useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -8,6 +7,7 @@ import { v4 as uuid } from "uuid";
 import { updateUserDataSources } from "../app/diary/actions";
 import { TopLoggerAuthTokens } from "../lib";
 import { DataSource, UserDataSourceMeta } from "../sources/utils";
+import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 
@@ -282,9 +282,7 @@ export default function UserStuffSourcesForm({
                       source.lastAttemptedAt > source.lastFailedAt) ? (
                       <>
                         Started{" "}
-                        {formatDistanceToNowStrict(source.lastAttemptedAt, {
-                          addSuffix: true,
-                        })}{" "}
+                        <DistanceToNowStrict date={source.lastAttemptedAt} />{" "}
                         <div className="inline-block animate-spin">↻</div>
                       </>
                     ) : source.lastSuccessfulAt &&
@@ -292,9 +290,7 @@ export default function UserStuffSourcesForm({
                         source.lastSuccessfulAt > source.lastFailedAt) ? (
                       <>
                         Last successful fetch{" "}
-                        {formatDistanceToNowStrict(source.lastSuccessfulAt, {
-                          addSuffix: true,
-                        })}{" "}
+                        <DistanceToNowStrict date={source.lastSuccessfulAt} />{" "}
                         {source.lastSuccessfulRuntime ? (
                           <>
                             in{" "}
@@ -305,9 +301,7 @@ export default function UserStuffSourcesForm({
                     ) : source.lastFailedAt ? (
                       <>
                         Last failed fetch{" "}
-                        {formatDistanceToNowStrict(source.lastFailedAt, {
-                          addSuffix: true,
-                        })}{" "}
+                        <DistanceToNowStrict date={source.lastFailedAt} />{" "}
                         {source.lastFailedRuntime ? (
                           <>
                             in {(source.lastFailedRuntime / 1000)?.toFixed(2)}s
