@@ -1,5 +1,5 @@
 "use client";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import { Session } from "next-auth";
 import { ReactElement, useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -237,7 +237,7 @@ export default function UserStuffSourcesForm({
                       source.lastAttemptedAt > source.lastFailedAt) ? (
                       <>
                         Started{" "}
-                        {formatDistanceToNow(source.lastAttemptedAt, {
+                        {formatDistanceToNowStrict(source.lastAttemptedAt, {
                           addSuffix: true,
                         })}{" "}
                         <div className="inline-block animate-spin">↻</div>
@@ -247,7 +247,7 @@ export default function UserStuffSourcesForm({
                         source.lastSuccessfulAt > source.lastFailedAt) ? (
                       <>
                         Last successful fetch{" "}
-                        {formatDistanceToNow(source.lastSuccessfulAt, {
+                        {formatDistanceToNowStrict(source.lastSuccessfulAt, {
                           addSuffix: true,
                         })}{" "}
                         {source.lastSuccessfulRuntime ? (
@@ -260,7 +260,7 @@ export default function UserStuffSourcesForm({
                     ) : source.lastFailedAt ? (
                       <>
                         Last failed fetch{" "}
-                        {formatDistanceToNow(source.lastFailedAt, {
+                        {formatDistanceToNowStrict(source.lastFailedAt, {
                           addSuffix: true,
                         })}{" "}
                         {source.lastFailedRuntime ? (
