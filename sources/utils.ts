@@ -24,6 +24,10 @@ type UserDataSourceConfig =
   | {
       source: DataSource.ICal;
       config: { url: string };
+    }
+  | {
+      source: DataSource.KilterBoard;
+      config: { token: string; user_id: string };
     };
 
 export interface UserDataSourceMeta {
@@ -48,8 +52,8 @@ export enum DataSource {
   RunDouble = "rundouble",
   TopLogger = "toplogger",
   ICal = "ical",
+  KilterBoard = "kilterboard",
   /* These are special and not configurable to the user for various reasons
-  KilterBoard = "kilterboard",s
   ClimbAlong = "climbalong",
   Sportstiming = "sportstiming",
   Songkick = "songkick",

@@ -377,65 +377,71 @@ export async function* materializeAllKilterBoardWorkouts({
   const t = new Date();
   const db = await getDB();
 
-  yield await db
-    .collection<KilterBoard.Ascent>("kilterboard_ascents")
-    .aggregate([
-      { $match: { user_id: 158721 } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
-          ascents: { $push: "$$ROOT" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          id: {
-            $concat: [
-              { $literal: WorkoutSource.KilterBoard },
-              ":",
-              { $toString: { $arrayElemAt: ["$ascents.user_id", 0] } },
-              ":",
-              "$_id",
-            ],
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.KilterBoard) continue;
+
+    const { user_id } = dataSource.config;
+
+    yield await db
+      .collection<KilterBoard.Ascent>("kilterboard_ascents")
+      .aggregate([
+        { $match: { user_id } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
+            ascents: { $push: "$$ROOT" },
           },
-          userId: { $literal: user.id },
-          createdAt: { $arrayElemAt: ["$ascents.created_at", 0] },
-          updatedAt: { $arrayElemAt: ["$ascents.updated_at", 0] },
-          workedOutAt: { $arrayElemAt: ["$ascents.climbed_at", 0] },
-          source: { $literal: WorkoutSource.KilterBoard },
-          exercises: [
-            {
-              exerciseId: 2003,
-              sets: {
-                $map: {
-                  input: "$ascents",
-                  as: "ascent",
-                  in: {
-                    inputs: [
-                      // Grade
-                      { value: "$$ascent.grade", unit: Unit.FrenchRounded },
-                      // Color
-                      { value: NaN },
-                      // Sent-ness
-                      { value: 1 },
-                    ],
+        },
+        {
+          $project: {
+            _id: 0,
+            id: {
+              $concat: [
+                { $literal: WorkoutSource.KilterBoard },
+                ":",
+                { $toString: { $arrayElemAt: ["$ascents.user_id", 0] } },
+                ":",
+                "$_id",
+              ],
+            },
+            userId: { $literal: user.id },
+            createdAt: { $arrayElemAt: ["$ascents.created_at", 0] },
+            updatedAt: { $arrayElemAt: ["$ascents.updated_at", 0] },
+            workedOutAt: { $arrayElemAt: ["$ascents.climbed_at", 0] },
+            source: { $literal: WorkoutSource.KilterBoard },
+            exercises: [
+              {
+                exerciseId: 2003,
+                sets: {
+                  $map: {
+                    input: "$ascents",
+                    as: "ascent",
+                    in: {
+                      inputs: [
+                        // Grade
+                        { value: "$$ascent.grade", unit: Unit.FrenchRounded },
+                        // Color
+                        { value: NaN },
+                        // Sent-ness
+                        { value: 1 },
+                      ],
+                    },
                   },
                 },
               },
-            },
-          ],
+            ],
+          },
         },
-      },
-      {
-        $merge: {
-          into: "materialized_workouts_view",
-          whenMatched: "replace",
-          on: "id",
+        {
+          $merge: {
+            into: "materialized_workouts_view",
+            whenMatched: "replace",
+            on: "id",
+          },
         },
-      },
-    ])
-    .toArray();
+      ])
+      .toArray();
+  }
 
   yield "materializeAllKilterBoardWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +

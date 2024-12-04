@@ -209,6 +209,34 @@ export default function UserStuffSourcesForm({
                   </label>
                 );
                 break;
+              case DataSource.KilterBoard:
+                formElements = (
+                  <>
+                    <label className="flex gap-1">
+                      Token:
+                      <input
+                        type="text"
+                        {...register(`dataSources.${index}.config.token`, {
+                          required: true,
+                        })}
+                        placeholder="Token"
+                        className="flex-1"
+                      />
+                    </label>
+                    <label className="flex gap-1">
+                      User ID:
+                      <input
+                        type="text"
+                        {...register(`dataSources.${index}.config.user_id`, {
+                          required: true,
+                        })}
+                        placeholder="User ID"
+                        className="flex-1"
+                      />
+                    </label>
+                  </>
+                );
+                break;
             }
 
             return (
@@ -368,6 +396,13 @@ export default function UserStuffSourcesForm({
                     ...initialSourceMeta,
                     source: DataSource.ICal,
                     config: { url: "" },
+                  });
+                  break;
+                case DataSource.KilterBoard:
+                  append({
+                    ...initialSourceMeta,
+                    source: DataSource.KilterBoard,
+                    config: { token: "", user_id: "" },
                   });
                   break;
               }

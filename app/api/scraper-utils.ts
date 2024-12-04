@@ -4,7 +4,6 @@ export const scraperEndpoints = [
   "rundouble_scrape",
   "tomorrow_scrape",
   "toplogger_gql_scrape",
-  "toplogger_gql_scrape",
   "kilterboard_scrape",
 ] as const;
 
