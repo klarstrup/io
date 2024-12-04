@@ -2,7 +2,6 @@ import { ObjectId } from "mongodb";
 import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../auth";
-import { isAuthTokens } from "../lib";
 import { Users } from "../models/user.server";
 import { getAllWorkoutExercises } from "../models/workout.server";
 import { decodeGeohash } from "../utils";
@@ -38,28 +37,6 @@ async function updateUser(formData: FormData) {
         new Date().toLocaleString("da-DK", { timeZone: timeZone.trim() });
       }
       newUser.timeZone = timeZone.trim() || null;
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  const topLoggerId = formData.get("topLoggerId");
-  if (typeof topLoggerId === "string") {
-    newUser.topLoggerId = topLoggerId.trim()
-      ? Number(topLoggerId.trim())
-      : null;
-  }
-
-  const topLoggerGraphQLId = formData.get("topLoggerGraphQLId");
-  if (typeof topLoggerGraphQLId === "string") {
-    newUser.topLoggerGraphQLId = topLoggerGraphQLId.trim() || null;
-  }
-
-  const topLoggerAuthTokens = formData.get("topLoggerAuthTokens");
-  if (typeof topLoggerAuthTokens === "string") {
-    try {
-      const authTokens = JSON.parse(topLoggerAuthTokens.trim()) as unknown;
-      if (isAuthTokens(authTokens)) newUser.topLoggerAuthTokens = authTokens;
     } catch (e) {
       console.error(e);
     }
@@ -168,41 +145,6 @@ export default async function UserStuff() {
                     />
                   </FieldSetY>
                 </div>
-                <FieldSetX
-                  className="flex items-center gap-1.5"
-                  legend="TopLogger ID"
-                >
-                  <input
-                    name="topLoggerId"
-                    defaultValue={user.topLoggerId || ""}
-                    className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                  />
-                </FieldSetX>
-                <FieldSetX
-                  className="flex flex-col items-center gap-1.5"
-                  legend="TopLogger GQL User"
-                >
-                  <label>
-                    <code>TopLogger GraphQL ID</code>
-                    <input
-                      name="topLoggerGraphQLId"
-                      defaultValue={user.topLoggerGraphQLId || ""}
-                      className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                    />
-                  </label>
-                  <label>
-                    <code>tl-auth</code>
-                    <input
-                      name="topLoggerAuthTokens"
-                      defaultValue={
-                        (user.topLoggerAuthTokens &&
-                          JSON.stringify(user.topLoggerAuthTokens)) ||
-                        ""
-                      }
-                      className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
-                    />
-                  </label>
-                </FieldSetX>
               </form>
             </FieldSetX>
             <FieldSetX legend="Workout Schedule" className="w-full">

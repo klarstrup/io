@@ -19,6 +19,7 @@ import {
 } from "../../sources/sportstiming";
 import { getTopLoggerGroupEventEntry } from "../../sources/toplogger";
 import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
+import { DataSource } from "../../sources/utils";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +35,14 @@ export async function GET() {
     ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
       getIoClimbAlongCompetitionEventEntry(eventId, ioId),
     ),
-    ...(user?.topLoggerId
-      ? await TopLoggerGroupUsers.find({ user_id: user.topLoggerId }).toArray()
+    ...(user?.dataSources?.some(
+      (source) => source.source === DataSource.TopLogger,
+    )
+      ? await TopLoggerGroupUsers.find({
+          user_id: user?.dataSources
+            ?.filter((source) => source.source === DataSource.TopLogger)
+            .map((source) => source.config.id),
+        }).toArray()
       : []
     ).map(({ group_id, user_id }) =>
       getTopLoggerGroupEventEntry(group_id, user_id),

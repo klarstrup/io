@@ -1,7 +1,9 @@
+import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
 import { Unit } from "../../../models/exercises";
-import { WorkoutData, WorkoutSource } from "../../../models/workout";
+import { Users } from "../../../models/user.server";
+import { type WorkoutData, WorkoutSource } from "../../../models/workout";
 import type { Fitocracy } from "../../../sources/fitocracy";
 import type { KilterBoard } from "../../../sources/kilterboard";
 import type { RunDouble } from "../../../sources/rundouble";
@@ -13,179 +15,209 @@ export async function* materializeAllToploggerWorkouts({
 }: {
   user: Session["user"];
 }) {
-  if (!user.topLoggerGraphQLId) return;
-
   yield "materializeAllToploggerWorkouts: start";
   const t = new Date();
   const db = await getDB();
 
-  yield await db
-    .collection<MongoGraphQLObject>("toplogger_graphql")
-    .aggregate([
-      {
-        $match: {
-          __typename: "ClimbUser",
-          userId: user.topLoggerGraphQLId,
-          tickedFirstAtDate: { $gt: new Date(0) },
-        },
-      },
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.TopLogger) continue;
+
+    const attemptedAt = new Date();
+    await Users.updateOne(
+      { _id: new ObjectId(user.id) },
       {
         $set: {
-          climbId: {
-            $replaceOne: {
-              input: "$climb.__ref",
-              find: "Climb:",
-              replacement: "",
-            },
+          "dataSources.$[source].lastAttemptedAt": attemptedAt,
+        },
+      },
+      { arrayFilters: [{ "source.id": dataSource.id }] },
+    );
+
+    const topLoggerGraphQLId = dataSource.config.graphQLId;
+
+    yield await db
+      .collection<MongoGraphQLObject>("toplogger_graphql")
+      .aggregate([
+        {
+          $match: {
+            __typename: "ClimbUser",
+            userId: topLoggerGraphQLId,
+            tickedFirstAtDate: { $gt: new Date(0) },
           },
-          holdColorId: {
-            $replaceOne: {
-              input: "$holdColor.__ref",
-              find: "HoldColor:",
-              replacement: "",
+        },
+        {
+          $set: {
+            climbId: {
+              $replaceOne: {
+                input: "$climb.__ref",
+                find: "Climb:",
+                replacement: "",
+              },
             },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "toplogger_graphql",
-          localField: "climbId",
-          foreignField: "id",
-          as: "climb",
-        },
-      },
-      {
-        $lookup: {
-          from: "toplogger_graphql",
-          localField: "holdColorId",
-          foreignField: "id",
-          as: "holdColor",
-        },
-      },
-      {
-        $set: {
-          climb: { $arrayElemAt: ["$climb", 0] },
-          holdColor: { $arrayElemAt: ["$holdColor", 0] },
-        },
-      },
-      {
-        $set: {
-          gymId: {
-            $replaceOne: {
-              input: "$climb.gym.__ref",
-              find: "Gym:",
-              replacement: "",
+            holdColorId: {
+              $replaceOne: {
+                input: "$holdColor.__ref",
+                find: "HoldColor:",
+                replacement: "",
+              },
             },
           },
         },
-      },
-      {
-        $lookup: {
-          from: "toplogger_graphql",
-          localField: "gymId",
-          foreignField: "id",
-          as: "gym",
-        },
-      },
-      {
-        $set: {
-          gym: { $arrayElemAt: ["$gym", 0] },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$tickedFirstAtDate" },
+        {
+          $lookup: {
+            from: "toplogger_graphql",
+            localField: "climbId",
+            foreignField: "id",
+            as: "climb",
           },
-          climbUsers: { $push: "$$ROOT" },
         },
-      },
-      {
-        $project: {
-          id: {
-            $concat: [
-              { $literal: WorkoutSource.TopLogger },
-              ":",
-              { $literal: user.topLoggerGraphQLId },
-              ":",
+        {
+          $lookup: {
+            from: "toplogger_graphql",
+            localField: "holdColorId",
+            foreignField: "id",
+            as: "holdColor",
+          },
+        },
+        {
+          $set: {
+            climb: { $arrayElemAt: ["$climb", 0] },
+            holdColor: { $arrayElemAt: ["$holdColor", 0] },
+          },
+        },
+        {
+          $set: {
+            gymId: {
+              $replaceOne: {
+                input: "$climb.gym.__ref",
+                find: "Gym:",
+                replacement: "",
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "toplogger_graphql",
+            localField: "gymId",
+            foreignField: "id",
+            as: "gym",
+          },
+        },
+        {
+          $set: {
+            gym: { $arrayElemAt: ["$gym", 0] },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$tickedFirstAtDate" },
+            },
+            climbUsers: { $push: "$$ROOT" },
+          },
+        },
+        {
+          $project: {
+            id: {
+              $concat: [
+                { $literal: WorkoutSource.TopLogger },
+                ":",
+                { $literal: topLoggerGraphQLId },
+                ":",
+                {
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: {
+                      $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0],
+                    },
+                  },
+                },
+              ],
+            },
+            _id: 0,
+            userId: { $literal: user.id },
+            createdAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+            updatedAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+            workedOutAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+            source: { $literal: WorkoutSource.TopLogger },
+            location: { $arrayElemAt: ["$climbUsers.gym.name", 0] },
+            exercises: [
               {
-                $dateToString: {
-                  format: "%Y-%m-%d",
-                  date: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+                exerciseId: 2001,
+                sets: {
+                  $map: {
+                    input: "$climbUsers",
+                    as: "climbUser",
+                    in: {
+                      inputs: [
+                        // Grade
+                        {
+                          value: { $divide: ["$$climbUser.climb.grade", 100] },
+                          unit: Unit.FrenchRounded,
+                        },
+                        // Color
+                        {
+                          value: {
+                            $indexOfArray: [
+                              [
+                                // Don't mess with the order of these colors
+                                "mint",
+                                "green",
+                                "yellow",
+                                "blue",
+                                "orange",
+                                "red",
+                                "black",
+                                "pink",
+                                "white",
+                                "purple",
+                              ],
+                              { $toLower: "$$climbUser.holdColor.nameLoc" },
+                            ],
+                          },
+                        },
+                        // Sent-ness
+                        {
+                          value: {
+                            $cond: {
+                              if: { $eq: ["$$climbUser.tickType", 2] },
+                              then: 0,
+                              else: 1,
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
                 },
               },
             ],
           },
-          _id: 0,
-          userId: { $literal: user.id },
-          createdAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
-          updatedAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
-          workedOutAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
-          source: { $literal: WorkoutSource.TopLogger },
-          location: { $arrayElemAt: ["$climbUsers.gym.name", 0] },
-          exercises: [
-            {
-              exerciseId: 2001,
-              sets: {
-                $map: {
-                  input: "$climbUsers",
-                  as: "climbUser",
-                  in: {
-                    inputs: [
-                      // Grade
-                      {
-                        value: { $divide: ["$$climbUser.climb.grade", 100] },
-                        unit: Unit.FrenchRounded,
-                      },
-                      // Color
-                      {
-                        value: {
-                          $indexOfArray: [
-                            [
-                              // Don't mess with the order of these colors
-                              "mint",
-                              "green",
-                              "yellow",
-                              "blue",
-                              "orange",
-                              "red",
-                              "black",
-                              "pink",
-                              "white",
-                              "purple",
-                            ],
-                            { $toLower: "$$climbUser.holdColor.nameLoc" },
-                          ],
-                        },
-                      },
-                      // Sent-ness
-                      {
-                        value: {
-                          $cond: {
-                            if: { $eq: ["$$climbUser.tickType", 2] },
-                            then: 0,
-                            else: 1,
-                          },
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-          ],
         },
-      },
+        {
+          $merge: {
+            into: "materialized_workouts_view",
+            whenMatched: "replace",
+            on: "id",
+          },
+        },
+      ])
+      .toArray();
+
+    const successfulAt = new Date();
+    await Users.updateOne(
+      { _id: new ObjectId(user.id) },
       {
-        $merge: {
-          into: "materialized_workouts_view",
-          whenMatched: "replace",
-          on: "id",
+        $set: {
+          "dataSources.$[source].lastSuccessfulAt": successfulAt,
+          "dataSources.$[source].lastSuccessfulRuntime":
+            successfulAt.valueOf() - attemptedAt.valueOf(),
         },
       },
-    ])
-    .toArray();
+      { arrayFilters: [{ "source.id": dataSource.id }] },
+    );
+  }
 
   yield "materializeAllToploggerWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +

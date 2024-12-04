@@ -20,6 +20,7 @@ import {
 } from "../../sources/sportstiming";
 import { getTopLoggerGroupEventEntry } from "../../sources/toplogger";
 import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
+import { DataSource } from "../../sources/utils";
 import "../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
 
@@ -105,9 +106,13 @@ const getData = async (
       ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
         getIoClimbAlongCompetitionEventEntry(eventId, ioId),
       ),
-      ...(user?.topLoggerId
+      ...(user?.dataSources?.some(
+        (source) => source.source === DataSource.TopLogger,
+      )
         ? await TopLoggerGroupUsers.find({
-            user_id: user.topLoggerId,
+            user_id: user?.dataSources
+              ?.filter((source) => source.source === DataSource.TopLogger)
+              .map((source) => source.config.id),
           }).toArray()
         : []
       ).map(({ group_id, user_id }) =>
