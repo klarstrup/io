@@ -1,13 +1,12 @@
 import { differenceInMonths, isFuture } from "date-fns";
 import { DateTime } from "luxon";
-import { ObjectId } from "mongodb";
 import { auth } from "../../../auth";
-import { Users } from "../../../models/user.server";
 import {
   getMyFitnessPalReport,
   MyFitnessPalFoodEntries,
 } from "../../../sources/myfitnesspal.server";
 import { DataSource } from "../../../sources/utils";
+import { wrapSource } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 const months = [
@@ -38,82 +37,63 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.MyFitnessPal) continue;
 
-      const attemptedAt = new Date();
-      await Users.updateOne(
-        { _id: new ObjectId(user.id) },
-        {
-          $set: { "dataSources.$[dataSource].lastAttemptedAt": attemptedAt },
-        },
-        { arrayFilters: [{ "dataSource.id": dataSource.id }] },
-      );
+      yield* wrapSource(dataSource, user, async function* () {
+        const { token, userName, userId } = dataSource.config;
 
-      const { token, userName, userId } = dataSource.config;
+        const now = new Date();
+        yearLoop: for (const year of years) {
+          for (const month of months) {
+            if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
 
-      const now = new Date();
-      yearLoop: for (const year of years) {
-        for (const month of months) {
-          if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
+            if (
+              differenceInMonths(now, new Date(year, Number(month) - 1)) > 1
+            ) {
+              const entriesForMonth =
+                await MyFitnessPalFoodEntries.countDocuments({
+                  user_id: userId,
+                  date: { $regex: new RegExp(`^${year}-${month}-`) },
+                });
 
-          if (differenceInMonths(now, new Date(year, Number(month) - 1)) > 1) {
-            const entriesForMonth =
-              await MyFitnessPalFoodEntries.countDocuments({
+              if (entriesForMonth > 0) continue;
+            }
+            const reportEntries = await getMyFitnessPalReport(
+              token,
+              userName,
+              year,
+              month,
+            );
+
+            if (Array.isArray(reportEntries)) {
+              // Wipe the month to be replaced with the new data
+              await MyFitnessPalFoodEntries.deleteMany({
                 user_id: userId,
                 date: { $regex: new RegExp(`^${year}-${month}-`) },
               });
-
-            if (entriesForMonth > 0) continue;
-          }
-          const reportEntries = await getMyFitnessPalReport(
-            token,
-            userName,
-            year,
-            month,
-          );
-
-          if (Array.isArray(reportEntries)) {
-            // Wipe the month to be replaced with the new data
-            await MyFitnessPalFoodEntries.deleteMany({
-              user_id: userId,
-              date: { $regex: new RegExp(`^${year}-${month}-`) },
-            });
-          }
-          if (!reportEntries.length) continue;
-          for (const reportEntry of reportEntries) {
-            if (reportEntry.food_entries) {
-              for (const foodEntry of reportEntry.food_entries) {
-                await MyFitnessPalFoodEntries.updateOne(
-                  { id: foodEntry.id },
-                  {
-                    $set: {
-                      ...foodEntry,
-                      user_id: userId,
-                      datetime: DateTime.fromISO(foodEntry.date, {
-                        zone: "utc",
-                      }).toJSDate(),
+            }
+            if (!reportEntries.length) continue;
+            for (const reportEntry of reportEntries) {
+              if (reportEntry.food_entries) {
+                for (const foodEntry of reportEntry.food_entries) {
+                  await MyFitnessPalFoodEntries.updateOne(
+                    { id: foodEntry.id },
+                    {
+                      $set: {
+                        ...foodEntry,
+                        user_id: userId,
+                        datetime: DateTime.fromISO(foodEntry.date, {
+                          zone: "utc",
+                        }).toJSDate(),
+                      },
                     },
-                  },
-                  { upsert: true },
-                );
-              }
+                    { upsert: true },
+                  );
+                }
 
-              yield reportEntry.date;
+                yield reportEntry.date;
+              }
             }
           }
         }
-      }
-
-      const successfulAt = new Date();
-      await Users.updateOne(
-        { _id: new ObjectId(user.id) },
-        {
-          $set: {
-            "dataSources.$[dataSource].lastSuccessfulAt": successfulAt,
-            "dataSources.$[dataSource].lastSuccessfulRuntime":
-              successfulAt.valueOf() - attemptedAt.valueOf(),
-            "dataSources.$[dataSource].lastResult": "success",
-          },
-        },
-        { arrayFilters: [{ "dataSource.id": dataSource.id }] },
-      );
+      });
     }
   });
