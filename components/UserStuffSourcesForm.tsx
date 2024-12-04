@@ -256,6 +256,8 @@ export default function UserStuffSourcesForm({
                 break;
             }
 
+            console.log({ source });
+
             return (
               <FieldSetY
                 legend={
