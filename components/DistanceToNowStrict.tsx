@@ -11,6 +11,10 @@ export function DistanceToNowStrict({ date }: { date: Date }) {
     setState({});
   }, 1000);
 
+  if (!date) {
+    return null;
+  }
+
   return state
     ? formatDistanceToNow(date, { addSuffix: true })
     : date.toISOString();
