@@ -1,8 +1,8 @@
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import NextAuth from "next-auth";
+import NextAuth, { type Session } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-import { Users } from "./models/user.server";
 import { mongoClient } from "./mongodb";
+import { parseDateFields } from "./utils";
 
 const {
   auth: authRaw,
@@ -23,16 +23,15 @@ const {
   },
 });
 
-const auth = process.env.VERCEL
-  ? authRaw
-  : async () => {
-      const userDocument = await Users.findOne();
+const auth = async () => {
+  const session = await authRaw();
 
-      if (!userDocument) throw new Error("Unauthorized");
-
-      const { _id, ...user } = userDocument;
-
-      return { user: { ...user, id: String(_id) } };
-    };
+  return (
+    session &&
+    (parseDateFields(
+      session as unknown as Record<string, unknown>,
+    ) as unknown as Session)
+  );
+};
 
 export { auth, handlers, signIn, signOut };

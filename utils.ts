@@ -535,3 +535,16 @@ export function countBy<T extends { [K in keyof T]: T[K] }, K extends keyof T>(
   }
   return acc;
 }
+
+export const parseDateFields = (doc: Record<string, unknown>) => {
+  for (const key in doc) {
+    const value = doc[key];
+    doc[key] =
+      typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}/)
+        ? new Date(value)
+        : isNonNullObject(value)
+          ? parseDateFields(value)
+          : value;
+  }
+  return doc;
+};
