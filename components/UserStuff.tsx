@@ -122,9 +122,6 @@ export default async function UserStuff() {
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/api/auth/signout">Sign out</a>
             </p>
-            <FieldSetX legend="Data Sources">
-              <UserStuffSourcesForm user={user} />
-            </FieldSetX>
             <FieldSetX legend="Settings">
               {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
               <form action={updateUser}>
@@ -146,6 +143,11 @@ export default async function UserStuff() {
                   </FieldSetY>
                 </div>
               </form>
+            </FieldSetX>
+            <FieldSetX legend="Data Sources"
+              className="w-full"
+            >
+              <UserStuffSourcesForm user={user} />
             </FieldSetX>
             <FieldSetX legend="Workout Schedule" className="w-full">
               <UserStuffWorkoutScheduleForm
