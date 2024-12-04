@@ -1,8 +1,6 @@
-import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { getDB } from "../../../dbConnect";
 import { Unit } from "../../../models/exercises";
-import { Users } from "../../../models/user.server";
 import { type WorkoutData, WorkoutSource } from "../../../models/workout";
 import type { Fitocracy } from "../../../sources/fitocracy";
 import type { KilterBoard } from "../../../sources/kilterboard";
@@ -21,17 +19,6 @@ export async function* materializeAllToploggerWorkouts({
 
   for (const dataSource of user.dataSources || []) {
     if (dataSource.source !== DataSource.TopLogger) continue;
-
-    const attemptedAt = new Date();
-    await Users.updateOne(
-      { _id: new ObjectId(user.id) },
-      {
-        $set: {
-          "dataSources.$[source].lastAttemptedAt": attemptedAt,
-        },
-      },
-      { arrayFilters: [{ "source.id": dataSource.id }] },
-    );
 
     const topLoggerGraphQLId = dataSource.config.graphQLId;
 
@@ -204,19 +191,6 @@ export async function* materializeAllToploggerWorkouts({
         },
       ])
       .toArray();
-
-    const successfulAt = new Date();
-    await Users.updateOne(
-      { _id: new ObjectId(user.id) },
-      {
-        $set: {
-          "dataSources.$[source].lastSuccessfulAt": successfulAt,
-          "dataSources.$[source].lastSuccessfulRuntime":
-            successfulAt.valueOf() - attemptedAt.valueOf(),
-        },
-      },
-      { arrayFilters: [{ "source.id": dataSource.id }] },
-    );
   }
 
   yield "materializeAllToploggerWorkouts: done in " +
