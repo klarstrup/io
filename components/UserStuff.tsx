@@ -4,9 +4,7 @@ import Link from "next/link";
 import { auth } from "../auth";
 import { Users } from "../models/user.server";
 import { getAllWorkoutExercises } from "../models/workout.server";
-import { decodeGeohash } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
-import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
 import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
 
@@ -18,16 +16,6 @@ async function updateUser(formData: FormData) {
   if (!user) throw new Error("No user found");
 
   const newUser = { ...user };
-
-  const geohash = formData.get("geohash");
-  if (typeof geohash === "string") {
-    try {
-      if (geohash.trim()) decodeGeohash(geohash.trim());
-      newUser.geohash = geohash.trim() || null;
-    } catch (e) {
-      console.error(e);
-    }
-  }
 
   const timeZone = formData.get("timeZone");
   if (typeof timeZone === "string") {
@@ -131,9 +119,6 @@ export default async function UserStuff() {
                   className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
                 />
                 <div className="grid grid-cols-2 gap-1.5">
-                  <FieldSetY legend="Location" className="flex">
-                    <UserStuffGeohashInput geohash={user.geohash} />
-                  </FieldSetY>
                   <FieldSetY legend="Time Zone">
                     <input
                       name="timeZone"
@@ -144,9 +129,7 @@ export default async function UserStuff() {
                 </div>
               </form>
             </FieldSetX>
-            <FieldSetX legend="Data Sources"
-              className="w-full"
-            >
+            <FieldSetX legend="Data Sources" className="w-full">
               <UserStuffSourcesForm user={user} />
             </FieldSetX>
             <FieldSetX legend="Workout Schedule" className="w-full">

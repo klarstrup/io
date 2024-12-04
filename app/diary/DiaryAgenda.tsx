@@ -15,6 +15,7 @@ import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
+import { DataSource } from "../../sources/utils";
 
 export function DiaryAgenda({
   date,
@@ -27,7 +28,10 @@ export function DiaryAgenda({
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 
-  const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
+  const userGeohash = user.dataSources?.find(
+    (source) => source.source === DataSource.Tomorrow,
+  )?.config?.geohash;
+  const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
@@ -105,7 +109,7 @@ export function DiaryAgenda({
         <div className="flex flex-1 flex-col">
           <Suspense
             fallback={
-              <FieldSetY className="min-w-[250px] flex-[1]" legend={<>Food</>} />
+              <FieldSetY className="min-w-[250px] flex-[1]" legend="Food" />
             }
           >
             <DiaryAgendaFood date={date} user={user} />

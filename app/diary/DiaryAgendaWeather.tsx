@@ -5,6 +5,7 @@ import Image from "next/image";
 import { FieldSetY } from "../../components/FieldSet";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { getTomorrowForecasts } from "../../sources/tomorrow";
+import { DataSource } from "../../sources/utils";
 import {
   dateToString,
   decodeGeohash,
@@ -25,11 +26,14 @@ export async function DiaryAgendaWeather({
   const now = TZDate.tz(timeZone);
   const tzDate = new TZDate(date, timeZone);
   const isToday = date === dateToString(now);
-  const userLocation = user.geohash ? decodeGeohash(user.geohash) : null;
+  const userGeohash = user.dataSources?.find(
+    (source) => source.source === DataSource.Tomorrow,
+  )?.config?.geohash;
+  const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
 
   const weatherIntervals =
     (await getTomorrowForecasts({
-      geohash: user.geohash,
+      geohash: userGeohash,
       start: isToday ? now : tzDate,
       end: addHours(isToday ? now : tzDate, 12),
     })) ?? [];
@@ -46,7 +50,7 @@ export async function DiaryAgendaWeather({
   );
 
   return (
-    <FieldSetY className="flex flex-none flex-col min-h-32" legend="Weather">
+    <FieldSetY className="flex min-h-32 flex-none flex-col" legend="Weather">
       <ul className="flex justify-around overflow-x-hidden">
         {weatherIntervals?.map((interval, i) => {
           const extendedWeatherCode = `${interval.values.weatherCode}${

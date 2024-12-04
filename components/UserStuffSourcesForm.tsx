@@ -9,6 +9,7 @@ import { updateUserDataSources } from "../app/diary/actions";
 import { TopLoggerAuthTokens } from "../lib";
 import { DataSource, UserDataSourceMeta } from "../sources/utils";
 import { FieldSetY } from "./FieldSet";
+import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 
 export default function UserStuffSourcesForm({
   user,
@@ -237,6 +238,22 @@ export default function UserStuffSourcesForm({
                   </>
                 );
                 break;
+              case DataSource.Tomorrow:
+                formElements = (
+                  <label className="flex gap-1">
+                    Geohash:{" "}
+                    <UserStuffGeohashInput
+                      geohash={source.config.geohash}
+                      onGeohashChange={(geohash) =>
+                        update(index, {
+                          ...source,
+                          config: { ...source.config, geohash },
+                        })
+                      }
+                    />
+                  </label>
+                );
+                break;
             }
 
             return (
@@ -403,6 +420,13 @@ export default function UserStuffSourcesForm({
                     ...initialSourceMeta,
                     source: DataSource.KilterBoard,
                     config: { token: "", user_id: "" },
+                  });
+                  break;
+                case DataSource.Tomorrow:
+                  append({
+                    ...initialSourceMeta,
+                    source: DataSource.Tomorrow,
+                    config: { geohash: "" },
                   });
                   break;
               }

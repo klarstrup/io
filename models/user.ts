@@ -6,7 +6,6 @@ export interface IUser {
   email: string;
   image: string;
   emailVerified: boolean;
-  geohash?: string | null;
   timeZone?: string | null;
   exerciseSchedules?: ExerciseSchedule[];
   dataSources?: UserDataSource[];

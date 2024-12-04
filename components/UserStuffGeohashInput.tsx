@@ -4,7 +4,10 @@ import { useState } from "react";
 import useInterval from "../hooks/useInterval";
 import { encodeGeohash, MINUTE_IN_SECONDS } from "../utils";
 
-export function UserStuffGeohashInput(props: { geohash?: string | null }) {
+export function UserStuffGeohashInput(props: {
+  geohash: string | null;
+  onGeohashChange: (geohash: string) => void;
+}) {
   const router = useRouter();
   const [geohash, setGeohash] = useState<string | null>(props.geohash ?? null);
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
@@ -28,7 +31,7 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
         value={geohash || ""}
         readOnly
         disabled={isGettingCurrentPosition}
-        className="flex-1 border-b-2 border-gray-200 focus:border-gray-500 w-full"
+        className="w-full flex-1 border-b-2 border-gray-200 focus:border-gray-500"
       />
       <button
         disabled={isGettingCurrentPosition}
@@ -38,6 +41,7 @@ export function UserStuffGeohashInput(props: { geohash?: string | null }) {
             navigator.geolocation.getCurrentPosition(({ coords }) => {
               setIsGettingCurrentPosition(false);
               setGeohash(encodeGeohash(coords.latitude, coords.longitude, 6));
+              props.onGeohashChange(encodeGeohash(coords.latitude, coords.longitude, 6));
             });
           } catch (err) {
             setIsGettingCurrentPosition(false);

@@ -28,6 +28,10 @@ type UserDataSourceConfig =
   | {
       source: DataSource.KilterBoard;
       config: { token: string; user_id: string };
+    }
+  | {
+      source: DataSource.Tomorrow;
+      config: { geohash: string };
     };
 
 export interface UserDataSourceMeta {
@@ -53,10 +57,10 @@ export enum DataSource {
   TopLogger = "toplogger",
   ICal = "ical",
   KilterBoard = "kilterboard",
+  Tomorrow = "tomorrow",
   /* These are special and not configurable to the user for various reasons
   ClimbAlong = "climbalong",
   Sportstiming = "sportstiming",
   Songkick = "songkick",
-  Tomorrow = "tomorrow",
   */
 }
