@@ -1,5 +1,5 @@
 "use client";
-import { formatRelative } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { Session } from "next-auth";
 import { ReactElement, useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -230,13 +230,47 @@ export default function UserStuffSourcesForm({
                 {formElements}
                 {source.source !== DataSource.Fitocracy ? ( // Fitocracy is read-only
                   <div className="text-xs">
-                    {source.lastAttemptedAt ? (
+                    {source.lastAttemptedAt &&
+                    (!source.lastSuccessfulAt ||
+                      source.lastAttemptedAt > source.lastSuccessfulAt) &&
+                    (!source.lastFailedAt ||
+                      source.lastAttemptedAt > source.lastFailedAt) ? (
                       <>
-                        Last ran{" "}
-                        {formatRelative(
-                          new Date(source.lastAttemptedAt),
-                          new Date(),
-                        )}
+                        Started{" "}
+                        {formatDistanceToNow(source.lastAttemptedAt, {
+                          addSuffix: true,
+                        })}{" "}
+                        <div className="inline-block animate-spin">↻</div>
+                      </>
+                    ) : source.lastSuccessfulAt &&
+                      (!source.lastFailedAt ||
+                        source.lastSuccessfulAt > source.lastFailedAt) ? (
+                      <>
+                        Last successful fetch{" "}
+                        {formatDistanceToNow(source.lastSuccessfulAt, {
+                          addSuffix: true,
+                        })}{" "}
+                        {source.lastSuccessfulRuntime ? (
+                          <>
+                            in{" "}
+                            {(source.lastSuccessfulRuntime / 1000)?.toFixed(2)}s
+                          </>
+                        ) : null}
+                      </>
+                    ) : source.lastFailedAt ? (
+                      <>
+                        Last failed fetch{" "}
+                        {formatDistanceToNow(source.lastFailedAt, {
+                          addSuffix: true,
+                        })}{" "}
+                        {source.lastFailedRuntime ? (
+                          <>
+                            in {(source.lastFailedRuntime / 1000)?.toFixed(2)}s
+                          </>
+                        ) : null}
+                        <div className="text-red-600">
+                          {source.lastError ?? "Unknown error"}
+                        </div>
                       </>
                     ) : (
                       "Never fetched"
