@@ -444,7 +444,7 @@ export const GET = () =>
               { length: Math.ceil((total - currentTotal) / 10) },
               (_, i) => i + 1 + Math.ceil(currentTotal / 10),
             ),
-            48,
+            64,
           );
 
           yield { currentPageNumbers, pageNumbers };
