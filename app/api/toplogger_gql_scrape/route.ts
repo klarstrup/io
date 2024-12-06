@@ -434,9 +434,13 @@ export const GET = () =>
           yield { total, currentTotal };
 
           const currentPageNumbers: number[] = [
-            ...Array.from(
-              { length: Math.ceil(currentTotal / 10) },
-              (_, i) => i + 1,
+            1,
+            ...randomSlice(
+              Array.from(
+                { length: Math.ceil(currentTotal / 10) - 1 },
+                (_, i) => i + 1 + 1,
+              ),
+              2,
             ),
           ];
           const pageNumbers: number[] = randomSlice(
