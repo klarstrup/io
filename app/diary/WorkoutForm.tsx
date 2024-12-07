@@ -598,42 +598,36 @@ function SetsForm({
               exercise={exercise}
             />
             <td>
-              <div className="flex">
-                <StealthButton
-                  onClick={() => remove(index)}
-                  className="leading-[0]"
-                >
-                  ❌
-                </StealthButton>
-                {/*
-                <StealthButton
-                  onClick={() => {
-                    const newIndex = index - 1;
-                    const destination = sets[newIndex]!;
-                    const source = sets[index]!;
-                    update(index, destination);
-                    update(newIndex, source);
-                  }}
-                  disabled={index === 0}
-                  className="leading-[0]"
-                >
-                  ⬆️
-                </StealthButton>
-                <StealthButton
-                  onClick={() => {
-                    const newIndex = index + 1;
-                    const destination = sets[newIndex]!;
-                    const source = sets[index]!;
-                    update(index, destination);
-                    update(newIndex, source);
-                  }}
-                  disabled={index === sets.length - 1}
-                  className="leading-[0]"
-                >
-                  ⬇️
-                </StealthButton>
-                */}
-              </div>
+              <StealthButton
+                onClick={() => remove(index)}
+                className="mx-2 leading-[0]"
+              >
+                ❌
+              </StealthButton>
+            </td>
+            <td>
+              <StealthButton
+                onClick={() =>
+                  append({
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    inputs: exercise.inputs.map((input, inputIndex) => {
+                      const setInput = set.inputs[inputIndex];
+
+                      return {
+                        value: setInput?.value ?? 0,
+                        unit:
+                          setInput?.unit ??
+                          input.metric_unit ??
+                          input.allowed_units?.[0]?.name,
+                      };
+                    }),
+                  })
+                }
+                className="mx-2 leading-[0]"
+              >
+                ➕
+              </StealthButton>
             </td>
           </tr>
         ))}
@@ -641,7 +635,7 @@ function SetsForm({
       {lastSet?.updatedAt ? (
         <tfoot>
           <tr>
-            <td colSpan={exercise.inputs.length + 2}>
+            <td colSpan={exercise.inputs.length + 3}>
               <TimeSince date={lastSet.updatedAt} />
             </td>
           </tr>
