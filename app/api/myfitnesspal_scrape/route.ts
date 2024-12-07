@@ -7,6 +7,7 @@ import {
 } from "../../../sources/myfitnesspal.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
+import { isNonEmptyArray } from "../../../utils";
 import { jsonStreamResponse } from "../scraper-utils";
 
 const months = [
@@ -71,7 +72,7 @@ export const GET = () =>
                   date: { $regex: new RegExp(`^${year}-${month}-`) },
                 });
               }
-              if (!reportEntries.length) continue;
+              if (!isNonEmptyArray(reportEntries)) continue;
               for (const reportEntry of reportEntries) {
                 if (reportEntry.food_entries) {
                   for (const foodEntry of reportEntry.food_entries) {

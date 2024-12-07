@@ -17,7 +17,7 @@ import {
   type getNextSets,
   type IWorkoutLocationsView,
 } from "../../models/workout.server";
-import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 
@@ -45,7 +45,7 @@ export function DiaryAgendaWorkouts({
       legend={
         <div className="flex items-center">
           Workouts
-          {workouts?.length ? (
+          {isNonEmptyArray(workouts) ? (
             <Link
               href={`/diary/${date}/workout`}
               className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
@@ -57,7 +57,7 @@ export function DiaryAgendaWorkouts({
       }
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(256px, 1fr))" }}
     >
-      {workouts?.length ? (
+      {isNonEmptyArray(workouts) ? (
         Array.from(workouts)
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
           ?.map((workout) => {
@@ -85,7 +85,7 @@ export function DiaryAgendaWorkouts({
               </Link>
             </div>
           </div>
-          {dueSets?.length ? (
+          {isNonEmptyArray(dueSets) ? (
             <div>
               <b>Due Sets:</b>
               <NextSets user={user} date={date} nextSets={dueSets} />

@@ -3,6 +3,7 @@ import { addDays } from "date-fns";
 import moment from "moment-timezone";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
+import { isNonEmptyArray } from "../utils";
 import * as zoneTable from "./windowsZones.json" with { type: "json" };
 
 /** **************
@@ -253,8 +254,7 @@ const storeParameter =
     _line?: string,
   ) => {
     const data: Property<unknown> =
-      parameters &&
-      parameters.length > 0 &&
+      isNonEmptyArray(parameters) &&
       !(
         parameters.length === 1 &&
         (parameters[0] === "CHARSET=utf-8" || parameters[0] === "VALUE=TEXT")

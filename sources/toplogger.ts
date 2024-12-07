@@ -17,7 +17,7 @@ import {
   type Score,
   type ThousandDivideByScore,
 } from "../lib";
-import { percentile } from "../utils";
+import { isNonEmptyArray, percentile } from "../utils";
 import {
   TopLoggerAscends,
   TopLoggerClimbs,
@@ -338,7 +338,7 @@ export namespace TopLogger {
 }
 
 const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
-  if (group.climb_groups.length) {
+  if (isNonEmptyArray(group.climb_groups)) {
     return await TopLoggerClimbs.find({
       id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) },
     }).toArray();
@@ -595,7 +595,7 @@ function getIoTopLoggerGroupScores(
     // If the group has climbs explicitly associated, we can calculate derived scores
     // in other scoring systems. These disappear on old competitions, so we can't
     // use them for all past events regrettably.
-    if (group.climb_groups.length) {
+    if (isNonEmptyArray(group.climb_groups)) {
       if (ioResults.tdbScore) {
         const ioTDBRank =
           Array.from(usersWithResults)

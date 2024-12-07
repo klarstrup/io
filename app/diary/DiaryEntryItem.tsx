@@ -9,6 +9,7 @@ import {
   dateToString,
   DEFAULT_TIMEZONE,
   getSchemeCategory10Color,
+  isNonEmptyArray,
   uniqueBy,
 } from "../../utils";
 
@@ -64,7 +65,9 @@ export function DiaryEntryItem({
         </div>
       </div>
       <div className="flex min-h-20 flex-1 flex-col flex-wrap">
-        {workouts?.length ? <WorkoutsSummary workouts={workouts} /> : null}
+        {isNonEmptyArray(workouts) ? (
+          <WorkoutsSummary workouts={workouts} />
+        ) : null}
         {dayTotalEnergy && dayTotalProtein ? (
           <div className="flex flex-wrap items-center justify-center gap-1 p-1 text-center text-[0.25em]">
             <div>{(dayTotalEnergy / 1000).toFixed(2)}mc</div>

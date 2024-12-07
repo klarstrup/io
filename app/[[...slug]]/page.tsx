@@ -23,6 +23,7 @@ import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
 import { DataSource } from "../../sources/utils";
 import "../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
+import { isNonEmptyArray } from "../../utils";
 
 const monthsPerPage = 2;
 
@@ -101,7 +102,8 @@ const getData = async (
 
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
-  if (disciplines?.includes("bouldering") || !disciplines?.length) {
+  const noDisciplines = !isNonEmptyArray(disciplines);
+  if (noDisciplines || disciplines?.includes("bouldering")) {
     eventsPromises.push(
       ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
         getIoClimbAlongCompetitionEventEntry(eventId, ioId),
@@ -120,14 +122,14 @@ const getData = async (
       ),
     );
   }
-  if (disciplines?.includes("running") || !disciplines?.length) {
+  if (noDisciplines || disciplines?.includes("running")) {
     eventsPromises.push(
       ...ioSportsTimingEventsWithIds.map(([eventId, ioId]) =>
         getSportsTimingEventEntry(eventId, ioId),
       ),
     );
   }
-  if (disciplines?.includes("metal") || !disciplines?.length) {
+  if (noDisciplines || disciplines?.includes("metal")) {
     eventsPromises.push(...(await getSongkickEvents()));
   }
 

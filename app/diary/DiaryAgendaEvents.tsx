@@ -14,7 +14,12 @@ import type { Session } from "next-auth";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 import type { MongoVEventWithVCalendar } from "../../lib";
 import { getUserIcalEventsBetween } from "../../sources/ical";
-import { dateToString, DEFAULT_TIMEZONE, roundToNearestDay } from "../../utils";
+import {
+  dateToString,
+  DEFAULT_TIMEZONE,
+  isNonEmptyArray,
+  roundToNearestDay,
+} from "../../utils";
 
 export async function DiaryAgendaEvents({
   date,
@@ -101,7 +106,7 @@ export async function DiaryAgendaEvents({
             className="w-full"
           >
             <ul>
-              {events.length ? (
+              {isNonEmptyArray(events) ? (
                 events.map((event) => {
                   const duration = intervalToDuration(event);
 

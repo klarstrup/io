@@ -34,7 +34,7 @@ import type {
   IWorkoutExercisesView,
   IWorkoutLocationsView,
 } from "../../models/workout.server";
-import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
 
@@ -422,7 +422,7 @@ export function WorkoutForm<R extends string>({
         </div>
       </form>
       <div className="min-w-[50%]">
-        {dueSets?.length ? (
+        {isNonEmptyArray(dueSets) ? (
           <div>
             <b>Due Sets:</b>
             <NextSets
@@ -433,7 +433,7 @@ export function WorkoutForm<R extends string>({
             />
           </div>
         ) : null}
-        {futureSets?.length ? (
+        {isNonEmptyArray(futureSets) ? (
           <div>
             <small>
               <b>Future Sets:</b>

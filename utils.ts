@@ -502,7 +502,7 @@ export const getSchemeCategory10Color = (index: number) =>
   schemeCategory10[index % schemeCategory10.length]!;
 
 export const isNonEmptyArray = <T>(
-  value?: ArrayLike<T>,
+  value?: ArrayLike<T> | null,
 ): value is [T, ...T[]] => Array.isArray(value) && value.length > 0;
 
 export const isNonNullObject = (

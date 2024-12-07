@@ -5,7 +5,7 @@ import { FieldSetY } from "../../components/FieldSet";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
 import { DataSource } from "../../sources/utils";
-import { DEFAULT_TIMEZONE, rangeToQuery } from "../../utils";
+import { DEFAULT_TIMEZONE, isNonEmptyArray, rangeToQuery } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
 
 export async function DiaryAgendaFood({
@@ -62,7 +62,7 @@ export async function DiaryAgendaFood({
         </>
       }
     >
-      {food.length ? (
+      {isNonEmptyArray(food) ? (
         <FoodEntry foodEntries={food} />
       ) : (
         <div className="flex h-full flex-col items-center justify-center">

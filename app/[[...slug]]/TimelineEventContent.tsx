@@ -14,7 +14,7 @@ import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
 import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
-import { DEFAULT_TIMEZONE, seconds2time } from "../../utils";
+import { DEFAULT_TIMEZONE, isNonEmptyArray, seconds2time } from "../../utils";
 
 const sex = true;
 
@@ -279,7 +279,7 @@ export default async function TimelineEventContent({
           ) : null}
         </small>
       ) : null}
-      {officialScores.length
+      {isNonEmptyArray(officialScores)
         ? officialScores.map((score) => (
             <div
               key={score.system}
@@ -296,7 +296,7 @@ export default async function TimelineEventContent({
             </div>
           ))
         : null}
-      {disciplines?.includes(discipline) && derivedScores.length ? (
+      {disciplines?.includes(discipline) && isNonEmptyArray(derivedScores) ? (
         <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
           {derivedScores.map((score) => (
             <fieldset
@@ -342,7 +342,7 @@ export default async function TimelineEventContent({
           ))}
         </div>
       ) : null}
-      {problemByProblem?.length && isPast(start) ? (
+      {isNonEmptyArray(problemByProblem) && isPast(start) ? (
         <ProblemByProblem problemByProblem={problemByProblem} />
       ) : null}
     </Fragment>
