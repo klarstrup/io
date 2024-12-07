@@ -65,6 +65,9 @@ export function chunk<I>(rawArr: I[], size: number) {
 export const randomSlice = <T>(array: T[], slices: number) =>
   shuffle(chunk(array, Math.ceil(array.length / slices)))[0] || [];
 
+export const randomSliceOfSize = <T>(array: T[], size: number) =>
+  shuffle(chunk(array, size))[0] || [];
+
 export const MINUTE_IN_SECONDS = 60;
 export const HOUR_IN_SECONDS = MINUTE_IN_SECONDS * 60;
 export const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24;

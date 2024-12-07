@@ -7,7 +7,7 @@ import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { randomSlice, shuffle } from "../../../utils";
+import { randomSliceOfSize, shuffle } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -433,22 +433,16 @@ export const GET = () =>
 
           yield { total, currentTotal };
 
-          const currentPageNumbers: number[] = [
-            1,
-            ...randomSlice(
-              Array.from(
-                { length: Math.ceil(currentTotal / 10) - 1 },
-                (_, i) => i + 1 + 1,
-              ),
-              2,
-            ),
-          ];
-          const pageNumbers: number[] = randomSlice(
+          const currentPageNumbers = randomSliceOfSize(
             Array.from(
-              { length: Math.ceil((total - currentTotal) / 10) },
-              (_, i) => i + 1 + Math.ceil(currentTotal / 10),
+              { length: Math.ceil(currentTotal / 10) },
+              (_, i) => i + 1,
             ),
-            64,
+            5,
+          );
+          const pageNumbers: number[] = randomSliceOfSize(
+            Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+            5,
           );
 
           yield { currentPageNumbers, pageNumbers };
