@@ -53,10 +53,8 @@ export async function DiaryAgendaWeather({
     <FieldSetY className="flex min-h-32 flex-none flex-col" legend="Weather">
       <ul className="flex justify-around overflow-x-hidden">
         {weatherIntervals
-          ?.filter(
-            // Get every 3rd interval
-            (_, i) => i % 3 === 0,
-          )
+          // Get every 3rd interval
+          ?.filter((_, i) => i % 3 === 0)
           ?.map((interval, i) => {
             const extendedWeatherCode = `${interval.values.weatherCode}${
               isWithinInterval(new Date(interval.startTime), {
