@@ -119,16 +119,6 @@ export async function getNextSets({
             : scheduleEntry.baseWeight
           : null;
 
-      if (exercise?.exerciseId === 288) {
-        console.log({
-          workingSets,
-          heaviestSetWeight,
-          exercise,
-          scheduleEntry,
-          goalWeight,
-          successful,
-        });
-      }
       return {
         workedOutAt: workout?.workedOutAt || null,
         exerciseId: scheduleEntry.exerciseId,
