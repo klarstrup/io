@@ -381,11 +381,11 @@ export async function* materializeAllKilterBoardWorkouts({
     if (dataSource.source !== DataSource.KilterBoard) continue;
 
     const { user_id } = dataSource.config;
-
+    console.log(dataSource);
     yield await db
       .collection<KilterBoard.Ascent>("kilterboard_ascents")
       .aggregate([
-        { $match: { user_id } },
+        { $match: { user_id: Number(user_id) } },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
