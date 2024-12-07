@@ -29,6 +29,11 @@ export const GET = () =>
       { key: { "exercises.exerciseId": -1 } },
     ]);
 
+    yield {
+      "MaterializedWorkoutsView.countDocuments()":
+        await MaterializedWorkoutsView.countDocuments(),
+    };
+
     yield "materializeAllWorkouts: start";
     const t = Date.now();
 
