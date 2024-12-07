@@ -1,11 +1,13 @@
 "use server";
 
+import { max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
 import { Users } from "../../models/user.server";
 import type { WorkoutData } from "../../models/workout";
 import {
+  MaterializedWorkoutsView,
   updateExerciseCounts,
   updateLocationCounts,
   Workouts,
@@ -90,4 +92,32 @@ export async function updateUserDataSources(
   );
 
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!.dataSources;
+}
+
+export async function mostRecentlyScrapedAt(userId: string) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  const workout = await MaterializedWorkoutsView.findOne(
+    { userId: user.id },
+    { sort: { updatedAt: -1, deletedAt: -1 } },
+  );
+  const dataSourceRuns: (Date | null)[] = [];
+  for (const dataSource of user.dataSources ?? []) {
+    dataSourceRuns.push(
+      dataSource.createdAt,
+      dataSource.updatedAt,
+      dataSource.lastAttemptedAt,
+      dataSource.lastSuccessfulAt,
+      dataSource.lastFailedAt,
+    );
+  }
+  return max(
+    [
+      ...dataSourceRuns,
+      workout?.deletedAt,
+      workout?.updatedAt,
+      new Date(0),
+    ].filter(Boolean),
+  );
 }

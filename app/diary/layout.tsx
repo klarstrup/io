@@ -19,6 +19,8 @@ import "../page.css";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
+import { DiaryPoller } from "./DiaryPoller";
+import { mostRecentlyScrapedAt } from "./actions";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -107,6 +109,11 @@ export default async function DiaryLayout(props: {
 
   return (
     <>
+      <DiaryPoller
+        mostRecentlyScrapedAtAction={mostRecentlyScrapedAt}
+        loadedAt={now}
+        userId={user.id}
+      />
       {props.children}
       <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
         <Suspense
