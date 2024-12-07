@@ -52,82 +52,87 @@ export async function DiaryAgendaWeather({
   return (
     <FieldSetY className="flex min-h-32 flex-none flex-col" legend="Weather">
       <ul className="flex justify-around overflow-x-hidden">
-        {weatherIntervals?.map((interval, i) => {
-          const extendedWeatherCode = `${interval.values.weatherCode}${
-            isWithinInterval(new Date(interval.startTime), {
-              start: sunrise,
-              end: sunset,
-            })
-              ? 0
-              : 1
-          }`;
-          const dayWeatherCode = extendedWeatherCode.substring(0, 4) + "0";
-          const weatherIcon =
-            (extendedWeatherCode in weatherIconsByCode &&
-              weatherIconsByCode[
-                extendedWeatherCode as keyof typeof weatherIconsByCode
-              ]) ||
-            (dayWeatherCode in weatherIconsByCode &&
-              weatherIconsByCode[
-                dayWeatherCode as keyof typeof weatherIconsByCode
-              ]);
-          return (
-            <li key={i} className="flex flex-col items-center">
-              <div className="flex items-center">
-                <big className="text-lg font-bold">
-                  {new TZDate(interval.startTime, timeZone).toLocaleTimeString(
-                    "en-DK",
-                    {
+        {weatherIntervals
+          ?.filter(
+            // Get every 3rd interval
+            (_, i) => i % 3 === 0,
+          )
+          ?.map((interval, i) => {
+            const extendedWeatherCode = `${interval.values.weatherCode}${
+              isWithinInterval(new Date(interval.startTime), {
+                start: sunrise,
+                end: sunset,
+              })
+                ? 0
+                : 1
+            }`;
+            const dayWeatherCode = extendedWeatherCode.substring(0, 4) + "0";
+            const weatherIcon =
+              (extendedWeatherCode in weatherIconsByCode &&
+                weatherIconsByCode[
+                  extendedWeatherCode as keyof typeof weatherIconsByCode
+                ]) ||
+              (dayWeatherCode in weatherIconsByCode &&
+                weatherIconsByCode[
+                  dayWeatherCode as keyof typeof weatherIconsByCode
+                ]);
+            return (
+              <li key={i} className="flex flex-col items-center">
+                <div className="flex items-center">
+                  <big className="text-lg font-bold">
+                    {new TZDate(
+                      interval.startTime,
+                      timeZone,
+                    ).toLocaleTimeString("en-DK", {
                       hour: "numeric",
                       timeZone,
-                    },
+                    })}
+                  </big>
+                  {weatherIcon ? (
+                    <Image
+                      src={weatherIcon}
+                      alt={prettyPrintWeatherCode(extendedWeatherCode)}
+                      title={prettyPrintWeatherCode(extendedWeatherCode)}
+                      width={24}
+                      className="align-middle"
+                    />
+                  ) : (
+                    extendedWeatherCode
                   )}
-                </big>
-                {weatherIcon ? (
-                  <Image
-                    src={weatherIcon}
-                    alt={prettyPrintWeatherCode(extendedWeatherCode)}
-                    title={prettyPrintWeatherCode(extendedWeatherCode)}
-                    width={24}
-                    className="align-middle"
-                  />
-                ) : (
-                  extendedWeatherCode
-                )}
-              </div>
-              <div>
-                <span className="align-middle text-lg">
-                  {interval.values.temperatureApparent.toFixed(0)}
-                </span>
-                <sup className="text-base">c</sup>
-                <sub className="-ml-2 text-sm" title="Humidity">
-                  {interval.values.humidity.toFixed(0)}%
-                </sub>{" "}
-              </div>
-              <div>
-                <span className="align-middle text-lg">
-                  {interval.values.windSpeed.toFixed(0)}
-                </span>
-                <sup className="text-sm">m/s</sup>{" "}
-              </div>
-              {interval.values.precipitationProbability > 0 &&
-              interval.values.precipitationIntensity >= 0.2 ? (
+                </div>
                 <div>
                   <span className="align-middle text-lg">
-                    {interval.values.precipitationIntensity.toFixed(2)}
+                    {interval.values.temperatureApparent.toFixed(0)}
                   </span>
-                  <sup className="text-sm">mm</sup>
-                  <sub
-                    className="-ml-2 text-sm"
-                    title="Precipitation Probability"
-                  >
-                    {interval.values.precipitationProbability.toFixed(0)}%
-                  </sub>
+                  <sup className="text-base">c</sup>
+                  <sub className="-ml-2 text-sm" title="Humidity">
+                    {interval.values.humidity.toFixed(0)}%
+                  </sub>{" "}
                 </div>
-              ) : null}
-            </li>
-          );
-        })}
+                <div>
+                  <span className="align-middle text-lg">
+                    {interval.values.windSpeed.toFixed(0)}
+                  </span>
+                  <sup className="text-sm">m/s</sup>{" "}
+                </div>
+                {interval.values.precipitationProbability > 0 &&
+                interval.values.precipitationIntensity >= 0.2 ? (
+                  <div>
+                    <span className="align-middle text-lg">
+                      {interval.values.precipitationIntensity.toFixed(2)}
+                    </span>
+                    <sup className="text-sm">mm</sup>
+                    <sub
+                      className="-ml-2 text-sm"
+                      title="Precipitation Probability"
+                    >
+                      {interval.values.precipitationProbability.toFixed(0)}%
+                    </sub>
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
       </ul>
     </FieldSetY>
   );
