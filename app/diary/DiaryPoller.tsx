@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import useInterval from "../../hooks/useInterval";
+import { MINUTE_IN_SECONDS } from "../../utils";
 
 export function DiaryPoller({
   userId,
@@ -25,6 +26,14 @@ export function DiaryPoller({
       router.refresh();
     }
   }, 10000);
+
+  useInterval(
+    async () => {
+      await fetch("/api/cron"); // Throwaway request to trigger a random scraper
+      router.refresh();
+    },
+    MINUTE_IN_SECONDS * 1000 * 10,
+  );
 
   return null;
 }
