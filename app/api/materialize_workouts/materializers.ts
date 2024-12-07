@@ -424,6 +424,8 @@ export async function* materializeAllKilterBoardWorkouts({
                         { value: NaN },
                         // Sent-ness
                         { value: 1 },
+                        // Angle
+                        { value: "$$ascent.angle", unit: Unit.Deg },
                       ],
                     },
                   },

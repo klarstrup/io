@@ -43,7 +43,7 @@ export function workoutFromKilterBoardAscents(
     exercises: [
       {
         exerciseId: 2003,
-        sets: ascents.map(({ grade }) => ({
+        sets: ascents.map(({ grade, angle }) => ({
           inputs: [
             // Grade
             { value: grade, unit: Unit.FrenchRounded },
@@ -51,6 +51,8 @@ export function workoutFromKilterBoardAscents(
             { value: NaN },
             // Sent-ness
             { value: 1 },
+            // Angle
+            { value: angle, unit: Unit.Deg },
           ],
         })),
       },

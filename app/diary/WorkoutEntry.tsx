@@ -127,7 +127,8 @@ function WorkoutEntryExerciseSetRow({
               (exercise.inputs[index]?.type === InputType.Weightassist
                 ? input.value !== 0
                 : true)
-                ? exercise.inputs[index]?.type === InputType.Options
+                ? exercise.inputs[index]?.type === InputType.Options ||
+                  exercise.inputs[index]?.type === InputType.Angle
                   ? ", "
                   : input.assistType === AssistType.Assisted
                     ? " - "
@@ -240,6 +241,7 @@ export function WorkoutEntryExercise({
           zone: Number(set.inputs[2]!.value) <= 2,
           number: String(i + 1),
           attempt: true,
+          angle: set.inputs[3]?.value,
         }))}
       />
     );

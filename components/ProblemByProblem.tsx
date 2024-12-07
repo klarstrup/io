@@ -7,12 +7,13 @@ import { countBy } from "../utils";
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
   grade?: string;
+  angle?: number;
 }
 
 const GradeText = ({ grade }: { grade: string }) => (
   <text
-    y="38"
-    x="8"
+    y="40"
+    x="6"
     dominantBaseline="central"
     textAnchor="start"
     fill="#fff"
@@ -25,7 +26,23 @@ const GradeText = ({ grade }: { grade: string }) => (
   </text>
 );
 
-const FlashBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
+const AngleText = ({ angle }: { angle: number }) => (
+  <text
+    y="14"
+    x="6"
+    dominantBaseline="central"
+    textAnchor="start"
+    fill="#fff"
+    fontSize="20px"
+    stroke="#000"
+    paintOrder="stroke"
+    strokeWidth="3px"
+  >
+    {angle}°
+  </text>
+);
+
+const FlashBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -47,10 +64,11 @@ const FlashBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
     >
       ⚡️
     </text>
+    {angle !== undefined ? <AngleText angle={angle} /> : null}
     {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
-const TopBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
+const TopBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -62,10 +80,11 @@ const TopBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       height="50"
       strokeWidth="8"
     ></rect>
+    {angle !== undefined ? <AngleText angle={angle} /> : null}
     {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
-const ZoneBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
+const ZoneBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -83,10 +102,11 @@ const ZoneBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       width="60"
       height="60"
     ></rect>
+    {angle !== undefined ? <AngleText angle={angle} /> : null}
     {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
-const AttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
+const AttemptBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -98,10 +118,16 @@ const AttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       height="50"
       strokeWidth="8"
     ></rect>
+    {angle !== undefined ? <AngleText angle={angle} /> : null}
     {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
-const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
+const NoAttemptBadge = ({
+  title,
+  grade,
+  angle,
+  ...props
+}: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -114,6 +140,7 @@ const NoAttemptBadge = ({ title, grade, ...props }: ProblemBadgeProps) => (
       height="50"
       strokeWidth="8"
     ></rect>
+    {angle !== undefined ? <AngleText angle={angle} /> : null}
     {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
@@ -126,6 +153,7 @@ function ProblemBadge({
   attempt,
   grade,
   color,
+  angle,
 }: {
   number?: string;
   flash: boolean;
@@ -134,6 +162,7 @@ function ProblemBadge({
   attempt: boolean;
   grade?: number;
   color?: string;
+  angle?: number;
 }) {
   const Badge = flash
     ? FlashBadge
@@ -168,6 +197,7 @@ function ProblemBadge({
       }}
       key={number}
       grade={grade ? new Grade(grade).name : undefined}
+      angle={angle}
       title={`${number}${
         number && grade ? `(${new Grade(grade).name})` : ""
       }${!number && grade ? new Grade(grade).name : ""}: ${
@@ -191,7 +221,9 @@ type PP = NonNullable<
       typeof getIoClimbAlongCompetitionEvent | typeof getIoTopLoggerGroupEvent
     >
   >["problemByProblem"]
->[number];
+>[number] & {
+  angle?: number;
+};
 
 // TODO: different gym color order per gym
 const colorsByGrade = [
@@ -245,7 +277,7 @@ export default function ProblemByProblem({
           ? problem.color
           : "";
       const flash = problem.flash;
-      const key = `${groupByGradeAndFlash && problem.grade ? new Grade(problem.grade).name : gradeOrColor}-${flash}`;
+      const key = `${groupByGradeAndFlash && problem.grade ? new Grade(problem.grade).name : gradeOrColor}-${flash}-${problem.angle}`;
       if (!grouped.has(key)) {
         grouped.set(key, [problem]);
       } else {
@@ -263,6 +295,7 @@ export default function ProblemByProblem({
       >
         {Array.from(grouped)
           .sort((a, b) => Number(b[1][0].grade) - Number(a[1][0].grade))
+          .sort((a, b) => Number(b[1][0].angle) - Number(a[1][0].angle))
           .map(([, problems], i) => {
             const mostCommonColor = Object.entries(
               countBy(problems, "color"),

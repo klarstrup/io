@@ -28,6 +28,7 @@ export enum Unit {
   SECLap50M = "sec/lap (50m)",
   Split = "split",
   Yd = "yd",
+  Deg = "°",
 
   // Custom post-fitocracy units
   FrenchRounded = "french_rounded",
@@ -45,6 +46,7 @@ export enum InputType {
   Weight = "weight",
   Weightassist = "weightassist",
   Grade = "grade",
+  Angle = "angle",
 }
 
 export enum TagType {
@@ -86251,6 +86253,14 @@ export const exercises = [
         options: [{ value: "flash" }, { value: "top" }, { value: "zone" }],
         type: InputType.Options,
       },
+      {
+        display_name: "Angle",
+        hidden_by_default: false,
+        id: 3,
+        input_ordinal: 4,
+        default_value: 20,
+        type: InputType.Angle,
+      },
     ],
     instructions: [{ value: "Climbing on a standardized bouldering wall." }],
     // This is meant for scraped readonly workouts and should not be used for user input
@@ -86309,7 +86319,12 @@ export const exercises = [
         type: InputType.Options,
       },
     ],
-    instructions: [{ value: "Like regular bouldering, but each hold must be touched by a foot before a hand." }],
+    instructions: [
+      {
+        value:
+          "Like regular bouldering, but each hold must be touched by a foot before a hand.",
+      },
+    ],
     // This is meant for scraped readonly workouts and should not be used for user input
     is_hidden: true,
     is_popular: false,
