@@ -4,7 +4,7 @@ import type { Session } from "next-auth";
 import { getDB } from "../dbConnect";
 import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
-import { exercises, InputType } from "./exercises";
+import { exercises, InputType, TagType } from "./exercises";
 import {
   isClimbingExercise,
   type WorkoutData,
@@ -64,7 +64,8 @@ export async function getNextSets({
         (ex) => ex.id === scheduleEntry.exerciseId,
       )!;
       const weightInputIndex = exerciseDefinition.inputs.findIndex(
-        ({ type }) => type === InputType.Weight,
+        ({ type }) =>
+          type === InputType.Weight || type === InputType.Weightassist,
       );
       const repsInputIndex = exerciseDefinition.inputs.findIndex(
         ({ type }) => type === InputType.Reps,
@@ -83,15 +84,16 @@ export async function getNextSets({
           : acc;
       }, exercise.sets[0]);
 
-      const heaviestSetWeight = heaviestSet?.inputs[weightInputIndex]?.value;
+      const heaviestSetWeight =
+        heaviestSet?.inputs[weightInputIndex]?.value ||
+        scheduleEntry.baseWeight;
 
       const workingSets =
-        (heaviestSetWeight &&
+        (heaviestSetWeight !== undefined &&
           exercise?.sets.filter(
             (set) => set.inputs[weightInputIndex]?.value === heaviestSetWeight,
           )) ||
         null;
-
       const successful =
         workingSets &&
         scheduleEntry.workingSets &&
@@ -108,7 +110,7 @@ export async function getNextSets({
 
       const goalWeight =
         scheduleEntry.deloadFactor && scheduleEntry.increment
-          ? heaviestSetWeight
+          ? heaviestSetWeight !== undefined
             ? successful
               ? finalWorkingSetReps === scheduleEntry.workingReps! * 2
                 ? scheduleEntry.increment * 2 + heaviestSetWeight
@@ -117,6 +119,16 @@ export async function getNextSets({
             : scheduleEntry.baseWeight
           : null;
 
+      if (exercise?.exerciseId === 288) {
+        console.log({
+          workingSets,
+          heaviestSetWeight,
+          exercise,
+          scheduleEntry,
+          goalWeight,
+          successful,
+        });
+      }
       return {
         workedOutAt: workout?.workedOutAt || null,
         exerciseId: scheduleEntry.exerciseId,
@@ -124,7 +136,10 @@ export async function getNextSets({
         nextWorkingSets: scheduleEntry.workingSets,
         nextWorkingSetsReps: scheduleEntry.workingReps,
         nextWorkingSetsWeight: goalWeight
-          ? Math.abs(goalWeight - Math.round(goalWeight)) < 0.5
+          ? // Barbell exercises use two plates so not all subdivisions are possible
+            exerciseDefinition.tags?.find(
+              (tag) => tag.name === "Barbell" && tag.type === TagType.Equipment,
+            ) && Math.abs(goalWeight - Math.round(goalWeight)) < 0.5
             ? Math.round(goalWeight)
             : goalWeight
           : goalWeight,
