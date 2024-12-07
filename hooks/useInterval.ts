@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-type Callback<A> = (...args: A[]) => void;
+type Callback<A> = (...args: A[]) => void | Promise<void>;
 export default function useInterval<A = unknown>(
   callback: Callback<A>,
   delay?: number | null,
@@ -14,7 +14,7 @@ export default function useInterval<A = unknown>(
 
   useEffect(() => {
     function tick() {
-      savedCallback.current?.(...args);
+      void savedCallback.current?.(...args);
     }
     if (delay !== null && delay !== undefined) {
       const id = setInterval(tick, delay);
