@@ -37,6 +37,7 @@ export async function getNextSets({
                   userId: user.id,
                   "exercises.exerciseId": scheduleEntry.exerciseId,
                   workedOutAt: { $lte: to },
+                  deletedAt: { $exists: false },
                 },
                 { sort: { workedOutAt: -1 } },
               ),
@@ -241,7 +242,13 @@ export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
     db
       .collection<WorkoutData>("materialized_workouts_view")
       .aggregate([
-        { $match: { userId, location: { $exists: true, $ne: null } } },
+        {
+          $match: {
+            userId,
+            location: { $exists: true, $ne: null },
+            deletedAt: { $exists: false },
+          },
+        },
         {
           $group: {
             _id: { location: "$location", userId: "$userId" },
@@ -280,7 +287,7 @@ export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
     db
       .collection<WorkoutData>("materialized_workouts_view")
       .aggregate([
-        { $match: { userId } },
+        { $match: { userId, deletedAt: { $exists: false } } },
         { $unwind: "$exercises" },
         {
           $group: {

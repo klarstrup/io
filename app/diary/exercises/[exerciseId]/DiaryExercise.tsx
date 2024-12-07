@@ -31,6 +31,7 @@ export default async function DiaryExercise({
       {
         userId: user.id,
         "exercises.exerciseId": exerciseId,
+        deletedAt: { $exists: false },
       },
       { sort: { workedOutAt: -1 } },
     ).toArray()

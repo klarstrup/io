@@ -65,6 +65,7 @@ export async function getDiaryEntriesShallow({
       for await (const workout of MaterializedWorkoutsView.find({
         userId: user.id,
         workedOutAt: rangeToQuery(from, to),
+        deletedAt: { $exists: false },
       })) {
         addDiaryEntry(workout.workedOutAt, "workouts", {
           ...workout,

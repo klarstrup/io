@@ -139,6 +139,7 @@ async function LeastRecentGym({
             "exercises.exerciseId": 2001,
             location,
             workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
+            deletedAt: { $exists: false },
           },
           { sort: { workedOutAt: -1 } },
         );

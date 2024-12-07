@@ -27,6 +27,7 @@ export async function DiaryAgendaWorkoutsWrapper({
       {
         userId: user.id,
         workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
+        deletedAt: { $exists: false },
       },
       { sort: { workedOutAt: -1 } },
     ).toArray(),
@@ -45,6 +46,7 @@ export async function DiaryAgendaWorkoutsWrapper({
               userId: user.id,
               "exercises.exerciseId": exercise.exerciseId,
               workedOutAt: { $lt: workout.workedOutAt },
+              deletedAt: { $exists: false },
             },
             { sort: { workedOutAt: -1 } },
           ).toArray();

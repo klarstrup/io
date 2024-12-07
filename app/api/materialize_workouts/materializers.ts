@@ -210,7 +210,7 @@ export async function* materializeAllIoWorkouts({
   yield await db
     .collection<WorkoutData>("workouts")
     .aggregate([
-      { $match: { userId: user.id, deletedAt: { $exists: false } } },
+      { $match: { userId: user.id } },
       {
         $addFields: {
           id: { $toString: "$_id" },

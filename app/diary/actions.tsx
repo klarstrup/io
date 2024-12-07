@@ -50,6 +50,12 @@ export async function deleteWorkout(workoutId: string) {
     { _id: new ObjectId(workoutId) },
     { $set: { deletedAt: new Date() } },
   );
+
+  void updateLocationCounts(user.id);
+  void updateExerciseCounts(user.id);
+
+  await arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
+
   revalidatePath("/diary");
 
   return result.modifiedCount;
