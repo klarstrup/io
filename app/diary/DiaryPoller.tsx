@@ -18,7 +18,6 @@ export function DiaryPoller({
     const scrapedAt = await mostRecentlyScrapedAtAction(userId);
     const loadedAtDate = new Date(loadedAt);
 
-    console.log({ scrapedAt, loadedAtDate });
     if (scrapedAt > loadedAtDate) {
       console.info(
         `Refreshing diary because scrapedAt ${scrapedAt.toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
