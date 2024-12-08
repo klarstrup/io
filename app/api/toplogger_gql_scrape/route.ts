@@ -438,11 +438,11 @@ export const GET = () =>
               { length: Math.ceil(currentTotal / 10) },
               (_, i) => i + 1,
             ),
-            5,
+            4,
           );
           const pageNumbers: number[] = randomSliceOfSize(
             Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-            5,
+            4,
           );
 
           yield { currentPageNumbers, pageNumbers };
