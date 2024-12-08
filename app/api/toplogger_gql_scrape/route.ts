@@ -7,7 +7,7 @@ import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { randomSliceOfSize, shuffle } from "../../../utils";
+import { omit, randomSliceOfSize, shuffle } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -19,6 +19,7 @@ import {
 } from "../../../utils/graphql";
 import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
+import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -176,7 +177,7 @@ export interface TopLoggerClimbUserDereferenced
   holdColor: HoldColor;
 }
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
@@ -275,6 +276,18 @@ export const GET = () =>
 
         yield* ensureAuthTokens();
 
+        const agentHeaders = request.headers;
+        agentHeaders.delete("cookie");
+        agentHeaders.delete("host");
+        agentHeaders.delete("x-forwarded-for");
+        agentHeaders.delete("x-forwarded-host");
+        agentHeaders.delete("x-forwarded-port");
+        agentHeaders.delete("x-forwarded-proto");
+
+        agentHeaders.set("pragma", "no-cache");
+        agentHeaders.set("origin", "https://app.toplogger.nu");
+        agentHeaders.set("x-app-locale", "en-us");
+
         const fetchQuery = <
           TData = Record<string, unknown>,
           TVariables extends Record<string, unknown> = Record<string, unknown>,
@@ -286,15 +299,23 @@ export const GET = () =>
             query,
             variables,
             "https://app.toplogger.nu/graphql",
-            { headers },
+            {
+              headers: {
+                ...agentHeaders,
+                ...headers,
+              },
+            },
           );
         const fetchQueries = <TData = Record<string, unknown>>(
           reqs: GraphQLRequestTuple[],
         ) =>
           fetchGraphQLQueries<TData>(reqs, "https://app.toplogger.nu/graphql", {
-            headers,
+            headers: {
+              ...agentHeaders,
+              ...headers,
+            },
           });
-
+        console.log(agentHeaders);
         const userMeResponse = await fetchQuery(gql`
           query {
             userMe {
