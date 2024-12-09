@@ -381,7 +381,7 @@ export async function* materializeAllKilterBoardWorkouts({
     if (dataSource.source !== DataSource.KilterBoard) continue;
 
     const { user_id } = dataSource.config;
-    console.log(dataSource);
+
     yield await db
       .collection<KilterBoard.Ascent>("kilterboard_ascents")
       .aggregate([

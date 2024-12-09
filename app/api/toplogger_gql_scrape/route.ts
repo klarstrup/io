@@ -315,7 +315,7 @@ export const GET = (request: NextRequest) =>
               ...headers,
             },
           });
-        console.log(agentHeaders);
+
         const userMeResponse = await fetchQuery(gql`
           query {
             userMe {

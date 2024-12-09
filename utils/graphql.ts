@@ -530,7 +530,7 @@ export function normalize(
       keyOrNewParentArray = null;
     } else if (!Array.isArray(responseObjectOrArray)) {
       const responseObject = responseObjectOrArray as ResponseObject;
-      // console.log("responseObject", responseObject);
+
       const objectToIdResult = getObjectIdToUse(responseObject);
       keyOrNewParentArray = objectToIdResult ? objectToIdResult : fallbackId;
       // Get or create normalized object
