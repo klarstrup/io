@@ -380,7 +380,7 @@ export const GET = (request: NextRequest) =>
           userMeResponse.data!.userMe.gymUserFavorites as { gym: Gym }[]
         ).map((guf) => guf.gym);
 
-        for (const gym of shuffle(gyms)) {
+        for (const gym of [shuffle(gyms)[0]!]) {
           yield { gym };
           yield* ensureAuthTokens();
 
