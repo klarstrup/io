@@ -13,21 +13,30 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
+    await TomorrowIntervals.createIndexes([
+      { key: { _io_geohash: 1 } },
+      { key: { startTime: 1 } },
+      { key: { _io_geohash: 1, startTime: 1 } },
+    ]);
+
     for (const dataSources of user.dataSources ?? []) {
       if (dataSources.source !== DataSource.Tomorrow) continue;
 
       yield* wrapSource(dataSources, user, async function* ({ geohash }) {
-        const intervals = await fetchTomorrowTimelineIntervals({ geohash });
+        const truncatedGeohash = geohash.slice(0, 4);
+        const intervals = await fetchTomorrowTimelineIntervals({
+          geohash: truncatedGeohash,
+        });
 
         for (const interval of intervals) {
           const startTime = new Date(interval.startTime);
           const updateResult = await TomorrowIntervals.updateOne(
-            { _io_geohash: geohash, startTime },
+            { _io_geohash: truncatedGeohash, startTime },
             {
               $set: {
                 ...interval,
                 startTime,
-                _io_geohash: geohash,
+                _io_geohash: truncatedGeohash,
                 _io_scrapedAt: new Date(),
               },
             },
