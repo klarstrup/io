@@ -385,7 +385,7 @@ export async function* materializeAllKilterBoardWorkouts({
     yield await db
       .collection<KilterBoard.Ascent>("kilterboard_ascents")
       .aggregate([
-        { $match: { user_id: Number(user_id) } },
+        { $match: { user_id: Number(user_id), is_listed: true } },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
