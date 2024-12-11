@@ -2,12 +2,13 @@ import { addDays } from "date-fns";
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
+import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { omit, randomSliceOfSize, shuffle } from "../../../utils";
+import { randomSliceOfSize } from "../../../utils";
 import {
   fetchGraphQLQueries,
   fetchGraphQLQuery,
@@ -19,10 +20,50 @@ import {
 } from "../../../utils/graphql";
 import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
-import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+const authSigninRefreshTokenQuery = gql`
+  mutation ($refreshToken: JWT!) {
+    authSigninRefreshToken(refreshToken: $refreshToken) {
+      access {
+        token
+        expiresAt
+        __typename
+      }
+      refresh {
+        token
+        expiresAt
+        __typename
+      }
+      __typename
+    }
+  }
+`;
+
+const totalQuery = gql`
+  query climbUsers(
+    $gymId: ID
+    $userId: ID
+    $pagination: PaginationInputClimbUsers
+    $pointsExpireAtDateMin: DateTime
+  ) {
+    __typename
+    climbUsers(
+      gymId: $gymId
+      userId: $userId
+      pagination: $pagination
+      pointsExpireAtDateMin: $pointsExpireAtDateMin
+    ) {
+      pagination {
+        total
+        __typename
+      }
+      __typename
+    }
+  }
+`;
 
 const climbUsersQuery = gql`
   query climbUsers(
@@ -219,23 +260,7 @@ export const GET = (request: NextRequest) =>
 
           if (new Date(authTokens.access.expiresAt) < new Date()) {
             const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
-              gql`
-                mutation ($refreshToken: JWT!) {
-                  authSigninRefreshToken(refreshToken: $refreshToken) {
-                    access {
-                      token
-                      expiresAt
-                      __typename
-                    }
-                    refresh {
-                      token
-                      expiresAt
-                      __typename
-                    }
-                    __typename
-                  }
-                }
-              `,
+              authSigninRefreshTokenQuery,
               { refreshToken: authTokens.refresh.token },
               "https://app.toplogger.nu/graphql",
               {
@@ -299,212 +324,81 @@ export const GET = (request: NextRequest) =>
             query,
             variables,
             "https://app.toplogger.nu/graphql",
-            {
-              headers: {
-                ...agentHeaders,
-                ...headers,
-              },
-            },
+            { headers: { ...agentHeaders, ...headers } },
           );
         const fetchQueries = <TData = Record<string, unknown>>(
           reqs: GraphQLRequestTuple[],
         ) =>
           fetchGraphQLQueries<TData>(reqs, "https://app.toplogger.nu/graphql", {
-            headers: {
-              ...agentHeaders,
-              ...headers,
-            },
+            headers: { ...agentHeaders, ...headers },
           });
 
-        const userMeResponse = await fetchQuery(gql`
-          query {
-            userMe {
-              id
-              anonymous
-              profileReviewed
-              avatarUploadPath
-              email
-              firstName
-              lastName
-              fullName
-              gender
-              height
-              weight
-              birthdayAt
-              city
-              state
-              countryCode
-              bio
-              locale
-              gradingSystemBoulders
-              gradingSystemRoutes
-              __typename
+        const userId = dataSource.config.graphQLId;
 
-              gym {
-                id
-                name
-                nameSlug
-                iconPath
-                __typename
-              }
-              gymUserFavorites {
-                id
-                gym {
-                  id
-                  name
-                  nameSlug
-                  iconPath
-                  __typename
-                }
-              }
-            }
+        const graphqlTotalResponse = await fetchQuery(totalQuery, {
+          userId,
+          pagination: { page: 1, perPage: 1 },
+        });
+        const graphqlCurrentTotalResponse = await fetchQuery(totalQuery, {
+          userId,
+          pagination: { page: 1, perPage: 1 },
+          pointsExpireAtDateMin: addDays(new Date(), 1),
+        });
+        const total = (
+          graphqlTotalResponse as {
+            data: { climbUsers: { pagination: { total: number } } };
           }
-        `);
-
-        const userId = (userMeResponse as { data: { userMe: { id: string } } })
-          .data.userMe.id;
-
-        yield { userId };
-
-        if (
-          !userMeResponse.data!.userMe ||
-          !(typeof userMeResponse.data!.userMe === "object") ||
-          !("gymUserFavorites" in userMeResponse.data!.userMe) ||
-          !userMeResponse.data!.userMe.gymUserFavorites ||
-          !Array.isArray(userMeResponse.data!.userMe.gymUserFavorites)
-        ) {
-          throw new Error("No gymUserFavorites");
-        }
-
-        const gyms = (
-          userMeResponse.data!.userMe.gymUserFavorites as { gym: Gym }[]
-        ).map((guf) => guf.gym);
-
-        for (const gym of [shuffle(gyms)[0]!]) {
-          yield { gym };
-          yield* ensureAuthTokens();
-
-          const graphqlTotalResponse = await fetchQuery(
-            gql`
-              query climbUsers(
-                $gymId: ID
-                $userId: ID
-                $pagination: PaginationInputClimbUsers
-              ) {
-                __typename
-                climbUsers(
-                  gymId: $gymId
-                  userId: $userId
-                  pagination: $pagination
-                ) {
-                  pagination {
-                    total
-                    __typename
-                  }
-                  __typename
-                }
-              }
-            `,
-            {
-              gymId: "rl63cez60dc4xo95uw3ta",
-              userId,
-              pagination: { page: 1, perPage: 1 },
-            },
-          );
-          const graphqlCurrentTotalResponse = await fetchQuery(
-            gql`
-              query climbUsers(
-                $gymId: ID
-                $userId: ID
-                $pagination: PaginationInputClimbUsers
-                $pointsExpireAtDateMin: DateTime
-              ) {
-                __typename
-                climbUsers(
-                  gymId: $gymId
-                  userId: $userId
-                  pagination: $pagination
-                  pointsExpireAtDateMin: $pointsExpireAtDateMin
-                ) {
-                  pagination {
-                    total
-                    __typename
-                  }
-                  __typename
-                }
-              }
-            `,
-            {
-              gymId: "rl63cez60dc4xo95uw3ta",
-              userId,
-              pagination: { page: 1, perPage: 1 },
-              pointsExpireAtDateMin: addDays(new Date(), 1),
-            },
-          );
-          const total = (
-            graphqlTotalResponse as {
-              data: { climbUsers: { pagination: { total: number } } };
-            }
-          ).data.climbUsers.pagination.total;
-          const currentTotal = (
-            graphqlCurrentTotalResponse as {
-              data: { climbUsers: { pagination: { total: number } } };
-            }
-          ).data.climbUsers.pagination.total;
-
-          yield { total, currentTotal };
-
-          const currentPageNumbers = randomSliceOfSize(
-            Array.from(
-              { length: Math.ceil(currentTotal / 10) },
-              (_, i) => i + 1,
-            ),
-            4,
-          );
-          const pageNumbers: number[] = randomSliceOfSize(
-            Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-            4,
-          );
-
-          yield { currentPageNumbers, pageNumbers };
-
-          const queries = [
-            ...currentPageNumbers.map(
-              (page): GraphQLRequestTuple => [
-                climbUsersQuery,
-                {
-                  gymId: "rl63cez60dc4xo95uw3ta",
-                  userId,
-                  pagination: { page },
-                  pointsExpireAtDateMin: addDays(new Date(), 1),
-                },
-              ],
-            ),
-            ...pageNumbers.map(
-              (page): GraphQLRequestTuple => [
-                climbUsersQuery,
-                {
-                  gymId: "rl63cez60dc4xo95uw3ta",
-                  userId,
-                  pagination: { page },
-                },
-              ],
-            ),
-          ];
-          const graphqlResponse2 = await fetchQueries(queries);
-
-          for (let i = 0; i < queries.length; i++) {
-            const [query, variables] = queries[i]!;
-            const response = graphqlResponse2[i]!;
-
-            const updateResult = await normalizeAndUpsertQueryData(
-              query,
-              variables,
-              response.data!,
-            );
-
-            yield updateResult;
+        ).data.climbUsers.pagination.total;
+        const currentTotal = (
+          graphqlCurrentTotalResponse as {
+            data: { climbUsers: { pagination: { total: number } } };
           }
+        ).data.climbUsers.pagination.total;
+
+        yield { total, currentTotal };
+
+        const currentPageNumbers = randomSliceOfSize(
+          Array.from({ length: Math.ceil(currentTotal / 10) }, (_, i) => i + 1),
+          6,
+        );
+        const pageNumbers: number[] = randomSliceOfSize(
+          Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
+          4,
+        );
+
+        yield { currentPageNumbers, pageNumbers };
+
+        const queries = [
+          ...currentPageNumbers.map(
+            (page): GraphQLRequestTuple => [
+              climbUsersQuery,
+              {
+                userId,
+                pagination: { page },
+                pointsExpireAtDateMin: addDays(new Date(), 1),
+              },
+            ],
+          ),
+          ...pageNumbers.map(
+            (page): GraphQLRequestTuple => [
+              climbUsersQuery,
+              { userId, pagination: { page } },
+            ],
+          ),
+        ];
+        const graphqlResponse2 = await fetchQueries(queries);
+
+        for (let i = 0; i < queries.length; i++) {
+          const [query, variables] = queries[i]!;
+          const response = graphqlResponse2[i]!;
+
+          const updateResult = await normalizeAndUpsertQueryData(
+            query,
+            variables,
+            response.data!,
+          );
+
+          yield updateResult;
         }
       });
     }
