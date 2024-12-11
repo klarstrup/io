@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const authSigninRefreshTokenQuery = gql`
-  mutation ($refreshToken: JWT!) {
+  mutation authSigninRefreshToken($refreshToken: JWT!) {
     authSigninRefreshToken(refreshToken: $refreshToken) {
       access {
         token
@@ -66,7 +66,7 @@ const totalQuery = gql`
 `;
 
 const climbUsersQuery = gql`
-  query climbUsers(
+  query climbUsersTopTen(
     $gymId: ID
     $userId: ID
     $pagination: PaginationInputClimbUsers
@@ -268,6 +268,7 @@ export const GET = (request: NextRequest) =>
                   authorization: `Bearer ${authTokens.refresh.token}`,
                 },
               },
+              "authSigninRefreshToken",
             );
 
             if (
@@ -319,12 +320,14 @@ export const GET = (request: NextRequest) =>
         >(
           query: DocumentNode,
           variables?: TVariables,
+          operationName?: string,
         ) =>
           fetchGraphQLQuery<TData>(
             query,
             variables,
             "https://app.toplogger.nu/graphql",
             { headers: { ...agentHeaders, ...headers } },
+            operationName,
           );
         const fetchQueries = <TData = Record<string, unknown>>(
           reqs: GraphQLRequestTuple[],
@@ -377,12 +380,14 @@ export const GET = (request: NextRequest) =>
                 pagination: { page },
                 pointsExpireAtDateMin: addDays(new Date(), 1),
               },
+              "climbUsersTopTen",
             ],
           ),
           ...pageNumbers.map(
             (page): GraphQLRequestTuple => [
               climbUsersQuery,
               { userId, pagination: { page } },
+              "climbUsersTopTen",
             ],
           ),
         ];

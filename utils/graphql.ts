@@ -84,10 +84,11 @@ export interface GraphQLRequest<TVariables = Record<string, unknown>> {
   query: DocumentNode;
   variables?: TVariables;
 }
-
+type OperationName = string;
 export type GraphQLRequestTuple<TVariables = Record<string, unknown>> = [
   DocumentNode,
   TVariables?,
+  OperationName?,
 ];
 
 interface FetchResult<TData = Record<string, unknown>> {
@@ -133,11 +134,12 @@ export const fetchGraphQLQuery = async <
   variables: TVariables | undefined,
   url: URL | string,
   init?: RequestInit,
+  operationName?: string,
 ): Promise<FetchResult<TData>> => {
   const response = await fetch(url, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
-    body: JSON.stringify({ variables, query: print(query) }),
+    body: JSON.stringify({ operationName, variables, query: print(query) }),
     method: "POST",
     next: { revalidate: 0 },
   });
@@ -156,15 +158,17 @@ export const fetchGraphQLQueries = async <
   TData = Record<string, unknown>,
   TVariables = Record<string, unknown>,
 >(
-  requests: [DocumentNode, TVariables?][],
+  requests: [DocumentNode, TVariables?, OperationName?][],
   url: URL | string,
   init?: RequestInit,
+  operationName?: string,
 ): Promise<FetchResult<TData>[]> => {
   const response = await fetch(url, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
     body: JSON.stringify(
       requests.map(([query, variables]) => ({
+        operationName,
         variables,
         query: print(query),
       })),
