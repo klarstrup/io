@@ -406,7 +406,7 @@ export const GET = (request: NextRequest) =>
               }
             `,
             {
-              gymId: gym.id,
+              gymId: "rl63cez60dc4xo95uw3ta",
               userId,
               pagination: { page: 1, perPage: 1 },
             },
@@ -435,7 +435,7 @@ export const GET = (request: NextRequest) =>
               }
             `,
             {
-              gymId: gym.id,
+              gymId: "rl63cez60dc4xo95uw3ta",
               userId,
               pagination: { page: 1, perPage: 1 },
               pointsExpireAtDateMin: addDays(new Date(), 1),
@@ -473,7 +473,7 @@ export const GET = (request: NextRequest) =>
               (page): GraphQLRequestTuple => [
                 climbUsersQuery,
                 {
-                  gymId: gym.id,
+                  gymId: "rl63cez60dc4xo95uw3ta",
                   userId,
                   pagination: { page },
                   pointsExpireAtDateMin: addDays(new Date(), 1),
@@ -484,7 +484,7 @@ export const GET = (request: NextRequest) =>
               (page): GraphQLRequestTuple => [
                 climbUsersQuery,
                 {
-                  gymId: gym.id,
+                  gymId: "rl63cez60dc4xo95uw3ta",
                   userId,
                   pagination: { page },
                 },
