@@ -187,7 +187,7 @@ export function WorkoutForm<R extends string>({
         })}
         className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
-        <div className="flex items-center justify-evenly">
+        <div className="inset-x sticky -top-4 z-20 -mt-4 flex items-center justify-evenly border-b-[1px] bg-white pb-2 pt-2">
           <button type="button" onClick={() => router.push(dismissTo)}>
             ❌
           </button>
