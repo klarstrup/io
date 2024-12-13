@@ -4,7 +4,7 @@ import type { Session } from "next-auth";
 import { getDB } from "../dbConnect";
 import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
-import { exercises, InputType, TagType } from "./exercises";
+import { AssistType, exercises, InputType, TagType } from "./exercises";
 import {
   isClimbingExercise,
   type WorkoutData,
@@ -160,20 +160,34 @@ export function getIsSetPR(
   const exercise = exercises.find((e) => e.id === exerciseId);
   if (!exercise) return noPR;
 
-  const inputValues = set.inputs.map((input) => input.value || 0);
-  const inputTypes = exercise.inputs.map((input) => input.type);
+  const inputValues = set.inputs.map(
+    ({ assistType, value }) =>
+      (assistType === AssistType.Assisted ? -value : value) || 0,
+  );
   const now1YearAgo = subYears(date, 1);
   const now3MonthsAgo = subMonths(date, 3);
   let allTimePR = true;
   let oneYearPR = true;
   let threeMonthPR = true;
-  for (const precedingWorkout of precedingWorkouts) {
+  for (const precedingWorkout of [...precedingWorkouts, workout]) {
     for (const workoutExercise of precedingWorkout.exercises) {
       if (workoutExercise.exerciseId !== exerciseId) continue;
 
-      setLoop: for (const { inputs } of workoutExercise.sets) {
-        for (const [index, { value }] of inputs.entries()) {
-          const inputType = inputTypes[index]!;
+      setLoop: for (const exerciseSet of workoutExercise.sets) {
+        // Optimistic identity check
+        if (exerciseSet === set) break;
+        const inputs = exerciseSet.inputs;
+
+        for (const [index, { type: inputType }] of exercise.inputs.entries()) {
+          const input = inputs[index];
+          let value = input?.value;
+          if (value === undefined) {
+            if (inputType !== InputType.Weightassist) {
+              continue;
+            }
+            value = 0;
+          }
+          value = input?.assistType === AssistType.Assisted ? -value : value;
           const inputValue = inputValues[index]!;
 
           if (
@@ -194,38 +208,6 @@ export function getIsSetPR(
         if (precedingWorkout.workedOutAt > now3MonthsAgo) {
           threeMonthPR = false;
         }
-      }
-    }
-  }
-
-  for (const workoutExercise of workout.exercises) {
-    if (workoutExercise.exerciseId !== exerciseId) continue;
-
-    setLoop: for (const exerciseSet of workoutExercise.sets) {
-      // Optimistic identity check
-      if (exerciseSet === set) break;
-
-      for (const [index, { value }] of exerciseSet.inputs.entries()) {
-        const inputType = inputTypes[index]!;
-        const inputValue = inputValues[index]!;
-
-        if (
-          inputType === InputType.Pace || inputType === InputType.Time
-            ? value > inputValue
-            : value < inputValue
-        ) {
-          continue setLoop;
-        }
-      }
-
-      allTimePR = false;
-
-      if (workout.workedOutAt > now1YearAgo) {
-        oneYearPR = false;
-      }
-
-      if (workout.workedOutAt > now3MonthsAgo) {
-        threeMonthPR = false;
       }
     }
   }
