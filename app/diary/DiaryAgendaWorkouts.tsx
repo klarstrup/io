@@ -60,18 +60,15 @@ export function DiaryAgendaWorkouts({
       {isNonEmptyArray(workouts) ? (
         Array.from(workouts)
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
-          ?.map((workout) => {
-            const _id = workout._id.toString();
-            return (
-              <WorkoutEntry
-                exerciseSetPRs={
-                  workoutsExerciseSetPRs?.[workouts.indexOf(workout)]
-                }
-                key={_id}
-                workout={{ ...workout, _id }}
-              />
-            );
-          })
+          ?.map((workout) => (
+            <WorkoutEntry
+              exerciseSetPRs={
+                workoutsExerciseSetPRs?.[workouts.indexOf(workout)]
+              }
+              key={workout._id.toString()}
+              workout={workout}
+            />
+          ))
       ) : (
         <div className="flex h-full flex-wrap items-center justify-around gap-4">
           <div className="flex flex-col items-center justify-center">

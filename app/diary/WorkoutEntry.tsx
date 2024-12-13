@@ -303,14 +303,14 @@ export default function WorkoutEntry({
 }: {
   showDate?: boolean;
   showExerciseName?: boolean;
-  workout: WorkoutData & { _id: string };
+  workout: WorkoutData;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
   const workoutDateStr = dateToString(workout.workedOutAt);
   return (
     <FieldSetX
-      key={workout._id}
+      key={workout.id}
       className={"min-w-[50%] " + (showDate ? "w-full" : "")}
       legend={
         <small className="-ml-2 block leading-none">
