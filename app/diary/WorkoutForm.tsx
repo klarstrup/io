@@ -715,7 +715,10 @@ function InputsForm({
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
-              { setValueAs, onChange },
+              {
+                setValueAs: (v) => (typeof v === "string" && v ? v : undefined),
+                onChange,
+              },
             )}
             className="flex-1"
           >
@@ -735,7 +738,7 @@ function InputsForm({
                 { setValueAs, onChange },
               )}
             >
-              {input.hidden_by_default ? <option value={""}>---</option> : null}
+              {input.hidden_by_default ? <option value="">---</option> : null}
               {frenchRounded.data.map(({ value, name }) => (
                 <option key={value} value={value}>
                   {name}
