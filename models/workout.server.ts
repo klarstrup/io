@@ -182,9 +182,8 @@ export function getIsSetPR(
           const input = inputs[index];
           let value = input?.value;
           if (value === undefined) {
-            if (inputType !== InputType.Weightassist) {
-              continue;
-            }
+            if (inputType !== InputType.Weightassist) continue;
+
             value = 0;
           }
           value = input?.assistType === AssistType.Assisted ? -value : value;
