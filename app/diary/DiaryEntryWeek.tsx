@@ -14,8 +14,12 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
-import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
+import {
+  calculateClimbingStats,
+  isClimbingExercise,
+} from "../../models/workout";
 
 export function DiaryEntryWeek({
   user,
@@ -38,6 +42,16 @@ export function DiaryEntryWeek({
     start: startOfWeek(weekDate, { weekStartsOn: 1 }),
     end: endOfWeek(weekDate, { weekStartsOn: 1 }),
   };
+
+  const weekClimbingSets =
+    diaryEntries?.flatMap(
+      ([, diaryEntry]) =>
+        diaryEntry?.workouts?.flatMap((w) =>
+          w.exercises
+            .filter((e) => isClimbingExercise(e.exerciseId))
+            .flatMap((e) => e.sets.map((set) => [w.location, set] as const)),
+        ) || [],
+    ) || [];
 
   return (
     <div
@@ -68,6 +82,8 @@ export function DiaryEntryWeek({
                 })
               : null}
         </span>
+        {isNonEmptyArray(weekClimbingSets) &&
+          calculateClimbingStats(weekClimbingSets)}
       </div>
       {eachDayOfInterval(weekInterval).map((dayte) => {
         const dateStr = dateToString(dayte);

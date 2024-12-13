@@ -98,6 +98,9 @@ export default class Grade {
   get name() {
     return this.roundedGrade.name;
   }
+  toString() {
+    return this.name;
+  }
   get nameOrQ() {
     const index = this.idxRound;
     if (index == 0) return "?";

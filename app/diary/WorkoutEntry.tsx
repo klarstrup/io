@@ -6,6 +6,7 @@ import Grade from "../../grades";
 import { PRType } from "../../lib";
 import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
 import {
+  calculateClimbingStats,
   isClimbingExercise,
   type WorkoutData,
   type WorkoutExerciseSet,
@@ -377,18 +378,28 @@ export default function WorkoutEntry({
           )!;
           return (
             <div key={exerciseIndex}>
-              {showExerciseName ? (
-                <Link
-                  href={`/diary/exercises/${exercise.id}`}
-                  style={{ color: "#edab00" }}
-                  className="block text-sm font-bold leading-none"
-                >
-                  {[exercise.name, ...exercise.aliases]
-                    .filter((name) => name.length >= 4)
-                    .sort((a, b) => a.length - b.length)[0]!
-                    .replace("Barbell", "")}
-                </Link>
-              ) : null}
+              <div className="flex gap-2">
+                {showExerciseName ? (
+                  <Link
+                    href={`/diary/exercises/${exercise.id}`}
+                    style={{ color: "#edab00" }}
+                    className="block text-sm font-bold leading-none"
+                  >
+                    {[exercise.name, ...exercise.aliases]
+                      .filter((name) => name.length >= 4)
+                      .sort((a, b) => a.length - b.length)[0]!
+                      .replace("Barbell", "")}
+                  </Link>
+                ) : null}
+                {isClimbingExercise(exercise.id)
+                  ? calculateClimbingStats(
+                      workoutExercise.sets.map((set) => [
+                        workout.location,
+                        set,
+                      ]),
+                    )
+                  : null}
+              </div>
               <WorkoutEntryExercise
                 exercise={exercise}
                 sets={workoutExercise.sets}
