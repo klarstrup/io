@@ -175,8 +175,22 @@ export function calculateClimbingStats(
               .at(Math.floor(setAndLocationPairs.length / 2))!,
           ),
         )}
+        ,
+      </span>{" "}
+      <span className="inline-block">
+        T10A:{" "}
+        {String(
+          new Grade(
+            setAndLocationPairs
+              .map(([location, set]) => getSetGrade(set, location) ?? 0)
+              .sort((a, b) => b - a)
+              .slice(0, Math.min(10, setAndLocationPairs.length))
+              .reduce((sum, grade) => sum + grade, 0) /
+              Math.min(10, setAndLocationPairs.length),
+          ),
+        )}
         .
-      </span>
+      </span>{" "}
     </small>
   );
 }
