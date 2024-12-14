@@ -87,12 +87,12 @@ export const isNextSetDue = (
 
 const bouldersColorGradeMap = {
   green: 3,
-  yellow: 4,
-  orange: 5,
+  yellow: 4.33,
+  orange: 5.33,
   blue: 5.67,
-  purple: 6.17,
-  red: 6.5,
-  black: 6.83,
+  purple: 6.33,
+  red: 6.67,
+  black: 7,
 } as const;
 const getGradeOfColorByLocation = (
   color: string,
