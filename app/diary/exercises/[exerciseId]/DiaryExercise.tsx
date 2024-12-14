@@ -79,8 +79,8 @@ export default async function DiaryExercise({
 
   if (!isClimbingExercise(exerciseId) || prType) {
     for (const workout of allWorkoutsOfExercise) {
-      if (!workoutsExerciseSetPRs[workout._id.toString()]) {
-        workoutsExerciseSetPRs[workout._id.toString()] = [];
+      if (!workoutsExerciseSetPRs[workout.id]) {
+        workoutsExerciseSetPRs[workout.id] = [];
       }
 
       const precedingWorkouts = allWorkoutsOfExercise.filter(
@@ -101,7 +101,7 @@ export default async function DiaryExercise({
           ),
         );
       }
-      workoutsExerciseSetPRs[workout._id.toString()]!.push(exerciseSetsPRs);
+      workoutsExerciseSetPRs[workout.id]!.push(exerciseSetsPRs);
     }
   }
 
@@ -154,21 +154,19 @@ export default async function DiaryExercise({
           .filter((workout) => {
             if (!prType) return true;
 
-            const PRs = workoutsExerciseSetPRs?.[workout._id.toString()];
+            const PRs = workoutsExerciseSetPRs?.[workout.id];
             if (!PRs) return false;
 
             return PRs.some((sets) => sets.some((set) => set[prType]));
           })
           .map((workout) => (
-            <li key={String(workout._id)} className="min-h-full">
+            <li key={workout.id} className="min-h-full">
               <WorkoutEntry
                 showExerciseName={false}
-                exerciseSetPRs={
-                  workoutsExerciseSetPRs?.[workout._id.toString()]
-                }
+                exerciseSetPRs={workoutsExerciseSetPRs?.[workout.id]}
                 onlyPRs={prType || undefined}
                 showDate={!mergeWorkouts}
-                workout={{ ...workout, _id: String(workout._id) }}
+                workout={workout}
               />
             </li>
           ))}
