@@ -140,56 +140,26 @@ export function calculateClimbingStats(
     set: WorkoutExerciseSet,
   ])[],
 ) {
+  const problemCount = setAndLocationPairs.length;
+  const gradeSum = setAndLocationPairs.reduce(
+    (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
+    0,
+  );
+  const gradeTop10Average =
+    setAndLocationPairs
+      .map(([location, set]) => getSetGrade(set, location) ?? 0)
+      .sort((a, b) => b - a)
+      .slice(0, Math.min(10, setAndLocationPairs.length))
+      .reduce((sum, grade) => sum + grade, 0) /
+    Math.min(10, setAndLocationPairs.length);
+
   return (
     <small className="block text-center text-[10px]">
-      <span className="inline-block">PC: {setAndLocationPairs.length},</span>{" "}
+      <span className="inline-block">PC: {problemCount},</span>{" "}
+      <span className="inline-block">GS: {gradeSum.toFixed(0)},</span>{" "}
       <span className="inline-block">
-        GS:{" "}
-        {setAndLocationPairs
-          .reduce(
-            (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
-            0,
-          )
-          .toFixed(0)}
-        ,
-      </span>{" "}
-      <span className="inline-block">
-        GA:{" "}
-        {String(
-          new Grade(
-            setAndLocationPairs.reduce(
-              (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
-              0,
-            ) / setAndLocationPairs.length,
-          ),
-        )}
-        ,
-      </span>{" "}
-      <span className="inline-block">
-        GM:{" "}
-        {String(
-          new Grade(
-            setAndLocationPairs
-              .map(([location, set]) => getSetGrade(set, location) ?? 0)
-              .sort((a, b) => a - b)
-              .at(Math.floor(setAndLocationPairs.length / 2))!,
-          ),
-        )}
-        ,
-      </span>{" "}
-      <span className="inline-block">
-        T10A:{" "}
-        {String(
-          new Grade(
-            setAndLocationPairs
-              .map(([location, set]) => getSetGrade(set, location) ?? 0)
-              .sort((a, b) => b - a)
-              .slice(0, Math.min(10, setAndLocationPairs.length))
-              .reduce((sum, grade) => sum + grade, 0) /
-              Math.min(10, setAndLocationPairs.length),
-          ),
-        )}
-        .
+        T10A: {new Grade(gradeTop10Average).nameFloor}
+        <small>+{new Grade(gradeTop10Average).subGradePercent}%</small>.
       </span>{" "}
     </small>
   );
