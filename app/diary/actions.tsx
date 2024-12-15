@@ -1,5 +1,6 @@
 "use server";
 
+import { waitUntil } from "@vercel/functions";
 import { max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
@@ -24,7 +25,9 @@ export async function upsertWorkout(
 ) {
   const user = (await auth())?.user;
   if (!user || workout.userId !== user.id) throw new Error("Unauthorized");
+  console.time("upsertWorkout");
 
+  console.time("upsertWorkout:upsertWorkout");
   let _id: ObjectId;
   if ("_id" in workout) {
     const { _id: id, ...rest } = workout;
@@ -34,13 +37,19 @@ export async function upsertWorkout(
     const newWorkout = await Workouts.insertOne(workout);
     _id = newWorkout.insertedId;
   }
+  console.timeEnd("upsertWorkout:upsertWorkout");
 
-  void updateLocationCounts(user.id);
-  void updateExerciseCounts(user.id);
+  waitUntil(updateLocationCounts(user.id));
+  waitUntil(updateExerciseCounts(user.id));
 
+  console.time("upsertWorkout:materializeAllIoWorkouts");
   await arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
+  console.timeEnd("upsertWorkout:materializeAllIoWorkouts");
 
   revalidatePath("/diary");
+
+  console.timeEnd("upsertWorkout");
+
   return String(_id);
 }
 
