@@ -4,6 +4,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
+import { DataSource } from "../../sources/utils";
 import {
   dateToString,
   decodeGeohash,
@@ -15,7 +16,6 @@ import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
-import { DataSource } from "../../sources/utils";
 
 export function DiaryAgenda({
   date,

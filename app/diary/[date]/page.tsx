@@ -1,6 +1,7 @@
 import { auth } from "../../../auth";
 import { Modal } from "../../../components/Modal";
 import { DiaryAgenda } from "../DiaryAgenda";
+import { KeyHandler } from "./KeyHandler";
 
 export default async function DiaryDayModal(props: {
   params: Promise<{ date: `${number}-${number}-${number}` }>;
@@ -18,6 +19,7 @@ export default async function DiaryDayModal(props: {
 
   return (
     <Modal dismissTo={`/diary`}>
+      <KeyHandler date={date} />
       <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-4 shadow-xl shadow-black/50">
         <DiaryAgenda user={user} date={date} isModal />
       </div>
