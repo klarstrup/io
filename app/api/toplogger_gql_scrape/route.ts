@@ -359,7 +359,7 @@ export const GET = (request: NextRequest) =>
         );
         const currentPageNumbers = [
           ...allCurrentPageNumbers.slice(0, 5),
-          ...randomSliceOfSize(allCurrentPageNumbers.slice(5), 10),
+          ...randomSliceOfSize(allCurrentPageNumbers.slice(5), 5),
         ];
         const pageNumbers: number[] = randomSliceOfSize(
           Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
