@@ -253,14 +253,13 @@ export const GET = (request: NextRequest) =>
         yield { authTokens };
 
         if (new Date(authTokens.access.expiresAt) < new Date()) {
+          yield "Access token expired, refreshing token";
           const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
             authSigninRefreshTokenQuery,
             { refreshToken: authTokens.refresh.token },
             "https://app.toplogger.nu/graphql",
             {
-              headers: {
-                authorization: `Bearer ${authTokens.refresh.token}`,
-              },
+              headers: { authorization: `Bearer ${authTokens.refresh.token}` },
             },
             "authSigninRefreshToken",
           );
