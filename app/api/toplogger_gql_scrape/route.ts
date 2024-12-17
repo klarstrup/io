@@ -247,60 +247,51 @@ export const GET = (request: NextRequest) =>
           { key: { __typename: 1, userId: 1, tickedFirstAtDate: 1 } },
         ]);
 
-        let headers: HeadersInit = {};
+        let headers: HeadersInit = {
+          authorization: `Bearer ${authTokens.access.token}`,
+        };
         yield { authTokens };
-        // eslint-disable-next-line no-inner-declarations
-        async function* ensureAuthTokens() {
-          if (!authTokens) {
-            throw new Error("No auth tokens");
-          }
-          if (!user) {
-            throw new Error("No user");
-          }
 
-          if (new Date(authTokens.access.expiresAt) < new Date()) {
-            const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
-              authSigninRefreshTokenQuery,
-              { refreshToken: authTokens.refresh.token },
-              "https://app.toplogger.nu/graphql",
-              {
-                headers: {
-                  authorization: `Bearer ${authTokens.refresh.token}`,
-                },
+        if (new Date(authTokens.access.expiresAt) < new Date()) {
+          const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
+            authSigninRefreshTokenQuery,
+            { refreshToken: authTokens.refresh.token },
+            "https://app.toplogger.nu/graphql",
+            {
+              headers: {
+                authorization: `Bearer ${authTokens.refresh.token}`,
               },
-              "authSigninRefreshToken",
+            },
+            "authSigninRefreshToken",
+          );
+
+          if (
+            typeof authSigninRefreshTokenResponse === "object" &&
+            authSigninRefreshTokenResponse &&
+            "data" in authSigninRefreshTokenResponse &&
+            typeof authSigninRefreshTokenResponse.data === "object" &&
+            authSigninRefreshTokenResponse.data &&
+            "authSigninRefreshToken" in authSigninRefreshTokenResponse.data &&
+            typeof authSigninRefreshTokenResponse.data
+              .authSigninRefreshToken === "object" &&
+            isAuthTokens(
+              authSigninRefreshTokenResponse.data.authSigninRefreshToken,
+            )
+          ) {
+            authTokens =
+              authSigninRefreshTokenResponse.data.authSigninRefreshToken;
+            await Users.updateOne(
+              { _id: new ObjectId(user.id) },
+              { $set: { topLoggerAuthTokens: authTokens } },
             );
-
-            if (
-              typeof authSigninRefreshTokenResponse === "object" &&
-              authSigninRefreshTokenResponse &&
-              "data" in authSigninRefreshTokenResponse &&
-              typeof authSigninRefreshTokenResponse.data === "object" &&
-              authSigninRefreshTokenResponse.data &&
-              "authSigninRefreshToken" in authSigninRefreshTokenResponse.data &&
-              typeof authSigninRefreshTokenResponse.data
-                .authSigninRefreshToken === "object" &&
-              isAuthTokens(
-                authSigninRefreshTokenResponse.data.authSigninRefreshToken,
-              )
-            ) {
-              authTokens =
-                authSigninRefreshTokenResponse.data.authSigninRefreshToken;
-              await Users.updateOne(
-                { _id: new ObjectId(user.id) },
-                { $set: { topLoggerAuthTokens: authTokens } },
-              );
-              yield "Updated authTokens with refresh token";
-              yield { authTokens };
-            } else {
-              throw new Error("Failed to refresh token");
-            }
+            yield "Updated authTokens with refresh token";
+            yield { authTokens };
+          } else {
+            throw new Error("Failed to refresh token");
           }
-
-          headers = { authorization: `Bearer ${authTokens.access.token}` };
         }
 
-        yield* ensureAuthTokens();
+        headers = { authorization: `Bearer ${authTokens.access.token}` };
 
         const agentHeaders = request.headers;
         agentHeaders.delete("cookie");
