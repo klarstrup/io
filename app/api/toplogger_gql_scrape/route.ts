@@ -353,10 +353,14 @@ export const GET = (request: NextRequest) =>
 
         yield { total, currentTotal };
 
-        const currentPageNumbers = randomSliceOfSize(
-          Array.from({ length: Math.ceil(currentTotal / 10) }, (_, i) => i + 1),
-          10,
+        const allCurrentPageNumbers = Array.from(
+          { length: Math.ceil(currentTotal / 10) },
+          (_, i) => i + 1,
         );
+        const currentPageNumbers = [
+          ...allCurrentPageNumbers.slice(0, 5),
+          ...randomSliceOfSize(allCurrentPageNumbers.slice(5), 10),
+        ];
         const pageNumbers: number[] = randomSliceOfSize(
           Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
           2,
