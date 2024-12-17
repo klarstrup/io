@@ -5,13 +5,13 @@ import { DataSource, UserDataSource } from "../../../sources/utils";
 
 const sourceScrapeMap: Omit<
   Record<DataSource, string>,
-  DataSource.Fitocracy | DataSource.TopLogger
+  DataSource.Fitocracy
 > = {
   ical: "ical_scrape",
   myfitnesspal: "myfitnesspal_scrape",
   rundouble: "rundouble_scrape",
   tomorrow: "tomorrow_scrape",
-  //  toplogger: "toplogger_gql_scrape",
+  toplogger: "toplogger_gql_scrape",
   kilterboard: "kilterboard_scrape",
 };
 
@@ -22,9 +22,7 @@ export async function GET() {
     .flatMap((user) => user.dataSources)
     .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
     .filter(
-      (dataSource) =>
-        dataSource.source !== DataSource.Fitocracy && // Fitocracy is read-only
-        dataSource.source !== DataSource.TopLogger, // TopLogger is acting up
+      (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
     )
     .sort((a, b) =>
       compareAsc(
