@@ -281,7 +281,10 @@ export const GET = (request: NextRequest) =>
               authSigninRefreshTokenResponse.data.authSigninRefreshToken;
             await Users.updateOne(
               { _id: new ObjectId(user.id) },
-              { $set: { topLoggerAuthTokens: authTokens } },
+              {
+                $set: { "dataSources.$[source].config.authTokens": authTokens },
+              },
+              { arrayFilters: [{ "source.id": dataSource.id }] },
             );
             yield "Updated authTokens with refresh token";
             yield { authTokens };
