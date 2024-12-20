@@ -145,21 +145,21 @@ export function calculateClimbingStats(
     (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
     0,
   );
-  const gradeTop10Average =
+  const gradeTop5Average =
     setAndLocationPairs
       .map(([location, set]) => getSetGrade(set, location) ?? 0)
       .sort((a, b) => b - a)
-      .slice(0, Math.min(10, setAndLocationPairs.length))
+      .slice(0, Math.min(5, setAndLocationPairs.length))
       .reduce((sum, grade) => sum + grade, 0) /
-    Math.min(10, setAndLocationPairs.length);
+    Math.min(5, setAndLocationPairs.length);
 
   return (
     <small className="block text-center text-[10px]">
       <span className="inline-block">PC: {problemCount},</span>{" "}
       <span className="inline-block">GS: {gradeSum.toFixed(0)},</span>{" "}
       <span className="inline-block">
-        T10A: {new Grade(gradeTop10Average).nameFloor}
-        <small>+{new Grade(gradeTop10Average).subGradePercent}%</small>.
+        T5A: {new Grade(gradeTop5Average).nameFloor}
+        <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>.
       </span>{" "}
     </small>
   );
