@@ -2,6 +2,7 @@
 import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
 import Link from "next/link";
+import { JSX } from "react";
 import type { DiaryEntry } from "../../lib";
 import { exercises, TagType } from "../../models/exercises";
 import { isClimbingExercise, WorkoutData } from "../../models/workout";
@@ -111,52 +112,62 @@ function WorkoutsSummary({
           .map((exerciseId) => {
             const exercise = exercises.find(({ id }) => exerciseId === id)!;
 
-            return {
-              id: exercise.id,
-              name: exercise.name,
-              icon: isClimbingExercise(exercise.id) ? (
-                "🧗‍♀️"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Equipment && tag.name === "Barbell",
-                ) ? (
-                "🏋️‍♀️"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Equipment && tag.name === "Drumkit",
-                ) ? (
-                "🥁"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Equipment &&
-                    (tag.name === "Dumbbell" ||
-                      tag.name === "EZ Bar" ||
-                      tag.name === "Cables" ||
-                      tag.name === "Machine"),
-                ) ? (
-                "💪"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.MuscleGroup && tag.name === "Cardio",
-                ) ? (
-                "🏃‍♀️"
-              ) : exercise.tags?.some(
-                  (tag) =>
-                    tag.type === TagType.Type && tag.name === "Calisthenics",
-                ) ? (
-                "🤸‍♀️"
-              ) : (
-                <span
-                  style={{
-                    fontSize: "0.125em",
-                    display: "inline-block",
-                    maxWidth: "12em",
-                  }}
-                >
-                  {exercise.name}
-                </span>
-              ),
-            };
+            let icon: JSX.Element | string = (
+              <span
+                style={{
+                  fontSize: "0.125em",
+                  display: "inline-block",
+                  maxWidth: "12em",
+                }}
+              >
+                {exercise.name}
+              </span>
+            );
+
+            if (isClimbingExercise(exercise.id)) {
+              icon = "🧗‍♀️";
+            } else if (
+              exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Equipment && tag.name === "Barbell",
+              )
+            ) {
+              icon = "🏋️‍♀️";
+            } else if (
+              exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Equipment && tag.name === "Drumkit",
+              )
+            ) {
+              icon = "🥁";
+            } else if (
+              exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Equipment &&
+                  (tag.name === "Dumbbell" ||
+                    tag.name === "EZ Bar" ||
+                    tag.name === "Cables" ||
+                    tag.name === "Machine"),
+              )
+            ) {
+              icon = "💪";
+            } else if (
+              exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.MuscleGroup && tag.name === "Cardio",
+              )
+            ) {
+              icon = "🏃‍♀️";
+            } else if (
+              exercise.tags?.some(
+                (tag) =>
+                  tag.type === TagType.Type && tag.name === "Calisthenics",
+              )
+            ) {
+              icon = "🤸‍♀️";
+            }
+
+            return { id: exercise.id, name: exercise.name, icon };
           }),
         ({ icon }) => icon,
       ).map(({ id, name, icon }) => (
