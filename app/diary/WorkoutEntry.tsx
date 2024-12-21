@@ -13,7 +13,13 @@ import {
   type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
-import { dateToString, omit, seconds2time } from "../../utils";
+import {
+  dateToString,
+  HOUR_IN_SECONDS,
+  MINUTE_IN_SECONDS,
+  omit,
+  seconds2time,
+} from "../../utils";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);
@@ -75,7 +81,13 @@ function WorkoutEntryExerciseSetRow({
                     <small>min/km</small>
                   </>
                 ) : inputType === InputType.Time ? (
-                  seconds2time(Math.round(input.value))
+                  seconds2time(
+                    input.unit === Unit.Hr
+                      ? input.value * HOUR_IN_SECONDS
+                      : input.unit === Unit.Min
+                        ? input.value * MINUTE_IN_SECONDS
+                        : input.value,
+                  )
                 ) : inputType === InputType.Distance ? (
                   <>
                     {(input.unit === Unit.M
