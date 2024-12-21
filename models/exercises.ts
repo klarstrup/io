@@ -50,6 +50,7 @@ export enum InputType {
 }
 
 export enum TagType {
+  Discipline = "Discipline",
   Equipment = "Equipment",
   ExperienceLevel = "Experience Level",
   MuscleGroup = "Muscle Group",
@@ -36370,6 +36371,14 @@ export const exercises = [
       {
         type: TagType.MuscleGroup,
         name: "Cardio",
+      },
+      {
+        type: TagType.Discipline,
+        name: "Music",
+      },
+      {
+        type: TagType.Equipment,
+        name: "Drumkit",
       },
     ],
   },

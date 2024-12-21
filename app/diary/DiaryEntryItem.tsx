@@ -123,6 +123,11 @@ function WorkoutsSummary({
                 "🏋️‍♀️"
               ) : exercise.tags?.some(
                   (tag) =>
+                    tag.type === TagType.Equipment && tag.name === "Drumkit",
+                ) ? (
+                "🥁"
+              ) : exercise.tags?.some(
+                  (tag) =>
                     tag.type === TagType.Equipment &&
                     (tag.name === "Dumbbell" ||
                       tag.name === "EZ Bar" ||
