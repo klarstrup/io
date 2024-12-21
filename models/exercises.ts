@@ -36334,7 +36334,7 @@ export const exercises = [
       },
       {
         display_name: "Options",
-        hidden_by_default: false,
+        hidden_by_default: true,
         id: 1,
         input_ordinal: 4,
         default_value: 1,
