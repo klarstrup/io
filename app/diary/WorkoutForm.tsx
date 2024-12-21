@@ -524,7 +524,7 @@ function SetsForm({
                       sets[sets.length - 1]?.inputs[inputIndex];
 
                     return {
-                      value: lastSetInput?.value ?? 0,
+                      value: lastSetInput?.value ?? input.default_value ?? 0,
                       unit:
                         lastSetInput?.unit ??
                         input.metric_unit ??
@@ -615,7 +615,7 @@ function SetsForm({
                       const setInput = set.inputs[inputIndex];
 
                       return {
-                        value: setInput?.value ?? 0,
+                        value: setInput?.value ?? input.default_value ?? 0,
                         unit:
                           setInput?.unit ??
                           input.metric_unit ??
