@@ -6,7 +6,7 @@ import { useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
 import { updateUserExerciseSchedules } from "../app/diary/actions";
-import { exercises } from "../models/exercises";
+import { exercises, InputType } from "../models/exercises";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { FieldSetY } from "./FieldSet";
@@ -132,62 +132,79 @@ export default function UserStuffWorkoutScheduleForm({
                           <option value={7}>Weekly</option>
                         </select>
                       </label>
-                      <label>
-                        Sets:{" "}
-                        <input
-                          type="number"
-                          {...register(
-                            `exerciseSchedules.${index}.workingSets`,
-                            { valueAsNumber: true },
-                          )}
-                          className="w-full"
-                        />
-                      </label>
-                      <label>
-                        Reps:{" "}
-                        <input
-                          type="number"
-                          {...register(
-                            `exerciseSchedules.${index}.workingReps`,
-                            { valueAsNumber: true },
-                          )}
-                          className="w-full"
-                        />
-                      </label>
-                      <label>
-                        Base Weight:{" "}
-                        <input
-                          type="number"
-                          {...register(
-                            `exerciseSchedules.${index}.baseWeight`,
-                            { valueAsNumber: true },
-                          )}
-                          className="w-full"
-                        />
-                      </label>
-                      <label>
-                        Increment:{" "}
-                        <input
-                          type="number"
-                          step={0.01}
-                          {...register(`exerciseSchedules.${index}.increment`, {
-                            valueAsNumber: true,
-                          })}
-                          className="w-full"
-                        />
-                      </label>
-                      <label>
-                        Deload:{" "}
-                        <input
-                          type="number"
-                          step={0.01}
-                          {...register(
-                            `exerciseSchedules.${index}.deloadFactor`,
-                            { valueAsNumber: true },
-                          )}
-                          className="w-full"
-                        />
-                      </label>
+                      {exercise.inputs.some(
+                        (input) => input.type === InputType.Reps,
+                      ) ? (
+                        <>
+                          <label>
+                            Sets:{" "}
+                            <input
+                              type="number"
+                              {...register(
+                                `exerciseSchedules.${index}.workingSets`,
+                                { valueAsNumber: true },
+                              )}
+                              className="w-full"
+                            />
+                          </label>
+                          <label>
+                            Reps:{" "}
+                            <input
+                              type="number"
+                              {...register(
+                                `exerciseSchedules.${index}.workingReps`,
+                                { valueAsNumber: true },
+                              )}
+                              className="w-full"
+                            />
+                          </label>
+                        </>
+                      ) : null}
+                      {exercise.inputs.some(
+                        (input) =>
+                          input.type === InputType.Weight ||
+                          input.type === InputType.Weightassist,
+                      ) ? (
+                        <>
+                          <label>
+                            Base Weight:{" "}
+                            <input
+                              type="number"
+                              {...register(
+                                `exerciseSchedules.${index}.baseWeight`,
+                                { valueAsNumber: true },
+                              )}
+                              className="w-full"
+                            />
+                          </label>
+                          <label>
+                            Increment:{" "}
+                            <input
+                              type="number"
+                              step={0.01}
+                              {...register(
+                                `exerciseSchedules.${index}.increment`,
+                                {
+                                  valueAsNumber: true,
+                                },
+                              )}
+                              className="w-full"
+                            />
+                          </label>
+                          <label>
+                            Deload:{" "}
+                            <input
+                              type="number"
+                              step={0.01}
+                              {...register(
+                                `exerciseSchedules.${index}.deloadFactor`,
+                                { valueAsNumber: true },
+                              )}
+                              className="w-full"
+                            />
+                          </label>
+                        </>
+                      ) : null}
                     </div>
                   </>
                 ) : null}
