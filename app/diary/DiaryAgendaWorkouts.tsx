@@ -20,6 +20,7 @@ import {
 import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
+import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 
 export function DiaryAgendaWorkouts({
   date,
@@ -43,16 +44,17 @@ export function DiaryAgendaWorkouts({
     <FieldSetY
       className="grid flex-1 gap-x-2 gap-y-1"
       legend={
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           Workouts
           {isNonEmptyArray(workouts) ? (
             <Link
               href={`/diary/${date}/workout`}
-              className="mx-2 cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
+              className="cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
             >
               ➕
             </Link>
           ) : null}
+          <DiaryAgendaWorkoutsSettings />
         </div>
       }
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(256px, 1fr))" }}

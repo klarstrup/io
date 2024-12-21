@@ -3,10 +3,8 @@ import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../auth";
 import { Users } from "../models/user.server";
-import { getAllWorkoutExercises } from "../models/workout.server";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
-import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -131,12 +129,6 @@ export default async function UserStuff() {
             </FieldSetX>
             <FieldSetX legend="Data Sources" className="w-full">
               <UserStuffSourcesForm user={user} />
-            </FieldSetX>
-            <FieldSetX legend="Workout Schedule" className="w-full">
-              <UserStuffWorkoutScheduleForm
-                exercisesStats={await getAllWorkoutExercises(user)}
-                user={user}
-              />
             </FieldSetX>
           </div>
         ) : (
