@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../auth";
 import { Users } from "../models/user.server";
+import CSSBasedPopover from "./CSSBasedPopover";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
 
@@ -43,52 +44,15 @@ export default async function UserStuff() {
   const user = (await auth())?.user;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "4px",
-        right: "4px",
-        paddingLeft: "4px",
-        zIndex: 1337,
-      }}
+    <CSSBasedPopover
+      className="fixed right-1 top-1 z-20 pl-1"
+      control={
+        <span className="absolute right-1 top-1 z-10 cursor-pointer select-none">
+          🌞
+        </span>
+      }
     >
-      <style>
-        {`
-        #toggle:checked + div {
-          display: inline-block !important; 
-        }
-        #toggle:checked + div + label {
-          display: inline-block !important; 
-        }
-      `}
-      </style>
-      <label
-        htmlFor="toggle"
-        style={{
-          position: "absolute",
-          top: "4px",
-          right: "4px",
-          zIndex: 1337,
-          cursor: "pointer",
-          userSelect: "none",
-        }}
-      >
-        🌞
-      </label>
-      <input type="checkbox" id="toggle" className="hidden" />
-      <div
-        style={{
-          background: "yellow",
-          padding: "8px",
-          display: "none",
-          borderRadius: "10px",
-          boxShadow: "yellow 0px 0px 20px",
-          width: "420px",
-          maxWidth: "90vw",
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
-      >
+      <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
         <div className="mb-2 flex gap-2">
           <Link href="/diary">Diary</Link>
           <Link href="/">Events</Link>
@@ -141,19 +105,6 @@ export default async function UserStuff() {
           </div>
         )}
       </div>
-      <label
-        htmlFor="toggle"
-        style={{
-          display: "none",
-          position: "fixed",
-          zIndex: -1,
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0,0,0,0.5)",
-        }}
-      ></label>
-    </div>
+    </CSSBasedPopover>
   );
 }

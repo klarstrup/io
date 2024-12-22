@@ -15,6 +15,7 @@ import {
 import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
+import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
 
 export function DiaryAgenda({
@@ -92,7 +93,12 @@ export function DiaryAgenda({
         fallback={
           <FieldSetY
             className="flex-1"
-            legend={<div className="flex items-center">Workouts</div>}
+            legend={
+              <div className="flex items-center gap-2">
+                <DiaryAgendaWorkoutsSettings />
+                Workouts
+              </div>
+            }
           />
         }
       >

@@ -45,6 +45,7 @@ export function DiaryAgendaWorkouts({
       className="grid flex-1 gap-x-2 gap-y-1"
       legend={
         <div className="flex items-center gap-2">
+          <DiaryAgendaWorkoutsSettings />
           Workouts
           {isNonEmptyArray(workouts) ? (
             <Link
@@ -54,7 +55,6 @@ export function DiaryAgendaWorkouts({
               ➕
             </Link>
           ) : null}
-          <DiaryAgendaWorkoutsSettings />
         </div>
       }
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(256px, 1fr))" }}
