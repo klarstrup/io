@@ -86392,4 +86392,4 @@ export const exercises = [
       },
     ],
   },
-] as ExerciseData[];
+] as unknown as ExerciseData[];
