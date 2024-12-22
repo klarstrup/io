@@ -86344,4 +86344,52 @@ export const exercises = [
       { name: "Body Weight", type: TagType.Equipment },
     ],
   },
+  {
+    aliases: ["Bat hang"],
+    id: 2005,
+    inputs: [
+      {
+        allowed_units: [
+          {
+            conversion_factor: 1.0,
+            name: Unit.SEC,
+          },
+        ],
+        bounds: {
+          maximum: 600.0,
+          minimum: 0.0,
+        },
+        display_name: "Time",
+        hidden_by_default: false,
+        id: 0,
+        imperial_unit: Unit.SEC,
+        input_ordinal: 0,
+        metric_unit: Unit.SEC,
+        type: InputType.Time,
+      },
+    ],
+    instructions: [
+      {
+        value:
+          "Hang upside down from a climbing hold or bar using your toes, climbing shoes recommended.",
+      },
+    ],
+    is_hidden: false,
+    is_popular: false,
+    name: "Toe Hangs",
+    tags: [
+      {
+        type: TagType.Type,
+        name: "Calisthenics",
+      },
+      {
+        name: "Tibialis Anterior",
+        type: TagType.MuscleGroup,
+      },
+      {
+        name: "Abdominals",
+        type: TagType.MuscleGroup,
+      },
+    ],
+  },
 ] as ExerciseData[];
