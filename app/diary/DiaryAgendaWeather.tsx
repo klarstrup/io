@@ -13,7 +13,7 @@ import {
   getSunrise,
   getSunset,
 } from "../../utils";
-import CSSBasedPopover from "../../components/CSSBasedPopover";
+import Popover from "../../components/Popover";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 
 export async function DiaryAgendaWeather({
@@ -56,14 +56,14 @@ export async function DiaryAgendaWeather({
       className="flex min-h-32 flex-none flex-col"
       legend={
         <div className="flex items-center gap-2">
-          <CSSBasedPopover control="📡">
-            <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+          <Popover control="📡">
+            <div className="absolute left-4 top-4 z-30 max-h-[90vh] w-96 max-w-[90vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.weather}
               />
             </div>
-          </CSSBasedPopover>
+          </Popover>
           Weather
         </div>
       }

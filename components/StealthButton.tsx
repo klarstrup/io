@@ -4,7 +4,7 @@ export function StealthButton({
   children,
   ...props
 }: {
-  children: ReactNode;
+  children?: ReactNode;
   onClick: () => void;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (

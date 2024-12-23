@@ -3,8 +3,8 @@ import { revalidateTag } from "next/cache";
 import Link from "next/link";
 import { auth } from "../auth";
 import { Users } from "../models/user.server";
-import CSSBasedPopover from "./CSSBasedPopover";
 import { FieldSetX, FieldSetY } from "./FieldSet";
+import Popover from "./Popover";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -43,7 +43,7 @@ export default async function UserStuff() {
   const user = (await auth())?.user;
 
   return (
-    <CSSBasedPopover
+    <Popover
       className="fixed right-1 top-1 z-20 pl-1"
       control={
         <span className="absolute right-1 top-1 z-10 cursor-pointer select-none">
@@ -51,7 +51,7 @@ export default async function UserStuff() {
         </span>
       }
     >
-      <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+      <div className="absolute right-4 top-4 z-30 max-h-[90vh] w-96 max-w-[90vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
         <div className="mb-2 flex gap-2">
           <Link href="/diary">Diary</Link>
           <Link href="/">Events</Link>
@@ -101,6 +101,6 @@ export default async function UserStuff() {
           </div>
         )}
       </div>
-    </CSSBasedPopover>
+    </Popover>
   );
 }

@@ -11,7 +11,7 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
-import CSSBasedPopover from "../../components/CSSBasedPopover";
+import Popover from "../../components/Popover";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { MongoVEventWithVCalendar } from "../../lib";
@@ -53,14 +53,14 @@ export async function DiaryAgendaEvents({
       className="min-w-[250px] flex-1"
       legend={
         <div className="flex items-center gap-2">
-          <CSSBasedPopover control="📡">
-            <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+          <Popover control="📡">
+            <div className="absolute left-4 top-4 z-30 max-h-[90vh] w-96 max-w-[90vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.events}
               />
             </div>
-          </CSSBasedPopover>
+          </Popover>
           Events
         </div>
       }
