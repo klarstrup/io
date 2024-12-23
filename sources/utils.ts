@@ -64,3 +64,15 @@ export enum DataSource {
   Songkick = "songkick",
   */
 }
+
+export const dataSourceGroups = {
+  workouts: [
+    DataSource.Fitocracy,
+    DataSource.RunDouble,
+    DataSource.TopLogger,
+    DataSource.KilterBoard,
+  ],
+  food: [DataSource.MyFitnessPal],
+  events: [DataSource.ICal],
+  weather: [DataSource.Tomorrow],
+};

@@ -8,7 +8,7 @@ export default async function DiaryAgendaWorkoutsSettings() {
   const user = (await auth())?.user;
 
   return (
-    <CSSBasedPopover control="⚙️" className="relative z-10">
+    <CSSBasedPopover control="⚙️">
       <div className="left-3 top-3 hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
         {user ? (
           <div className="flex flex-col gap-2">

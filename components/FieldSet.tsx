@@ -16,9 +16,7 @@ export const FieldSetY = ({
         className
       }
     >
-      <legend className="ml-2">
-        <big>{legend}</big>
-      </legend>
+      <legend className="ml-2">{legend}</legend>
       {children}
     </fieldset>
   );
@@ -40,9 +38,7 @@ export const FieldSetX = ({
         className
       }
     >
-      <legend className="ml-2">
-        <big>{legend}</big>
-      </legend>
+      <legend className="ml-2">{legend}</legend>
       {children}
     </fieldset>
   );

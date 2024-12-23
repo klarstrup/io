@@ -11,9 +11,12 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
+import CSSBasedPopover from "../../components/CSSBasedPopover";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
+import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { MongoVEventWithVCalendar } from "../../lib";
 import { getUserIcalEventsBetween } from "../../sources/ical";
+import { dataSourceGroups } from "../../sources/utils";
 import {
   dateToString,
   DEFAULT_TIMEZONE,
@@ -46,7 +49,22 @@ export async function DiaryAgendaEvents({
   );
 
   return (
-    <FieldSetY className="min-w-[250px] flex-1" legend="Events">
+    <FieldSetY
+      className="min-w-[250px] flex-1"
+      legend={
+        <div className="flex items-center gap-2">
+          <CSSBasedPopover control="📡">
+            <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+              <UserStuffSourcesForm
+                user={user}
+                sourceOptions={dataSourceGroups.events}
+              />
+            </div>
+          </CSSBasedPopover>
+          Events
+        </div>
+      }
+    >
       {Object.entries(
         calendarEvents.reduce(
           (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {

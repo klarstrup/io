@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FieldSetY } from "../../components/FieldSet";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { getTomorrowForecasts } from "../../sources/tomorrow";
-import { DataSource } from "../../sources/utils";
+import { DataSource, dataSourceGroups } from "../../sources/utils";
 import {
   dateToString,
   decodeGeohash,
@@ -13,6 +13,8 @@ import {
   getSunrise,
   getSunset,
 } from "../../utils";
+import CSSBasedPopover from "../../components/CSSBasedPopover";
+import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 
 export async function DiaryAgendaWeather({
   user,
@@ -50,7 +52,22 @@ export async function DiaryAgendaWeather({
   );
 
   return (
-    <FieldSetY className="flex min-h-32 flex-none flex-col" legend="Weather">
+    <FieldSetY
+      className="flex min-h-32 flex-none flex-col"
+      legend={
+        <div className="flex items-center gap-2">
+          <CSSBasedPopover control="📡">
+            <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+              <UserStuffSourcesForm
+                user={user}
+                sourceOptions={dataSourceGroups.weather}
+              />
+            </div>
+          </CSSBasedPopover>
+          Weather
+        </div>
+      }
+    >
       <ul className="flex justify-around overflow-x-hidden">
         {weatherIntervals
           // Get every 3rd interval

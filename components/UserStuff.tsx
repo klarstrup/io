@@ -5,7 +5,6 @@ import { auth } from "../auth";
 import { Users } from "../models/user.server";
 import CSSBasedPopover from "./CSSBasedPopover";
 import { FieldSetX, FieldSetY } from "./FieldSet";
-import UserStuffSourcesForm from "./UserStuffSourcesForm";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -90,9 +89,6 @@ export default async function UserStuff() {
                   </FieldSetY>
                 </div>
               </form>
-            </FieldSetX>
-            <FieldSetX legend="Data Sources" className="w-full">
-              <UserStuffSourcesForm user={user} />
             </FieldSetX>
           </div>
         ) : (

@@ -1,10 +1,12 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
+import CSSBasedPopover from "../../components/CSSBasedPopover";
 import { FieldSetY } from "../../components/FieldSet";
+import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import { MyFitnessPal } from "../../sources/myfitnesspal";
 import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
-import { DataSource } from "../../sources/utils";
+import { DataSource, dataSourceGroups } from "../../sources/utils";
 import { DEFAULT_TIMEZONE, isNonEmptyArray, rangeToQuery } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
 
@@ -51,7 +53,15 @@ export async function DiaryAgendaFood({
     <FieldSetY
       className="min-w-[250px] flex-[1]"
       legend={
-        <>
+        <div className="flex items-center gap-2">
+          <CSSBasedPopover control="📡">
+            <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+              <UserStuffSourcesForm
+                user={user}
+                sourceOptions={dataSourceGroups.food}
+              />
+            </div>
+          </CSSBasedPopover>
           Food{" "}
           {dayTotalEnergy && dayTotalProtein ? (
             <small>
@@ -59,7 +69,7 @@ export async function DiaryAgendaFood({
               protein
             </small>
           ) : null}
-        </>
+        </div>
       }
     >
       {isNonEmptyArray(food) ? (

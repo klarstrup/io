@@ -114,7 +114,7 @@ export default function CSSBasedPopover({
   const id = useId();
 
   return (
-    <div className={className}>
+    <div className={className || "relative z-10"}>
       <style>
         {`
         #${cssesc(id)}:checked + div {

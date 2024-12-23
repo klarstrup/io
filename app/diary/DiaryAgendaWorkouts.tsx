@@ -9,7 +9,9 @@ import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
+import CSSBasedPopover from "../../components/CSSBasedPopover";
 import { FieldSetY } from "../../components/FieldSet";
+import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { PRType } from "../../lib";
 import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
@@ -17,10 +19,11 @@ import {
   type getNextSets,
   type IWorkoutLocationsView,
 } from "../../models/workout.server";
+import { dataSourceGroups } from "../../sources/utils";
 import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
+import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
-import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 
 export function DiaryAgendaWorkouts({
   date,
@@ -46,6 +49,14 @@ export function DiaryAgendaWorkouts({
       legend={
         <div className="flex items-center gap-2">
           <DiaryAgendaWorkoutsSettings />
+          <CSSBasedPopover control="📡">
+            <div className="hidden max-h-[90vh] w-96 max-w-[90vw] overflow-auto rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+              <UserStuffSourcesForm
+                user={user}
+                sourceOptions={dataSourceGroups.workouts}
+              />
+            </div>
+          </CSSBasedPopover>
           Workouts
           {isNonEmptyArray(workouts) ? (
             <Link
