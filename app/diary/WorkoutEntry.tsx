@@ -329,6 +329,7 @@ export default function WorkoutEntry({
         <small className="-ml-2 block leading-none">
           {showDate ? (
             <Link
+              prefetch={false}
               href={`/diary/${workoutDateStr}`}
               style={{ color: "#edab00" }}
               className="block text-xs font-semibold"
@@ -350,6 +351,7 @@ export default function WorkoutEntry({
                     {" "}
                     <small>-</small>{" "}
                     <Link
+                      prefetch={false}
                       href={`/diary/${workoutDateStr}/workout/${workout.id}`}
                       style={{ color: "#edab00" }}
                       className="text-xs font-semibold"
@@ -393,6 +395,7 @@ export default function WorkoutEntry({
               <div className="flex gap-2">
                 {showExerciseName ? (
                   <Link
+                    prefetch={false}
                     href={`/diary/exercises/${exercise.id}`}
                     style={{ color: "#edab00" }}
                     className="block text-sm font-bold leading-none"

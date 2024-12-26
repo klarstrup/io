@@ -92,6 +92,7 @@ export default function UserStuffWorkoutScheduleForm({
                 legend={
                   <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
                     <Link
+                      prefetch={false}
                       href={`/diary/exercises/${exercise.id}`}
                       style={{ color: "#edab00" }}
                     >

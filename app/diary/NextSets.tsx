@@ -42,6 +42,7 @@ export function NextSets({
               <div className="leading-none">
                 <span className="whitespace-nowrap font-semibold">
                   <Link
+                    prefetch={false}
                     href={`/diary/exercises/${exercise.id}`}
                     style={{ color: "#edab00" }}
                   >
@@ -66,6 +67,7 @@ export function NextSets({
                     Last set{" "}
                     {workedOutAt ? (
                       <Link
+                        prefetch={false}
                         href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
                         style={{ color: "#edab00" }}
                       >

@@ -53,8 +53,12 @@ export default async function UserStuff() {
     >
       <div className="absolute right-4 top-4 z-30 max-h-[90vh] w-96 max-w-[90vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
         <div className="mb-2 flex gap-2">
-          <Link href="/diary">Diary</Link>
-          <Link href="/">Events</Link>
+          <Link prefetch={false} href="/diary">
+            Diary
+          </Link>
+          <Link prefetch={false} href="/">
+            Events
+          </Link>
         </div>
         {user ? (
           <div>

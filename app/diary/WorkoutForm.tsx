@@ -291,6 +291,7 @@ export function WorkoutForm<R extends string>({
                 legend={
                   <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
                     <Link
+                      prefetch={false}
                       href={`/diary/exercises/${exercise.id}`}
                       style={{ color: "#edab00" }}
                     >
@@ -349,6 +350,7 @@ export function WorkoutForm<R extends string>({
                         {" "}
                         based on{" "}
                         <Link
+                          prefetch={false}
                           href={`/diary/${dateToString(nextExerciseSet.workedOutAt)}`}
                           style={{ color: "#edab00" }}
                         >

@@ -60,6 +60,7 @@ export function DiaryAgendaWorkouts({
           Workouts
           {isNonEmptyArray(workouts) ? (
             <Link
+              prefetch={false}
               href={`/diary/${date}/workout`}
               className="cursor-pointer rounded-full bg-[#ff0] px-1 py-0.5 text-center text-xs font-semibold"
             >
@@ -88,6 +89,7 @@ export function DiaryAgendaWorkouts({
             <p className="mb-2 whitespace-nowrap">No workout logged</p>
             <div>
               <Link
+                prefetch={false}
                 href={`/diary/${date}/workout`}
                 className="mb-4 cursor-pointer rounded-2xl bg-[#ff0] px-3 py-2 pr-4 text-center text-xl font-semibold"
               >
@@ -173,6 +175,7 @@ async function LeastRecentGym({
               <span className="font-semibold">{location.location}</span> -{" "}
               {location.mostRecentVisit ? (
                 <Link
+                  prefetch={false}
                   href={`/diary/${dateToString(location.mostRecentVisit)}`}
                   className="text-xs"
                   style={{ color: "#edab00" }}

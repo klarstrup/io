@@ -205,6 +205,7 @@ export default async function TimelineEventContent({
         }}
       >
         <Link
+          prefetch={false}
           title={`${discipline} ${type}`}
           href={disciplines?.includes(discipline) ? "/" : `/${discipline}`}
           style={{ textDecoration: "none", cursor: "pointer" }}
