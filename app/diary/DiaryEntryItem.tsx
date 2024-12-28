@@ -154,6 +154,13 @@ function WorkoutsSummary({
             } else if (
               exercise.tags?.some(
                 (tag) =>
+                  tag.type === TagType.MuscleGroup && tag.name === "Fingers",
+              )
+            ) {
+              icon = "🤏";
+            } else if (
+              exercise.tags?.some(
+                (tag) =>
                   tag.type === TagType.MuscleGroup && tag.name === "Cardio",
               )
             ) {

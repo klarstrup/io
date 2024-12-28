@@ -248,6 +248,33 @@ export default function UserStuffSourcesForm({
                     </>
                   );
                   break;
+                case DataSource.Grippy:
+                  formElements = (
+                    <>
+                      <label className="flex gap-1">
+                        Auth Tokens:
+                        <input
+                          type="text"
+                          value={JSON.stringify(
+                            watch(`dataSources.${index}.config.authTokens`),
+                          )}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const authTokens = JSON.parse(
+                              value,
+                            ) as unknown as typeof source.config.authTokens;
+
+                            update(index, {
+                              ...source,
+                              config: { ...source.config, authTokens },
+                            });
+                          }}
+                          className="flex-1 font-mono"
+                        />
+                      </label>
+                    </>
+                  );
+                  break;
                 case DataSource.Tomorrow:
                   formElements = (
                     <label className="flex gap-1">
@@ -428,6 +455,21 @@ export default function UserStuffSourcesForm({
                       ...initialSourceMeta,
                       source: DataSource.KilterBoard,
                       config: { token: "", user_id: "" },
+                    });
+                    break;
+                  case DataSource.Grippy:
+                    append({
+                      ...initialSourceMeta,
+                      source: DataSource.Grippy,
+                      config: {
+                        authTokens: {
+                          access_token: "",
+                          expires_in: NaN,
+                          token_type: "",
+                          scope: "",
+                          refresh_token: "",
+                        },
+                      },
                     });
                     break;
                   case DataSource.Tomorrow:

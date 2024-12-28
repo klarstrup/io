@@ -3,6 +3,7 @@ import { getDB } from "../../../dbConnect";
 import { Unit } from "../../../models/exercises";
 import { type WorkoutData, WorkoutSource } from "../../../models/workout";
 import type { Fitocracy } from "../../../sources/fitocracy";
+import { Grippy } from "../../../sources/grippy";
 import type { KilterBoard } from "../../../sources/kilterboard";
 import type { RunDouble } from "../../../sources/rundouble";
 import { DataSource } from "../../../sources/utils";
@@ -446,6 +447,65 @@ export async function* materializeAllKilterBoardWorkouts({
   }
 
   yield "materializeAllKilterBoardWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
+}
+
+export async function* materializeAllGrippyWorkouts({
+  user,
+}: {
+  user: Session["user"];
+}) {
+  yield "materializeAllGrippyWorkouts: start";
+  const t = new Date();
+  const db = await getDB();
+
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.Grippy) continue;
+
+    yield await db
+      .collection<Grippy.WorkoutLog>("grippy_workout_logs")
+      .aggregate([
+        { $match: { _io_userId: user.id } },
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: "$uuid" },
+            userId: { $literal: user.id },
+            createdAt: "$end_time",
+            updatedAt: "$end_time",
+            workedOutAt: "$end_time",
+            source: { $literal: WorkoutSource.Grippy },
+            exercises: [
+              {
+                exerciseId: 2006,
+                sets: [
+                  {
+                    inputs: [
+                      { unit: Unit.SEC, value: "$total_hang_time" },
+                      {
+                        unit: Unit.Percent,
+                        value: { $multiply: ["$compliance", 100] },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $merge: {
+            into: "materialized_workouts_view",
+            whenMatched: "replace",
+            on: "id",
+          },
+        },
+      ])
+      .toArray();
+  }
+
+  yield "materializeAllGrippyWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
 }

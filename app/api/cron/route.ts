@@ -13,6 +13,7 @@ const sourceScrapeMap: Omit<
   tomorrow: "tomorrow_scrape",
   toplogger: "toplogger_gql_scrape",
   kilterboard: "kilterboard_scrape",
+  grippy: "grippy_scrape",
 };
 
 export async function GET() {

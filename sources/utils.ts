@@ -32,6 +32,18 @@ type UserDataSourceConfig =
   | {
       source: DataSource.Tomorrow;
       config: { geohash: string };
+    }
+  | {
+      source: DataSource.Grippy;
+      config: {
+        authTokens: {
+          access_token: string;
+          expires_in: number;
+          token_type: string;
+          scope: string;
+          refresh_token: string;
+        };
+      };
     };
 
 export interface UserDataSourceMeta {
@@ -58,6 +70,7 @@ export enum DataSource {
   ICal = "ical",
   KilterBoard = "kilterboard",
   Tomorrow = "tomorrow",
+  Grippy = "grippy",
   /* These are special and not configurable to the user for various reasons
   ClimbAlong = "climbalong",
   Sportstiming = "sportstiming",
@@ -71,6 +84,7 @@ export const dataSourceGroups = {
     DataSource.RunDouble,
     DataSource.TopLogger,
     DataSource.KilterBoard,
+    DataSource.Grippy,
   ],
   food: [DataSource.MyFitnessPal],
   events: [DataSource.ICal],
