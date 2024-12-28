@@ -478,6 +478,7 @@ export async function* materializeAllGrippyWorkouts({
             source: { $literal: WorkoutSource.Grippy },
             exercises: [
               {
+                displayName: "$workout.name",
                 exerciseId: 2006,
                 sets: [
                   {

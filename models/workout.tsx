@@ -30,6 +30,7 @@ export interface WorkoutData {
 
 export interface WorkoutExercise {
   exerciseId: number;
+  displayName?: string;
   sets: WorkoutExerciseSet[];
 }
 
