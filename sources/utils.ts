@@ -44,6 +44,10 @@ type UserDataSourceConfig =
           refresh_token: string;
         };
       };
+    }
+  | {
+      source: DataSource.Crimpd;
+      config: { token: string };
     };
 
 export interface UserDataSourceMeta {
@@ -71,6 +75,7 @@ export enum DataSource {
   KilterBoard = "kilterboard",
   Tomorrow = "tomorrow",
   Grippy = "grippy",
+  Crimpd = "crimpd",
   /* These are special and not configurable to the user for various reasons
   ClimbAlong = "climbalong",
   Sportstiming = "sportstiming",
@@ -85,6 +90,7 @@ export const dataSourceGroups = {
     DataSource.TopLogger,
     DataSource.KilterBoard,
     DataSource.Grippy,
+    DataSource.Crimpd,
   ],
   food: [DataSource.MyFitnessPal],
   events: [DataSource.ICal],

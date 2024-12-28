@@ -275,6 +275,19 @@ export default function UserStuffSourcesForm({
                     </>
                   );
                   break;
+                case DataSource.Crimpd:
+                  formElements = (
+                    <label className="flex gap-1">
+                      Token:{" "}
+                      <input
+                        type="text"
+                        {...register(`dataSources.${index}.config.token`)}
+                        placeholder="Token"
+                        className="flex-1"
+                      />
+                    </label>
+                  );
+                  break;
                 case DataSource.Tomorrow:
                   formElements = (
                     <label className="flex gap-1">
@@ -470,6 +483,13 @@ export default function UserStuffSourcesForm({
                           refresh_token: "",
                         },
                       },
+                    });
+                    break;
+                  case DataSource.Crimpd:
+                    append({
+                      ...initialSourceMeta,
+                      source: DataSource.Crimpd,
+                      config: { token: "" },
                     });
                     break;
                   case DataSource.Tomorrow:

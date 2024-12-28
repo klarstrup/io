@@ -8,6 +8,7 @@ import type { KilterBoard } from "../../../sources/kilterboard";
 import type { RunDouble } from "../../../sources/rundouble";
 import { DataSource } from "../../../sources/utils";
 import type { MongoGraphQLObject } from "../../../utils/graphql";
+import { Crimpd } from "../../../sources/crimpd";
 
 export async function* materializeAllToploggerWorkouts({
   user,
@@ -507,6 +508,66 @@ export async function* materializeAllGrippyWorkouts({
   }
 
   yield "materializeAllGrippyWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
+}
+
+export async function* materializeAllCrimpdWorkouts({
+  user,
+}: {
+  user: Session["user"];
+}) {
+  yield "materializeAllCrimpdWorkouts: start";
+  const t = new Date();
+  const db = await getDB();
+
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.Crimpd) continue;
+
+    yield await db
+      .collection<Crimpd.WorkoutLog>("crimpd_workout_logs")
+      .aggregate([
+        { $match: { _io_userId: user.id } },
+        {
+          $project: {
+            _id: 0,
+            id: "$_id",
+            userId: { $literal: user.id },
+            createdAt: "$dateCreated",
+            updatedAt: "$lastUpdated",
+            workedOutAt: "$logDate",
+            source: { $literal: WorkoutSource.Crimpd },
+            exercises: [
+              {
+                exerciseId: 2007,
+                displayName: "$workout.name",
+                sets: [
+                  {
+                    inputs: [
+                      { unit: Unit.SEC, value: "$estimatedWorkDuration" },
+                      {
+                        unit: Unit.Percent,
+                        value: { $multiply: ["$completionPercent", 100] },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $merge: {
+            into: "materialized_workouts_view",
+            whenMatched: "replace",
+            on: "id",
+          },
+        },
+      ])
+      .toArray();
+  }
+
+  yield "materializeAllCrimpdWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
 }

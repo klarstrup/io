@@ -374,6 +374,8 @@ export default function WorkoutEntry({
                 <small>Kilter Board</small>
               ) : workout.source === WorkoutSource.Grippy ? (
                 <small>Grippy</small>
+              ) : workout.source === WorkoutSource.Crimpd ? (
+                <small>Crimpd</small>
               ) : null}
             </div>
           ) : null}
