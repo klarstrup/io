@@ -57,7 +57,7 @@ export async function DiaryAgendaWeather({
       legend={
         <div className="flex items-center gap-2">
           <Popover control="📡">
-            <div className="absolute left-4 top-4 z-30 max-h-[90vh] w-96 max-w-[90vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+            <div className="absolute left-4 top-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.weather}
