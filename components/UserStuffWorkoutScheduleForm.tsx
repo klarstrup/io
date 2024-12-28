@@ -114,15 +114,15 @@ export default function UserStuffWorkoutScheduleForm({
               >
                 {watch("exerciseSchedules")?.[index]?.enabled ? (
                   <>
-                    <div className="grid grid-cols-3 gap-1 text-sm">
-                      <label>
-                        Frequency:{" "}
+                    <div className="grid grid-cols-2 gap-1 text-sm">
+                      <label className="flex gap-1 [grid-column:span_2]">
+                        Frequency:
                         <select
                           {...register(
                             `exerciseSchedules.${index}.frequency.days`,
                             { valueAsNumber: true },
                           )}
-                          className="w-full flex-1"
+                          className="w-full"
                         >
                           <option value={1}>Daily</option>
                           <option value={2}>2 days</option>
@@ -137,8 +137,8 @@ export default function UserStuffWorkoutScheduleForm({
                         (input) => input.type === InputType.Reps,
                       ) ? (
                         <>
-                          <label>
-                            Sets:{" "}
+                          <label className="flex gap-1">
+                            Sets:
                             <input
                               type="number"
                               {...register(
@@ -148,8 +148,8 @@ export default function UserStuffWorkoutScheduleForm({
                               className="w-full"
                             />
                           </label>
-                          <label>
-                            Reps:{" "}
+                          <label className="flex gap-1">
+                            Reps:
                             <input
                               type="number"
                               {...register(
@@ -167,8 +167,8 @@ export default function UserStuffWorkoutScheduleForm({
                           input.type === InputType.Weightassist,
                       ) ? (
                         <>
-                          <label>
-                            Base Weight:{" "}
+                          <label className="flex gap-1">
+                            Base Weight:
                             <input
                               type="number"
                               {...register(
@@ -178,8 +178,8 @@ export default function UserStuffWorkoutScheduleForm({
                               className="w-full"
                             />
                           </label>
-                          <label>
-                            Increment:{" "}
+                          <label className="flex gap-1">
+                            Increment:
                             <input
                               type="number"
                               step={0.01}
@@ -192,8 +192,8 @@ export default function UserStuffWorkoutScheduleForm({
                               className="w-full"
                             />
                           </label>
-                          <label>
-                            Deload:{" "}
+                          <label className="flex gap-1">
+                            Deload:
                             <input
                               type="number"
                               step={0.01}
