@@ -3,20 +3,6 @@ import { redirect } from "next/navigation";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
 
-const sourceScrapeMap: Omit<
-  Record<DataSource, string>,
-  DataSource.Fitocracy
-> = {
-  ical: "ical_scrape",
-  myfitnesspal: "myfitnesspal_scrape",
-  rundouble: "rundouble_scrape",
-  tomorrow: "tomorrow_scrape",
-  toplogger: "toplogger_gql_scrape",
-  kilterboard: "kilterboard_scrape",
-  grippy: "grippy_scrape",
-  crimpd: "crimpd_scrape",
-};
-
 export async function GET() {
   const users = await Users.find({}).toArray();
 
@@ -37,5 +23,5 @@ export async function GET() {
 
   if (!leastRecentlyAttempted) return Response.json({});
 
-  redirect(`/api/${sourceScrapeMap[leastRecentlyAttempted.source]}`);
+  redirect(`/api/${leastRecentlyAttempted.source}_scrape`);
 }

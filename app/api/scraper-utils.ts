@@ -1,11 +1,8 @@
-export const scraperEndpoints = [
-  "ical_scrape",
-  "myfitnesspal_scrape",
-  "rundouble_scrape",
-  "tomorrow_scrape",
-  "toplogger_gql_scrape",
-  "kilterboard_scrape",
-] as const;
+import { DataSource } from "../../sources/utils";
+
+export const scraperEndpoints = Object.values(DataSource).map(
+  (source) => `/${source}_scrape`,
+);
 
 export function jsonStreamResponse(
   generator: (flushJSON: (data: unknown) => Promise<void>) => AsyncGenerator,
