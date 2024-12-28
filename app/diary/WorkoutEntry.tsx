@@ -110,7 +110,9 @@ function WorkoutEntryExerciseSetRow({
                     ? input.value !== 0
                     : true) ? (
                   <>
-                    {input.value}
+                    {input.value.toLocaleString("en-DK", {
+                      maximumFractionDigits: 2,
+                    })}
                     {!(
                       input.unit === Unit.Reps &&
                       set.inputs.some(
@@ -395,17 +397,18 @@ export default function WorkoutEntry({
           return (
             <div key={exerciseIndex}>
               <div className="flex gap-2">
-                {showExerciseName ? (
+                {showExerciseName || workoutExercise.displayName ? (
                   <Link
                     prefetch={false}
                     href={`/diary/exercises/${exercise.id}`}
                     style={{ color: "#edab00" }}
                     className="block text-sm font-bold leading-none"
                   >
-                    {[exercise.name, ...exercise.aliases]
-                      .filter((name) => name.length >= 4)
-                      .sort((a, b) => a.length - b.length)[0]!
-                      .replace("Barbell", "")}
+                    {workoutExercise.displayName ??
+                      [exercise.name, ...exercise.aliases]
+                        .filter((name) => name.length >= 4)
+                        .sort((a, b) => a.length - b.length)[0]!
+                        .replace("Barbell", "")}
                   </Link>
                 ) : null}
                 {isClimbingExercise(exercise.id)
