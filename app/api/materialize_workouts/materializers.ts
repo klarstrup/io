@@ -473,9 +473,9 @@ export async function* materializeAllGrippyWorkouts({
             _id: 0,
             id: { $toString: "$uuid" },
             userId: { $literal: user.id },
-            createdAt: "$end_time",
-            updatedAt: "$end_time",
-            workedOutAt: "$end_time",
+            createdAt: "$start_time",
+            updatedAt: "$start_time",
+            workedOutAt: "$start_time",
             source: { $literal: WorkoutSource.Grippy },
             exercises: [
               {
