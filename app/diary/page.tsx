@@ -82,9 +82,7 @@ async function loadMoreData(cursor: {
   ] as const;
 }
 
-export default async function DiaryLayout(props: {
-  children: React.ReactNode;
-}) {
+export default async function DiaryLayout() {
   const user = (await auth())?.user;
 
   if (!user) {
@@ -114,7 +112,6 @@ export default async function DiaryLayout(props: {
         loadedAt={now}
         userId={user.id}
       />
-      {props.children}
       <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
         <Suspense
           fallback={
