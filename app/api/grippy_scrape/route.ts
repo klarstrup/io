@@ -18,13 +18,18 @@ export const GET = () =>
       if (dataSource.source !== DataSource.Grippy) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ authTokens }) {
-        const workoutLogs = (
-          (await (
-            await fetch("https://api.griptonite.io/workouts/logs", {
-              headers: { Authorization: `Bearer ${authTokens.access_token}` },
-            })
-          ).json()) as Grippy.WorkoutLogsResponse
-        ).data;
+        const response = await fetch(
+          "https://api.griptonite.io/workouts/logs",
+          { headers: { Authorization: `Bearer ${authTokens.access_token}` } },
+        );
+
+        if (!response.ok || response.status !== 200) {
+          throw await response.text();
+        }
+
+        const json = (await response.json()) as Grippy.WorkoutLogsResponse;
+
+        const workoutLogs = json.data;
 
         for (const workoutLog of workoutLogs) {
           await GrippyWorkoutLogs.updateOne(
