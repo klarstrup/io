@@ -32,7 +32,7 @@ export async function getDiaryEntriesShallow({
     key: K,
     entry: NonNullable<DiaryEntry[K]>[number],
   ) {
-    const dayStr: DayStr = dateToString(date);
+    const dayStr: DayStr = dateToString(new TZDate(date, timeZone));
     let day = diary[dayStr];
     if (!day) day = {};
 
