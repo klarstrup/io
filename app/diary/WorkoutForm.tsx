@@ -527,6 +527,7 @@ function SetsForm({
 
                     return {
                       value: lastSetInput?.value ?? input.default_value ?? 0,
+                      assistType: lastSetInput?.assistType,
                       unit:
                         lastSetInput?.unit ??
                         input.metric_unit ??
@@ -618,6 +619,7 @@ function SetsForm({
 
                       return {
                         value: setInput?.value ?? input.default_value ?? 0,
+                        assistType: setInput?.assistType,
                         unit:
                           setInput?.unit ??
                           input.metric_unit ??
