@@ -62,8 +62,8 @@ export async function deleteWorkout(workoutId: string) {
     { $set: { deletedAt: new Date() } },
   );
 
-  void updateLocationCounts(user.id);
-  void updateExerciseCounts(user.id);
+  waitUntil(updateLocationCounts(user.id));
+  waitUntil(updateExerciseCounts(user.id));
 
   await arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
 

@@ -1,7 +1,6 @@
 import { subMonths, subYears } from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
-import { getDB } from "../dbConnect";
 import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
 import { AssistType, exercises, InputType, TagType } from "./exercises";
@@ -215,30 +214,25 @@ export function getIsSetPR(
 }
 
 export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
-  await getDB().then((db) =>
-    db
-      .collection<WorkoutData>("materialized_workouts_view")
-      .aggregate([
-        {
-          $match: {
-            userId,
-            location: { $exists: true, $ne: null },
-            deletedAt: { $exists: false },
-          },
-        },
-        {
-          $group: {
-            _id: { location: "$location", userId: "$userId" },
-            location: { $first: "$location" },
-            userId: { $first: "$userId" },
-            visitCount: { $count: {} },
-            mostRecentVisit: { $max: "$workedOutAt" },
-          },
-        },
-        { $merge: { into: "workout_locations_view", whenMatched: "replace" } },
-      ])
-      .toArray(),
-  );
+  await WorkoutExercisesView.aggregate([
+    {
+      $match: {
+        userId,
+        location: { $exists: true, $ne: null },
+        deletedAt: { $exists: false },
+      },
+    },
+    {
+      $group: {
+        _id: { location: "$location", userId: "$userId" },
+        location: { $first: "$location" },
+        userId: { $first: "$userId" },
+        visitCount: { $count: {} },
+        mostRecentVisit: { $max: "$workedOutAt" },
+      },
+    },
+    { $merge: { into: "workout_locations_view", whenMatched: "replace" } },
+  ]).toArray();
 
 export interface IWorkoutLocationsView {
   location: string;
@@ -260,30 +254,25 @@ export const getAllWorkoutLocations = async (user: Session["user"]) =>
   );
 
 export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
-  await getDB().then((db) =>
-    db
-      .collection<WorkoutData>("materialized_workouts_view")
-      .aggregate([
-        { $match: { userId, deletedAt: { $exists: false } } },
-        { $unwind: "$exercises" },
-        {
-          $group: {
-            _id: { exerciseId: "$exercises.exerciseId", userId },
-            exerciseId: { $first: "$exercises.exerciseId" },
-            userId: { $first: "$userId" },
-            exerciseCount: { $count: {} },
-            workedOutAt: { $max: "$workedOutAt" },
-          },
-        },
-        {
-          $replaceWith: {
-            $setField: { field: "userId", input: "$$ROOT", value: userId },
-          },
-        },
-        { $merge: { into: "workout_exercises_view", whenMatched: "replace" } },
-      ])
-      .toArray(),
-  );
+  await WorkoutExercisesView.aggregate([
+    { $match: { userId, deletedAt: { $exists: false } } },
+    { $unwind: "$exercises" },
+    {
+      $group: {
+        _id: { exerciseId: "$exercises.exerciseId", userId },
+        exerciseId: { $first: "$exercises.exerciseId" },
+        userId: { $first: "$userId" },
+        exerciseCount: { $count: {} },
+        workedOutAt: { $max: "$workedOutAt" },
+      },
+    },
+    {
+      $replaceWith: {
+        $setField: { field: "userId", input: "$$ROOT", value: userId },
+      },
+    },
+    { $merge: { into: "workout_exercises_view", whenMatched: "replace" } },
+  ]).toArray();
 
 export interface IWorkoutExercisesView {
   userId: string;

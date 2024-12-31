@@ -1,4 +1,4 @@
-import { Collection, Document } from "mongodb";
+import { AggregateOptions, Collection, Document } from "mongodb";
 import { getDB } from "./dbConnect";
 
 type ProxyCollection<TSchema extends Document> = Pick<
@@ -13,6 +13,7 @@ type ProxyCollection<TSchema extends Document> = Pick<
   | "deleteMany"
   | "insertMany"
   | "createIndexes"
+  | "aggregate"
 >;
 export function proxyCollection<
   TSchema extends Document,
@@ -41,6 +42,28 @@ export function proxyCollection<
                   .find(...args)
                   .toArray()
               );
+            },
+          };
+        };
+      }
+
+      if (property === "aggregate") {
+        return function (pipeline?: Document[], options?: AggregateOptions) {
+          return {
+            async *[Symbol.asyncIterator]() {
+              const DB = await getDB();
+
+              for await (const document of DB.collection(name).aggregate(
+                pipeline,
+                options,
+              )) {
+                yield document;
+              }
+            },
+            async toArray() {
+              const DB = await getDB();
+
+              return DB.collection(name).aggregate(pipeline, options).toArray();
             },
           };
         };
