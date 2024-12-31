@@ -105,6 +105,8 @@ export default async function DiaryLayout() {
   const start = nowWeek;
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
 
+  const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+
   return (
     <>
       <DiaryPoller
@@ -154,24 +156,23 @@ export default async function DiaryLayout() {
               }}
               loadMoreAction={loadMoreData}
             >
-              {eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map(
-                (weekDate) => (
-                  <Suspense
+              <Suspense
+                fallback={weeks.map((weekDate) => (
+                  <DiaryEntryWeek
                     key={String(weekDate)}
-                    fallback={
-                      <DiaryEntryWeek
-                        user={user}
-                        isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-                      />
-                    }
-                  >
-                    <DiaryEntryWeekWrapper
-                      user={user}
-                      isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-                    />
-                  </Suspense>
-                ),
-              )}
+                    user={user}
+                    isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                  />
+                ))}
+              >
+                {weeks.map((weekDate) => (
+                  <DiaryEntryWeekWrapper
+                    key={String(weekDate)}
+                    user={user}
+                    isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                  />
+                ))}
+              </Suspense>
             </LoadMore>
           </div>
         </div>
