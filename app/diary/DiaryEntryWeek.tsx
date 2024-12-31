@@ -2,24 +2,24 @@ import { TZDate } from "@date-fns/tz";
 import {
   addMonths,
   eachDayOfInterval,
-  endOfWeek,
+  endOfISOWeek,
   getISOWeek,
   getYear,
   isWithinInterval,
   setISOWeek,
   setYear,
+  startOfISOWeek,
   startOfMonth,
-  startOfWeek,
   subWeeks,
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
-import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
-import { DiaryEntryItem } from "./DiaryEntryItem";
 import {
   calculateClimbingStats,
   isClimbingExercise,
 } from "../../models/workout";
+import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
+import { DiaryEntryItem } from "./DiaryEntryItem";
 
 export function DiaryEntryWeek({
   user,
@@ -39,8 +39,8 @@ export function DiaryEntryWeek({
 
   const weekDate = setYear(setISOWeek(TZDate.tz(timeZone), isoWeek), isoYear);
   const weekInterval = {
-    start: startOfWeek(weekDate, { weekStartsOn: 1 }),
-    end: endOfWeek(weekDate, { weekStartsOn: 1 }),
+    start: startOfISOWeek(weekDate),
+    end: endOfISOWeek(weekDate),
   };
 
   const weekClimbingSets =

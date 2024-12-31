@@ -1,13 +1,13 @@
 import { TZDate } from "@date-fns/tz";
 import {
   eachWeekOfInterval,
-  endOfWeek,
+  endOfISOWeek,
   getISOWeek,
   getYear,
   isAfter,
   setISOWeek,
   setYear,
-  startOfWeek,
+  startOfISOWeek,
   subWeeks,
 } from "date-fns";
 import { Suspense } from "react";
@@ -42,7 +42,7 @@ async function loadMoreData(cursor: {
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
-  const nowWeek = startOfWeek(now, { weekStartsOn: 1 });
+  const nowWeek = startOfISOWeek(now);
 
   const [startIsoYear, startIsoWeek] = startIsoYearAndWeek
     .split("-")
@@ -68,10 +68,10 @@ async function loadMoreData(cursor: {
   };
 
   return [
-    eachWeekOfInterval({
-      start: startWeekDate,
-      end: endWeekDate,
-    }).map((weekDate) => (
+    eachWeekOfInterval(
+      { start: startWeekDate, end: endWeekDate },
+      { weekStartsOn: 1 },
+    ).map((weekDate) => (
       <DiaryEntryWeekWrapper
         user={user}
         key={String(weekDate)}
@@ -99,7 +99,7 @@ export default async function DiaryLayout() {
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
-  const nowWeek = endOfWeek(now, { weekStartsOn: 1 });
+  const nowWeek = endOfISOWeek(now);
 
   const date = dateToString(now);
   const start = nowWeek;
@@ -154,25 +154,24 @@ export default async function DiaryLayout() {
               }}
               loadMoreAction={loadMoreData}
             >
-              {eachWeekOfInterval({
-                start,
-                end,
-              }).map((weekDate) => (
-                <Suspense
-                  key={String(weekDate)}
-                  fallback={
-                    <DiaryEntryWeek
+              {eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map(
+                (weekDate) => (
+                  <Suspense
+                    key={String(weekDate)}
+                    fallback={
+                      <DiaryEntryWeek
+                        user={user}
+                        isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                      />
+                    }
+                  >
+                    <DiaryEntryWeekWrapper
                       user={user}
                       isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
                     />
-                  }
-                >
-                  <DiaryEntryWeekWrapper
-                    user={user}
-                    isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
-                  />
-                </Suspense>
-              ))}
+                  </Suspense>
+                ),
+              )}
             </LoadMore>
           </div>
         </div>

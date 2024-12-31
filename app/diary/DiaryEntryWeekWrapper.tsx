@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { endOfWeek, setISOWeek, setYear, startOfWeek } from "date-fns";
+import { endOfISOWeek, setISOWeek, setYear, startOfISOWeek } from "date-fns";
 import type { Session } from "next-auth";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
@@ -22,8 +22,8 @@ export async function DiaryEntryWeekWrapper({
   const weekDate = setYear(setISOWeek(TZDate.tz(timeZone), isoWeek), isoYear);
 
   const diaryEntries = await getDiaryEntriesShallow({
-    from: startOfWeek(weekDate, { weekStartsOn: 1 }),
-    to: endOfWeek(weekDate, { weekStartsOn: 1 }),
+    from: startOfISOWeek(weekDate),
+    to: endOfISOWeek(weekDate),
   });
 
   return (
