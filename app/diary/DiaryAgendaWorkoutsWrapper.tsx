@@ -36,29 +36,23 @@ export async function DiaryAgendaWorkoutsWrapper({
   const workoutsExerciseSetPRs = await Promise.all(
     workouts.map((workout) =>
       Promise.all(
-        workout.exercises.map(async (exercise) => {
-          if (isClimbingExercise(exercise.exerciseId)) {
-            return Array.from({ length: exercise.sets.length }, () => noPR);
+        workout.exercises.map(async ({ exerciseId, sets }) => {
+          if (isClimbingExercise(exerciseId)) {
+            return Array.from({ length: sets.length }, () => noPR);
           }
 
           const precedingWorkouts = await MaterializedWorkoutsView.find(
             {
               userId: user.id,
-              "exercises.exerciseId": exercise.exerciseId,
+              "exercises.exerciseId": exerciseId,
               workedOutAt: { $lt: workout.workedOutAt },
               deletedAt: { $exists: false },
             },
             { sort: { workedOutAt: -1 } },
           ).toArray();
 
-          return exercise.sets.map((set) =>
-            getIsSetPR(
-              workout.workedOutAt,
-              workout,
-              precedingWorkouts,
-              exercise.exerciseId,
-              set,
-            ),
+          return sets.map((set) =>
+            getIsSetPR(workout, precedingWorkouts, exerciseId, set),
           );
         }),
       ),

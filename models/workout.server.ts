@@ -148,7 +148,6 @@ export const noPR = {
 } satisfies Record<PRType, boolean>;
 
 export function getIsSetPR(
-  date: Date,
   workout: WorkoutData,
   precedingWorkouts: WithId<WorkoutData>[],
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
@@ -161,8 +160,8 @@ export function getIsSetPR(
     ({ assistType, value }) =>
       (assistType === AssistType.Assisted ? -value : value) || 0,
   );
-  const now1YearAgo = subYears(date, 1);
-  const now3MonthsAgo = subMonths(date, 3);
+  const now1YearAgo = subYears(workout.workedOutAt, 1);
+  const now3MonthsAgo = subMonths(workout.workedOutAt, 3);
   let allTimePR = true;
   let oneYearPR = true;
   let threeMonthPR = true;

@@ -92,13 +92,7 @@ export default async function DiaryExercise({
         (e) => e.exerciseId === exerciseId,
       )?.sets ?? []) {
         exerciseSetsPRs.push(
-          getIsSetPR(
-            workout.workedOutAt,
-            workout,
-            precedingWorkouts,
-            exerciseId,
-            set,
-          ),
+          getIsSetPR(workout, precedingWorkouts, exerciseId, set),
         );
       }
       workoutsExerciseSetPRs[workout.id]!.push(exerciseSetsPRs);
