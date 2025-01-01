@@ -25,7 +25,6 @@ export async function DiaryEntryWeekWrapper({
     from: startOfISOWeek(weekDate),
     to: endOfISOWeek(weekDate),
   });
-
   return (
     <DiaryEntryWeek
       user={user}

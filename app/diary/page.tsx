@@ -3,7 +3,7 @@ import {
   eachWeekOfInterval,
   endOfISOWeek,
   getISOWeek,
-  getYear,
+  getISOWeekYear,
   isAfter,
   setISOWeek,
   setYear,
@@ -63,8 +63,8 @@ async function loadMoreData(cursor: {
   const nextStart = subWeeks(endWeekDate, 1);
   const nextEnd = subWeeks(endWeekDate, 1 + WEEKS_PER_PAGE);
   const nextCursor = {
-    startIsoYearAndWeek: `${getYear(nextStart)}-${getISOWeek(nextStart)}`,
-    endIsoYearAndWeek: `${getYear(nextEnd)}-${getISOWeek(nextEnd)}`,
+    startIsoYearAndWeek: `${getISOWeekYear(nextStart)}-${getISOWeek(nextStart)}`,
+    endIsoYearAndWeek: `${getISOWeekYear(nextEnd)}-${getISOWeek(nextEnd)}`,
   };
 
   return [
@@ -75,7 +75,7 @@ async function loadMoreData(cursor: {
       <DiaryEntryWeekWrapper
         user={user}
         key={String(weekDate)}
-        isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+        isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
       />
     )),
     nextCursor,
@@ -106,6 +106,8 @@ export default async function DiaryLayout() {
   const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
 
   const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+
+  console.log("weeks", weeks);
 
   return (
     <>
@@ -151,8 +153,8 @@ export default async function DiaryLayout() {
           <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[25vh]">
             <LoadMore
               initialCursor={{
-                startIsoYearAndWeek: `${getYear(end)}-${getISOWeek(end)}`,
-                endIsoYearAndWeek: `${getYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
+                startIsoYearAndWeek: `${getISOWeekYear(end)}-${getISOWeek(end)}`,
+                endIsoYearAndWeek: `${getISOWeekYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
               }}
               loadMoreAction={loadMoreData}
             >
@@ -161,7 +163,7 @@ export default async function DiaryLayout() {
                   <DiaryEntryWeek
                     key={String(weekDate)}
                     user={user}
-                    isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                    isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
                   />
                 ))}
               >
@@ -169,7 +171,7 @@ export default async function DiaryLayout() {
                   <DiaryEntryWeekWrapper
                     key={String(weekDate)}
                     user={user}
-                    isoYearAndWeek={`${getYear(weekDate)}-${getISOWeek(weekDate)}`}
+                    isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
                   />
                 ))}
               </Suspense>

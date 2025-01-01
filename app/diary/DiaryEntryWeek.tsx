@@ -4,13 +4,13 @@ import {
   eachDayOfInterval,
   endOfISOWeek,
   getISOWeek,
-  getYear,
+  getISOWeekYear,
   isWithinInterval,
   setISOWeek,
   setYear,
   startOfISOWeek,
   startOfMonth,
-  subWeeks,
+  subWeeks
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
@@ -64,8 +64,8 @@ export function DiaryEntryWeek({
       >
         <span>{getISOWeek(weekDate)}</span>
         <span className="text-xs font-bold">
-          {getYear(weekDate) !== getYear(subWeeks(weekDate, 1))
-            ? getYear(weekDate)
+          {getISOWeekYear(weekDate) !== getISOWeekYear(subWeeks(weekDate, 1))
+            ? getISOWeekYear(weekDate)
             : null}
         </span>
         <span className="text-xs font-bold">
