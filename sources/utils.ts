@@ -1,4 +1,5 @@
 import type { TopLoggerAuthTokens } from "../lib";
+import type { Grippy } from "./grippy";
 
 type UserDataSourceConfig =
   | {
@@ -35,15 +36,7 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.Grippy;
-      config: {
-        authTokens: {
-          access_token: string;
-          expires_in: number;
-          token_type: string;
-          scope: string;
-          refresh_token: string;
-        };
-      };
+      config: { authTokens: Grippy.AuthTokens };
     }
   | {
       source: DataSource.Crimpd;

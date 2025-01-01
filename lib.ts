@@ -1,4 +1,5 @@
 import type { WorkoutData } from "./models/workout";
+import type { Grippy } from "./sources/grippy";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
 import type { VCalendar, VEvent } from "./vendor/ical";
 
@@ -207,6 +208,18 @@ export const isAuthTokens = (obj: unknown): obj is TopLoggerAuthTokens =>
       typeof obj.refresh.token === "string" &&
       "expiresAt" in obj.refresh &&
       typeof obj.refresh.expiresAt === "string",
+  );
+
+export const isGrippyAuthTokens = (obj: unknown): obj is Grippy.AuthTokens =>
+  Boolean(
+    obj &&
+      typeof obj === "object" &&
+      "access_token" in obj &&
+      typeof obj.access_token === "string" &&
+      "expires_in" in obj &&
+      typeof obj.expires_in === "number" &&
+      "refresh_token" in obj &&
+      typeof obj.refresh_token === "string",
   );
 
 export enum PRType {
