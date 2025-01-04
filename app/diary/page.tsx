@@ -107,8 +107,6 @@ export default async function DiaryLayout() {
 
   const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
 
-  console.log("weeks", weeks);
-
   return (
     <>
       <DiaryPoller
