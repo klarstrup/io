@@ -6,7 +6,7 @@ import {
   getISOWeekYear,
   isAfter,
   setISOWeek,
-  setYear,
+  setISOWeekYear,
   startOfISOWeek,
   subWeeks,
 } from "date-fns";
@@ -16,16 +16,16 @@ import LoadMore from "../../components/LoadMore";
 import UserStuff from "../../components/UserStuff";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import "../page.css";
+import { mostRecentlyScrapedAt } from "./actions";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
 import { DiaryPoller } from "./DiaryPoller";
-import { mostRecentlyScrapedAt } from "./actions";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
 
-const WEEKS_PER_PAGE = 16;
+const WEEKS_PER_PAGE = 9;
 
 async function loadMoreData(cursor: {
   startIsoYearAndWeek: string;
@@ -51,11 +51,14 @@ async function loadMoreData(cursor: {
     number,
     number,
   ];
-  const startWeekDate = setYear(
+  const startWeekDate = setISOWeekYear(
     setISOWeek(nowWeek, startIsoWeek),
     startIsoYear,
   );
-  const endWeekDate = setYear(setISOWeek(nowWeek, endIsoWeek), endIsoYear);
+  const endWeekDate = setISOWeekYear(
+    setISOWeek(nowWeek, endIsoWeek),
+    endIsoYear,
+  );
   const isAtLimit = isAfter(new Date(2013, 9), startWeekDate);
 
   if (isAtLimit) return [null, null] as const;
@@ -72,7 +75,7 @@ async function loadMoreData(cursor: {
       { start: startWeekDate, end: endWeekDate },
       { weekStartsOn: 1 },
     ).map((weekDate) => (
-      <DiaryEntryWeekWrapper
+      <DiaryEntryWeek
         user={user}
         key={String(weekDate)}
         isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}

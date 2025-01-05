@@ -7,10 +7,10 @@ import {
   getISOWeekYear,
   isWithinInterval,
   setISOWeek,
-  setYear,
+  setISOWeekYear,
   startOfISOWeek,
   startOfMonth,
-  subWeeks
+  subWeeks,
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
@@ -37,7 +37,10 @@ export function DiaryEntryWeek({
     number,
   ];
 
-  const weekDate = setYear(setISOWeek(TZDate.tz(timeZone), isoWeek), isoYear);
+  const weekDate = setISOWeekYear(
+    setISOWeek(TZDate.tz(timeZone), isoWeek),
+    isoYear,
+  );
   const weekInterval = {
     start: startOfISOWeek(weekDate),
     end: endOfISOWeek(weekDate),
