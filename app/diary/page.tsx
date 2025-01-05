@@ -17,42 +17,28 @@ export const revalidate = 3600; // 1 hour
 
 const WEEKS_PER_PAGE = 9;
 
-async function loadMoreData(cursor: {
-  startWeekDate: Date;
-  endWeekDate: Date;
-}) {
+async function loadMoreData(cursor: { start: Date; end: Date }) {
   "use server";
 
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
 
-  const { startWeekDate, endWeekDate } = cursor;
-  if (!startWeekDate || !endWeekDate)
-    throw new Error("isoYearAndWeek not found");
+  const { start, end } = cursor;
+  if (!start || !end) throw new Error("isoYearAndWeek not found");
 
-  const isAtLimit = isAfter(new Date(2013, 9), startWeekDate);
+  const isAtLimit = isAfter(new Date(2013, 9), start);
 
   if (isAtLimit) return [null, null] as const;
 
-  const nextStart = subWeeks(endWeekDate, 1);
-  const nextEnd = subWeeks(endWeekDate, 1 + WEEKS_PER_PAGE);
-  const nextCursor = {
-    startWeekDate: nextStart,
-    endWeekDate: nextEnd,
-  };
-
   return [
-    eachWeekOfInterval(
-      { start: startWeekDate, end: endWeekDate },
-      { weekStartsOn: 1 },
-    ).map((weekDate) => (
+    eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map((weekDate) => (
       <DiaryEntryWeekWrapper
         user={user}
         key={String(weekDate)}
         weekDate={weekDate}
       />
     )),
-    nextCursor,
+    { start: subWeeks(end, 1), end: subWeeks(end, 1 + WEEKS_PER_PAGE) },
   ] as const;
 }
 
@@ -73,11 +59,9 @@ export default async function DiaryLayout() {
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
-  const nowWeek = endOfISOWeek(now);
 
-  const date = dateToString(now);
-  const start = nowWeek;
-  const end = subWeeks(nowWeek, WEEKS_PER_PAGE);
+  const start = endOfISOWeek(now);
+  const end = subWeeks(start, WEEKS_PER_PAGE);
 
   const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
 
@@ -120,13 +104,13 @@ export default async function DiaryLayout() {
         </Suspense>
         <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
           <div className="max-h-[100vh] self-stretch border-black/25 portrait:h-[75vh] portrait:border-b-[0.5px] landscape:w-1/3">
-            <DiaryAgenda date={date} user={user} />
+            <DiaryAgenda date={dateToString(now)} user={user} />
           </div>
           <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[25vh]">
             <LoadMore
               initialCursor={{
-                startWeekDate: end,
-                endWeekDate: subWeeks(end, WEEKS_PER_PAGE),
+                start: subWeeks(end, 1),
+                end: subWeeks(end, 1 + WEEKS_PER_PAGE),
               }}
               loadMoreAction={loadMoreData}
             >
