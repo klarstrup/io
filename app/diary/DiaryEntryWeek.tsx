@@ -1,4 +1,3 @@
-import { TZDate } from "@date-fns/tz";
 import {
   addMonths,
   eachDayOfInterval,
@@ -6,8 +5,6 @@ import {
   getISOWeek,
   getISOWeekYear,
   isWithinInterval,
-  setISOWeek,
-  setISOWeekYear,
   startOfISOWeek,
   startOfMonth,
   subWeeks,
@@ -18,29 +15,18 @@ import {
   calculateClimbingStats,
   isClimbingExercise,
 } from "../../models/workout";
-import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
+import { dateToString, isNonEmptyArray } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 
 export function DiaryEntryWeek({
   user,
-  isoYearAndWeek,
+  weekDate,
   diaryEntries,
 }: {
   user: Session["user"];
-  isoYearAndWeek: string;
+  weekDate: Date;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
 }) {
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-
-  const [isoYear, isoWeek] = isoYearAndWeek.split("-").map(Number) as [
-    number,
-    number,
-  ];
-
-  const weekDate = setISOWeekYear(
-    setISOWeek(TZDate.tz(timeZone), isoWeek),
-    isoYear,
-  );
   const weekInterval = {
     start: startOfISOWeek(weekDate),
     end: endOfISOWeek(weekDate),
@@ -58,7 +44,7 @@ export function DiaryEntryWeek({
 
   return (
     <div
-      key={getISOWeek(weekDate)}
+      key={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
       className="grid flex-1 grid-cols-8 bg-white"
     >
       <div

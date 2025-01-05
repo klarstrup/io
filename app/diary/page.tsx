@@ -1,15 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import {
-  eachWeekOfInterval,
-  endOfISOWeek,
-  getISOWeek,
-  getISOWeekYear,
-  isAfter,
-  setISOWeek,
-  setISOWeekYear,
-  startOfISOWeek,
-  subWeeks,
-} from "date-fns";
+import { eachWeekOfInterval, endOfISOWeek, isAfter, subWeeks } from "date-fns";
 import { Suspense } from "react";
 import { auth } from "../../auth";
 import LoadMore from "../../components/LoadMore";
@@ -28,37 +18,18 @@ export const revalidate = 3600; // 1 hour
 const WEEKS_PER_PAGE = 9;
 
 async function loadMoreData(cursor: {
-  startIsoYearAndWeek: string;
-  endIsoYearAndWeek: string;
+  startWeekDate: Date;
+  endWeekDate: Date;
 }) {
   "use server";
 
   const user = (await auth())?.user;
   if (!user) throw new Error("User not found");
 
-  const { startIsoYearAndWeek, endIsoYearAndWeek } = cursor;
-  if (!startIsoYearAndWeek || !endIsoYearAndWeek)
+  const { startWeekDate, endWeekDate } = cursor;
+  if (!startWeekDate || !endWeekDate)
     throw new Error("isoYearAndWeek not found");
 
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
-  const now = TZDate.tz(timeZone);
-  const nowWeek = startOfISOWeek(now);
-
-  const [startIsoYear, startIsoWeek] = startIsoYearAndWeek
-    .split("-")
-    .map(Number) as [number, number];
-  const [endIsoYear, endIsoWeek] = endIsoYearAndWeek.split("-").map(Number) as [
-    number,
-    number,
-  ];
-  const startWeekDate = setISOWeekYear(
-    setISOWeek(nowWeek, startIsoWeek),
-    startIsoYear,
-  );
-  const endWeekDate = setISOWeekYear(
-    setISOWeek(nowWeek, endIsoWeek),
-    endIsoYear,
-  );
   const isAtLimit = isAfter(new Date(2013, 9), startWeekDate);
 
   if (isAtLimit) return [null, null] as const;
@@ -66,8 +37,8 @@ async function loadMoreData(cursor: {
   const nextStart = subWeeks(endWeekDate, 1);
   const nextEnd = subWeeks(endWeekDate, 1 + WEEKS_PER_PAGE);
   const nextCursor = {
-    startIsoYearAndWeek: `${getISOWeekYear(nextStart)}-${getISOWeek(nextStart)}`,
-    endIsoYearAndWeek: `${getISOWeekYear(nextEnd)}-${getISOWeek(nextEnd)}`,
+    startWeekDate: nextStart,
+    endWeekDate: nextEnd,
   };
 
   return [
@@ -78,7 +49,7 @@ async function loadMoreData(cursor: {
       <DiaryEntryWeekWrapper
         user={user}
         key={String(weekDate)}
-        isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
+        weekDate={weekDate}
       />
     )),
     nextCursor,
@@ -154,8 +125,8 @@ export default async function DiaryLayout() {
           <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[25vh]">
             <LoadMore
               initialCursor={{
-                startIsoYearAndWeek: `${getISOWeekYear(end)}-${getISOWeek(end)}`,
-                endIsoYearAndWeek: `${getISOWeekYear(subWeeks(end, WEEKS_PER_PAGE))}-${getISOWeek(subWeeks(end, WEEKS_PER_PAGE))}`,
+                startWeekDate: end,
+                endWeekDate: subWeeks(end, WEEKS_PER_PAGE),
               }}
               loadMoreAction={loadMoreData}
             >
@@ -164,7 +135,7 @@ export default async function DiaryLayout() {
                   <DiaryEntryWeek
                     key={String(weekDate)}
                     user={user}
-                    isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
+                    weekDate={weekDate}
                   />
                 ))}
               >
@@ -172,7 +143,7 @@ export default async function DiaryLayout() {
                   <DiaryEntryWeekWrapper
                     key={String(weekDate)}
                     user={user}
-                    isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
+                    weekDate={weekDate}
                   />
                 ))}
               </Suspense>
