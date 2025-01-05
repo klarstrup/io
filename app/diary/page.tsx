@@ -75,7 +75,7 @@ async function loadMoreData(cursor: {
       { start: startWeekDate, end: endWeekDate },
       { weekStartsOn: 1 },
     ).map((weekDate) => (
-      <DiaryEntryWeek
+      <DiaryEntryWeekWrapper
         user={user}
         key={String(weekDate)}
         isoYearAndWeek={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
