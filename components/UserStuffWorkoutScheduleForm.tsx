@@ -133,21 +133,21 @@ export default function UserStuffWorkoutScheduleForm({
                           <option value={7}>Weekly</option>
                         </select>
                       </label>
+                      <label className="flex gap-1">
+                        Sets:
+                        <input
+                          type="number"
+                          {...register(
+                            `exerciseSchedules.${index}.workingSets`,
+                            { valueAsNumber: true },
+                          )}
+                          className="w-full"
+                        />
+                      </label>
                       {exercise.inputs.some(
                         (input) => input.type === InputType.Reps,
                       ) ? (
                         <>
-                          <label className="flex gap-1">
-                            Sets:
-                            <input
-                              type="number"
-                              {...register(
-                                `exerciseSchedules.${index}.workingSets`,
-                                { valueAsNumber: true },
-                              )}
-                              className="w-full"
-                            />
-                          </label>
                           <label className="flex gap-1">
                             Reps:
                             <input

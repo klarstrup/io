@@ -43,7 +43,7 @@ export const getNextSets = async ({
               workedOutAt: workout?.workedOutAt || null,
               exerciseId: scheduleEntry.exerciseId,
               successful: true,
-              nextWorkingSets: NaN,
+              nextWorkingSets: scheduleEntry.workingSets ?? NaN,
               nextWorkingSetsReps: NaN,
               nextWorkingSetsWeight: NaN,
               scheduleEntry,

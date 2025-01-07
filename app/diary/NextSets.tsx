@@ -55,12 +55,16 @@ export function NextSets({
                   {successful === false ? " (failed)" : null}
                 </span>{" "}
                 <div className="whitespace-nowrap">
-                  {nextWorkingSets && nextWorkingSetsReps ? (
+                  {nextWorkingSets ? (
                     <span className="text-sm">
-                      {nextWorkingSets}x{nextWorkingSetsReps}
-                      {nextWorkingSetsWeight ? (
-                        <>x{nextWorkingSetsWeight}kg</>
-                      ) : null}
+                      {nextWorkingSets}
+                      {nextWorkingSetsReps ? `x${nextWorkingSetsReps}` : null}
+                      {nextWorkingSetsWeight
+                        ? `x${nextWorkingSetsWeight}kg`
+                        : null}
+                      {!nextWorkingSetsReps && !nextWorkingSetsWeight
+                        ? " sets"
+                        : null}
                     </span>
                   ) : null}{" "}
                   <span className="text-xs">
