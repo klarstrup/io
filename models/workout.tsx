@@ -51,7 +51,7 @@ export interface WorkoutExerciseSetInput {
 // meaning that its set inputs are a specific shape and can be presented in a
 // problem by problem format.
 export const isClimbingExercise = (exerciseId: number) =>
-  exerciseId === 2001 || exerciseId === 2003 || exerciseId === 2004;
+  exerciseId === 2001 || exerciseId === 2003 || exerciseId === 2004 || exerciseId === 2008;
 
 const yearsInMs = 365.25 * 24 * 60 * 60 * 1000;
 const monthsInMs = 30.44 * 24 * 60 * 60 * 1000;

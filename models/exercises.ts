@@ -86470,4 +86470,67 @@ export const exercises = [
       { name: "Forearms", type: TagType.MuscleGroup },
     ],
   },
+  {
+    aliases: ["Campus Bouldering"],
+    id: 2008,
+    inputs: [
+      {
+        allowed_units: [{ conversion_factor: 1.0, name: Unit.FrenchRounded }],
+        bounds: {
+          minimum: 2,
+          maximum: 9.5,
+        },
+        display_name: "Grade",
+        hidden_by_default: true,
+        id: 0,
+        input_ordinal: 1,
+        imperial_unit: Unit.FrenchRounded,
+        metric_unit: Unit.FrenchRounded,
+        type: InputType.Grade,
+      },
+      {
+        display_name: "Color",
+        hidden_by_default: true,
+        id: 1,
+        input_ordinal: 2,
+        options: [
+          // Don't mess with the order of these colors
+          { value: "mint" },
+          { value: "green" },
+          { value: "yellow" },
+          { value: "blue" },
+          { value: "orange" },
+          { value: "red" },
+          { value: "black" },
+          { value: "pink" },
+          { value: "white" },
+          { value: "purple" },
+        ],
+        type: InputType.Options,
+      },
+      {
+        display_name: "Send",
+        hidden_by_default: false,
+        id: 2,
+        input_ordinal: 3,
+        default_value: 1,
+        // Don't mess with the order of these options
+        options: [{ value: "flash" }, { value: "top" }, { value: "zone" }],
+        type: InputType.Options,
+      },
+    ],
+    instructions: [
+      {
+        value: "An activity that involves climbing up a short wall of plastic. Arms only.",
+      },
+    ],
+    is_hidden: false,
+    is_popular: false,
+    name: "Boulder Campusing",
+    tags: [
+      { name: "Climbing", type: TagType.Type },
+      { name: "Calisthenics", type: TagType.Type },
+      { name: "Body Weight", type: TagType.Equipment },
+    ],
+  },
 ] as unknown as ExerciseData[];
