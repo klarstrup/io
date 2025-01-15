@@ -17,7 +17,6 @@ import {
   dateToString,
   HOUR_IN_SECONDS,
   MINUTE_IN_SECONDS,
-  omit,
   seconds2time,
 } from "../../utils";
 
@@ -398,7 +397,7 @@ export default function WorkoutEntry({
           )!;
           return (
             <div key={exerciseIndex}>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex flex-wrap gap-2">
                 {showExerciseName || workoutExercise.displayName ? (
                   <Link
                     prefetch={false}
@@ -436,13 +435,16 @@ export default function WorkoutEntry({
     </FieldSetX>
   );
 }
+export const isEquivalentSet = (
+  setA: WorkoutExerciseSet,
+  setB: WorkoutExerciseSet,
+) => {
+  for (const [index, aInput] of Object.entries(setA.inputs)) {
+    const bInput = setB.inputs[index] as WorkoutExerciseSetInput;
+    for (const key in aInput) {
+      if (key !== "id" && aInput[key] !== bInput[key]) return false;
+    }
+  }
 
-const normalizeInput = (input: WorkoutExerciseSetInput) =>
-  // @ts-expect-error -- old data might have input id
-  omit(input, "id");
-function isEquivalentSet(setA: WorkoutExerciseSet, setB: WorkoutExerciseSet) {
-  return (
-    JSON.stringify(setA.inputs.map(normalizeInput)) ===
-    JSON.stringify(setB.inputs.map(normalizeInput))
-  );
-}
+  return true;
+};
