@@ -385,10 +385,10 @@ export default function WorkoutEntry({
       <div
         style={{
           display: "grid",
-          gap: "8px 4px",
+          gap: "8px",
           gridTemplateColumns:
             workout.exercises.length > 1
-              ? "repeat(auto-fit, minmax(130px, 1fr))"
+              ? "repeat(auto-fit, minmax(148px, 1fr))"
               : "100%",
         }}
       >
