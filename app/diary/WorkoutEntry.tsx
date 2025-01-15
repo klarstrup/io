@@ -398,7 +398,7 @@ export default function WorkoutEntry({
           )!;
           return (
             <div key={exerciseIndex}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {showExerciseName || workoutExercise.displayName ? (
                   <Link
                     prefetch={false}

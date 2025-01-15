@@ -157,7 +157,7 @@ export function calculateClimbingStats(
     Math.min(5, setAndLocationPairs.length);
 
   return (
-    <small className="block text-center text-[10px]">
+    <small className="block text-[10px]">
       <span className="inline-block">PC: {problemCount},</span>{" "}
       <span className="inline-block">GS: {gradeSum.toFixed(0)},</span>{" "}
       <span className="inline-block">
