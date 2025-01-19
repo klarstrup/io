@@ -122,7 +122,7 @@ const nearestLiftingLocationToBoulderingLocation: Record<
   "Boulders Amager": null,
   "Beta Boulders West": "PureGym C.F. Richs Vej",
   "Beta Boulders South": "PureGym Sjælør",
-  "Beta Boulders Osterbro": "PureGym Æbeløgade",
+  "Beta Boulders Østerbro": "PureGym Æbeløgade",
 };
 
 async function LeastRecentGym({
@@ -143,7 +143,7 @@ async function LeastRecentGym({
         "Boulders Amager",
         "Beta Boulders West",
         "Beta Boulders South",
-        "Beta Boulders Osterbro",
+        "Beta Boulders Østerbro",
       ].map(async (location) => {
         const boulderingInThePast = await MaterializedWorkoutsView.findOne(
           {
