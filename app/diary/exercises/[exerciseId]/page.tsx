@@ -19,13 +19,11 @@ export default async function DiaryExerciseModal(props: {
   return (
     <Modal>
       <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-4 shadow-xl shadow-black/50">
-        <Suspense>
-          <DiaryExercise
-            exerciseId={exerciseId}
-            mergeWorkouts={mergeWorkouts}
-            prType={prType}
-          />
-        </Suspense>
+        <DiaryExercise
+          exerciseId={exerciseId}
+          mergeWorkouts={mergeWorkouts}
+          prType={prType}
+        />
       </div>
     </Modal>
   );
