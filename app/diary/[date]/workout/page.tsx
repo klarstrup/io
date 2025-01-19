@@ -1,6 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { endOfDay } from "date-fns";
-import { Suspense } from "react";
+import { startOfDay } from "date-fns";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
 import {
@@ -28,7 +27,7 @@ export default async function DiaryNewWorkoutModal(props: {
   const [locations, exercisesStats, nextSets] = await Promise.all([
     getAllWorkoutLocations(user),
     getAllWorkoutExercises(user),
-    getNextSets({ user, to: endOfDay(tzDate) }),
+    getNextSets({ user, to: startOfDay(tzDate) }),
   ]);
 
   const dismissTo = isToday ? "/diary" : (`/diary/${date}` as const);
@@ -36,16 +35,14 @@ export default async function DiaryNewWorkoutModal(props: {
   return (
     <Modal dismissTo={dismissTo}>
       <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-4 shadow-xl shadow-black/50">
-        <Suspense>
-          <WorkoutForm
-            date={date}
-            user={user}
-            locations={locations}
-            exercisesStats={exercisesStats}
-            nextSets={nextSets}
-            dismissTo={dismissTo}
-          />
-        </Suspense>
+        <WorkoutForm
+          date={date}
+          user={user}
+          locations={locations}
+          exercisesStats={exercisesStats}
+          nextSets={nextSets}
+          dismissTo={dismissTo}
+        />
       </div>
     </Modal>
   );

@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { endOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 import { ObjectId } from "mongodb";
 import { auth } from "../../../../../auth";
 import {
@@ -28,7 +28,7 @@ export default async function DiaryWorkout(props: {
   const [locations, exercisesStats, nextSets] = await Promise.all([
     getAllWorkoutLocations(user),
     getAllWorkoutExercises(user),
-    getNextSets({ user, to: endOfDay(tzDate) }),
+    getNextSets({ user, to: startOfDay(tzDate) }),
   ]);
 
   const dismissTo = isToday ? "/diary" : (`/diary/${date}` as const);
