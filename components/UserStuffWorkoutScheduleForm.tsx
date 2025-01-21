@@ -237,9 +237,6 @@ export default function UserStuffWorkoutScheduleForm({
                   b.stats?.workedOutAt ?? new Date(0),
                 ),
               )
-              .filter(
-                ({ id }) => !fields.some((field) => field.exerciseId === id),
-              )
               .map(({ id, name, aliases, stats }) => ({
                 label:
                   `${name} ${
