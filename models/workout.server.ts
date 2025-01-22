@@ -39,6 +39,37 @@ export const getNextSets = async ({
           );
 
           if (isClimbingExercise(scheduleEntry.exerciseId)) {
+            if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {
+              const workouts = await MaterializedWorkoutsView.find(
+                {
+                  userId: user.id,
+                  "exercises.exerciseId": scheduleEntry.exerciseId,
+                  workedOutAt: { $lte: to },
+                  deletedAt: { $exists: false },
+                },
+                { sort: { workedOutAt: -1 } },
+              ).toArray();
+              for (const workout of workouts) {
+                const exercise = workout.exercises.find(
+                  ({ exerciseId }) => exerciseId === scheduleEntry.exerciseId,
+                )!;
+                const successful =
+                  exercise?.sets.length >= scheduleEntry.workingSets;
+
+                if (successful) {
+                  return {
+                    workedOutAt: workout.workedOutAt,
+                    exerciseId: scheduleEntry.exerciseId,
+                    successful: true,
+                    nextWorkingSets: scheduleEntry.workingSets,
+                    nextWorkingSetsReps: NaN,
+                    nextWorkingSetsWeight: NaN,
+                    scheduleEntry,
+                  };
+                }
+              }
+            }
+
             return {
               workedOutAt: workout?.workedOutAt || null,
               exerciseId: scheduleEntry.exerciseId,
