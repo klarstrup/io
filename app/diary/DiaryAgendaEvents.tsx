@@ -22,6 +22,7 @@ import {
   DEFAULT_TIMEZONE,
   isNonEmptyArray,
   roundToNearestDay,
+  uniqueBy,
 } from "../../utils";
 
 export async function DiaryAgendaEvents({
@@ -125,7 +126,7 @@ export async function DiaryAgendaEvents({
           >
             <ul>
               {isNonEmptyArray(events) ? (
-                events.map((event) => {
+                uniqueBy(events, ({ uid }) => uid).map((event) => {
                   const duration = intervalToDuration(event);
 
                   const days = eachDayOfInterval(event, {
