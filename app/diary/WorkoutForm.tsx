@@ -337,7 +337,7 @@ export function WorkoutForm<R extends string>({
                   <div className="text-xs">
                     Goal{" "}
                     <span className="text-sm">
-                      {nextExerciseSet.nextWorkingSets}x
+                      {nextExerciseSet.nextWorkingSets}
                       {nextExerciseSet.nextWorkingSetsReps
                         ? `x${nextExerciseSet.nextWorkingSetsReps}`
                         : null}
