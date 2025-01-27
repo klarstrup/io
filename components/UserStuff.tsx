@@ -81,7 +81,7 @@ export default async function UserStuff() {
                 <input
                   type="submit"
                   value="Update"
-                  className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+                  className="rounded-sm bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
                 />
                 <div className="grid grid-cols-2 gap-1.5">
                   <FieldSetY legend="Time Zone">

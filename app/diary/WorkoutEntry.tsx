@@ -165,7 +165,7 @@ function WorkoutEntryExerciseSetRow({
         ))}
       {setPR ? (
         <td
-          className="p-0 pl-1 text-left text-[10px] leading-[0]"
+          className="p-0 pl-1 text-left text-[10px] leading-0"
           title={
             setPR.allTimePR
               ? "All-time PR"

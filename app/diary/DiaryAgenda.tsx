@@ -126,7 +126,7 @@ export function DiaryAgenda({
           <Suspense
             fallback={
               <FieldSetY
-                className="min-w-[250px] flex-[1]"
+                className="min-w-[250px] flex-1"
                 legend={
                   <div className="flex items-center gap-2">
                     <Popover control="📡">{null}</Popover>

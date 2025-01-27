@@ -300,7 +300,7 @@ export function WorkoutForm<R extends string>({
                     <StealthButton
                       onClick={() => remove(index)}
                       disabled={isSubmitting}
-                      className="leading-[0]"
+                      className="leading-0"
                     >
                       ❌
                     </StealthButton>
@@ -313,7 +313,7 @@ export function WorkoutForm<R extends string>({
                         update(newIndex, source);
                       }}
                       disabled={index === 0 || isSubmitting}
-                      className="leading-[0]"
+                      className="leading-0"
                     >
                       ⬆️
                     </StealthButton>
@@ -326,7 +326,7 @@ export function WorkoutForm<R extends string>({
                         update(newIndex, source);
                       }}
                       disabled={index === fields.length - 1 || isSubmitting}
-                      className="leading-[0]"
+                      className="leading-0"
                     >
                       ⬇️
                     </StealthButton>
@@ -540,7 +540,7 @@ function SetsForm({
                   }),
                 })
               }
-              className="leading-[0]"
+              className="leading-0"
             >
               ➕
             </StealthButton>
@@ -607,7 +607,7 @@ function SetsForm({
             <td>
               <StealthButton
                 onClick={() => remove(index)}
-                className="mx-2 leading-[0]"
+                className="mx-2 leading-0"
               >
                 ❌
               </StealthButton>
@@ -632,7 +632,7 @@ function SetsForm({
                     }),
                   })
                 }
-                className="mx-2 leading-[0]"
+                className="mx-2 leading-0"
               >
                 ➕
               </StealthButton>
