@@ -466,6 +466,17 @@ export async function* materializeAllGrippyWorkouts({
                       unit: Unit.Percent,
                       value: { $multiply: ["$compliance", 100] },
                     },
+                    {
+                      unit: { $toLower: "$weight_added_unit" },
+                      value: { $abs: "$weight_added" },
+                      assistType: {
+                        $cond: {
+                          if: { $gte: ["$weight_added", 0] },
+                          then: "weighted",
+                          else: "assisted",
+                        },
+                      },
+                    },
                   ],
                 },
               ],

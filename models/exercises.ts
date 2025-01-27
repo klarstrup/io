@@ -86418,6 +86418,21 @@ export const exercises = [
         metric_unit: Unit.Percent,
         type: InputType.Percent,
       },
+      {
+        allowed_units: [
+          { conversion_factor: 1.0, name: Unit.LB },
+          { conversion_factor: 0.4535923703803783, name: Unit.Kg },
+        ],
+        bounds: { maximum: 200.0, minimum: 0.0 },
+        display_name: "Weight",
+        hidden_by_default: true,
+        id: 1,
+        imperial_unit: Unit.LB,
+        input_ordinal: 2,
+        metric_unit: Unit.Kg,
+        options: [{ value: "weighted" }, { value: "assisted" }],
+        type: InputType.Weightassist,
+      },
     ],
     instructions: [{ value: "Do as Grippy says." }],
     is_hidden: true,
@@ -86521,7 +86536,8 @@ export const exercises = [
     ],
     instructions: [
       {
-        value: "An activity that involves climbing up a short wall of plastic. Arms only.",
+        value:
+          "An activity that involves climbing up a short wall of plastic. Arms only.",
       },
     ],
     is_hidden: false,
