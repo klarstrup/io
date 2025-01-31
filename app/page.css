@@ -201,7 +201,6 @@ table {
 }
 
 fieldset {
-  display: inline-block;
   border-radius: 5px;
 }
 fieldset > legend {
