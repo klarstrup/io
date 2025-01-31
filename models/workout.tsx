@@ -155,7 +155,7 @@ export function calculateClimbingStats(
     setAndLocationPairs
       .map(([location, set]) => getSetGrade(set, location) ?? 0)
       .sort((a, b) => b - a)
-      .slice(0, Math.min(5, setAndLocationPairs.length))
+      .slice(0, Math.min(5, setAndLocationPairs.length) - 1)
       .reduce((sum, grade) => sum + grade, 0) /
     Math.min(5, setAndLocationPairs.length);
 
