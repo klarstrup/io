@@ -23,7 +23,7 @@ export default async function DiaryWorkoutModal(props: {
 
   return (
     <Modal dismissTo={dismissTo}>
-      <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-4 shadow-xl shadow-black/50">
+      <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-2 shadow-xl shadow-black/50">
         <DiaryWorkout date={date} workoutId={workoutId} />
       </div>
     </Modal>
