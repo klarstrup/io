@@ -1,4 +1,4 @@
-import { TZDate } from "@date-fns/tz";
+import { tz, TZDate } from "@date-fns/tz";
 import {
   compareAsc,
   formatDistanceStrict,
@@ -9,8 +9,8 @@ import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
-import Popover from "../../components/Popover";
 import { FieldSetY } from "../../components/FieldSet";
+import Popover from "../../components/Popover";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { PRType } from "../../lib";
 import { isNextSetDue, type WorkoutData } from "../../models/workout";
@@ -50,7 +50,7 @@ export function DiaryAgendaWorkouts({
         <div className="flex items-center gap-2">
           <DiaryAgendaWorkoutsSettings />
           <Popover control="📡">
-            <div className="absolute left-4 top-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.workouts}
@@ -182,7 +182,9 @@ async function LeastRecentGym({
                 >
                   {location.mostRecentVisit
                     ? formatDistanceStrict(
-                        startOfDay(location.mostRecentVisit),
+                        startOfDay(location.mostRecentVisit, {
+                          in: tz(tzDate.timeZone || DEFAULT_TIMEZONE),
+                        }),
                         startOfDay(tzDate),
                         { addSuffix: true, roundingMethod: "ceil" },
                       )

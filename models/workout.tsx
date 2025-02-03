@@ -1,6 +1,7 @@
-import { TZDate } from "@date-fns/tz";
+import { tz, TZDate } from "@date-fns/tz";
 import { intervalToDuration, startOfDay, type Duration } from "date-fns";
 import Grade from "../grades";
+import { DEFAULT_TIMEZONE } from "../utils";
 import { exercises, type AssistType, type Unit } from "./exercises";
 import type { getNextSets } from "./workout.server";
 
@@ -85,7 +86,9 @@ export const isNextSetDue = (
 ) =>
   isDurationGreaterOrEqual(
     intervalToDuration({
-      start: startOfDay(nextSet.workedOutAt || new Date(0)),
+      start: startOfDay(nextSet.workedOutAt || new Date(0), {
+        in: tz(tzDate.timeZone || DEFAULT_TIMEZONE),
+      }),
       end: startOfDay(tzDate),
     }),
     nextSet.scheduleEntry.frequency,

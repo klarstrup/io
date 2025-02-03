@@ -1,4 +1,4 @@
-import { TZDate } from "@date-fns/tz";
+import { tz, TZDate } from "@date-fns/tz";
 import {
   addSeconds,
   areIntervalsOverlapping,
@@ -126,11 +126,15 @@ export async function getUserIcalEventsBetween(
         {
           start:
             event.datetype === "date"
-              ? roundToNearestDay(event.start)
+              ? roundToNearestDay(event.start, {
+                  in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                })
               : event.start,
           end:
             event.datetype === "date"
-              ? roundToNearestDay(event.end)
+              ? roundToNearestDay(event.end, {
+                  in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                })
               : event.end,
         },
         { start, end },

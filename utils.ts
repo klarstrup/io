@@ -444,7 +444,10 @@ export function roundToNearestDay<
 
   const roundingMethod = getRoundingMethod(options?.roundingMethod ?? "round");
 
-  return addDays(startOfDay(date), roundingMethod(hours / 24));
+  return addDays(
+    startOfDay(date, { in: options?.in }),
+    roundingMethod(hours / 24),
+  );
 }
 
 function stringToColours(inputString: string) {

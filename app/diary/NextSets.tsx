@@ -1,4 +1,4 @@
-import { TZDate } from "@date-fns/tz";
+import { tz, TZDate } from "@date-fns/tz";
 import { formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
@@ -40,7 +40,7 @@ export function NextSets({
                 </StealthButton>
               ) : null}
               <div className="leading-none">
-                <span className="whitespace-nowrap font-semibold">
+                <span className="font-semibold whitespace-nowrap">
                   <Link
                     prefetch={false}
                     href={`/diary/exercises/${exercise.id}`}
@@ -76,7 +76,9 @@ export function NextSets({
                         style={{ color: "#edab00" }}
                       >
                         {formatDistanceStrict(
-                          startOfDay(workedOutAt),
+                          startOfDay(workedOutAt, {
+                            in: tz(user.timeZone || DEFAULT_TIMEZONE),
+                          }),
                           startOfDay(tzDate),
                           { addSuffix: true, roundingMethod: "floor" },
                         )}

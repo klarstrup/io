@@ -11,8 +11,8 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
-import Popover from "../../components/Popover";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
+import Popover from "../../components/Popover";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { MongoVEventWithVCalendar } from "../../lib";
 import { getUserIcalEventsBetween } from "../../sources/ical";
@@ -55,7 +55,7 @@ export async function DiaryAgendaEvents({
       legend={
         <div className="flex items-center gap-2">
           <Popover control="📡">
-            <div className="absolute left-4 top-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.events}
@@ -73,13 +73,17 @@ export async function DiaryAgendaEvents({
               {
                 start: max([
                   event.datetype === "date"
-                    ? roundToNearestDay(event.start)
+                    ? roundToNearestDay(event.start, {
+                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                      })
                     : event.start,
                   fetchingInterval.start,
                 ]),
                 end: min([
                   event.datetype === "date"
-                    ? roundToNearestDay(event.end)
+                    ? roundToNearestDay(event.end, {
+                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                      })
                     : event.end,
                   fetchingInterval.end,
                 ]),
@@ -140,7 +144,7 @@ export async function DiaryAgendaEvents({
                   return (
                     <li key={event.uid} className="flex gap-2">
                       <div className="text-center">
-                        <div className="font-semibold tabular-nums leading-snug">
+                        <div className="leading-snug font-semibold tabular-nums">
                           {event.datetype === "date-time" && dayNo === 1 ? (
                             event.start.toLocaleTimeString("en-DK", {
                               hour: "2-digit",
@@ -151,7 +155,7 @@ export async function DiaryAgendaEvents({
                             <>Day {dayNo}</>
                           )}{" "}
                         </div>
-                        <div className="whitespace-nowrap text-[0.666rem] tabular-nums">
+                        <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
                           {dayNo === 1 ? (
                             <>
                               {duration.days ? `${duration.days}d` : null}
@@ -173,7 +177,7 @@ export async function DiaryAgendaEvents({
                       </div>
                       <div className="flex-1">
                         <div className="leading-snug">{event.summary}</div>
-                        <div className="text-[0.666rem] italic leading-tight">
+                        <div className="text-[0.666rem] leading-tight italic">
                           {event.location || <>&nbsp;</>}
                         </div>
                       </div>
