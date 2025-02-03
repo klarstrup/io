@@ -405,7 +405,10 @@ function calculate(
     date.getDate(),
   );
 
-  return new TZDate(utcMidnight + time * MSEC_IN_HOUR, "Etc/UTC");
+  return new TZDate(
+    utcMidnight + time * MSEC_IN_HOUR,
+    date.timeZone || DEFAULT_TIMEZONE,
+  );
 }
 
 /**
