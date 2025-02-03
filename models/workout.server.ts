@@ -99,10 +99,9 @@ export const getNextSets = async ({
             const setWeight = set.inputs[weightInputIndex]?.value;
             const accWeight = acc?.inputs[weightInputIndex]?.value;
             return setWeight &&
-              accWeight &&
               setReps &&
               scheduleEntry.workingReps &&
-              setWeight > accWeight &&
+              (!accWeight || setWeight > accWeight) &&
               setReps >= scheduleEntry.workingReps
               ? set
               : acc;
