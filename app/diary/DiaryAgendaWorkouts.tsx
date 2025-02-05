@@ -112,19 +112,6 @@ export function DiaryAgendaWorkouts({
   );
 }
 
-const nearestLiftingLocationToBoulderingLocation: Record<
-  string,
-  string | null
-> = {
-  "Boulders Hvidovre": "PureGym Friheden Butikscenter",
-  "Boulders Sydhavn": "PureGym Sjælør",
-  "Boulders Valby": "PureGym Mosedalvej",
-  "Boulders Amager": null,
-  "Beta Boulders West": "PureGym C.F. Richs Vej",
-  "Beta Boulders South": "PureGym Sjælør",
-  "Beta Boulders Østerbro": "PureGym Æbeløgade",
-};
-
 async function LeastRecentGym({
   user,
   date,
@@ -194,18 +181,6 @@ async function LeastRecentGym({
                 <span className="text-xs">not visited in the past month</span>
               )}
             </div>
-            {nearestLiftingLocationToBoulderingLocation[location.location] ? (
-              <div>
-                <span className="text-xs">Closest lifting gym: </span>
-                <span className="text-sm">
-                  {
-                    nearestLiftingLocationToBoulderingLocation[
-                      location.location
-                    ]
-                  }
-                </span>
-              </div>
-            ) : null}
           </li>
         ))}
       </ul>
