@@ -122,6 +122,33 @@ const AttemptBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
     {grade ? <GradeText grade={grade} /> : null}
   </svg>
 );
+const RepeatBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
+  <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
+    <title>{title}</title>
+    <rect
+      width="50"
+      stroke="currentColor"
+      y="4"
+      x="4"
+      fill="currentColor"
+      height="50"
+      strokeWidth="8"
+    ></rect>
+    <text
+      y="30%"
+      x="70%"
+      dominantBaseline="central"
+      textAnchor="middle"
+      fill="#000"
+      fontSize="24px"
+      stroke="#fff"
+    >
+      🔁
+    </text>
+    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {grade ? <GradeText grade={grade} /> : null}
+  </svg>
+);
 const NoAttemptBadge = ({
   title,
   grade,
@@ -151,6 +178,7 @@ function ProblemBadge({
   top,
   zone,
   attempt,
+  repeat,
   grade,
   color,
   angle,
@@ -160,6 +188,7 @@ function ProblemBadge({
   top: boolean;
   zone: boolean;
   attempt: boolean;
+  repeat: boolean;
   grade?: number;
   color?: string;
   angle?: number;
@@ -172,7 +201,9 @@ function ProblemBadge({
         ? ZoneBadge
         : attempt
           ? AttemptBadge
-          : NoAttemptBadge;
+          : repeat
+            ? RepeatBadge
+            : NoAttemptBadge;
 
   return (
     <Badge
@@ -209,7 +240,9 @@ function ProblemBadge({
               ? "zone"
               : attempt
                 ? "no send"
-                : "no attempt"
+                : repeat
+                  ? "repeat"
+                  : "no attempt"
       }`}
     />
   );
@@ -255,6 +288,8 @@ export default function ProblemByProblem({
   const sortedProblems = Array.from(problemByProblem)
     .sort((a, b) => Number(b.attempt) - Number(a.attempt))
     .sort((a, b) => Number(b.zone) - Number(a.zone))
+    .sort((a, b) => Number(b.repeat) - Number(a.repeat))
+    .sort((a, b) => Number(b.top) - Number(a.top))
     .sort((a, b) => Number(b.flash) - Number(a.flash))
     .sort((a, b) =>
       a.color &&

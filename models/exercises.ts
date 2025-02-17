@@ -34,6 +34,14 @@ export enum Unit {
   FrenchRounded = "french_rounded",
 }
 
+export enum SendType {
+  Flash = 0,
+  Top = 1,
+  Zone = 2,
+  Attempt = 3,
+  Repeat = 4,
+}
+
 export enum InputType {
   Distance = "distance",
   Heartrate = "heartrate",

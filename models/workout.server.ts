@@ -3,7 +3,13 @@ import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
-import { AssistType, exercises, InputType, TagType } from "./exercises";
+import {
+  AssistType,
+  exercises,
+  InputType,
+  SendType,
+  TagType,
+} from "./exercises";
 import {
   isClimbingExercise,
   type WorkoutData,
@@ -53,8 +59,14 @@ export const getNextSets = async ({
                 const exercise = workout.exercises.find(
                   ({ exerciseId }) => exerciseId === scheduleEntry.exerciseId,
                 )!;
+                const successfulSets = exercise.sets.filter(
+                  (set) =>
+                    (set.inputs[2]?.value as SendType) === SendType.Flash ||
+                    (set.inputs[2]?.value as SendType) === SendType.Top ||
+                    (set.inputs[2]?.value as SendType) === SendType.Repeat,
+                );
                 const successful =
-                  exercise?.sets.length >= scheduleEntry.workingSets;
+                  successfulSets.length >= scheduleEntry.workingSets;
 
                 if (successful) {
                   return {

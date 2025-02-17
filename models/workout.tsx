@@ -2,7 +2,7 @@ import { tz, TZDate } from "@date-fns/tz";
 import { intervalToDuration, startOfDay, type Duration } from "date-fns";
 import Grade from "../grades";
 import { DEFAULT_TIMEZONE } from "../utils";
-import { exercises, type AssistType, type Unit } from "./exercises";
+import { exercises, SendType, type AssistType, type Unit } from "./exercises";
 import type { getNextSets } from "./workout.server";
 
 export enum WorkoutSource {
@@ -120,24 +120,29 @@ export function getSetGrade(
 ) {
   const exercise = exercises.find(({ id }) => 2001 === id)!;
 
+  const sendType = Number(set.inputs[2]!.value) as SendType;
+  if (
+    !(
+      sendType === SendType.Flash ||
+      sendType === SendType.Top ||
+      sendType === SendType.Repeat
+    )
+  ) {
+    return null;
+  }
+
   const inputGrade = set.inputs[0]!.value;
   if (inputGrade) return inputGrade;
 
   if (!location) return null;
 
-  const colorOptions =
-    exercise.inputs[1] &&
-    "options" in exercise.inputs[1] &&
-    exercise.inputs[1].options;
-
+  const colorOptions = exercise.inputs[1]?.options;
   if (!colorOptions) return null;
 
   const color = colorOptions?.[set.inputs[1]!.value]?.value;
-
   if (!color) return null;
 
   const colorGrade = getGradeOfColorByLocation(color, location);
-
   if (colorGrade) return colorGrade;
 
   return null;
@@ -157,6 +162,7 @@ export function calculateClimbingStats(
   const gradeTop5Average =
     setAndLocationPairs
       .map(([location, set]) => getSetGrade(set, location) ?? 0)
+      .filter((grade) => grade > 0)
       .sort((a, b) => b - a)
       .slice(0, Math.min(5, setAndLocationPairs.length))
       .reduce((sum, grade) => sum + grade, 0) /

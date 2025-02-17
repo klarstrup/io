@@ -4,7 +4,13 @@ import { FieldSetX } from "../../components/FieldSet";
 import ProblemByProblem from "../../components/ProblemByProblem";
 import Grade from "../../grades";
 import { PRType } from "../../lib";
-import { AssistType, exercises, InputType, Unit } from "../../models/exercises";
+import {
+  AssistType,
+  exercises,
+  InputType,
+  SendType,
+  Unit,
+} from "../../models/exercises";
 import {
   calculateClimbingStats,
   isClimbingExercise,
@@ -43,7 +49,7 @@ function WorkoutEntryExerciseSetRow({
   setPR?: Record<PRType, boolean>;
 }) {
   return (
-    <tr className="whitespace-nowrap text-lg leading-tight">
+    <tr className="text-lg leading-tight whitespace-nowrap">
       {repeatCount &&
       !set.inputs.some(
         (_, i) => exercise.inputs[i]?.type === InputType.Reps,
@@ -247,16 +253,20 @@ export function WorkoutEntryExercise({
       <ProblemByProblem
         groupByGradeAndFlash={sets.every((set) => set.inputs[0]!.value)}
         groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value > -1)}
-        problemByProblem={sets.map((set, i) => ({
-          grade: set.inputs[0]!.value,
-          color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
-          flash: Number(set.inputs[2]!.value) === 0,
-          top: Number(set.inputs[2]!.value) <= 1,
-          zone: Number(set.inputs[2]!.value) <= 2,
-          number: String(i + 1),
-          attempt: true,
-          angle: set.inputs[3]?.value,
-        }))}
+        problemByProblem={sets.map((set, i) => {
+          const sendType = Number(set.inputs[2]!.value) as SendType;
+          return {
+            grade: set.inputs[0]!.value,
+            color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
+            flash: sendType === SendType.Flash,
+            top: sendType === SendType.Top,
+            zone: sendType === SendType.Zone,
+            attempt: sendType === SendType.Attempt,
+            repeat: sendType === SendType.Repeat,
+            number: String(i + 1),
+            angle: set.inputs[3]?.value,
+          };
+        })}
       />
     );
   }
@@ -403,7 +413,7 @@ export default function WorkoutEntry({
                     prefetch={false}
                     href={`/diary/exercises/${exercise.id}`}
                     style={{ color: "#edab00" }}
-                    className="block text-sm font-bold leading-none"
+                    className="block text-sm leading-none font-bold"
                   >
                     {workoutExercise.displayName ??
                       [exercise.name, ...exercise.aliases]

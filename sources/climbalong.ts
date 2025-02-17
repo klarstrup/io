@@ -401,41 +401,57 @@ export async function getIoClimbAlongCompetitionEvent(
     problemByProblem: problems.length
       ? Array.from(
           problems
-            .reduce((memo, problem) => {
-              const ioPerformance = ioPerformances?.find(
-                (performance) => performance.problemId === problem.problemId,
-              );
+            .reduce(
+              (memo, problem) => {
+                const ioPerformance = ioPerformances?.find(
+                  (performance) => performance.problemId === problem.problemId,
+                );
 
-              // More nastiness here because each problem is repeated for each lane
-              const key = problem.title;
-              memo.set(key, {
-                number: problem.title,
-                color: undefined,
-                grade: undefined,
-                attempt: Boolean(
-                  ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
-                ),
-                zone: Boolean(
-                  ioPerformance?.scores.some(
-                    (score) => score.holdScore === HoldScore.ZONE,
-                  ) || memo.get(key)?.zone,
-                ),
-                top: Boolean(
-                  ioPerformance?.scores.some(
-                    (score) => score.holdScore === HoldScore.TOP,
-                  ) || memo.get(key)?.top,
-                ),
-                flash: Boolean(
-                  ioPerformance?.scores.some(
-                    (score) =>
-                      score.holdScore === HoldScore.TOP &&
-                      score.reachedInAttempt === 1,
-                  ) || memo.get(key)?.flash,
-                ),
-              });
+                // More nastiness here because each problem is repeated for each lane
+                const key = problem.title;
+                memo.set(key, {
+                  number: problem.title,
+                  color: undefined,
+                  grade: undefined,
+                  attempt: Boolean(
+                    ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
+                  ),
+                  zone: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) => score.holdScore === HoldScore.ZONE,
+                    ) || memo.get(key)?.zone,
+                  ),
+                  top: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) => score.holdScore === HoldScore.TOP,
+                    ) || memo.get(key)?.top,
+                  ),
+                  flash: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) =>
+                        score.holdScore === HoldScore.TOP &&
+                        score.reachedInAttempt === 1,
+                    ) || memo.get(key)?.flash,
+                  ),
+                  repeat: false,
+                });
 
-              return memo;
-            }, new Map<string, { number: string; color: string | undefined; grade: number | undefined; attempt: boolean; zone: boolean; top: boolean; flash: boolean }>())
+                return memo;
+              },
+              new Map<
+                string,
+                {
+                  number: string;
+                  color: string | undefined;
+                  grade: number | undefined;
+                  attempt: boolean;
+                  zone: boolean;
+                  top: boolean;
+                  flash: boolean;
+                  repeat: false;
+                }
+              >(),
+            )
             .values(),
         )
       : null,
