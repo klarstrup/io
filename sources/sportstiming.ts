@@ -89,12 +89,12 @@ const getAllNordicRaceEvents = async () =>
     await Promise.all([
       dbFetch<{ Events: SportsTiming.Event[] }>(
         "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race",
-        undefined,
+        { headers: { referrer: "https://www.sportstiming.dk/events" } },
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
       dbFetch<{ Events: SportsTiming.Event[] }>(
         "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race",
-        undefined,
+        { headers: { referrer: "https://www.sportstiming.dk/results" } },
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
     ])
