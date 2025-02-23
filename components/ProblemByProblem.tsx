@@ -300,8 +300,7 @@ export default function ProblemByProblem({
         ? colorsByGrade.indexOf(b.color) - colorsByGrade.indexOf(a.color)
         : 0,
     )
-    .sort((a, b) => Number(b.grade) - Number(a.grade))
-    .sort((a, b) => Number(b.top) - Number(a.top));
+    .sort((a, b) => Number(b.grade) - Number(a.grade));
 
   if (groupByGradeAndFlash || groupByColorAndFlash) {
     const grouped = new Map<string, [PP, ...PP[]]>();
@@ -312,7 +311,21 @@ export default function ProblemByProblem({
           ? problem.color
           : "";
       const flash = problem.flash;
-      const key = `${groupByGradeAndFlash && problem.grade ? new Grade(problem.grade).name : gradeOrColor}-${flash}-${problem.angle}`;
+      const top = problem.top;
+      const zone = problem.zone;
+      const attempt = problem.attempt;
+      const repeat = problem.repeat;
+      const key = [
+        groupByGradeAndFlash && problem.grade
+          ? new Grade(problem.grade).name
+          : gradeOrColor,
+        flash,
+        top,
+        zone,
+        attempt,
+        repeat,
+        problem.angle,
+      ].join("-");
       if (!grouped.has(key)) {
         grouped.set(key, [problem]);
       } else {
