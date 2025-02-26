@@ -29,10 +29,24 @@ export async function* materializeAllToploggerWorkouts({
           __typename: "ClimbLog",
           userId: topLoggerGraphQLId,
           climbedAtDate: { $gt: new Date(0) },
-          // TODO: Include attempts, but not when there is a successful ascent of the same climb on the same day
-          tickType: { $gt: 0 },
         },
       },
+      // This sorting puts successful sends first, for the following group stage
+      { $sort: { tickType: -1, tickIndex: 1 } },
+      {
+        $group: {
+          _id: {
+            climbedAtDate: {
+              $dateToString: { format: "%Y-%m-%d", date: "$climbedAtDate" },
+            },
+            climbId: "$climbId",
+            // Don't merge in repeats of the same climb
+            repeat: { $eq: ["$tickIndex", 1] },
+          },
+          climbLog: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$climbLog" } },
       {
         $set: {
           climbId: {
@@ -165,9 +179,21 @@ export async function* materializeAllToploggerWorkouts({
                       {
                         value: {
                           $cond: {
-                            if: { $eq: ["$$climbLog.tickType", 2] },
-                            then: 0,
-                            else: 1,
+                            if: { $eq: ["$$climbLog.tickIndex", 1] },
+                            then: 4,
+                            else: {
+                              $cond: {
+                                if: { $eq: ["$$climbLog.tickType", 2] },
+                                then: 0,
+                                else: {
+                                  $cond: {
+                                    if: { $eq: ["$$climbLog.tickType", 1] },
+                                    then: 1,
+                                    else: 3,
+                                  },
+                                },
+                              },
+                            },
                           },
                         },
                       },
