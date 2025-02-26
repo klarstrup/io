@@ -302,7 +302,8 @@ export default function ProblemByProblem({
     )
     .sort((a, b) => Number(b.grade) - Number(a.grade));
 
-  if (groupByGradeAndFlash || groupByColorAndFlash) {
+  // @ts-expect-error - disabled for now
+  if ((groupByGradeAndFlash || groupByColorAndFlash) && !"nope") {
     const grouped = new Map<string, [PP, ...PP[]]>();
     for (const problem of sortedProblems) {
       const gradeOrColor = groupByGradeAndFlash
