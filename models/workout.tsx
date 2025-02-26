@@ -154,19 +154,24 @@ export function calculateClimbingStats(
     set: WorkoutExerciseSet,
   ])[],
 ) {
-  const problemCount = setAndLocationPairs.length;
-  const gradeSum = setAndLocationPairs.reduce(
+  const successfulSetAndLocationPairs = setAndLocationPairs.filter(
+    ([, set]) =>
+      (set.inputs[2]!.value as SendType) !== SendType.Attempt &&
+      (set.inputs[2]!.value as SendType) !== SendType.Zone,
+  );
+  const problemCount = successfulSetAndLocationPairs.length;
+  const gradeSum = successfulSetAndLocationPairs.reduce(
     (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
     0,
   );
   const gradeTop5Average =
-    setAndLocationPairs
+    successfulSetAndLocationPairs
       .map(([location, set]) => getSetGrade(set, location) ?? 0)
       .filter((grade) => grade > 0)
       .sort((a, b) => b - a)
-      .slice(0, Math.min(5, setAndLocationPairs.length))
+      .slice(0, Math.min(5, successfulSetAndLocationPairs.length))
       .reduce((sum, grade) => sum + grade, 0) /
-    Math.min(5, setAndLocationPairs.length);
+    Math.min(5, successfulSetAndLocationPairs.length);
 
   return (
     <small className="block text-[10px]">
