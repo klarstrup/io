@@ -1,4 +1,3 @@
-import { addDays } from "date-fns";
 import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
@@ -10,9 +9,7 @@ import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { randomSliceOfSize } from "../../../utils";
 import {
-  fetchGraphQLQueries,
   fetchGraphQLQuery,
-  type GraphQLRequestTuple,
   type MongoGraphQLObject,
   normalizeAndUpsertQueryData,
   type Reference,
@@ -42,22 +39,86 @@ const authSigninRefreshTokenQuery = gql`
   }
 `;
 
-const totalQuery = gql`
-  query climbUsers(
-    $gymId: ID
-    $userId: ID
-    $pagination: PaginationInputClimbUsers
-    $pointsExpireAtDateMin: DateTime
+interface ClimbDaysSessionsQueryResponse {
+  climbDaysPaginated: {
+    pagination: {
+      total: number;
+      page: number;
+      perPage: number;
+      orderBy: {
+        key: string;
+        order: string;
+        __typename: string;
+      }[];
+    };
+    data: TopLoggerClimbDayDereferenced[];
+  };
+}
+const climbDaysSessionsQuery = gql`
+  query climbDaysSessions(
+    $userId: ID!
+    $bouldersTotalTriesMin: Int
+    $routesTotalTriesMin: Int
+    $statsAtDateMin: DateTime
+    $statsAtDateMax: DateTime
+    $pagination: PaginationInputClimbDays
   ) {
-    __typename
-    climbUsers(
-      gymId: $gymId
+    climbDaysPaginated(
       userId: $userId
+      bouldersTotalTriesMin: $bouldersTotalTriesMin
+      routesTotalTriesMin: $routesTotalTriesMin
+      statsAtDateMin: $statsAtDateMin
+      statsAtDateMax: $statsAtDateMax
       pagination: $pagination
-      pointsExpireAtDateMin: $pointsExpireAtDateMin
+      updateDayStatsIfOld: true
     ) {
       pagination {
         total
+        page
+        perPage
+        orderBy {
+          key
+          order
+          __typename
+        }
+        __typename
+      }
+      data {
+        id
+        statsAtDate
+        gradeDistributionRoutes
+        gradeDistributionBoulders
+        bouldersTotalTries
+        bouldersDayGrade
+        bouldersDayGradeMax
+        bouldersDayGradeFlPct
+        bouldersDayGradeRepeatPct
+        routesTotalTries
+        routesDayGrade
+        routesDayGradeMax
+        routesDayGradeOsPct
+        routesDayGradeRepeatPct
+        routesTotalHeight
+
+        gym {
+          id
+          name
+          nameSlug
+          iconPath
+          markBoulderNewDays
+          markRouteNewDays
+          markBoulderOutSoonDays
+          markRouteOutSoonDays
+          settingsLogBoulders
+          settingsLogRoutes
+          __typename
+        }
+        user {
+          id
+          fullName
+          avatarUploadPath
+          __typename
+        }
         __typename
       }
       __typename
@@ -65,35 +126,80 @@ const totalQuery = gql`
   }
 `;
 
-const climbUsersQuery = gql`
-  query climbUsersTopTen(
+interface ClimbLogsQueryResponse {
+  climbLogs: {
+    pagination: {
+      total: number;
+      page: number;
+      perPage: number;
+      orderBy: {
+        key: string;
+        order: string;
+        __typename: string;
+      }[];
+    };
+    data: TopLoggerClimbLogDereferenced[];
+  };
+  [key: string]: unknown;
+}
+const climbLogsQuery = gql`
+  query climbLogsSession(
     $gymId: ID
-    $userId: ID
-    $pagination: PaginationInputClimbUsers
-    $pointsExpireAtDateMin: DateTime
+    $userId: ID!
+    $climbedAtDate: DateTime!
+    $pagination: PaginationInputClimbLogs
+    $compRoundId: ID
+    $climbType: ClimbType
   ) {
-    climbUsers(
+    climbLogs(
       gymId: $gymId
       userId: $userId
+      climbedAtDate: $climbedAtDate
+      climbType: $climbType
       pagination: $pagination
-      pointsExpireAtDateMin: $pointsExpireAtDateMin
     ) {
+      pagination {
+        total
+        page
+        perPage
+        orderBy {
+          key
+          order
+          __typename
+        }
+        __typename
+      }
       data {
         id
+        climbId
         userId
         points
         pointsBonus
-        pointsExpireAtDate
-        climbId
-        grade
-        rating
-        project
-        votedRenew
-        tickType
+        tryIndex
+        tickIndex
         ticked
-        totalTries
-        triedFirstAtDate
-        tickedFirstAtDate
+        tickType
+        gymId
+        climbType
+        topped
+        foreknowledge
+        zones
+        clips
+        holds
+        duration
+        lead
+        hangs
+        comments
+        climbedAtDate
+
+        compClimbLog(compRoundId: $compRoundId) {
+          id
+          points
+          pointsBase
+          pointsBonus
+          pointsJson
+          __typename
+        }
 
         climb {
           id
@@ -123,10 +229,33 @@ const climbUsersQuery = gql`
           outPlannedAt
           order
           setterName
+          holdColor {
+            id
+            color
+            colorSecondary
+            nameLoc
+            order
+            __typename
+          }
+          wall {
+            id
+            nameLoc
+            idOnFloorplan
+            height
+            overhang
+            bouldersEnabled
+            routesEnabled
+            climbTypeDefault
+            labelX
+            labelY
+            order
+            __typename
+          }
           gym {
             id
             name
             nameSlug
+            iconPath
             markBoulderNewDays
             markRouteNewDays
             markBoulderOutSoonDays
@@ -137,28 +266,7 @@ const climbUsersQuery = gql`
           }
           __typename
         }
-        wall {
-          id
-          nameLoc
-          idOnFloorplan
-          height
-          overhang
-          bouldersEnabled
-          routesEnabled
-          climbTypeDefault
-          labelX
-          labelY
-          order
-          __typename
-        }
-        holdColor {
-          id
-          color
-          colorSecondary
-          nameLoc
-          order
-          __typename
-        }
+
         __typename
       }
       __typename
@@ -166,35 +274,75 @@ const climbUsersQuery = gql`
   }
 `;
 
-export interface TopLoggerClimbUser extends MongoGraphQLObject {
-  __typename: "ClimbUser";
-  id: string;
-  userId: string;
-  tickType: number;
-  points: number;
-  pointsBonus: number;
-  pointsExpireAtDate: Date;
-  climbId: string;
-  grade: string;
-  rating: number;
-  project: string;
-  votedRenew: boolean;
-  totalTries: number;
-  triedFirstAtDate: Date;
-  tickedFirstAtDate: Date;
-  // Object fields
-  climb: Reference;
-  wall: Reference;
-  holdColor: Reference;
-}
-
 interface Climb extends MongoGraphQLObject {
   grade: number;
   gym: Reference;
+  holdColor: Reference;
+  wall: Reference;
 }
 
-interface ClimbDereferenced extends Omit<Climb, "gym"> {
+interface ClimbDereferenced extends Omit<Climb, "gym" | "holdColor" | "wall"> {
   gym: Gym;
+  holdColor: HoldColor;
+  wall: Wall;
+}
+
+interface ClimbDay extends MongoGraphQLObject {
+  __typename: "ClimbDay";
+  statsAtDate: Date;
+  bouldersTotalTries: number;
+  bouldersDayGradeMax: number;
+  routesTotalTries: number;
+  routesDayGradeMax: number;
+  gradeDistributionRoutes: {
+    grade: string;
+    countFl: number;
+    countOs: number;
+    countRp: number;
+  }[];
+  gradeDistributionBoulders: {
+    grade: string;
+    countFl: number;
+    countOs: number;
+    countRp: number;
+  }[];
+  gym: Reference;
+  user: Reference;
+  bouldersDayGrade: number;
+  bouldersDayGradeFlPct: number;
+  bouldersDayGradeRepeatPct: number;
+  routesDayGrade: number;
+  routesDayGradeFlPct: number;
+  routesDayGradeRepeatPct: number;
+  routesTotalHeight: number;
+}
+
+type ClimbType = "boulder" | "route";
+interface ClimbLog extends MongoGraphQLObject {
+  grade: number;
+  __typename: "ClimbLog";
+  climb: Reference;
+  climbId: string;
+  climbType: ClimbType;
+  climbedAtDate: Date;
+  clips: number;
+  comments: unknown;
+  compClimbLog: unknown;
+  duration: number;
+  foreknowledge: boolean;
+  gymId: string;
+  hangs: number;
+  holds: number;
+  lead: boolean;
+  points: number;
+  pointsBonus: number;
+  tickIndex: number;
+  tickType: number;
+  ticked: boolean;
+  topped: boolean;
+  tryIndex: number;
+  userId: string;
+  zones: number;
 }
 
 interface Gym extends MongoGraphQLObject {
@@ -211,11 +359,12 @@ interface HoldColor extends MongoGraphQLObject {
   nameLoc: string;
 }
 
-export interface TopLoggerClimbUserDereferenced
-  extends Omit<TopLoggerClimbUser, "climb" | "wall" | "holdColor"> {
+interface TopLoggerClimbLogDereferenced extends Omit<ClimbLog, "climb"> {
   climb: ClimbDereferenced;
-  wall: Wall;
-  holdColor: HoldColor;
+}
+
+interface TopLoggerClimbDayDereferenced extends Omit<ClimbDay, "gym"> {
+  gym: Gym;
 }
 
 export const GET = (request: NextRequest) =>
@@ -242,9 +391,11 @@ export const GET = (request: NextRequest) =>
           { key: { id: 1 } },
           { key: { userId: 1 } },
           { key: { tickedFirstAtDate: 1 } },
+          { key: { climbedAtDate: 1 } },
           { key: { __typename: 1, id: 1 } },
           { key: { __typename: 1, userId: 1 } },
           { key: { __typename: 1, userId: 1, tickedFirstAtDate: 1 } },
+          { key: { __typename: 1, userId: 1, climbedAtDate: 1 } },
         ]);
 
         let headers: HeadersInit = {
@@ -322,82 +473,78 @@ export const GET = (request: NextRequest) =>
             { headers: { ...agentHeaders, ...headers } },
             operationName,
           );
-        const fetchQueries = <TData = Record<string, unknown>>(
-          reqs: GraphQLRequestTuple[],
-        ) =>
-          fetchGraphQLQueries<TData>(reqs, "https://app.toplogger.nu/graphql", {
-            headers: { ...agentHeaders, ...headers },
-          });
 
         const userId = dataSource.config.graphQLId;
 
-        const graphqlTotalResponse = await fetchQuery(totalQuery, {
-          userId,
-          pagination: { page: 1, perPage: 1 },
-        });
-        const graphqlCurrentTotalResponse = await fetchQuery(totalQuery, {
-          userId,
-          pagination: { page: 1, perPage: 1 },
-          pointsExpireAtDateMin: addDays(new Date(), 1),
-        });
-        const total = (
-          graphqlTotalResponse as {
-            data: { climbUsers: { pagination: { total: number } } };
-          }
-        ).data.climbUsers.pagination.total;
-        const currentTotal = (
-          graphqlCurrentTotalResponse as {
-            data: { climbUsers: { pagination: { total: number } } };
-          }
-        ).data.climbUsers.pagination.total;
+        let climbDays: TopLoggerClimbDayDereferenced[] = [];
 
-        yield { total, currentTotal };
-
-        const allCurrentPageNumbers = Array.from(
-          { length: Math.ceil(currentTotal / 10) },
-          (_, i) => i + 1,
+        let page = 1;
+        let graphqlClimbDaysPaginatedResponse =
+          await fetchQuery<ClimbDaysSessionsQueryResponse>(
+            climbDaysSessionsQuery,
+            {
+              userId,
+              bouldersTotalTriesMin: 1,
+              pagination: { page, perPage: 100 },
+            },
+          );
+        if (!graphqlClimbDaysPaginatedResponse.data) {
+          throw new Error("Failed to fetch climb days");
+        }
+        climbDays = climbDays.concat(
+          graphqlClimbDaysPaginatedResponse.data.climbDaysPaginated.data,
         );
-        const currentPageNumbers = [
-          ...allCurrentPageNumbers.slice(0, 5),
-          ...randomSliceOfSize(allCurrentPageNumbers.slice(5), 5),
-        ];
-        const pageNumbers: number[] = randomSliceOfSize(
-          Array.from({ length: Math.ceil(total / 10) }, (_, i) => i + 1),
-          2,
+        const totalPages = Math.ceil(
+          graphqlClimbDaysPaginatedResponse.data?.climbDaysPaginated.pagination
+            .total /
+            graphqlClimbDaysPaginatedResponse.data?.climbDaysPaginated
+              .pagination.perPage || 1,
         );
 
-        yield { currentPageNumbers, pageNumbers };
-
-        const queries = [
-          ...currentPageNumbers.map(
-            (page): GraphQLRequestTuple => [
-              climbUsersQuery,
+        for (; page <= totalPages; page++) {
+          graphqlClimbDaysPaginatedResponse =
+            await fetchQuery<ClimbDaysSessionsQueryResponse>(
+              climbDaysSessionsQuery,
               {
                 userId,
-                pagination: { page },
-                pointsExpireAtDateMin: addDays(new Date(), 1),
+                bouldersTotalTriesMin: 1,
+                pagination: { page, perPage: 100 },
               },
-              "climbUsersTopTen",
-            ],
-          ),
-          ...pageNumbers.map(
-            (page): GraphQLRequestTuple => [
-              climbUsersQuery,
-              { userId, pagination: { page } },
-              "climbUsersTopTen",
-            ],
-          ),
-        ];
-        const graphqlResponse2 = await fetchQueries(queries);
+            );
 
-        for (let i = 0; i < queries.length; i++) {
-          const [query, variables] = queries[i]!;
-          const response = graphqlResponse2[i]!;
+          if (!graphqlClimbDaysPaginatedResponse.data) {
+            throw new Error("Failed to fetch climb days");
+          }
+
+          climbDays = climbDays.concat(
+            graphqlClimbDaysPaginatedResponse.data.climbDaysPaginated.data,
+          );
+        }
+
+        const recentDays = 5;
+        const backfillDays = 25;
+        const climbDaysToFetch = [
+          // Most recent days
+          ...climbDays.slice(0, recentDays),
+          // other random days, for backfilling. TODO: General backfilling strategy
+          ...randomSliceOfSize(climbDays.slice(recentDays), backfillDays),
+        ];
+
+        for (const climbDay of climbDaysToFetch) {
+          const climbLogsVariables = {
+            userId,
+            climbedAtDate: climbDay.statsAtDate,
+          };
+          const graphqlClimbLogsResponse =
+            await fetchQuery<ClimbLogsQueryResponse>(
+              climbLogsQuery,
+              climbLogsVariables,
+            );
 
           const updateResult = await normalizeAndUpsertQueryData(
-            query,
-            variables,
-            response.data!,
+            climbLogsQuery,
+            climbLogsVariables,
+            graphqlClimbLogsResponse.data!,
           );
 
           yield updateResult;

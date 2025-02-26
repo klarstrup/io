@@ -26,9 +26,11 @@ export async function* materializeAllToploggerWorkouts({
     yield* TopLoggerGraphQL.aggregate([
       {
         $match: {
-          __typename: "ClimbUser",
+          __typename: "ClimbLog",
           userId: topLoggerGraphQLId,
-          tickedFirstAtDate: { $gt: new Date(0) },
+          climbedAtDate: { $gt: new Date(0) },
+          // TODO: Include attempts, but not when there is a successful ascent of the same climb on the same day
+          tickType: { $gt: 0 },
         },
       },
       {
@@ -37,13 +39,6 @@ export async function* materializeAllToploggerWorkouts({
             $replaceOne: {
               input: "$climb.__ref",
               find: "Climb:",
-              replacement: "",
-            },
-          },
-          holdColorId: {
-            $replaceOne: {
-              input: "$holdColor.__ref",
-              find: "HoldColor:",
               replacement: "",
             },
           },
@@ -57,6 +52,18 @@ export async function* materializeAllToploggerWorkouts({
           as: "climb",
         },
       },
+      { $set: { climb: { $arrayElemAt: ["$climb", 0] } } },
+      {
+        $set: {
+          holdColorId: {
+            $replaceOne: {
+              input: "$climb.holdColor.__ref",
+              find: "HoldColor:",
+              replacement: "",
+            },
+          },
+        },
+      },
       {
         $lookup: {
           from: "toplogger_graphql",
@@ -65,12 +72,7 @@ export async function* materializeAllToploggerWorkouts({
           as: "holdColor",
         },
       },
-      {
-        $set: {
-          climb: { $arrayElemAt: ["$climb", 0] },
-          holdColor: { $arrayElemAt: ["$holdColor", 0] },
-        },
-      },
+      { $set: { holdColor: { $arrayElemAt: ["$holdColor", 0] } } },
       {
         $set: {
           gymId: {
@@ -90,17 +92,13 @@ export async function* materializeAllToploggerWorkouts({
           as: "gym",
         },
       },
-      {
-        $set: {
-          gym: { $arrayElemAt: ["$gym", 0] },
-        },
-      },
+      { $set: { gym: { $arrayElemAt: ["$gym", 0] } } },
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$tickedFirstAtDate" },
+            $dateToString: { format: "%Y-%m-%d", date: "$climbedAtDate" },
           },
-          climbUsers: { $push: "$$ROOT" },
+          climbLogs: { $push: "$$ROOT" },
         },
       },
       {
@@ -115,7 +113,7 @@ export async function* materializeAllToploggerWorkouts({
                 $dateToString: {
                   format: "%Y-%m-%d",
                   date: {
-                    $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0],
+                    $arrayElemAt: ["$climbLogs.climbedAtDate", 0],
                   },
                 },
               },
@@ -123,23 +121,23 @@ export async function* materializeAllToploggerWorkouts({
           },
           _id: 0,
           userId: { $literal: user.id },
-          createdAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
-          updatedAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
-          workedOutAt: { $arrayElemAt: ["$climbUsers.tickedFirstAtDate", 0] },
+          createdAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
+          updatedAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
+          workedOutAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
           source: { $literal: WorkoutSource.TopLogger },
-          location: { $arrayElemAt: ["$climbUsers.gym.name", 0] },
+          location: { $arrayElemAt: ["$climbLogs.gym.name", 0] },
           exercises: [
             {
               exerciseId: 2001,
               sets: {
                 $map: {
-                  input: "$climbUsers",
-                  as: "climbUser",
+                  input: "$climbLogs",
+                  as: "climbLog",
                   in: {
                     inputs: [
                       // Grade
                       {
-                        value: { $divide: ["$$climbUser.climb.grade", 100] },
+                        value: { $divide: ["$$climbLog.climb.grade", 100] },
                         unit: Unit.FrenchRounded,
                       },
                       // Color
@@ -159,7 +157,7 @@ export async function* materializeAllToploggerWorkouts({
                               "white",
                               "purple",
                             ],
-                            { $toLower: "$$climbUser.holdColor.nameLoc" },
+                            { $toLower: "$$climbLog.holdColor.nameLoc" },
                           ],
                         },
                       },
@@ -167,7 +165,7 @@ export async function* materializeAllToploggerWorkouts({
                       {
                         value: {
                           $cond: {
-                            if: { $eq: ["$$climbUser.tickType", 2] },
+                            if: { $eq: ["$$climbLog.tickType", 2] },
                             then: 0,
                             else: 1,
                           },
