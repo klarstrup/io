@@ -1,5 +1,5 @@
 import type { Session } from "next-auth";
-import { Unit } from "../../../models/exercises";
+import { SendType, Unit } from "../../../models/exercises";
 import { WorkoutSource } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
 import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
@@ -394,6 +394,54 @@ export async function* materializeAllKilterBoardWorkouts({
     yield* KilterBoardAscents.aggregate([
       { $match: { user_id: Number(user_id), is_listed: true } },
       {
+        $lookup: {
+          from: "kilterboard_bids",
+          let: {
+            climb_uuid: "$climb_uuid",
+            angle: "$angle",
+            climbed_at: "$climbed_at",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$climb_uuid", "$$climb_uuid"] },
+                    { $eq: ["$angle", "$$angle"] },
+                    { $lt: ["$climbed_at", "$$climbed_at"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "climb_bids",
+        },
+      },
+      {
+        $lookup: {
+          from: "kilterboard_ascents",
+          let: {
+            climb_uuid: "$climb_uuid",
+            angle: "$angle",
+            climbed_at: "$climbed_at",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$climb_uuid", "$$climb_uuid"] },
+                    { $eq: ["$angle", "$$angle"] },
+                    { $lt: ["$climbed_at", "$$climbed_at"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "climb_ascents",
+        },
+      },
+      {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
           ascents: { $push: "$$ROOT" },
@@ -430,7 +478,25 @@ export async function* materializeAllKilterBoardWorkouts({
                       // Color
                       { value: NaN },
                       // Sent-ness
-                      { value: 1 },
+                      {
+                        value: {
+                          $cond: {
+                            if: {
+                              $gt: [{ $size: "$$ascent.climb_ascents" }, 0],
+                            },
+                            then: SendType.Repeat,
+                            else: {
+                              $cond: {
+                                if: {
+                                  $eq: [{ $size: "$$ascent.climb_bids" }, 0],
+                                },
+                                then: SendType.Flash,
+                                else: SendType.Top,
+                              },
+                            },
+                          },
+                        },
+                      },
                       // Angle
                       { value: "$$ascent.angle", unit: Unit.Deg },
                     ],
