@@ -180,16 +180,16 @@ export async function* materializeAllToploggerWorkouts({
                         value: {
                           $cond: {
                             if: { $eq: ["$$climbLog.tickIndex", 1] },
-                            then: 4,
+                            then: SendType.Repeat,
                             else: {
                               $cond: {
                                 if: { $eq: ["$$climbLog.tickType", 2] },
-                                then: 0,
+                                then: SendType.Flash,
                                 else: {
                                   $cond: {
                                     if: { $eq: ["$$climbLog.tickType", 1] },
-                                    then: 1,
-                                    else: 3,
+                                    then: SendType.Top,
+                                    else: SendType.Attempt,
                                   },
                                 },
                               },
