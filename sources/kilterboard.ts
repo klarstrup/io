@@ -25,11 +25,28 @@ export namespace KilterBoard {
     created_at: Date;
     updated_at: Date;
   }
+
+  export interface Bid {
+    uuid: string;
+    user_id: number;
+    climb_uuid: string;
+    angle: number;
+    is_mirror: boolean;
+    bid_count: number;
+    is_listed: boolean;
+    comment: string;
+    climbed_at: Date;
+    created_at: Date;
+    updated_at: Date;
+  }
 }
 
 export const KilterBoardAscents = proxyCollection<KilterBoard.Ascent>(
   "kilterboard_ascents",
 );
+
+export const KilterBoardBids =
+  proxyCollection<KilterBoard.Bid>("kilterboard_bids");
 
 export function workoutFromKilterBoardAscents(
   user: Session["user"],
