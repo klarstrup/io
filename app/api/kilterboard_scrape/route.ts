@@ -50,6 +50,8 @@ export const GET = () =>
           );
         }
 
+        yield { ascents };
+
         for (const bid of bids) {
           await KilterBoardBids.updateOne(
             { uuid: bid.uuid },
@@ -65,7 +67,7 @@ export const GET = () =>
           );
         }
 
-        yield { ascents };
+        yield { bids };
       });
     }
 
