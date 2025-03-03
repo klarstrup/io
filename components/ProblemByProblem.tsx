@@ -12,12 +12,12 @@ interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
 
 const GradeText = ({ grade }: { grade: string }) => (
   <text
-    y="40"
-    x="6"
+    y="38"
+    x="4"
     dominantBaseline="central"
     textAnchor="start"
     fill="#fff"
-    fontSize="28px"
+    fontSize="34px"
     stroke="#000"
     paintOrder="stroke"
     strokeWidth="3px"
@@ -28,15 +28,15 @@ const GradeText = ({ grade }: { grade: string }) => (
 
 const AngleText = ({ angle }: { angle: number }) => (
   <text
-    y="14"
-    x="6"
+    y="12"
+    x="4"
     dominantBaseline="central"
     textAnchor="start"
     fill="#fff"
     fontSize="20px"
     stroke="#000"
     paintOrder="stroke"
-    strokeWidth="3px"
+    strokeWidth="2px"
   >
     {angle}°
   </text>
@@ -55,12 +55,12 @@ const FlashBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       strokeWidth="8"
     ></rect>
     <text
-      y="30%"
-      x="70%"
+      y="20%"
+      x="85%"
       dominantBaseline="central"
       textAnchor="middle"
       fill="#ffff00"
-      fontSize="26px"
+      fontSize="20px"
     >
       ⚡️
     </text>
@@ -135,12 +135,12 @@ const RepeatBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       strokeWidth="8"
     ></rect>
     <text
-      y="30%"
-      x="70%"
+      y="20%"
+      x="80%"
       dominantBaseline="central"
       textAnchor="middle"
       fill="#000"
-      fontSize="24px"
+      fontSize="18px"
       stroke="#fff"
     >
       🔁
