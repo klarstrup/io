@@ -25,6 +25,7 @@ export function NextSets({
         ({
           exerciseId,
           successful,
+          scheduleEntry,
           nextWorkingSets,
           nextWorkingSetsReps,
           nextWorkingSetsWeight,
@@ -33,7 +34,10 @@ export function NextSets({
           const exercise = exercises.find(({ id }) => exerciseId === id)!;
 
           return (
-            <li key={exercise.id} className="flex items-start">
+            <li
+              key={JSON.stringify(scheduleEntry)}
+              className="flex items-start"
+            >
               {onAddExercise ? (
                 <StealthButton onClick={() => onAddExercise(exercise.id)}>
                   ➕
