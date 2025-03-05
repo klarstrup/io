@@ -126,6 +126,8 @@ function WorkoutsSummary({
 
             if (isClimbingExercise(exercise.id)) {
               icon = "🧗‍♀️";
+            } else if (exercise.id === 564) {
+              icon = "🧘‍♀️";
             } else if (
               exercise.tags?.some(
                 (tag) =>

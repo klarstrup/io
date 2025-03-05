@@ -34,12 +34,14 @@ export interface WorkoutExercise {
   exerciseId: number;
   displayName?: string;
   sets: WorkoutExerciseSet[];
+  comment?: string;
 }
 
 export interface WorkoutExerciseSet {
   createdAt?: Date;
   updatedAt?: Date;
   inputs: WorkoutExerciseSetInput[];
+  comment?: string;
 }
 
 export interface WorkoutExerciseSetInput {
