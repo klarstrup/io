@@ -2,8 +2,8 @@ import { ImageResponse } from "next/og";
 
 // Image metadata
 export const size = {
-  width: 32,
-  height: 32,
+  width: 64,
+  height: 64,
 };
 export const contentType = "image/png";
 
@@ -14,14 +14,14 @@ export default function Icon() {
       // ImageResponse JSX element
       <div
         style={{
-          fontSize: 32,
-          background: "black",
+          fontSize: 64,
+          background: "#ffff00",
           width: "100%",
           height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "white",
+          color: "#edab00",
         }}
       >
         io
