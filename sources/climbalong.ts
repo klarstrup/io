@@ -5,6 +5,7 @@ import {
   isBefore,
   isFuture,
   isWithinInterval,
+  min,
   subHours,
 } from "date-fns";
 import { dbFetch } from "../fetch";
@@ -390,13 +391,16 @@ export async function getIoClimbAlongCompetitionEvent(
     ),
     end: isFuture(new Date(competition.endTime))
       ? new Date(competition.endTime)
-      : new Date(
-          lastPerformance ||
-            circuitChallengeNodesGroupedByLane.find(
-              ([, [challengeNode]]) => challengeNode?.selfscoringClose,
-            )?.[1][0]?.selfscoringClose ||
-            competition.endTime,
-        ),
+      : min([
+          new Date(
+            lastPerformance ||
+              circuitChallengeNodesGroupedByLane.find(
+                ([, [challengeNode]]) => challengeNode?.selfscoringClose,
+              )?.[1][0]?.selfscoringClose ||
+              competition.endTime,
+          ),
+          new Date(competition.endTime),
+        ]),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
     subEvent: null,
