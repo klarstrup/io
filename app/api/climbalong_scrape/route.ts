@@ -7,6 +7,7 @@ import {
 } from "../../../sources/climbalong.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
+import { shuffle } from "../../../utils";
 import { materializeAllClimbalongWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -34,7 +35,7 @@ export const GET = () =>
           official: null;
         }[];
 
-        for (const { competition, athlete } of userInCompetitions) {
+        for (const { competition, athlete } of shuffle(userInCompetitions)) {
           await ClimbAlongCompetitions.updateOne(
             { competitionId: competition.competitionId },
             {
