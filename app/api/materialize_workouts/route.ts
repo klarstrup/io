@@ -2,6 +2,7 @@ import { auth } from "../../../auth";
 import { MaterializedWorkoutsView } from "../../../models/workout.server";
 import { jsonStreamResponse } from "../scraper-utils";
 import {
+  materializeAllClimbalongWorkouts,
   materializeAllCrimpdWorkouts,
   materializeAllFitocracyWorkouts,
   materializeAllGrippyWorkouts,
@@ -52,6 +53,8 @@ export const GET = () =>
     yield* materializeAllGrippyWorkouts({ user });
 
     yield* materializeAllCrimpdWorkouts({ user });
+
+    yield* materializeAllClimbalongWorkouts({ user });
 
     yield `materializeAllWorkouts: done in ${Date.now() - t}ms`;
 

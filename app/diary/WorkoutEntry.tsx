@@ -201,7 +201,7 @@ function WorkoutEntryExerciseSetRow({
           <td />
           <td
             colSpan={set.inputs.length + 2}
-            className="text-left text-xs pb-1 whitespace-nowrap italic"
+            className="pb-1 text-left text-xs whitespace-nowrap italic"
           >
             {set.comment}
           </td>
@@ -401,6 +401,8 @@ export default function WorkoutEntry({
                 <small>Grippy</small>
               ) : workout.source === WorkoutSource.Crimpd ? (
                 <small>Crimpd</small>
+              ) : workout.source === WorkoutSource.ClimbAlong ? (
+                <small>ClimbAlong</small>
               ) : null}
             </div>
           ) : null}
@@ -448,7 +450,7 @@ export default function WorkoutEntry({
                   : null}
               </div>
               {workoutExercise.comment ? (
-                <div className="text-xs whitespace-nowrap italic pb-1">
+                <div className="pb-1 text-xs whitespace-nowrap italic">
                   {workoutExercise.comment}
                 </div>
               ) : null}

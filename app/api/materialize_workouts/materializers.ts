@@ -2,6 +2,8 @@ import type { Session } from "next-auth";
 import { SendType, Unit } from "../../../models/exercises";
 import { WorkoutSource } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
+import { HoldScore, HoldScore2 } from "../../../sources/climbalong";
+import { ClimbAlongAthletes } from "../../../sources/climbalong.server";
 import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { GrippyWorkoutLogs } from "../../../sources/grippy";
@@ -641,6 +643,237 @@ export async function* materializeAllCrimpdWorkouts({
   }
 
   yield "materializeAllCrimpdWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
+}
+
+export async function* materializeAllClimbalongWorkouts({
+  user,
+}: {
+  user: Session["user"];
+}) {
+  yield "materializeAllClimbalongWorkouts: start";
+  const t = new Date();
+
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.ClimbAlong) continue;
+
+    yield* ClimbAlongAthletes.aggregate([
+      { $match: { userId: dataSource.config.userId } },
+      {
+        $lookup: {
+          from: "climbalong_performances",
+          let: { athleteId: "$athleteId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$athleteId", "$$athleteId"] },
+              },
+            },
+          ],
+          as: "performances",
+        },
+      },
+      { $unwind: "$performances" },
+      { $replaceRoot: { newRoot: "$performances" } },
+      { $match: { numberOfAttempts: { $gt: 0 } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$registrationTime" },
+          },
+          athleteId: { $first: "$athleteId" },
+          circuitId: { $first: "$circuitId" },
+          registrationTime: { $first: "$registrationTime" },
+          performances: { $push: "$$ROOT" },
+        },
+      },
+      {
+        $lookup: {
+          from: "climbalong_athletes",
+          localField: "athleteId",
+          foreignField: "athleteId",
+          as: "athlete",
+        },
+      },
+      { $set: { athlete: { $first: "$athlete" } } },
+      {
+        $lookup: {
+          from: "climbalong_competitions",
+          localField: "athlete.competitionId",
+          foreignField: "competitionId",
+          as: "competition",
+        },
+      },
+      { $set: { competition: { $first: "$competition" } } },
+      {
+        $project: {
+          _id: 0,
+          id: {
+            $concat: [
+              { $literal: WorkoutSource.ClimbAlong },
+              ":",
+              { $toString: "$circuitId" },
+              ":",
+              "$_id",
+            ],
+          },
+          userId: { $literal: user.id },
+          createdAt: "$registrationTime",
+          updatedAt: "$registrationTime",
+          workedOutAt: "$registrationTime",
+          source: { $literal: WorkoutSource.ClimbAlong },
+          exercises: [
+            {
+              exerciseId: 2001,
+              comment: "$competition.title",
+              sets: {
+                $map: {
+                  input: "$performances",
+                  as: "performance",
+                  in: {
+                    inputs: [
+                      // Grade
+                      {
+                        value: { $literal: null },
+                        unit: Unit.FrenchRounded,
+                      },
+                      // Color
+                      { value: { $literal: null } },
+                      // Sent-ness
+                      {
+                        value: {
+                          $cond: {
+                            if: {
+                              $and: [
+                                { $eq: ["$$performance.numberOfAttempts", 1] },
+                                {
+                                  $gt: [
+                                    {
+                                      $size: {
+                                        $filter: {
+                                          input: "$$performance.scores",
+                                          as: "score",
+                                          cond: {
+                                            $or: [
+                                              {
+                                                $eq: [
+                                                  "$$score.holdScore",
+                                                  HoldScore.TOP,
+                                                ],
+                                              },
+                                              {
+                                                $eq: [
+                                                  "$$score.holdScore",
+                                                  HoldScore2.TOP,
+                                                ],
+                                              },
+                                            ],
+                                          },
+                                          limit: 1,
+                                        },
+                                      },
+                                    },
+                                    0,
+                                  ],
+                                },
+                              ],
+                            },
+                            then: SendType.Flash,
+                            else: {
+                              $cond: {
+                                if: {
+                                  $gt: [
+                                    {
+                                      $size: {
+                                        $filter: {
+                                          input: "$$performance.scores",
+                                          as: "score",
+                                          cond: {
+                                            $or: [
+                                              {
+                                                $eq: [
+                                                  "$$score.holdScore",
+                                                  HoldScore.TOP,
+                                                ],
+                                              },
+                                              {
+                                                $eq: [
+                                                  "$$score.holdScore",
+                                                  HoldScore2.TOP,
+                                                ],
+                                              },
+                                            ],
+                                          },
+                                          limit: 1,
+                                        },
+                                      },
+                                    },
+                                    0,
+                                  ],
+                                },
+                                then: SendType.Top,
+                                else: {
+                                  $cond: {
+                                    if: {
+                                      $gt: [
+                                        {
+                                          $size: {
+                                            $filter: {
+                                              input: "$$performance.scores",
+                                              as: "score",
+                                              cond: {
+                                                $or: [
+                                                  {
+                                                    $eq: [
+                                                      "$$score.holdScore",
+                                                      HoldScore.ZONE,
+                                                    ],
+                                                  },
+                                                  {
+                                                    $eq: [
+                                                      "$$score.holdScore",
+                                                      HoldScore2.ZONE,
+                                                    ],
+                                                  },
+                                                ],
+                                              },
+                                              limit: 1,
+                                            },
+                                          },
+                                        },
+                                        0,
+                                      ],
+                                    },
+                                    then: SendType.Zone,
+                                    else: SendType.Attempt,
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+      //*/
+    ]);
+  }
+
+  yield "materializeAllClimbalongWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
 }

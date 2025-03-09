@@ -258,6 +258,30 @@ function UserStuffSourceForm({
         </label>
       );
       break;
+    case DataSource.ClimbAlong:
+      formElements = (
+        <>
+          <label className="flex gap-1">
+            Token:{" "}
+            <input
+              type="text"
+              {...register(`dataSources.${index}.config.token`)}
+              placeholder="Token"
+              className="flex-1"
+            />
+          </label>
+          <label className="flex gap-1">
+            User ID:{" "}
+            <input
+              type="text"
+              {...register(`dataSources.${index}.config.userId`)}
+              placeholder="User ID"
+              className="flex-1"
+            />
+          </label>
+        </>
+      );
+      break;
     case DataSource.Tomorrow:
       formElements = (
         <label className="flex gap-1">
@@ -549,6 +573,13 @@ export default function UserStuffSourcesForm({
                       ...initialSourceMeta,
                       source: DataSource.Crimpd,
                       config: { token: "" },
+                    });
+                    break;
+                  case DataSource.ClimbAlong:
+                    append({
+                      ...initialSourceMeta,
+                      source: DataSource.ClimbAlong,
+                      config: { token: "", userId: "" },
                     });
                     break;
                   case DataSource.Tomorrow:

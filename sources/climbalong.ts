@@ -28,6 +28,34 @@ import {
 } from "../utils";
 
 export namespace Climbalong {
+  export type CircuitChallengeNodesGroupedByLane = [
+    number,
+    {
+      nodeId: number;
+      nodeType: number;
+      competitionId: number;
+      inputsFrom: {
+        nodeId: number;
+        edgeId: number;
+      }[];
+      outputEdgeIds: number[];
+      inputTitle: string;
+      nodeOutputType: {
+        scoreSystem: string;
+        numberOfAttemptsCounted: boolean;
+        numberOfScoringHolds: number;
+        ranked: boolean;
+      };
+      circuit: Climbalong.Circuit;
+      selfscoring: boolean;
+      selfscoringOpen: Date | null;
+      selfscoringClose: Date | null;
+      pickTopPerformancesAmount: number;
+      outputRanked: boolean;
+      nodeName: string;
+    }[],
+  ][];
+
   export interface Athlete {
     athleteId: number;
     competitionId: number;
@@ -140,11 +168,11 @@ export namespace Climbalong {
     title: string;
   }
 }
-enum HoldScore {
+export enum HoldScore {
   "TOP" = 4,
   "ZONE" = 1,
 }
-enum HoldScore2 {
+export enum HoldScore2 {
   "TOP" = 25,
   "ZONE" = 10,
 }
