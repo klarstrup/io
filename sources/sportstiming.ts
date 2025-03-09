@@ -292,8 +292,6 @@ export async function getSportsTimingEventEntry(
   const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
   if (!event) throw new Error("???");
 
-  console.log({ event });
-
   return {
     source: EventSource.Sportstiming,
     type: "competition",
