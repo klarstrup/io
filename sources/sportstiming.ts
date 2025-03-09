@@ -81,20 +81,17 @@ export namespace SportsTiming {
   }
 }
 
-const parseSTDate = (stDate: string) =>
-  new Date(Number(stDate.match(/\d+/)?.[0]));
-
 const getAllNordicRaceEvents = async () =>
   (
     await Promise.all([
       dbFetch<{ Events: SportsTiming.Event[] }>(
-        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race",
-        { headers: { referrer: "https://www.sportstiming.dk/events" } },
+        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race&maxResults=100&page=1&federation=",
+        { headers: { referer: "https://www.sportstiming.dk/events" } },
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
       dbFetch<{ Events: SportsTiming.Event[] }>(
-        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race",
-        { headers: { referrer: "https://www.sportstiming.dk/results" } },
+        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race&maxResults=100&page=1&federation=",
+        { headers: { referer: "https://www.sportstiming.dk/results" } },
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
     ])
@@ -126,8 +123,8 @@ export async function getSportsTimingEventResults(
   const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
   if (!event) throw new Error("???");
 
-  const start = addMinutes(addHours(parseSTDate(event.RawDate), 8), 30);
-  const end = addHours(parseSTDate(event.RawDate), 16);
+  const start = addMinutes(addHours(new Date(event.RawDate), 8), 30);
+  const end = addHours(new Date(event.RawDate), 16);
   const competitionTime = cotemporality({ start, end });
 
   const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
@@ -270,11 +267,11 @@ export async function getSportsTimingEventResults(
     start:
       ioResult?.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime)
-        : addMinutes(addHours(parseSTDate(event.RawDate), 8), 30),
+        : addMinutes(addHours(new Date(event.RawDate), 8), 30),
     end:
       ioResult?.StartTime && ioResult.StartTime > 0
         ? new Date(ioResult.StartTime + duration * 1000)
-        : addHours(parseSTDate(event.RawDate), 16),
+        : addHours(new Date(event.RawDate), 16),
     category:
       bracket
         .replace("Strandparken 2018", "Open Race")
@@ -294,6 +291,8 @@ export async function getSportsTimingEventEntry(
 
   const event = allNordicRaceEvents.find((Event) => Event.EventId === eventId);
   if (!event) throw new Error("???");
+
+  console.log({ event });
 
   return {
     source: EventSource.Sportstiming,
@@ -315,8 +314,8 @@ export async function getSportsTimingEventEntry(
       null,
     location: null,
     ioId,
-    start: addMinutes(addHours(parseSTDate(event.RawDate), 8), 30),
-    end: addHours(parseSTDate(event.RawDate), 16),
+    start: addMinutes(addHours(new Date(event.RawDate), 8), 30),
+    end: addHours(new Date(event.RawDate), 16),
   } as const;
 }
 
