@@ -124,6 +124,7 @@ async function LeastRecentGym({
   const leastRecentBoulderingLocations = (
     await Promise.all(
       [
+        "Bison Boulders",
         "Boulders Hvidovre",
         "Boulders Sydhavn",
         "Boulders Valby",

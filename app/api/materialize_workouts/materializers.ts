@@ -723,6 +723,7 @@ export async function* materializeAllClimbalongWorkouts({
           updatedAt: "$registrationTime",
           workedOutAt: "$registrationTime",
           source: { $literal: WorkoutSource.ClimbAlong },
+          location: "$competition.facility",
           exercises: [
             {
               exerciseId: 2001,
