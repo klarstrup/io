@@ -1,5 +1,4 @@
 import { TZDate } from "@date-fns/tz";
-import { Suspense } from "react";
 import { auth } from "../../../../../auth";
 import { Modal } from "../../../../../components/Modal";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../../utils";

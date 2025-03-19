@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { Modal } from "../../../../components/Modal";
 import { isPRType } from "../../../../lib";
 import DiaryExercise from "./DiaryExercise";
