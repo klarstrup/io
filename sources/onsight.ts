@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import { dbFetch } from "../fetch";
 import {
   EventEntry,
@@ -182,8 +183,14 @@ export async function getIoOnsightCompetitionEvent(competitionId: string) {
     id: competitionId,
     ioId: ioCompetitionScore._id,
     url: "https://onsight.one/app/Onsight.html",
-    start: new Date(`${competition.Date} ${competition.Start.split(" - ")[0]}`),
-    end: new Date(`${competition.Date} ${competition.Start.split(" - ")[1]}`),
+    start: new TZDate(
+      `${competition.Date} ${competition.Start.split(" - ")[0]}`,
+      "Europe/Copenhagen",
+    ),
+    end: new TZDate(
+      `${competition.Date} ${competition.Start.split(" - ")[1]}`,
+      "Europe/Copenhagen",
+    ),
     venue: "Blocs & Walls",
     event: competition.Name,
     subEvent: competition.Name.includes("KVAL") ? "Qualification" : null,
@@ -268,11 +275,13 @@ export async function getIoOnsightCompetitionEventEntries(): Promise<
           : null,
         location: "Refshalevej 163D, 1432 København K",
         ioId: competitionScore._id,
-        start: new Date(
+        start: new TZDate(
           `${competition.Date} ${competition.Start.split(" - ")[0]}`,
+          "Europe/Copenhagen",
         ),
-        end: new Date(
+        end: new TZDate(
           `${competition.Date} ${competition.Start.split(" - ")[1]}`,
+          "Europe/Copenhagen",
         ),
       } satisfies EventEntry;
     }),
