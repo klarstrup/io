@@ -59,12 +59,13 @@ export enum EventSource {
   ClimbAlong = "climbalong",
   Sportstiming = "sportstiming",
   Songkick = "songkick",
+  Onsight = "onsight",
 }
 
 export type EventEntry =
   | {
-      id: number;
-      ioId: number;
+      id: string;
+      ioId: string;
       source: EventSource.TopLogger;
       type: "competition";
       discipline: "bouldering";
@@ -79,6 +80,19 @@ export type EventEntry =
       id: number;
       ioId: number;
       source: EventSource.ClimbAlong;
+      type: "competition";
+      discipline: "bouldering";
+      event: string;
+      subEvent: string | null;
+      venue: string | null;
+      location: string | null;
+      start: Date;
+      end: Date;
+    }
+  | {
+      id: string;
+      ioId: string;
+      source: EventSource.Onsight;
       type: "competition";
       discipline: "bouldering";
       event: string;

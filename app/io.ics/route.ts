@@ -17,10 +17,11 @@ import {
   getSportsTimingEventEntry,
   ioSportsTimingEventsWithIds,
 } from "../../sources/sportstiming";
-import { getTopLoggerGroupEventEntry } from "../../sources/toplogger";
-import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
+import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
 import { DataSource } from "../../sources/utils";
 import { MINUTE_IN_SECONDS } from "../../utils";
+import { TopLoggerGraphQL } from "../../utils/graphql";
+import { CompUser } from "../api/toplogger_scrape/route";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -38,14 +39,17 @@ export async function GET() {
     ...(user?.dataSources?.some(
       (source) => source.source === DataSource.TopLogger,
     )
-      ? await TopLoggerGroupUsers.find({
-          user_id: user?.dataSources
-            ?.filter((source) => source.source === DataSource.TopLogger)
-            .map((source) => source.config.id),
+      ? await TopLoggerGraphQL.find<CompUser>({
+          userId: {
+            $in: user?.dataSources
+              ?.filter((source) => source.source === DataSource.TopLogger)
+              .map((source) => source.config.graphQLId),
+          },
+          __typename: "CompUser",
         }).toArray()
       : []
-    ).map(({ group_id, user_id }) =>
-      getTopLoggerGroupEventEntry(group_id, user_id),
+    ).map((compUser) =>
+      getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
     ),
   );
 

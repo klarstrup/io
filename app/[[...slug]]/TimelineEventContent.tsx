@@ -13,8 +13,9 @@ import {
 import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventResults } from "../../sources/sportstiming";
-import { getIoTopLoggerGroupEvent } from "../../sources/toplogger";
+import { getIoTopLoggerCompEvent } from "../../sources/toplogger";
 import { DEFAULT_TIMEZONE, isNonEmptyArray, seconds2time } from "../../utils";
+import { getIoOnsightCompetitionEvent } from "../../sources/onsight";
 
 const sex = true;
 
@@ -133,14 +134,16 @@ export default async function TimelineEventContent({
     eventEntry.source === EventSource.ClimbAlong
       ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId, sex)
       : eventEntry.source === EventSource.TopLogger
-        ? getIoTopLoggerGroupEvent(eventEntry.id, eventEntry.ioId, sex)
-        : eventEntry.source === EventSource.Sportstiming
-          ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
-          : eventEntry.source === EventSource.Songkick
-            ? (await getSongkickEvents()).find(
-                ({ id }) => eventEntry.id === id,
-              )!
-            : undefined
+        ? getIoTopLoggerCompEvent(eventEntry.id, eventEntry.ioId)
+        : eventEntry.source === EventSource.Onsight
+          ? getIoOnsightCompetitionEvent(eventEntry.id)
+          : eventEntry.source === EventSource.Sportstiming
+            ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
+            : eventEntry.source === EventSource.Songkick
+              ? (await getSongkickEvents()).find(
+                  ({ id }) => eventEntry.id === id,
+                )!
+              : undefined
   )!;
 
   const officialScores = scores.filter(
@@ -343,7 +346,9 @@ export default async function TimelineEventContent({
           ))}
         </div>
       ) : null}
-      {isNonEmptyArray(problemByProblem) && isPast(start) ? (
+      {Array.isArray(problemByProblem) &&
+      problemByProblem.length &&
+      isPast(start) ? (
         <ProblemByProblem problemByProblem={problemByProblem} />
       ) : null}
     </Fragment>

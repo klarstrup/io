@@ -1,32 +1,23 @@
-import {
-  addHours,
-  isAfter,
-  isBefore,
-  isFuture,
-  isPast,
-  isWithinInterval,
-  subHours,
-} from "date-fns";
+import { isAfter, isBefore, isFuture } from "date-fns";
+import type {
+  Climb,
+  ClimbLog,
+  Comp,
+  CompGym,
+  CompPoule,
+  CompRound,
+  CompRoundClimb,
+  CompUser,
+  Gym,
+  HoldColor,
+} from "../app/api/toplogger_scrape/route";
 import {
   type DateInterval,
   type EventEntry,
   EventSource,
-  type PointsScore,
-  SCORING_SOURCE,
-  SCORING_SYSTEM,
   type Score,
-  type ThousandDivideByScore,
 } from "../lib";
-import { isNonEmptyArray, percentile } from "../utils";
-import {
-  TopLoggerAscends,
-  TopLoggerClimbs,
-  TopLoggerGroupUsers,
-  TopLoggerGroups,
-  TopLoggerGyms,
-  TopLoggerHolds,
-  TopLoggerUsers,
-} from "./toplogger.server";
+import { TopLoggerGraphQL, dereferenceReference } from "../utils/graphql";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -337,169 +328,135 @@ export namespace TopLogger {
   }
 }
 
-const getGroupClimbs = async (group: TopLogger.GroupSingle) => {
-  if (isNonEmptyArray(group.climb_groups)) {
-    return await TopLoggerClimbs.find({
-      id: { $in: group.climb_groups.map(({ climb_id }) => climb_id) },
-    }).toArray();
-  }
+const getCompClimbs = async (comp: Comp) => {
+  const poules = await TopLoggerGraphQL.find<CompPoule>({
+    compId: comp.id,
+    __typename: "CompPoule",
+  }).toArray();
 
-  const groupInterval: DateInterval = {
-    start: subHours(group.date_loggable_start, 16),
-    end: addHours(group.date_loggable_end, 21),
-  };
-  const climbs: TopLogger.ClimbMultiple[] = [];
-  await TopLoggerGyms.find({
-    id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) },
-  })
-    .toArray()
-    .then((gyms) =>
-      Promise.all(
-        gyms.map((gym) =>
-          TopLoggerClimbs.find({ gym_id: gym.id })
-            .toArray()
-            .then((gymClimbs) =>
-              gymClimbs.forEach((climb) => {
-                if (
-                  (climb.name || climb.number) &&
-                  climb.date_live_start &&
-                  isWithinInterval(climb.date_live_start, groupInterval)
-                ) {
-                  climbs.push(climb);
-                }
-              }),
-            ),
-        ),
-      ),
-    );
+  const rounds = await TopLoggerGraphQL.find<CompRound>({
+    compPouleId: { $in: poules.map(({ id }) => id) },
+    __typename: "CompRound",
+  }).toArray();
+
+  const compRoundClimbs = await TopLoggerGraphQL.find<CompRoundClimb>({
+    compRoundId: { $in: rounds.map(({ id }) => id) },
+    __typename: "CompRoundClimb",
+  }).toArray();
+
+  const climbs = await TopLoggerGraphQL.find<Climb>({
+    id: { $in: compRoundClimbs.map(({ climbId }) => climbId) },
+    __typename: "Climb",
+  }).toArray();
 
   return climbs;
 };
 
-const TDB_BASE = 1000;
-const TDB_FLASH_MULTIPLIER = 1.1;
-const PTS_SEND = 100;
-const PTS_FLASH_BONUS = 20;
-
-export async function getIoTopLoggerGroupEvent(
-  groupId: number,
-  ioId: number,
-  sex?: boolean,
-) {
-  const group = await TopLoggerGroups.findOne({ id: groupId });
-  if (!group) throw new Error("Group not found");
-
-  const groupInterval: DateInterval = {
-    start: group.date_loggable_start,
-    end: group.date_loggable_end,
-  };
-
-  const gyms = await TopLoggerGyms.find({
-    id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) },
-  }).toArray();
-
-  const climbs = await getGroupClimbs(group);
-
-  const io = await TopLoggerUsers.findOne({
-    id: ioId,
+export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
+  const compUser = await TopLoggerGraphQL.findOne<CompUser>({
+    compId,
+    userId: ioId,
+    __typename: "CompUser",
   });
 
+  if (!compUser) throw new Error("CompUser not found");
+
+  const comp = await TopLoggerGraphQL.findOne<Comp>({
+    id: compUser.compId,
+    __typename: "Comp",
+  });
+
+  if (!comp) throw new Error("Comp not found");
+
+  const compGyms = await Promise.all(
+    comp.compGyms.map((compGym) =>
+      dereferenceReference<"CompGym", CompGym>(compGym),
+    ),
+  );
+
+  const gyms = await Promise.all(
+    compGyms.map((compGym) => dereferenceReference<"Gym", Gym>(compGym.gym)),
+  );
+
+  const compInterval: DateInterval = {
+    start: comp.loggableStartAt,
+    end: comp.loggableEndAt,
+  };
+
+  const climbs = await getCompClimbs(comp);
+
+  const io = compUser;
   if (!io) throw new Error("io not found");
 
-  const groupUsers = await TopLoggerGroupUsers.find({
-    group_id: groupId,
+  const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLog>({
+    __typename: "ClimbLog",
+    userId: ioId,
+    climbId: { $in: climbs.map(({ id }) => id) },
+    climbedAtDate: { $gt: new Date(0) },
   }).toArray();
 
-  const ascends = (
-    await TopLoggerAscends.find({
-      user_id: { $in: groupUsers.map(({ user_id }) => user_id) },
-      climb_id: { $in: climbs.map(({ id }) => id) },
-      date_logged: {
-        $gte: groupInterval.start,
-        $lte: groupInterval.end,
-      },
-    }).toArray()
-  ).filter((ascend) => climbs.some((climb) => ascend.climb_id === climb.id));
-
-  const ioAscends = climbs.length
-    ? ascends.filter((ascend) => ascend.user_id === ioId)
-    : await TopLoggerAscends.find({
-        user_id: ioId,
-        date_logged: {
-          $gte: groupInterval.start,
-          $lte: groupInterval.end,
-        },
-      }).toArray();
-
-  let firstAscend: Date | null = null;
-  let lastAscend: Date | null = null;
-  for (const ascend of ioAscends || []) {
-    const date = ascend.date_logged;
+  let firstClimbLog: Date | null = null;
+  let lastClimbLog: Date | null = null;
+  for (const climbLog of ioClimbLogs || []) {
+    const date = climbLog.climbedAtDate;
     if (!date) continue;
-    if (!firstAscend || isBefore(date, firstAscend)) firstAscend = date;
-    if (!lastAscend || isAfter(date, lastAscend)) lastAscend = date;
+    if (!firstClimbLog || isBefore(date, firstClimbLog)) firstClimbLog = date;
+    if (!lastClimbLog || isAfter(date, lastClimbLog)) lastClimbLog = date;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
-  const holds = await TopLoggerHolds.find({
-    gym_id: { $in: climbs.map(({ gym_id }) => gym_id) },
-  }).toArray();
-
-  const participants = await TopLoggerUsers.find({
-    id: { $in: groupUsers.map(({ user_id }) => user_id) },
-    gender: sex ? io.gender : undefined,
+  const holdColors = await TopLoggerGraphQL.find<HoldColor>({
+    __typename: "HoldColor",
   }).toArray();
 
   const r = {
     source: EventSource.TopLogger,
     discipline: "bouldering",
     type: "competition",
-    id: groupId,
+    id: compId,
     ioId,
-    url: `https://app.toplogger.nu/en-us/${gym.slug}/comp/${groupId}/details`,
-    start: firstAscend || groupInterval.start,
-    end: isFuture(groupInterval.end)
-      ? groupInterval.end
-      : lastAscend || groupInterval.end,
-    venue: gym.name.trim(),
-    location: gym.address,
-    event: group.name
+    url: `https://app.toplogger.nu/en-us/${gym.nameSlug}/competitions/${compId}`,
+    start: firstClimbLog || compInterval.start,
+    end: isFuture(compInterval.end)
+      ? compInterval.end
+      : lastClimbLog || compInterval.end,
+    venue: gyms.map((gym) => gym.name).join(", ") || null,
+    location: gyms.map((gym) => gym.name).join(", ") || null,
+    event: comp.name
       .replace("- Qualification", "")
       .replace("(Qualification)", "")
       .replace("(Mini-Comp)", "")
       .trim(),
-    subEvent: group.name.includes("- Qualification")
+    subEvent: comp.name.includes("- Qualification")
       ? "Qualification"
-      : group.name.includes("(Qualification)")
+      : comp.name.includes("(Qualification)")
         ? "Qualification"
-        : group.name.includes("(Mini-Comp)")
+        : comp.name.includes("(Mini-Comp)")
           ? "Mini-Comp"
           : null,
-    category: sex ? io.gender : null,
+    category: null, // TODO: Io poule names
     team: null,
-    noParticipants: participants.length || NaN,
+    noParticipants: NaN,
     problems: climbs.length,
     problemByProblem: climbs
       .map((climb) => {
-        const ioAscend = ioAscends.find(
-          (ascend) => ascend.climb_id === climb.id,
+        const ioClimbLog = ioClimbLogs.find(
+          (climbLog) => climbLog.climbId === climb.id,
         );
 
         return {
-          number: climb.number || climb.name || "",
+          number: climb.name || "",
           color:
-            holds.find((hold) => hold.id === climb.hold_id)?.color || undefined,
-          grade:
-            climb.grade && Number(climb.grade_stability) > 0
-              ? Number(climb.grade)
-              : undefined,
-          attempt: true,
+            holdColors.find((holdColor) => holdColor.id === climb.holdColorId)
+              ?.color || undefined,
+          grade: climb.grade ? Number(climb.grade / 100) : undefined,
+          attempt: ioClimbLog ? ioClimbLog.tickType == 0 : false,
           // TopLogger does not do zones, at least not for Beta Boulders
-          zone: ioAscend ? ioAscend.checks >= 1 : false,
-          top: ioAscend ? ioAscend.checks >= 1 : false,
-          flash: ioAscend ? ioAscend.checks >= 2 : false,
+          zone: ioClimbLog ? ioClimbLog.tickType >= 1 : false,
+          top: ioClimbLog ? ioClimbLog.tickType >= 1 : false,
+          flash: ioClimbLog ? ioClimbLog.tickType >= 2 : false,
           repeat: false,
         };
       })
@@ -509,22 +466,25 @@ export async function getIoTopLoggerGroupEvent(
           b.number || "",
         ),
       ),
-    scores: getIoTopLoggerGroupScores(
-      group,
-      io,
-      groupUsers,
-      participants,
-      ascends,
-      sex,
-    ),
+    // Left as an exercise for the reader
+    scores: [] as Score[] /* ||
+      getIoTopLoggerGroupScores(
+        comp,
+        io,
+        groupUsers,
+        participants,
+        ascends,
+        sex,
+      )*/,
   } as const;
 
   return r;
 }
 
+/*
 function getIoTopLoggerGroupScores(
-  group: TopLogger.GroupSingle,
-  io: TopLogger.User,
+  comp: Comp,
+  io: CompUser,
   groupUsers: Omit<TopLogger.GroupUserMultiple, "user">[],
   participants: TopLogger.User[],
   ascends: TopLogger.AscendSingle[],
@@ -568,14 +528,14 @@ function getIoTopLoggerGroupScores(
   const noParticipants = participants.length || NaN;
 
   const scores: Score[] = [];
-  if (ioResults && isPast(group.date_loggable_start)) {
+  if (ioResults && isPast(comp.loggableStartAt)) {
     const ioRank =
       Array.from(usersWithResults)
         .filter(({ user }) => (sex ? user?.gender === io.gender : true))
         .sort((a, b) => Number(b.score) - Number(a.score))
         .findIndex(({ user_id }) => user_id === io.id) + 1;
 
-    if (group.score_system === "points") {
+    if (comp.score_system === "points") {
       scores.push({
         system: SCORING_SYSTEM.POINTS,
         source: SCORING_SOURCE.OFFICIAL,
@@ -584,7 +544,7 @@ function getIoTopLoggerGroupScores(
         points: Number(ioResults.score),
       } satisfies PointsScore);
     }
-    if (group.score_system === "thousand_divide_by") {
+    if (comp.score_system === "thousand_divide_by") {
       scores.push({
         system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
         source: SCORING_SOURCE.OFFICIAL,
@@ -593,69 +553,54 @@ function getIoTopLoggerGroupScores(
         points: Number(ioResults.score),
       } satisfies ThousandDivideByScore);
     }
-    // If the group has climbs explicitly associated, we can calculate derived scores
-    // in other scoring systems. These disappear on old competitions, so we can't
-    // use them for all past events regrettably.
-    if (isNonEmptyArray(group.climb_groups)) {
-      if (ioResults.tdbScore) {
-        const ioTDBRank =
-          Array.from(usersWithResults)
-            .filter(({ user }) => (sex ? user?.gender === io.gender : true))
-            .sort((a, b) => b.tdbScore - a.tdbScore)
-            .findIndex(({ user_id }) => user_id === io.id) + 1;
-        scores.push({
-          system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-          source: SCORING_SOURCE.DERIVED,
-          rank: ioTDBRank,
-          percentile: percentile(ioTDBRank, noParticipants),
-          points: Math.round(ioResults.tdbScore),
-        } satisfies ThousandDivideByScore);
-      }
-      if (ioResults.ptsScore) {
-        const ioPointsRank =
-          Array.from(usersWithResults)
-            .filter(({ user }) => (sex ? user?.gender === io.gender : true))
-            .sort((a, b) => b.ptsScore - a.ptsScore)
-            .findIndex(({ user_id }) => user_id === io.id) + 1;
-        scores.push({
-          system: SCORING_SYSTEM.POINTS,
-          source: SCORING_SOURCE.DERIVED,
-          rank: ioPointsRank,
-          percentile: percentile(ioPointsRank, noParticipants),
-          points: ioResults.ptsScore,
-        } satisfies PointsScore);
-      }
-    }
   }
 
   return scores;
 }
-
-export async function getTopLoggerGroupEventEntry(
-  groupId: number,
-  userId: number,
+*/
+export async function getTopLoggerCompEventEntry(
+  compId: string,
+  userId: string,
 ): Promise<EventEntry> {
-  const group = await TopLoggerGroups.findOne({ id: groupId });
-  if (!group) throw new Error("Group not found");
+  const compUser = await TopLoggerGraphQL.findOne<CompUser>({
+    compId,
+    userId,
+    __typename: "CompUser",
+  });
 
-  const gym = (await TopLoggerGyms.findOne({
-    id: { $in: group.gym_groups.map(({ gym_id }) => gym_id) },
-  }))!;
+  if (!compUser) throw new Error("CompUser not found");
+
+  const comp = await TopLoggerGraphQL.findOne<Comp>({
+    id: compUser.compId,
+    __typename: "Comp",
+  });
+
+  if (!comp) throw new Error("Comp not found");
+
+  const compGyms = await Promise.all(
+    comp.compGyms.map((compGym) =>
+      dereferenceReference<"CompGym", CompGym>(compGym),
+    ),
+  );
+
+  const gyms = await Promise.all(
+    compGyms.map((compGym) => dereferenceReference<"Gym", Gym>(compGym.gym)),
+  );
 
   return {
     source: EventSource.TopLogger,
     type: "competition",
     discipline: "bouldering",
-    id: groupId,
-    venue: gym.name.trim(),
-    location: gym.address || null,
-    event: group.name
+    id: compUser.compId,
+    venue: gyms.map((gym) => gym.name).join(", ") || null,
+    location: gyms.map((gym) => gym.name).join(", ") || null,
+    event: comp.name
       .replace("- Qualification", "")
       .replace("(Qualification)", "")
       .trim(),
     subEvent: null,
     ioId: userId,
-    start: group.date_loggable_start,
-    end: group.date_loggable_end,
+    start: comp.loggableStartAt,
+    end: comp.loggableEndAt,
   } as const;
 }

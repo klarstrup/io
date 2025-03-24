@@ -1,8 +1,9 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
 import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
-import { type getIoTopLoggerGroupEvent } from "../sources/toplogger";
+import { type getIoTopLoggerCompEvent } from "../sources/toplogger";
 import { countBy } from "../utils";
+import { getIoOnsightCompetitionEvent } from "../sources/onsight";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
@@ -183,7 +184,7 @@ function ProblemBadge({
   color,
   angle,
 }: {
-  number?: string;
+  number?: string | number;
   flash: boolean;
   top: boolean;
   zone: boolean;
@@ -251,7 +252,9 @@ function ProblemBadge({
 type PP = NonNullable<
   Awaited<
     ReturnType<
-      typeof getIoClimbAlongCompetitionEvent | typeof getIoTopLoggerGroupEvent
+      | typeof getIoClimbAlongCompetitionEvent
+      | typeof getIoTopLoggerCompEvent
+      | typeof getIoOnsightCompetitionEvent
     >
   >["problemByProblem"]
 >[number] & {

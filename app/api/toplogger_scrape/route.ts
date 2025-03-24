@@ -21,6 +21,202 @@ import { jsonStreamResponse } from "../scraper-utils";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+const climbsQuery = gql`
+  query climbs(
+    $gymId: ID!
+    $climbType: ClimbType!
+    $isReported: Boolean
+    $userId: ID
+    $compRoundId: ID
+  ) {
+    climbs(
+      gymId: $gymId
+      climbType: $climbType
+      isReported: $isReported
+      compRoundId: $compRoundId
+    ) {
+      pagination {
+        total
+        page
+        perPage
+        orderBy {
+          key
+          order
+          __typename
+        }
+        __typename
+      }
+      data {
+        ...climb
+        ...climbWithClimbUser
+        ...climbWithCompRoundClimb
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment climbGroupClimb on ClimbGroupClimb {
+    id
+    climbGroupId
+    order
+    __typename
+  }
+
+  fragment climbUser on ClimbUser {
+    id
+    climbId
+    grade
+    rating
+    project
+    votedRenew
+    tickType
+    totalTries
+    triedFirstAtDate
+    tickedFirstAtDate
+    updatedAt
+    compClimbUser(compRoundId: $compRoundId) {
+      climbUser {
+        id
+        __typename
+        climbId
+        grade
+        rating
+        project
+        votedRenew
+        tickType
+        totalTries
+        triedFirstAtDate
+        tickedFirstAtDate
+        updatedAt
+      }
+      compRoundClimb {
+        id
+        points
+        pointsJson
+        leadRequired
+        __typename
+        compRoundId
+        climbId
+        compId
+      }
+      compId
+      userId
+      climbId
+      id
+      points
+      pointsJson
+      tickType
+      __typename
+    }
+    __typename
+  }
+
+  fragment compRoundClimb on CompRoundClimb {
+    id
+    points
+    pointsJson
+    leadRequired
+    __typename
+    compRoundId
+    climbId
+    compId
+  }
+
+  fragment climb on Climb {
+    id
+    climbType
+    positionX
+    positionY
+    gradeAuto
+    grade
+    gradeVotesCount
+    gradeUsersVsAdmin
+    picPath
+    label
+    name
+    zones
+    remarksLoc
+    suitableForKids
+    clips
+    holds
+    height
+    overhang
+    autobelay
+    leadEnabled
+    leadRequired
+    ratingsAverage
+    ticksCount
+    inAt
+    outAt
+    outPlannedAt
+    order
+    setterName
+    climbSetters {
+      id
+      gymAdmin {
+        id
+        name
+        picPath
+        __typename
+      }
+      __typename
+    }
+    wallId
+    wall {
+      id
+      nameLoc
+      labelX
+      labelY
+      __typename
+    }
+    wallSectionId
+    wallSection {
+      id
+      name
+      routesEnabled
+      positionX
+      positionY
+      __typename
+    }
+    holdColorId
+    holdColor {
+      id
+      color
+      colorSecondary
+      nameLoc
+      order
+      __typename
+    }
+    climbGroupClimbs {
+      ...climbGroupClimb
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbWithClimbUser on Climb {
+    id
+    climbUser(userId: $userId) {
+      ...climbUser
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbWithCompRoundClimb on Climb {
+    id
+    compRoundClimb(compRoundId: $compRoundId) {
+      ...compRoundClimb
+      compRoundId
+      climbId
+      compId
+      __typename
+    }
+    __typename
+  }
+`;
+
 const authSigninRefreshTokenQuery = gql`
   mutation authSigninRefreshToken($refreshToken: JWT!) {
     authSigninRefreshToken(refreshToken: $refreshToken) {
@@ -274,11 +470,685 @@ const climbLogsQuery = gql`
   }
 `;
 
-interface Climb extends MongoGraphQLObject {
+const compsQuery = gql`
+  query comps(
+    $gymId: ID!
+    $search: String
+    $climbType: ClimbType
+    $inviteOnly: Boolean
+    $registered: Boolean
+    $pagination: PaginationInputComps
+    $isAdmin: Boolean!
+  ) {
+    comps(
+      gymId: $gymId
+      search: $search
+      climbType: $climbType
+      inviteOnly: $inviteOnly
+      registered: $registered
+      pagination: $pagination
+    ) {
+      pagination {
+        ...pagination
+        __typename
+      }
+      data {
+        id
+        ...compForComps
+        ...compForCompPage
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment compForRegistrationStatus on Comp {
+    id
+    loggableStartAt
+    loggableEndAt
+    compUserMe {
+      id
+      userId
+      compId
+      comp {
+        id
+        __typename
+
+        compGyms {
+          id
+          gymId
+          compId
+          gym {
+            id
+            name
+            __typename
+          }
+          __typename
+        }
+      }
+      approvalState
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForAdminStatus on Comp {
+    id
+    compAdminMe {
+      id
+      permitJudge
+      permitAdmin
+      __typename
+    }
+    __typename
+  }
+
+  fragment pagination on Pagination {
+    total
+    page
+    perPage
+    orderBy {
+      key
+      order
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForComps on Comp {
+    id
+    name
+    subtitleLoc
+    logoPath
+    loggableStartAt
+    loggableEndAt
+    inviteOnly
+    compGyms {
+      id
+      gymId
+      compId
+      gym {
+        id
+        name
+        __typename
+      }
+      __typename
+    }
+
+    ...compForRegistrationStatus
+    ...compForAdminStatus
+    __typename
+  }
+
+  fragment roundForRegistrationStatusRound on CompRound {
+    id
+    selfLoggable
+    loggableStartAt
+    loggableEndAt
+    compRoundUserMe {
+      id
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForRoundToolbarTitle on Comp {
+    id
+    name
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    compPoules {
+      id
+      compId
+      nameLoc
+      compRounds(includeHidden: $isAdmin) {
+        id
+        nameLoc
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForInviteDialog on Comp {
+    id
+    name
+    inviteToken
+    __typename
+  }
+
+  fragment compForDetails on Comp {
+    id
+    logoPath
+    name
+    subtitleLoc
+    descriptionLoc
+    prizesLoc
+    prizePaths
+    loggableStartAt
+    loggableEndAt
+    visible @include(if: $isAdmin)
+    ...compForInviteDialog @include(if: $isAdmin)
+    __typename
+  }
+
+  fragment roundForClimbsLink on CompRound {
+    id
+    climbType
+    __typename
+  }
+
+  fragment compForAdminStatusBanner on Comp {
+    id
+    compAdminMe {
+      id
+      permitJudge
+      permitAdmin
+      __typename
+    }
+    compPoules {
+      id
+      compRounds(includeHidden: $isAdmin) {
+        id
+        ...roundForClimbsLink
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForRegistrationDetails on Comp {
+    id
+    registrationStartAt
+    registrationEndAt
+    inviteOnly
+    approveParticipation
+    participantsMax
+    participantsSpotsLeft
+    __typename
+  }
+
+  fragment compForRegistrationDisabled on Comp {
+    id
+    inviteOnly
+    registrationStartAt
+    registrationEndAt
+    loggableEndAt
+    participantsMax
+    participantsSpotsLeft
+    compUserMe {
+      id
+      __typename
+    }
+    compPoules {
+      id
+      compRounds(includeHidden: $isAdmin) {
+        id
+        loggableEndAt
+        compRoundUserMe {
+          id
+          participating
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment roundForRegistrationDisabledRound on CompRound {
+    id
+    participantsPickedByAdmin
+    loggableEndAt
+    participantsMax
+    participantsSpotsLeft
+    __typename
+  }
+
+  fragment compForRegistrationDisabledRound on Comp {
+    id
+    isMultiRound(includeHidden: $isAdmin)
+    __typename
+  }
+
+  fragment compForRoundSelect on Comp {
+    id
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    compPoules {
+      id
+      nameLoc
+      descriptionLoc
+      compRounds(includeHidden: $isAdmin) {
+        id
+        compPouleId
+        nameLoc
+        loggableStartAt
+        loggableEndAt
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForRegistrationDialog on Comp {
+    id
+    name
+    registrationMessageLoc
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    registrationRoundsMax
+    compUserMe {
+      id
+      approvalState
+      __typename
+    }
+    compPoules {
+      id
+      compRounds(includeHidden: $isAdmin) {
+        id
+        ...roundForRegistrationDisabledRound
+        __typename
+      }
+      __typename
+    }
+    ...compForRegistrationDisabledRound
+    ...compForRoundSelect
+    __typename
+  }
+
+  fragment roundForBtnSubscribeRound on CompRound {
+    id
+    nameLoc
+    compRoundUserMe {
+      id
+      __typename
+    }
+    __typename
+  }
+
+  fragment roundForBtnUnsubscribeRound on CompRound {
+    id
+    nameLoc
+    compRoundUserMe {
+      id
+      userId
+      compRoundId
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForUnsubscribe on Comp {
+    id
+    name
+    __typename
+  }
+
+  fragment compForRegistrationEdit on Comp {
+    id
+    name
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    registrationRoundsMax
+    compPoules {
+      id
+      compRounds(includeHidden: $isAdmin) {
+        id
+        ...roundForRegistrationDisabledRound
+        ...roundForBtnSubscribeRound
+        ...roundForBtnUnsubscribeRound
+        __typename
+      }
+      __typename
+    }
+    compUserMe {
+      id
+      firstName
+      lastName
+      email
+      createdAt
+      approvalState
+      compRoundUsers {
+        id
+        compRoundId
+        __typename
+      }
+      __typename
+    }
+    ...compForRegistrationStatus
+    ...compForRegistrationDisabled
+    ...compForRegistrationDisabledRound
+    ...compForRoundSelect
+    ...compForUnsubscribe
+    __typename
+  }
+
+  fragment compForRegistrationBtn on Comp {
+    id
+    isMultiPoule
+    compUserMe {
+      id
+      approvalState
+      __typename
+    }
+    compPoules {
+      id
+      compRounds(includeHidden: $isAdmin) {
+        id
+        compRoundUserMe {
+          id
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    ...compForRegistrationStatus
+    ...compForRegistrationDisabled
+    ...compForRegistrationDialog
+    ...compForRegistrationEdit
+    __typename
+  }
+
+  fragment compForRegistrationStatusRound on Comp {
+    id
+    compUserMe {
+      id
+      approvalState
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForRegistrationAnonymizeBtn on Comp {
+    id
+    loggableEndAt
+    compUserMe {
+      id
+      fullName
+      approvalState
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForRoundDetailsBase on Comp {
+    id
+    isMultiRound(includeHidden: $isAdmin)
+    __typename
+  }
+
+  fragment compForCompGymSelect on Comp {
+    id
+    compGyms {
+      id
+      gym {
+        id
+        iconPath
+        name
+        nameSlug
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment compForRoundClimbs on Comp {
+    id
+    __typename
+  }
+
+  fragment compForRegistrationBtnRound on Comp {
+    id
+    compUserMe {
+      id
+      approvalState
+      __typename
+    }
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    ...compForRegistrationStatusRound
+    ...compForRegistrationDisabled
+    ...compForRegistrationDisabledRound
+    ...compForRegistrationDialog
+    ...compForRegistrationEdit
+    __typename
+  }
+
+  fragment compForRoundDetails on Comp {
+    id
+    climbType
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    compGyms {
+      id
+      __typename
+    }
+    ...compForDetails
+    ...compForRoundDetailsBase
+    ...compForCompGymSelect
+    ...compForRoundClimbs
+    ...compForRegistrationDetails
+    ...compForRegistrationBtnRound
+    __typename
+  }
+
+  fragment compForRoundRankingTable on Comp {
+    id
+    __typename
+  }
+
+  fragment compForRoundRankingClimbUser on Comp {
+    id
+    __typename
+  }
+
+  fragment compForRoundRanking on Comp {
+    id
+    ...compForRoundRankingTable
+    ...compForRoundRankingClimbUser
+    __typename
+  }
+
+  fragment compForRound on Comp {
+    id
+    name
+    isMultiPoule
+    isMultiRound(includeHidden: $isAdmin)
+    ...compForRoundToolbarTitle
+    ...compForRoundDetails
+    ...compForRoundRanking
+    __typename
+  }
+
+  fragment compForCompPage on Comp {
+    id
+    name
+    loggableEndAt
+    isMultiPoule
+    compUserMe {
+      id
+      approvalState
+      __typename
+    }
+    compPoules {
+      id
+      compRounds(includeHidden: $isAdmin) {
+        id
+        compRoundUserMe {
+          id
+          participating
+          __typename
+        }
+        ...roundForRegistrationStatusRound
+        __typename
+      }
+      __typename
+    }
+    ...compForRoundToolbarTitle
+    ...compForDetails
+    ...compForAdminStatusBanner
+    ...compForRegistrationDetails
+    ...compForRegistrationBtn
+    ...compForRegistrationStatusRound
+    ...compForRegistrationAnonymizeBtn
+    ...compForRoundSelect
+    ...compForRound
+    ...compForRoundRanking
+    __typename
+  }
+`;
+
+const userMeStoreQuery = gql`
+  query userMeStore {
+    userMe {
+      ...userMeStore
+      __typename
+    }
+  }
+
+  fragment userMeStoreFavorite on GymUserMe {
+    id
+    gym {
+      id
+      name
+      nameSlug
+      iconPath
+      __typename
+    }
+    __typename
+  }
+
+  fragment userMeStore on UserMe {
+    id
+    locale
+    gradingSystemRoutes
+    gradingSystemBoulders
+    profileReviewed
+    avatarUploadPath
+    firstName
+    lastName
+    fullName
+    gender
+    email
+    privacy
+    gym {
+      id
+      nameSlug
+      __typename
+    }
+    gymUserFavorites {
+      ...userMeStoreFavorite
+      __typename
+    }
+    __typename
+  }
+`;
+
+export interface Climb extends MongoGraphQLObject<"Climb"> {
   grade: number;
   gym: Reference;
   holdColor: Reference;
   wall: Reference;
+  id: string;
+  climbType: ClimbType;
+  positionX: number;
+  positionY: number;
+  gradeAuto: boolean;
+  gradeVotesCount: number;
+  gradeUsersVsAdmin: number;
+  picPath: null;
+  label: null;
+  name: null;
+  zones: number;
+  remarksLoc: null;
+  suitableForKids: boolean;
+  clips: number;
+  holds: number;
+  height: number;
+  overhang: number;
+  autobelay: boolean;
+  leadEnabled: boolean;
+  leadRequired: boolean;
+  ratingsAverage: number | null;
+  ticksCount: number;
+  inAt: Date;
+  outAt: null;
+  outPlannedAt: null;
+  order: number;
+  setterName: null | string;
+  climbSetters: ClimbSetter[];
+  wallId: string;
+  wallSectionId: null;
+  wallSection: null;
+  holdColorId: string;
+  climbGroupClimbs: ClimbGroupClimb[];
+  climbUser: ClimbUser | null;
+  compRoundClimb: CompRoundClimb;
+}
+
+export interface ClimbGroupClimb extends MongoGraphQLObject<"ClimbGroupClimb"> {
+  climbGroupId: string;
+  order: number;
+}
+
+export interface ClimbSetter extends MongoGraphQLObject<"ClimbSetter"> {
+  id: string;
+  gymAdmin: GymAdmin;
+}
+
+export interface GymAdmin extends MongoGraphQLObject<"GymAdmin"> {
+  name: string;
+  picPath: null;
+}
+
+export interface ClimbUser extends MongoGraphQLObject<"ClimbUser"> {
+  climbId: string;
+  grade: number | null;
+  rating: null;
+  project: boolean;
+  votedRenew: boolean;
+  tickType: number;
+  totalTries: number;
+  triedFirstAtDate: Date;
+  tickedFirstAtDate: Date | null;
+  updatedAt: Date;
+  compClimbUser: CompClimbUser;
+}
+
+export interface CompClimbUser extends MongoGraphQLObject<"CompClimbUser"> {
+  id: string;
+  points: number;
+  pointsJson: CompClimbUserPointsJSON;
+  tickType: number;
+}
+export interface CompClimbUserPointsJSON {
+  zones: Zone[];
+}
+
+export interface Zone {
+  points: number;
+  pointsBase: number;
+  pointsBonus: number;
+}
+
+export interface CompRoundClimb extends MongoGraphQLObject<"CompRoundClimb"> {
+  points: number;
+  pointsJson: CompRoundClimbPointsJSON;
+  leadRequired: boolean;
+  climbId: string;
+  compId: string;
+  compRoundId: string;
+}
+
+export interface CompRoundClimbPointsJSON {
+  zones: number[];
 }
 
 interface ClimbDereferenced extends Omit<Climb, "gym" | "holdColor" | "wall"> {
@@ -287,8 +1157,7 @@ interface ClimbDereferenced extends Omit<Climb, "gym" | "holdColor" | "wall"> {
   wall: Wall;
 }
 
-interface ClimbDay extends MongoGraphQLObject {
-  __typename: "ClimbDay";
+interface ClimbDay extends MongoGraphQLObject<"ClimbDay"> {
   statsAtDate: Date;
   bouldersTotalTries: number;
   bouldersDayGradeMax: number;
@@ -318,9 +1187,8 @@ interface ClimbDay extends MongoGraphQLObject {
 }
 
 type ClimbType = "boulder" | "route";
-interface ClimbLog extends MongoGraphQLObject {
+export interface ClimbLog extends MongoGraphQLObject<"ClimbLog"> {
   grade: number;
-  __typename: "ClimbLog";
   climb: Reference;
   climbId: string;
   climbType: ClimbType;
@@ -345,16 +1213,122 @@ interface ClimbLog extends MongoGraphQLObject {
   zones: number;
 }
 
-interface Gym extends MongoGraphQLObject {
+export interface UserMe extends MongoGraphQLObject<"UserMe"> {
+  locale: string;
+  gradingSystemRoutes: null;
+  gradingSystemBoulders: null;
+  profileReviewed: boolean;
+  avatarUploadPath: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  gender: string;
+  email: string;
+  privacy: string;
+  gym: UserMeGym;
+  gymUserFavorites: GymUserFavorite[];
+}
+
+export interface Comp extends MongoGraphQLObject<"Comp"> {
+  name: string;
+  subtitleLoc: null;
+  logoPath: null | string;
+  loggableStartAt: Date;
+  loggableEndAt: Date;
+  inviteOnly: boolean;
+  compUserMe: CompUser | null;
+  compAdminMe: null;
+  isMultiPoule: boolean;
+  compPoules: CompPoule[];
+  isMultiRound: boolean;
+  descriptionLoc: string;
+  prizesLoc: null;
+  prizePaths: null;
+  registrationStartAt: null;
+  registrationEndAt: null;
+  approveParticipation: boolean;
+  participantsMax: number;
+  participantsSpotsLeft: number;
+  registrationMessageLoc: null;
+  registrationRoundsMax: number;
+  climbType: string;
+  compGyms: Reference[];
+}
+export interface CompRound extends MongoGraphQLObject<"CompRound"> {
+  compRoundUserMe: CompRoundUser;
+  selfLoggable: boolean;
+  loggableStartAt: Date;
+  loggableEndAt: Date;
+  nameLoc: string;
+  climbType: string;
+  participantsPickedByAdmin: boolean;
+  participantsMax: number;
+  participantsSpotsLeft: number;
+  compPouleId: string;
+  compPoule: CompPoule;
+  participationDetailsLoc: null;
+  descriptionLoc: null;
+  visible: boolean;
+  scoreSystemRoute: string;
+  scoreSystemRouteParams: ScoreSystemParams;
+  scoreSystemBoulder: string;
+  scoreSystemBoulderParams: ScoreSystemParams;
+  tiebreakers: unknown[];
+  compId: string;
+}
+
+export interface ScoreSystemParams {
+  bonusFlPercent: number;
+  bonusOsPercent: number;
+}
+export interface CompRoundUser extends MongoGraphQLObject<"CompRoundUser"> {
+  participating: boolean;
+}
+export interface CompPoule extends MongoGraphQLObject<"CompPoule"> {
+  compRounds: CompRound[];
+  nameLoc: string;
+  descriptionLoc: null;
+}
+export interface CompGym extends MongoGraphQLObject<"CompGym"> {
+  gym: Reference;
+  gymId: string;
+}
+
+export interface CompUser extends MongoGraphQLObject<"CompUser"> {
+  approvalState: string;
+  userId: string;
+  compId: string;
+  comp: Reference;
+}
+export interface TopLoggerCompUserDereferenced extends Omit<CompUser, "comp"> {
+  comp: Comp;
+}
+
+export interface UserMeGym extends MongoGraphQLObject<"UserMeGym"> {
+  nameSlug: string;
+}
+
+export interface GymUserFavorite extends MongoGraphQLObject<"GymUserFavorite"> {
+  gym: GymUserFavoriteGym;
+}
+
+export interface GymUserFavoriteGym
+  extends MongoGraphQLObject<"GymUserFavoriteGym"> {
+  name: string;
+  nameSlug: string;
+  iconPath: string;
+}
+
+export interface Gym extends MongoGraphQLObject<"Gym"> {
   name: string;
   nameSlug: string;
 }
 
-interface Wall extends MongoGraphQLObject {
+interface Wall extends MongoGraphQLObject<"Wall"> {
   nameLoc: string;
 }
 
-interface HoldColor extends MongoGraphQLObject {
+export interface HoldColor extends MongoGraphQLObject<"HoldColor"> {
   color: string;
   nameLoc: string;
 }
@@ -476,8 +1450,78 @@ export const GET = (request: NextRequest) =>
 
         const userId = dataSource.config.graphQLId;
 
-        let climbDays: TopLoggerClimbDayDereferenced[] = [];
+        const userMe = (await fetchQuery<{ userMe: UserMe }>(userMeStoreQuery))
+          .data?.userMe;
 
+        yield userMe;
+
+        const gyms = userMe?.gymUserFavorites.map((fav) => fav.gym);
+
+        if (gyms) {
+          for (const gym of gyms) {
+            const compsVariables = {
+              gymId: gym.id,
+              registered: true,
+              isAdmin: false,
+              pagination: {
+                page: 1,
+                perPage: 10,
+                orderBy: [{ key: "loggableStartAt", order: "desc" }],
+              },
+            };
+            const compsResponse = await fetchQuery<{
+              comps: {
+                pagination: {
+                  total: number;
+                  perPage: number;
+                  page: number;
+                };
+                data: Comp[];
+              };
+            }>(compsQuery, compsVariables);
+
+            const updateResult = await normalizeAndUpsertQueryData(
+              compsQuery,
+              compsVariables,
+              compsResponse.data!,
+            );
+
+            yield updateResult;
+
+            for (const comp of compsResponse.data?.comps.data ?? []) {
+              for (const poule of comp.compPoules) {
+                for (const round of poule.compRounds) {
+                  const climbsVariables = {
+                    gymId: gym.id,
+                    climbType: "boulder",
+                    compRoundId: round.id,
+                    userId,
+                  };
+                  const climbsResponse = await fetchQuery<{
+                    climbs: {
+                      pagination: {
+                        total: number;
+                        perPage: number;
+                        page: number;
+                      };
+                      data: Climb[];
+                    };
+                  }>(climbsQuery, climbsVariables);
+
+                  const updateResult = await normalizeAndUpsertQueryData(
+                    climbsQuery,
+                    climbsVariables,
+                    climbsResponse.data!,
+                  );
+                  console.log(climbsResponse.data?.climbs.data);
+                  yield updateResult;
+                }
+              }
+            }
+          }
+        }
+
+        let climbDays: TopLoggerClimbDayDereferenced[] = [];
         let page = 1;
         let graphqlClimbDaysPaginatedResponse =
           await fetchQuery<ClimbDaysSessionsQueryResponse>(

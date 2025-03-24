@@ -13,17 +13,19 @@ import {
   getIoClimbAlongCompetitionEventEntry,
   ioClimbAlongEventsWithIds,
 } from "../../sources/climbalong";
+import { getIoOnsightCompetitionEventEntries } from "../../sources/onsight";
 import { getSongkickEvents } from "../../sources/songkick";
 import {
   getSportsTimingEventEntry,
   ioSportsTimingEventsWithIds,
 } from "../../sources/sportstiming";
-import { getTopLoggerGroupEventEntry } from "../../sources/toplogger";
-import { TopLoggerGroupUsers } from "../../sources/toplogger.server";
+import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
 import { DataSource } from "../../sources/utils";
+import { isNonEmptyArray } from "../../utils";
+import { TopLoggerGraphQL } from "../../utils/graphql";
+import type { CompUser } from "../api/toplogger_scrape/route";
 import "../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
-import { isNonEmptyArray } from "../../utils";
 
 const monthsPerPage = 2;
 
@@ -105,20 +107,24 @@ const getData = async (
   const noDisciplines = !isNonEmptyArray(disciplines);
   if (noDisciplines || disciplines?.includes("bouldering")) {
     eventsPromises.push(
+      ...(await getIoOnsightCompetitionEventEntries()),
       ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
         getIoClimbAlongCompetitionEventEntry(eventId, ioId),
       ),
       ...(user?.dataSources?.some(
         (source) => source.source === DataSource.TopLogger,
       )
-        ? await TopLoggerGroupUsers.find({
-            user_id: user?.dataSources
-              ?.filter((source) => source.source === DataSource.TopLogger)
-              .map((source) => source.config.id),
+        ? await TopLoggerGraphQL.find<CompUser>({
+            userId: {
+              $in: user?.dataSources
+                ?.filter((source) => source.source === DataSource.TopLogger)
+                .map((source) => source.config.graphQLId),
+            },
+            __typename: "CompUser",
           }).toArray()
         : []
-      ).map(({ group_id, user_id }) =>
-        getTopLoggerGroupEventEntry(group_id, user_id),
+      ).map((compUser) =>
+        getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
       ),
     );
   }

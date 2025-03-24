@@ -621,36 +621,25 @@ export function normalize(
   return normMap as NormMap;
 }
 
-export interface MongoGraphQLObject {
-  __typename: string;
+export interface MongoGraphQLObject<T extends string> {
+  __typename: T;
   id: string;
 }
 
-export const dereferenceDocument = async <
-  D extends MongoGraphQLObject,
-  R extends MongoGraphQLObject,
+export const dereferenceReference = async <
+  T extends string,
+  R extends MongoGraphQLObject<T>,
 >(
-  docRaw: D,
+  ref: Reference,
 ): Promise<R> => {
-  const doc = { ...docRaw } as D & R;
+  const [__typename, id] = ref.__ref.split(":") as [GraphQLID, GraphQLTypeName];
+  const doc = await TopLoggerGraphQL.findOne<MongoGraphQLObject<T>>({
+    __typename,
+    id,
+  });
 
-  for (const key in doc) {
-    if (isReference(doc[key])) {
-      const [__typename, id] = doc[key].__ref.split(":") as [
-        GraphQLID,
-        GraphQLTypeName,
-      ];
-      const keyDoc = await TopLoggerGraphQL.findOne<MongoGraphQLObject>({
-        __typename,
-        id,
-      });
-      if (!keyDoc) {
-        throw new Error(
-          `Failed to dereference ${key} of ${doc.__typename}:${doc.id}`,
-        );
-      }
-      doc[key] = await dereferenceDocument(keyDoc);
-    }
+  if (!doc) {
+    throw new Error(`Failed to dereference ${ref.__ref}`);
   }
 
   return doc as R;
@@ -669,7 +658,7 @@ const parseDateFields = (doc: Record<string, unknown>) => {
 };
 
 export const TopLoggerGraphQL =
-  proxyCollection<MongoGraphQLObject>("toplogger_graphql");
+  proxyCollection<MongoGraphQLObject<string>>("toplogger_graphql");
 
 export async function normalizeAndUpsertQueryData(
   query: DocumentNode,
