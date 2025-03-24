@@ -102,44 +102,46 @@ const getData = async (
 ) => {
   const user = await Users.findOne();
 
-  const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
+  const eventsPromises: (Promise<EventEntry[]> | Promise<EventEntry>)[] = [];
 
   const noDisciplines = !isNonEmptyArray(disciplines);
   if (noDisciplines || disciplines?.includes("bouldering")) {
-    eventsPromises.push(
-      ...(await getIoOnsightCompetitionEventEntries()),
-      ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
-        getIoClimbAlongCompetitionEventEntry(eventId, ioId),
-      ),
-      ...(user?.dataSources?.some(
+    for (const [eventId, ioId] of ioClimbAlongEventsWithIds) {
+      eventsPromises.push(getIoClimbAlongCompetitionEventEntry(eventId, ioId));
+    }
+
+    if (
+      user?.dataSources?.some(
         (source) => source.source === DataSource.TopLogger,
       )
-        ? await TopLoggerGraphQL.find<CompUser>({
-            userId: {
-              $in: user?.dataSources
-                ?.filter((source) => source.source === DataSource.TopLogger)
-                .map((source) => source.config.graphQLId),
-            },
-            __typename: "CompUser",
-          }).toArray()
-        : []
-      ).map((compUser) =>
-        getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
-      ),
-    );
+    ) {
+      for await (const compUser of TopLoggerGraphQL.find<CompUser>({
+        userId: {
+          $in: user.dataSources
+            .filter((source) => source.source === DataSource.TopLogger)
+            .map((source) => source.config.graphQLId),
+        },
+        __typename: "CompUser",
+      })) {
+        eventsPromises.push(
+          getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
+        );
+      }
+    }
+
+    eventsPromises.push(getIoOnsightCompetitionEventEntries());
   }
   if (noDisciplines || disciplines?.includes("running")) {
-    eventsPromises.push(
-      ...ioSportsTimingEventsWithIds.map(([eventId, ioId]) =>
-        getSportsTimingEventEntry(eventId, ioId),
-      ),
-    );
+    for (const [eventId, ioId] of ioSportsTimingEventsWithIds) {
+      eventsPromises.push(getSportsTimingEventEntry(eventId, ioId));
+    }
   }
   if (noDisciplines || disciplines?.includes("metal")) {
-    eventsPromises.push(...(await getSongkickEvents()));
+    eventsPromises.push(getSongkickEvents());
   }
 
   return (await Promise.all(eventsPromises))
+    .flat()
     .filter((event) => {
       const eventCenter = new Date(
         (event.start.getTime() + event.end.getTime()) / 2,
