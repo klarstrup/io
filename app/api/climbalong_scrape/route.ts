@@ -24,11 +24,16 @@ export const GET = () =>
       if (dataSource.source !== DataSource.ClimbAlong) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ token }) {
-        const userInCompetitions = (await (
-          await fetch("https://comp.climbalong.com/api/v0/userInCompetitions", {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-        ).json()) as {
+        const res = await fetch(
+          "https://comp.climbalong.com/api/v0/userInCompetitions",
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!res.ok) {
+          throw new Error(
+            `Failed to fetch user competitions: ${res.status} ${res.statusText}`,
+          );
+        }
+        const userInCompetitions = (await res.json()) as {
           userId: string;
           athlete: Climbalong.Athlete;
           competition: Climbalong.Competition;
