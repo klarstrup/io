@@ -459,15 +459,23 @@ export async function getIoClimbAlongCompetitionEvent(
                   zone: Boolean(
                     ioPerformance?.scores.some(
                       (score) =>
-                        score.holdScore === HoldScore.ZONE ||
-                        score.holdScore === HoldScore2.ZONE,
+                        (Math.ceil(score.holdScore) as HoldScore) ===
+                          HoldScore.ZONE ||
+                        (Math.ceil(score.holdScore) as HoldScore2) ===
+                          HoldScore2.ZONE ||
+                        (Math.ceil(score.holdScore) as HoldScore2) ===
+                          ((HoldScore2.ZONE - 1) as HoldScore2),
                     ) || memo.get(key)?.zone,
                   ),
                   top: Boolean(
                     ioPerformance?.scores.some(
                       (score) =>
-                        score.holdScore === HoldScore.TOP ||
-                        score.holdScore === HoldScore2.TOP,
+                        (Math.ceil(score.holdScore) as HoldScore) ===
+                          HoldScore.TOP ||
+                        (Math.ceil(score.holdScore) as HoldScore2) ===
+                          HoldScore2.TOP ||
+                        (Math.ceil(score.holdScore) as HoldScore2) ===
+                          ((HoldScore2.TOP - 1) as HoldScore2),
                     ) || memo.get(key)?.top,
                   ),
                   flash: Boolean(
@@ -586,14 +594,18 @@ async function getIoClimbAlongCompetitionScores(
         const key = problem.title;
         for (const score of performance.scores) {
           if (
-            score.holdScore === HoldScore.ZONE ||
-            score.holdScore === HoldScore2.ZONE
+            (Math.ceil(score.holdScore) as HoldScore) === HoldScore.ZONE ||
+            (Math.ceil(score.holdScore) as HoldScore2) === HoldScore2.ZONE ||
+            (Math.ceil(score.holdScore) as HoldScore2) ===
+              ((HoldScore2.ZONE - 1) as HoldScore2)
           ) {
             zoneMemo.set(key, (zoneMemo.get(key) || 0) + 1);
           }
           if (
-            score.holdScore === HoldScore.TOP ||
-            score.holdScore === HoldScore2.TOP
+            (Math.ceil(score.holdScore) as HoldScore) === HoldScore.TOP ||
+            (Math.ceil(score.holdScore) as HoldScore2) === HoldScore2.TOP ||
+            (Math.ceil(score.holdScore) as HoldScore2) ===
+              ((HoldScore2.TOP - 1) as HoldScore2)
           ) {
             topMemo.set(key, (topMemo.get(key) || 0) + 1);
           }
@@ -630,8 +642,10 @@ async function getIoClimbAlongCompetitionScores(
 
         for (const score of performance.scores) {
           if (
-            score.holdScore === HoldScore.TOP ||
-            score.holdScore === HoldScore2.TOP
+            (Math.ceil(score.holdScore) as HoldScore) === HoldScore.TOP ||
+            (Math.ceil(score.holdScore) as HoldScore2) === HoldScore2.TOP ||
+            (Math.ceil(score.holdScore) as HoldScore2) ===
+              ((HoldScore2.TOP - 1) as HoldScore2)
           ) {
             topsAttempts += score.reachedInAttempt;
             tops += 1;
@@ -642,8 +656,10 @@ async function getIoClimbAlongCompetitionScores(
             }
             topsTDBScore += problemTopTDBScore;
           } else if (
-            score.holdScore === HoldScore.ZONE ||
-            score.holdScore === HoldScore2.ZONE
+            (Math.ceil(score.holdScore) as HoldScore) === HoldScore.ZONE ||
+            (Math.ceil(score.holdScore) as HoldScore2) === HoldScore2.ZONE ||
+            (Math.ceil(score.holdScore) as HoldScore2) ===
+              ((HoldScore2.ZONE - 1) as HoldScore2)
           ) {
             if (score.reachedInAttempt === 1) {
               problemZoneTDBScore *= TDB_FLASH_MULTIPLIER;
@@ -720,7 +736,10 @@ async function getIoClimbAlongCompetitionScores(
     const tops = ioPerformanceSum.scoreSums
       .filter(
         ({ holdScore }) =>
-          holdScore === HoldScore.TOP || holdScore === HoldScore2.TOP,
+          (Math.ceil(holdScore) as HoldScore) === HoldScore.TOP ||
+          (Math.ceil(holdScore) as HoldScore2) === HoldScore2.TOP ||
+          (Math.ceil(holdScore) as HoldScore2) ===
+            ((HoldScore2.TOP - 1) as HoldScore2),
       )
       .reduce(
         (sum, { totalNumberOfTimesReached }) => sum + totalNumberOfTimesReached,
@@ -729,7 +748,10 @@ async function getIoClimbAlongCompetitionScores(
     const topsAttempts = ioPerformanceSum.scoreSums
       .filter(
         ({ holdScore }) =>
-          holdScore === HoldScore.TOP || holdScore === HoldScore2.TOP,
+          (Math.ceil(holdScore) as HoldScore) === HoldScore.TOP ||
+          (Math.ceil(holdScore) as HoldScore2) === HoldScore2.TOP ||
+          (Math.ceil(holdScore) as HoldScore2) ===
+            ((HoldScore2.TOP - 1) as HoldScore2),
       )
       .reduce(
         (sum, { totalNumberOfAttemptsUsed }) => sum + totalNumberOfAttemptsUsed,
@@ -738,7 +760,10 @@ async function getIoClimbAlongCompetitionScores(
     const zones = ioPerformanceSum.scoreSums
       .filter(
         ({ holdScore }) =>
-          holdScore === HoldScore.ZONE || holdScore === HoldScore2.ZONE,
+          (Math.ceil(holdScore) as HoldScore) === HoldScore.ZONE ||
+          (Math.ceil(holdScore) as HoldScore2) === HoldScore2.ZONE ||
+          (Math.ceil(holdScore) as HoldScore2) ===
+            ((HoldScore2.ZONE - 1) as HoldScore2),
       )
       .reduce(
         (sum, { totalNumberOfTimesReached }) => sum + totalNumberOfTimesReached,
@@ -747,7 +772,10 @@ async function getIoClimbAlongCompetitionScores(
     const zonesAttempts = ioPerformanceSum.scoreSums
       .filter(
         ({ holdScore }) =>
-          holdScore === HoldScore.ZONE || holdScore === HoldScore2.ZONE,
+          (Math.ceil(holdScore) as HoldScore) === HoldScore.ZONE ||
+          (Math.ceil(holdScore) as HoldScore2) === HoldScore2.ZONE ||
+          (Math.ceil(holdScore) as HoldScore2) ===
+            ((HoldScore2.ZONE - 1) as HoldScore2),
       )
       .reduce(
         (sum, { totalNumberOfAttemptsUsed }) => sum + totalNumberOfAttemptsUsed,
