@@ -81,6 +81,9 @@ export const GET = () =>
               ).json()) as Climbalong.Performance[];
 
               for (const performance of performances) {
+                if (performance.athleteId !== athlete.athleteId) {
+                  continue;
+                }
                 await ClimbAlongPerformances.updateOne(
                   {
                     athleteId: performance.athleteId,
