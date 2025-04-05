@@ -223,9 +223,9 @@ export async function getIoOnsightCompetitionEvent(competitionId: string) {
         source: SCORING_SOURCE.OFFICIAL,
         system: SCORING_SYSTEM.TOPS_AND_ZONES,
         tops: Number(ioCompetitionScore.Score.split("-")[1]!.split("/")[0]!),
-        zones: Number(ioCompetitionScore.Score.split("-")[1]!.split("/")[1]!),
+        zones: Number(ioCompetitionScore.Score.split("-")[1]!.split("/")[2]!),
         topsAttempts: Number(
-          ioCompetitionScore.Score.split("-")[1]!.split("/")[2]!,
+          ioCompetitionScore.Score.split("-")[1]!.split("/")[1]!,
         ),
         zonesAttempts: Number(
           ioCompetitionScore.Score.split("-")[1]!.split("/")[3]!,
