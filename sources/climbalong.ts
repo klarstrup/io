@@ -378,7 +378,6 @@ export async function getIoClimbAlongCompetitionEvent(
   );
 
   const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
-  const noClimbers = athletes.length || NaN;
 
   const ioPerformances =
     io && performances.filter(({ athleteId }) => athleteId === io.athleteId);
@@ -404,6 +403,12 @@ export async function getIoClimbAlongCompetitionEvent(
       lastPerformance = end;
     }
   }
+
+  const { noParticipants, scores } = await getIoClimbAlongCompetitionScores(
+    competitionId,
+    io?.athleteId || ioId,
+    sex,
+  );
 
   return {
     source: "climbalong",
@@ -441,7 +446,7 @@ export async function getIoClimbAlongCompetitionEvent(
     location: competition.address,
     category: io && sex ? io.sex : null,
     team: null,
-    noParticipants: noClimbers,
+    noParticipants,
     problems: problems.length
       ? problems.filter((problem) => ioCircuitIds.includes(problem.circuitId))
           .length
@@ -503,11 +508,7 @@ export async function getIoClimbAlongCompetitionEvent(
             .values(),
         )
       : null,
-    scores: await getIoClimbAlongCompetitionScores(
-      competitionId,
-      io?.athleteId || ioId,
-      sex,
-    ),
+    scores,
   } as const;
 }
 
@@ -662,42 +663,47 @@ async function getIoClimbAlongCompetitionScores(
         tops + zones + topsAttempts + zonesAttempts,
     );
 
+  const circuitChallenges = await Promise.all(
+    lanes.map((lane) =>
+      dbFetch<{
+        node: string;
+        title: string;
+        athletes: {
+          athleteId: number;
+          performanceSum: {
+            athleteId: number;
+            rank: number;
+            scoreSums: {
+              holdScore: HoldScore | HoldScore2;
+              totalNumberOfTimesReached: number;
+              totalNumberOfAttemptsUsed: number;
+            }[];
+            prevRank: null;
+          } | null;
+        }[];
+        ranked: boolean;
+        processedBy: { nodeId: number; nodeType: number; edge: number }[];
+      }>(
+        `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`,
+        undefined,
+        { maxAge },
+      ),
+    ),
+  );
+
   const ioPerformanceSum =
     io &&
-    (
-      await Promise.all(
-        lanes.map((lane) =>
-          dbFetch<{
-            node: string;
-            title: string;
-            athletes: {
-              athleteId: number;
-              performanceSum: {
-                athleteId: number;
-                rank: number;
-                scoreSums: {
-                  holdScore: HoldScore | HoldScore2;
-                  totalNumberOfTimesReached: number;
-                  totalNumberOfAttemptsUsed: number;
-                }[];
-                prevRank: null;
-              } | null;
-            }[];
-            ranked: boolean;
-            processedBy: { nodeId: number; nodeType: number; edge: number }[];
-          }>(
-            `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`,
-            undefined,
-            { maxAge },
-          ),
-        ),
-      )
-    )
+    circuitChallenges
       .map(({ athletes }) => athletes)
       .flat()
       .find(({ athleteId }) => athleteId === io.athleteId)?.performanceSum;
 
-  const noClimbers = atheletesWithResults.length || NaN;
+  const noParticipants =
+    (circuitChallenges.find(({ athletes }) =>
+      athletes.some((athletes) => athletes.athleteId === io?.athleteId),
+    )?.athletes?.length ??
+      atheletesWithResults.length) ||
+    NaN;
 
   const scores: Score[] = [];
 
@@ -737,7 +743,7 @@ async function getIoClimbAlongCompetitionScores(
       system: SCORING_SYSTEM.TOPS_AND_ZONES,
       source: SCORING_SOURCE.OFFICIAL,
       rank: ioPerformanceSum.rank,
-      percentile: percentile(ioPerformanceSum.rank, noClimbers),
+      percentile: percentile(ioPerformanceSum.rank, noParticipants),
       tops: ioResults?.tops || tops || NaN,
       zones: ioResults?.zones || zones || NaN,
       topsAttempts: ioResults?.topsAttempts || topsAttempts || NaN,
@@ -798,7 +804,7 @@ async function getIoClimbAlongCompetitionScores(
   }
     */
 
-  return scores;
+  return { noParticipants, scores };
 }
 
 export async function getIoClimbAlongCompetitionEventEntry(
