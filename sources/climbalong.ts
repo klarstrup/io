@@ -442,7 +442,10 @@ export async function getIoClimbAlongCompetitionEvent(
     category: io && sex ? io.sex : null,
     team: null,
     noParticipants: noClimbers,
-    problems: noProblems,
+    problems: problems.length
+      ? problems.filter((problem) => ioCircuitIds.includes(problem.circuitId))
+          .length
+      : noProblems,
     problemByProblem: problems.length
       ? Array.from(
           problems
