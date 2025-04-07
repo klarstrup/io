@@ -404,11 +404,12 @@ export async function getIoClimbAlongCompetitionEvent(
     }
   }
 
-  const { noParticipants, scores } = await getIoClimbAlongCompetitionScores(
-    competitionId,
-    io?.athleteId || ioId,
-    sex,
-  );
+  const { noParticipants, scores, category } =
+    await getIoClimbAlongCompetitionScores(
+      competitionId,
+      io?.athleteId || ioId,
+      sex,
+    );
 
   return {
     source: "climbalong",
@@ -444,7 +445,7 @@ export async function getIoClimbAlongCompetitionEvent(
     event: competition.title.trim(),
     subEvent: null,
     location: competition.address,
-    category: io && sex ? io.sex : null,
+    category: category?.replace("Mænd/", "")?.replace("Male / ", "")?.replace("Male", "Open") || (io && sex ? io.sex : null),
     team: null,
     noParticipants,
     problems: problems.length
@@ -691,12 +692,15 @@ async function getIoClimbAlongCompetitionScores(
     ),
   );
 
-  const ioPerformanceSum =
+  const ioCircuitChallenge =
     io &&
-    circuitChallenges
-      .map(({ athletes }) => athletes)
-      .flat()
-      .find(({ athleteId }) => athleteId === io.athleteId)?.performanceSum;
+    circuitChallenges.find(({ athletes }) =>
+      athletes.some((athlete) => athlete.athleteId === io?.athleteId),
+    );
+
+  const ioPerformanceSum = ioCircuitChallenge?.athletes.find(
+    (athlete) => athlete.athleteId === io?.athleteId,
+  )?.performanceSum;
 
   const noParticipants =
     (circuitChallenges.find(({ athletes }) =>
@@ -804,7 +808,7 @@ async function getIoClimbAlongCompetitionScores(
   }
     */
 
-  return { noParticipants, scores };
+  return { noParticipants, scores, category: ioCircuitChallenge?.title };
 }
 
 export async function getIoClimbAlongCompetitionEventEntry(
