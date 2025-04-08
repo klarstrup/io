@@ -404,180 +404,6 @@ export async function getIoClimbAlongCompetitionEvent(
     }
   }
 
-  const { noParticipants, scores, category } =
-    await getIoClimbAlongCompetitionScores(
-      competitionId,
-      io?.athleteId || ioId,
-      sex,
-    );
-
-  return {
-    source: "climbalong",
-    type: "competition",
-    discipline: "bouldering",
-    id: competitionId,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
-    ioId: io?.athleteId!,
-    url:
-      rounds[0] && lanes[0]
-        ? `https://climbalong.com/competitions/${competitionId}/results`
-        : `https://climbalong.com/competitions/${competitionId}/info`,
-    start: new Date(
-      firstPerformance ||
-        circuitChallengeNodesGroupedByLane.find(
-          ([, [challengeNode]]) => challengeNode?.selfscoringOpen,
-        )?.[1][0]?.selfscoringOpen ||
-        competition.startTime,
-    ),
-    end: isFuture(new Date(competition.endTime))
-      ? new Date(competition.endTime)
-      : min([
-          new Date(
-            lastPerformance ||
-              circuitChallengeNodesGroupedByLane.find(
-                ([, [challengeNode]]) => challengeNode?.selfscoringClose,
-              )?.[1][0]?.selfscoringClose ||
-              competition.endTime,
-          ),
-          new Date(competition.endTime),
-        ]),
-    venue: competition.facility.trim(),
-    event: competition.title.trim(),
-    subEvent: null,
-    location: competition.address,
-    category: category?.replace("Mænd/", "")?.replace("Male / ", "")?.replace("Male", "Open") || (io && sex ? io.sex : null),
-    team: null,
-    noParticipants,
-    problems: problems.length
-      ? problems.filter((problem) => ioCircuitIds.includes(problem.circuitId))
-          .length
-      : noProblems,
-    problemByProblem: problems.length
-      ? Array.from(
-          problems
-            .filter((problem) => ioCircuitIds.includes(problem.circuitId))
-            .reduce(
-              (memo, problem) => {
-                const ioPerformance = ioPerformances?.find(
-                  (performance) => performance.problemId === problem.problemId,
-                );
-
-                // More nastiness here because each problem is repeated for each lane
-                const key = problem.title;
-                memo.set(key, {
-                  number: problem.title,
-                  color: undefined,
-                  grade: undefined,
-                  attempt: Boolean(
-                    ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
-                  ),
-                  zone: Boolean(
-                    ioPerformance?.scores.some((score) =>
-                      isZone(score.holdScore),
-                    ) || memo.get(key)?.zone,
-                  ),
-                  top: Boolean(
-                    ioPerformance?.scores.some((score) =>
-                      isTop(score.holdScore),
-                    ) || memo.get(key)?.top,
-                  ),
-                  flash: Boolean(
-                    ioPerformance?.scores.some(
-                      (score) =>
-                        isTop(score.holdScore) && score.reachedInAttempt === 1,
-                    ) || memo.get(key)?.flash,
-                  ),
-                  repeat: false,
-                });
-
-                return memo;
-              },
-              new Map<
-                string,
-                {
-                  number: string;
-                  color: string | undefined;
-                  grade: number | undefined;
-                  attempt: boolean;
-                  zone: boolean;
-                  top: boolean;
-                  flash: boolean;
-                  repeat: false;
-                }
-              >(),
-            )
-            .values(),
-        )
-      : null,
-    scores,
-  } as const;
-}
-
-async function getIoClimbAlongCompetitionScores(
-  competitionId: number,
-  ioId?: number,
-  sex?: boolean,
-) {
-  const competition = await getCompetition(competitionId, {
-    maxAge: WEEK_IN_SECONDS,
-  });
-  const competitionTime = cotemporality({
-    start: new Date(competition.startTime),
-    end: new Date(competition.endTime),
-  });
-
-  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "current"
-      ? 30
-      : isWithinInterval(new Date(), {
-            start: subHours(new Date(competition.startTime), 3),
-            end: addHours(new Date(competition.endTime), 1),
-          })
-        ? MINUTE_IN_SECONDS
-        : competitionTime === "past"
-          ? isWithinInterval(new Date(), {
-              start: new Date(competition.startTime),
-              end: addWeeks(new Date(competition.endTime), 1),
-            })
-            ? DAY_IN_SECONDS
-            : undefined
-          : WEEK_IN_SECONDS;
-
-  let athletes = await getCompetitionAthletes(competitionId, { maxAge });
-
-  const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io",
-  );
-
-  if (io && sex) {
-    athletes = athletes.filter((athlete) => athlete.sex === io.sex);
-  }
-
-  const rounds = (await getCompetitionRounds(competitionId, { maxAge })).filter(
-    ({ title }) => !title.match(/final/gi), // Only score quals
-  );
-  const lanes = (await getCompetitionLanes(competitionId, { maxAge })).filter(
-    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId),
-  );
-  const circuits = (
-    await getLanesCircuits(
-      lanes.map(({ laneId }) => laneId),
-      { maxAge },
-    )
-  ).flat();
-  const performances = (
-    await getCircuitsPerformances(
-      circuits.map(({ circuitId }) => circuitId),
-      { maxAge },
-    )
-  ).flat();
-  const problems = (
-    await getCircuitsProblems(
-      circuits.map(({ circuitId }) => circuitId),
-      { maxAge },
-    )
-  ).flat();
-
   const [topsByProblemTitle, zonesByProblemTitle] = performances.reduce(
     ([topMemo, zoneMemo], performance) => {
       const problem = problems.find(
@@ -755,60 +581,110 @@ async function getIoClimbAlongCompetitionScores(
     } satisfies TopsAndZonesScore);
   }
 
-  /*
-  if (ioResults) {
-    const ioTopsAndZonesRank =
-      Array.from(atheletesWithResults)
-        .sort((a, b) => a.zonesAttempts - b.zonesAttempts)
-        .sort((a, b) => a.topsAttempts - b.topsAttempts)
-        .sort((a, b) => b.zones - a.zones)
-        .sort((a, b) => b.tops - a.tops)
-        .findIndex(({ athlete }) => athlete.athleteId == io.athleteId) + 1;
-    if (ioTopsAndZonesRank) {
-      scores.push({
-        system: SCORING_SYSTEM.TOPS_AND_ZONES,
-        source: SCORING_SOURCE.DERIVED,
-        rank: ioTopsAndZonesRank,
-        percentile: percentile(ioTopsAndZonesRank, noClimbers),
-        tops: ioResults.tops,
-        zones: ioResults.zones,
-        topsAttempts: ioResults.topsAttempts,
-        zonesAttempts: ioResults.zonesAttempts,
-      } satisfies TopsAndZonesScore);
-    }
+  return {
+    source: "climbalong",
+    type: "competition",
+    discipline: "bouldering",
+    id: competitionId,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+    ioId: io?.athleteId!,
+    url:
+      rounds[0] && lanes[0]
+        ? `https://climbalong.com/competitions/${competitionId}/results`
+        : `https://climbalong.com/competitions/${competitionId}/info`,
+    start: new Date(
+      firstPerformance ||
+        circuitChallengeNodesGroupedByLane.find(
+          ([, [challengeNode]]) => challengeNode?.selfscoringOpen,
+        )?.[1][0]?.selfscoringOpen ||
+        competition.startTime,
+    ),
+    end: isFuture(new Date(competition.endTime))
+      ? new Date(competition.endTime)
+      : min([
+          new Date(
+            lastPerformance ||
+              circuitChallengeNodesGroupedByLane.find(
+                ([, [challengeNode]]) => challengeNode?.selfscoringClose,
+              )?.[1][0]?.selfscoringClose ||
+              competition.endTime,
+          ),
+          new Date(competition.endTime),
+        ]),
+    venue: competition.facility.trim(),
+    event: competition.title.trim(),
+    subEvent: null,
+    location: competition.address,
+    category:
+      ioCircuitChallenge?.title
+        ?.replace("Mænd/", "")
+        ?.replace("Male / ", "")
+        ?.replace("Male", "Open") || (io && sex ? io.sex : null),
+    team: null,
+    noParticipants,
+    problems: problems.length
+      ? problems.filter((problem) => ioCircuitIds.includes(problem.circuitId))
+          .length
+      : noProblems,
+    problemByProblem: problems.length
+      ? Array.from(
+          problems
+            .filter((problem) => ioCircuitIds.includes(problem.circuitId))
+            .reduce(
+              (memo, problem) => {
+                const ioPerformance = ioPerformances?.find(
+                  (performance) => performance.problemId === problem.problemId,
+                );
 
-    const ioTDBRank =
-      Array.from(atheletesWithResults)
-        .sort((a, b) => b.zonesTDBScore - a.zonesTDBScore)
-        .sort((a, b) => b.topsTDBScore - a.topsTDBScore)
-        .findIndex(({ athlete }) => athlete.athleteId == io.athleteId) + 1;
-    if (ioTDBRank) {
-      scores.push({
-        system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-        source: SCORING_SOURCE.DERIVED,
-        rank: ioTDBRank,
-        percentile: percentile(ioTDBRank, noClimbers),
-        points: Math.round(ioResults.topsTDBScore),
-      } satisfies ThousandDivideByScore);
-    }
+                // More nastiness here because each problem is repeated for each lane
+                const key = problem.title;
+                memo.set(key, {
+                  number: problem.title,
+                  color: undefined,
+                  grade: undefined,
+                  attempt: Boolean(
+                    ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
+                  ),
+                  zone: Boolean(
+                    ioPerformance?.scores.some((score) =>
+                      isZone(score.holdScore),
+                    ) || memo.get(key)?.zone,
+                  ),
+                  top: Boolean(
+                    ioPerformance?.scores.some((score) =>
+                      isTop(score.holdScore),
+                    ) || memo.get(key)?.top,
+                  ),
+                  flash: Boolean(
+                    ioPerformance?.scores.some(
+                      (score) =>
+                        isTop(score.holdScore) && score.reachedInAttempt === 1,
+                    ) || memo.get(key)?.flash,
+                  ),
+                  repeat: false,
+                });
 
-    const ioPointsRank =
-      Array.from(atheletesWithResults)
-        .sort((a, b) => b.ptsScore - a.ptsScore)
-        .findIndex(({ athlete }) => athlete.athleteId == io.athleteId) + 1;
-    if (ioPointsRank) {
-      scores.push({
-        system: SCORING_SYSTEM.POINTS,
-        source: SCORING_SOURCE.DERIVED,
-        rank: ioPointsRank,
-        percentile: percentile(ioPointsRank, noClimbers),
-        points: ioResults.ptsScore,
-      } satisfies PointsScore);
-    }
-  }
-    */
-
-  return { noParticipants, scores, category: ioCircuitChallenge?.title };
+                return memo;
+              },
+              new Map<
+                string,
+                {
+                  number: string;
+                  color: string | undefined;
+                  grade: number | undefined;
+                  attempt: boolean;
+                  zone: boolean;
+                  top: boolean;
+                  flash: boolean;
+                  repeat: false;
+                }
+              >(),
+            )
+            .values(),
+        )
+      : null,
+    scores,
+  } as const;
 }
 
 export async function getIoClimbAlongCompetitionEventEntry(
