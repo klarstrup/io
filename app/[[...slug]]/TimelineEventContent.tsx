@@ -132,7 +132,7 @@ export default async function TimelineEventContent({
     url,
   } = await (
     eventEntry.source === EventSource.ClimbAlong
-      ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId, sex)
+      ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId)
       : eventEntry.source === EventSource.TopLogger
         ? getIoTopLoggerCompEvent(eventEntry.id, eventEntry.ioId)
         : eventEntry.source === EventSource.Onsight
