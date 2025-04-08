@@ -4,7 +4,9 @@ import {
   ClimbAlongAthletes,
   ClimbAlongCircuits,
   ClimbAlongCompetitions,
+  ClimbAlongEdges,
   ClimbAlongLanes,
+  ClimbAlongNodes,
   ClimbAlongPerformances,
   ClimbAlongProblems,
   ClimbAlongRounds,
@@ -77,34 +79,6 @@ export const GET = () =>
               { upsert: true },
             );
             yield lane;
-
-            const circuits = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v0/lanes/${lane.laneId}/circuits`,
-              )
-            ).json()) as Climbalong.Circuit[];
-            for (const circuit of circuits) {
-              await ClimbAlongCircuits.updateOne(
-                { circuitId: circuit.circuitId },
-                { $set: { ...circuit } },
-                { upsert: true },
-              );
-              yield circuit;
-
-              const problems = (await (
-                await fetch(
-                  `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/problems`,
-                )
-              ).json()) as Climbalong.Problem[];
-              for (const problem of problems) {
-                await ClimbAlongProblems.updateOne(
-                  { problemId: problem.problemId },
-                  { $set: { ...problem } },
-                  { upsert: true },
-                );
-                yield problem;
-              }
-            }
           }
 
           const rounds = (await (
@@ -132,11 +106,59 @@ export const GET = () =>
             circuitChallengeNodes,
           ] of circuitChallengeNodesGroupedByLane) {
             for (const circuitChallengeNode of circuitChallengeNodes) {
-              const circuitId = circuitChallengeNode.circuit.circuitId;
+              const circuit = circuitChallengeNode.circuit;
+
+              await ClimbAlongCircuits.updateOne(
+                { circuitId: circuit.circuitId },
+                { $set: { ...circuit } },
+                { upsert: true },
+              );
+              await ClimbAlongNodes.updateOne(
+                { nodeId: circuitChallengeNode.nodeId },
+                {
+                  $set: {
+                    ...circuitChallengeNode,
+                    selfscoringOpen:
+                      circuitChallengeNode.selfscoringOpen &&
+                      new Date(circuitChallengeNode.selfscoringOpen),
+                    selfscoringClose:
+                      circuitChallengeNode.selfscoringClose &&
+                      new Date(circuitChallengeNode.selfscoringClose),
+                  },
+                },
+                { upsert: true },
+              );
+              yield circuitChallengeNode;
+
+              const circuitChallengeEdge = await fetch(
+                `https://comp.climbalong.com/api/v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
+              ).then(
+                (r) => r.json() as Promise<Climbalong.CircuitChallengeEdge>,
+              );
+              await ClimbAlongEdges.updateOne(
+                { processedBy: circuitChallengeEdge.processedBy },
+                { $set: { ...circuitChallengeEdge } },
+                { upsert: true },
+              );
+              yield circuitChallengeEdge;
+
+              const problems = (await (
+                await fetch(
+                  `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/problems`,
+                )
+              ).json()) as Climbalong.Problem[];
+              for (const problem of problems) {
+                await ClimbAlongProblems.updateOne(
+                  { problemId: problem.problemId },
+                  { $set: { ...problem } },
+                  { upsert: true },
+                );
+                yield problem;
+              }
 
               const performances = (await (
                 await fetch(
-                  `https://comp.climbalong.com/api/v0/circuits/${circuitId}/performances`,
+                  `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/performances`,
                 )
               ).json()) as Climbalong.Performance[];
 

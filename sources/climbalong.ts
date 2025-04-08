@@ -1,14 +1,4 @@
-import {
-  addHours,
-  addWeeks,
-  isAfter,
-  isBefore,
-  isFuture,
-  isWithinInterval,
-  min,
-  subHours,
-} from "date-fns";
-import { dbFetch } from "../fetch";
+import { isAfter, isBefore, isFuture, max, min } from "date-fns";
 import {
   EventEntry,
   EventSource,
@@ -17,51 +7,86 @@ import {
   Score,
   TopsAndZonesScore,
 } from "../lib";
-import {
-  DAY_IN_SECONDS,
-  MINUTE_IN_SECONDS,
-  WEEK_IN_SECONDS,
-  cotemporality,
-  percentile,
-  unique,
-} from "../utils";
+import { percentile, unique } from "../utils";
 import {
   ClimbAlongAthletes,
   ClimbAlongCircuits,
   ClimbAlongCompetitions,
+  ClimbAlongEdges,
   ClimbAlongLanes,
+  ClimbAlongNodes,
   ClimbAlongPerformances,
   ClimbAlongProblems,
   ClimbAlongRounds,
 } from "./climbalong.server";
 
 export namespace Climbalong {
+  export enum ScoreSystem {
+    BoulderTopAndZones = "BOULDER_TOP_AND_ZONES",
+    LeadScorePerHold = "LEAD_SCORE_PER_HOLD",
+    LeadScorePerHoldPlus = "LEAD_SCORE_PER_HOLD_PLUS",
+    Unknown = "UNKNOWN",
+  }
+
+  export type CircuitChallengeNode = {
+    nodeId: number;
+    nodeType:
+      | NodeType.CircuitChallenge
+      | NodeType.CircuitChallenge3
+      | NodeType.CircuitChallenge9;
+    competitionId: number;
+    inputsFrom: {
+      nodeId: number;
+      edgeId: number;
+    }[];
+    outputEdgeIds: number[];
+    inputTitle: string;
+    nodeOutputType: {
+      scoreSystem: ScoreSystem;
+      numberOfAttemptsCounted: boolean;
+      numberOfScoringHolds: number;
+      ranked: boolean;
+    };
+    circuit: Climbalong.Circuit;
+    selfscoring: boolean;
+    selfscoringOpen: Date | null;
+    selfscoringClose: Date | null;
+    pickTopPerformancesAmount: number;
+    outputRanked: boolean;
+    nodeName: string;
+  };
+
+  export type Node = CircuitChallengeNode;
+
+  export interface CircuitChallengeEdge {
+    node: string;
+    title: string;
+    athletes: {
+      athleteId: number;
+      performanceSum: {
+        athleteId: number;
+        rank: number;
+        scoreSums: {
+          holdScore: HoldScore | HoldScore2;
+          totalNumberOfTimesReached: number;
+          totalNumberOfAttemptsUsed: number;
+          points?: number;
+          problemId?: number;
+        }[];
+        prevRank: null;
+        points?: number;
+        origin?: null;
+      };
+    }[];
+    ranked: boolean;
+    processedBy: { nodeId: number; nodeType: number; edge: number }[];
+  }
+
+  export type Edge = CircuitChallengeEdge;
+
   export type CircuitChallengeNodesGroupedByLane = [
     number,
-    {
-      nodeId: number;
-      nodeType: NodeType.CircuitChallenge;
-      competitionId: number;
-      inputsFrom: {
-        nodeId: number;
-        edgeId: number;
-      }[];
-      outputEdgeIds: number[];
-      inputTitle: string;
-      nodeOutputType: {
-        scoreSystem: string;
-        numberOfAttemptsCounted: boolean;
-        numberOfScoringHolds: number;
-        ranked: boolean;
-      };
-      circuit: Climbalong.Circuit;
-      selfscoring: boolean;
-      selfscoringOpen: Date | null;
-      selfscoringClose: Date | null;
-      pickTopPerformancesAmount: number;
-      outputRanked: boolean;
-      nodeName: string;
-    }[],
+    CircuitChallengeNode[],
   ][];
 
   export interface Athlete {
@@ -185,7 +210,17 @@ export namespace Climbalong {
   }
 
   export enum NodeType {
-    CircuitChallenge = 309,
+    Entrance = 1,
+    Splitter = 101,
+    Sequencer = 201,
+    CustomOrderSequencer = 202,
+    CircuitChallenge = 301, // BOULDER_TOP_AND_ZONES
+    CircuitChallenge3 = 304, // LEAD_SCORE_PER_HOLD_PLUS
+    CircuitChallenge9 = 309, // BOULDER_OLYMPIC
+    Gate = 401,
+    Tiebreaker = 601,
+    TimeTiebreaker = 602,
+    ReRanker = 701,
   }
 }
 export enum HoldScore {
@@ -215,56 +250,31 @@ export async function getIoClimbAlongCompetitionEvent(
   const competition = await ClimbAlongCompetitions.findOne({ competitionId });
   if (!competition) throw new Error("???");
 
-  const competitionTime = cotemporality({
-    start: new Date(competition.startTime),
-    end: new Date(competition.endTime),
-  });
-
-  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    competitionTime === "current"
-      ? 30
-      : isWithinInterval(new Date(), {
-            start: subHours(new Date(competition.startTime), 3),
-            end: addHours(new Date(competition.endTime), 1),
-          })
-        ? MINUTE_IN_SECONDS
-        : competitionTime === "past"
-          ? isWithinInterval(new Date(), {
-              start: new Date(competition.startTime),
-              end: addWeeks(new Date(competition.endTime), 1),
-            })
-            ? DAY_IN_SECONDS
-            : undefined
-          : WEEK_IN_SECONDS;
-
   const athletes = await ClimbAlongAthletes.find({ competitionId }).toArray();
-  const io = athletes.find((athlete) => athlete.athleteId === athleteId);
   const rounds = await ClimbAlongRounds.find({ competitionId }).toArray();
   const lanes = await ClimbAlongLanes.find({ competitionId }).toArray();
   const circuits = await ClimbAlongCircuits.find({ competitionId }).toArray();
   const performances = await ClimbAlongPerformances.find({
     circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
   }).toArray();
-  console.log(circuits);
   const problems = await ClimbAlongProblems.find({
     circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
   }).toArray();
 
-  const circuitChallengeNodesGroupedByLane =
-    await dbFetch<Climbalong.CircuitChallengeNodesGroupedByLane>(
-      `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
-      undefined,
-      { maxAge },
-    );
-
-  const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
-
+  const io = athletes.find((athlete) => athlete.athleteId === athleteId);
   const ioPerformances =
     io && performances.filter(({ athleteId }) => athleteId === io.athleteId);
 
   const ioCircuitIds = ioPerformances
     ? unique(ioPerformances.map(({ circuitId }) => circuitId))
     : [];
+  const ioCircuitChallengeNode = await ClimbAlongNodes.findOne({
+    "circuit.circuitId": { $in: ioCircuitIds },
+  });
+  const noProblems = problems.filter(
+    (problem) =>
+      problem.circuitId === ioCircuitChallengeNode?.circuit.circuitId,
+  ).length;
 
   let firstPerformance: Date | null = null;
   let lastPerformance: Date | null = null;
@@ -292,6 +302,7 @@ export async function getIoClimbAlongCompetitionEvent(
 
       if (
         problem &&
+        problem.circuitId === ioCircuitChallengeNode?.circuit.circuitId &&
         athletes.some((athlete) => athlete.athleteId === performance.athleteId)
       ) {
         const key = problem.title;
@@ -370,41 +381,18 @@ export async function getIoClimbAlongCompetitionEvent(
         tops + zones + topsAttempts + zonesAttempts,
     );
 
-  const circuitChallenges = await Promise.all(
-    lanes.map((lane) =>
-      dbFetch<{
-        node: string;
-        title: string;
-        athletes: {
-          athleteId: number;
-          performanceSum: {
-            athleteId: number;
-            rank: number;
-            scoreSums: {
-              holdScore: HoldScore | HoldScore2;
-              totalNumberOfTimesReached: number;
-              totalNumberOfAttemptsUsed: number;
-            }[];
-            prevRank: null;
-          } | null;
-        }[];
-        ranked: boolean;
-        processedBy: {
-          nodeId: number;
-          nodeType: Climbalong.NodeType;
-          edge: number;
-        }[];
-      }>(
-        `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`,
-        undefined,
-        { maxAge },
-      ),
-    ),
-  );
+  const circuitChallengeEdges = await ClimbAlongEdges.find({
+    processedBy: {
+      $elemMatch: {
+        nodeId: ioCircuitChallengeNode?.nodeId,
+        edge: ioCircuitChallengeNode?.outputEdgeIds[0],
+      },
+    },
+  }).toArray();
 
   const ioCircuitChallenge =
     io &&
-    circuitChallenges.find(({ athletes }) =>
+    circuitChallengeEdges.find(({ athletes }) =>
       athletes.some((athlete) => athlete.athleteId === io?.athleteId),
     );
 
@@ -413,10 +401,7 @@ export async function getIoClimbAlongCompetitionEvent(
   )?.performanceSum;
 
   const noParticipants =
-    (circuitChallenges.find(({ athletes }) =>
-      athletes.some((athletes) => athletes.athleteId === io?.athleteId),
-    )?.athletes?.length ??
-      atheletesWithResults.length) ||
+    (ioCircuitChallenge?.athletes?.length ?? atheletesWithResults.length) ||
     NaN;
 
   const scores: Score[] = [];
@@ -476,25 +461,24 @@ export async function getIoClimbAlongCompetitionEvent(
       rounds[0] && lanes[0]
         ? `https://climbalong.com/competitions/${competitionId}/results`
         : `https://climbalong.com/competitions/${competitionId}/info`,
-    start: new Date(
-      firstPerformance ||
-        circuitChallengeNodesGroupedByLane.find(
-          ([, [challengeNode]]) => challengeNode?.selfscoringOpen,
-        )?.[1][0]?.selfscoringOpen ||
-        competition.startTime,
+    start: max(
+      [
+        firstPerformance && new Date(firstPerformance),
+        ioCircuitChallengeNode?.selfscoringOpen &&
+          new Date(ioCircuitChallengeNode?.selfscoringOpen),
+        new Date(competition.startTime),
+      ].filter(Boolean),
     ),
     end: isFuture(new Date(competition.endTime))
       ? new Date(competition.endTime)
-      : min([
-          new Date(
-            lastPerformance ||
-              circuitChallengeNodesGroupedByLane.find(
-                ([, [challengeNode]]) => challengeNode?.selfscoringClose,
-              )?.[1][0]?.selfscoringClose ||
-              competition.endTime,
-          ),
-          new Date(competition.endTime),
-        ]),
+      : min(
+          [
+            lastPerformance && new Date(lastPerformance),
+            ioCircuitChallengeNode?.selfscoringClose &&
+              new Date(ioCircuitChallengeNode?.selfscoringClose),
+            new Date(competition.endTime),
+          ].filter(Boolean),
+        ),
     venue: competition.facility.trim(),
     event: competition.title.trim(),
     subEvent: null,
@@ -506,10 +490,7 @@ export async function getIoClimbAlongCompetitionEvent(
         ?.replace("Male", "Open") || null,
     team: null,
     noParticipants,
-    problems: problems.length
-      ? problems.filter((problem) => ioCircuitIds.includes(problem.circuitId))
-          .length
-      : noProblems,
+    problems: noProblems,
     problemByProblem: problems.length
       ? Array.from(
           problems

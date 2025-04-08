@@ -12,6 +12,10 @@ export const ClimbAlongCompetitions = proxyCollection<Climbalong.Competition>(
 export const ClimbAlongCircuits = proxyCollection<Climbalong.Circuit>(
   "climbalong_circuits",
 );
+export const ClimbAlongNodes =
+  proxyCollection<Climbalong.Node>("climbalong_nodes");
+export const ClimbAlongEdges =
+  proxyCollection<Climbalong.Edge>("climbalong_edges");
 
 export const ClimbAlongRounds =
   proxyCollection<Climbalong.Round>("climbalong_rounds");
