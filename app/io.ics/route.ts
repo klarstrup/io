@@ -9,9 +9,10 @@ import { NextResponse } from "next/server";
 import type { EventEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import {
+  Climbalong,
   getIoClimbAlongCompetitionEventEntry,
-  ioClimbAlongEventsWithIds,
 } from "../../sources/climbalong";
+import { ClimbAlongAthletes } from "../../sources/climbalong.server";
 import { getSongkickEvents } from "../../sources/songkick";
 import {
   getSportsTimingEventEntry,
@@ -33,8 +34,22 @@ export async function GET() {
   const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
 
   eventsPromises.push(
-    ...ioClimbAlongEventsWithIds.map(([eventId, ioId]) =>
-      getIoClimbAlongCompetitionEventEntry(eventId, ioId),
+    ...(user?.dataSources?.some(
+      (source) => source.source === DataSource.ClimbAlong,
+    )
+      ? await ClimbAlongAthletes.find<Climbalong.Athlete>({
+          userId: {
+            $in: user?.dataSources
+              ?.filter((source) => source.source === DataSource.ClimbAlong)
+              .map((source) => source.config.userId),
+          },
+        }).toArray()
+      : []
+    ).map((athlete) =>
+      getIoClimbAlongCompetitionEventEntry(
+        athlete.competitionId,
+        athlete.athleteId,
+      ),
     ),
     ...(user?.dataSources?.some(
       (source) => source.source === DataSource.TopLogger,

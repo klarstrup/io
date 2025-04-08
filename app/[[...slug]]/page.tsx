@@ -9,10 +9,8 @@ import LoadMore from "../../components/LoadMore";
 import UserStuff from "../../components/UserStuff";
 import type { EventEntry } from "../../lib";
 import { Users } from "../../models/user.server";
-import {
-  getIoClimbAlongCompetitionEventEntry,
-  ioClimbAlongEventsWithIds,
-} from "../../sources/climbalong";
+import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
+import { ClimbAlongAthletes } from "../../sources/climbalong.server";
 import { getIoOnsightCompetitionEventEntries } from "../../sources/onsight";
 import { getSongkickEvents } from "../../sources/songkick";
 import {
@@ -106,8 +104,25 @@ const getData = async (
 
   const noDisciplines = !isNonEmptyArray(disciplines);
   if (noDisciplines || disciplines?.includes("bouldering")) {
-    for (const [eventId, ioId] of ioClimbAlongEventsWithIds) {
-      eventsPromises.push(getIoClimbAlongCompetitionEventEntry(eventId, ioId));
+    if (
+      user?.dataSources?.some(
+        (source) => source.source === DataSource.ClimbAlong,
+      )
+    ) {
+      for await (const athlete of ClimbAlongAthletes.find({
+        userId: {
+          $in: user.dataSources
+            .filter((source) => source.source === DataSource.ClimbAlong)
+            .map((source) => source.config.userId),
+        },
+      })) {
+        eventsPromises.push(
+          getIoClimbAlongCompetitionEventEntry(
+            athlete.competitionId,
+            athlete.athleteId,
+          ),
+        );
+      }
     }
 
     if (
@@ -131,11 +146,13 @@ const getData = async (
 
     eventsPromises.push(getIoOnsightCompetitionEventEntries());
   }
+
   if (noDisciplines || disciplines?.includes("running")) {
     for (const [eventId, ioId] of ioSportsTimingEventsWithIds) {
       eventsPromises.push(getSportsTimingEventEntry(eventId, ioId));
     }
   }
+
   if (noDisciplines || disciplines?.includes("metal")) {
     eventsPromises.push(getSongkickEvents());
   }

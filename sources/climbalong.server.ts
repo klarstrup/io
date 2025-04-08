@@ -13,7 +13,16 @@ export const ClimbAlongCircuits = proxyCollection<Climbalong.Circuit>(
   "climbalong_circuits",
 );
 
-export const ClimbAlongPerformances =
-  proxyCollection<Climbalong.Performance>(
-    "climbalong_performances",
-  );
+export const ClimbAlongRounds =
+  proxyCollection<Climbalong.Round>("climbalong_rounds");
+
+export const ClimbAlongLanes =
+  proxyCollection<Climbalong.Lane>("climbalong_lanes");
+
+export const ClimbAlongProblems = proxyCollection<Climbalong.Problem>(
+  "climbalong_problems",
+);
+
+export const ClimbAlongPerformances = proxyCollection<Climbalong.Performance>(
+  "climbalong_performances",
+);

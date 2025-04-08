@@ -2,8 +2,12 @@ import { auth } from "../../../auth";
 import { Climbalong } from "../../../sources/climbalong";
 import {
   ClimbAlongAthletes,
+  ClimbAlongCircuits,
   ClimbAlongCompetitions,
+  ClimbAlongLanes,
   ClimbAlongPerformances,
+  ClimbAlongProblems,
+  ClimbAlongRounds,
 } from "../../../sources/climbalong.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
@@ -60,6 +64,62 @@ export const GET = () =>
             { upsert: true },
           );
           yield athlete;
+
+          const lanes = (await (
+            await fetch(
+              `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/lanes`,
+            )
+          ).json()) as Climbalong.Lane[];
+          for (const lane of lanes) {
+            await ClimbAlongLanes.updateOne(
+              { laneId: lane.laneId },
+              { $set: { ...lane } },
+              { upsert: true },
+            );
+            yield lane;
+
+            const circuits = (await (
+              await fetch(
+                `https://comp.climbalong.com/api/v0/lanes/${lane.laneId}/circuits`,
+              )
+            ).json()) as Climbalong.Circuit[];
+            for (const circuit of circuits) {
+              await ClimbAlongCircuits.updateOne(
+                { circuitId: circuit.circuitId },
+                { $set: { ...circuit } },
+                { upsert: true },
+              );
+              yield circuit;
+
+              const problems = (await (
+                await fetch(
+                  `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/problems`,
+                )
+              ).json()) as Climbalong.Problem[];
+              for (const problem of problems) {
+                await ClimbAlongProblems.updateOne(
+                  { problemId: problem.problemId },
+                  { $set: { ...problem } },
+                  { upsert: true },
+                );
+                yield problem;
+              }
+            }
+          }
+
+          const rounds = (await (
+            await fetch(
+              `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/rounds`,
+            )
+          ).json()) as Climbalong.Round[];
+          for (const round of rounds) {
+            await ClimbAlongRounds.updateOne(
+              { roundId: round.roundId },
+              { $set: { ...round } },
+              { upsert: true },
+            );
+            yield round;
+          }
 
           const circuitChallengeNodesGroupedByLane = (await (
             await fetch(

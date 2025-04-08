@@ -22,17 +22,25 @@ import {
   MINUTE_IN_SECONDS,
   WEEK_IN_SECONDS,
   cotemporality,
-  getMaxAgeFactor,
   percentile,
   unique,
 } from "../utils";
+import {
+  ClimbAlongAthletes,
+  ClimbAlongCircuits,
+  ClimbAlongCompetitions,
+  ClimbAlongLanes,
+  ClimbAlongPerformances,
+  ClimbAlongProblems,
+  ClimbAlongRounds,
+} from "./climbalong.server";
 
 export namespace Climbalong {
   export type CircuitChallengeNodesGroupedByLane = [
     number,
     {
       nodeId: number;
-      nodeType: number;
+      nodeType: NodeType.CircuitChallenge;
       competitionId: number;
       inputsFrom: {
         nodeId: number;
@@ -59,14 +67,22 @@ export namespace Climbalong {
   export interface Athlete {
     athleteId: number;
     competitionId: number;
-    bib: number;
+    bib: null;
     name: string;
-    dateOfBirth: null;
+    dateOfBirth: Date;
     sex: Sex;
-    category: null;
-    nationality: null;
-    club: null;
+    category: string;
+    nationality: null | string;
+    club: null | string;
     tags: unknown;
+    checkedIn: boolean;
+    countryId: null;
+    countryName: null;
+    countryCode: null;
+    flagLink: null;
+    userId: string;
+    region: null | string;
+    didNotShow: boolean | null;
   }
 
   export enum Sex {
@@ -167,6 +183,10 @@ export namespace Climbalong {
     circuitId: number;
     title: string;
   }
+
+  export enum NodeType {
+    CircuitChallenge = 309,
+  }
 }
 export enum HoldScore {
   "TOP" = 4,
@@ -183,96 +203,6 @@ const isTop = (holdScore: HoldScore | HoldScore2) =>
 const isZone = (holdScore: HoldScore | HoldScore2) =>
   holdScore === HoldScore.ZONE || holdScore === HoldScore2.ZONE;
 
-const fetchClimbalong = async <T>(
-  input: string | URL,
-  init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  dbFetch<T>(
-    `https://comp.climbalong.com/api${String(input)}`,
-    init,
-    dbFetchOptions,
-  );
-
-const getCompetition = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Competition>(
-    `/v0/competitions/${id}`,
-    undefined,
-    dbFetchOptions,
-  );
-const getCompetitionAthletes = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Athlete[]>(
-    `/v0/competitions/${id}/athletes`,
-    undefined,
-    dbFetchOptions,
-  );
-const getCompetitionRounds = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Round[]>(
-    `/v1/competitions/${id}/rounds`,
-    undefined,
-    dbFetchOptions,
-  );
-const getCompetitionLanes = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Lane[]>(
-    `/v1/competitions/${id}/lanes`,
-    undefined,
-    dbFetchOptions,
-  );
-
-const getLaneCircuits = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Circuit[]>(
-    `/v0/lanes/${id}/circuits`,
-    undefined,
-    dbFetchOptions,
-  );
-const getLanesCircuits = (
-  ids: number[],
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => Promise.all(ids.map((id) => getLaneCircuits(id, dbFetchOptions)));
-
-const getCircuitPerformances = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Performance[]>(
-    `/v0/circuits/${id}/performances`,
-    undefined,
-    dbFetchOptions,
-  );
-const getCircuitsPerformances = (
-  ids: number[],
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => Promise.all(ids.map((id) => getCircuitPerformances(id, dbFetchOptions)));
-
-const getCircuitProblems = (
-  id: number,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  fetchClimbalong<Climbalong.Problem[]>(
-    `/v0/circuits/${id}/problems`,
-    undefined,
-    dbFetchOptions,
-  );
-const getCircuitsProblems = (
-  ids: number[],
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => Promise.all(ids.map((id) => getCircuitProblems(id, dbFetchOptions)));
-
 const TDB_BASE = 1000;
 const TDB_FLASH_MULTIPLIER = 1.1;
 const PTS_SEND = 100;
@@ -280,12 +210,11 @@ const PTS_FLASH_BONUS = 20;
 
 export async function getIoClimbAlongCompetitionEvent(
   competitionId: number,
-  ioId?: number,
-  sex?: boolean,
+  athleteId: number,
 ) {
-  const competition = await getCompetition(competitionId, {
-    maxAge: WEEK_IN_SECONDS,
-  });
+  const competition = await ClimbAlongCompetitions.findOne({ competitionId });
+  if (!competition) throw new Error("???");
+
   const competitionTime = cotemporality({
     start: new Date(competition.startTime),
     end: new Date(competition.endTime),
@@ -308,74 +237,25 @@ export async function getIoClimbAlongCompetitionEvent(
             : undefined
           : WEEK_IN_SECONDS;
 
-  let athletes = await getCompetitionAthletes(competitionId, { maxAge });
+  const athletes = await ClimbAlongAthletes.find({ competitionId }).toArray();
+  const io = athletes.find((athlete) => athlete.athleteId === athleteId);
+  const rounds = await ClimbAlongRounds.find({ competitionId }).toArray();
+  const lanes = await ClimbAlongLanes.find({ competitionId }).toArray();
+  const circuits = await ClimbAlongCircuits.find({ competitionId }).toArray();
+  const performances = await ClimbAlongPerformances.find({
+    circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
+  }).toArray();
+  console.log(circuits);
+  const problems = await ClimbAlongProblems.find({
+    circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
+  }).toArray();
 
-  const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io",
-  );
-
-  if (io && sex) {
-    athletes = athletes.filter((athlete) => athlete.sex === io.sex);
-  }
-
-  const rounds = (await getCompetitionRounds(competitionId, { maxAge })).filter(
-    ({ title }) => !title.match(/final/gi), // Only score quals
-  );
-  const lanes = (await getCompetitionLanes(competitionId, { maxAge })).filter(
-    (lane) => rounds.some(({ roundId }) => lane.roundId === roundId),
-  );
-  const circuits = (
-    await getLanesCircuits(
-      lanes.map(({ laneId }) => laneId),
+  const circuitChallengeNodesGroupedByLane =
+    await dbFetch<Climbalong.CircuitChallengeNodesGroupedByLane>(
+      `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
+      undefined,
       { maxAge },
-    )
-  ).flat();
-  const performances = (
-    await getCircuitsPerformances(
-      circuits.map(({ circuitId }) => circuitId),
-      { maxAge },
-    )
-  ).flat();
-  const problems = (
-    await getCircuitsProblems(
-      circuits.map(({ circuitId }) => circuitId),
-      { maxAge },
-    )
-  ).flat();
-
-  const circuitChallengeNodesGroupedByLane = await dbFetch<
-    [
-      number,
-      {
-        nodeId: number;
-        nodeType: number;
-        competitionId: number;
-        inputsFrom: {
-          nodeId: number;
-          edgeId: number;
-        }[];
-        outputEdgeIds: number[];
-        inputTitle: string;
-        nodeOutputType: {
-          scoreSystem: string;
-          numberOfAttemptsCounted: boolean;
-          numberOfScoringHolds: number;
-          ranked: boolean;
-        };
-        circuit: Climbalong.Circuit;
-        selfscoring: boolean;
-        selfscoringOpen: Date | null;
-        selfscoringClose: Date | null;
-        pickTopPerformancesAmount: number;
-        outputRanked: boolean;
-        nodeName: string;
-      }[],
-    ][]
-  >(
-    `https://comp.climbalong.com/api/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
-    undefined,
-    { maxAge },
-  );
+    );
 
   const noProblems = new Set(problems.map(({ title }) => title)).size || NaN;
 
@@ -509,7 +389,11 @@ export async function getIoClimbAlongCompetitionEvent(
           } | null;
         }[];
         ranked: boolean;
-        processedBy: { nodeId: number; nodeType: number; edge: number }[];
+        processedBy: {
+          nodeId: number;
+          nodeType: Climbalong.NodeType;
+          edge: number;
+        }[];
       }>(
         `https://comp.climbalong.com/api/v0/nodes/${lane.endNodeId}/edges/${lane.endEdgeId}`,
         undefined,
@@ -619,7 +503,7 @@ export async function getIoClimbAlongCompetitionEvent(
       ioCircuitChallenge?.title
         ?.replace("Mænd/", "")
         ?.replace("Male / ", "")
-        ?.replace("Male", "Open") || (io && sex ? io.sex : null),
+        ?.replace("Male", "Open") || null,
     team: null,
     noParticipants,
     problems: problems.length
@@ -689,23 +573,13 @@ export async function getIoClimbAlongCompetitionEvent(
 
 export async function getIoClimbAlongCompetitionEventEntry(
   competitionId: number,
-  ioId?: number,
+  athleteId: number,
 ): Promise<EventEntry> {
-  const competition = await getCompetition(competitionId, {
-    maxAge: WEEK_IN_SECONDS,
-  });
+  const competition = await ClimbAlongCompetitions.findOne({ competitionId });
 
-  const maxAge: NonNullable<Parameters<typeof dbFetch>[2]>["maxAge"] =
-    MINUTE_IN_SECONDS *
-    getMaxAgeFactor({
-      start: new Date(competition.startTime),
-      end: new Date(competition.endTime),
-    });
-  const athletes = await getCompetitionAthletes(competitionId, { maxAge });
-
-  const io = athletes.find(({ athleteId, name }) =>
-    ioId ? athleteId === ioId : name.startsWith("Io ") || name === "Io",
-  );
+  if (!competition) {
+    throw new Error("???");
+  }
 
   return {
     source: EventSource.ClimbAlong,
@@ -716,8 +590,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
     event: competition.title.trim(),
     subEvent: null,
     location: competition.address,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
-    ioId: io?.athleteId || ioId!,
+    ioId: athleteId,
     start: new Date(competition.startTime),
     end: new Date(competition.endTime),
   } as const;
