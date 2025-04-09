@@ -1,6 +1,7 @@
 import { addHours, addMinutes } from "date-fns";
 import {
   DistanceRaceScore,
+  EventEntry,
   EventSource,
   SCORING_SOURCE,
   SCORING_SYSTEM,
@@ -202,7 +203,7 @@ export async function getSportsTimingEventEntries(ioName: string) {
         ioId: result.Id,
         start: addMinutes(addHours(new Date(event.RawDate), 8), 30),
         end: addHours(new Date(event.RawDate), 16),
-      } as const;
+      } satisfies EventEntry;
     }),
   );
 }
