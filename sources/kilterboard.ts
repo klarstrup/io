@@ -1,5 +1,3 @@
-import { proxyCollection } from "../utils.server";
-
 export namespace KilterBoard {
   export interface Ascent {
     uuid: string;
@@ -35,13 +33,6 @@ export namespace KilterBoard {
     updated_at: Date;
   }
 }
-
-export const KilterBoardAscents = proxyCollection<KilterBoard.Ascent>(
-  "kilterboard_ascents",
-);
-
-export const KilterBoardBids =
-  proxyCollection<KilterBoard.Bid>("kilterboard_bids");
 
 export const difficulty_grades = [
   { boulder_name: "1a/V0", difficulty: 1 },
