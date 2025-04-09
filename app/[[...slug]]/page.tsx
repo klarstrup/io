@@ -13,10 +13,7 @@ import { getIoClimbAlongCompetitionEventEntry } from "../../sources/climbalong";
 import { ClimbAlongAthletes } from "../../sources/climbalong.server";
 import { getIoOnsightCompetitionEventEntries } from "../../sources/onsight";
 import { getSongkickEvents } from "../../sources/songkick";
-import {
-  getSportsTimingEventEntry,
-  ioSportsTimingEventsWithIds,
-} from "../../sources/sportstiming";
+import { getSportsTimingEventEntries } from "../../sources/sportstiming";
 import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
 import { DataSource } from "../../sources/utils";
 import { isNonEmptyArray } from "../../utils";
@@ -159,8 +156,19 @@ const getData = async (
   }
 
   if (noDisciplines || disciplines?.includes("running")) {
-    for (const [eventId, ioId] of ioSportsTimingEventsWithIds) {
-      eventsPromises.push(getSportsTimingEventEntry(eventId, ioId));
+    if (
+      user?.dataSources?.some(
+        (source) => source.source === DataSource.Sportstiming,
+      )
+    ) {
+      const dataSources = user.dataSources.filter(
+        (source) => source.source === DataSource.Sportstiming,
+      );
+      for (const dataSource of dataSources) {
+        eventsPromises.push(
+          getSportsTimingEventEntries(dataSource.config.name),
+        );
+      }
     }
   }
 

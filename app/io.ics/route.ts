@@ -14,10 +14,7 @@ import {
 } from "../../sources/climbalong";
 import { ClimbAlongAthletes } from "../../sources/climbalong.server";
 import { getSongkickEvents } from "../../sources/songkick";
-import {
-  getSportsTimingEventEntry,
-  ioSportsTimingEventsWithIds,
-} from "../../sources/sportstiming";
+import { getSportsTimingEventEntries } from "../../sources/sportstiming";
 import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
 import { DataSource } from "../../sources/utils";
 import { MINUTE_IN_SECONDS } from "../../utils";
@@ -31,7 +28,11 @@ export const revalidate = 600; // 10 minutes
 export async function GET() {
   const user = await Users.findOne();
 
-  const eventsPromises: (Promise<EventEntry> | EventEntry)[] = [];
+  const eventsPromises: (
+    | Promise<EventEntry[]>
+    | Promise<EventEntry>
+    | EventEntry
+  )[] = [];
 
   eventsPromises.push(
     ...(user?.dataSources?.some(
@@ -66,19 +67,21 @@ export async function GET() {
     ).map((compUser) =>
       getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
     ),
-  );
-
-  eventsPromises.push(
-    ...ioSportsTimingEventsWithIds.map(([eventId, ioId]) =>
-      getSportsTimingEventEntry(eventId, ioId),
-    ),
+    ...(user?.dataSources?.some(
+      (source) => source.source === DataSource.Sportstiming,
+    )
+      ? user.dataSources
+          .filter((source) => source.source === DataSource.Sportstiming)
+          .map((source) => getSportsTimingEventEntries(source.config.name))
+      : []),
   );
 
   eventsPromises.push(...(await getSongkickEvents()));
 
-  const events = await Promise.all(eventsPromises).then((events) =>
-    events.sort((a, b) => differenceInMilliseconds(b.start, a.start)),
-  );
+  const events = (await Promise.all(eventsPromises))
+    .flat()
+    .sort((a, b) => differenceInMilliseconds(b.start, a.start));
+
   const calendar = new ICalCalendar({
     name: "ioCal",
     ttl: MINUTE_IN_SECONDS,

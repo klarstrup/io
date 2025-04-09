@@ -158,6 +158,7 @@ export const GET = () =>
                       ),
                     _io_NumberOfParticipants: noParticipants,
                     _io_TotalDistance: distance,
+                    _io_EventId: event.EventId,
                   },
                 },
                 { upsert: true },

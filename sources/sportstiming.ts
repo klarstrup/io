@@ -1,7 +1,6 @@
 import { addHours, addMinutes } from "date-fns";
 import {
   DistanceRaceScore,
-  EventEntry,
   EventSource,
   SCORING_SOURCE,
   SCORING_SYSTEM,
@@ -74,6 +73,7 @@ export namespace SportsTiming {
   export interface MongoFavoriteUpdate extends FavoriteUpdate {
     _io_TotalDistance: number;
     _io_NumberOfParticipants: number;
+    _io_EventId: number;
   }
 
   export enum LastSplitName {
@@ -168,47 +168,41 @@ export async function getSportsTimingEventResults(
   } as const;
 }
 
-export async function getSportsTimingEventEntry(
-  eventId: number,
-  ioId: number,
-): Promise<EventEntry> {
-  const event = await SportstimingEvents.findOne({ EventId: eventId });
-  if (!event) throw new Error("???");
+export async function getSportsTimingEventEntries(ioName: string) {
+  const results = await SportstimingFavorites.find({
+    Name: new RegExp(ioName, "i"),
+  }).toArray();
 
-  return {
-    source: EventSource.Sportstiming,
-    type: "competition",
-    discipline: "running",
-    id: eventId,
-    event: event.Name.replace("Copenhagen Urban", "")
-      .replace("Copenhagen Beach", "")
-      .replace("Refshaleøen", "")
-      .replace("Strandparken", "")
-      .replace("  ", " "),
-    subEvent: null,
-    venue:
-      event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
-        .replace("Copenhagen Urban", "Refshaleøen")
-        .replace("Refshaleøen, København", "Refshaleøen")
-        .replace("København S", "Amager Strandpark") ||
-      (event.Name.includes("Strandparken") && "Amager Strandpark") ||
-      null,
-    location: null,
-    ioId,
-    start: addMinutes(addHours(new Date(event.RawDate), 8), 30),
-    end: addHours(new Date(event.RawDate), 16),
-  } as const;
+  return Promise.all(
+    results.map(async (result) => {
+      const event = await SportstimingEvents.findOne({
+        EventId: result._io_EventId,
+      });
+      if (!event) throw new Error("???");
+
+      return {
+        source: EventSource.Sportstiming,
+        type: "competition",
+        discipline: "running",
+        id: result._io_EventId,
+        event: event.Name.replace("Copenhagen Urban", "")
+          .replace("Copenhagen Beach", "")
+          .replace("Refshaleøen", "")
+          .replace("Strandparken", "")
+          .replace("  ", " "),
+        subEvent: null,
+        venue:
+          event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
+            .replace("Copenhagen Urban", "Refshaleøen")
+            .replace("Refshaleøen, København", "Refshaleøen")
+            .replace("København S", "Amager Strandpark") ||
+          (event.Name.includes("Strandparken") && "Amager Strandpark") ||
+          null,
+        location: null,
+        ioId: result.Id,
+        start: addMinutes(addHours(new Date(event.RawDate), 8), 30),
+        end: addHours(new Date(event.RawDate), 16),
+      } as const;
+    }),
+  );
 }
-
-export const ioSportsTimingEventsWithIds = [
-  [12920, 6076514],
-  [12576, 5298030],
-  [11107, 5177996],
-  [10694, 5096890],
-  [8962, 4433356],
-  [8940, 3999953],
-  [7913, 3825124],
-  [5805, 2697593],
-  [5647, 2619935],
-  [4923, 2047175],
-] as const;
