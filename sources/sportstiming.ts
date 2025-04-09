@@ -90,7 +90,7 @@ const getAllNordicRaceEvents = async () =>
   (
     await Promise.all([
       dbFetch<{ Events: SportsTiming.Event[] }>(
-        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race&maxResults=100&page=1&federation=",
+        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=&maxResults=10000",
         {
           headers: {
             referer: "https://www.sportstiming.dk/events",
@@ -100,7 +100,7 @@ const getAllNordicRaceEvents = async () =>
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
       dbFetch<{ Events: SportsTiming.Event[] }>(
-        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race&maxResults=100&page=1&federation=",
+        "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=&maxResults=10000",
         {
           headers: {
             referer: "https://www.sportstiming.dk/results",
