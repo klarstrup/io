@@ -22,7 +22,7 @@ import type { CompUser } from "../api/toplogger_scrape/route";
 import "../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
 
-const monthsPerPage = 2;
+const monthsPerPage = 3;
 
 export default async function Home(props: {
   params: Promise<{ slug?: string[] }>;
