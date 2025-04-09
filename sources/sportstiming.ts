@@ -81,17 +81,32 @@ export namespace SportsTiming {
   }
 }
 
+const sportstimingHeaders: HeadersInit = {
+  "x-requested-with": "XMLHttpRequest",
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+};
 const getAllNordicRaceEvents = async () =>
   (
     await Promise.all([
       dbFetch<{ Events: SportsTiming.Event[] }>(
         "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race&maxResults=100&page=1&federation=",
-        { headers: { referer: "https://www.sportstiming.dk/events" } },
+        {
+          headers: {
+            referer: "https://www.sportstiming.dk/events",
+            ...sportstimingHeaders,
+          },
+        },
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
       dbFetch<{ Events: SportsTiming.Event[] }>(
         "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race&maxResults=100&page=1&federation=",
-        { headers: { referer: "https://www.sportstiming.dk/results" } },
+        {
+          headers: {
+            referer: "https://www.sportstiming.dk/results",
+            ...sportstimingHeaders,
+          },
+        },
         { maxAge: WEEK_IN_SECONDS },
       ).then(({ Events }) => Events),
     ])
@@ -107,7 +122,7 @@ const getEventParticipantFavoriteUpdate = async (
   return (
     await dbFetch<SportsTiming.FavoriteUpdate[]>(
       `https://www.sportstiming.dk/event/${eventId}/favorites/UpdateFavorites`,
-      { headers: { cookie } },
+      { headers: { cookie, ...sportstimingHeaders } },
       dbFetchOptions,
     )
   ).find(({ Id }) => Id === participantId);
@@ -148,7 +163,7 @@ export async function getSportsTimingEventResults(
   const $ = cheerio.load(
     await dbFetch(
       `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
-      undefined,
+      { headers: { ...sportstimingHeaders } },
       { parseJson: false, maxAge },
     ),
   );
