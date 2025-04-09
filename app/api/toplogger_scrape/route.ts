@@ -1513,7 +1513,7 @@ export const GET = (request: NextRequest) =>
                     climbsVariables,
                     climbsResponse.data!,
                   );
-                  console.log(climbsResponse.data?.climbs.data);
+
                   yield updateResult;
                 }
               }

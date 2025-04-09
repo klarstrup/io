@@ -46,8 +46,6 @@ export const GET = () =>
           })
         ).text();
 
-        console.log(authSigninRefreshTokenResponse);
-
         const authSigninRefreshTokenResponseJSON = JSON.parse(
           authSigninRefreshTokenResponse,
         ) as unknown;

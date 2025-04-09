@@ -312,15 +312,30 @@ function UserStuffSourceForm({
             />
           </label>
           <label className="flex gap-1">
-            Username (email):{" "}
+            Username (Email):{" "}
             <input
               type="text"
               {...register(`dataSources.${index}.config.username`)}
-              placeholder="User ID"
+              placeholder="Username (Email)"
               className="flex-1"
             />
           </label>
         </>
+      );
+      break;
+    case DataSource.Sportstiming:
+      formElements = (
+        <label className="flex gap-1">
+          Name:
+          <input
+            type="text"
+            {...register(`dataSources.${index}.config.name`, {
+              required: true,
+            })}
+            placeholder="Name"
+            className="flex-1"
+          />
+        </label>
       );
       break;
     default:
@@ -622,6 +637,13 @@ export default function UserStuffSourcesForm({
                       ...initialSourceMeta,
                       source: DataSource.Onsight,
                       config: { token: "", username: "" },
+                    });
+                    break;
+                  case DataSource.Sportstiming:
+                    append({
+                      ...initialSourceMeta,
+                      source: DataSource.Sportstiming,
+                      config: { name: "" },
                     });
                     break;
 

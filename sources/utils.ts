@@ -42,12 +42,17 @@ type UserDataSourceConfig =
       source: DataSource.Crimpd;
       config: { token: string };
     }
-    | {
+  | {
       source: DataSource.ClimbAlong;
       config: { token: string; userId: string };
-    }| {
+    }
+  | {
       source: DataSource.Onsight;
       config: { token: string; username: string };
+    }
+  | {
+      source: DataSource.Sportstiming;
+      config: { name: string };
     };
 
 export interface UserDataSourceMeta {
@@ -78,8 +83,8 @@ export enum DataSource {
   Crimpd = "crimpd",
   ClimbAlong = "climbalong",
   Onsight = "onsight",
-  /* These are special and not configurable to the user for various reasons
   Sportstiming = "sportstiming",
+  /* These are special and not configurable to the user for various reasons
   Songkick = "songkick",
   */
 }
@@ -94,6 +99,7 @@ export const dataSourceGroups = {
     DataSource.Crimpd,
     DataSource.ClimbAlong,
     DataSource.Onsight,
+    DataSource.Sportstiming,
   ],
   food: [DataSource.MyFitnessPal],
   events: [DataSource.ICal],

@@ -12,6 +12,7 @@ import { OnsightCompetitionScores } from "../../../sources/onsight.server";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DataSource } from "../../../sources/utils";
 import { TopLoggerGraphQL } from "../../../utils/graphql";
+import { SportstimingFavorites } from "../../../sources/sportstiming.server";
 
 export async function* materializeAllToploggerWorkouts({
   user,
@@ -659,7 +660,6 @@ export async function* materializeAllOnsightWorkouts({
   for (const dataSource of user.dataSources || []) {
     if (dataSource.source !== DataSource.Onsight) continue;
 
-    console.log(dataSource.config);
     yield* OnsightCompetitionScores.aggregate([
       { $match: { Username: dataSource.config.username } },
       {
@@ -1035,6 +1035,68 @@ export async function* materializeAllClimbalongWorkouts({
   }
 
   yield "materializeAllClimbalongWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
+}
+
+export async function* materializeAllSportstimingWorkouts({
+  user,
+}: {
+  user: Session["user"];
+}) {
+  yield "materializeAllSportstimingWorkouts: start";
+  const t = new Date();
+
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.Sportstiming) continue;
+
+    yield* SportstimingFavorites.aggregate([
+      { $match: { Name: new RegExp(dataSource.config.name, "i") } },
+      {
+        $project: {
+          _id: 0,
+          id: "$_id",
+          userId: { $literal: user.id },
+          createdAt: "$StartTime",
+          updatedAt: "$StartTime",
+          workedOutAt: "$StartTime",
+          source: { $literal: WorkoutSource.Sportstiming },
+          exercises: [
+            {
+              exerciseId: 518,
+              displayName: "$DistanceName",
+              sets: [
+                {
+                  inputs: [
+                    { unit: Unit.SEC, value: "$LastSplitTimeSeconds" },
+                    { unit: Unit.M, value: "$_io_TotalDistance" },
+                    {
+                      unit: Unit.MinKM,
+                      value: {
+                        $divide: [
+                          { $divide: ["$LastSplitTimeSeconds", 60] },
+                          { $divide: ["$_io_TotalDistance", 1000] },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ] as const);
+  }
+
+  yield "materializeAllSportstimingWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
 }
