@@ -7,7 +7,7 @@ import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { randomSliceOfSize } from "../../../utils";
+import { randomSliceOfSize, shuffle } from "../../../utils";
 import {
   fetchGraphQLQuery,
   type MongoGraphQLObject,
@@ -25,15 +25,14 @@ const climbsQuery = gql`
   query climbs(
     $gymId: ID!
     $climbType: ClimbType!
-    $isReported: Boolean
     $userId: ID
     $compRoundId: ID
   ) {
     climbs(
       gymId: $gymId
       climbType: $climbType
-      isReported: $isReported
       compRoundId: $compRoundId
+      includeHidden: true
     ) {
       pagination {
         total
@@ -394,6 +393,7 @@ const climbLogsQuery = gql`
           pointsBase
           pointsBonus
           pointsJson
+          climbId
           __typename
         }
 
@@ -887,6 +887,7 @@ const compsQuery = gql`
     id
     compGyms {
       id
+      gymId
       gym {
         id
         iconPath
@@ -928,6 +929,7 @@ const compsQuery = gql`
     isMultiRound(includeHidden: $isAdmin)
     compGyms {
       id
+      gymId
       __typename
     }
     ...compForDetails
@@ -1051,6 +1053,343 @@ const userMeStoreQuery = gql`
   }
 `;
 
+const compRoundUsersForRankingQuery = gql`
+  query compRoundUsersForRanking(
+    $gymId: ID!
+    $compId: ID!
+    $compRoundId: ID
+    $compRoundUserIdPage: ID
+    $search: String
+    $pagination: PaginationInputCompRoundUsers
+  ) {
+    ranking: compRoundUsers(
+      gymId: $gymId
+      compId: $compId
+      compRoundId: $compRoundId
+      compRoundUserIdPage: $compRoundUserIdPage
+      search: $search
+      pagination: $pagination
+    ) {
+      pagination {
+        ...pagination
+        __typename
+      }
+      data {
+        ...compRoundUserForRanking
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment compRoundUserForRankingClimbUser on CompRoundUser {
+    id
+    userId
+    climbsWithScoresCount
+    __typename
+  }
+
+  fragment pagination on Pagination {
+    total
+    page
+    perPage
+    orderBy {
+      key
+      order
+      __typename
+    }
+    __typename
+  }
+
+  fragment compRoundUserForRanking on CompRoundUser {
+    id
+    score
+    totMaxZones
+    totMaxClips
+    totMaxHolds
+    totMinTries
+    totMinDuration
+    climbsWithScoresCount
+    compUser {
+      id
+      fullName
+      disqualified
+      __typename
+    }
+    user {
+      id
+      avatarUploadPath
+      __typename
+    }
+    ...compRoundUserForRankingClimbUser
+    __typename
+  }
+`;
+
+const compClimbUsersForRankingClimbUserQuery = gql`
+  query compClimbUsersForRankingClimbUser(
+    $gymId: ID!
+    $compId: ID!
+    $compRoundId: ID
+    $userId: ID
+    $pagination: PaginationInputCompClimbUsers
+  ) {
+    compClimbUsers(
+      gymId: $gymId
+      compId: $compId
+      compRoundId: $compRoundId
+      userId: $userId
+      pointsMin: 0.0001
+      pagination: $pagination
+    ) {
+      pagination {
+        ...pagination
+        __typename
+      }
+      data {
+        ...compClimbUserForRankingClimbUsers
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment compClimbUserForRankingClimbUsersItem on CompClimbUser {
+    id
+    points
+    tickType
+    climbType
+    userId
+    compId
+    gym {
+      id
+      name
+      __typename
+    }
+    climb {
+      id
+      outAt
+      grade
+      gradeAuto
+      holdColor {
+        id
+        color
+        colorSecondary
+        __typename
+      }
+      name
+      wall {
+        id
+        nameLoc
+        __typename
+      }
+      wallSection {
+        id
+        name
+        __typename
+      }
+      label
+      leadRequired
+      climbSetters {
+        id
+        gymAdmin {
+          id
+          name
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbGroupClimb on ClimbGroupClimb {
+    id
+    climbGroupId
+    order
+    __typename
+  }
+
+  fragment climb on Climb {
+    id
+    climbType
+    positionX
+    positionY
+    gradeAuto
+    grade
+    gradeVotesCount
+    gradeUsersVsAdmin
+    picPath
+    label
+    name
+    zones
+    remarksLoc
+    suitableForKids
+    clips
+    holds
+    height
+    overhang
+    autobelay
+    leadEnabled
+    leadRequired
+    ratingsAverage
+    ticksCount
+    inAt
+    outAt
+    outPlannedAt
+    order
+    setterName
+    climbSetters {
+      id
+      gymAdmin {
+        id
+        name
+        picPath
+        __typename
+      }
+      __typename
+    }
+    wallId
+    wall {
+      id
+      nameLoc
+      labelX
+      labelY
+      __typename
+    }
+    wallSectionId
+    wallSection {
+      id
+      name
+      routesEnabled
+      positionX
+      positionY
+      __typename
+    }
+    holdColorId
+    holdColor {
+      id
+      color
+      colorSecondary
+      nameLoc
+      order
+      __typename
+    }
+    climbGroupClimbs {
+      ...climbGroupClimb
+      __typename
+    }
+    climbTagClimbs {
+      id
+      climbTagId
+      order
+      climbTag {
+        id
+        type
+        nameLoc
+        icon
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbUser on ClimbUser {
+    id
+    climbId
+    grade
+    rating
+    project
+    votedRenew
+    tickType
+    totalTries
+    triedFirstAtDate
+    tickedFirstAtDate
+    updatedAt
+    compClimbUser(compRoundId: $compRoundId) {
+      id
+      points
+      pointsJson
+      climbId
+      tickType
+      __typename
+    }
+    __typename
+  }
+
+  fragment climbWithClimbUser on Climb {
+    id
+    climbUser(userId: $userId) {
+      ...climbUser
+      __typename
+    }
+    __typename
+  }
+
+  fragment compRoundClimb on CompRoundClimb {
+    id
+    points
+    pointsJson
+    climbId
+    leadRequired
+    __typename
+  }
+
+  fragment climbWithCompRoundClimb on Climb {
+    id
+    compRoundClimb(compRoundId: $compRoundId) {
+      ...compRoundClimb
+      __typename
+    }
+    __typename
+  }
+
+  fragment compClimbUserForRoundRankingClimbLogs on CompClimbUser {
+    id
+    totalTries
+    climb {
+      id
+      ...climb
+      ...climbWithClimbUser
+      ...climbWithCompRoundClimb
+      __typename
+    }
+    __typename
+  }
+
+  fragment pagination on Pagination {
+    total
+    page
+    perPage
+    orderBy {
+      key
+      order
+      __typename
+    }
+    __typename
+  }
+
+  fragment compClimbUserForRankingClimbUsers on CompClimbUser {
+    id
+    climbType
+    gym {
+      id
+      nameSlug
+      __typename
+    }
+    climb {
+      id
+      outAt
+      __typename
+    }
+    ...compClimbUserForRankingClimbUsersItem
+    ...compClimbUserForRoundRankingClimbLogs
+    __typename
+  }
+`;
+
 export interface Climb extends MongoGraphQLObject<"Climb"> {
   grade: number;
   gym: Reference;
@@ -1124,6 +1463,8 @@ export interface ClimbUser extends MongoGraphQLObject<"ClimbUser"> {
 
 export interface CompClimbUser extends MongoGraphQLObject<"CompClimbUser"> {
   id: string;
+  climbId: string;
+  compId: string;
   points: number;
   pointsJson: CompClimbUserPointsJSON;
   tickType: number;
@@ -1283,6 +1624,19 @@ export interface ScoreSystemParams {
 }
 export interface CompRoundUser extends MongoGraphQLObject<"CompRoundUser"> {
   participating: boolean;
+  score: number;
+  totMaxZones: number;
+  totMaxClips: number;
+  totMaxHolds: number;
+  totMinTries: number;
+  totMinDuration: number;
+  climbsWithScoresCount: number;
+  compUser: CompUser;
+  user: User;
+  userId: string;
+}
+export interface User extends MongoGraphQLObject<"User"> {
+  avatarUploadPath: null | string;
 }
 export interface CompPoule extends MongoGraphQLObject<"CompPoule"> {
   compRounds: CompRound[];
@@ -1455,7 +1809,9 @@ export const GET = (request: NextRequest) =>
 
         yield userMe;
 
-        const gyms = userMe?.gymUserFavorites.map((fav) => fav.gym);
+        const gyms = shuffle(
+          userMe?.gymUserFavorites.map((fav) => fav.gym) || [],
+        );
 
         if (gyms) {
           for (const gym of gyms) {
@@ -1491,30 +1847,97 @@ export const GET = (request: NextRequest) =>
             for (const comp of compsResponse.data?.comps.data ?? []) {
               for (const poule of comp.compPoules) {
                 for (const round of poule.compRounds) {
-                  const climbsVariables = {
+                  const compRoundUsersForRankingVariables = {
                     gymId: gym.id,
-                    climbType: "boulder",
+                    compId: comp.id,
                     compRoundId: round.id,
-                    userId,
                   };
-                  const climbsResponse = await fetchQuery<{
-                    climbs: {
+                  const compRoundUsersForRankingResponse = await fetchQuery<{
+                    ranking: {
                       pagination: {
                         total: number;
                         perPage: number;
                         page: number;
                       };
-                      data: Climb[];
+                      data: CompRoundUser[];
                     };
-                  }>(climbsQuery, climbsVariables);
-
-                  const updateResult = await normalizeAndUpsertQueryData(
-                    climbsQuery,
-                    climbsVariables,
-                    climbsResponse.data!,
+                  }>(
+                    compRoundUsersForRankingQuery,
+                    compRoundUsersForRankingVariables,
                   );
 
+                  const updateResult = await normalizeAndUpsertQueryData(
+                    compRoundUsersForRankingQuery,
+                    compRoundUsersForRankingVariables,
+                    compRoundUsersForRankingResponse.data!,
+                  );
+                  const bestClimberId =
+                    compRoundUsersForRankingResponse.data?.ranking.data[0]?.user
+                      .id;
                   yield updateResult;
+
+                  for (const userIddd of [userId, bestClimberId].filter(
+                    Boolean,
+                  )) {
+                    const compClimbUsersForRankingClimbUserVariables = {
+                      gymId: gym.id,
+                      userId: userIddd,
+                      compId: comp.id,
+                      compRoundId: round.id,
+                      pagination: {
+                        page: 1,
+                        perPage: 100,
+                        orderBy: [{ key: "points", order: "desc" }],
+                      },
+                    };
+                    const compClimbUsersForRankingClimbUserResponse =
+                      await fetchQuery<{
+                        compClimbUsers: {
+                          pagination: {
+                            total: number;
+                            perPage: number;
+                            page: number;
+                          };
+                          data: CompClimbUser[];
+                        };
+                      }>(
+                        compClimbUsersForRankingClimbUserQuery,
+                        compClimbUsersForRankingClimbUserVariables,
+                      );
+
+                    const compClimbUsersForRankingClimbUserUpdateResult =
+                      await normalizeAndUpsertQueryData(
+                        compClimbUsersForRankingClimbUserQuery,
+                        compClimbUsersForRankingClimbUserVariables,
+                        compClimbUsersForRankingClimbUserResponse.data!,
+                      );
+                    yield compClimbUsersForRankingClimbUserUpdateResult;
+
+                    const climbsVariables = {
+                      gymId: gym.id,
+                      climbType: "boulder",
+                      compRoundId: round.id,
+                      userId: userIddd,
+                    };
+                    const climbsResponse = await fetchQuery<{
+                      climbs: {
+                        pagination: {
+                          total: number;
+                          perPage: number;
+                          page: number;
+                        };
+                        data: Climb[];
+                      };
+                    }>(climbsQuery, climbsVariables);
+
+                    const updateResult = await normalizeAndUpsertQueryData(
+                      climbsQuery,
+                      climbsVariables,
+                      climbsResponse.data!,
+                    );
+
+                    yield updateResult;
+                  }
                 }
               }
             }

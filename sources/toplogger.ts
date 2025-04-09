@@ -3,10 +3,8 @@ import type {
   Climb,
   ClimbLog,
   Comp,
+  CompClimbUser,
   CompGym,
-  CompPoule,
-  CompRound,
-  CompRoundClimb,
   CompUser,
   Gym,
   HoldColor,
@@ -328,30 +326,6 @@ export namespace TopLogger {
   }
 }
 
-const getCompClimbs = async (comp: Comp) => {
-  const poules = await TopLoggerGraphQL.find<CompPoule>({
-    compId: comp.id,
-    __typename: "CompPoule",
-  }).toArray();
-
-  const rounds = await TopLoggerGraphQL.find<CompRound>({
-    compPouleId: { $in: poules.map(({ id }) => id) },
-    __typename: "CompRound",
-  }).toArray();
-
-  const compRoundClimbs = await TopLoggerGraphQL.find<CompRoundClimb>({
-    compRoundId: { $in: rounds.map(({ id }) => id) },
-    __typename: "CompRoundClimb",
-  }).toArray();
-
-  const climbs = await TopLoggerGraphQL.find<Climb>({
-    id: { $in: compRoundClimbs.map(({ climbId }) => climbId) },
-    __typename: "Climb",
-  }).toArray();
-
-  return climbs;
-};
-
 export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
   const compUser = await TopLoggerGraphQL.findOne<CompUser>({
     compId,
@@ -383,7 +357,15 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     end: comp.loggableEndAt,
   };
 
-  const climbs = await getCompClimbs(comp);
+  const compClimbUsers = await TopLoggerGraphQL.find<CompClimbUser>({
+    __typename: "CompClimbUser",
+    compId: comp.id,
+  }).toArray();
+
+  const climbs = await TopLoggerGraphQL.find<Climb>({
+    __typename: "Climb",
+    id: { $in: compClimbUsers.map(({ climbId }) => climbId) },
+  }).toArray();
 
   const io = compUser;
   if (!io) throw new Error("io not found");
