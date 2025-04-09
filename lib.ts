@@ -137,34 +137,6 @@ export interface ScrapedAt {
   _io_scrapedAt?: Date;
 }
 
-export interface TomorrowResponseTimelineInterval {
-  startTime: string;
-  values: {
-    cloudCover: number;
-    humidity: number;
-    precipitationIntensity: number;
-    precipitationProbability: number;
-    precipitationType: number;
-    temperatureApparent: number;
-    weatherCode: number;
-    windGust: number;
-    windSpeed: number;
-    sunriseTime: string;
-    sunsetTime: string;
-  };
-}
-
-export interface TomorrowResponse {
-  data: {
-    timelines: {
-      timestep: string;
-      endTime: string;
-      startTime: string;
-      intervals: TomorrowResponseTimelineInterval[];
-    }[];
-  };
-}
-
 export interface VEventWithVCalendar extends VEvent {
   calendar: VCalendar;
 }
@@ -179,17 +151,6 @@ export interface MongoVEventWithVCalendar
     ScrapedAt,
     IcalIoMeta {
   recurrences?: Omit<VEvent, "recurrences">[];
-}
-
-export interface TomorrowIoMeta {
-  _io_geohash: string;
-}
-
-export interface MongoTomorrowInterval
-  extends Omit<TomorrowResponseTimelineInterval, "startTime">,
-    ScrapedAt,
-    TomorrowIoMeta {
-  startTime: Date;
 }
 
 export interface TopLoggerAuthToken {

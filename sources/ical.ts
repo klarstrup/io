@@ -10,29 +10,14 @@ import {
 import type { FilterOperators } from "mongodb";
 import { RRule } from "rrule";
 import { auth } from "../auth";
-import { dbFetch } from "../fetch";
 import type { MongoVEventWithVCalendar } from "../lib";
+import { DEFAULT_TIMEZONE, omit, roundToNearestDay } from "../utils";
 import {
-  DEFAULT_TIMEZONE,
-  MINUTE_IN_SECONDS,
-  omit,
-  roundToNearestDay,
-} from "../utils";
-import {
-  parseICS,
   type CalendarResponse,
   type VCalendar,
   type VEvent,
 } from "../vendor/ical";
 import { IcalEvents } from "./ical.server";
-
-export const fetchAndParseIcal = async (icalUrl: string) =>
-  parseICS(
-    await dbFetch<string>(icalUrl, undefined, {
-      parseJson: false,
-      maxAge: MINUTE_IN_SECONDS,
-    }),
-  );
 
 export function extractIcalCalendarAndEvents(data: CalendarResponse) {
   let calendar: VCalendar | undefined;

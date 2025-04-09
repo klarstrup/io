@@ -1,13 +1,11 @@
 import { createHash } from "crypto";
 import { auth } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
-import {
-  extractIcalCalendarAndEvents,
-  fetchAndParseIcal,
-} from "../../../sources/ical";
+import { extractIcalCalendarAndEvents } from "../../../sources/ical";
 import { IcalEvents } from "../../../sources/ical.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
+import { parseICS } from "../../../vendor/ical";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +20,7 @@ export const GET = () =>
       if (dataSource.source !== DataSource.ICal) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ url }) {
-        const icalData = await fetchAndParseIcal(url);
+        const icalData = parseICS(await fetch(url).then((r) => r.text()));
 
         const icalUrlHash = createHash("sha256")
           .update(url + user.id)
