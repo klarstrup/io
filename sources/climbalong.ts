@@ -13,11 +13,9 @@ import {
   ClimbAlongCircuits,
   ClimbAlongCompetitions,
   ClimbAlongEdges,
-  ClimbAlongLanes,
   ClimbAlongNodes,
   ClimbAlongPerformances,
   ClimbAlongProblems,
-  ClimbAlongRounds,
 } from "./climbalong.server";
 
 export namespace Climbalong {
@@ -250,16 +248,18 @@ export async function getIoClimbAlongCompetitionEvent(
   const competition = await ClimbAlongCompetitions.findOne({ competitionId });
   if (!competition) throw new Error("???");
 
-  const athletes = await ClimbAlongAthletes.find({ competitionId }).toArray();
-  const rounds = await ClimbAlongRounds.find({ competitionId }).toArray();
-  const lanes = await ClimbAlongLanes.find({ competitionId }).toArray();
-  const circuits = await ClimbAlongCircuits.find({ competitionId }).toArray();
-  const performances = await ClimbAlongPerformances.find({
-    circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
-  }).toArray();
-  const problems = await ClimbAlongProblems.find({
-    circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
-  }).toArray();
+  const [athletes, circuits] = await Promise.all([
+    ClimbAlongAthletes.find({ competitionId }).toArray(),
+    ClimbAlongCircuits.find({ competitionId }).toArray(),
+  ]);
+  const [performances, problems] = await Promise.all([
+    ClimbAlongPerformances.find({
+      circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
+    }).toArray(),
+    ClimbAlongProblems.find({
+      circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
+    }).toArray(),
+  ]);
 
   const io = athletes.find((athlete) => athlete.athleteId === athleteId);
   const ioPerformances =
@@ -271,6 +271,15 @@ export async function getIoClimbAlongCompetitionEvent(
   const ioCircuitChallengeNode = await ClimbAlongNodes.findOne({
     "circuit.circuitId": { $in: ioCircuitIds },
   });
+  const circuitChallengeEdges = await ClimbAlongEdges.find({
+    processedBy: {
+      $elemMatch: {
+        nodeId: ioCircuitChallengeNode?.nodeId,
+        edge: ioCircuitChallengeNode?.outputEdgeIds[0],
+      },
+    },
+  }).toArray();
+
   const noProblems = problems.filter(
     (problem) =>
       problem.circuitId === ioCircuitChallengeNode?.circuit.circuitId,
@@ -381,15 +390,6 @@ export async function getIoClimbAlongCompetitionEvent(
         tops + zones + topsAttempts + zonesAttempts,
     );
 
-  const circuitChallengeEdges = await ClimbAlongEdges.find({
-    processedBy: {
-      $elemMatch: {
-        nodeId: ioCircuitChallengeNode?.nodeId,
-        edge: ioCircuitChallengeNode?.outputEdgeIds[0],
-      },
-    },
-  }).toArray();
-
   const ioCircuitChallenge =
     io &&
     circuitChallengeEdges.find(({ athletes }) =>
@@ -457,10 +457,9 @@ export async function getIoClimbAlongCompetitionEvent(
     id: competitionId,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
     ioId: io?.athleteId!,
-    url:
-      rounds[0] && lanes[0]
-        ? `https://climbalong.com/competitions/${competitionId}/results`
-        : `https://climbalong.com/competitions/${competitionId}/info`,
+    url: performances.length
+      ? `https://climbalong.com/competitions/${competitionId}/results`
+      : `https://climbalong.com/competitions/${competitionId}/info`,
     start: max(
       [
         firstPerformance && new Date(firstPerformance),
