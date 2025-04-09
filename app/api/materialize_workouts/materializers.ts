@@ -7,12 +7,12 @@ import { ClimbAlongAthletes } from "../../../sources/climbalong.server";
 import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { GrippyWorkoutLogs } from "../../../sources/grippy";
-import { KilterBoardAscents } from "../../../sources/kilterboard";
 import { OnsightCompetitionScores } from "../../../sources/onsight.server";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DataSource } from "../../../sources/utils";
 import { TopLoggerGraphQL } from "../../../utils/graphql";
 import { SportstimingFavorites } from "../../../sources/sportstiming.server";
+import { KilterBoardAscents } from "../../../sources/kilterboard.server";
 
 export async function* materializeAllToploggerWorkouts({
   user,

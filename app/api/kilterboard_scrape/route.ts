@@ -2,9 +2,11 @@ import { auth } from "../../../auth";
 import {
   difficultyToGradeMap,
   type KilterBoard,
+} from "../../../sources/kilterboard";
+import {
   KilterBoardAscents,
   KilterBoardBids,
-} from "../../../sources/kilterboard";
+} from "../../../sources/kilterboard.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { materializeAllKilterBoardWorkouts } from "../materialize_workouts/materializers";
