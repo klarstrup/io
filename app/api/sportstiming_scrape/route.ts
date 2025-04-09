@@ -77,11 +77,9 @@ export const GET = () =>
           );
           liveSearchResultsURL.searchParams.set("Rally", String(event.EventId));
           liveSearchResultsURL.searchParams.set("q", name);
-          console.time(liveSearchResultsURL.href);
           const liveSearchResultsText = await fetch(liveSearchResultsURL, {
             headers: { ...sportstimingHeaders },
           }).then((r) => r.text());
-          console.timeEnd(liveSearchResultsURL.href);
 
           for (const line of liveSearchResultsText.split("\n")) {
             const [, id] = line.split("|").map((s) => s.trim());
