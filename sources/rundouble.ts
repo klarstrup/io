@@ -1,8 +1,3 @@
-import type { WithId } from "mongodb";
-import type { Session } from "next-auth";
-import { Unit } from "../models/exercises";
-import { type WorkoutData, WorkoutSource } from "../models/workout";
-
 export namespace RunDouble {
   export interface HistoryResponse {
     history: HistoryItem[];
@@ -141,32 +136,4 @@ export namespace RunDouble {
     /** Kilometers per minute */
     paceInv: number;
   }
-}
-
-export function workoutFromRunDouble(
-  user: Session["user"],
-  run: WithId<RunDouble.MongoHistoryItem>,
-): WorkoutData {
-  return {
-    id: run.key.toString(),
-    exercises: [
-      {
-        exerciseId: 518,
-        sets: [
-          {
-            inputs: [
-              { unit: Unit.SEC, value: run.runTime / 1000 },
-              { unit: Unit.M, value: run.runDistance },
-              { unit: Unit.MinKM, value: 0.6215 / run.runPace },
-            ],
-          },
-        ],
-      },
-    ],
-    userId: user.id,
-    createdAt: run.completedAt,
-    updatedAt: run.completedAt,
-    workedOutAt: run.completedAt,
-    source: WorkoutSource.RunDouble,
-  };
 }

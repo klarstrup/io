@@ -1,8 +1,3 @@
-import type { WithId } from "mongodb";
-import type { Session } from "next-auth";
-import { Unit } from "../models/exercises";
-import { type WorkoutData, WorkoutSource } from "../models/workout";
-import { dateToString } from "../utils";
 import { proxyCollection } from "../utils.server";
 
 export namespace KilterBoard {
@@ -47,40 +42,6 @@ export const KilterBoardAscents = proxyCollection<KilterBoard.Ascent>(
 
 export const KilterBoardBids =
   proxyCollection<KilterBoard.Bid>("kilterboard_bids");
-
-export function workoutFromKilterBoardAscents(
-  user: Session["user"],
-  ascents: WithId<KilterBoard.Ascent>[],
-): WorkoutData {
-  const [firstAscent] = ascents;
-  if (!firstAscent) throw new Error("No ascents provided");
-
-  return {
-    id: `${WorkoutSource.KilterBoard}:${firstAscent.user_id}:${dateToString(firstAscent.climbed_at)}`,
-    exercises: [
-      {
-        exerciseId: 2003,
-        sets: ascents.map(({ grade, angle }) => ({
-          inputs: [
-            // Grade
-            { value: grade, unit: Unit.FrenchRounded },
-            // Color
-            { value: NaN },
-            // Sent-ness
-            { value: 1 },
-            // Angle
-            { value: angle, unit: Unit.Deg },
-          ],
-        })),
-      },
-    ],
-    userId: user.id,
-    createdAt: firstAscent.created_at,
-    updatedAt: firstAscent.updated_at,
-    workedOutAt: firstAscent.climbed_at,
-    source: WorkoutSource.KilterBoard,
-  };
-}
 
 export const difficulty_grades = [
   { boulder_name: "1a/V0", difficulty: 1 },

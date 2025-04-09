@@ -1,14 +1,4 @@
 import type { Duration } from "date-fns";
-import type { WithId } from "mongodb";
-import type { Session } from "next-auth";
-import { Unit } from "../models/exercises";
-import {
-  WorkoutSource,
-  type WorkoutData,
-  type WorkoutExercise,
-  type WorkoutExerciseSet,
-  type WorkoutExerciseSetInput,
-} from "../models/workout";
 
 export namespace Fitocracy {
   export interface Result<T> {
@@ -286,36 +276,4 @@ export interface ExerciseSchedule {
   workingReps?: number;
   deloadFactor?: number;
   baseWeight?: number;
-}
-
-export function workoutFromFitocracyWorkout(
-  user: Session["user"],
-  workout: WithId<Fitocracy.MongoWorkout>,
-): WorkoutData {
-  const exercises = workout.root_group.children.map(
-    ({ exercise }): WorkoutExercise => ({
-      exerciseId: exercise.exercise_id,
-      sets: exercise.sets.map(
-        ({ inputs }): WorkoutExerciseSet => ({
-          inputs: inputs.map(
-            ({ unit, value, assist_type }): WorkoutExerciseSetInput => ({
-              unit: unit as Unit | undefined,
-              value,
-              assistType: assist_type,
-            }),
-          ),
-        }),
-      ),
-    }),
-  );
-
-  return {
-    id: workout.id.toString(),
-    exercises,
-    userId: user.id,
-    createdAt: workout.updated_timestamp,
-    updatedAt: workout.updated_timestamp,
-    workedOutAt: workout.workout_timestamp,
-    source: WorkoutSource.Fitocracy,
-  };
 }
