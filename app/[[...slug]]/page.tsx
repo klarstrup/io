@@ -100,77 +100,56 @@ const getData = async (
   const eventsPromises: (Promise<EventEntry[]> | Promise<EventEntry>)[] = [];
 
   const noDisciplines = !isNonEmptyArray(disciplines);
-  if (noDisciplines || disciplines?.includes("bouldering")) {
-    if (
-      user?.dataSources?.some(
-        (source) => source.source === DataSource.ClimbAlong,
-      )
-    ) {
-      for await (const athlete of ClimbAlongAthletes.find({
-        userId: {
-          $in: user.dataSources
-            .filter((source) => source.source === DataSource.ClimbAlong)
-            .map((source) => source.config.userId),
-        },
-      })) {
-        eventsPromises.push(
-          getIoClimbAlongCompetitionEventEntry(
-            athlete.competitionId,
-            athlete.athleteId,
-          ),
-        );
-      }
-    }
 
-    if (
-      user?.dataSources?.some(
-        (source) => source.source === DataSource.TopLogger,
-      )
-    ) {
-      for await (const compUser of TopLoggerGraphQL.find<CompUser>({
-        userId: {
-          $in: user.dataSources
-            .filter((source) => source.source === DataSource.TopLogger)
-            .map((source) => source.config.graphQLId),
-        },
-        __typename: "CompUser",
-      })) {
-        eventsPromises.push(
-          getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
-        );
-      }
-    }
+  if (user?.dataSources)
+    await Promise.all(
+      user.dataSources.map(async ({ source, config }) => {
+        switch (source) {
+          case DataSource.ClimbAlong: {
+            if (!(noDisciplines || disciplines?.includes("bouldering"))) break;
 
-    if (
-      user?.dataSources?.some((source) => source.source === DataSource.Onsight)
-    ) {
-      const dataSources = user.dataSources.filter(
-        (source) => source.source === DataSource.Onsight,
-      );
-      for (const dataSource of dataSources) {
-        eventsPromises.push(
-          getIoOnsightCompetitionEventEntries(dataSource.config.username),
-        );
-      }
-    }
-  }
+            for await (const athlete of ClimbAlongAthletes.find({
+              userId: config.userId,
+            })) {
+              eventsPromises.push(
+                getIoClimbAlongCompetitionEventEntry(
+                  athlete.competitionId,
+                  athlete.athleteId,
+                ),
+              );
+            }
+            break;
+          }
+          case DataSource.TopLogger: {
+            if (!(noDisciplines || disciplines?.includes("bouldering"))) break;
 
-  if (noDisciplines || disciplines?.includes("running")) {
-    if (
-      user?.dataSources?.some(
-        (source) => source.source === DataSource.Sportstiming,
-      )
-    ) {
-      const dataSources = user.dataSources.filter(
-        (source) => source.source === DataSource.Sportstiming,
-      );
-      for (const dataSource of dataSources) {
-        eventsPromises.push(
-          getSportsTimingEventEntries(dataSource.config.name),
-        );
-      }
-    }
-  }
+            for await (const compUser of TopLoggerGraphQL.find<CompUser>({
+              userId: config.graphQLId,
+              __typename: "CompUser",
+            })) {
+              eventsPromises.push(
+                getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
+              );
+            }
+            break;
+          }
+          case DataSource.Onsight: {
+            if (!(noDisciplines || disciplines?.includes("bouldering"))) break;
+
+            eventsPromises.push(
+              getIoOnsightCompetitionEventEntries(config.username),
+            );
+            break;
+          }
+          case DataSource.Sportstiming: {
+            if (!(noDisciplines || disciplines?.includes("running"))) break;
+
+            eventsPromises.push(getSportsTimingEventEntries(config.name));
+            break;
+          }
+        }
+      }),
+    );
 
   if (noDisciplines || disciplines?.includes("metal")) {
     eventsPromises.push(getSongkickEvents());
