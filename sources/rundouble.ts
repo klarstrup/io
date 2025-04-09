@@ -1,9 +1,7 @@
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
-import { dbFetch } from "../fetch";
 import { Unit } from "../models/exercises";
 import { type WorkoutData, WorkoutSource } from "../models/workout";
-import { RelativeURL } from "../utils";
 
 export namespace RunDouble {
   export interface HistoryResponse {
@@ -144,53 +142,6 @@ export namespace RunDouble {
     paceInv: number;
   }
 }
-
-const fetchRunDouble = async <T>(
-  input: string | URL,
-  init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  dbFetch<T>(
-    `https://www.rundouble.com/rundoublesite${String(input)}`,
-    init,
-    dbFetchOptions,
-  );
-
-export async function* getRuns(
-  userId: string,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) {
-  let cursor: string | undefined = undefined;
-  do {
-    const url = new RelativeURL("/history");
-    url.searchParams.set("user", userId);
-    if (cursor) url.searchParams.set("cursor", cursor);
-
-    const response = await fetchRunDouble<RunDouble.HistoryResponse>(
-      url,
-      undefined,
-      dbFetchOptions,
-    );
-    cursor = response.cursor;
-    yield* response.history;
-  } while (cursor);
-}
-
-export const getRunDoubleUser = async (
-  userId: string,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL("/history");
-  url.searchParams.set("user", userId);
-
-  return (
-    await fetchRunDouble<RunDouble.HistoryResponse>(
-      url,
-      undefined,
-      dbFetchOptions,
-    )
-  ).user;
-};
 
 export function workoutFromRunDouble(
   user: Session["user"],
