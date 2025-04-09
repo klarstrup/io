@@ -136,7 +136,7 @@ export default async function TimelineEventContent({
       : eventEntry.source === EventSource.TopLogger
         ? getIoTopLoggerCompEvent(eventEntry.id, eventEntry.ioId)
         : eventEntry.source === EventSource.Onsight
-          ? getIoOnsightCompetitionEvent(eventEntry.id)
+          ? getIoOnsightCompetitionEvent(eventEntry.id, eventEntry.ioId)
           : eventEntry.source === EventSource.Sportstiming
             ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
             : eventEntry.source === EventSource.Songkick

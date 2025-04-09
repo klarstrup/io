@@ -102,7 +102,10 @@ export namespace Onsight {
   }
 }
 
-export async function getIoOnsightCompetitionEvent(competitionId: string) {
+export async function getIoOnsightCompetitionEvent(
+  competitionId: string,
+  Username: string,
+) {
   const competition = await OnsightCompetitions.findOne({ _id: competitionId });
 
   if (!competition) throw new Error("???" + competitionId);
@@ -111,11 +114,12 @@ export async function getIoOnsightCompetitionEvent(competitionId: string) {
     Competition_name: `${competition.Name}/${competitionId}`,
   }).toArray();
   const ioCompetitionScore = competitionScores.find(
-    ({ Username }) => Username === "io@klarstrup.dk",
+    (competitionScore) => competitionScore.Username === Username,
   );
 
-  if (!ioCompetitionScore)
+  if (!ioCompetitionScore) {
     throw new Error("???" + `${competition.Name}/${competitionId}`);
+  }
 
   const noParticipants = competitionScores.filter(
     (competitionScore) => competitionScore.Gender === ioCompetitionScore.Gender,
@@ -186,11 +190,11 @@ export async function getIoOnsightCompetitionEvent(competitionId: string) {
   } as const;
 }
 
-export async function getIoOnsightCompetitionEventEntries(): Promise<
-  EventEntry[]
-> {
+export async function getIoOnsightCompetitionEventEntries(
+  Username: string,
+): Promise<EventEntry[]> {
   const competitionScores = await OnsightCompetitionScores.find({
-    Username: "io@klarstrup.dk",
+    Username,
   }).toArray();
 
   return await Promise.all(
@@ -214,7 +218,7 @@ export async function getIoOnsightCompetitionEventEntries(): Promise<
           ? "Qualification"
           : null,
         location: "Refshalevej 163D, 1432 København K",
-        ioId: competitionScore._id,
+        ioId: competitionScore.Username,
         start: competition.startAt,
         end: competition.endAt,
       } satisfies EventEntry;

@@ -144,7 +144,18 @@ const getData = async (
       }
     }
 
-    eventsPromises.push(getIoOnsightCompetitionEventEntries());
+    if (
+      user?.dataSources?.some((source) => source.source === DataSource.Onsight)
+    ) {
+      const dataSources = user.dataSources.filter(
+        (source) => source.source === DataSource.Onsight,
+      );
+      for (const dataSource of dataSources) {
+        eventsPromises.push(
+          getIoOnsightCompetitionEventEntries(dataSource.config.username),
+        );
+      }
+    }
   }
 
   if (noDisciplines || disciplines?.includes("running")) {
