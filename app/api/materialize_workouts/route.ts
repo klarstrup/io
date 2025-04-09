@@ -8,6 +8,7 @@ import {
   materializeAllGrippyWorkouts,
   materializeAllIoWorkouts,
   materializeAllKilterBoardWorkouts,
+  materializeAllOnsightWorkouts,
   materializeAllRunDoubleWorkouts,
   materializeAllToploggerWorkouts,
 } from "./materializers";
@@ -55,6 +56,8 @@ export const GET = () =>
     yield* materializeAllCrimpdWorkouts({ user });
 
     yield* materializeAllClimbalongWorkouts({ user });
+
+    yield* materializeAllOnsightWorkouts({ user });
 
     yield `materializeAllWorkouts: done in ${Date.now() - t}ms`;
 

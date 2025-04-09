@@ -57,7 +57,8 @@ function UserStuffSourceForm({
     return null;
   }
 
-  switch (source.source) {
+  const dataSource = source.source;
+  switch (dataSource) {
     case DataSource.Fitocracy:
       formElements = (
         <label className="flex gap-1">
@@ -298,6 +299,32 @@ function UserStuffSourceForm({
         </label>
       );
       break;
+    case DataSource.Onsight:
+      formElements = (
+        <>
+          <label className="flex gap-1">
+            Token:{" "}
+            <input
+              type="text"
+              {...register(`dataSources.${index}.config.token`)}
+              placeholder="Token"
+              className="flex-1"
+            />
+          </label>
+          <label className="flex gap-1">
+            Username (email):{" "}
+            <input
+              type="text"
+              {...register(`dataSources.${index}.config.username`)}
+              placeholder="User ID"
+              className="flex-1"
+            />
+          </label>
+        </>
+      );
+      break;
+    default:
+      return dataSource satisfies never;
   }
 
   return (
@@ -480,9 +507,10 @@ export default function UserStuffSourcesForm({
               ) => {
                 if (!selected) return;
 
+                const value = selected.value;
                 const initialSourceMeta: UserDataSourceMeta = {
                   id: uuid(),
-                  name: selected.value,
+                  name: value,
                   updatedAt: new Date(),
                   createdAt: new Date(),
                   lastAttemptedAt: null,
@@ -494,7 +522,7 @@ export default function UserStuffSourcesForm({
                   lastError: null,
                 };
 
-                switch (selected.value) {
+                switch (value) {
                   case DataSource.Fitocracy:
                     append({
                       ...initialSourceMeta,
@@ -589,6 +617,16 @@ export default function UserStuffSourcesForm({
                       config: { geohash: "" },
                     });
                     break;
+                  case DataSource.Onsight:
+                    append({
+                      ...initialSourceMeta,
+                      source: DataSource.Onsight,
+                      config: { token: "", username: "" },
+                    });
+                    break;
+
+                  default:
+                    return value satisfies never;
                 }
               }}
             />

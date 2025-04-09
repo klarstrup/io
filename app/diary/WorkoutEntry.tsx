@@ -402,7 +402,9 @@ export default function WorkoutEntry({
               ) : workout.source === WorkoutSource.Crimpd ? (
                 <small>Crimpd</small>
               ) : workout.source === WorkoutSource.ClimbAlong ? (
-                <small>ClimbAlong</small>
+                <small>Climbalong</small>
+              ) : workout.source === WorkoutSource.Onsight ? (
+                <small>Onsight</small>
               ) : null}
             </div>
           ) : null}

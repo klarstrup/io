@@ -8,6 +8,7 @@ import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { GrippyWorkoutLogs } from "../../../sources/grippy";
 import { KilterBoardAscents } from "../../../sources/kilterboard";
+import { OnsightCompetitionScores } from "../../../sources/onsight.server";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DataSource } from "../../../sources/utils";
 import { TopLoggerGraphQL } from "../../../utils/graphql";
@@ -643,6 +644,165 @@ export async function* materializeAllCrimpdWorkouts({
   }
 
   yield "materializeAllCrimpdWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
+}
+
+export async function* materializeAllOnsightWorkouts({
+  user,
+}: {
+  user: Session["user"];
+}) {
+  yield "materializeAllOnsightWorkouts: start";
+  const t = new Date();
+
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.Onsight) continue;
+
+    console.log(dataSource.config);
+    yield* OnsightCompetitionScores.aggregate([
+      { $match: { Username: dataSource.config.username } },
+      {
+        $project: {
+          _id: 0,
+          id: "$_id",
+          userId: { $literal: user.id },
+          createdAt: "$_createdAt",
+          updatedAt: "$_updatedAt",
+          workedOutAt: "$_createdAt",
+          source: { $literal: WorkoutSource.Onsight },
+          exercises: [
+            {
+              exerciseId: 2001,
+              displayName: {
+                $arrayElemAt: [{ $split: ["$Competition_name", "/"] }, 0],
+              },
+              sets: {
+                $map: {
+                  input: "$Ascents",
+                  as: "ascent",
+                  in: {
+                    inputs: [
+                      // Grade
+                      {
+                        value: { $literal: null },
+                        unit: Unit.FrenchRounded,
+                      },
+                      // Color
+                      { value: { $literal: null } },
+                      // Sent-ness
+                      {
+                        value: {
+                          $cond: {
+                            if: {
+                              $and: [
+                                {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$$ascent", "/"] },
+                                        2,
+                                      ],
+                                    },
+                                    "2",
+                                  ],
+                                },
+                                {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$$ascent", "/"] },
+                                        1,
+                                      ],
+                                    },
+                                    "1",
+                                  ],
+                                },
+                                {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$$ascent", "/"] },
+                                        0,
+                                      ],
+                                    },
+                                    "1",
+                                  ],
+                                },
+                              ],
+                            },
+                            then: SendType.Flash,
+                            else: {
+                              $cond: {
+                                if: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$$ascent", "/"] },
+                                        2,
+                                      ],
+                                    },
+                                    "2",
+                                  ],
+                                },
+                                then: SendType.Top,
+                                else: {
+                                  $cond: {
+                                    if: {
+                                      $eq: [
+                                        {
+                                          $arrayElemAt: [
+                                            { $split: ["$$ascent", "/"] },
+                                            1,
+                                          ],
+                                        },
+                                        "1",
+                                      ],
+                                    },
+                                    then: SendType.Zone,
+                                    else: {
+                                      $cond: {
+                                        if: {
+                                          $gt: [
+                                            {
+                                              $arrayElemAt: [
+                                                { $split: ["$$ascent", "/"] },
+                                                0,
+                                              ],
+                                            },
+                                            0,
+                                          ],
+                                        },
+                                        then: SendType.Attempt,
+                                        else: { $literal: null },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ] as const);
+  }
+
+  yield "materializeAllOnsightWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
 }

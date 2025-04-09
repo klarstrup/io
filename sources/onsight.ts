@@ -1,5 +1,3 @@
-import { TZDate } from "@date-fns/tz";
-import { dbFetch } from "../fetch";
 import {
   EventEntry,
   EventSource,
@@ -7,7 +5,11 @@ import {
   SCORING_SOURCE,
   SCORING_SYSTEM,
 } from "../lib";
-import { DAY_IN_SECONDS, percentile, RelativeURL } from "../utils";
+import { percentile } from "../utils";
+import {
+  OnsightCompetitions,
+  OnsightCompetitionScores,
+} from "./onsight.server";
 
 export namespace Onsight {
   type CompetitionName = string;
@@ -100,63 +102,16 @@ export namespace Onsight {
   }
 }
 
-const fetchOnsight = async <T>(
-  input: string | URL,
-  init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  dbFetch<T>(
-    `https://api.appery.io/rest/1/db/collections${String(input)}`,
-    init,
-    dbFetchOptions,
-  );
-
-const getCompetitionScores = (
-  where: Record<string, unknown>,
-  init: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/Competition_score`);
-  url.searchParams.set("where", JSON.stringify(where));
-
-  return fetchOnsight<Onsight.CompetitionScore[]>(url, init, dbFetchOptions);
-};
-
-const getCompetitions = (
-  where: Record<string, unknown>,
-  init: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new RelativeURL(`/Competition`);
-  url.searchParams.set("where", JSON.stringify(where));
-
-  return fetchOnsight<Onsight.Competition[]>(url, init, dbFetchOptions);
-};
-
 export async function getIoOnsightCompetitionEvent(competitionId: string) {
-  const competitions = await getCompetitions(
-    { _id: competitionId },
-    {
-      headers: {
-        "x-appery-database-id": "562e0e3be4b081edd3eb975d",
-        "x-appery-session-token": "4113795e-c997-4af3-ac52-a7b85bedc24a",
-      },
-    },
-    { maxAge: DAY_IN_SECONDS },
-  );
-
-  if (competitions.length > 1) throw new Error("???" + competitions.length);
-  const [competition] = competitions;
+  const competition = await OnsightCompetitions.findOne({ _id: competitionId });
 
   if (!competition) throw new Error("???" + competitionId);
 
-  const competitionScores = await getCompetitionScores(
-    { Competition_name: `${competition.Name}/${competitionId}` },
-    { headers: { "x-appery-database-id": "562e0e3be4b081edd3eb975d" } },
-    { maxAge: DAY_IN_SECONDS },
-  );
+  const competitionScores = await OnsightCompetitionScores.find({
+    Competition_name: `${competition.Name}/${competitionId}`,
+  }).toArray();
   const ioCompetitionScore = competitionScores.find(
-    (competitionScore) => competitionScore.Username === "io@klarstrup.dk",
+    ({ Username }) => Username === "io@klarstrup.dk",
   );
 
   if (!ioCompetitionScore)
@@ -183,14 +138,8 @@ export async function getIoOnsightCompetitionEvent(competitionId: string) {
     id: competitionId,
     ioId: ioCompetitionScore._id,
     url: "https://onsight.one/app/Onsight.html",
-    start: new TZDate(
-      `${competition.Date} ${competition.Start.split(" - ")[0]}`,
-      "Europe/Copenhagen",
-    ),
-    end: new TZDate(
-      `${competition.Date} ${competition.Start.split(" - ")[1]}`,
-      "Europe/Copenhagen",
-    ),
+    start: competition.startAt,
+    end: competition.endAt,
     venue: "Blocs & Walls",
     event: competition.Name,
     subEvent: competition.Name.includes("KVAL") ? "Qualification" : null,
@@ -240,24 +189,15 @@ export async function getIoOnsightCompetitionEvent(competitionId: string) {
 export async function getIoOnsightCompetitionEventEntries(): Promise<
   EventEntry[]
 > {
-  const competitionScores = await getCompetitionScores(
-    { Username: "io@klarstrup.dk" },
-    { headers: { "x-appery-database-id": "562e0e3be4b081edd3eb975d" } },
-    { maxAge: DAY_IN_SECONDS },
-  );
+  const competitionScores = await OnsightCompetitionScores.find({
+    Username: "io@klarstrup.dk",
+  }).toArray();
 
   return await Promise.all(
     competitionScores.map(async (competitionScore) => {
-      const [competition] = await getCompetitions(
-        { _id: competitionScore.Competition_name.split("/")[1]! },
-        {
-          headers: {
-            "x-appery-database-id": "562e0e3be4b081edd3eb975d",
-            "x-appery-session-token": "4113795e-c997-4af3-ac52-a7b85bedc24a",
-          },
-        },
-        { maxAge: DAY_IN_SECONDS },
-      );
+      const competition = await OnsightCompetitions.findOne({
+        _id: competitionScore.Competition_name.split("/")[1]!,
+      });
 
       if (!competition) throw new Error("???");
 
@@ -275,14 +215,8 @@ export async function getIoOnsightCompetitionEventEntries(): Promise<
           : null,
         location: "Refshalevej 163D, 1432 København K",
         ioId: competitionScore._id,
-        start: new TZDate(
-          `${competition.Date} ${competition.Start.split(" - ")[0]}`,
-          "Europe/Copenhagen",
-        ),
-        end: new TZDate(
-          `${competition.Date} ${competition.Start.split(" - ")[1]}`,
-          "Europe/Copenhagen",
-        ),
+        start: competition.startAt,
+        end: competition.endAt,
       } satisfies EventEntry;
     }),
   );

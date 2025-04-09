@@ -14,6 +14,7 @@ export enum WorkoutSource {
   Grippy = "grippy",
   Crimpd = "crimpd",
   ClimbAlong = "climbalong",
+  Onsight = "onsight",
   Self = "self",
 }
 
