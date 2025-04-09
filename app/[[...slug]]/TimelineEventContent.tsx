@@ -17,8 +17,6 @@ import { getIoTopLoggerCompEvent } from "../../sources/toplogger";
 import { DEFAULT_TIMEZONE, isNonEmptyArray, seconds2time } from "../../utils";
 import { getIoOnsightCompetitionEvent } from "../../sources/onsight";
 
-const sex = true;
-
 const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
 
 const suffixes = {
@@ -138,7 +136,7 @@ export default async function TimelineEventContent({
         : eventEntry.source === EventSource.Onsight
           ? getIoOnsightCompetitionEvent(eventEntry.id, eventEntry.ioId)
           : eventEntry.source === EventSource.Sportstiming
-            ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId, sex)
+            ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId)
             : eventEntry.source === EventSource.Songkick
               ? (await getSongkickEvents()).find(
                   ({ id }) => eventEntry.id === id,
