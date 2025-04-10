@@ -18,6 +18,7 @@ import {
 import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 import {
+  ClimbDayScalars,
   ClimbDayScalarsFragment,
   ClimbGroupClimbScalarsFragment,
   ClimbScalarsFragment,
@@ -131,21 +132,6 @@ const authSigninRefreshTokenQuery = gql`
   }
 `;
 
-interface ClimbDaysSessionsQueryResponse {
-  climbDaysPaginated: {
-    pagination: {
-      total: number;
-      page: number;
-      perPage: number;
-      orderBy: {
-        key: string;
-        order: string;
-        __typename: string;
-      }[];
-    };
-    data: TopLoggerClimbDayDereferenced[];
-  };
-}
 const climbDaysSessionsQuery = gql`
   ${PaginationFragment}
   ${ClimbDayScalarsFragment}
@@ -177,23 +163,10 @@ const climbDaysSessionsQuery = gql`
     }
   }
 `;
-
-interface ClimbLogsQueryResponse {
-  climbLogs: {
-    pagination: {
-      total: number;
-      page: number;
-      perPage: number;
-      orderBy: {
-        key: string;
-        order: string;
-        __typename: string;
-      }[];
-    };
-    data: TopLoggerClimbLogDereferenced[];
-  };
-  [key: string]: unknown;
+interface ClimbDaysSessionsResponse {
+  climbDaysPaginated: PaginatedObjects<ClimbDayScalars>;
 }
+
 const climbLogsQuery = gql`
   ${PaginationFragment}
   ${ClimbScalarsFragment}
@@ -618,35 +591,6 @@ interface ClimbDereferenced extends Omit<Climb, "gym" | "holdColor" | "wall"> {
   wall: Wall;
 }
 
-interface ClimbDay extends MongoGraphQLObject<"ClimbDay"> {
-  statsAtDate: Date;
-  bouldersTotalTries: number;
-  bouldersDayGradeMax: number;
-  routesTotalTries: number;
-  routesDayGradeMax: number;
-  gradeDistributionRoutes: {
-    grade: string;
-    countFl: number;
-    countOs: number;
-    countRp: number;
-  }[];
-  gradeDistributionBoulders: {
-    grade: string;
-    countFl: number;
-    countOs: number;
-    countRp: number;
-  }[];
-  gym: Reference;
-  user: Reference;
-  bouldersDayGrade: number;
-  bouldersDayGradeFlPct: number;
-  bouldersDayGradeRepeatPct: number;
-  routesDayGrade: number;
-  routesDayGradeFlPct: number;
-  routesDayGradeRepeatPct: number;
-  routesTotalHeight: number;
-}
-
 type ClimbType = "boulder" | "route";
 export interface ClimbLog extends MongoGraphQLObject<"ClimbLog"> {
   grade: number;
@@ -809,10 +753,6 @@ export interface HoldColor extends MongoGraphQLObject<"HoldColor"> {
 
 interface TopLoggerClimbLogDereferenced extends Omit<ClimbLog, "climb"> {
   climb: ClimbDereferenced;
-}
-
-interface TopLoggerClimbDayDereferenced extends Omit<ClimbDay, "gym"> {
-  gym: Gym;
 }
 
 export const GET = (request: NextRequest) =>
@@ -1031,24 +971,27 @@ export const GET = (request: NextRequest) =>
                     );
 
                     yield updateResult;
+                    break;
                   }
+                  break;
                 }
+                break;
               }
+              break;
             }
+            break;
           }
         }
 
-        let climbDays: TopLoggerClimbDayDereferenced[] = [];
+        let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
+          [];
         let page = 1;
         let graphqlClimbDaysPaginatedResponse =
-          await fetchQuery<ClimbDaysSessionsQueryResponse>(
-            climbDaysSessionsQuery,
-            {
-              userId,
-              bouldersTotalTriesMin: 1,
-              pagination: { page, perPage: 100 },
-            },
-          );
+          await fetchQuery<ClimbDaysSessionsResponse>(climbDaysSessionsQuery, {
+            userId,
+            bouldersTotalTriesMin: 1,
+            pagination: { page, perPage: 100 },
+          });
         if (!graphqlClimbDaysPaginatedResponse.data) {
           throw new Error("Failed to fetch climb days");
         }
@@ -1064,7 +1007,7 @@ export const GET = (request: NextRequest) =>
 
         for (; page <= totalPages; page++) {
           graphqlClimbDaysPaginatedResponse =
-            await fetchQuery<ClimbDaysSessionsQueryResponse>(
+            await fetchQuery<ClimbDaysSessionsResponse>(
               climbDaysSessionsQuery,
               {
                 userId,
@@ -1096,11 +1039,9 @@ export const GET = (request: NextRequest) =>
             userId,
             climbedAtDate: climbDay.statsAtDate,
           };
-          const graphqlClimbLogsResponse =
-            await fetchQuery<ClimbLogsQueryResponse>(
-              climbLogsQuery,
-              climbLogsVariables,
-            );
+          const graphqlClimbLogsResponse = await fetchQuery<{
+            climbLogs: PaginatedObjects<TopLoggerClimbLogDereferenced>;
+          }>(climbLogsQuery, climbLogsVariables);
 
           const updateResult = await normalizeAndUpsertQueryData(
             climbLogsQuery,

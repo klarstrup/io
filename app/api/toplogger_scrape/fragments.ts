@@ -1,5 +1,10 @@
 import gql from "graphql-tag";
 
+export interface GraphQLObject<T extends string> {
+  __typename: T;
+  id: string;
+}
+
 export const PaginationFragment = gql`
   fragment PaginationFragment on Pagination {
     __typename
@@ -312,6 +317,36 @@ export const ClimbDayScalarsFragment = gql`
     gymId
   }
 `;
+export interface ClimbDayScalars extends GraphQLObject<"ClimbDay"> {
+  statsAtDate: Date;
+  gradeDistributionRoutes: {
+    grade: string;
+    countFl: number;
+    countOs: number;
+    countRp: number;
+  }[];
+  gradeDistributionBoulders: {
+    grade: string;
+    countFl: number;
+    countOs: number;
+    countRp: number;
+  }[];
+  bouldersTotalTries: number;
+  bouldersDayGrade: number;
+  bouldersDayGradeMax: number;
+  bouldersDayGradeFlPct: number;
+  bouldersDayGradeRepeatPct: number;
+  routesTotalTries: number;
+  routesDayGrade: number;
+  routesDayGradeMax: number;
+  routesDayGradeOsPct: number;
+  routesDayGradeFlPct: number;
+  routesDayGradeRepeatPct: number;
+  routesTotalHeight: number;
+  gymId: string;
+  // gym: Reference;
+  // user: Reference;
+}
 
 export const ClimbTagClimbScalarsFragment = gql`
   fragment ClimbTagClimbScalarsFragment on ClimbTagClimb {
