@@ -26,7 +26,6 @@ import {
   ClimbTagClimbScalarsFragment,
   ClimbTagScalarsFragment,
   ClimbUserScalarsFragment,
-  CompClimbLogScalarsFragment,
   CompClimbUserScalarsFragment,
   CompGymScalarsFragment,
   CompPouleScalarsFragment,
@@ -179,7 +178,6 @@ const climbLogsQuery = gql`
   ${ClimbLogScalarsFragment}
   ${ClimbScalarsFragment}
   ${GymScalarsFragment}
-  ${CompClimbLogScalarsFragment}
   ${HoldColorScalarsFragment}
   ${WallScalarsFragment}
 
@@ -188,7 +186,6 @@ const climbLogsQuery = gql`
     $userId: ID!
     $climbedAtDate: DateTime!
     $pagination: PaginationInputClimbLogs
-    $compRoundId: ID
     $climbType: ClimbType
   ) {
     climbLogs(
@@ -203,10 +200,6 @@ const climbLogsQuery = gql`
       }
       data {
         ...ClimbLogScalarsFragment
-
-        compClimbLog(compRoundId: $compRoundId) {
-          ...CompClimbLogScalarsFragment
-        }
 
         climb {
           ...ClimbScalarsFragment
@@ -225,6 +218,17 @@ const climbLogsQuery = gql`
     }
   }
 `;
+interface ClimbLogsResponse {
+  climbLogs: PaginatedObjects<
+    ClimbLog & {
+      climb: Climb & {
+        holdColor: HoldColor;
+        wall: Wall;
+        gym: GymScalars;
+      };
+    }
+  >;
+}
 
 const compsQuery = gql`
   ${PaginationFragment}
@@ -990,8 +994,8 @@ export const GET = (request: NextRequest) =>
           );
         }
 
-        const recentDays = 1;
-        const backfillDays = 1;
+        const recentDays = 5;
+        const backfillDays = 25;
         const climbDaysToFetch = [
           // Most recent days
           ...climbDays.slice(0, recentDays),

@@ -336,17 +336,6 @@ export interface CompRoundUserScalars extends GraphQLObject<"CompRoundUser"> {
   // user: User;
 }
 
-export const CompClimbLogScalarsFragment = gql`
-  fragment CompClimbLogScalarsFragment on CompClimbLog {
-    __typename
-    id
-    points
-    pointsBase
-    pointsBonus
-    pointsJson
-  }
-`;
-
 export const WallScalarsFragment = gql`
   fragment WallScalarsFragment on Wall {
     id
