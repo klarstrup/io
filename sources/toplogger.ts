@@ -1,13 +1,15 @@
 import { isAfter, isBefore } from "date-fns";
+import {
+  ClimbLogScalars,
+  GymScalars,
+  HoldColorScalars,
+} from "../app/api/toplogger_scrape/fragments";
 import type {
   Climb,
-  ClimbLog,
   Comp,
   CompClimbUser,
   CompGym,
   CompUser,
-  Gym,
-  HoldColor,
 } from "../app/api/toplogger_scrape/route";
 import {
   type DateInterval,
@@ -349,7 +351,9 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
   );
 
   const gyms = await Promise.all(
-    compGyms.map((compGym) => dereferenceReference<"Gym", Gym>(compGym.gym)),
+    compGyms.map((compGym) =>
+      dereferenceReference<"Gym", GymScalars>(compGym.gym),
+    ),
   );
 
   const compInterval: DateInterval = {
@@ -370,7 +374,7 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
   const io = compUser;
   if (!io) throw new Error("io not found");
 
-  const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLog>({
+  const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>({
     __typename: "ClimbLog",
     userId: ioId,
     climbId: { $in: climbs.map(({ id }) => id) },
@@ -388,7 +392,7 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
 
   const gym = gyms[0]!;
 
-  const holdColors = await TopLoggerGraphQL.find<HoldColor>({
+  const holdColors = await TopLoggerGraphQL.find<HoldColorScalars>({
     __typename: "HoldColor",
   }).toArray();
 
@@ -563,7 +567,9 @@ export async function getTopLoggerCompEventEntry(
   );
 
   const gyms = await Promise.all(
-    compGyms.map((compGym) => dereferenceReference<"Gym", Gym>(compGym.gym)),
+    compGyms.map((compGym) =>
+      dereferenceReference<"Gym", GymScalars>(compGym.gym),
+    ),
   );
 
   return {

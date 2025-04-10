@@ -302,18 +302,29 @@ const compsQuery = gql`
             }
           }
         }
-
-        compAdminMe {
-          id
-          permitJudge
-          permitAdmin
-          __typename
-        }
       }
       __typename
     }
   }
 `;
+type CompsResponse = {
+  comps: PaginatedObjects<
+    Comp & {
+      compGyms: (CompGym & { gym: GymScalars })[];
+      compPoules: (CompPoule & {
+        compRounds: (CompRound & { compRoundUserMe: CompRoundUserScalars })[];
+      })[];
+      compUserMe: CompUserScalars & {
+        compRoundUsers: CompRoundUserScalars[];
+        comp: Comp & {
+          compGyms: CompGym & {
+            gym: GymScalars;
+          };
+        };
+      };
+    }
+  >;
+};
 
 const userMeStoreQuery = gql`
   ${GymScalarsFragment}
@@ -522,7 +533,6 @@ export interface Climb extends MongoGraphQLObject<"Climb"> {
   outPlannedAt: null;
   order: number;
   setterName: null | string;
-  climbSetters: ClimbSetter[];
   wallId: string;
   wallSectionId: null;
   wallSection: null;
@@ -535,16 +545,6 @@ export interface Climb extends MongoGraphQLObject<"Climb"> {
 interface ClimbGroupClimb extends MongoGraphQLObject<"ClimbGroupClimb"> {
   climbGroupId: string;
   order: number;
-}
-
-interface ClimbSetter extends MongoGraphQLObject<"ClimbSetter"> {
-  id: string;
-  gymAdmin: GymAdmin;
-}
-
-interface GymAdmin extends MongoGraphQLObject<"GymAdmin"> {
-  name: string;
-  picPath: null;
 }
 
 interface ClimbUser extends MongoGraphQLObject<"ClimbUser"> {
@@ -567,65 +567,28 @@ export interface CompClimbUser extends MongoGraphQLObject<"CompClimbUser"> {
   userId: string;
   compId: string;
   points: number;
-  pointsJson: CompClimbUserPointsJSON;
+  pointsJson: {
+    zones: {
+      points: number;
+      pointsBase: number;
+      pointsBonus: number;
+    }[];
+  };
   tickType: number;
-}
-interface CompClimbUserPointsJSON {
-  zones: Zone[];
-}
-
-interface Zone {
-  points: number;
-  pointsBase: number;
-  pointsBonus: number;
 }
 
 interface CompRoundClimb extends MongoGraphQLObject<"CompRoundClimb"> {
   points: number;
-  pointsJson: CompRoundClimbPointsJSON;
+  pointsJson: {
+    zones: number[];
+  };
   leadRequired: boolean;
   climbId: string;
   compId: string;
   compRoundId: string;
 }
 
-interface CompRoundClimbPointsJSON {
-  zones: number[];
-}
-
-interface ClimbDereferenced extends Omit<Climb, "gym" | "holdColor" | "wall"> {
-  gym: Gym;
-  holdColor: HoldColor;
-  wall: Wall;
-}
-
 type ClimbType = "boulder" | "route";
-
-export interface ClimbLog extends MongoGraphQLObject<"ClimbLog"> {
-  grade: number;
-  climb: Reference;
-  climbId: string;
-  climbType: ClimbType;
-  climbedAtDate: Date;
-  clips: number;
-  comments: unknown;
-  compClimbLog: unknown;
-  duration: number;
-  foreknowledge: boolean;
-  gymId: string;
-  hangs: number;
-  holds: number;
-  lead: boolean;
-  points: number;
-  pointsBonus: number;
-  tickIndex: number;
-  tickType: number;
-  ticked: boolean;
-  topped: boolean;
-  tryIndex: number;
-  userId: string;
-  zones: number;
-}
 
 export interface Comp extends MongoGraphQLObject<"Comp"> {
   name: string;
@@ -635,7 +598,6 @@ export interface Comp extends MongoGraphQLObject<"Comp"> {
   loggableEndAt: Date;
   inviteOnly: boolean;
   compUserMe: CompUser | null;
-  compAdminMe: null;
   isMultiPoule: boolean;
   compPoules: CompPoule[];
   isMultiRound: boolean;
@@ -668,17 +630,19 @@ interface CompRound extends MongoGraphQLObject<"CompRound"> {
   descriptionLoc: null;
   visible: boolean;
   scoreSystemRoute: string;
-  scoreSystemRouteParams: ScoreSystemParams;
+  scoreSystemRouteParams: {
+    bonusFlPercent: number;
+    bonusOsPercent: number;
+  };
   scoreSystemBoulder: string;
-  scoreSystemBoulderParams: ScoreSystemParams;
+  scoreSystemBoulderParams: {
+    bonusFlPercent: number;
+    bonusOsPercent: number;
+  };
   tiebreakers: unknown[];
   compId: string;
 }
 
-interface ScoreSystemParams {
-  bonusFlPercent: number;
-  bonusOsPercent: number;
-}
 interface CompRoundUser extends MongoGraphQLObject<"CompRoundUser"> {
   participating: boolean;
   score: number;
@@ -709,20 +673,6 @@ export interface CompUser extends MongoGraphQLObject<"CompUser"> {
   userId: string;
   compId: string;
   comp: Reference;
-}
-
-export interface Gym extends MongoGraphQLObject<"Gym"> {
-  name: string;
-  nameSlug: string;
-}
-
-interface Wall extends MongoGraphQLObject<"Wall"> {
-  nameLoc: string;
-}
-
-export interface HoldColor extends MongoGraphQLObject<"HoldColor"> {
-  color: string;
-  nameLoc: string;
 }
 
 export const GET = (request: NextRequest) =>
@@ -857,9 +807,10 @@ export const GET = (request: NextRequest) =>
                 orderBy: [{ key: "loggableStartAt", order: "desc" }],
               },
             };
-            const compsResponse = await fetchQuery<{
-              comps: PaginatedObjects<Comp>;
-            }>(compsQuery, compsVariables);
+            const compsResponse = await fetchQuery<CompsResponse>(
+              compsQuery,
+              compsVariables,
+            );
 
             const updateResult = await normalizeAndUpsertQueryData(
               compsQuery,
@@ -940,15 +891,10 @@ export const GET = (request: NextRequest) =>
                     );
 
                     yield updateResult;
-                    break;
                   }
-                  break;
                 }
-                break;
               }
-              break;
             }
-            break;
           }
         }
 
@@ -1018,8 +964,6 @@ export const GET = (request: NextRequest) =>
             climbLogsVariables,
             graphqlClimbLogsResponse.data!,
           );
-
-          yield graphqlClimbLogsResponse.data;
 
           yield updateResult;
         }
