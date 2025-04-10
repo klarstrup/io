@@ -29,12 +29,16 @@ import {
   ClimbTagScalarsFragment,
   ClimbUserScalarsFragment,
   CompClimbUserScalarsFragment,
+  CompGymScalars,
   CompGymScalarsFragment,
+  CompPouleScalars,
   CompPouleScalarsFragment,
   CompRoundClimbScalarsFragment,
+  CompRoundScalars,
   CompRoundScalarsFragment,
   CompRoundUserScalars,
   CompRoundUserScalarsFragment,
+  CompScalars,
   CompScalarsFragment,
   CompUserScalars,
   CompUserScalarsFragment,
@@ -309,17 +313,19 @@ const compsQuery = gql`
 `;
 type CompsResponse = {
   comps: PaginatedObjects<
-    Comp & {
-      compGyms: (CompGym & { gym: GymScalars })[];
-      compPoules: (CompPoule & {
-        compRounds: (CompRound & { compRoundUserMe: CompRoundUserScalars })[];
+    CompScalars & {
+      compGyms: (CompGymScalars & { gym: GymScalars })[];
+      compPoules: (CompPouleScalars & {
+        compRounds: (CompRoundScalars & {
+          compRoundUserMe: CompRoundUserScalars;
+        })[];
       })[];
       compUserMe: CompUserScalars & {
         compRoundUsers: CompRoundUserScalars[];
-        comp: Comp & {
-          compGyms: CompGym & {
+        comp: CompScalars & {
+          compGyms: (CompGymScalars & {
             gym: GymScalars;
-          };
+          })[];
         };
       };
     }

@@ -140,6 +140,10 @@ export const CompGymScalarsFragment = gql`
     gymId
   }
 `;
+export interface CompGymScalars extends GraphQLObject<"CompGym"> {
+  compId: string;
+  gymId: string;
+}
 
 export const CompPouleScalarsFragment = gql`
   fragment CompPouleScalarsFragment on CompPoule {
@@ -150,6 +154,12 @@ export const CompPouleScalarsFragment = gql`
     descriptionLoc
   }
 `;
+export interface CompPouleScalars extends GraphQLObject<"CompPoule"> {
+  compId: string;
+  nameLoc: string;
+  descriptionLoc: string | null;
+  // compRounds: CompRound[];
+}
 
 export const GymUserMeScalarsFragment = gql`
   fragment GymUserMeScalarsFragment on GymUserMe {
@@ -281,6 +291,7 @@ export const CompClimbUserScalarsFragment = gql`
     totalTries
   }
 `;
+
 export const CompUserScalarsFragment = gql`
   fragment CompUserScalarsFragment on CompUser {
     id
@@ -324,6 +335,18 @@ export const CompRoundScalarsFragment = gql`
     compPouleId
   }
 `;
+export interface CompRoundScalars extends GraphQLObject<"CompRound"> {
+  climbType: ClimbType;
+  loggableEndAt: Date;
+  selfLoggable: boolean;
+  loggableStartAt: Date;
+  participantsPickedByAdmin: boolean;
+  participantsMax: number;
+  participantsSpotsLeft: number;
+  nameLoc: string;
+  compPouleId: string;
+  // compRoundUserMe: CompRoundUser | null;
+}
 
 export const CompRoundClimbScalarsFragment = gql`
   fragment CompRoundClimbScalarsFragment on CompRoundClimb {
@@ -526,6 +549,30 @@ export const CompScalarsFragment = gql`
     climbType
   }
 `;
+export interface CompScalars extends GraphQLObject<"Comp"> {
+  name: string;
+  subtitleLoc: null;
+  logoPath: null | string;
+  loggableStartAt: Date;
+  loggableEndAt: Date;
+  inviteOnly: boolean;
+  isMultiPoule: boolean;
+  isMultiRound: boolean;
+  registrationStartAt: null;
+  registrationEndAt: Date | null;
+  participantsMax: number;
+  participantsSpotsLeft: number;
+  registrationMessageLoc: null | string;
+  registrationRoundsMax: number;
+  descriptionLoc: null | string;
+  prizesLoc: null | string;
+  prizePaths: null;
+  approveParticipation: boolean;
+  climbType: ClimbType;
+  // compGyms: GymUserFavorite[];
+  // compPoules?: CompPoule[];
+  // compUserMe?: CompUserMe | null;
+}
 
 export const ClimbLogScalarsFragment = gql`
   fragment ClimbLogScalarsFragment on ClimbLog {
