@@ -201,6 +201,43 @@ export const ClimbScalarsFragment = gql`
     setterName
   }
 `;
+export interface ClimbScalars extends GraphQLObject<"Climb"> {
+  gymId: string;
+  wallId: string | null;
+  wallSectionId: null;
+  holdColorId: string;
+  grade: number;
+  climbType: ClimbType;
+  positionX: number;
+  positionY: number;
+  gradeAuto: boolean;
+  gradeVotesCount: number;
+  gradeUsersVsAdmin: number;
+  picPath: null;
+  label: null | string;
+  name: null | string;
+  zones: number;
+  remarksLoc: null;
+  suitableForKids: boolean;
+  clips: number;
+  holds: number;
+  height: number;
+  overhang: number;
+  autobelay: boolean;
+  leadEnabled: boolean;
+  leadRequired: boolean;
+  ratingsAverage: number | null;
+  ticksCount: number;
+  inAt: Date;
+  outAt: Date | null;
+  outPlannedAt: Date | null;
+  order: number;
+  setterName: null;
+  // holdColor: HoldColor;
+  // wall: Wall | null;
+  // gym: ClimbGym;
+}
+
 export const ClimbGroupClimbScalarsFragment = gql`
   fragment ClimbGroupClimbScalarsFragment on ClimbGroupClimb {
     id
@@ -352,6 +389,18 @@ export const WallScalarsFragment = gql`
     __typename
   }
 `;
+export interface WallScalars extends GraphQLObject<"Wall"> {
+  nameLoc: string;
+  idOnFloorplan: string;
+  height: number;
+  overhang: number;
+  bouldersEnabled: boolean;
+  routesEnabled: boolean;
+  climbTypeDefault: ClimbType;
+  labelX: number;
+  labelY: number;
+  order: number;
+}
 
 export const WallSectionScalarsFragment = gql`
   fragment WallSectionScalarsFragment on WallSection {
@@ -374,6 +423,12 @@ export const HoldColorScalarsFragment = gql`
     __typename
   }
 `;
+export interface HoldColorScalars extends GraphQLObject<"HoldColor"> {
+  color: string;
+  colorSecondary: null | string;
+  nameLoc: string;
+  order: number;
+}
 
 export const ClimbDayScalarsFragment = gql`
   fragment ClimbDayScalarsFragment on ClimbDay {
@@ -498,3 +553,26 @@ export const ClimbLogScalarsFragment = gql`
     climbedAtDate
   }
 `;
+export interface ClimbLogScalars extends GraphQLObject<"ClimbLog"> {
+  climbId: string;
+  userId: string;
+  points: number;
+  pointsBonus: number;
+  tryIndex: number;
+  tickIndex: number;
+  ticked: boolean;
+  tickType: number;
+  gymId: string;
+  climbType: ClimbType;
+  topped: boolean;
+  foreknowledge: boolean;
+  zones: number;
+  clips: number;
+  holds: number;
+  duration: number;
+  lead: boolean;
+  hangs: number;
+  comments: null;
+  climbedAtDate: Date;
+  // climb: Climb;
+}

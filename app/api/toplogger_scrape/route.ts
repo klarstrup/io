@@ -21,7 +21,9 @@ import {
   ClimbDayScalars,
   ClimbDayScalarsFragment,
   ClimbGroupClimbScalarsFragment,
+  ClimbLogScalars,
   ClimbLogScalarsFragment,
+  ClimbScalars,
   ClimbScalarsFragment,
   ClimbTagClimbScalarsFragment,
   ClimbTagScalarsFragment,
@@ -40,6 +42,7 @@ import {
   GymScalarsFragment,
   GymUserMeScalars,
   GymUserMeScalarsFragment,
+  HoldColorScalars,
   HoldColorScalarsFragment,
   PaginatedObjects,
   PaginationFragment,
@@ -47,6 +50,7 @@ import {
   UserMeScalarsFragment,
   UserScalars,
   UserScalarsFragment,
+  WallScalars,
   WallScalarsFragment,
   WallSectionScalarsFragment,
 } from "./fragments";
@@ -218,17 +222,17 @@ const climbLogsQuery = gql`
     }
   }
 `;
-interface ClimbLogsResponse {
+type ClimbLogsResponse = {
   climbLogs: PaginatedObjects<
-    ClimbLog & {
-      climb: Climb & {
-        holdColor: HoldColor;
-        wall: Wall;
+    ClimbLogScalars & {
+      climb: ClimbScalars & {
+        holdColor: HoldColorScalars;
+        wall: WallScalars;
         gym: GymScalars;
       };
     }
   >;
-}
+};
 
 const compsQuery = gql`
   ${PaginationFragment}
@@ -721,10 +725,6 @@ export interface HoldColor extends MongoGraphQLObject<"HoldColor"> {
   nameLoc: string;
 }
 
-interface TopLoggerClimbLogDereferenced extends Omit<ClimbLog, "climb"> {
-  climb: ClimbDereferenced;
-}
-
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
@@ -1008,15 +1008,18 @@ export const GET = (request: NextRequest) =>
             userId,
             climbedAtDate: climbDay.statsAtDate,
           };
-          const graphqlClimbLogsResponse = await fetchQuery<{
-            climbLogs: PaginatedObjects<TopLoggerClimbLogDereferenced>;
-          }>(climbLogsQuery, climbLogsVariables);
+          const graphqlClimbLogsResponse = await fetchQuery<ClimbLogsResponse>(
+            climbLogsQuery,
+            climbLogsVariables,
+          );
 
           const updateResult = await normalizeAndUpsertQueryData(
             climbLogsQuery,
             climbLogsVariables,
             graphqlClimbLogsResponse.data!,
           );
+
+          yield graphqlClimbLogsResponse.data;
 
           yield updateResult;
         }
