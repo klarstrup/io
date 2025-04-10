@@ -21,6 +21,7 @@ import {
   ClimbDayScalars,
   ClimbDayScalarsFragment,
   ClimbGroupClimbScalarsFragment,
+  ClimbLogScalarsFragment,
   ClimbScalarsFragment,
   ClimbTagClimbScalarsFragment,
   ClimbTagScalarsFragment,
@@ -175,6 +176,7 @@ interface ClimbDaysSessionsResponse {
 
 const climbLogsQuery = gql`
   ${PaginationFragment}
+  ${ClimbLogScalarsFragment}
   ${ClimbScalarsFragment}
   ${GymScalarsFragment}
   ${CompClimbLogScalarsFragment}
@@ -200,27 +202,7 @@ const climbLogsQuery = gql`
         ...PaginationFragment
       }
       data {
-        id
-        climbId
-        userId
-        points
-        pointsBonus
-        tryIndex
-        tickIndex
-        ticked
-        tickType
-        gymId
-        climbType
-        topped
-        foreknowledge
-        zones
-        clips
-        holds
-        duration
-        lead
-        hangs
-        comments
-        climbedAtDate
+        ...ClimbLogScalarsFragment
 
         compClimbLog(compRoundId: $compRoundId) {
           ...CompClimbLogScalarsFragment
@@ -238,8 +220,6 @@ const climbLogsQuery = gql`
             ...GymScalarsFragment
           }
         }
-
-        __typename
       }
       __typename
     }

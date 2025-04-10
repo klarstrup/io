@@ -482,3 +482,30 @@ export const CompScalarsFragment = gql`
     climbType
   }
 `;
+
+export const ClimbLogScalarsFragment = gql`
+  fragment ClimbLogScalarsFragment on ClimbLog {
+    __typename
+    id
+    climbId
+    userId
+    points
+    pointsBonus
+    tryIndex
+    tickIndex
+    ticked
+    tickType
+    gymId
+    climbType
+    topped
+    foreknowledge
+    zones
+    clips
+    holds
+    duration
+    lead
+    hangs
+    comments
+    climbedAtDate
+  }
+`;
