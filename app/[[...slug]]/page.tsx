@@ -18,9 +18,9 @@ import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
 import { DataSource } from "../../sources/utils";
 import { isNonEmptyArray } from "../../utils";
 import { TopLoggerGraphQL } from "../../utils/graphql";
-import type { CompUser } from "../api/toplogger_scrape/route";
 import "../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
+import { CompUserScalars } from "../api/toplogger_scrape/fragments";
 
 const monthsPerPage = 3;
 
@@ -123,10 +123,9 @@ const getData = async (
           case DataSource.TopLogger: {
             if (!(noDisciplines || disciplines?.includes("bouldering"))) break;
 
-            for await (const compUser of TopLoggerGraphQL.find<CompUser>({
-              userId: config.graphQLId,
-              __typename: "CompUser",
-            })) {
+            for await (const compUser of TopLoggerGraphQL.find<CompUserScalars>(
+              { userId: config.graphQLId, __typename: "CompUser" },
+            )) {
               eventsPromises.push(
                 getTopLoggerCompEventEntry(compUser.compId, compUser.userId),
               );

@@ -19,7 +19,7 @@ import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
 import { DataSource } from "../../sources/utils";
 import { MINUTE_IN_SECONDS } from "../../utils";
 import { TopLoggerGraphQL } from "../../utils/graphql";
-import { CompUser } from "../api/toplogger_scrape/route";
+import { CompUserScalars } from "../api/toplogger_scrape/fragments";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -55,7 +55,7 @@ export async function GET() {
     ...(user?.dataSources?.some(
       (source) => source.source === DataSource.TopLogger,
     )
-      ? await TopLoggerGraphQL.find<CompUser>({
+      ? await TopLoggerGraphQL.find<CompUserScalars>({
           userId: {
             $in: user?.dataSources
               ?.filter((source) => source.source === DataSource.TopLogger)

@@ -1,23 +1,25 @@
 import { isAfter, isBefore } from "date-fns";
 import {
   ClimbLogScalars,
+  ClimbScalars,
+  CompClimbUserScalars,
+  CompGymScalars,
+  CompScalars,
+  CompUserScalars,
   GymScalars,
   HoldColorScalars,
 } from "../app/api/toplogger_scrape/fragments";
-import type {
-  Climb,
-  Comp,
-  CompClimbUser,
-  CompGym,
-  CompUser,
-} from "../app/api/toplogger_scrape/route";
 import {
   type DateInterval,
   type EventEntry,
   EventSource,
   type Score,
 } from "../lib";
-import { TopLoggerGraphQL, dereferenceReference } from "../utils/graphql";
+import {
+  Reference,
+  TopLoggerGraphQL,
+  dereferenceReference,
+} from "../utils/graphql";
 
 export namespace TopLogger {
   export interface GroupSingle {
@@ -329,7 +331,7 @@ export namespace TopLogger {
 }
 
 export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
-  const compUser = await TopLoggerGraphQL.findOne<CompUser>({
+  const compUser = await TopLoggerGraphQL.findOne<CompUserScalars>({
     compId,
     userId: ioId,
     __typename: "CompUser",
@@ -337,7 +339,9 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
 
   if (!compUser) throw new Error("CompUser not found");
 
-  const comp = await TopLoggerGraphQL.findOne<Comp>({
+  const comp = await TopLoggerGraphQL.findOne<
+    CompScalars & { compGyms: Reference[] }
+  >({
     id: compUser.compId,
     __typename: "Comp",
   });
@@ -346,7 +350,9 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
 
   const compGyms = await Promise.all(
     comp.compGyms.map((compGym) =>
-      dereferenceReference<"CompGym", CompGym>(compGym),
+      dereferenceReference<"CompGym", CompGymScalars & { gym: Reference }>(
+        compGym,
+      ),
     ),
   );
 
@@ -361,12 +367,12 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     end: comp.loggableEndAt,
   };
 
-  const compClimbUsers = await TopLoggerGraphQL.find<CompClimbUser>({
+  const compClimbUsers = await TopLoggerGraphQL.find<CompClimbUserScalars>({
     __typename: "CompClimbUser",
     compId: comp.id,
   }).toArray();
 
-  const climbs = await TopLoggerGraphQL.find<Climb>({
+  const climbs = await TopLoggerGraphQL.find<ClimbScalars>({
     __typename: "Climb",
     id: { $in: compClimbUsers.map(({ climbId }) => climbId) },
   }).toArray();
@@ -545,7 +551,7 @@ export async function getTopLoggerCompEventEntry(
   compId: string,
   userId: string,
 ): Promise<EventEntry> {
-  const compUser = await TopLoggerGraphQL.findOne<CompUser>({
+  const compUser = await TopLoggerGraphQL.findOne<CompUserScalars>({
     compId,
     userId,
     __typename: "CompUser",
@@ -553,7 +559,9 @@ export async function getTopLoggerCompEventEntry(
 
   if (!compUser) throw new Error("CompUser not found");
 
-  const comp = await TopLoggerGraphQL.findOne<Comp>({
+  const comp = await TopLoggerGraphQL.findOne<
+    CompScalars & { compGyms: Reference[] }
+  >({
     id: compUser.compId,
     __typename: "Comp",
   });
@@ -562,7 +570,9 @@ export async function getTopLoggerCompEventEntry(
 
   const compGyms = await Promise.all(
     comp.compGyms.map((compGym) =>
-      dereferenceReference<"CompGym", CompGym>(compGym),
+      dereferenceReference<"CompGym", CompGymScalars & { gym: Reference }>(
+        compGym,
+      ),
     ),
   );
 
