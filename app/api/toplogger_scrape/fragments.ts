@@ -562,16 +562,25 @@ export const ClimbTagClimbScalarsFragment = gql`
     order
   }
 `;
+export interface ClimbTagClimbScalars extends GraphQLObject<"ClimbTagClimb"> {
+  climbTagId: string;
+  order: number;
+}
 
 export const ClimbTagScalarsFragment = gql`
   fragment ClimbTagScalarsFragment on ClimbTag {
+    __typename
     id
     type
     nameLoc
     icon
-    __typename
   }
 `;
+export interface ClimbTagScalars extends GraphQLObject<"ClimbTag"> {
+  type: string;
+  nameLoc: string;
+  icon: string;
+}
 
 export const CompScalarsFragment = gql`
   fragment CompScalarsFragment on Comp {

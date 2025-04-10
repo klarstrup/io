@@ -26,7 +26,9 @@ import {
   ClimbLogScalarsFragment,
   ClimbScalars,
   ClimbScalarsFragment,
+  ClimbTagClimbScalars,
   ClimbTagClimbScalarsFragment,
+  ClimbTagScalars,
   ClimbTagScalarsFragment,
   ClimbUserScalars,
   ClimbUserScalarsFragment,
@@ -471,12 +473,6 @@ const compClimbUsersForRankingClimbUserQuery = gql`
         }
         climb {
           ...ClimbScalarsFragment
-        }
-        gym {
-          ...GymScalarsFragment
-        }
-        climb {
-          ...ClimbScalarsFragment
 
           holdColor {
             ...HoldColorScalarsFragment
@@ -486,19 +482,6 @@ const compClimbUsersForRankingClimbUserQuery = gql`
           }
           wallSection {
             ...WallSectionScalarsFragment
-          }
-        }
-        climb {
-          ...ClimbScalarsFragment
-
-          wall {
-            ...WallScalarsFragment
-          }
-          wallSection {
-            ...WallSectionScalarsFragment
-          }
-          holdColor {
-            ...HoldColorScalarsFragment
           }
           climbGroupClimbs {
             ...ClimbGroupClimbScalarsFragment
@@ -528,6 +511,26 @@ const compClimbUsersForRankingClimbUserQuery = gql`
     }
   }
 `;
+type CompClimbUsersForRankingClimbUserResponse = {
+  compClimbUsers: PaginatedObjects<
+    CompClimbUserScalars & {
+      gym: GymScalars;
+      climb: ClimbScalars & {
+        holdColor: HoldColorScalars;
+        wall: WallScalars;
+        wallSection: WallSectionScalars;
+        climbGroupClimbs: ClimbGroupClimbScalars[];
+        climbTagClimbs: (ClimbTagClimbScalars & {
+          climbTag: ClimbTagScalars;
+        })[];
+        climbUser: ClimbUserScalars & {
+          compClimbUser: CompClimbUserScalars;
+        };
+        compRoundClimb: CompRoundClimbScalars;
+      };
+    }
+  >;
+};
 
 export interface Climb extends MongoGraphQLObject<"Climb"> {
   grade: number;
@@ -887,9 +890,7 @@ export const GET = (request: NextRequest) =>
                       },
                     };
                     const compClimbUsersForRankingClimbUserResponse =
-                      await fetchQuery<{
-                        compClimbUsers: PaginatedObjects<CompClimbUser>;
-                      }>(
+                      await fetchQuery<CompClimbUsersForRankingClimbUserResponse>(
                         compClimbUsersForRankingClimbUserQuery,
                         compClimbUsersForRankingClimbUserVariables,
                       );
