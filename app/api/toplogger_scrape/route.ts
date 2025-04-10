@@ -31,8 +31,10 @@ import {
   CompPouleScalarsFragment,
   CompRoundClimbScalarsFragment,
   CompRoundScalarsFragment,
+  CompRoundUserScalars,
   CompRoundUserScalarsFragment,
   CompScalarsFragment,
+  CompUserScalars,
   CompUserScalarsFragment,
   GymScalars,
   GymScalarsFragment,
@@ -43,6 +45,7 @@ import {
   PaginationFragment,
   UserMeScalars,
   UserMeScalarsFragment,
+  UserScalars,
   UserScalarsFragment,
   WallScalarsFragment,
   WallSectionScalarsFragment,
@@ -392,6 +395,14 @@ const compRoundUsersForRankingQuery = gql`
     }
   }
 `;
+type CompRoundUsersForRankingResponse = {
+  ranking: PaginatedObjects<
+    CompRoundUserScalars & {
+      compUser: CompUserScalars;
+      user: UserScalars;
+    }
+  >;
+};
 
 const compClimbUsersForRankingClimbUserQuery = gql`
   ${PaginationFragment}
@@ -882,12 +893,11 @@ export const GET = (request: NextRequest) =>
                     compId: comp.id,
                     compRoundId: round.id,
                   };
-                  const compRoundUsersForRankingResponse = await fetchQuery<{
-                    ranking: PaginatedObjects<CompRoundUser>;
-                  }>(
-                    compRoundUsersForRankingQuery,
-                    compRoundUsersForRankingVariables,
-                  );
+                  const compRoundUsersForRankingResponse =
+                    await fetchQuery<CompRoundUsersForRankingResponse>(
+                      compRoundUsersForRankingQuery,
+                      compRoundUsersForRankingVariables,
+                    );
 
                   const updateResult = await normalizeAndUpsertQueryData(
                     compRoundUsersForRankingQuery,

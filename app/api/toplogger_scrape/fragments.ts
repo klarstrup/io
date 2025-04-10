@@ -43,6 +43,9 @@ export const UserScalarsFragment = gql`
     __typename
   }
 `;
+export interface UserScalars extends GraphQLObject<"User"> {
+  avatarUploadPath: null | string;
+}
 
 export const UserMeScalarsFragment = gql`
   fragment UserMeScalarsFragment on UserMe {
@@ -257,6 +260,17 @@ export const CompUserScalarsFragment = gql`
     # createdAt
   }
 `;
+export interface CompUserScalars extends GraphQLObject<"CompUser"> {
+  id: string;
+  userId: string;
+  compId: string;
+  fullName: string;
+  disqualified: boolean;
+  approvalState: "APPROVED";
+  firstName: string;
+  lastName: string;
+  email: null;
+}
 
 export const CompRoundScalarsFragment = gql`
   fragment CompRoundScalarsFragment on CompRound {
@@ -286,6 +300,7 @@ export const CompRoundClimbScalarsFragment = gql`
     compId
   }
 `;
+
 export const CompRoundUserScalarsFragment = gql`
   fragment CompRoundUserScalarsFragment on CompRoundUser {
     __typename
@@ -301,8 +316,26 @@ export const CompRoundUserScalarsFragment = gql`
     totMinDuration
     climbsWithScoresCount
     participating
+    # compUser
+    # user
   }
 `;
+export interface CompRoundUserScalars extends GraphQLObject<"CompRoundUser"> {
+  userId: string;
+  compUserId: string;
+  compRoundId: string;
+  score: number;
+  totMaxZones: number;
+  totMaxClips: number;
+  totMaxHolds: number;
+  totMinTries: number;
+  totMinDuration: number;
+  climbsWithScoresCount: number;
+  participating: boolean;
+  // compUser: CompUser;
+  // user: User;
+}
+
 export const CompClimbLogScalarsFragment = gql`
   fragment CompClimbLogScalarsFragment on CompClimbLog {
     __typename
