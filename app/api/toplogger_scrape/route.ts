@@ -533,22 +533,22 @@ export interface Climb extends MongoGraphQLObject<"Climb"> {
   compRoundClimb: CompRoundClimb;
 }
 
-export interface ClimbGroupClimb extends MongoGraphQLObject<"ClimbGroupClimb"> {
+interface ClimbGroupClimb extends MongoGraphQLObject<"ClimbGroupClimb"> {
   climbGroupId: string;
   order: number;
 }
 
-export interface ClimbSetter extends MongoGraphQLObject<"ClimbSetter"> {
+interface ClimbSetter extends MongoGraphQLObject<"ClimbSetter"> {
   id: string;
   gymAdmin: GymAdmin;
 }
 
-export interface GymAdmin extends MongoGraphQLObject<"GymAdmin"> {
+interface GymAdmin extends MongoGraphQLObject<"GymAdmin"> {
   name: string;
   picPath: null;
 }
 
-export interface ClimbUser extends MongoGraphQLObject<"ClimbUser"> {
+interface ClimbUser extends MongoGraphQLObject<"ClimbUser"> {
   climbId: string;
   grade: number | null;
   rating: null;
@@ -571,17 +571,17 @@ export interface CompClimbUser extends MongoGraphQLObject<"CompClimbUser"> {
   pointsJson: CompClimbUserPointsJSON;
   tickType: number;
 }
-export interface CompClimbUserPointsJSON {
+interface CompClimbUserPointsJSON {
   zones: Zone[];
 }
 
-export interface Zone {
+interface Zone {
   points: number;
   pointsBase: number;
   pointsBonus: number;
 }
 
-export interface CompRoundClimb extends MongoGraphQLObject<"CompRoundClimb"> {
+interface CompRoundClimb extends MongoGraphQLObject<"CompRoundClimb"> {
   points: number;
   pointsJson: CompRoundClimbPointsJSON;
   leadRequired: boolean;
@@ -590,7 +590,7 @@ export interface CompRoundClimb extends MongoGraphQLObject<"CompRoundClimb"> {
   compRoundId: string;
 }
 
-export interface CompRoundClimbPointsJSON {
+interface CompRoundClimbPointsJSON {
   zones: number[];
 }
 
@@ -601,6 +601,7 @@ interface ClimbDereferenced extends Omit<Climb, "gym" | "holdColor" | "wall"> {
 }
 
 type ClimbType = "boulder" | "route";
+
 export interface ClimbLog extends MongoGraphQLObject<"ClimbLog"> {
   grade: number;
   climb: Reference;
@@ -652,7 +653,7 @@ export interface Comp extends MongoGraphQLObject<"Comp"> {
   climbType: string;
   compGyms: Reference[];
 }
-export interface CompRound extends MongoGraphQLObject<"CompRound"> {
+interface CompRound extends MongoGraphQLObject<"CompRound"> {
   compRoundUserMe: CompRoundUser;
   selfLoggable: boolean;
   loggableStartAt: Date;
@@ -675,11 +676,11 @@ export interface CompRound extends MongoGraphQLObject<"CompRound"> {
   compId: string;
 }
 
-export interface ScoreSystemParams {
+interface ScoreSystemParams {
   bonusFlPercent: number;
   bonusOsPercent: number;
 }
-export interface CompRoundUser extends MongoGraphQLObject<"CompRoundUser"> {
+interface CompRoundUser extends MongoGraphQLObject<"CompRoundUser"> {
   participating: boolean;
   score: number;
   totMaxZones: number;
@@ -692,10 +693,10 @@ export interface CompRoundUser extends MongoGraphQLObject<"CompRoundUser"> {
   user: User;
   userId: string;
 }
-export interface User extends MongoGraphQLObject<"User"> {
+interface User extends MongoGraphQLObject<"User"> {
   avatarUploadPath: null | string;
 }
-export interface CompPoule extends MongoGraphQLObject<"CompPoule"> {
+interface CompPoule extends MongoGraphQLObject<"CompPoule"> {
   compRounds: CompRound[];
   nameLoc: string;
   descriptionLoc: null;
@@ -704,30 +705,11 @@ export interface CompGym extends MongoGraphQLObject<"CompGym"> {
   gym: Reference;
   gymId: string;
 }
-
 export interface CompUser extends MongoGraphQLObject<"CompUser"> {
   approvalState: string;
   userId: string;
   compId: string;
   comp: Reference;
-}
-export interface TopLoggerCompUserDereferenced extends Omit<CompUser, "comp"> {
-  comp: Comp;
-}
-
-export interface UserMeGym extends MongoGraphQLObject<"UserMeGym"> {
-  nameSlug: string;
-}
-
-export interface GymUserFavorite extends MongoGraphQLObject<"GymUserFavorite"> {
-  gym: GymUserFavoriteGym;
-}
-
-export interface GymUserFavoriteGym
-  extends MongoGraphQLObject<"GymUserFavoriteGym"> {
-  name: string;
-  nameSlug: string;
-  iconPath: string;
 }
 
 export interface Gym extends MongoGraphQLObject<"Gym"> {
