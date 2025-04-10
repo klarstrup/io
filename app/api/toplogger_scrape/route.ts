@@ -20,6 +20,7 @@ import { jsonStreamResponse } from "../scraper-utils";
 import {
   ClimbDayScalars,
   ClimbDayScalarsFragment,
+  ClimbGroupClimbScalars,
   ClimbGroupClimbScalarsFragment,
   ClimbLogScalars,
   ClimbLogScalarsFragment,
@@ -27,12 +28,15 @@ import {
   ClimbScalarsFragment,
   ClimbTagClimbScalarsFragment,
   ClimbTagScalarsFragment,
+  ClimbUserScalars,
   ClimbUserScalarsFragment,
+  CompClimbUserScalars,
   CompClimbUserScalarsFragment,
   CompGymScalars,
   CompGymScalarsFragment,
   CompPouleScalars,
   CompPouleScalarsFragment,
+  CompRoundClimbScalars,
   CompRoundClimbScalarsFragment,
   CompRoundScalars,
   CompRoundScalarsFragment,
@@ -56,6 +60,7 @@ import {
   UserScalarsFragment,
   WallScalars,
   WallScalarsFragment,
+  WallSectionScalars,
   WallSectionScalarsFragment,
 } from "./fragments";
 
@@ -127,6 +132,23 @@ const climbsQuery = gql`
     }
   }
 `;
+type ClimbsResponse = {
+  climbs: PaginatedObjects<
+    ClimbScalars & {
+      wall: WallScalars;
+      wallSection: WallSectionScalars;
+      holdColor: HoldColorScalars;
+      climbGroupClimbs: ClimbGroupClimbScalars[];
+      climbUser: ClimbUserScalars & {
+        compClimbUser: CompClimbUserScalars & {
+          climbUser: ClimbUserScalars;
+          compRoundClimb: CompRoundClimbScalars;
+        };
+      };
+      compRoundClimb: CompRoundClimbScalars;
+    }
+  >;
+};
 
 const authSigninRefreshTokenQuery = gql`
   mutation authSigninRefreshToken($refreshToken: JWT!) {
@@ -886,9 +908,10 @@ export const GET = (request: NextRequest) =>
                       compRoundId: round.id,
                       userId: userIddd,
                     };
-                    const climbsResponse = await fetchQuery<{
-                      climbs: PaginatedObjects<Climb>;
-                    }>(climbsQuery, climbsVariables);
+                    const climbsResponse = await fetchQuery<ClimbsResponse>(
+                      climbsQuery,
+                      climbsVariables,
+                    );
 
                     const updateResult = await normalizeAndUpsertQueryData(
                       climbsQuery,

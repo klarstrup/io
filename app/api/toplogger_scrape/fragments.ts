@@ -258,6 +258,13 @@ export const ClimbGroupClimbScalarsFragment = gql`
     __typename
   }
 `;
+export interface ClimbGroupClimbScalars
+  extends GraphQLObject<"ClimbGroupClimb"> {
+  climbId: string;
+  gymId: string;
+  climbGroupId: string;
+  order: number;
+}
 
 export const ClimbUserScalarsFragment = gql`
   fragment ClimbUserScalarsFragment on ClimbUser {
@@ -275,6 +282,19 @@ export const ClimbUserScalarsFragment = gql`
     updatedAt
   }
 `;
+export interface ClimbUserScalars extends GraphQLObject<"ClimbUser"> {
+  climbId: string;
+  grade: number | null;
+  rating: null;
+  project: boolean;
+  votedRenew: boolean;
+  tickType: number;
+  totalTries: number;
+  triedFirstAtDate: Date;
+  tickedFirstAtDate: Date | null;
+  updatedAt: Date;
+  // compClimbUser?: CompClimbUser | null;
+}
 
 export const CompClimbUserScalarsFragment = gql`
   fragment CompClimbUserScalarsFragment on CompClimbUser {
@@ -291,6 +311,21 @@ export const CompClimbUserScalarsFragment = gql`
     totalTries
   }
 `;
+export interface CompClimbUserScalars extends GraphQLObject<"CompClimbUser"> {
+  climbType: ClimbType;
+  compId: string;
+  userId: string;
+  compUserId: string;
+  climbId: string;
+  points: number;
+  pointsJson: {
+    zones: { points: number; pointsBase: number; pointsBonus: number }[];
+  };
+  tickType: number;
+  totalTries: number;
+  //  climbUser: ClimbUser;
+  //  compRoundClimb: CompRoundClimb;
+}
 
 export const CompUserScalarsFragment = gql`
   fragment CompUserScalarsFragment on CompUser {
@@ -360,6 +395,14 @@ export const CompRoundClimbScalarsFragment = gql`
     compId
   }
 `;
+export interface CompRoundClimbScalars extends GraphQLObject<"CompRoundClimb"> {
+  points: number;
+  pointsJson: { zones: number[] };
+  leadRequired: boolean;
+  compRoundId: string;
+  climbId: string;
+  compId: string;
+}
 
 export const CompRoundUserScalarsFragment = gql`
   fragment CompRoundUserScalarsFragment on CompRoundUser {
@@ -435,6 +478,12 @@ export const WallSectionScalarsFragment = gql`
     __typename
   }
 `;
+export interface WallSectionScalars {
+  name: string;
+  routesEnabled: boolean;
+  positionX: number;
+  positionY: number;
+}
 
 export const HoldColorScalarsFragment = gql`
   fragment HoldColorScalarsFragment on HoldColor {
