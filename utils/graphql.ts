@@ -14,8 +14,8 @@ import {
   type SelectionSetNode,
   type ValueNode,
 } from "graphql";
+import { TopLoggerGraphQL } from "../sources/toplogger.server";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
-import { proxyCollection } from "../utils.server";
 interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   errorMessage?: string;
@@ -656,9 +656,6 @@ const parseDateFields = (doc: Record<string, unknown>) => {
   }
   return doc;
 };
-
-export const TopLoggerGraphQL =
-  proxyCollection<MongoGraphQLObject<string>>("toplogger_graphql");
 
 export async function normalizeAndUpsertQueryData(
   query: DocumentNode,

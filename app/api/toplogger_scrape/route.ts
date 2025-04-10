@@ -5,13 +5,13 @@ import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
+import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { randomSliceOfSize, shuffle } from "../../../utils";
 import {
   fetchGraphQLQuery,
   normalizeAndUpsertQueryData,
-  TopLoggerGraphQL,
 } from "../../../utils/graphql";
 import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";

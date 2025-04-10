@@ -16,9 +16,9 @@ import { ClimbAlongAthletes } from "../../sources/climbalong.server";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntries } from "../../sources/sportstiming";
 import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
+import { TopLoggerGraphQL } from "../../sources/toplogger.server";
 import { DataSource } from "../../sources/utils";
 import { MINUTE_IN_SECONDS } from "../../utils";
-import { TopLoggerGraphQL } from "../../utils/graphql";
 import { CompUserScalars } from "../api/toplogger_scrape/fragments";
 
 export const dynamic = "force-dynamic";

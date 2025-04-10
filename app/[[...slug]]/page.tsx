@@ -15,12 +15,12 @@ import { getIoOnsightCompetitionEventEntries } from "../../sources/onsight";
 import { getSongkickEvents } from "../../sources/songkick";
 import { getSportsTimingEventEntries } from "../../sources/sportstiming";
 import { getTopLoggerCompEventEntry } from "../../sources/toplogger";
+import { TopLoggerGraphQL } from "../../sources/toplogger.server";
 import { DataSource } from "../../sources/utils";
 import { isNonEmptyArray } from "../../utils";
-import { TopLoggerGraphQL } from "../../utils/graphql";
+import { CompUserScalars } from "../api/toplogger_scrape/fragments";
 import "../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
-import { CompUserScalars } from "../api/toplogger_scrape/fragments";
 
 const monthsPerPage = 3;
 
