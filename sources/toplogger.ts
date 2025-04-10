@@ -35,7 +35,7 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
 
   const gyms = await TopLoggerGraphQL.find<GymScalars>({
     __typename: "Gym",
-    id: { $in: compGyms.map((compGym) => compGym.gymId) },
+    id: { $in: compGyms.map(({ gymId }) => gymId) },
   }).toArray();
 
   const compClimbUsers = await TopLoggerGraphQL.find<CompClimbUserScalars>({
@@ -82,8 +82,8 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     url: `https://app.toplogger.nu/en-us/${gym.nameSlug}/competitions/${compId}`,
     start: comp.loggableStartAt,
     end: comp.loggableEndAt,
-    venue: gyms.map((gym) => gym.name).join(", ") || null,
-    location: gyms.map((gym) => gym.name).join(", ") || null,
+    venue: gyms.map(({ name }) => name).join(", ") || null,
+    location: gyms.map(({ name }) => name).join(", ") || null,
     event: comp.name
       .replace("- Qualification", "")
       .replace("(Qualification)", "")
@@ -109,8 +109,8 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
         return {
           number: climb.name || "",
           color:
-            holdColors.find((holdColor) => holdColor.id === climb.holdColorId)
-              ?.color || undefined,
+            holdColors.find(({ id }) => id === climb.holdColorId)?.color ||
+            undefined,
           grade: climb.grade ? Number(climb.grade / 100) : undefined,
           attempt: ioClimbLog ? ioClimbLog.tickType == 0 : false,
           // TopLogger does not do zones, at least not for Beta Boulders
@@ -121,10 +121,7 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
         };
       })
       .sort((a, b) =>
-        Intl.Collator("en-DK", { numeric: true }).compare(
-          a.number || "",
-          b.number || "",
-        ),
+        Intl.Collator("en-DK", { numeric: true }).compare(a.number, b.number),
       ),
     // Left as an exercise for the reader
     scores: [] as Score[] /* ||
@@ -243,7 +240,7 @@ export async function getTopLoggerCompEventEntry(
 
   const gyms = await TopLoggerGraphQL.find<GymScalars>({
     __typename: "Gym",
-    id: { $in: compGyms.map((compGym) => compGym.gymId) },
+    id: { $in: compGyms.map(({ gymId }) => gymId) },
   }).toArray();
 
   return {
@@ -251,8 +248,8 @@ export async function getTopLoggerCompEventEntry(
     type: "competition",
     discipline: "bouldering",
     id: compUser.compId,
-    venue: gyms.map((gym) => gym.name).join(", ") || null,
-    location: gyms.map((gym) => gym.name).join(", ") || null,
+    venue: gyms.map(({ name }) => name).join(", ") || null,
+    location: gyms.map(({ name }) => name).join(", ") || null,
     event: comp.name
       .replace("- Qualification", "")
       .replace("(Qualification)", "")
