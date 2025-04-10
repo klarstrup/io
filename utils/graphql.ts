@@ -93,11 +93,17 @@ interface FetchResult<TData = Record<string, unknown>> {
 export type GraphQLTypeName = string;
 export type GraphQLID = string;
 export type RefString = `${GraphQLTypeName}:${GraphQLID}`;
-export interface Reference {
-  readonly __ref: RefString;
-}
 
-export const makeReference = (__ref: RefString): Reference => ({ __ref });
+declare const __brand: unique symbol;
+type Brand<B> = { [__brand]: B };
+export type Branded<T, B> = T & Brand<B>;
+
+export type Reference<TypeBeingReferenced = MutableDeep<unknown>> = Branded<
+  { readonly __ref: RefString },
+  TypeBeingReferenced
+>;
+
+export const makeReference = (__ref: RefString) => ({ __ref }) as Reference;
 
 export const isReference = (obj: unknown): obj is Reference =>
   Boolean(
@@ -626,21 +632,17 @@ export interface MongoGraphQLObject<T extends string> {
   id: string;
 }
 
-export const dereferenceReference = async <
-  T extends string,
-  R extends MongoGraphQLObject<T>,
->(
-  ref: Reference,
-): Promise<R> => {
+export const filterFromReference = <R = unknown>(ref: Reference<R>) => {
   const [__typename, id] = ref.__ref.split(":") as [GraphQLID, GraphQLTypeName];
-  const doc = await TopLoggerGraphQL.findOne<MongoGraphQLObject<T>>({
-    __typename,
-    id,
-  });
 
-  if (!doc) {
-    throw new Error(`Failed to dereference ${ref.__ref}`);
-  }
+  return { __typename, id };
+};
+export const dereferenceReference = async <R = unknown>(
+  ref: Reference<R>,
+): Promise<R> => {
+  const doc = await TopLoggerGraphQL.findOne<R>(filterFromReference(ref));
+
+  if (!doc) throw new Error(`Failed to dereference ${ref.__ref}`);
 
   return doc as R;
 };
@@ -648,10 +650,8 @@ export const dereferenceReference = async <
 const parseDateFields = (doc: Record<string, unknown>) => {
   for (const key in doc) {
     const value = doc[key];
-    if (typeof value === "string") {
-      if (value.match(/^\d{4}-\d{2}-\d{2}/)) {
-        doc[key] = TZDate.tz("Etc/UTC", value);
-      }
+    if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+      doc[key] = TZDate.tz("Etc/UTC", value);
     }
   }
   return doc;

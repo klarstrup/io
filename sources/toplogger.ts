@@ -10,7 +10,7 @@ import {
   HoldColorScalars,
 } from "../app/api/toplogger_scrape/fragments";
 import { type EventEntry, EventSource, type Score } from "../lib";
-import { type Reference, dereferenceReference } from "../utils/graphql";
+import { type Reference, filterFromReference } from "../utils/graphql";
 import { TopLoggerGraphQL } from "./toplogger.server";
 
 export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
@@ -23,27 +23,20 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
   if (!compUser) throw new Error("CompUser not found");
 
   const comp = await TopLoggerGraphQL.findOne<
-    CompScalars & { compGyms: Reference[] }
-  >({
-    id: compUser.compId,
-    __typename: "Comp",
-  });
+    CompScalars & { compGyms: Reference<CompGymScalars>[] }
+  >({ id: compUser.compId, __typename: "Comp" });
 
   if (!comp) throw new Error("Comp not found");
 
-  const compGyms = await Promise.all(
-    comp.compGyms.map((compGym) =>
-      dereferenceReference<"CompGym", CompGymScalars & { gym: Reference }>(
-        compGym,
-      ),
-    ),
-  );
+  const compGyms = await TopLoggerGraphQL.find<CompGymScalars>({
+    __typename: "CompGym",
+    id: { $in: comp.compGyms.map((ref) => filterFromReference(ref).id) },
+  }).toArray();
 
-  const gyms = await Promise.all(
-    compGyms.map((compGym) =>
-      dereferenceReference<"Gym", GymScalars>(compGym.gym),
-    ),
-  );
+  const gyms = await TopLoggerGraphQL.find<GymScalars>({
+    __typename: "Gym",
+    id: { $in: compGyms.map((compGym) => compGym.gymId) },
+  }).toArray();
 
   const compClimbUsers = await TopLoggerGraphQL.find<CompClimbUserScalars>({
     __typename: "CompClimbUser",
@@ -230,35 +223,28 @@ export async function getTopLoggerCompEventEntry(
   userId: string,
 ): Promise<EventEntry> {
   const compUser = await TopLoggerGraphQL.findOne<CompUserScalars>({
+    __typename: "CompUser",
     compId,
     userId,
-    __typename: "CompUser",
   });
 
   if (!compUser) throw new Error("CompUser not found");
 
   const comp = await TopLoggerGraphQL.findOne<
-    CompScalars & { compGyms: Reference[] }
-  >({
-    id: compUser.compId,
-    __typename: "Comp",
-  });
+    CompScalars & { compGyms: Reference<CompGymScalars>[] }
+  >({ __typename: "Comp", id: compUser.compId });
 
   if (!comp) throw new Error("Comp not found");
 
-  const compGyms = await Promise.all(
-    comp.compGyms.map((compGym) =>
-      dereferenceReference<"CompGym", CompGymScalars & { gym: Reference }>(
-        compGym,
-      ),
-    ),
-  );
+  const compGyms = await TopLoggerGraphQL.find<CompGymScalars>({
+    __typename: "CompGym",
+    id: { $in: comp.compGyms.map((ref) => filterFromReference(ref).id) },
+  }).toArray();
 
-  const gyms = await Promise.all(
-    compGyms.map((compGym) =>
-      dereferenceReference<"Gym", GymScalars>(compGym.gym),
-    ),
-  );
+  const gyms = await TopLoggerGraphQL.find<GymScalars>({
+    __typename: "Gym",
+    id: { $in: compGyms.map((compGym) => compGym.gymId) },
+  }).toArray();
 
   return {
     source: EventSource.TopLogger,
