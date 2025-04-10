@@ -1,4 +1,4 @@
-import { type DocumentNode } from "graphql";
+import { type DocumentNode, Kind } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
 import { NextRequest } from "next/server";
@@ -17,11 +17,47 @@ import {
 } from "../../../utils/graphql";
 import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
+import {
+  ClimbDayScalarsFragment,
+  ClimbGroupClimbScalarsFragment,
+  ClimbScalarsFragment,
+  ClimbTagClimbScalarsFragment,
+  ClimbTagScalarsFragment,
+  ClimbUserScalarsFragment,
+  CompClimbLogScalarsFragment,
+  CompClimbUserScalarsFragment,
+  CompGymScalarsFragment,
+  CompPouleScalarsFragment,
+  CompRoundClimbScalarsFragment,
+  CompRoundScalarsFragment,
+  CompRoundUserScalarsFragment,
+  CompScalarsFragment,
+  CompUserScalarsFragment,
+  GymScalarsFragment,
+  GymUserMeScalarsFragment,
+  HoldColorScalarsFragment,
+  PaginatedObjects,
+  PaginationFragment,
+  UserMeScalarsFragment,
+  UserScalarsFragment,
+  WallScalarsFragment,
+  WallSectionScalarsFragment,
+} from "./fragments";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const climbsQuery = gql`
+  ${PaginationFragment}
+  ${ClimbScalarsFragment}
+  ${ClimbUserScalarsFragment}
+  ${CompRoundClimbScalarsFragment}
+  ${WallScalarsFragment}
+  ${WallSectionScalarsFragment}
+  ${HoldColorScalarsFragment}
+  ${ClimbGroupClimbScalarsFragment}
+  ${CompClimbUserScalarsFragment}
+
   query climbs(
     $gymId: ID!
     $climbType: ClimbType!
@@ -35,184 +71,45 @@ const climbsQuery = gql`
       includeHidden: true
     ) {
       pagination {
-        total
-        page
-        perPage
-        orderBy {
-          key
-          order
-          __typename
-        }
-        __typename
+        ...PaginationFragment
       }
       data {
-        ...climb
-        ...climbWithClimbUser
-        ...climbWithCompRoundClimb
-        __typename
+        ...ClimbScalarsFragment
+
+        wall {
+          ...WallScalarsFragment
+        }
+        wallSection {
+          ...WallSectionScalarsFragment
+        }
+        holdColor {
+          ...HoldColorScalarsFragment
+        }
+        climbGroupClimbs {
+          ...ClimbGroupClimbScalarsFragment
+        }
+
+        climbUser(userId: $userId) {
+          ...ClimbUserScalarsFragment
+
+          compClimbUser(compRoundId: $compRoundId) {
+            ...CompClimbUserScalarsFragment
+
+            climbUser {
+              ...ClimbUserScalarsFragment
+            }
+            compRoundClimb {
+              ...CompRoundClimbScalarsFragment
+            }
+          }
+        }
+
+        compRoundClimb(compRoundId: $compRoundId) {
+          ...CompRoundClimbScalarsFragment
+        }
       }
       __typename
     }
-  }
-
-  fragment climbGroupClimb on ClimbGroupClimb {
-    id
-    climbGroupId
-    order
-    __typename
-  }
-
-  fragment climbUser on ClimbUser {
-    id
-    climbId
-    grade
-    rating
-    project
-    votedRenew
-    tickType
-    totalTries
-    triedFirstAtDate
-    tickedFirstAtDate
-    updatedAt
-    compClimbUser(compRoundId: $compRoundId) {
-      climbUser {
-        id
-        __typename
-        climbId
-        grade
-        rating
-        project
-        votedRenew
-        tickType
-        totalTries
-        triedFirstAtDate
-        tickedFirstAtDate
-        updatedAt
-      }
-      compRoundClimb {
-        id
-        points
-        pointsJson
-        leadRequired
-        __typename
-        compRoundId
-        climbId
-        compId
-      }
-      compId
-      userId
-      climbId
-      id
-      points
-      pointsJson
-      tickType
-      __typename
-    }
-    __typename
-  }
-
-  fragment compRoundClimb on CompRoundClimb {
-    id
-    points
-    pointsJson
-    leadRequired
-    __typename
-    compRoundId
-    climbId
-    compId
-  }
-
-  fragment climb on Climb {
-    id
-    climbType
-    positionX
-    positionY
-    gradeAuto
-    grade
-    gradeVotesCount
-    gradeUsersVsAdmin
-    picPath
-    label
-    name
-    zones
-    remarksLoc
-    suitableForKids
-    clips
-    holds
-    height
-    overhang
-    autobelay
-    leadEnabled
-    leadRequired
-    ratingsAverage
-    ticksCount
-    inAt
-    outAt
-    outPlannedAt
-    order
-    setterName
-    climbSetters {
-      id
-      gymAdmin {
-        id
-        name
-        picPath
-        __typename
-      }
-      __typename
-    }
-    wallId
-    wall {
-      id
-      nameLoc
-      labelX
-      labelY
-      __typename
-    }
-    wallSectionId
-    wallSection {
-      id
-      name
-      routesEnabled
-      positionX
-      positionY
-      __typename
-    }
-    holdColorId
-    holdColor {
-      id
-      color
-      colorSecondary
-      nameLoc
-      order
-      __typename
-    }
-    climbGroupClimbs {
-      ...climbGroupClimb
-      __typename
-    }
-    __typename
-  }
-
-  fragment climbWithClimbUser on Climb {
-    id
-    climbUser(userId: $userId) {
-      ...climbUser
-      __typename
-    }
-    __typename
-  }
-
-  fragment climbWithCompRoundClimb on Climb {
-    id
-    compRoundClimb(compRoundId: $compRoundId) {
-      ...compRoundClimb
-      compRoundId
-      climbId
-      compId
-      __typename
-    }
-    __typename
   }
 `;
 
@@ -250,6 +147,9 @@ interface ClimbDaysSessionsQueryResponse {
   };
 }
 const climbDaysSessionsQuery = gql`
+  ${PaginationFragment}
+  ${ClimbDayScalarsFragment}
+
   query climbDaysSessions(
     $userId: ID!
     $bouldersTotalTriesMin: Int
@@ -268,53 +168,10 @@ const climbDaysSessionsQuery = gql`
       updateDayStatsIfOld: true
     ) {
       pagination {
-        total
-        page
-        perPage
-        orderBy {
-          key
-          order
-          __typename
-        }
-        __typename
+        ...PaginationFragment
       }
       data {
-        id
-        statsAtDate
-        gradeDistributionRoutes
-        gradeDistributionBoulders
-        bouldersTotalTries
-        bouldersDayGrade
-        bouldersDayGradeMax
-        bouldersDayGradeFlPct
-        bouldersDayGradeRepeatPct
-        routesTotalTries
-        routesDayGrade
-        routesDayGradeMax
-        routesDayGradeOsPct
-        routesDayGradeRepeatPct
-        routesTotalHeight
-
-        gym {
-          id
-          name
-          nameSlug
-          iconPath
-          markBoulderNewDays
-          markRouteNewDays
-          markBoulderOutSoonDays
-          markRouteOutSoonDays
-          settingsLogBoulders
-          settingsLogRoutes
-          __typename
-        }
-        user {
-          id
-          fullName
-          avatarUploadPath
-          __typename
-        }
-        __typename
+        ...ClimbDayScalarsFragment
       }
       __typename
     }
@@ -338,6 +195,13 @@ interface ClimbLogsQueryResponse {
   [key: string]: unknown;
 }
 const climbLogsQuery = gql`
+  ${PaginationFragment}
+  ${ClimbScalarsFragment}
+  ${GymScalarsFragment}
+  ${CompClimbLogScalarsFragment}
+  ${HoldColorScalarsFragment}
+  ${WallScalarsFragment}
+
   query climbLogsSession(
     $gymId: ID
     $userId: ID!
@@ -354,15 +218,7 @@ const climbLogsQuery = gql`
       pagination: $pagination
     ) {
       pagination {
-        total
-        page
-        perPage
-        orderBy {
-          key
-          order
-          __typename
-        }
-        __typename
+        ...PaginationFragment
       }
       data {
         id
@@ -388,79 +244,20 @@ const climbLogsQuery = gql`
         climbedAtDate
 
         compClimbLog(compRoundId: $compRoundId) {
-          id
-          points
-          pointsBase
-          pointsBonus
-          pointsJson
-          climbId
-          __typename
+          ...CompClimbLogScalarsFragment
         }
 
         climb {
-          id
-          climbType
-          positionX
-          positionY
-          gradeAuto
-          grade
-          gradeVotesCount
-          gradeUsersVsAdmin
-          picPath
-          label
-          name
-          zones
-          remarksLoc
-          suitableForKids
-          clips
-          holds
-          height
-          overhang
-          leadEnabled
-          leadRequired
-          ratingsAverage
-          ticksCount
-          inAt
-          outAt
-          outPlannedAt
-          order
-          setterName
+          ...ClimbScalarsFragment
           holdColor {
-            id
-            color
-            colorSecondary
-            nameLoc
-            order
-            __typename
+            ...HoldColorScalarsFragment
           }
           wall {
-            id
-            nameLoc
-            idOnFloorplan
-            height
-            overhang
-            bouldersEnabled
-            routesEnabled
-            climbTypeDefault
-            labelX
-            labelY
-            order
-            __typename
+            ...WallScalarsFragment
           }
           gym {
-            id
-            name
-            nameSlug
-            iconPath
-            markBoulderNewDays
-            markRouteNewDays
-            markBoulderOutSoonDays
-            markRouteOutSoonDays
-            settingsLogBoulders
-            settingsLogRoutes
-            __typename
+            ...GymScalarsFragment
           }
-          __typename
         }
 
         __typename
@@ -471,589 +268,115 @@ const climbLogsQuery = gql`
 `;
 
 const compsQuery = gql`
+  ${PaginationFragment}
+  ${CompScalarsFragment}
+  ${GymScalarsFragment}
+  ${CompGymScalarsFragment}
+  ${CompPouleScalarsFragment}
+  ${CompRoundScalarsFragment}
+  ${CompRoundUserScalarsFragment}
+  ${CompUserScalarsFragment}
+
   query comps(
     $gymId: ID!
     $search: String
     $climbType: ClimbType
     $inviteOnly: Boolean
-    $registered: Boolean
     $pagination: PaginationInputComps
-    $isAdmin: Boolean!
   ) {
     comps(
       gymId: $gymId
       search: $search
       climbType: $climbType
       inviteOnly: $inviteOnly
-      registered: $registered
       pagination: $pagination
     ) {
       pagination {
-        ...pagination
-        __typename
+        ...PaginationFragment
       }
       data {
-        id
-        ...compForComps
-        ...compForCompPage
-        __typename
-      }
-      __typename
-    }
-  }
-
-  fragment compForRegistrationStatus on Comp {
-    id
-    loggableStartAt
-    loggableEndAt
-    compUserMe {
-      id
-      userId
-      compId
-      comp {
-        id
-        __typename
+        ...CompScalarsFragment
 
         compGyms {
-          id
-          gymId
-          compId
+          ...CompGymScalarsFragment
+
           gym {
-            id
-            name
-            __typename
+            ...GymScalarsFragment
           }
-          __typename
         }
-      }
-      approvalState
-      __typename
-    }
-    __typename
-  }
 
-  fragment compForAdminStatus on Comp {
-    id
-    compAdminMe {
-      id
-      permitJudge
-      permitAdmin
-      __typename
-    }
-    __typename
-  }
+        compPoules {
+          ...CompPouleScalarsFragment
 
-  fragment pagination on Pagination {
-    total
-    page
-    perPage
-    orderBy {
-      key
-      order
-      __typename
-    }
-    __typename
-  }
+          compRounds {
+            ...CompRoundScalarsFragment
 
-  fragment compForComps on Comp {
-    id
-    name
-    subtitleLoc
-    logoPath
-    loggableStartAt
-    loggableEndAt
-    inviteOnly
-    compGyms {
-      id
-      gymId
-      compId
-      gym {
-        id
-        name
-        __typename
-      }
-      __typename
-    }
+            compRoundUserMe {
+              ...CompRoundUserScalarsFragment
+            }
+          }
+        }
 
-    ...compForRegistrationStatus
-    ...compForAdminStatus
-    __typename
-  }
+        compUserMe {
+          ...CompUserScalarsFragment
 
-  fragment roundForRegistrationStatusRound on CompRound {
-    id
-    selfLoggable
-    loggableStartAt
-    loggableEndAt
-    compRoundUserMe {
-      id
-      __typename
-    }
-    __typename
-  }
+          compRoundUsers {
+            ...CompRoundUserScalarsFragment
+          }
+          comp {
+            ...CompScalarsFragment
 
-  fragment compForRoundToolbarTitle on Comp {
-    id
-    name
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    compPoules {
-      id
-      compId
-      nameLoc
-      compRounds(includeHidden: $isAdmin) {
-        id
-        nameLoc
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
+            compGyms {
+              ...CompGymScalarsFragment
 
-  fragment compForInviteDialog on Comp {
-    id
-    name
-    inviteToken
-    __typename
-  }
+              gym {
+                ...GymScalarsFragment
+              }
+            }
+          }
+        }
 
-  fragment compForDetails on Comp {
-    id
-    logoPath
-    name
-    subtitleLoc
-    descriptionLoc
-    prizesLoc
-    prizePaths
-    loggableStartAt
-    loggableEndAt
-    visible @include(if: $isAdmin)
-    ...compForInviteDialog @include(if: $isAdmin)
-    __typename
-  }
-
-  fragment roundForClimbsLink on CompRound {
-    id
-    climbType
-    __typename
-  }
-
-  fragment compForAdminStatusBanner on Comp {
-    id
-    compAdminMe {
-      id
-      permitJudge
-      permitAdmin
-      __typename
-    }
-    compPoules {
-      id
-      compRounds(includeHidden: $isAdmin) {
-        id
-        ...roundForClimbsLink
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
-
-  fragment compForRegistrationDetails on Comp {
-    id
-    registrationStartAt
-    registrationEndAt
-    inviteOnly
-    approveParticipation
-    participantsMax
-    participantsSpotsLeft
-    __typename
-  }
-
-  fragment compForRegistrationDisabled on Comp {
-    id
-    inviteOnly
-    registrationStartAt
-    registrationEndAt
-    loggableEndAt
-    participantsMax
-    participantsSpotsLeft
-    compUserMe {
-      id
-      __typename
-    }
-    compPoules {
-      id
-      compRounds(includeHidden: $isAdmin) {
-        id
-        loggableEndAt
-        compRoundUserMe {
+        compAdminMe {
           id
-          participating
+          permitJudge
+          permitAdmin
           __typename
         }
-        __typename
       }
       __typename
     }
-    __typename
-  }
-
-  fragment roundForRegistrationDisabledRound on CompRound {
-    id
-    participantsPickedByAdmin
-    loggableEndAt
-    participantsMax
-    participantsSpotsLeft
-    __typename
-  }
-
-  fragment compForRegistrationDisabledRound on Comp {
-    id
-    isMultiRound(includeHidden: $isAdmin)
-    __typename
-  }
-
-  fragment compForRoundSelect on Comp {
-    id
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    compPoules {
-      id
-      nameLoc
-      descriptionLoc
-      compRounds(includeHidden: $isAdmin) {
-        id
-        compPouleId
-        nameLoc
-        loggableStartAt
-        loggableEndAt
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
-
-  fragment compForRegistrationDialog on Comp {
-    id
-    name
-    registrationMessageLoc
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    registrationRoundsMax
-    compUserMe {
-      id
-      approvalState
-      __typename
-    }
-    compPoules {
-      id
-      compRounds(includeHidden: $isAdmin) {
-        id
-        ...roundForRegistrationDisabledRound
-        __typename
-      }
-      __typename
-    }
-    ...compForRegistrationDisabledRound
-    ...compForRoundSelect
-    __typename
-  }
-
-  fragment roundForBtnSubscribeRound on CompRound {
-    id
-    nameLoc
-    compRoundUserMe {
-      id
-      __typename
-    }
-    __typename
-  }
-
-  fragment roundForBtnUnsubscribeRound on CompRound {
-    id
-    nameLoc
-    compRoundUserMe {
-      id
-      userId
-      compRoundId
-      __typename
-    }
-    __typename
-  }
-
-  fragment compForUnsubscribe on Comp {
-    id
-    name
-    __typename
-  }
-
-  fragment compForRegistrationEdit on Comp {
-    id
-    name
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    registrationRoundsMax
-    compPoules {
-      id
-      compRounds(includeHidden: $isAdmin) {
-        id
-        ...roundForRegistrationDisabledRound
-        ...roundForBtnSubscribeRound
-        ...roundForBtnUnsubscribeRound
-        __typename
-      }
-      __typename
-    }
-    compUserMe {
-      id
-      firstName
-      lastName
-      email
-      createdAt
-      approvalState
-      compRoundUsers {
-        id
-        compRoundId
-        __typename
-      }
-      __typename
-    }
-    ...compForRegistrationStatus
-    ...compForRegistrationDisabled
-    ...compForRegistrationDisabledRound
-    ...compForRoundSelect
-    ...compForUnsubscribe
-    __typename
-  }
-
-  fragment compForRegistrationBtn on Comp {
-    id
-    isMultiPoule
-    compUserMe {
-      id
-      approvalState
-      __typename
-    }
-    compPoules {
-      id
-      compRounds(includeHidden: $isAdmin) {
-        id
-        compRoundUserMe {
-          id
-          __typename
-        }
-        __typename
-      }
-      __typename
-    }
-    ...compForRegistrationStatus
-    ...compForRegistrationDisabled
-    ...compForRegistrationDialog
-    ...compForRegistrationEdit
-    __typename
-  }
-
-  fragment compForRegistrationStatusRound on Comp {
-    id
-    compUserMe {
-      id
-      approvalState
-      __typename
-    }
-    __typename
-  }
-
-  fragment compForRegistrationAnonymizeBtn on Comp {
-    id
-    loggableEndAt
-    compUserMe {
-      id
-      fullName
-      approvalState
-      __typename
-    }
-    __typename
-  }
-
-  fragment compForRoundDetailsBase on Comp {
-    id
-    isMultiRound(includeHidden: $isAdmin)
-    __typename
-  }
-
-  fragment compForCompGymSelect on Comp {
-    id
-    compGyms {
-      id
-      gymId
-      gym {
-        id
-        iconPath
-        name
-        nameSlug
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
-
-  fragment compForRoundClimbs on Comp {
-    id
-    __typename
-  }
-
-  fragment compForRegistrationBtnRound on Comp {
-    id
-    compUserMe {
-      id
-      approvalState
-      __typename
-    }
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    ...compForRegistrationStatusRound
-    ...compForRegistrationDisabled
-    ...compForRegistrationDisabledRound
-    ...compForRegistrationDialog
-    ...compForRegistrationEdit
-    __typename
-  }
-
-  fragment compForRoundDetails on Comp {
-    id
-    climbType
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    compGyms {
-      id
-      gymId
-      __typename
-    }
-    ...compForDetails
-    ...compForRoundDetailsBase
-    ...compForCompGymSelect
-    ...compForRoundClimbs
-    ...compForRegistrationDetails
-    ...compForRegistrationBtnRound
-    __typename
-  }
-
-  fragment compForRoundRankingTable on Comp {
-    id
-    __typename
-  }
-
-  fragment compForRoundRankingClimbUser on Comp {
-    id
-    __typename
-  }
-
-  fragment compForRoundRanking on Comp {
-    id
-    ...compForRoundRankingTable
-    ...compForRoundRankingClimbUser
-    __typename
-  }
-
-  fragment compForRound on Comp {
-    id
-    name
-    isMultiPoule
-    isMultiRound(includeHidden: $isAdmin)
-    ...compForRoundToolbarTitle
-    ...compForRoundDetails
-    ...compForRoundRanking
-    __typename
-  }
-
-  fragment compForCompPage on Comp {
-    id
-    name
-    loggableEndAt
-    isMultiPoule
-    compUserMe {
-      id
-      approvalState
-      __typename
-    }
-    compPoules {
-      id
-      compRounds(includeHidden: $isAdmin) {
-        id
-        compRoundUserMe {
-          id
-          participating
-          __typename
-        }
-        ...roundForRegistrationStatusRound
-        __typename
-      }
-      __typename
-    }
-    ...compForRoundToolbarTitle
-    ...compForDetails
-    ...compForAdminStatusBanner
-    ...compForRegistrationDetails
-    ...compForRegistrationBtn
-    ...compForRegistrationStatusRound
-    ...compForRegistrationAnonymizeBtn
-    ...compForRoundSelect
-    ...compForRound
-    ...compForRoundRanking
-    __typename
   }
 `;
 
 const userMeStoreQuery = gql`
+  ${GymScalarsFragment}
+  ${UserMeScalarsFragment}
+  ${GymUserMeScalarsFragment}
+
   query userMeStore {
     userMe {
-      ...userMeStore
-      __typename
-    }
-  }
+      ...UserMeScalarsFragment
 
-  fragment userMeStoreFavorite on GymUserMe {
-    id
-    gym {
-      id
-      name
-      nameSlug
-      iconPath
-      __typename
-    }
-    __typename
-  }
+      gym {
+        ...GymScalarsFragment
+      }
+      gymUserFavorites {
+        ...GymUserMeScalarsFragment
 
-  fragment userMeStore on UserMe {
-    id
-    locale
-    gradingSystemRoutes
-    gradingSystemBoulders
-    profileReviewed
-    avatarUploadPath
-    firstName
-    lastName
-    fullName
-    gender
-    email
-    privacy
-    gym {
-      id
-      nameSlug
-      __typename
+        gym {
+          ...GymScalarsFragment
+        }
+      }
     }
-    gymUserFavorites {
-      ...userMeStoreFavorite
-      __typename
-    }
-    __typename
   }
 `;
 
 const compRoundUsersForRankingQuery = gql`
+  ${PaginationFragment}
+  ${CompRoundUserScalarsFragment}
+  ${CompUserScalarsFragment}
+  ${UserScalarsFragment}
+
   query compRoundUsersForRanking(
     $gymId: ID!
     $compId: ID!
@@ -1071,62 +394,37 @@ const compRoundUsersForRankingQuery = gql`
       pagination: $pagination
     ) {
       pagination {
-        ...pagination
-        __typename
+        ...PaginationFragment
       }
       data {
-        ...compRoundUserForRanking
-        __typename
+        ...CompRoundUserScalarsFragment
+
+        compUser {
+          ...CompUserScalarsFragment
+        }
+        user {
+          ...UserScalarsFragment
+        }
       }
       __typename
     }
-  }
-
-  fragment compRoundUserForRankingClimbUser on CompRoundUser {
-    id
-    userId
-    climbsWithScoresCount
-    __typename
-  }
-
-  fragment pagination on Pagination {
-    total
-    page
-    perPage
-    orderBy {
-      key
-      order
-      __typename
-    }
-    __typename
-  }
-
-  fragment compRoundUserForRanking on CompRoundUser {
-    id
-    score
-    totMaxZones
-    totMaxClips
-    totMaxHolds
-    totMinTries
-    totMinDuration
-    climbsWithScoresCount
-    compUser {
-      id
-      fullName
-      disqualified
-      __typename
-    }
-    user {
-      id
-      avatarUploadPath
-      __typename
-    }
-    ...compRoundUserForRankingClimbUser
-    __typename
   }
 `;
 
 const compClimbUsersForRankingClimbUserQuery = gql`
+  ${PaginationFragment}
+  ${ClimbScalarsFragment}
+  ${GymScalarsFragment}
+  ${HoldColorScalarsFragment}
+  ${WallScalarsFragment}
+  ${WallSectionScalarsFragment}
+  ${ClimbGroupClimbScalarsFragment}
+  ${ClimbTagClimbScalarsFragment}
+  ${ClimbTagScalarsFragment}
+  ${ClimbUserScalarsFragment}
+  ${CompRoundClimbScalarsFragment}
+  ${CompClimbUserScalarsFragment}
+
   query compClimbUsersForRankingClimbUser(
     $gymId: ID!
     $compId: ID!
@@ -1143,250 +441,71 @@ const compClimbUsersForRankingClimbUserQuery = gql`
       pagination: $pagination
     ) {
       pagination {
-        ...pagination
-        __typename
+        ...PaginationFragment
       }
       data {
-        ...compClimbUserForRankingClimbUsers
-        __typename
-      }
-      __typename
-    }
-  }
+        ...CompClimbUserScalarsFragment
 
-  fragment compClimbUserForRankingClimbUsersItem on CompClimbUser {
-    id
-    points
-    tickType
-    climbType
-    userId
-    compId
-    gym {
-      id
-      name
-      __typename
-    }
-    climb {
-      id
-      outAt
-      grade
-      gradeAuto
-      holdColor {
-        id
-        color
-        colorSecondary
-        __typename
-      }
-      name
-      wall {
-        id
-        nameLoc
-        __typename
-      }
-      wallSection {
-        id
-        name
-        __typename
-      }
-      label
-      leadRequired
-      climbSetters {
-        id
-        gymAdmin {
-          id
-          name
-          __typename
+        gym {
+          ...GymScalarsFragment
         }
-        __typename
+        climb {
+          ...ClimbScalarsFragment
+        }
+        gym {
+          ...GymScalarsFragment
+        }
+        climb {
+          ...ClimbScalarsFragment
+
+          holdColor {
+            ...HoldColorScalarsFragment
+          }
+          wall {
+            ...WallScalarsFragment
+          }
+          wallSection {
+            ...WallSectionScalarsFragment
+          }
+        }
+        climb {
+          ...ClimbScalarsFragment
+
+          wall {
+            ...WallScalarsFragment
+          }
+          wallSection {
+            ...WallSectionScalarsFragment
+          }
+          holdColor {
+            ...HoldColorScalarsFragment
+          }
+          climbGroupClimbs {
+            ...ClimbGroupClimbScalarsFragment
+          }
+          climbTagClimbs {
+            ...ClimbTagClimbScalarsFragment
+
+            climbTag {
+              ...ClimbTagScalarsFragment
+            }
+          }
+
+          climbUser(userId: $userId) {
+            ...ClimbUserScalarsFragment
+
+            compClimbUser(compRoundId: $compRoundId) {
+              ...CompClimbUserScalarsFragment
+            }
+          }
+
+          compRoundClimb(compRoundId: $compRoundId) {
+            ...CompRoundClimbScalarsFragment
+          }
+        }
       }
       __typename
     }
-    __typename
-  }
-
-  fragment climbGroupClimb on ClimbGroupClimb {
-    id
-    climbGroupId
-    order
-    __typename
-  }
-
-  fragment climb on Climb {
-    id
-    climbType
-    positionX
-    positionY
-    gradeAuto
-    grade
-    gradeVotesCount
-    gradeUsersVsAdmin
-    picPath
-    label
-    name
-    zones
-    remarksLoc
-    suitableForKids
-    clips
-    holds
-    height
-    overhang
-    autobelay
-    leadEnabled
-    leadRequired
-    ratingsAverage
-    ticksCount
-    inAt
-    outAt
-    outPlannedAt
-    order
-    setterName
-    climbSetters {
-      id
-      gymAdmin {
-        id
-        name
-        picPath
-        __typename
-      }
-      __typename
-    }
-    wallId
-    wall {
-      id
-      nameLoc
-      labelX
-      labelY
-      __typename
-    }
-    wallSectionId
-    wallSection {
-      id
-      name
-      routesEnabled
-      positionX
-      positionY
-      __typename
-    }
-    holdColorId
-    holdColor {
-      id
-      color
-      colorSecondary
-      nameLoc
-      order
-      __typename
-    }
-    climbGroupClimbs {
-      ...climbGroupClimb
-      __typename
-    }
-    climbTagClimbs {
-      id
-      climbTagId
-      order
-      climbTag {
-        id
-        type
-        nameLoc
-        icon
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
-
-  fragment climbUser on ClimbUser {
-    id
-    climbId
-    grade
-    rating
-    project
-    votedRenew
-    tickType
-    totalTries
-    triedFirstAtDate
-    tickedFirstAtDate
-    updatedAt
-    compClimbUser(compRoundId: $compRoundId) {
-      id
-      points
-      pointsJson
-      climbId
-      tickType
-      __typename
-    }
-    __typename
-  }
-
-  fragment climbWithClimbUser on Climb {
-    id
-    climbUser(userId: $userId) {
-      ...climbUser
-      __typename
-    }
-    __typename
-  }
-
-  fragment compRoundClimb on CompRoundClimb {
-    id
-    points
-    pointsJson
-    climbId
-    leadRequired
-    __typename
-  }
-
-  fragment climbWithCompRoundClimb on Climb {
-    id
-    compRoundClimb(compRoundId: $compRoundId) {
-      ...compRoundClimb
-      __typename
-    }
-    __typename
-  }
-
-  fragment compClimbUserForRoundRankingClimbLogs on CompClimbUser {
-    id
-    totalTries
-    climb {
-      id
-      ...climb
-      ...climbWithClimbUser
-      ...climbWithCompRoundClimb
-      __typename
-    }
-    __typename
-  }
-
-  fragment pagination on Pagination {
-    total
-    page
-    perPage
-    orderBy {
-      key
-      order
-      __typename
-    }
-    __typename
-  }
-
-  fragment compClimbUserForRankingClimbUsers on CompClimbUser {
-    id
-    climbType
-    gym {
-      id
-      nameSlug
-      __typename
-    }
-    climb {
-      id
-      outAt
-      __typename
-    }
-    ...compClimbUserForRankingClimbUsersItem
-    ...compClimbUserForRoundRankingClimbLogs
-    __typename
   }
 `;
 
@@ -1464,6 +583,7 @@ export interface ClimbUser extends MongoGraphQLObject<"ClimbUser"> {
 export interface CompClimbUser extends MongoGraphQLObject<"CompClimbUser"> {
   id: string;
   climbId: string;
+  userId: string;
   compId: string;
   points: number;
   pointsJson: CompClimbUserPointsJSON;
@@ -1696,7 +816,6 @@ interface TopLoggerClimbDayDereferenced extends Omit<ClimbDay, "gym"> {
 }
 
 export const GET = (request: NextRequest) =>
-  // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -1793,14 +912,21 @@ export const GET = (request: NextRequest) =>
           query: DocumentNode,
           variables?: TVariables,
           operationName?: string,
-        ) =>
-          fetchGraphQLQuery<TData>(
+        ) => {
+          console.log(
+            query.definitions.find(
+              (definition) => definition.kind === Kind.OPERATION_DEFINITION,
+            )?.name?.value,
+            variables,
+          );
+          return fetchGraphQLQuery<TData>(
             query,
             variables,
             "https://app.toplogger.nu/graphql",
             { headers: { ...agentHeaders, ...headers } },
             operationName,
           );
+        };
 
         const userId = dataSource.config.graphQLId;
 
@@ -1817,23 +943,12 @@ export const GET = (request: NextRequest) =>
           for (const gym of gyms) {
             const compsVariables = {
               gymId: gym.id,
-              registered: true,
-              isAdmin: false,
               pagination: {
-                page: 1,
-                perPage: 10,
                 orderBy: [{ key: "loggableStartAt", order: "desc" }],
               },
             };
             const compsResponse = await fetchQuery<{
-              comps: {
-                pagination: {
-                  total: number;
-                  perPage: number;
-                  page: number;
-                };
-                data: Comp[];
-              };
+              comps: PaginatedObjects<Comp>;
             }>(compsQuery, compsVariables);
 
             const updateResult = await normalizeAndUpsertQueryData(
@@ -1853,14 +968,7 @@ export const GET = (request: NextRequest) =>
                     compRoundId: round.id,
                   };
                   const compRoundUsersForRankingResponse = await fetchQuery<{
-                    ranking: {
-                      pagination: {
-                        total: number;
-                        perPage: number;
-                        page: number;
-                      };
-                      data: CompRoundUser[];
-                    };
+                    ranking: PaginatedObjects<CompRoundUser>;
                   }>(
                     compRoundUsersForRankingQuery,
                     compRoundUsersForRankingVariables,
@@ -1892,14 +1000,7 @@ export const GET = (request: NextRequest) =>
                     };
                     const compClimbUsersForRankingClimbUserResponse =
                       await fetchQuery<{
-                        compClimbUsers: {
-                          pagination: {
-                            total: number;
-                            perPage: number;
-                            page: number;
-                          };
-                          data: CompClimbUser[];
-                        };
+                        compClimbUsers: PaginatedObjects<CompClimbUser>;
                       }>(
                         compClimbUsersForRankingClimbUserQuery,
                         compClimbUsersForRankingClimbUserVariables,
@@ -1920,14 +1021,7 @@ export const GET = (request: NextRequest) =>
                       userId: userIddd,
                     };
                     const climbsResponse = await fetchQuery<{
-                      climbs: {
-                        pagination: {
-                          total: number;
-                          perPage: number;
-                          page: number;
-                        };
-                        data: Climb[];
-                      };
+                      climbs: PaginatedObjects<Climb>;
                     }>(climbsQuery, climbsVariables);
 
                     const updateResult = await normalizeAndUpsertQueryData(
@@ -1988,8 +1082,8 @@ export const GET = (request: NextRequest) =>
           );
         }
 
-        const recentDays = 5;
-        const backfillDays = 25;
+        const recentDays = 1;
+        const backfillDays = 1;
         const climbDaysToFetch = [
           // Most recent days
           ...climbDays.slice(0, recentDays),

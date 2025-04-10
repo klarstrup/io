@@ -1,4 +1,4 @@
-import { isAfter, isBefore, isFuture } from "date-fns";
+import { isAfter, isBefore } from "date-fns";
 import type {
   Climb,
   ClimbLog,
@@ -386,7 +386,6 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     if (!lastClimbLog || isAfter(date, lastClimbLog)) lastClimbLog = date;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const gym = gyms[0]!;
 
   const holdColors = await TopLoggerGraphQL.find<HoldColor>({
@@ -400,10 +399,8 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     id: compId,
     ioId,
     url: `https://app.toplogger.nu/en-us/${gym.nameSlug}/competitions/${compId}`,
-    start: firstClimbLog || compInterval.start,
-    end: isFuture(compInterval.end)
-      ? compInterval.end
-      : lastClimbLog || compInterval.end,
+    start: compInterval.start,
+    end: compInterval.end,
     venue: gyms.map((gym) => gym.name).join(", ") || null,
     location: gyms.map((gym) => gym.name).join(", ") || null,
     event: comp.name
