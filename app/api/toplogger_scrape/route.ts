@@ -34,11 +34,14 @@ import {
   CompRoundUserScalarsFragment,
   CompScalarsFragment,
   CompUserScalarsFragment,
+  GymScalars,
   GymScalarsFragment,
+  GymUserMeScalars,
   GymUserMeScalarsFragment,
   HoldColorScalarsFragment,
   PaginatedObjects,
   PaginationFragment,
+  UserMeScalars,
   UserMeScalarsFragment,
   UserScalarsFragment,
   WallScalarsFragment,
@@ -343,6 +346,12 @@ const userMeStoreQuery = gql`
     }
   }
 `;
+interface UserMeStoreResponse {
+  userMe: UserMeScalars & {
+    gym: GymScalars;
+    gymUserFavorites: (GymUserMeScalars & { gym: GymScalars })[];
+  };
+}
 
 const compRoundUsersForRankingQuery = gql`
   ${PaginationFragment}
@@ -618,22 +627,6 @@ export interface ClimbLog extends MongoGraphQLObject<"ClimbLog"> {
   zones: number;
 }
 
-export interface UserMe extends MongoGraphQLObject<"UserMe"> {
-  locale: string;
-  gradingSystemRoutes: null;
-  gradingSystemBoulders: null;
-  profileReviewed: boolean;
-  avatarUploadPath: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  gender: string;
-  email: string;
-  privacy: string;
-  gym: UserMeGym;
-  gymUserFavorites: GymUserFavorite[];
-}
-
 export interface Comp extends MongoGraphQLObject<"Comp"> {
   name: string;
   subtitleLoc: null;
@@ -870,7 +863,7 @@ export const GET = (request: NextRequest) =>
 
         const userId = dataSource.config.graphQLId;
 
-        const userMe = (await fetchQuery<{ userMe: UserMe }>(userMeStoreQuery))
+        const userMe = (await fetchQuery<UserMeStoreResponse>(userMeStoreQuery))
           .data?.userMe;
 
         yield userMe;

@@ -1,5 +1,7 @@
 import gql from "graphql-tag";
 
+type ClimbType = "boulder" | "route";
+
 export interface GraphQLObject<T extends string> {
   __typename: T;
   id: string;
@@ -41,6 +43,7 @@ export const UserScalarsFragment = gql`
     __typename
   }
 `;
+
 export const UserMeScalarsFragment = gql`
   fragment UserMeScalarsFragment on UserMe {
     __typename
@@ -59,9 +62,25 @@ export const UserMeScalarsFragment = gql`
     gymId
   }
 `;
+export interface UserMeScalars extends GraphQLObject<"UserMe"> {
+  locale: string;
+  gradingSystemRoutes: null;
+  gradingSystemBoulders: null;
+  profileReviewed: boolean;
+  avatarUploadPath: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  gender: string;
+  email: string;
+  privacy: string;
+  // gym: UserMeGym;
+  // gymUserFavorites: GymUserFavorite[];
+}
 
 export const GymScalarsFragment = gql`
   fragment GymScalarsFragment on Gym {
+    __typename
     id
     name
     nameSlug
@@ -72,9 +91,43 @@ export const GymScalarsFragment = gql`
     markRouteOutSoonDays
     settingsLogBoulders
     settingsLogRoutes
-    __typename
+    latitude
+    longitude
+    visibleSoon
+    climbTypeDefault
+    city
+    countryCode
+    visible
+    bouldersEnabled
+    routesEnabled
   }
 `;
+export interface GymScalars extends GraphQLObject<"Gym"> {
+  name: string;
+  nameSlug: string;
+  iconPath: string;
+  markBoulderNewDays: number;
+  markRouteNewDays: number;
+  markBoulderOutSoonDays: number;
+  markRouteOutSoonDays: number;
+  settingsLogBoulders: {
+    reportBtnEnabled: boolean;
+    voteRenewEnabled: boolean;
+  };
+  settingsLogRoutes: {
+    reportBtnEnabled: boolean;
+    voteRenewEnabled: boolean;
+  };
+  latitude: number;
+  longitude: number;
+  visibleSoon: boolean;
+  climbTypeDefault: ClimbType;
+  city: string | null;
+  countryCode: string;
+  visible: boolean;
+  bouldersEnabled: boolean;
+  routesEnabled: boolean;
+}
 
 export const CompGymScalarsFragment = gql`
   fragment CompGymScalarsFragment on CompGym {
@@ -103,6 +156,10 @@ export const GymUserMeScalarsFragment = gql`
     gymId
   }
 `;
+export interface GymUserMeScalars extends GraphQLObject<"GymUserMe"> {
+  userId: string;
+  gymId: string;
+}
 
 export const ClimbScalarsFragment = gql`
   fragment ClimbScalarsFragment on Climb {
