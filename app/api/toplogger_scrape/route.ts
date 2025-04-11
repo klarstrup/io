@@ -479,17 +479,26 @@ export const GET = (request: NextRequest) =>
           );
         }
 
-        await TopLoggerGraphQL.createIndexes([
-          { key: { __typename: 1 } },
-          { key: { id: 1 } },
-          { key: { userId: 1 } },
-          { key: { tickedFirstAtDate: 1 } },
-          { key: { climbedAtDate: 1 } },
-          { key: { __typename: 1, id: 1 } },
-          { key: { __typename: 1, userId: 1 } },
-          { key: { __typename: 1, userId: 1, tickedFirstAtDate: 1 } },
-          { key: { __typename: 1, userId: 1, climbedAtDate: 1 } },
-        ]);
+        await TopLoggerGraphQL.createIndexes(
+          [
+            { key: { __typename: 1 } },
+            { key: { id: 1 } },
+            { key: { userId: 1 } },
+            { key: { tickedFirstAtDate: 1 } },
+            { key: { climbedAtDate: 1 } },
+            { key: { __typename: 1, id: 1 } },
+            { key: { __typename: 1, compId: 1 } },
+            { key: { __typename: 1, compId: 1, userId: 1 } },
+            { key: { __typename: 1, compId: 1, compRoundId: 1 } },
+            { key: { __typename: 1, userId: 1 } },
+            { key: { __typename: 1, userId: 1, climbedAtDate: 1 } },
+            {
+              key: { __typename: 1, userId: 1, climbId: 1, climbedAtDate: -1 },
+            },
+            { key: { __typename: 1, compId: 1, compRoundId: 1 } },
+          ],
+          { sparse: true },
+        );
 
         let headers: HeadersInit = {
           authorization: `Bearer ${authTokens.access.token}`,
