@@ -602,7 +602,7 @@ export const GET = (request: NextRequest) =>
               (comp) => comp.compUserMe,
             );
 
-            for (const comp of userComps || []) {
+            for (const comp of randomSliceOfSize(userComps || [], 1)) {
               for (const poule of comp.compPoules) {
                 for (const round of poule.compRounds) {
                   const [compRoundUsersForRankingResponse, updateResult] =
