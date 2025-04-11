@@ -1,4 +1,4 @@
-import { isAfter, isBefore } from "date-fns";
+import { compareDesc, isAfter, isBefore } from "date-fns";
 import type {
   ClimbLogScalars,
   ClimbScalars,
@@ -134,26 +134,30 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     team: null,
     noParticipants: ioCompRoundUsers.length,
     problems: climbs.length,
-    problemByProblem: climbs
-      .map((climb) => {
-        const ioClimbLog = ioClimbLogs.find(
-          (climbLog) => climbLog.climbId === climb.id,
-        );
-
-        return {
-          number: climb.name || "",
-          color:
-            holdColors.find(({ id }) => id === climb.holdColorId)?.color ||
-            undefined,
-          grade: climb.grade ? Number(climb.grade / 100) : undefined,
-          attempt: ioClimbLog ? ioClimbLog.tickType == 0 : false,
-          // TopLogger does not do zones, at least not for Beta Boulders
-          zone: ioClimbLog ? ioClimbLog.tickType >= 1 : false,
-          top: ioClimbLog ? ioClimbLog.tickType >= 1 : false,
-          flash: ioClimbLog ? ioClimbLog.tickType >= 2 : false,
-          repeat: false,
-        };
-      })
+    problemByProblem: Array.from(climbs)
+      .map((climb) => ({
+        climb,
+        climbLog: ioClimbLogs.find((climbLog) => climbLog.climbId === climb.id),
+      }))
+      .sort((a, b) =>
+        compareDesc(
+          a.climbLog?.climbedAtDate || a.climb.inAt,
+          b.climbLog?.climbedAtDate || b.climb.inAt,
+        ),
+      )
+      .map(({ climb, climbLog }) => ({
+        number: climb.name || "",
+        color:
+          holdColors.find(({ id }) => id === climb.holdColorId)?.color ||
+          undefined,
+        grade: climb.grade ? Number(climb.grade / 100) : undefined,
+        attempt: climbLog ? climbLog.tickType == 0 : false,
+        // TopLogger does not do zones, at least not for Beta Boulders
+        zone: climbLog ? climbLog.tickType >= 1 : false,
+        top: climbLog ? climbLog.tickType >= 1 : false,
+        flash: climbLog ? climbLog.tickType >= 2 : false,
+        repeat: false,
+      }))
       .sort((a, b) =>
         Intl.Collator("en-DK", { numeric: true }).compare(a.number, b.number),
       ),
