@@ -744,7 +744,7 @@ export const GET = (request: NextRequest) =>
         }
 
         const recentDays = 3;
-        const backfillDays = 12;
+        const backfillDays = 6;
         const climbDaysToFetch = [
           // Most recent days
           ...climbDays.slice(0, recentDays),
