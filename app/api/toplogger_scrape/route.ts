@@ -8,7 +8,7 @@ import { Users } from "../../../models/user.server";
 import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { randomSliceOfSize, shuffle } from "../../../utils";
+import { randomSliceOfSize } from "../../../utils";
 import {
   fetchGraphQLQuery,
   normalizeAndUpsertQueryData,
@@ -54,8 +54,6 @@ import {
   PaginationFragment,
   UserMeScalars,
   UserMeScalarsFragment,
-  UserScalars,
-  UserScalarsFragment,
   WallScalars,
   WallScalarsFragment,
   WallSectionScalars,
@@ -70,9 +68,6 @@ const climbsQuery = gql`
   ${ClimbScalarsFragment}
   ${ClimbUserScalarsFragment}
   ${CompRoundClimbScalarsFragment}
-  ${WallScalarsFragment}
-  ${WallSectionScalarsFragment}
-  ${HoldColorScalarsFragment}
   ${ClimbGroupClimbScalarsFragment}
   ${CompClimbUserScalarsFragment}
 
@@ -94,15 +89,6 @@ const climbsQuery = gql`
       data {
         ...ClimbScalarsFragment
 
-        wall {
-          ...WallScalarsFragment
-        }
-        wallSection {
-          ...WallSectionScalarsFragment
-        }
-        holdColor {
-          ...HoldColorScalarsFragment
-        }
         climbGroupClimbs {
           ...ClimbGroupClimbScalarsFragment
         }
@@ -205,9 +191,6 @@ const climbLogsQuery = gql`
   ${PaginationFragment}
   ${ClimbLogScalarsFragment}
   ${ClimbScalarsFragment}
-  ${GymScalarsFragment}
-  ${HoldColorScalarsFragment}
-  ${WallScalarsFragment}
 
   query climbLogsSession(
     $gymId: ID
@@ -231,15 +214,6 @@ const climbLogsQuery = gql`
 
         climb {
           ...ClimbScalarsFragment
-          holdColor {
-            ...HoldColorScalarsFragment
-          }
-          wall {
-            ...WallScalarsFragment
-          }
-          gym {
-            ...GymScalarsFragment
-          }
         }
       }
       __typename
@@ -247,21 +221,12 @@ const climbLogsQuery = gql`
   }
 `;
 type ClimbLogsResponse = {
-  climbLogs: PaginatedObjects<
-    ClimbLogScalars & {
-      climb: ClimbScalars & {
-        holdColor: HoldColorScalars;
-        wall: WallScalars;
-        gym: GymScalars;
-      };
-    }
-  >;
+  climbLogs: PaginatedObjects<ClimbLogScalars & { climb: ClimbScalars }>;
 };
 
 const compsQuery = gql`
   ${PaginationFragment}
   ${CompScalarsFragment}
-  ${GymScalarsFragment}
   ${CompGymScalarsFragment}
   ${CompPouleScalarsFragment}
   ${CompRoundScalarsFragment}
@@ -290,10 +255,6 @@ const compsQuery = gql`
 
         compGyms {
           ...CompGymScalarsFragment
-
-          gym {
-            ...GymScalarsFragment
-          }
         }
 
         compPoules {
@@ -302,7 +263,7 @@ const compsQuery = gql`
           compRounds {
             ...CompRoundScalarsFragment
 
-            compRoundUserMe {
+            compRoundUsers {
               ...CompRoundUserScalarsFragment
             }
           }
@@ -310,21 +271,6 @@ const compsQuery = gql`
 
         compUserMe {
           ...CompUserScalarsFragment
-
-          compRoundUsers {
-            ...CompRoundUserScalarsFragment
-          }
-          comp {
-            ...CompScalarsFragment
-
-            compGyms {
-              ...CompGymScalarsFragment
-
-              gym {
-                ...GymScalarsFragment
-              }
-            }
-          }
         }
       }
       __typename
@@ -334,20 +280,13 @@ const compsQuery = gql`
 type CompsResponse = {
   comps: PaginatedObjects<
     CompScalars & {
-      compGyms: (CompGymScalars & { gym: GymScalars })[];
+      compGyms: CompGymScalars[];
       compPoules: (CompPouleScalars & {
         compRounds: (CompRoundScalars & {
-          compRoundUserMe: CompRoundUserScalars;
+          compRoundUsers: CompRoundUserScalars[];
         })[];
       })[];
-      compUserMe: CompUserScalars & {
-        compRoundUsers: CompRoundUserScalars[];
-        comp: CompScalars & {
-          compGyms: (CompGymScalars & {
-            gym: GymScalars;
-          })[];
-        };
-      };
+      compUserMe: CompUserScalars;
     }
   >;
 };
@@ -356,6 +295,9 @@ const userMeStoreQuery = gql`
   ${GymScalarsFragment}
   ${UserMeScalarsFragment}
   ${GymUserMeScalarsFragment}
+  ${HoldColorScalarsFragment}
+  ${WallScalarsFragment}
+  ${WallSectionScalarsFragment}
 
   query userMeStore {
     userMe {
@@ -369,6 +311,16 @@ const userMeStoreQuery = gql`
 
         gym {
           ...GymScalarsFragment
+
+          walls {
+            ...WallScalarsFragment
+          }
+          wallSections {
+            ...WallSectionScalarsFragment
+          }
+          holdColors {
+            ...HoldColorScalarsFragment
+          }
         }
       }
     }
@@ -377,7 +329,13 @@ const userMeStoreQuery = gql`
 interface UserMeStoreResponse {
   userMe: UserMeScalars & {
     gym: GymScalars;
-    gymUserFavorites: (GymUserMeScalars & { gym: GymScalars })[];
+    gymUserFavorites: (GymUserMeScalars & {
+      gym: GymScalars & {
+        walls: WallScalars[];
+        wallSections: WallSectionScalars[];
+        holdColors: HoldColorScalars[];
+      };
+    })[];
   };
 }
 
@@ -385,7 +343,6 @@ const compRoundUsersForRankingQuery = gql`
   ${PaginationFragment}
   ${CompRoundUserScalarsFragment}
   ${CompUserScalarsFragment}
-  ${UserScalarsFragment}
   ${CompPouleUserScalarsFragment}
 
   query compRoundUsersForRanking(
@@ -417,9 +374,6 @@ const compRoundUsersForRankingQuery = gql`
             ...CompPouleUserScalarsFragment
           }
         }
-        user {
-          ...UserScalarsFragment
-        }
       }
       __typename
     }
@@ -428,10 +382,7 @@ const compRoundUsersForRankingQuery = gql`
 type CompRoundUsersForRankingResponse = {
   ranking: PaginatedObjects<
     CompRoundUserScalars & {
-      compUser: CompUserScalars & {
-        compPouleUsers: CompPouleUserScalars[];
-      };
-      user: UserScalars;
+      compUser: CompUserScalars & { compPouleUsers: CompPouleUserScalars[] };
     }
   >;
 };
@@ -439,10 +390,6 @@ type CompRoundUsersForRankingResponse = {
 const compClimbUsersForRankingClimbUserQuery = gql`
   ${PaginationFragment}
   ${ClimbScalarsFragment}
-  ${GymScalarsFragment}
-  ${HoldColorScalarsFragment}
-  ${WallScalarsFragment}
-  ${WallSectionScalarsFragment}
   ${ClimbGroupClimbScalarsFragment}
   ${ClimbUserScalarsFragment}
   ${CompRoundClimbScalarsFragment}
@@ -469,31 +416,15 @@ const compClimbUsersForRankingClimbUserQuery = gql`
       data {
         ...CompClimbUserScalarsFragment
 
-        gym {
-          ...GymScalarsFragment
-        }
         climb {
           ...ClimbScalarsFragment
 
-          holdColor {
-            ...HoldColorScalarsFragment
-          }
-          wall {
-            ...WallScalarsFragment
-          }
-          wallSection {
-            ...WallSectionScalarsFragment
-          }
           climbGroupClimbs {
             ...ClimbGroupClimbScalarsFragment
           }
 
           climbUser(userId: $userId) {
             ...ClimbUserScalarsFragment
-
-            compClimbUser(compRoundId: $compRoundId) {
-              ...CompClimbUserScalarsFragment
-            }
           }
 
           compRoundClimb(compRoundId: $compRoundId) {
@@ -508,15 +439,9 @@ const compClimbUsersForRankingClimbUserQuery = gql`
 type CompClimbUsersForRankingClimbUserResponse = {
   compClimbUsers: PaginatedObjects<
     CompClimbUserScalars & {
-      gym: GymScalars;
       climb: ClimbScalars & {
-        holdColor: HoldColorScalars;
-        wall: WallScalars;
-        wallSection: WallSectionScalars;
         climbGroupClimbs: ClimbGroupClimbScalars[];
-        climbUser: ClimbUserScalars & {
-          compClimbUser: CompClimbUserScalars;
-        };
+        climbUser: ClimbUserScalars;
         compRoundClimb: CompRoundClimbScalars;
       };
     }
@@ -645,20 +570,23 @@ export const GET = (request: NextRequest) =>
 
         const userMe = userMeStoreResponse.data?.userMe;
 
-        yield userMe;
-
-        const gyms = shuffle(
+        const gyms = randomSliceOfSize(
           userMe?.gymUserFavorites.map((fav) => fav.gym) || [],
+          1,
         );
 
+        yield gyms;
+
         if (gyms) {
-          for (const gym of gyms) {
+          for (const gymId of gyms.map(({ id }) => id)) {
             const [compsResponse, updateResult] =
               await fetchQueryAndNormalizeAndUpsertQueryData<CompsResponse>(
                 compsQuery,
                 {
-                  gymId: gym.id,
+                  gymId,
                   pagination: {
+                    page: 1,
+                    perPage: 10, // Max is 10
                     orderBy: [{ key: "loggableStartAt", order: "desc" }],
                   },
                 },
@@ -666,13 +594,17 @@ export const GET = (request: NextRequest) =>
             yield updateResult;
 
             for (const comp of compsResponse.data?.comps.data ?? []) {
+              if (!comp.compUserMe) {
+                continue; // Skip comps without the user
+              }
+
               for (const poule of comp.compPoules) {
                 for (const round of poule.compRounds) {
                   const [compRoundUsersForRankingResponse, updateResult] =
                     await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                       compRoundUsersForRankingQuery,
                       {
-                        gymId: gym.id,
+                        gymId,
                         compId: comp.id,
                         compRoundId: round.id,
                         pagination: {
@@ -687,8 +619,8 @@ export const GET = (request: NextRequest) =>
                     );
 
                   const bestClimberId =
-                    compRoundUsersForRankingResponse.data?.ranking.data[0]?.user
-                      .id;
+                    compRoundUsersForRankingResponse.data?.ranking.data[0]
+                      ?.compUser.userId;
                   yield updateResult;
 
                   if (
@@ -702,7 +634,7 @@ export const GET = (request: NextRequest) =>
                       await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                         compRoundUsersForRankingQuery,
                         {
-                          gymId: gym.id,
+                          gymId,
                           compId: comp.id,
                           compRoundId: round.id,
                           pagination: {
@@ -729,7 +661,7 @@ export const GET = (request: NextRequest) =>
                       await fetchQueryAndNormalizeAndUpsertQueryData<CompClimbUsersForRankingClimbUserResponse>(
                         compClimbUsersForRankingClimbUserQuery,
                         {
-                          gymId: gym.id,
+                          gymId,
                           userId: userIddd,
                           compId: comp.id,
                           compRoundId: round.id,
@@ -746,7 +678,7 @@ export const GET = (request: NextRequest) =>
                       await fetchQueryAndNormalizeAndUpsertQueryData<ClimbsResponse>(
                         climbsQuery,
                         {
-                          gymId: gym.id,
+                          gymId,
                           climbType: "boulder",
                           compRoundId: round.id,
                           userId: userIddd,
@@ -806,8 +738,8 @@ export const GET = (request: NextRequest) =>
           );
         }
 
-        const recentDays = 5;
-        const backfillDays = 25;
+        const recentDays = 4;
+        const backfillDays = 16;
         const climbDaysToFetch = [
           // Most recent days
           ...climbDays.slice(0, recentDays),
