@@ -257,10 +257,7 @@ export function getDocumentDefinitions(
   }
   const rootFieldNode: FieldNodeWithSelectionSet = {
     kind: Kind.FIELD,
-    name: {
-      kind: Kind.NAME,
-      value: "data",
-    },
+    name: { kind: Kind.NAME, value: "data" },
     selectionSet: {
       kind: Kind.SELECTION_SET,
       selections: operationDefinition!.selectionSet.selections,
@@ -368,11 +365,8 @@ export function fieldNameWithArguments(
 const defaultGetObjectId: GetObjectId = (object: {
   readonly id: string;
   readonly __typename?: string;
-}): GetObjectToIdResult => {
-  return object.id === undefined
-    ? undefined
-    : `${object.__typename}:${object.id}`;
-};
+}): GetObjectToIdResult =>
+  object.id === undefined ? undefined : `${object.__typename}:${object.id}`;
 
 const resolveType: ResolveType = (object: {
   readonly __typename?: string;
@@ -666,27 +660,40 @@ export async function normalizeAndUpsertQueryData(
     (o) => o.__typename && o.id,
   );
   const updateResults: {
-    /** The number of documents that matched the filter */
-    matchedCount: number;
-    /** The number of documents that were modified */
-    modifiedCount: number;
-    /** The number of documents that were upserted */
-    upsertedCount: number;
+    [key: string]:
+      | string
+      | {
+          /** The number of documents that matched the filter */
+          matchedCount: number;
+          /** The number of documents that were modified */
+          modifiedCount: number;
+          /** The number of documents that were upserted */
+          upsertedCount: number;
+        };
+    operationName: string;
   } = {
-    matchedCount: 0,
-    modifiedCount: 0,
-    upsertedCount: 0,
+    operationName: query.definitions.find(
+      (definition) => definition.kind === Kind.OPERATION_DEFINITION,
+    )!.name!.value,
   };
   for (const object of objects) {
+    const __typename = object.__typename as string;
     const updateResult = await TopLoggerGraphQL.updateOne(
-      { __typename: object.__typename as string, id: object.id as string },
+      { __typename, id: object.id as string },
       { $set: parseDateFields(object) },
       { upsert: true },
     );
 
-    updateResults.matchedCount += updateResult.matchedCount;
-    updateResults.modifiedCount += updateResult.modifiedCount;
-    updateResults.upsertedCount += updateResult.upsertedCount;
+    if (typeof updateResults[__typename] !== "object") {
+      updateResults[__typename] = {
+        matchedCount: 0,
+        modifiedCount: 0,
+        upsertedCount: 0,
+      };
+    }
+    updateResults[__typename].matchedCount += updateResult.matchedCount;
+    updateResults[__typename].modifiedCount += updateResult.modifiedCount;
+    updateResults[__typename].upsertedCount += updateResult.upsertedCount;
   }
 
   return updateResults;
