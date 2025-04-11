@@ -20,6 +20,8 @@ export const GET = () =>
       if (dataSource.source !== DataSource.ICal) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ url }) {
+        if (!url) return;
+
         const icalData = parseICS(await fetch(url).then((r) => r.text()));
 
         const icalUrlHash = createHash("sha256")
