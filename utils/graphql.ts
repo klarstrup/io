@@ -140,9 +140,9 @@ export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>) {
 }
 
 export const fetchGraphQLQuery = async <TData = Record<string, unknown>>(
-  query: DocumentNode,
-  variables: Variables,
   url: URL | string,
+  query: DocumentNode,
+  variables?: Variables,
   init?: RequestInit,
   operationName?: string,
 ): Promise<FetchResult<TData>> => {

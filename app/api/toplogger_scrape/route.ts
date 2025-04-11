@@ -12,6 +12,7 @@ import { randomSliceOfSize } from "../../../utils";
 import {
   fetchGraphQLQuery,
   normalizeAndUpsertQueryData,
+  type Variables,
 } from "../../../utils/graphql";
 import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
@@ -491,9 +492,9 @@ export const GET = (request: NextRequest) =>
         if (new Date(authTokens.access.expiresAt) < new Date()) {
           yield "Access token expired, refreshing token";
           const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
+            "https://app.toplogger.nu/graphql",
             authSigninRefreshTokenQuery,
             { refreshToken: authTokens.refresh.token },
-            "https://app.toplogger.nu/graphql",
             {
               headers: { authorization: `Bearer ${authTokens.refresh.token}` },
             },
@@ -545,15 +546,14 @@ export const GET = (request: NextRequest) =>
 
         const fetchQueryAndNormalizeAndUpsertQueryData = async <
           TData = Record<string, unknown>,
-          TVariables extends Record<string, unknown> = Record<string, unknown>,
         >(
           query: DocumentNode,
-          variables?: TVariables,
+          variables?: Variables,
         ) => {
           const response = await fetchGraphQLQuery<TData>(
+            "https://app.toplogger.nu/graphql",
             query,
             variables,
-            "https://app.toplogger.nu/graphql",
             { headers: { ...agentHeaders, ...headers } },
           );
 
