@@ -161,6 +161,20 @@ export interface CompPouleScalars extends GraphQLObject<"CompPoule"> {
   // compRounds: CompRound[];
 }
 
+export const CompPouleUserScalarsFragment = gql`
+  fragment CompPouleUserScalarsFragment on CompPouleUser {
+    __typename
+    id
+    compPouleId
+    compUserId
+    userId
+  }
+`;
+export interface CompPouleUserScalars extends GraphQLObject<"CompPouleUser"> {
+  compPouleId: string;
+  compUserId: string;
+}
+
 export const GymUserMeScalarsFragment = gql`
   fragment GymUserMeScalarsFragment on GymUserMe {
     __typename
@@ -368,6 +382,7 @@ export const CompRoundScalarsFragment = gql`
     participantsSpotsLeft
     nameLoc
     compPouleId
+    compId
   }
 `;
 export interface CompRoundScalars extends GraphQLObject<"CompRound"> {
@@ -380,6 +395,7 @@ export interface CompRoundScalars extends GraphQLObject<"CompRound"> {
   participantsSpotsLeft: number;
   nameLoc: string;
   compPouleId: string;
+  compId: string;
   // compRoundUserMe: CompRoundUser | null;
 }
 
@@ -410,6 +426,7 @@ export const CompRoundUserScalarsFragment = gql`
     id
     userId
     compUserId
+    compId
     compRoundId
     score
     totMaxZones
@@ -425,6 +442,7 @@ export const CompRoundUserScalarsFragment = gql`
 `;
 export interface CompRoundUserScalars extends GraphQLObject<"CompRoundUser"> {
   userId: string;
+  compId: string;
   compUserId: string;
   compRoundId: string;
   score: number;

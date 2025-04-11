@@ -1,16 +1,26 @@
 import { isAfter, isBefore } from "date-fns";
-import {
+import type {
   ClimbLogScalars,
   ClimbScalars,
   CompClimbUserScalars,
   CompGymScalars,
+  CompPouleScalars,
+  CompRoundScalars,
+  CompRoundUserScalars,
   CompScalars,
   CompUserScalars,
   GymScalars,
   HoldColorScalars,
 } from "../app/api/toplogger_scrape/fragments";
-import { type EventEntry, EventSource, type Score } from "../lib";
-import { type Reference, filterFromReference } from "../utils/graphql";
+import {
+  type EventEntry,
+  EventSource,
+  type Score,
+  SCORING_SOURCE,
+  SCORING_SYSTEM,
+} from "../lib";
+import { percentile, unique } from "../utils";
+import { filterFromReference, type Reference } from "../utils/graphql";
 import { TopLoggerGraphQL } from "./toplogger.server";
 
 export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
@@ -38,18 +48,40 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     id: { $in: compGyms.map(({ gymId }) => gymId) },
   }).toArray();
 
+  const ioCompRoundUser = await TopLoggerGraphQL.findOne<CompRoundUserScalars>({
+    __typename: "CompRoundUser",
+    compId: comp.id,
+    userId: ioId,
+  });
+  const ioCompRound = await TopLoggerGraphQL.findOne<CompRoundScalars>({
+    __typename: "CompRound",
+    id: ioCompRoundUser?.compRoundId,
+  });
+  const ioCompPoule = await TopLoggerGraphQL.findOne<CompPouleScalars>({
+    __typename: "CompPoule",
+    id: ioCompRound?.compPouleId,
+  });
+  const ioCompRoundUsers = await TopLoggerGraphQL.find<CompRoundUserScalars>(
+    {
+      __typename: "CompRoundUser",
+      compId: comp.id,
+      compRoundId: ioCompRound?.id,
+    },
+    { sort: { score: -1 } },
+  ).toArray();
+
+  const ioRank =
+    ioCompRoundUser &&
+    ioCompRoundUsers.findIndex(({ id }) => id === ioCompRoundUser.id) + 1;
+
   const compClimbUsers = await TopLoggerGraphQL.find<CompClimbUserScalars>({
     __typename: "CompClimbUser",
     compId: comp.id,
   }).toArray();
-
   const climbs = await TopLoggerGraphQL.find<ClimbScalars>({
     __typename: "Climb",
-    id: { $in: compClimbUsers.map(({ climbId }) => climbId) },
+    id: { $in: unique(compClimbUsers.map(({ climbId }) => climbId)) },
   }).toArray();
-
-  const io = compUser;
-  if (!io) throw new Error("io not found");
 
   const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>({
     __typename: "ClimbLog",
@@ -79,7 +111,9 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     type: "competition",
     id: compId,
     ioId,
-    url: `https://app.toplogger.nu/en-us/${gym.nameSlug}/competitions/${compId}`,
+    url: ioCompRound
+      ? `https://app.toplogger.nu/en-us/${gym.nameSlug}/competitions/${compId}/rounds/${ioCompRound.id}`
+      : `https://app.toplogger.nu/en-us/${gym.nameSlug}/competitions/${compId}`,
     start: comp.loggableStartAt,
     end: comp.loggableEndAt,
     venue: gyms.map(({ name }) => name).join(", ") || null,
@@ -96,9 +130,9 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
         : comp.name.includes("(Mini-Comp)")
           ? "Mini-Comp"
           : null,
-    category: null, // TODO: Io poule names
+    category: ioCompPoule?.nameLoc.replace("♀️", "F").replace("♂️", "M").trim(), // TODO: Io poule names
     team: null,
-    noParticipants: NaN,
+    noParticipants: ioCompRoundUsers.length,
     problems: climbs.length,
     problemByProblem: climbs
       .map((climb) => {
@@ -124,7 +158,17 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
         Intl.Collator("en-DK", { numeric: true }).compare(a.number, b.number),
       ),
     // Left as an exercise for the reader
-    scores: [] as Score[] /* ||
+    scores: ioCompRoundUser
+      ? ([
+          {
+            source: SCORING_SOURCE.OFFICIAL,
+            points: ioCompRoundUser.score,
+            percentile: percentile(ioRank!, ioCompRoundUsers.length),
+            system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+            rank: ioRank!,
+          },
+        ] satisfies Score[])
+      : ([] as Score[]) /* ||
       getIoTopLoggerGroupScores(
         comp,
         io,

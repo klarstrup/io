@@ -1,4 +1,4 @@
-import { type DocumentNode, Kind } from "graphql";
+import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
 import { NextRequest } from "next/server";
@@ -24,10 +24,6 @@ import {
   ClimbLogScalarsFragment,
   ClimbScalars,
   ClimbScalarsFragment,
-  ClimbTagClimbScalars,
-  ClimbTagClimbScalarsFragment,
-  ClimbTagScalars,
-  ClimbTagScalarsFragment,
   ClimbUserScalars,
   ClimbUserScalarsFragment,
   CompClimbUserScalars,
@@ -36,6 +32,8 @@ import {
   CompGymScalarsFragment,
   CompPouleScalars,
   CompPouleScalarsFragment,
+  CompPouleUserScalars,
+  CompPouleUserScalarsFragment,
   CompRoundClimbScalars,
   CompRoundClimbScalarsFragment,
   CompRoundScalars,
@@ -388,6 +386,7 @@ const compRoundUsersForRankingQuery = gql`
   ${CompRoundUserScalarsFragment}
   ${CompUserScalarsFragment}
   ${UserScalarsFragment}
+  ${CompPouleUserScalarsFragment}
 
   query compRoundUsersForRanking(
     $gymId: ID!
@@ -413,6 +412,10 @@ const compRoundUsersForRankingQuery = gql`
 
         compUser {
           ...CompUserScalarsFragment
+
+          compPouleUsers {
+            ...CompPouleUserScalarsFragment
+          }
         }
         user {
           ...UserScalarsFragment
@@ -425,7 +428,9 @@ const compRoundUsersForRankingQuery = gql`
 type CompRoundUsersForRankingResponse = {
   ranking: PaginatedObjects<
     CompRoundUserScalars & {
-      compUser: CompUserScalars;
+      compUser: CompUserScalars & {
+        compPouleUsers: CompPouleUserScalars[];
+      };
       user: UserScalars;
     }
   >;
@@ -439,8 +444,6 @@ const compClimbUsersForRankingClimbUserQuery = gql`
   ${WallScalarsFragment}
   ${WallSectionScalarsFragment}
   ${ClimbGroupClimbScalarsFragment}
-  ${ClimbTagClimbScalarsFragment}
-  ${ClimbTagScalarsFragment}
   ${ClimbUserScalarsFragment}
   ${CompRoundClimbScalarsFragment}
   ${CompClimbUserScalarsFragment}
@@ -484,13 +487,6 @@ const compClimbUsersForRankingClimbUserQuery = gql`
           climbGroupClimbs {
             ...ClimbGroupClimbScalarsFragment
           }
-          climbTagClimbs {
-            ...ClimbTagClimbScalarsFragment
-
-            climbTag {
-              ...ClimbTagScalarsFragment
-            }
-          }
 
           climbUser(userId: $userId) {
             ...ClimbUserScalarsFragment
@@ -518,9 +514,6 @@ type CompClimbUsersForRankingClimbUserResponse = {
         wall: WallScalars;
         wallSection: WallSectionScalars;
         climbGroupClimbs: ClimbGroupClimbScalars[];
-        climbTagClimbs: (ClimbTagClimbScalars & {
-          climbTag: ClimbTagScalars;
-        })[];
         climbUser: ClimbUserScalars & {
           compClimbUser: CompClimbUserScalars;
         };
@@ -620,28 +613,21 @@ export const GET = (request: NextRequest) =>
         agentHeaders.set("origin", "https://app.toplogger.nu");
         agentHeaders.set("x-app-locale", "en-us");
 
-        const fetchQuery = <
+        const fetchQuery = async <
           TData = Record<string, unknown>,
           TVariables extends Record<string, unknown> = Record<string, unknown>,
         >(
           query: DocumentNode,
           variables?: TVariables,
           operationName?: string,
-        ) => {
-          console.log(
-            query.definitions.find(
-              (definition) => definition.kind === Kind.OPERATION_DEFINITION,
-            )?.name?.value,
-            variables,
-          );
-          return fetchGraphQLQuery<TData>(
+        ) =>
+          fetchGraphQLQuery<TData>(
             query,
             variables,
             "https://app.toplogger.nu/graphql",
             { headers: { ...agentHeaders, ...headers } },
             operationName,
           );
-        };
 
         const userId = dataSource.config.graphQLId;
 
@@ -682,6 +668,14 @@ export const GET = (request: NextRequest) =>
                     gymId: gym.id,
                     compId: comp.id,
                     compRoundId: round.id,
+                    pagination: {
+                      page: 1,
+                      perPage: 100,
+                      orderBy: [
+                        { key: "compUser.disqualifiedInt", order: "asc" },
+                        { key: "score", order: "desc" },
+                      ],
+                    },
                   };
                   const compRoundUsersForRankingResponse =
                     await fetchQuery<CompRoundUsersForRankingResponse>(
@@ -699,6 +693,44 @@ export const GET = (request: NextRequest) =>
                       .id;
                   yield updateResult;
 
+                  if (
+                    compRoundUsersForRankingResponse.data &&
+                    compRoundUsersForRankingResponse.data?.ranking.pagination
+                      .total >
+                      compRoundUsersForRankingResponse.data?.ranking.pagination
+                        .perPage
+                  ) {
+                    const compRoundUsersForRankingVariables = {
+                      gymId: gym.id,
+                      compId: comp.id,
+                      compRoundId: round.id,
+                      pagination: {
+                        page: 2,
+                        perPage: 100,
+                        orderBy: [
+                          { key: "compUser.disqualifiedInt", order: "asc" },
+                          { key: "score", order: "desc" },
+                        ],
+                      },
+                    };
+                    const compRoundUsersForRankingResponse =
+                      await fetchQuery<CompRoundUsersForRankingResponse>(
+                        compRoundUsersForRankingQuery,
+                        compRoundUsersForRankingVariables,
+                      );
+
+                    const updateResult = await normalizeAndUpsertQueryData(
+                      compRoundUsersForRankingQuery,
+                      compRoundUsersForRankingVariables,
+                      compRoundUsersForRankingResponse.data!,
+                    );
+                    yield updateResult;
+                  }
+
+                  // Also get all the Comp Climbs of the best ranked climber,
+                  // presuming that they've attempted every Comp Climb.
+                  // This allows for backfilling of Climbs for comps that are no longer
+                  // set, I haven't found a better way of doing this.
                   for (const userIddd of [userId, bestClimberId].filter(
                     Boolean,
                   )) {
