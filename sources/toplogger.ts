@@ -83,12 +83,15 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
     id: { $in: unique(compClimbUsers.map(({ climbId }) => climbId)) },
   }).toArray();
 
-  const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>({
-    __typename: "ClimbLog",
-    userId: ioId,
-    climbId: { $in: climbs.map(({ id }) => id) },
-    climbedAtDate: { $gt: new Date(0) },
-  }).toArray();
+  const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>(
+    {
+      __typename: "ClimbLog",
+      userId: ioId,
+      climbId: { $in: climbs.map(({ id }) => id) },
+      climbedAtDate: { $gt: new Date(0) },
+    },
+    { sort: { tickType: -1, climbedAtDate: 1 } },
+  ).toArray();
 
   let firstClimbLog: Date | null = null;
   let lastClimbLog: Date | null = null;
