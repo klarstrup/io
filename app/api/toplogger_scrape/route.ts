@@ -1,4 +1,4 @@
-import { type DocumentNode } from "graphql";
+import { getOperationAST, type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
 import { NextRequest } from "next/server";
@@ -21,6 +21,8 @@ import {
   ClimbDayScalarsFragment,
   ClimbGroupClimbScalars,
   ClimbGroupClimbScalarsFragment,
+  ClimbGroupScalars,
+  ClimbGroupScalarsFragment,
   ClimbLogScalars,
   ClimbLogScalarsFragment,
   ClimbScalars,
@@ -299,6 +301,7 @@ const userMeStoreQuery = gql`
   ${HoldColorScalarsFragment}
   ${WallScalarsFragment}
   ${WallSectionScalarsFragment}
+  ${ClimbGroupScalarsFragment}
 
   query userMeStore {
     userMe {
@@ -318,6 +321,9 @@ const userMeStoreQuery = gql`
           }
           holdColors {
             ...HoldColorScalarsFragment
+          }
+          climbGroups {
+            ...ClimbGroupScalarsFragment
           }
         }
       }
@@ -340,6 +346,7 @@ interface UserMeStoreResponse {
         walls: WallScalars[];
         wallSections: WallSectionScalars[];
         holdColors: HoldColorScalars[];
+        climbGroups: ClimbGroupScalars[];
       };
     })[];
   };
@@ -568,10 +575,11 @@ export const GET = (request: NextRequest) =>
 
         const userId = dataSource.config.graphQLId;
 
-        const [userMeStoreResponse] =
+        const [userMeStoreResponse, updateResult] =
           await fetchQueryAndNormalizeAndUpsertQueryData<UserMeStoreResponse>(
             userMeStoreQuery,
           );
+        yield updateResult;
 
         const userMe = userMeStoreResponse.data?.userMe;
 

@@ -262,14 +262,49 @@ export interface ClimbScalars extends GraphQLObject<"Climb"> {
   // gym: ClimbGym;
 }
 
+export const ClimbGroupScalarsFragment = gql`
+  fragment ClimbGroupScalarsFragment on ClimbGroup {
+    __typename
+    id
+    gymId
+    holdColorId
+    nameLoc
+    descriptionLoc
+    gradeInit
+    color
+    label
+    climbGroupBy
+    climbType
+    visible
+    order
+  }
+`;
+export interface ClimbGroupScalars extends GraphQLObject<"ClimbGroup"> {
+  gymId: string;
+  holdColorId: null | string;
+  nameLoc: string;
+  descriptionLoc: null | string;
+  gradeInit: number;
+  color: null | string;
+  label: null;
+  climbGroupBy: ClimbGroupBy;
+  climbType: ClimbType;
+  visible: boolean;
+  order: number;
+}
+export enum ClimbGroupBy {
+  HoldColor = "HOLD_COLOR",
+  LabelColor = "LABEL_COLOR",
+}
+
 export const ClimbGroupClimbScalarsFragment = gql`
   fragment ClimbGroupClimbScalarsFragment on ClimbGroupClimb {
+    __typename
     id
     climbId
     gymId
     climbGroupId
     order
-    __typename
   }
 `;
 export interface ClimbGroupClimbScalars
@@ -460,6 +495,7 @@ export interface CompRoundUserScalars extends GraphQLObject<"CompRoundUser"> {
 export const WallScalarsFragment = gql`
   fragment WallScalarsFragment on Wall {
     id
+    gymId
     nameLoc
     idOnFloorplan
     height
@@ -474,6 +510,7 @@ export const WallScalarsFragment = gql`
   }
 `;
 export interface WallScalars extends GraphQLObject<"Wall"> {
+  gymId: string;
   nameLoc: string;
   idOnFloorplan: string;
   height: number;
@@ -489,6 +526,7 @@ export interface WallScalars extends GraphQLObject<"Wall"> {
 export const WallSectionScalarsFragment = gql`
   fragment WallSectionScalarsFragment on WallSection {
     id
+    gymId
     name
     routesEnabled
     positionX
@@ -497,6 +535,7 @@ export const WallSectionScalarsFragment = gql`
   }
 `;
 export interface WallSectionScalars {
+  gymId: string;
   name: string;
   routesEnabled: boolean;
   positionX: number;
@@ -505,15 +544,17 @@ export interface WallSectionScalars {
 
 export const HoldColorScalarsFragment = gql`
   fragment HoldColorScalarsFragment on HoldColor {
+    __typename
     id
+    gymId
     color
     colorSecondary
     nameLoc
     order
-    __typename
   }
 `;
 export interface HoldColorScalars extends GraphQLObject<"HoldColor"> {
+  gymId: string;
   color: string;
   colorSecondary: null | string;
   nameLoc: string;
