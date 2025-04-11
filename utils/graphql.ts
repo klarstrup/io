@@ -19,6 +19,8 @@ import { isNonEmptyArray, isNonNullObject } from "../utils";
 interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   errorMessage?: string;
+  operationName?: string;
+  variables?: Variables;
 }
 
 // Sets the error message on this error according to the
@@ -60,11 +62,22 @@ class ApolloError extends Error {
   // Constructs an instance of ApolloError given serialized GraphQL errors.
   // Note that one of these has to be a valid
   // value or the constructed error will be meaningless.
-  constructor({ graphQLErrors, errorMessage }: ApolloErrorOptions) {
+  constructor({
+    graphQLErrors,
+    errorMessage,
+    operationName,
+    variables,
+  }: ApolloErrorOptions) {
     super(errorMessage);
     this.name = "ApolloError";
     this.graphQLErrors = graphQLErrors || [];
-    this.message = errorMessage || generateErrorMessage(this);
+    this.message = [
+      errorMessage || generateErrorMessage(this),
+      operationName,
+      variables,
+    ]
+      .filter(Boolean)
+      .join("\n");
     this.cause = [...(graphQLErrors || [])].find((e) => !!e) || null;
 
     // We're not using `Object.setPrototypeOf` here as it isn't fully
@@ -126,12 +139,9 @@ export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>) {
   return graphQLErrors;
 }
 
-export const fetchGraphQLQuery = async <
-  TData = Record<string, unknown>,
-  TVariables = Record<string, unknown>,
->(
+export const fetchGraphQLQuery = async <TData = Record<string, unknown>>(
   query: DocumentNode,
-  variables: TVariables | undefined,
+  variables: Variables,
   url: URL | string,
   init?: RequestInit,
   operationName?: string,
@@ -148,6 +158,10 @@ export const fetchGraphQLQuery = async <
 
   if (graphQLResultHasError(result)) {
     throw new ApolloError({
+      operationName: query.definitions.find(
+        (definition) => definition.kind === Kind.OPERATION_DEFINITION,
+      )?.name?.value,
+      variables,
       graphQLErrors: getGraphQLErrorsFromResult(result),
     });
   }
