@@ -613,26 +613,37 @@ export const GET = (request: NextRequest) =>
         agentHeaders.set("origin", "https://app.toplogger.nu");
         agentHeaders.set("x-app-locale", "en-us");
 
-        const fetchQuery = async <
+        const fetchQueryAndNormalizeAndUpsertQueryData = async <
           TData = Record<string, unknown>,
           TVariables extends Record<string, unknown> = Record<string, unknown>,
         >(
           query: DocumentNode,
           variables?: TVariables,
-          operationName?: string,
-        ) =>
-          fetchGraphQLQuery<TData>(
+        ) => {
+          const response = await fetchGraphQLQuery<TData>(
             query,
             variables,
             "https://app.toplogger.nu/graphql",
             { headers: { ...agentHeaders, ...headers } },
-            operationName,
           );
+
+          const updateResult = await normalizeAndUpsertQueryData(
+            query,
+            variables,
+            response.data!,
+          );
+
+          return [response, updateResult] as const;
+        };
 
         const userId = dataSource.config.graphQLId;
 
-        const userMe = (await fetchQuery<UserMeStoreResponse>(userMeStoreQuery))
-          .data?.userMe;
+        const [userMeStoreResponse] =
+          await fetchQueryAndNormalizeAndUpsertQueryData<UserMeStoreResponse>(
+            userMeStoreQuery,
+          );
+
+        const userMe = userMeStoreResponse.data?.userMe;
 
         yield userMe;
 
@@ -642,52 +653,39 @@ export const GET = (request: NextRequest) =>
 
         if (gyms) {
           for (const gym of gyms) {
-            const compsVariables = {
-              gymId: gym.id,
-              pagination: {
-                orderBy: [{ key: "loggableStartAt", order: "desc" }],
-              },
-            };
-            const compsResponse = await fetchQuery<CompsResponse>(
-              compsQuery,
-              compsVariables,
-            );
-
-            const updateResult = await normalizeAndUpsertQueryData(
-              compsQuery,
-              compsVariables,
-              compsResponse.data!,
-            );
-
+            const [compsResponse, updateResult] =
+              await fetchQueryAndNormalizeAndUpsertQueryData<CompsResponse>(
+                compsQuery,
+                {
+                  gymId: gym.id,
+                  pagination: {
+                    orderBy: [{ key: "loggableStartAt", order: "desc" }],
+                  },
+                },
+              );
             yield updateResult;
 
             for (const comp of compsResponse.data?.comps.data ?? []) {
               for (const poule of comp.compPoules) {
                 for (const round of poule.compRounds) {
-                  const compRoundUsersForRankingVariables = {
-                    gymId: gym.id,
-                    compId: comp.id,
-                    compRoundId: round.id,
-                    pagination: {
-                      page: 1,
-                      perPage: 100,
-                      orderBy: [
-                        { key: "compUser.disqualifiedInt", order: "asc" },
-                        { key: "score", order: "desc" },
-                      ],
-                    },
-                  };
-                  const compRoundUsersForRankingResponse =
-                    await fetchQuery<CompRoundUsersForRankingResponse>(
+                  const [compRoundUsersForRankingResponse, updateResult] =
+                    await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                       compRoundUsersForRankingQuery,
-                      compRoundUsersForRankingVariables,
+                      {
+                        gymId: gym.id,
+                        compId: comp.id,
+                        compRoundId: round.id,
+                        pagination: {
+                          page: 1,
+                          perPage: 100,
+                          orderBy: [
+                            { key: "compUser.disqualifiedInt", order: "asc" },
+                            { key: "score", order: "desc" },
+                          ],
+                        },
+                      },
                     );
 
-                  const updateResult = await normalizeAndUpsertQueryData(
-                    compRoundUsersForRankingQuery,
-                    compRoundUsersForRankingVariables,
-                    compRoundUsersForRankingResponse.data!,
-                  );
                   const bestClimberId =
                     compRoundUsersForRankingResponse.data?.ranking.data[0]?.user
                       .id;
@@ -700,30 +698,23 @@ export const GET = (request: NextRequest) =>
                       compRoundUsersForRankingResponse.data?.ranking.pagination
                         .perPage
                   ) {
-                    const compRoundUsersForRankingVariables = {
-                      gymId: gym.id,
-                      compId: comp.id,
-                      compRoundId: round.id,
-                      pagination: {
-                        page: 2,
-                        perPage: 100,
-                        orderBy: [
-                          { key: "compUser.disqualifiedInt", order: "asc" },
-                          { key: "score", order: "desc" },
-                        ],
-                      },
-                    };
-                    const compRoundUsersForRankingResponse =
-                      await fetchQuery<CompRoundUsersForRankingResponse>(
+                    const [, updateResult] =
+                      await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                         compRoundUsersForRankingQuery,
-                        compRoundUsersForRankingVariables,
+                        {
+                          gymId: gym.id,
+                          compId: comp.id,
+                          compRoundId: round.id,
+                          pagination: {
+                            page: 2,
+                            perPage: 100,
+                            orderBy: [
+                              { key: "compUser.disqualifiedInt", order: "asc" },
+                              { key: "score", order: "desc" },
+                            ],
+                          },
+                        },
                       );
-
-                    const updateResult = await normalizeAndUpsertQueryData(
-                      compRoundUsersForRankingQuery,
-                      compRoundUsersForRankingVariables,
-                      compRoundUsersForRankingResponse.data!,
-                    );
                     yield updateResult;
                   }
 
@@ -734,47 +725,33 @@ export const GET = (request: NextRequest) =>
                   for (const userIddd of [userId, bestClimberId].filter(
                     Boolean,
                   )) {
-                    const compClimbUsersForRankingClimbUserVariables = {
-                      gymId: gym.id,
-                      userId: userIddd,
-                      compId: comp.id,
-                      compRoundId: round.id,
-                      pagination: {
-                        page: 1,
-                        perPage: 100,
-                        orderBy: [{ key: "points", order: "desc" }],
-                      },
-                    };
-                    const compClimbUsersForRankingClimbUserResponse =
-                      await fetchQuery<CompClimbUsersForRankingClimbUserResponse>(
+                    const [, compClimbUsersForRankingClimbUserUpdateResult] =
+                      await fetchQueryAndNormalizeAndUpsertQueryData<CompClimbUsersForRankingClimbUserResponse>(
                         compClimbUsersForRankingClimbUserQuery,
-                        compClimbUsersForRankingClimbUserVariables,
-                      );
-
-                    const compClimbUsersForRankingClimbUserUpdateResult =
-                      await normalizeAndUpsertQueryData(
-                        compClimbUsersForRankingClimbUserQuery,
-                        compClimbUsersForRankingClimbUserVariables,
-                        compClimbUsersForRankingClimbUserResponse.data!,
+                        {
+                          gymId: gym.id,
+                          userId: userIddd,
+                          compId: comp.id,
+                          compRoundId: round.id,
+                          pagination: {
+                            page: 1,
+                            perPage: 100,
+                            orderBy: [{ key: "points", order: "desc" }],
+                          },
+                        },
                       );
                     yield compClimbUsersForRankingClimbUserUpdateResult;
 
-                    const climbsVariables = {
-                      gymId: gym.id,
-                      climbType: "boulder",
-                      compRoundId: round.id,
-                      userId: userIddd,
-                    };
-                    const climbsResponse = await fetchQuery<ClimbsResponse>(
-                      climbsQuery,
-                      climbsVariables,
-                    );
-
-                    const updateResult = await normalizeAndUpsertQueryData(
-                      climbsQuery,
-                      climbsVariables,
-                      climbsResponse.data!,
-                    );
+                    const [, updateResult] =
+                      await fetchQueryAndNormalizeAndUpsertQueryData<ClimbsResponse>(
+                        climbsQuery,
+                        {
+                          gymId: gym.id,
+                          climbType: "boulder",
+                          compRoundId: round.id,
+                          userId: userIddd,
+                        },
+                      );
 
                     yield updateResult;
                   }
@@ -787,12 +764,15 @@ export const GET = (request: NextRequest) =>
         let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
           [];
         let page = 1;
-        let graphqlClimbDaysPaginatedResponse =
-          await fetchQuery<ClimbDaysSessionsResponse>(climbDaysSessionsQuery, {
-            userId,
-            bouldersTotalTriesMin: 1,
-            pagination: { page, perPage: 100 },
-          });
+        let [graphqlClimbDaysPaginatedResponse] =
+          await fetchQueryAndNormalizeAndUpsertQueryData<ClimbDaysSessionsResponse>(
+            climbDaysSessionsQuery,
+            {
+              userId,
+              bouldersTotalTriesMin: 1,
+              pagination: { page, perPage: 100 },
+            },
+          );
         if (!graphqlClimbDaysPaginatedResponse.data) {
           throw new Error("Failed to fetch climb days");
         }
@@ -807,8 +787,8 @@ export const GET = (request: NextRequest) =>
         );
 
         for (; page <= totalPages; page++) {
-          graphqlClimbDaysPaginatedResponse =
-            await fetchQuery<ClimbDaysSessionsResponse>(
+          [graphqlClimbDaysPaginatedResponse] =
+            await fetchQueryAndNormalizeAndUpsertQueryData<ClimbDaysSessionsResponse>(
               climbDaysSessionsQuery,
               {
                 userId,
@@ -836,20 +816,11 @@ export const GET = (request: NextRequest) =>
         ];
 
         for (const climbDay of climbDaysToFetch) {
-          const climbLogsVariables = {
-            userId,
-            climbedAtDate: climbDay.statsAtDate,
-          };
-          const graphqlClimbLogsResponse = await fetchQuery<ClimbLogsResponse>(
-            climbLogsQuery,
-            climbLogsVariables,
-          );
-
-          const updateResult = await normalizeAndUpsertQueryData(
-            climbLogsQuery,
-            climbLogsVariables,
-            graphqlClimbLogsResponse.data!,
-          );
+          const [, updateResult] =
+            await fetchQueryAndNormalizeAndUpsertQueryData<ClimbLogsResponse>(
+              climbLogsQuery,
+              { userId, climbedAtDate: climbDay.statsAtDate },
+            );
 
           yield updateResult;
         }
