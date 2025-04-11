@@ -303,10 +303,7 @@ const userMeStoreQuery = gql`
     userMe {
       ...UserMeScalarsFragment
 
-      gym {
-        ...GymScalarsFragment
-      }
-      gymUserFavorites {
+      gymUsers {
         ...GymUserMeScalarsFragment
 
         gym {
@@ -323,13 +320,21 @@ const userMeStoreQuery = gql`
           }
         }
       }
+
+      gym {
+        ...GymScalarsFragment
+      }
+      gymUserFavorites {
+        ...GymUserMeScalarsFragment
+      }
     }
   }
 `;
 interface UserMeStoreResponse {
   userMe: UserMeScalars & {
     gym: GymScalars;
-    gymUserFavorites: (GymUserMeScalars & {
+    gymUserFavorites: GymUserMeScalars[];
+    gymUsers: (GymUserMeScalars & {
       gym: GymScalars & {
         walls: WallScalars[];
         wallSections: WallSectionScalars[];
@@ -571,7 +576,7 @@ export const GET = (request: NextRequest) =>
         const userMe = userMeStoreResponse.data?.userMe;
 
         const gyms = randomSliceOfSize(
-          userMe?.gymUserFavorites.map((fav) => fav.gym) || [],
+          userMe?.gymUsers.map((fav) => fav.gym) || [],
           1,
         );
 
@@ -593,11 +598,11 @@ export const GET = (request: NextRequest) =>
               );
             yield updateResult;
 
-            for (const comp of compsResponse.data?.comps.data ?? []) {
-              if (!comp.compUserMe) {
-                continue; // Skip comps without the user
-              }
+            const userComps = compsResponse.data?.comps.data?.filter(
+              (comp) => comp.compUserMe,
+            );
 
+            for (const comp of userComps || []) {
               for (const poule of comp.compPoules) {
                 for (const round of poule.compRounds) {
                   const [compRoundUsersForRankingResponse, updateResult] =
@@ -738,8 +743,8 @@ export const GET = (request: NextRequest) =>
           );
         }
 
-        const recentDays = 4;
-        const backfillDays = 16;
+        const recentDays = 3;
+        const backfillDays = 12;
         const climbDaysToFetch = [
           // Most recent days
           ...climbDays.slice(0, recentDays),
