@@ -133,7 +133,7 @@ export async function getIoTopLoggerCompEvent(compId: string, ioId: string) {
         : comp.name.includes("(Mini-Comp)")
           ? "Mini-Comp"
           : null,
-    category: ioCompPoule?.nameLoc.replace("♀️", "F").replace("♂️", "M").trim(), // TODO: Io poule names
+    category: ioCompPoule?.nameLoc.replace("♀️", "F").replace("♂️", "M").trim(),
     team: null,
     noParticipants: ioCompRoundUsers.length,
     problems: climbs.length,
