@@ -52,17 +52,6 @@ export async function* materializeAllToploggerWorkouts({
       },
       { $replaceRoot: { newRoot: "$climbLog" } },
       {
-        $set: {
-          climbId: {
-            $replaceOne: {
-              input: "$climb.__ref",
-              find: "Climb:",
-              replacement: "",
-            },
-          },
-        },
-      },
-      {
         $lookup: {
           from: "toplogger_graphql",
           localField: "climbId",
@@ -75,7 +64,7 @@ export async function* materializeAllToploggerWorkouts({
         $set: {
           holdColorId: {
             $replaceOne: {
-              input: "$climb.holdColor.__ref",
+              input: "$climb.holdColorId",
               find: "HoldColor:",
               replacement: "",
             },
@@ -95,7 +84,7 @@ export async function* materializeAllToploggerWorkouts({
         $set: {
           gymId: {
             $replaceOne: {
-              input: "$climb.gym.__ref",
+              input: "$climb.gymId",
               find: "Gym:",
               replacement: "",
             },
