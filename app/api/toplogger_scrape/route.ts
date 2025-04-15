@@ -489,8 +489,6 @@ export const GET = (request: NextRequest) =>
             { key: { __typename: 1, id: 1 } },
             { key: { __typename: 1, compId: 1 } },
             { key: { __typename: 1, compId: 1, userId: 1 } },
-            { key: { __typename: 1, compId: 1, compRoundId: 1 } },
-            { key: { __typename: 1, userId: 1 } },
             { key: { __typename: 1, userId: 1, climbedAtDate: 1 } },
             {
               key: { __typename: 1, userId: 1, climbId: 1, climbedAtDate: -1 },
