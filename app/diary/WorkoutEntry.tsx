@@ -355,16 +355,17 @@ export default function WorkoutEntry({
       legend={
         <small className="-ml-2 block leading-none">
           {showDate ? (
-            <Link
-              prefetch={false}
-              href={`/diary/${workoutDateStr}`}
-              style={{ color: "#edab00" }}
-              className="block text-xs font-semibold"
-            >
-              <small>{workoutDateStr}</small>
-            </Link>
-          ) : null}
-          {workout.location && showExerciseName ? (
+            <div className="block text-xs font-semibold">
+              <Link
+                prefetch={false}
+                href={`/diary/${workoutDateStr}`}
+                style={{ color: "#edab00" }}
+              >
+                <small>{workoutDateStr}</small>
+              </Link>
+              {workout.location ? <small> - {workout.location}</small> : null}
+            </div>
+          ) : workout.location ? (
             <div>
               <small>{workout.location}</small>
             </div>
