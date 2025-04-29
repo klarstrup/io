@@ -26,6 +26,7 @@ import {
   isNextSetDue,
   WorkoutSource,
   type WorkoutData,
+  type WorkoutExercise,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
 } from "../../models/workout";
@@ -47,6 +48,24 @@ function dateToInputDate(date?: Date) {
   if (!date || !isValid(date)) return undefined;
 
   return date.toJSON().slice(0, 10) as unknown as Date;
+}
+
+const setValueAs = (v: unknown) =>
+  v === "" || Number.isNaN(Number(v)) ? null : Number(v);
+const getValueAs = (v: unknown) =>
+  v === null || Number.isNaN(Number(v)) ? "" : Number(v);
+const getValueAsFont = (v: unknown) =>
+  v === null || Number.isNaN(Number(v)) || v === 0 ? "" : Number(v);
+
+interface WorkoutDataFormData extends Omit<WorkoutData, "exercises"> {
+  _id?: string;
+  exercises: (Omit<WorkoutExercise, "sets"> & {
+    sets: (Omit<WorkoutExerciseSet, "inputs"> & {
+      inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
+        value: number | string;
+      })[];
+    })[];
+  })[];
 }
 
 export function WorkoutForm<R extends string>({
@@ -76,9 +95,25 @@ export function WorkoutForm<R extends string>({
     control,
     watch,
     formState: { isDirty, isSubmitting },
-  } = useForm<WorkoutData & { _id?: string }>({
+  } = useForm<WorkoutDataFormData>({
     defaultValues: workout
-      ? { ...workout, workedOutAt: dateToInputDate(workout?.workedOutAt) }
+      ? {
+          ...workout,
+          workedOutAt: dateToInputDate(workout?.workedOutAt),
+          exercises: workout.exercises.map((exercise) => ({
+            ...exercise,
+            sets: exercise.sets.map((set) => ({
+              ...set,
+              inputs: set.inputs.map((input) => ({
+                ...input,
+                value:
+                  input.unit === Unit.FrenchRounded
+                    ? getValueAsFont(input.value)
+                    : getValueAs(input.value),
+              })),
+            })),
+          })),
+        }
       : undefined,
   });
   const { fields, append, update, remove } = useFieldArray({
@@ -163,7 +198,17 @@ export function WorkoutForm<R extends string>({
             workedOutAt: data.workedOutAt ?? workout?.workedOutAt,
             createdAt: workout?.createdAt ?? new Date(),
             updatedAt: new Date(),
-            exercises: data.exercises ?? workout?.exercises,
+            exercises:
+              data.exercises?.map((exercise) => ({
+                ...exercise,
+                sets: exercise.sets.map((set) => ({
+                  ...set,
+                  inputs: set.inputs.map((input) => ({
+                    ...input,
+                    value: setValueAs(input.value) as number,
+                  })),
+                })),
+              })) ?? workout?.exercises,
             source: WorkoutSource.Self,
             location: data.location ?? workout?.location,
           };
@@ -486,12 +531,8 @@ function SetsForm({
   register,
   exercise,
 }: {
-  control: ReturnType<
-    typeof useForm<WorkoutData & { _id?: string }>
-  >["control"];
-  register: ReturnType<
-    typeof useForm<WorkoutData & { _id?: string }>
-  >["register"];
+  control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
+  register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
   parentIndex: number;
   exercise: ExerciseData;
 }) {
@@ -610,89 +651,85 @@ function SetsForm({
         </tr>
       </thead>
       <tbody>
-        {sets.map(
-          (set, index) =>
-            console.log(set) ?? (
-              <Fragment key={set.id}>
-                <tr>
-                  <td className="pr-0.5 text-sm">{index + 1}.</td>
-                  <InputsForm
-                    control={control}
-                    register={register}
-                    parentIndex={parentIndex}
-                    setIndex={index}
-                    exercise={exercise}
-                  />
-                  <td>
-                    <StealthButton
-                      onClick={() => remove(index)}
-                      className="mx-1 leading-0"
-                    >
-                      ❌
-                    </StealthButton>
-                  </td>
-                  <td>
-                    {set.comment !== undefined ? (
-                      <StealthButton
-                        onClick={() =>
-                          update(index, { ...set, comment: undefined })
-                        }
-                        className="mx-1"
-                      >
-                        ✍️
-                      </StealthButton>
-                    ) : (
-                      <StealthButton
-                        onClick={() => update(index, { ...set, comment: "" })}
-                        className="mx-1"
-                      >
-                        ✍️
-                      </StealthButton>
-                    )}
-                  </td>
-                  <td>
-                    <StealthButton
-                      onClick={() =>
-                        append({
-                          createdAt: new Date(),
-                          updatedAt: new Date(),
-                          inputs: exercise.inputs.map((input, inputIndex) => {
-                            const setInput = set.inputs[inputIndex];
-
-                            return {
-                              value:
-                                setInput?.value ?? input.default_value ?? 0,
-                              assistType: setInput?.assistType,
-                              unit:
-                                setInput?.unit ??
-                                input.metric_unit ??
-                                input.allowed_units?.[0]?.name,
-                            };
-                          }),
-                          comment: set.comment ?? undefined,
-                        })
-                      }
-                      className="mx-1 leading-0"
-                    >
-                      ➕
-                    </StealthButton>
-                  </td>
-                </tr>
+        {sets.map((set, index) => (
+          <Fragment key={set.id}>
+            <tr>
+              <td className="pr-0.5 text-sm">{index + 1}.</td>
+              <InputsForm
+                control={control}
+                register={register}
+                parentIndex={parentIndex}
+                setIndex={index}
+                exercise={exercise}
+              />
+              <td>
+                <StealthButton
+                  onClick={() => remove(index)}
+                  className="mx-1 leading-0"
+                >
+                  ❌
+                </StealthButton>
+              </td>
+              <td>
                 {set.comment !== undefined ? (
-                  <tr>
-                    <td colSpan={exercise.inputs.length + 4}>
-                      <textarea
-                        {...register(
-                          `exercises.${parentIndex}.sets.${index}.comment`,
-                        )}
-                        className="w-full border-b-2 border-gray-200 text-xs focus:border-gray-500"
-                      />
-                    </td>
-                  </tr>
-                ) : null}
-              </Fragment>
-            ),
-        )}
+                  <StealthButton
+                    onClick={() =>
+                      update(index, { ...set, comment: undefined })
+                    }
+                    className="mx-1"
+                  >
+                    ✍️
+                  </StealthButton>
+                ) : (
+                  <StealthButton
+                    onClick={() => update(index, { ...set, comment: "" })}
+                    className="mx-1"
+                  >
+                    ✍️
+                  </StealthButton>
+                )}
+              </td>
+              <td>
+                <StealthButton
+                  onClick={() =>
+                    append({
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      inputs: exercise.inputs.map((input, inputIndex) => {
+                        const setInput = set.inputs[inputIndex];
+
+                        return {
+                          value: setInput?.value ?? input.default_value ?? NaN,
+                          assistType: setInput?.assistType,
+                          unit:
+                            setInput?.unit ??
+                            input.metric_unit ??
+                            input.allowed_units?.[0]?.name,
+                        };
+                      }),
+                      comment: set.comment ?? undefined,
+                    })
+                  }
+                  className="mx-1 leading-0"
+                >
+                  ➕
+                </StealthButton>
+              </td>
+            </tr>
+            {set.comment !== undefined ? (
+              <tr>
+                <td colSpan={exercise.inputs.length + 4}>
+                  <textarea
+                    {...register(
+                      `exercises.${parentIndex}.sets.${index}.comment`,
+                    )}
+                    className="w-full border-b-2 border-gray-200 text-xs focus:border-gray-500"
+                  />
+                </td>
+              </tr>
+            ) : null}
+          </Fragment>
+        ))}
       </tbody>
       {lastSet?.updatedAt ? (
         <tfoot>
@@ -726,9 +763,6 @@ function TimeSince({ date }: { date: Date }) {
   );
 }
 
-const setValueAs = (v: unknown) =>
-  v === "" || Number.isNaN(Number(v)) ? null : Number(v);
-
 function InputsForm({
   parentIndex,
   setIndex,
@@ -736,12 +770,8 @@ function InputsForm({
   register,
   exercise,
 }: {
-  control: ReturnType<
-    typeof useForm<WorkoutData & { _id?: string }>
-  >["control"];
-  register: ReturnType<
-    typeof useForm<WorkoutData & { _id?: string }>
-  >["register"];
+  control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
+  register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
   parentIndex: number;
   setIndex: number;
   exercise: ExerciseData;
@@ -761,7 +791,7 @@ function InputsForm({
           <select
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-              { setValueAs, onChange },
+              { onChange },
             )}
             className="flex-1"
           >
@@ -797,7 +827,7 @@ function InputsForm({
             <select
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { setValueAs, onChange },
+                { onChange },
               )}
             >
               {input.hidden_by_default ? <option value="">---</option> : null}
@@ -811,7 +841,7 @@ function InputsForm({
             <input
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { setValueAs, onChange },
+                { onChange },
               )}
               type="number"
               onFocus={(e) => e.target.select()}
