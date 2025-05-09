@@ -11,6 +11,7 @@ export enum WorkoutSource {
   RunDouble = "rundouble",
   TopLogger = "toplogger",
   KilterBoard = "kilterboard",
+  MoonBoard = "moonboard",
   Grippy = "grippy",
   Crimpd = "crimpd",
   ClimbAlong = "climbalong",

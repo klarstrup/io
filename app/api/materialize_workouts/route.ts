@@ -8,6 +8,7 @@ import {
   materializeAllGrippyWorkouts,
   materializeAllIoWorkouts,
   materializeAllKilterBoardWorkouts,
+  materializeAllMoonBoardWorkouts,
   materializeAllOnsightWorkouts,
   materializeAllRunDoubleWorkouts,
   materializeAllSportstimingWorkouts,
@@ -51,6 +52,8 @@ export const GET = () =>
     yield* materializeAllRunDoubleWorkouts({ user });
 
     yield* materializeAllKilterBoardWorkouts({ user });
+
+    yield* materializeAllMoonBoardWorkouts({ user });
 
     yield* materializeAllGrippyWorkouts({ user });
 

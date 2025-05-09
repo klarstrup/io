@@ -31,6 +31,10 @@ type UserDataSourceConfig =
       config: { token: string; user_id: string };
     }
   | {
+      source: DataSource.MoonBoard;
+      config: { token: string; user_id: string };
+    }
+  | {
       source: DataSource.Tomorrow;
       config: { geohash: string };
     }
@@ -78,6 +82,7 @@ export enum DataSource {
   TopLogger = "toplogger",
   ICal = "ical",
   KilterBoard = "kilterboard",
+  MoonBoard = "moonboard",
   Tomorrow = "tomorrow",
   Grippy = "grippy",
   Crimpd = "crimpd",
@@ -95,6 +100,7 @@ export const dataSourceGroups = {
     DataSource.RunDouble,
     DataSource.TopLogger,
     DataSource.KilterBoard,
+    DataSource.MoonBoard,
     DataSource.Grippy,
     DataSource.Crimpd,
     DataSource.ClimbAlong,

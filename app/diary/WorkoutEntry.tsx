@@ -398,6 +398,8 @@ export default function WorkoutEntry({
                 <small>TopLogger</small>
               ) : workout.source === WorkoutSource.KilterBoard ? (
                 <small>Kilter Board</small>
+              ) : workout.source === WorkoutSource.MoonBoard ? (
+                <small>MoonBoard</small>
               ) : workout.source === WorkoutSource.Grippy ? (
                 <small>Grippy</small>
               ) : workout.source === WorkoutSource.Crimpd ? (

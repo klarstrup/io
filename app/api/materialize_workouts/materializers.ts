@@ -8,6 +8,7 @@ import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { GrippyWorkoutLogs } from "../../../sources/grippy";
 import { KilterBoardAscents } from "../../../sources/kilterboard.server";
+import { MoonBoardLogbookEntries } from "../../../sources/moonboard.server";
 import { OnsightCompetitionScores } from "../../../sources/onsight.server";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { SportstimingFavorites } from "../../../sources/sportstiming.server";
@@ -511,6 +512,119 @@ export async function* materializeAllKilterBoardWorkouts({
   }
 
   yield "materializeAllKilterBoardWorkouts: done in " +
+    (new Date().getTime() - t.getTime()) +
+    "ms";
+}
+
+export async function* materializeAllMoonBoardWorkouts({
+  user,
+}: {
+  user: Session["user"];
+}) {
+  yield "materializeAllMoonBoardWorkouts: start";
+  const t = new Date();
+
+  for (const dataSource of user.dataSources || []) {
+    if (dataSource.source !== DataSource.MoonBoard) continue;
+
+    const { user_id } = dataSource.config;
+
+    yield* MoonBoardLogbookEntries.aggregate([
+      { $match: { "User.Id": user_id } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$DateClimbed" } },
+          entries: { $push: "$$ROOT" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: {
+            $concat: [
+              { $literal: WorkoutSource.MoonBoard },
+              ":",
+              { $toString: { $arrayElemAt: ["$entries.User.Id", 0] } },
+              ":",
+              "$_id",
+            ],
+          },
+          userId: { $literal: user.id },
+          createdAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
+          updatedAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
+          workedOutAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
+          source: { $literal: WorkoutSource.MoonBoard },
+          exercises: [
+            {
+              exerciseId: 2003,
+              sets: {
+                $map: {
+                  input: "$entries",
+                  as: "entry",
+                  in: {
+                    inputs: [
+                      // Grade
+                      {
+                        value: "$$entry.Problem.GradeNumber",
+                        unit: Unit.FrenchRounded,
+                      },
+                      // Color
+                      { value: NaN },
+                      // Sent-ness
+                      {
+                        value: {
+                          $cond: {
+                            if: {
+                              $eq: ["$$entry.Rating", 0],
+                            },
+                            then: SendType.Attempt,
+                            else: {
+                              $cond: {
+                                if: {
+                                  $eq: ["$$entry.Attempts", 0],
+                                },
+                                then: SendType.Flash,
+                                else: SendType.Top,
+                              },
+                            },
+                          },
+                        },
+                      },
+                      // Angle
+                      {
+                        value: {
+                          $cond: {
+                            if: {
+                              $eq: [
+                                "$$entry.Problem.MoonBoardConfiguration.Id",
+                                2,
+                              ],
+                            },
+                            then: 25,
+                            else: 40,
+                          },
+                        },
+                        unit: Unit.Deg,
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $merge: {
+          into: "materialized_workouts_view",
+          whenMatched: "replace",
+          on: "id",
+        },
+      },
+    ]);
+  }
+
+  yield "materializeAllMoonBoardWorkouts: done in " +
     (new Date().getTime() - t.getTime()) +
     "ms";
 }
