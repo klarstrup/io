@@ -1,4 +1,4 @@
-import { getOperationAST, type DocumentNode } from "graphql";
+import { type DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
 import { NextRequest } from "next/server";
