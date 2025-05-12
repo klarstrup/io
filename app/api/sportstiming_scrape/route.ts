@@ -8,7 +8,6 @@ import {
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { uniqueBy } from "../../../utils";
-import { materializeAllSportstimingWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -172,6 +171,4 @@ export const GET = () =>
         });
       }
     }
-
-    yield* materializeAllSportstimingWorkouts({ user });
   });

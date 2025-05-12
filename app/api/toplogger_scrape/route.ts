@@ -14,7 +14,6 @@ import {
   normalizeAndUpsertQueryData,
   type Variables,
 } from "../../../utils/graphql";
-import { materializeAllToploggerWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 import {
   ClimbDayScalars,
@@ -778,6 +777,4 @@ export const GET = (request: NextRequest) =>
         }
       });
     }
-
-    yield* materializeAllToploggerWorkouts({ user });
   });

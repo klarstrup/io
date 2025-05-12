@@ -1,19 +1,7 @@
 import { auth } from "../../../auth";
 import { MaterializedWorkoutsView } from "../../../models/workout.server";
 import { jsonStreamResponse } from "../scraper-utils";
-import {
-  materializeAllClimbalongWorkouts,
-  materializeAllCrimpdWorkouts,
-  materializeAllFitocracyWorkouts,
-  materializeAllGrippyWorkouts,
-  materializeAllIoWorkouts,
-  materializeAllKilterBoardWorkouts,
-  materializeAllMoonBoardWorkouts,
-  materializeAllOnsightWorkouts,
-  materializeAllRunDoubleWorkouts,
-  materializeAllSportstimingWorkouts,
-  materializeAllToploggerWorkouts,
-} from "./materializers";
+import { materializeIoWorkouts, sourceToMaterializer } from "./materializers";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -43,19 +31,24 @@ export const GET = () =>
     yield "materializeAllWorkouts: start";
     const t = Date.now();
 
-    yield* mergeGenerators([
-      materializeAllIoWorkouts({ user }),
-      materializeAllToploggerWorkouts({ user }),
-      materializeAllFitocracyWorkouts({ user }),
-      materializeAllRunDoubleWorkouts({ user }),
-      materializeAllKilterBoardWorkouts({ user }),
-      materializeAllMoonBoardWorkouts({ user }),
-      materializeAllGrippyWorkouts({ user }),
-      materializeAllCrimpdWorkouts({ user }),
-      materializeAllClimbalongWorkouts({ user }),
-      materializeAllOnsightWorkouts({ user }),
-      materializeAllSportstimingWorkouts({ user }),
-    ]);
+    const generators: AsyncGenerator[] = [
+      // Always materialize manually entered workouts, this is not a data source per se
+      materializeIoWorkouts(user),
+    ];
+
+    for (const dataSource of user.dataSources ?? []) {
+      const source = dataSource.source;
+
+      if (source in sourceToMaterializer) {
+        const materializer =
+          sourceToMaterializer[source as keyof typeof sourceToMaterializer];
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - some runtimes think this is too complex
+        if (materializer) generators.push(materializer(user, dataSource));
+      }
+    }
+
+    yield* mergeGenerators(generators);
 
     yield `materializeAllWorkouts: done in ${Date.now() - t}ms`;
 
@@ -74,10 +67,9 @@ async function* mergeGenerators<T>(gens: AsyncGenerator<T>[]) {
 
     if (r.done) {
       promises[i] = null;
-      continue;
+    } else {
+      yield r.value;
+      promises[i] = gens[i]!.next().then((r) => ({ r, i }));
     }
-
-    yield r.value;
-    promises[i] = gens[i]!.next().then((r) => ({ r, i }));
   }
 }

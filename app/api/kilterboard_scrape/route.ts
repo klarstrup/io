@@ -9,7 +9,6 @@ import {
 } from "../../../sources/kilterboard.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { materializeAllKilterBoardWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +71,4 @@ export const GET = () =>
         yield { bids };
       });
     }
-
-    yield* materializeAllKilterBoardWorkouts({ user });
   });

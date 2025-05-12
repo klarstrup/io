@@ -7,7 +7,6 @@ import {
 } from "../../../sources/onsight.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { materializeAllOnsightWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -91,6 +90,4 @@ export const GET = () =>
         }
       });
     }
-
-    yield* materializeAllOnsightWorkouts({ user });
   });

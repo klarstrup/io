@@ -5,7 +5,6 @@ import { Users } from "../../../models/user.server";
 import { Grippy, GrippyWorkoutLogs } from "../../../sources/grippy";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { materializeAllGrippyWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -103,6 +102,4 @@ export const GET = () =>
         yield { workoutLogs };
       });
     }
-
-    yield* materializeAllGrippyWorkouts({ user });
   });

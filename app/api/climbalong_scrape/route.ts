@@ -14,7 +14,6 @@ import {
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { shuffle } from "../../../utils";
-import { materializeAllClimbalongWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -194,6 +193,4 @@ export const GET = () =>
         }
       });
     }
-
-    yield* materializeAllClimbalongWorkouts({ user });
   });

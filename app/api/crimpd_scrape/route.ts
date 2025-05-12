@@ -2,7 +2,6 @@ import { auth } from "../../../auth";
 import { Crimpd, CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
-import { materializeAllCrimpdWorkouts } from "../materialize_workouts/materializers";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +44,4 @@ export const GET = () =>
         yield { workoutLogs };
       });
     }
-
-    yield* materializeAllCrimpdWorkouts({ user });
   });

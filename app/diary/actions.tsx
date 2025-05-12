@@ -16,7 +16,7 @@ import {
 import type { ExerciseSchedule } from "../../sources/fitocracy";
 import type { UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable } from "../../utils";
-import { materializeAllIoWorkouts } from "../api/materialize_workouts/materializers";
+import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
 
 export async function upsertWorkout(
   workout:
@@ -43,7 +43,7 @@ export async function upsertWorkout(
   waitUntil(updateExerciseCounts(user.id));
 
   console.time("upsertWorkout:materializeAllIoWorkouts");
-  await arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
+  await arrayFromAsyncIterable(materializeIoWorkouts(user));
   console.timeEnd("upsertWorkout:materializeAllIoWorkouts");
 
   revalidatePath("/diary");
@@ -65,7 +65,7 @@ export async function deleteWorkout(workoutId: string) {
   waitUntil(updateLocationCounts(user.id));
   waitUntil(updateExerciseCounts(user.id));
 
-  await arrayFromAsyncIterable(materializeAllIoWorkouts({ user }));
+  await arrayFromAsyncIterable(materializeIoWorkouts(user));
 
   revalidatePath("/diary");
 

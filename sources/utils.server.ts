@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
+import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
 import { Users } from "../models/user.server";
 import type { UserDataSource } from "./utils";
 
@@ -49,5 +50,15 @@ export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
       updateOptions,
     );
     throw e;
+  }
+
+  const materializer =
+    sourceToMaterializer[
+      dataSource.source as keyof typeof sourceToMaterializer
+    ];
+  if (materializer) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - some runtimes think this is too complex
+    yield* materializer?.(user, dataSource);
   }
 }
