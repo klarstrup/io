@@ -23,8 +23,11 @@ import {
   dateToString,
   HOUR_IN_SECONDS,
   MINUTE_IN_SECONDS,
+  omit,
   seconds2time,
 } from "../../utils";
+import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
+import type { ObjectId } from "mongodb";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);
@@ -386,6 +389,18 @@ export default function WorkoutEntry({
                     >
                       Edit
                     </Link>
+                    {workoutDateStr !== dateToString(new Date()) ? (
+                      <>
+                        {" "}
+                        <small>-</small>{" "}
+                        <WorkoutEntryDuplicateButton
+                          workout={omit(
+                            workout as WorkoutData & { _id: ObjectId },
+                            "_id",
+                          )}
+                        />
+                      </>
+                    ) : null}
                   </>
                 </>
               ) : workout.source === WorkoutSource.Fitocracy ? (
