@@ -43,27 +43,19 @@ export const GET = () =>
     yield "materializeAllWorkouts: start";
     const t = Date.now();
 
-    yield* materializeAllIoWorkouts({ user });
-
-    yield* materializeAllToploggerWorkouts({ user });
-
-    yield* materializeAllFitocracyWorkouts({ user });
-
-    yield* materializeAllRunDoubleWorkouts({ user });
-
-    yield* materializeAllKilterBoardWorkouts({ user });
-
-    yield* materializeAllMoonBoardWorkouts({ user });
-
-    yield* materializeAllGrippyWorkouts({ user });
-
-    yield* materializeAllCrimpdWorkouts({ user });
-
-    yield* materializeAllClimbalongWorkouts({ user });
-
-    yield* materializeAllOnsightWorkouts({ user });
-
-    yield* materializeAllSportstimingWorkouts({ user });
+    yield* mergeGenerators([
+      materializeAllIoWorkouts({ user }),
+      materializeAllToploggerWorkouts({ user }),
+      materializeAllFitocracyWorkouts({ user }),
+      materializeAllRunDoubleWorkouts({ user }),
+      materializeAllKilterBoardWorkouts({ user }),
+      materializeAllMoonBoardWorkouts({ user }),
+      materializeAllGrippyWorkouts({ user }),
+      materializeAllCrimpdWorkouts({ user }),
+      materializeAllClimbalongWorkouts({ user }),
+      materializeAllOnsightWorkouts({ user }),
+      materializeAllSportstimingWorkouts({ user }),
+    ]);
 
     yield `materializeAllWorkouts: done in ${Date.now() - t}ms`;
 
@@ -72,3 +64,20 @@ export const GET = () =>
         await MaterializedWorkoutsView.countDocuments(),
     };
   });
+
+async function* mergeGenerators<T>(gens: AsyncGenerator<T>[]) {
+  const promises: (Promise<{ r: IteratorResult<T>; i: number }> | null)[] =
+    gens.map(async (g, i) => ({ r: await g.next(), i }));
+
+  while (promises.some(Boolean)) {
+    const { r, i } = await Promise.race(promises.filter(Boolean));
+
+    if (r.done) {
+      promises[i] = null;
+      continue;
+    }
+
+    yield r.value;
+    promises[i] = gens[i]!.next().then((r) => ({ r, i }));
+  }
+}
