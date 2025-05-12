@@ -17,7 +17,7 @@ export function WorkoutEntryDuplicateButton({
   return (
     <button
       style={{ color: "#edab00" }}
-      className="text-xs font-semibold"
+      className="cursor-pointer text-xs font-semibold"
       disabled={isUpdating}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={async () => {
