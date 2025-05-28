@@ -55,8 +55,7 @@ export function NextSets({
                         .filter((name) => name.length >= 4)
                         .sort((a, b) => a.length - b.length)[0]!
                     }
-                  </Link>{" "}
-                  {successful === false ? " (failed)" : null}
+                  </Link>
                 </span>{" "}
                 <div className="whitespace-nowrap">
                   {nextWorkingSets ? (
@@ -89,7 +88,8 @@ export function NextSets({
                       </Link>
                     ) : (
                       "never"
-                    )}
+                    )}{" "}
+                    {successful === false ? " (failed)" : null}
                   </span>
                 </div>
               </div>
