@@ -31158,6 +31158,7 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Toe Touches",
+    tags: [{ name: "Calisthenics", type: TagType.Type }],
   },
   {
     aliases: [],
