@@ -238,7 +238,12 @@ export async function* materializeFitocracyWorkouts(
   const fitocracyUserId = dataSource.config.userId;
 
   yield* FitocracyWorkouts.aggregate([
-    { $match: { user_id: fitocracyUserId } },
+    {
+      $match: {
+        user_id: fitocracyUserId,
+        "root_group.children.0.exercise.sets.0.inputs.0": { $exists: true },
+      },
+    },
     {
       $project: {
         _id: 0,
