@@ -617,8 +617,8 @@ export const GET = (request: NextRequest) =>
             );
 
             for (const comp of randomSliceOfSize(userComps || [], 1)) {
-              for (const poule of comp.compPoules) {
-                for (const round of poule.compRounds) {
+              for (const poule of randomSliceOfSize(comp.compPoules, 1)) {
+                for (const round of randomSliceOfSize(poule.compRounds, 1)) {
                   const [compRoundUsersForRankingResponse, updateResult] =
                     await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                       compRoundUsersForRankingQuery,
