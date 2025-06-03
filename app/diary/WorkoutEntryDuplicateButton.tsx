@@ -25,7 +25,15 @@ export function WorkoutEntryDuplicateButton({
           if (isUpdating) return;
           setIsUpdating(true);
 
-          const now = new Date();
+          const nowDays = new Date();
+          const now = new Date(
+            nowDays.getFullYear(),
+            nowDays.getMonth(),
+            nowDays.getDate(),
+            workout.workedOutAt.getHours(),
+            workout.workedOutAt.getMinutes(),
+            workout.workedOutAt.getSeconds(),
+          );
           const newWorkout = { ...workout };
 
           // Reset timestamps
