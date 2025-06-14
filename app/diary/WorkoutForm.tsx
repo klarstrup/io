@@ -94,6 +94,7 @@ export function WorkoutForm<R extends string>({
     reset,
     control,
     watch,
+    getValues,
     formState: { isDirty, isSubmitting },
   } = useForm<WorkoutDataFormData>({
     defaultValues: workout
@@ -438,6 +439,7 @@ export function WorkoutForm<R extends string>({
                 <SetsForm
                   control={control}
                   register={register}
+                  getValues={getValues}
                   parentIndex={index}
                   exercise={exercise}
                 />
@@ -527,12 +529,14 @@ export function WorkoutForm<R extends string>({
 
 function SetsForm({
   control,
+  getValues,
   parentIndex,
   register,
   exercise,
 }: {
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
+  getValues: ReturnType<typeof useForm<WorkoutDataFormData>>["getValues"];
   parentIndex: number;
   exercise: ExerciseData;
 }) {
@@ -673,16 +677,25 @@ function SetsForm({
               <td>
                 {set.comment !== undefined ? (
                   <StealthButton
-                    onClick={() =>
-                      update(index, { ...set, comment: undefined })
-                    }
+                    onClick={() => {
+                      const setState = getValues(
+                        `exercises.${parentIndex}.sets.${index}`,
+                      );
+
+                      update(index, { ...setState, comment: undefined });
+                    }}
                     className="mx-1"
                   >
                     ✍️
                   </StealthButton>
                 ) : (
                   <StealthButton
-                    onClick={() => update(index, { ...set, comment: "" })}
+                    onClick={() => {
+                      const setState = getValues(
+                        `exercises.${parentIndex}.sets.${index}`,
+                      );
+                      update(index, { ...setState, comment: "" });
+                    }}
                     className="mx-1"
                   >
                     ✍️
@@ -691,12 +704,16 @@ function SetsForm({
               </td>
               <td>
                 <StealthButton
-                  onClick={() =>
+                  onClick={() => {
+                    const setState = getValues(
+                      `exercises.${parentIndex}.sets.${index}`,
+                    );
+
                     append({
                       createdAt: new Date(),
                       updatedAt: new Date(),
                       inputs: exercise.inputs.map((input, inputIndex) => {
-                        const setInput = set.inputs[inputIndex];
+                        const setInput = setState.inputs[inputIndex];
 
                         return {
                           value: setInput?.value ?? input.default_value ?? NaN,
@@ -707,9 +724,9 @@ function SetsForm({
                             input.allowed_units?.[0]?.name,
                         };
                       }),
-                      comment: set.comment ?? undefined,
-                    })
-                  }
+                      comment: setState.comment ?? undefined,
+                    });
+                  }}
                   className="mx-1 leading-0"
                 >
                   ➕
