@@ -115,7 +115,7 @@ export default function UserStuffWorkoutScheduleForm({
                 {watch("exerciseSchedules")?.[index]?.enabled ? (
                   <>
                     <div className="grid grid-cols-2 gap-1 text-sm">
-                      <label className="flex gap-1 [grid-column:span_2]">
+                      <label className="[grid-column:span_2] flex gap-1">
                         Frequency:
                         <select
                           {...register(
@@ -125,12 +125,16 @@ export default function UserStuffWorkoutScheduleForm({
                           className="w-full"
                         >
                           <option value={1}>Daily</option>
-                          <option value={2}>2 days</option>
-                          <option value={3}>3 days</option>
-                          <option value={4}>4 days</option>
-                          <option value={5}>5 days</option>
-                          <option value={6}>6 days</option>
+                          <option value={7 / 4}>Quadrantweekly</option>
+                          <option value={7 / 3}>Trientweekly</option>
+                          <option value={7 / 2}>Semiweekly</option>
                           <option value={7}>Weekly</option>
+                          <option value={7 * 2}>Biweekly</option>
+                          <option value={7 * 3}>Triweekly</option>
+                          <option value={7 * 4}>Quadriweekly</option>
+                          <option value={365 / 4}>Quarterly</option>
+                          <option value={365 / 2}>Semiannually</option>
+                          <option value={365}>Annually</option>
                         </select>
                       </label>
                       <label className="flex gap-1">
