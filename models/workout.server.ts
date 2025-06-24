@@ -227,7 +227,12 @@ export function getIsSetPR(
           const inputValue = inputValues[index]!;
 
           if (
-            inputType === InputType.Pace || inputType === InputType.Time
+            (inputType === InputType.Pace || inputType === InputType.Time) &&
+            // Calisthenics are typically done for time, not for speed
+            !exercise.tags?.some(
+              ({ name, type }) =>
+                name === "Calisthenics" && type === TagType.Type,
+            )
               ? value > inputValue
               : value < inputValue
           ) {
