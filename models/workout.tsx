@@ -133,11 +133,9 @@ export function getSetGrade(
 
   const sendType = Number(set.inputs[2]!.value) as SendType;
   if (
-    !(
-      sendType === SendType.Flash ||
-      sendType === SendType.Top ||
-      sendType === SendType.Repeat
-    )
+    sendType !== SendType.Flash &&
+    sendType !== SendType.Top &&
+    sendType !== SendType.Repeat
   ) {
     return null;
   }
