@@ -6,6 +6,7 @@ import { StealthButton } from "../../components/StealthButton";
 import { exercisesById } from "../../models/exercises";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntry";
 
 export function NextSets({
   user,
@@ -27,8 +28,7 @@ export function NextSets({
           successful,
           scheduleEntry,
           nextWorkingSets,
-          nextWorkingSetsReps,
-          nextWorkingSetsWeight,
+          nextWorkingSetInputs,
           workedOutAt,
         }) => {
           const exercise = exercisesById[exerciseId]!;
@@ -57,18 +57,17 @@ export function NextSets({
                     }
                   </Link>
                 </span>{" "}
-                <div className="whitespace-nowrap">
+                <div className="whitespace-nowrap align-baseline">
                   {nextWorkingSets ? (
-                    <span className="text-sm">
-                      {nextWorkingSets}
-                      {nextWorkingSetsReps ? `x${nextWorkingSetsReps}` : null}
-                      {nextWorkingSetsWeight
-                        ? `x${nextWorkingSetsWeight}kg`
-                        : null}
-                      {!nextWorkingSetsReps && !nextWorkingSetsWeight
-                        ? " sets"
-                        : null}
-                    </span>
+                    <table className="inline-table w-auto max-w-0 text-sm align-baseline">
+                      <tbody>
+                        <WorkoutEntryExerciseSetRow
+                          exercise={exercise}
+                          set={{ inputs: nextWorkingSetInputs }}
+                          repeatCount={nextWorkingSets}
+                        />
+                      </tbody>
+                    </table>
                   ) : null}{" "}
                   <span className="text-xs">
                     Last set{" "}

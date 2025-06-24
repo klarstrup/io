@@ -166,11 +166,12 @@ export default function UserStuffWorkoutScheduleForm({
                       {exercise.inputs.some(
                         (input) =>
                           input.type === InputType.Weight ||
-                          input.type === InputType.Weightassist,
+                          input.type === InputType.Weightassist ||
+                          input.type === InputType.Time,
                       ) ? (
                         <>
                           <label className="flex gap-1">
-                            Base Weight:
+                            Base Effort:
                             <input
                               type="number"
                               {...register(
@@ -179,6 +180,14 @@ export default function UserStuffWorkoutScheduleForm({
                               )}
                               className="w-full"
                             />
+                            {
+                              exercise.inputs.find(
+                                (input) =>
+                                  input.type === InputType.Weight ||
+                                  input.type === InputType.Weightassist ||
+                                  input.type === InputType.Time,
+                              )?.metric_unit
+                            }
                           </label>
                           <label className="flex gap-1">
                             Increment:
@@ -193,6 +202,14 @@ export default function UserStuffWorkoutScheduleForm({
                               )}
                               className="w-full"
                             />
+                            {
+                              exercise.inputs.find(
+                                (input) =>
+                                  input.type === InputType.Weight ||
+                                  input.type === InputType.Weightassist ||
+                                  input.type === InputType.Time,
+                              )?.metric_unit
+                            }
                           </label>
                           <label className="flex gap-1">
                             Deload:

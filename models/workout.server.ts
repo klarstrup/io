@@ -12,6 +12,7 @@ import {
 } from "./exercises";
 import {
   isClimbingExercise,
+  WorkoutExerciseSetInput,
   type WorkoutData,
   type WorkoutExerciseSet,
 } from "./workout";
@@ -74,8 +75,7 @@ export const getNextSets = async ({
                     exerciseId: scheduleEntry.exerciseId,
                     successful: true,
                     nextWorkingSets: scheduleEntry.workingSets,
-                    nextWorkingSetsReps: NaN,
-                    nextWorkingSetsWeight: NaN,
+                    nextWorkingSetInputs: [],
                     scheduleEntry,
                   };
                 }
@@ -87,8 +87,7 @@ export const getNextSets = async ({
               exerciseId: scheduleEntry.exerciseId,
               successful: true,
               nextWorkingSets: scheduleEntry.workingSets ?? NaN,
-              nextWorkingSetsReps: NaN,
-              nextWorkingSetsWeight: NaN,
+              nextWorkingSetInputs: [],
               scheduleEntry,
             };
           }
@@ -99,7 +98,9 @@ export const getNextSets = async ({
           const exerciseDefinition = exercisesById[scheduleEntry.exerciseId]!;
           const weightInputIndex = exerciseDefinition.inputs.findIndex(
             ({ type }) =>
-              type === InputType.Weight || type === InputType.Weightassist,
+              type === InputType.Weight ||
+              type === InputType.Weightassist ||
+              type === InputType.Time,
           );
           const repsInputIndex = exerciseDefinition.inputs.findIndex(
             ({ type }) => type === InputType.Reps,
@@ -154,21 +155,37 @@ export const getNextSets = async ({
                 : scheduleEntry.baseWeight
               : null;
 
+          const nextWorkingSetsWeight = goalWeight
+            ? // Barbell exercises use two plates so not all subdivisions are possible
+              exerciseDefinition.tags?.find(
+                ({ name, type }) =>
+                  name === "Barbell" && type === TagType.Equipment,
+              ) && Math.abs(goalWeight - Math.round(goalWeight)) < 0.5
+              ? Math.round(goalWeight)
+              : goalWeight
+            : goalWeight;
+
           return {
             workedOutAt: workout?.workedOutAt || null,
             exerciseId: scheduleEntry.exerciseId,
             successful,
+            nextWorkingSetInputs: exerciseDefinition.inputs.map(
+              ({ type, metric_unit }, inputIndex): WorkoutExerciseSetInput =>
+                nextWorkingSetsWeight &&
+                (type === InputType.Weight ||
+                  type === InputType.Weightassist ||
+                  type === InputType.Time)
+                  ? {
+                      value: nextWorkingSetsWeight,
+                      unit:
+                        exercise?.sets[0]?.inputs[inputIndex]?.unit ||
+                        metric_unit,
+                    }
+                  : scheduleEntry.workingReps && type === InputType.Reps
+                    ? { value: scheduleEntry.workingReps }
+                    : { value: 0 },
+            ),
             nextWorkingSets: scheduleEntry.workingSets,
-            nextWorkingSetsReps: scheduleEntry.workingReps,
-            nextWorkingSetsWeight: goalWeight
-              ? // Barbell exercises use two plates so not all subdivisions are possible
-                exerciseDefinition.tags?.find(
-                  ({ name, type }) =>
-                    name === "Barbell" && type === TagType.Equipment,
-                ) && Math.abs(goalWeight - Math.round(goalWeight)) < 0.5
-                ? Math.round(goalWeight)
-                : goalWeight
-              : goalWeight,
             scheduleEntry,
           };
         }),
@@ -332,8 +349,5 @@ export const WorkoutExercisesView = proxyCollection<IWorkoutExercisesView>(
 
 export const getAllWorkoutExercises = async (user: Session["user"]) =>
   (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
-    (location) => ({
-      ...location,
-      _id: location._id.toString(),
-    }),
+    ({ _id, ...location }) => ({ ...location, _id: _id.toString() }),
   );

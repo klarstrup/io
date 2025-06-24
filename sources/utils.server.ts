@@ -56,6 +56,8 @@ export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
     sourceToMaterializer[
       dataSource.source as keyof typeof sourceToMaterializer
     ];
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - some runtimes think this is too complex
   if (materializer) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - some runtimes think this is too complex

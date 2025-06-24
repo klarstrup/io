@@ -39,6 +39,7 @@ import type {
 import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntry";
 
 /**
  * Create a date YYYY-MM-DD date string that is typecasted as a `Date`.
@@ -146,10 +147,14 @@ export function WorkoutForm<R extends string>({
 
     const exerciseDefinition = exercisesById[exerciseId]!;
 
+    const weightInputIndex = exerciseDefinition.inputs.findIndex(
+      ({ type }) =>
+        type === InputType.Weight || type === InputType.Weightassist,
+    );
+
     const goalWeight = dueSets.find(
       (nextSet) => nextSet.exerciseId === exerciseId,
-    )?.nextWorkingSetsWeight;
-
+    )?.nextWorkingSetInputs[weightInputIndex]?.value;
     const warmupIncrement = ((goalWeight ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
 
     const setWeights: number[] = [goalWeight ?? NaN];
@@ -394,23 +399,24 @@ export function WorkoutForm<R extends string>({
                 }
               >
                 {nextExerciseSet && nextExerciseSet.nextWorkingSets ? (
-                  <div className="text-xs">
-                    Goal{" "}
+                  <div className="leading-none">
                     <span className="text-sm">
-                      {nextExerciseSet.nextWorkingSets}
-                      {nextExerciseSet.nextWorkingSetsReps
-                        ? `x${nextExerciseSet.nextWorkingSetsReps}`
-                        : null}
-                      {nextExerciseSet.nextWorkingSetsWeight
-                        ? `x${nextExerciseSet.nextWorkingSetsWeight}kg`
-                        : null}
-                      {!nextExerciseSet.nextWorkingSetsReps &&
-                      !nextExerciseSet.nextWorkingSetsWeight
-                        ? " sets"
-                        : null}
+                      Goal{" "}
+                      <table className="inline-table w-auto max-w-0">
+                        <tbody>
+                          <WorkoutEntryExerciseSetRow
+                            exercise={exercise}
+                            set={{
+                              inputs:
+                                nextExerciseSet.nextWorkingSetInputs || [],
+                            }}
+                            repeatCount={nextExerciseSet.nextWorkingSets}
+                          />
+                        </tbody>
+                      </table>
                     </span>
                     {nextExerciseSet.workedOutAt ? (
-                      <>
+                      <span className="text-xs">
                         {" "}
                         based on{" "}
                         <Link
@@ -423,7 +429,7 @@ export function WorkoutForm<R extends string>({
                             "da-DK",
                           )}
                         </Link>
-                      </>
+                      </span>
                     ) : null}
                   </div>
                 ) : null}
