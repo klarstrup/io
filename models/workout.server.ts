@@ -5,7 +5,7 @@ import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
 import {
   AssistType,
-  exercises,
+  exercisesById,
   InputType,
   SendType,
   TagType,
@@ -96,9 +96,7 @@ export const getNextSets = async ({
           const exercise = workout?.exercises.find(
             ({ exerciseId }) => exerciseId === scheduleEntry.exerciseId,
           );
-          const exerciseDefinition = exercises.find(
-            ({ id }) => id === scheduleEntry.exerciseId,
-          )!;
+          const exerciseDefinition = exercisesById[scheduleEntry.exerciseId]!;
           const weightInputIndex = exerciseDefinition.inputs.findIndex(
             ({ type }) =>
               type === InputType.Weight || type === InputType.Weightassist,
@@ -194,7 +192,7 @@ export function getIsSetPR(
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
   set: WorkoutExerciseSet,
 ) {
-  const exercise = exercises.find((e) => e.id === exerciseId);
+  const exercise = exercisesById[exerciseId];
   if (!exercise) return noPR;
 
   const inputValues = set.inputs.map(

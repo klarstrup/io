@@ -57521,3 +57521,7 @@ export const exercises = [
     ],
   },
 ] as unknown as ExerciseData[];
+
+const exercisesById: Record<number, ExerciseData> = {};
+for (const exercise of exercises) exercisesById[exercise.id] = exercise;
+export { exercisesById };

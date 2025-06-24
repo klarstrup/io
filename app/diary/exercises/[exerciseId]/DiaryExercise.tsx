@@ -2,7 +2,7 @@ import { ObjectId, type WithId } from "mongodb";
 import { Fragment } from "react";
 import { auth } from "../../../../auth";
 import { PRType } from "../../../../lib";
-import { exercises } from "../../../../models/exercises";
+import { exercisesById } from "../../../../models/exercises";
 import {
   isClimbingExercise,
   type WorkoutData,
@@ -22,15 +22,15 @@ export default async function DiaryExercise({
   prType?: PRType;
   mergeWorkouts?: boolean;
 }) {
-  const exercise = exercises.find((e) => e.id === exerciseId);
+  const exercise = exercisesById[exerciseId]!;
   const user = (await auth())?.user;
-  if (!user || !exercise) return null;
+  if (!user) return null;
 
   let allWorkoutsOfExercise = (
     await MaterializedWorkoutsView.find(
       {
         userId: user.id,
-        "exercises.exerciseId": exerciseId,
+        "exercises.exerciseId": exercise.id,
         deletedAt: { $exists: false },
       },
       { sort: { workedOutAt: -1 } },

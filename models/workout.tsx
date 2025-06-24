@@ -2,7 +2,12 @@ import { tz, TZDate } from "@date-fns/tz";
 import { intervalToDuration, startOfDay, type Duration } from "date-fns";
 import Grade from "../grades";
 import { DEFAULT_TIMEZONE } from "../utils";
-import { exercises, SendType, type AssistType, type Unit } from "./exercises";
+import {
+  exercisesById,
+  SendType,
+  type AssistType,
+  type Unit,
+} from "./exercises";
 import type { getNextSets } from "./workout.server";
 
 export enum WorkoutSource {
@@ -124,7 +129,7 @@ export function getSetGrade(
   set: WorkoutExerciseSet,
   location: string | undefined,
 ) {
-  const exercise = exercises.find(({ id }) => 2001 === id)!;
+  const exercise = exercisesById[2001]!;
 
   const sendType = Number(set.inputs[2]!.value) as SendType;
   if (

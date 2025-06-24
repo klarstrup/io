@@ -3,7 +3,7 @@ import { formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { StealthButton } from "../../components/StealthButton";
-import { exercises } from "../../models/exercises";
+import { exercisesById } from "../../models/exercises";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
 
@@ -31,7 +31,7 @@ export function NextSets({
           nextWorkingSetsWeight,
           workedOutAt,
         }) => {
-          const exercise = exercises.find(({ id }) => exerciseId === id)!;
+          const exercise = exercisesById[exerciseId]!;
 
           return (
             <li

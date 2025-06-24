@@ -4,7 +4,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { JSX } from "react";
 import type { DiaryEntry } from "../../lib";
-import { exercises, TagType } from "../../models/exercises";
+import { exercisesById, TagType } from "../../models/exercises";
 import { isClimbingExercise, WorkoutData } from "../../models/workout";
 import {
   dateToString,
@@ -110,7 +110,7 @@ function WorkoutsSummary({
         Array.from(exercisesDone)
           .sort()
           .map((exerciseId) => {
-            const exercise = exercises.find(({ id }) => exerciseId === id)!;
+            const exercise = exercisesById[exerciseId]!;
 
             let icon: JSX.Element | string = (
               <span

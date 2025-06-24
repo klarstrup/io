@@ -6,7 +6,7 @@ import { useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
 import { updateUserExerciseSchedules } from "../app/diary/actions";
-import { exercises, InputType } from "../models/exercises";
+import { exercises, exercisesById, InputType } from "../models/exercises";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { FieldSetY } from "./FieldSet";
@@ -80,9 +80,7 @@ export default function UserStuffWorkoutScheduleForm({
         </div>
         <div className="flex flex-col gap-1">
           {fields.map((field, index) => {
-            const exercise = exercises.find(
-              (exercise) => exercise.id === field.exerciseId,
-            );
+            const exercise = exercisesById[field.exerciseId];
             if (!exercise) {
               throw new Error(`Exercise with ID ${field.exerciseId} not found`);
             }

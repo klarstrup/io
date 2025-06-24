@@ -18,6 +18,7 @@ import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
 import {
   exercises,
+  exercisesById,
   InputType,
   Unit,
   type ExerciseData,
@@ -143,9 +144,7 @@ export function WorkoutForm<R extends string>({
   const handleAddExercise = useEvent((exerciseId: number) => {
     if (!dueSets) return;
 
-    const exerciseDefinition = exercises.find(
-      (exercise) => exercise.id === exerciseId,
-    )!;
+    const exerciseDefinition = exercisesById[exerciseId]!;
 
     const goalWeight = dueSets.find(
       (nextSet) => nextSet.exerciseId === exerciseId,
@@ -321,9 +320,7 @@ export function WorkoutForm<R extends string>({
         </div>
         <div className="flex flex-col gap-1">
           {fields.map((field, index) => {
-            const exercise = exercises.find(
-              (exercise) => exercise.id === field.exerciseId,
-            );
+            const exercise = exercisesById[field.exerciseId];
             if (!exercise) {
               throw new Error(`Exercise with ID ${field.exerciseId} not found`);
             }

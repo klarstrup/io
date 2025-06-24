@@ -1,3 +1,4 @@
+import type { ObjectId } from "mongodb";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { FieldSetX } from "../../components/FieldSet";
@@ -6,7 +7,8 @@ import Grade from "../../grades";
 import { PRType } from "../../lib";
 import {
   AssistType,
-  exercises,
+  ExerciseData,
+  exercisesById,
   InputType,
   SendType,
   Unit,
@@ -27,7 +29,6 @@ import {
   seconds2time,
 } from "../../utils";
 import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
-import type { ObjectId } from "mongodb";
 
 function pad(i: number, width: number, z = "0") {
   const n = String(i);
@@ -48,7 +49,7 @@ function WorkoutEntryExerciseSetRow({
 }: {
   set: WorkoutExerciseSet;
   repeatCount: number | null;
-  exercise: (typeof exercises)[number];
+  exercise: ExerciseData;
   setPR?: Record<PRType, boolean>;
 }) {
   return (
@@ -243,7 +244,7 @@ export function WorkoutEntryExercise({
   exerciseSetPRs,
   onlyPRs,
 }: {
-  exercise: (typeof exercises)[number];
+  exercise: ExerciseData;
   sets: WorkoutExerciseSet[];
   exerciseIndex: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
@@ -440,9 +441,8 @@ export default function WorkoutEntry({
         }}
       >
         {workout.exercises.map((workoutExercise, exerciseIndex) => {
-          const exercise = exercises.find(
-            ({ id }) => workoutExercise.exerciseId === id,
-          )!;
+          const exercise = exercisesById[workoutExercise.exerciseId]!;
+
           return (
             <div key={exerciseIndex}>
               <div className="flex flex-wrap gap-2">
