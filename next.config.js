@@ -13,6 +13,7 @@ const nextConfig = {
         has: [{ type: "host", value: "io.klarstrup.dk" }],
         destination: "/diary",
       },
+      { source: "/cv", destination: "/cv.pdf" },
     ];
   },
 };
