@@ -7,13 +7,16 @@ const nextConfig = {
   },
   staticPageGenerationTimeout: 600,
   rewrites: async () => {
+    return [{ source: "/cv", destination: "/cv.pdf" }];
+  },
+  redirects: async () => {
     return [
       {
-        source: "/",
-        has: [{ type: "host", value: "io.klarstrup.dk" }],
-        destination: "/diary",
+        source: "/:path*",
+        has: [{ type: "host", value: "klarstrup.dk" }],
+        destination: "https://github.com/klarstrup",
+        permanent: false,
       },
-      { source: "/cv", destination: "/cv.pdf" },
     ];
   },
 };
