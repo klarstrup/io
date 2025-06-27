@@ -11,3 +11,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("https://github.com/klarstrup"));
   }
 }
+
+export const config = {
+  matcher: ["/:path*"],
+};
