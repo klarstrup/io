@@ -5,8 +5,8 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   if (
     request.nextUrl.hostname === "klarstrup.dk" &&
-    (request.nextUrl.pathname === "/cv" ||
-      request.nextUrl.pathname === "/cv.pdf")
+    request.nextUrl.pathname !== "/cv" &&
+    request.nextUrl.pathname !== "/cv.pdf"
   ) {
     return NextResponse.redirect(new URL("https://github.com/klarstrup"));
   }
