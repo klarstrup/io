@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @config '../tailwind.config.js';
 
@@ -222,4 +222,10 @@ dl {
 
 dl > dd {
   margin: 0;
+}
+
+input[type="text"],
+input[type="number"] {
+  background: white;
+  border-bottom: 1px solid #ccc;
 }

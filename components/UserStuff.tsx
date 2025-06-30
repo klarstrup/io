@@ -44,14 +44,14 @@ export default async function UserStuff() {
 
   return (
     <Popover
-      className="fixed right-1 top-1 z-20 pl-1"
+      className="fixed top-1 right-1 z-20 pl-1"
       control={
-        <span className="absolute right-1 top-1 z-10 cursor-pointer select-none">
+        <span className="absolute top-1 right-1 z-10 cursor-pointer select-none">
           🌞
         </span>
       }
     >
-      <div className="absolute right-4 top-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+      <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
         <div className="mb-2 flex gap-2">
           <Link prefetch={false} href="/diary">
             Diary
@@ -86,6 +86,7 @@ export default async function UserStuff() {
                 <div className="grid grid-cols-2 gap-1.5">
                   <FieldSetY legend="Time Zone">
                     <input
+                      type="text"
                       name="timeZone"
                       defaultValue={user.timeZone || ""}
                       className="flex-1 border-b-2 border-gray-200 focus:border-gray-500"
