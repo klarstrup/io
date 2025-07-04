@@ -357,44 +357,18 @@ export function WorkoutForm<R extends string>({
                         onClick={() =>
                           update(index, { ...field, comment: undefined })
                         }
-                        className="mx-1"
+                        className="mx-0.5"
                       >
                         ✍️
                       </StealthButton>
                     ) : (
                       <StealthButton
                         onClick={() => update(index, { ...field, comment: "" })}
-                        className="mx-1"
+                        className="mx-0.5"
                       >
                         ✍️
                       </StealthButton>
                     )}
-                    <StealthButton
-                      onClick={() => {
-                        const newIndex = index - 1;
-                        const destination = fields[newIndex]!;
-                        const source = fields[index]!;
-                        update(index, destination);
-                        update(newIndex, source);
-                      }}
-                      disabled={index === 0 || isSubmitting}
-                      className="leading-0"
-                    >
-                      ⬆️
-                    </StealthButton>
-                    <StealthButton
-                      onClick={() => {
-                        const newIndex = index + 1;
-                        const destination = fields[newIndex]!;
-                        const source = fields[index]!;
-                        update(index, destination);
-                        update(newIndex, source);
-                      }}
-                      disabled={index === fields.length - 1 || isSubmitting}
-                      className="leading-0"
-                    >
-                      ⬇️
-                    </StealthButton>
                   </div>
                 }
               >
@@ -445,6 +419,7 @@ export function WorkoutForm<R extends string>({
                   getValues={getValues}
                   parentIndex={index}
                   exercise={exercise}
+                  isDisabled={isSubmitting}
                 />
               </FieldSetX>
             );
@@ -536,12 +511,14 @@ function SetsForm({
   parentIndex,
   register,
   exercise,
+  isDisabled = false,
 }: {
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
   getValues: ReturnType<typeof useForm<WorkoutDataFormData>>["getValues"];
   parentIndex: number;
   exercise: ExerciseData;
+  isDisabled?: boolean;
 }) {
   const {
     fields: sets,
@@ -580,11 +557,12 @@ function SetsForm({
   const lastSet = watchedSets[watchedSets.length - 1];
 
   return (
-    <table className="block w-full min-w-1/2 border-collapse border-spacing-0">
+    <table className="w-full max-w-xs min-w-1/2 border-collapse border-spacing-0">
       <thead>
         <tr>
           <th>
             <StealthButton
+              disabled={isDisabled}
               onClick={() =>
                 append({
                   createdAt: new Date(),
@@ -615,6 +593,7 @@ function SetsForm({
               <small>
                 {input.allowed_units && input.allowed_units.length > 1 ? (
                   <select
+                    disabled={isDisabled}
                     value={sets[0]?.inputs[inputIndex]?.unit}
                     className="flex-1 [font-size:inherit]"
                     onChange={(event) => {
@@ -668,11 +647,13 @@ function SetsForm({
                 parentIndex={parentIndex}
                 setIndex={index}
                 exercise={exercise}
+                isDisabled={isDisabled}
               />
               <td>
                 <StealthButton
+                  disabled={isDisabled}
                   onClick={() => remove(index)}
-                  className="mx-1 leading-0"
+                  className="mx-0.5 leading-0"
                 >
                   ❌
                 </StealthButton>
@@ -680,6 +661,7 @@ function SetsForm({
               <td>
                 {set.comment !== undefined ? (
                   <StealthButton
+                    disabled={isDisabled}
                     onClick={() => {
                       const setState = getValues(
                         `exercises.${parentIndex}.sets.${index}`,
@@ -687,19 +669,20 @@ function SetsForm({
 
                       update(index, { ...setState, comment: undefined });
                     }}
-                    className="mx-1"
+                    className="mx-0.5"
                   >
                     ✍️
                   </StealthButton>
                 ) : (
                   <StealthButton
+                    disabled={isDisabled}
                     onClick={() => {
                       const setState = getValues(
                         `exercises.${parentIndex}.sets.${index}`,
                       );
                       update(index, { ...setState, comment: "" });
                     }}
-                    className="mx-1"
+                    className="mx-0.5"
                   >
                     ✍️
                   </StealthButton>
@@ -707,6 +690,7 @@ function SetsForm({
               </td>
               <td>
                 <StealthButton
+                  disabled={isDisabled}
                   onClick={() => {
                     const setState = getValues(
                       `exercises.${parentIndex}.sets.${index}`,
@@ -730,7 +714,7 @@ function SetsForm({
                       comment: setState.comment ?? undefined,
                     });
                   }}
-                  className="mx-1 leading-0"
+                  className="mx-0.5 leading-0"
                 >
                   ➕
                 </StealthButton>
@@ -740,6 +724,7 @@ function SetsForm({
               <tr>
                 <td colSpan={exercise.inputs.length + 4}>
                   <textarea
+                    disabled={isDisabled}
                     {...register(
                       `exercises.${parentIndex}.sets.${index}.comment`,
                     )}
@@ -789,12 +774,14 @@ function InputsForm({
   control,
   register,
   exercise,
+  isDisabled = false,
 }: {
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
   parentIndex: number;
   setIndex: number;
   exercise: ExerciseData;
+  isDisabled?: boolean;
 }) {
   const { fields: sets, update } = useFieldArray({
     control,
@@ -809,6 +796,7 @@ function InputsForm({
       <div className="flex">
         {input.type === InputType.Options && input.options ? (
           <select
+            disabled={isDisabled}
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
               { onChange },
@@ -825,6 +813,7 @@ function InputsForm({
         ) : null}
         {input.type === InputType.Weightassist && input.options ? (
           <select
+            disabled={isDisabled}
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
               {
@@ -845,6 +834,7 @@ function InputsForm({
         {input.type !== InputType.Options ? (
           input.type === InputType.Grade ? (
             <select
+              disabled={isDisabled}
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
                 { onChange },
@@ -859,6 +849,7 @@ function InputsForm({
             </select>
           ) : (
             <input
+              disabled={isDisabled}
               {...register(
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
                 { onChange },

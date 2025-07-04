@@ -229,3 +229,9 @@ input[type="number"] {
   background: white;
   border-bottom: 1px solid #ccc;
 }
+
+input[type="text"]:disabled,
+input[type="number"]:disabled,
+select:disabled {
+  opacity: 0.5;
+}
