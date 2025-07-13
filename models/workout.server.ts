@@ -1,5 +1,11 @@
 /* eslint-disable no-unexpected-multiline */
-import { subMonths, subYears } from "date-fns";
+import {
+  eachMonthOfInterval,
+  endOfMonth,
+  startOfMonth,
+  subMonths,
+  subYears,
+} from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
 import type { PRType } from "../lib";
@@ -12,11 +18,12 @@ import {
   TagType,
 } from "./exercises";
 import {
+  getSetGrade,
   isClimbingExercise,
-  type WorkoutExercise,
-  type WorkoutExerciseSetInput,
   type WorkoutData,
+  type WorkoutExercise,
   type WorkoutExerciseSet,
+  type WorkoutExerciseSetInput,
 } from "./workout";
 
 export const Workouts = proxyCollection<Omit<WorkoutData, "id">>("workouts");
@@ -37,7 +44,7 @@ export const getNextSets = async ({
     return (
       await Promise.all(
         (user.exerciseSchedules || [])
-          .filter((scheduleEntry) => scheduleEntry.enabled)
+          .filter(({ enabled }) => enabled)
           .map(async (scheduleEntry) => {
             const workout = (
               await MaterializedWorkoutsView.aggregate<{
@@ -83,10 +90,7 @@ export const getNextSets = async ({
               if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {
                 const workouts = MaterializedWorkoutsView.aggregate<{
                   workedOutAt: Date;
-                  exercise: {
-                    exerciseId: number;
-                    sets: WorkoutExerciseSet[];
-                  };
+                  exercise: WorkoutExercise;
                 }>([
                   {
                     $match: {
@@ -414,3 +418,82 @@ export const getAllWorkoutExercises = async (user: Session["user"]) =>
   (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
     ({ _id, ...location }) => ({ ...location, _id: _id.toString() }),
   );
+
+export async function calculateFlashRateByMonth(userId: string, now: Date) {
+  const months = eachMonthOfInterval({
+    start: startOfMonth(subYears(now, 2)),
+    end: endOfMonth(now),
+  });
+
+  const flashRateByMonth: unknown[] = [];
+  for (const month of months) {
+    const monthKey = month.toISOString().slice(0, 7); // YYYY-MM
+
+    const workout = await MaterializedWorkoutsView.aggregate<{
+      workedOutAt: Date;
+      exercise: WorkoutExercise;
+      location: string;
+    }>([
+      {
+        $match: {
+          userId,
+          "exercises.exerciseId": 2001,
+          workedOutAt: { $gte: startOfMonth(month), $lt: endOfMonth(month) },
+          deletedAt: { $exists: false },
+        },
+      },
+      { $sort: { workedOutAt: -1 } },
+      {
+        $project: {
+          _id: 0,
+          location: 1,
+          workedOutAt: 1,
+          exercise: {
+            $first: {
+              $filter: {
+                input: "$exercises",
+                as: "exercise",
+                cond: { $eq: ["$$exercise.exerciseId", 2001] },
+              },
+            },
+          },
+        },
+      },
+    ]).toArray();
+
+    const gradePredicate = (set: WorkoutExerciseSet & { location: string }) => {
+      const inputGrade = getSetGrade(set, set.location);
+      if (inputGrade) return inputGrade >= 6.67 && inputGrade < 6.83;
+    };
+
+    const sets = workout
+      .flatMap((w) =>
+        (w.exercise.sets || []).map((set) => ({
+          ...set,
+          location: w.location,
+        })),
+      )
+      .filter(gradePredicate);
+
+    const sendSets = sets.filter(
+      (set) =>
+        set.inputs[2]?.value === SendType.Flash ||
+        set.inputs[2]?.value === SendType.Top,
+    );
+    const flashSets = sendSets.filter(
+      (set) => set.inputs[2]?.value === SendType.Flash,
+    );
+
+    flashRateByMonth.push({
+      month: monthKey,
+      totalSets: sets.length,
+      sendSets: sendSets.length,
+      flashSets: flashSets.length,
+      flashRate: (flashSets.length / sendSets.length).toLocaleString("en-US", {
+        style: "percent",
+      }),
+    });
+  }
+
+  console.table(flashRateByMonth);
+}
