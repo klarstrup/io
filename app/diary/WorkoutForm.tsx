@@ -858,6 +858,7 @@ function InputsForm({
               { onChange },
             )}
             type="number"
+            onFocus={(e) => e.target.select()}
             step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
             className="w-full border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
             onKeyDown={(e) => {
