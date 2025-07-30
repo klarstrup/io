@@ -268,13 +268,13 @@ export function WorkoutForm<R extends string>({
             <div />
           )}
         </div>
-        <div className="flex">
+        <div className="grid grid-cols-2 gap-1">
           <Controller
             name="location"
             control={control}
             render={({ field }) => (
               <Creatable<{ label: string; value: string }, false>
-                className="flex-1"
+                className="text-xl"
                 instanceId={locationInstanceId}
                 placeholder="Pick location..."
                 isDisabled={isSubmitting}
@@ -320,7 +320,7 @@ export function WorkoutForm<R extends string>({
               dateToInputDate(workout?.workedOutAt ?? tzDate),
             )}
             hidden={!workout}
-            className="border-b-2 border-gray-200 focus:border-gray-500"
+            className="border-b-2 border-gray-200 text-center text-xl focus:border-gray-500"
           />
         </div>
         <div className="flex flex-col gap-1">
