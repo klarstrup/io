@@ -438,6 +438,7 @@ export function WorkoutForm<R extends string>({
             instanceId={useId()}
             isDisabled={isSubmitting}
             placeholder="Add exercise..."
+            className="text-2xl"
             options={exercises
               .map((exercise) => ({
                 ...exercise,
