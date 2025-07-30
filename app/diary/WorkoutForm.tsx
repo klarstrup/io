@@ -642,7 +642,9 @@ function SetsForm({
         {sets.map((set, index) => (
           <Fragment key={set.id}>
             <tr>
-              <td className="pr-0.5 text-sm">{index + 1}.</td>
+              <td className="pr-0.5 text-sm" width="1%">
+                {index + 1}.
+              </td>
               <InputsForm
                 control={control}
                 register={register}
@@ -651,16 +653,16 @@ function SetsForm({
                 exercise={exercise}
                 isDisabled={isDisabled}
               />
-              <td>
+              <td width="1%">
                 <StealthButton
                   disabled={isDisabled}
                   onClick={() => remove(index)}
-                  className="mx-0.5 leading-0"
+                  className="mx-1 leading-0"
                 >
                   ❌
                 </StealthButton>
               </td>
-              <td>
+              <td width="1%">
                 {set.comment !== undefined ? (
                   <StealthButton
                     disabled={isDisabled}
@@ -690,7 +692,7 @@ function SetsForm({
                   </StealthButton>
                 )}
               </td>
-              <td>
+              <td width="1%">
                 <StealthButton
                   disabled={isDisabled}
                   onClick={() => {
