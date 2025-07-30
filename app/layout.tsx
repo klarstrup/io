@@ -7,8 +7,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  interactiveWidget: 'resizes-content',
-}
+  interactiveWidget: "resizes-content",
+  minimumScale: 1,
+};
 
 export default function RootLayout({
   children,
