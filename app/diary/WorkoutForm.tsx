@@ -268,7 +268,7 @@ export function WorkoutForm<R extends string>({
             <div />
           )}
         </div>
-        <div className="grid grid-cols-2 gap-1">
+        <div>
           <Controller
             name="location"
             control={control}
@@ -313,15 +313,17 @@ export function WorkoutForm<R extends string>({
               />
             )}
           />
-          <input
-            type="date"
-            {...register("workedOutAt", { valueAsDate: true })}
-            defaultValue={String(
-              dateToInputDate(workout?.workedOutAt ?? tzDate),
-            )}
-            hidden={!workout}
-            className="border-b-2 border-gray-200 text-center text-xl focus:border-gray-500"
-          />
+          <center>
+            <input
+              type="date"
+              {...register("workedOutAt", { valueAsDate: true })}
+              defaultValue={String(
+                dateToInputDate(workout?.workedOutAt ?? tzDate),
+              )}
+              hidden={!workout}
+              className="border-b-2 border-gray-200 text-center text-xl focus:border-gray-500"
+            />
+          </center>
         </div>
         <div className="flex flex-col gap-1">
           {fields.map((field, index) => {
