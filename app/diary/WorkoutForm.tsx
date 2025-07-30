@@ -274,7 +274,7 @@ export function WorkoutForm<R extends string>({
             control={control}
             render={({ field }) => (
               <Creatable<{ label: string; value: string }, false>
-                className="text-xl"
+                className="text-2xl"
                 instanceId={locationInstanceId}
                 placeholder="Pick location..."
                 isDisabled={isSubmitting}
