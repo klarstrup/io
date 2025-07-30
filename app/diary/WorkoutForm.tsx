@@ -797,98 +797,95 @@ function InputsForm({
 
   return exercise.inputs.map((input, index) => (
     <td key={index}>
-      <div className="flex">
-        {input.type === InputType.Options && input.options ? (
+      {input.type === InputType.Options && input.options ? (
+        <select
+          disabled={isDisabled}
+          {...register(
+            `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+            { onChange },
+          )}
+          className="w-full"
+        >
+          {input.hidden_by_default ? <option value="">---</option> : null}
+          {input.options.map((option, i) => (
+            <option key={option.value} value={i}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+      ) : null}
+      {input.type === InputType.Weightassist && input.options ? (
+        <select
+          disabled={isDisabled}
+          {...register(
+            `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
+            {
+              setValueAs: (v) => (typeof v === "string" && v ? v : undefined),
+              onChange,
+            },
+          )}
+          className="w-full"
+        >
+          {input.hidden_by_default ? <option value="">---</option> : null}
+          {input.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+      ) : null}
+      {input.type !== InputType.Options ? (
+        input.type === InputType.Grade ? (
           <select
             disabled={isDisabled}
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
               { onChange },
             )}
-            className="flex-1"
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
-            {input.options.map((option, i) => (
-              <option key={option.value} value={i}>
-                {option.value}
+            {frenchRounded.data.map(({ value, name }) => (
+              <option key={value} value={value}>
+                {name}
               </option>
             ))}
           </select>
-        ) : null}
-        {input.type === InputType.Weightassist && input.options ? (
-          <select
+        ) : (
+          <input
             disabled={isDisabled}
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
-              {
-                setValueAs: (v) => (typeof v === "string" && v ? v : undefined),
-                onChange,
-              },
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+              { onChange },
             )}
-            className="flex-1"
-          >
-            {input.hidden_by_default ? <option value="">---</option> : null}
-            {input.options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.value}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {input.type !== InputType.Options ? (
-          input.type === InputType.Grade ? (
-            <select
-              disabled={isDisabled}
-              {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { onChange },
-              )}
-            >
-              {input.hidden_by_default ? <option value="">---</option> : null}
-              {frenchRounded.data.map(({ value, name }) => (
-                <option key={value} value={value}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              disabled={isDisabled}
-              {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { onChange },
-              )}
-              type="number"
-              step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
-              style={{ width: "48px", flex: 1, textAlign: "right" }}
-              className="border-b-2 border-gray-200 text-xl leading-none focus:border-gray-500"
-              onKeyDown={(e) => {
-                const input = e.currentTarget;
-                const formElements = input.form?.elements;
-                if (!formElements) return;
-                if (e.key == "Enter") {
-                  const followingFormElements = Array.from(formElements).slice(
-                    Array.from(formElements).indexOf(input) + 1,
-                  );
+            type="number"
+            step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
+            className="w-full border-b-2 border-gray-200 text-right text-xl leading-none focus:border-gray-500"
+            onKeyDown={(e) => {
+              const input = e.currentTarget;
+              const formElements = input.form?.elements;
+              if (!formElements) return;
+              if (e.key == "Enter") {
+                const followingFormElements = Array.from(formElements).slice(
+                  Array.from(formElements).indexOf(input) + 1,
+                );
 
-                  for (const element of followingFormElements) {
-                    if (
-                      element instanceof HTMLInputElement &&
-                      element.type === "number"
-                    ) {
-                      e.preventDefault();
-                      e.stopPropagation();
+                for (const element of followingFormElements) {
+                  if (
+                    element instanceof HTMLInputElement &&
+                    element.type === "number"
+                  ) {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                      element.focus();
-                      break;
-                    }
+                    element.focus();
+                    break;
                   }
                 }
-              }}
-            />
-          )
-        ) : null}
-      </div>
+              }
+            }}
+          />
+        )
+      ) : null}
     </td>
   ));
 }

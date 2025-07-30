@@ -14,13 +14,8 @@
   box-shadow: rgba(28, 28, 30, 0.9) 0px 0px 20px !important;
 }
 
-html,
-body {
-  height: 100%;
-}
 /* Set a background color */
 body {
-  margin: 0;
   background-color: #edab00;
   font-family:
     -apple-system,
