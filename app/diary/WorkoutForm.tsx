@@ -858,7 +858,7 @@ function InputsForm({
               onFocus={(e) => e.target.select()}
               step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
               style={{ width: "48px", flex: 1, textAlign: "right" }}
-              className="border-b-2 border-gray-200 text-lg leading-none focus:border-gray-500"
+              className="border-b-2 border-gray-200 text-xl leading-none focus:border-gray-500"
               onKeyDown={(e) => {
                 const input = e.currentTarget;
                 const formElements = input.form?.elements;
