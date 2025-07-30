@@ -48,11 +48,8 @@ export function DiaryAgenda({
   const isToday = date === dateToString(TZDate.tz(timeZone));
 
   return (
-    <div
-      key={date}
-      className="flex h-full max-h-full w-full max-w-full flex-col overflow-x-hidden overflow-y-scroll overscroll-contain bg-white p-2"
-    >
-      <div className="flex-0 mb-2 ml-3 flex items-center justify-between gap-1 text-lg leading-none">
+    <div key={date} className="flex flex-col">
+      <div className="mb-2 ml-3 flex flex-0 items-center justify-between gap-1 text-lg leading-none">
         {isToday ? <span>Today</span> : null}
         <span className={"font-semibold " + isToday ? "text-sm" : ""}>
           {date}
