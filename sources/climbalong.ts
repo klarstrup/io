@@ -575,28 +575,3 @@ export async function getIoClimbAlongCompetitionEventEntry(
     end: new Date(competition.endTime),
   } as const;
 }
-
-export const ioClimbAlongEventsWithIds = [
-  [13, 844],
-  [20, 1284],
-  [26, 3381],
-  [27, 8468],
-  [28, 10770],
-  [30, 11951],
-  [32, 12091],
-  [33, 12477],
-  [34, 14063],
-  [147],
-  [148],
-  [150, 25938],
-  [151],
-  [269],
-  [270],
-  [271],
-  [272],
-  [273],
-  [274],
-  [275],
-  [276],
-  [277],
-] as const;
