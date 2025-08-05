@@ -156,7 +156,7 @@ async function LeastRecentGym({
         return {
           location: location ?? {
             userId: user.id,
-            _id: new ObjectId(uuid()),
+            _id: new ObjectId(ObjectId.generate()),
             name: locationName,
             createdAt: new Date(),
             updatedAt: new Date(),
