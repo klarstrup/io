@@ -1,18 +1,16 @@
-import type { ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import Link from "next/link";
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import ProblemByProblem from "../../components/ProblemByProblem";
 import Grade from "../../grades";
 import { PRType } from "../../lib";
 import {
-  AssistType,
-  ExerciseData,
+  type ExerciseData,
   exercisesById,
-  InputType,
   SendType,
-  Unit,
 } from "../../models/exercises";
+import { Locations } from "../../models/location.server";
 import {
   calculateClimbingStats,
   isClimbingExercise,
@@ -21,220 +19,9 @@ import {
   type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
-import {
-  dateToString,
-  HOUR_IN_SECONDS,
-  MINUTE_IN_SECONDS,
-  omit,
-  seconds2time,
-} from "../../utils";
+import { dateToString, omit } from "../../utils";
 import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
-
-function pad(i: number, width: number, z = "0") {
-  const n = String(i);
-  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-}
-
-function decimalAsTime(dec: number) {
-  const minutes = Math.floor(dec);
-  const sec = Math.floor(60 * (dec - minutes));
-  return String(minutes) + ":" + pad(sec, 2);
-}
-
-export function WorkoutEntryExerciseSetRow({
-  set,
-  repeatCount,
-  exercise,
-  setPR,
-}: {
-  set: WorkoutExerciseSet;
-  repeatCount: number | null;
-  exercise: ExerciseData;
-  setPR?: Record<PRType, boolean>;
-}) {
-  return (
-    <Fragment>
-      <tr className="align-baseline leading-tight whitespace-nowrap">
-        {repeatCount &&
-        !set.inputs.some(
-          (_, i) => exercise.inputs[i]?.type === InputType.Reps,
-        ) ? (
-          <Fragment>
-            <td className="p-0 text-right tabular-nums" width="0.01%">
-              {repeatCount}
-            </td>
-            {set.inputs.length ? <td className="px-0.5 py-0">×</td> : null}
-          </Fragment>
-        ) : (
-          <Fragment>
-            <td className="p-0" />
-            <td className="p-0" />
-          </Fragment>
-        )}
-        {set.inputs.length ? (
-          set.inputs
-            .map((input, index) => {
-              const inputDefinition = exercise.inputs[index]!;
-              const inputOptions =
-                inputDefinition.type === InputType.Options &&
-                "options" in inputDefinition &&
-                inputDefinition.options;
-
-              const inputType = inputDefinition.type;
-              return {
-                input,
-                index,
-                element: (
-                  <span className="tabular-nums">
-                    {inputType === InputType.Pace ? (
-                      <>
-                        {decimalAsTime(input.value)}
-                        <small>min/km</small>
-                      </>
-                    ) : inputType === InputType.Time ? (
-                      seconds2time(
-                        input.unit === Unit.Hr
-                          ? input.value * HOUR_IN_SECONDS
-                          : input.unit === Unit.Min
-                            ? input.value * MINUTE_IN_SECONDS
-                            : input.value,
-                      )
-                    ) : inputType === InputType.Distance ? (
-                      <>
-                        {(input.unit === Unit.M
-                          ? input.value / 1000
-                          : input.value
-                        ).toLocaleString("en-DK", {
-                          unit: "kilometer",
-                          maximumSignificantDigits: 2,
-                        })}
-                        <small>km</small>
-                      </>
-                    ) : inputType === InputType.Options && inputOptions ? (
-                      String(inputOptions[input.value]?.value ?? "")
-                    ) : input.unit === Unit.FrenchRounded ? (
-                      new Grade(input.value).name
-                    ) : !isNaN(input.value) &&
-                      input.value !== undefined &&
-                      input.value !== null &&
-                      (inputType === InputType.Weightassist
-                        ? input.value !== 0
-                        : true) ? (
-                      <>
-                        {input.value.toLocaleString("en-DK", {
-                          maximumFractionDigits: 2,
-                        })}
-                        {!(
-                          input.unit === Unit.Reps &&
-                          set.inputs.some(
-                            (_, i) =>
-                              exercise.inputs[i]?.type === InputType.Weight,
-                          )
-                        ) ? (
-                          <small>{input.unit}</small>
-                        ) : null}
-                      </>
-                    ) : null}
-                  </span>
-                ),
-              };
-            })
-            .sort(
-              (a, b) =>
-                Number(exercise.inputs[b.index]?.type === InputType.Reps) -
-                Number(exercise.inputs[a.index]?.type === InputType.Reps),
-            )
-            .map(({ element, input, index }, elIndex) => {
-              const separator =
-                elIndex > 0 &&
-                !isNaN(input.value) &&
-                input.value !== undefined &&
-                input.value !== null &&
-                (exercise.inputs[index]?.type === InputType.Weightassist
-                  ? input.value !== 0
-                  : true)
-                  ? exercise.inputs[index]?.type === InputType.Options ||
-                    exercise.inputs[index]?.type === InputType.Angle
-                    ? ", "
-                    : input.assistType === AssistType.Assisted
-                      ? " - "
-                      : input.assistType === AssistType.Weighted
-                        ? " + "
-                        : " × "
-                  : "";
-              return (
-                <Fragment key={index}>
-                  <td
-                    className={
-                      separator
-                        ? separator === " - "
-                          ? "p-0 pl-0.5"
-                          : "p-0 px-0.5"
-                        : "p-0"
-                    }
-                  >
-                    {separator}
-                  </td>
-                  <td width="0.01%" className="p-0 text-right">
-                    {repeatCount &&
-                    exercise.inputs[index]?.type === InputType.Reps ? (
-                      <>
-                        <span>{repeatCount}</span>
-                        <span className="px-0.5">×</span>
-                      </>
-                    ) : null}
-                    {element}
-                  </td>
-                </Fragment>
-              );
-            })
-        ) : (
-          <Fragment>
-            <td className="p-0 px-0.5"></td>
-            <td width="0.01%" className="p-0 text-right">
-              sets
-            </td>
-          </Fragment>
-        )}
-        {setPR ? (
-          <td
-            className="p-0 pl-1 text-left text-[10px] leading-0"
-            title={
-              setPR.allTimePR
-                ? "All-time PR"
-                : setPR.oneYearPR
-                  ? "Year PR"
-                  : setPR.threeMonthPR
-                    ? "3-month PR"
-                    : undefined
-            }
-          >
-            {setPR.allTimePR
-              ? "🥇"
-              : setPR.oneYearPR
-                ? "🥈"
-                : setPR.threeMonthPR
-                  ? "🥉"
-                  : null}
-          </td>
-        ) : null}
-      </tr>
-      {set.comment ? (
-        <tr>
-          <td />
-          <td />
-          <td />
-          <td
-            colSpan={set.inputs.length + 2}
-            className="pb-1 text-left text-xs whitespace-nowrap italic"
-          >
-            {set.comment}
-          </td>
-        </tr>
-      ) : null}
-    </Fragment>
-  );
-}
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 const average = (arr: number[]) => arr.reduce((a, b) => a + b) / arr.length;
 
@@ -359,7 +146,7 @@ export function WorkoutEntryExercise({
   );
 }
 
-export default function WorkoutEntry({
+export default async function WorkoutEntry({
   showDate,
   showExerciseName = true,
   workout,
@@ -373,6 +160,13 @@ export default function WorkoutEntry({
   onlyPRs?: PRType;
 }) {
   const workoutDateStr = dateToString(workout.workedOutAt);
+
+  const location = workout.locationId
+    ? await Locations.findOne({ _id: new ObjectId(workout.locationId) })
+    : null;
+
+  const locationName = location?.name ?? workout.location ?? null;
+
   return (
     <FieldSetX
       key={workout.id}
@@ -388,11 +182,11 @@ export default function WorkoutEntry({
               >
                 <small>{workoutDateStr}</small>
               </Link>
-              {workout.location ? <small> - {workout.location}</small> : null}
+              {locationName ? <small> - {locationName}</small> : null}
             </div>
-          ) : workout.location ? (
+          ) : locationName ? (
             <div>
-              <small>{workout.location}</small>
+              <small>{locationName}</small>
             </div>
           ) : null}
           {showExerciseName ? (
@@ -484,7 +278,7 @@ export default function WorkoutEntry({
                 {isClimbingExercise(exercise.id)
                   ? calculateClimbingStats(
                       workoutExercise.sets.map((set) => [
-                        workout.location,
+                        locationName || undefined,
                         set,
                       ]),
                     )
@@ -509,7 +303,7 @@ export default function WorkoutEntry({
     </FieldSetX>
   );
 }
-export const isEquivalentSet = (
+const isEquivalentSet = (
   setA: WorkoutExerciseSet,
   setB: WorkoutExerciseSet,
 ) => {

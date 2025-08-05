@@ -17,6 +17,7 @@ import {
   SendType,
   TagType,
 } from "./exercises";
+import type { LocationData } from "./location";
 import {
   getSetGrade,
   isClimbingExercise,
@@ -343,17 +344,27 @@ export function getIsSetPR(
 }
 
 export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
-  await WorkoutExercisesView.aggregate([
+  await MaterializedWorkoutsView.aggregate([
     {
       $match: {
         userId,
-        location: { $exists: true, $ne: null },
+        locationId: { $exists: true, $ne: null },
         deletedAt: { $exists: false },
       },
     },
+    { $addFields: { locationId: { $toObjectId: "$locationId" } } },
+    {
+      $lookup: {
+        from: "locations",
+        localField: "locationId",
+        foreignField: "_id",
+        as: "location",
+      },
+    },
+    { $set: { location: { $first: "$location" } } },
     {
       $group: {
-        _id: { location: "$location", userId: "$userId" },
+        _id: { locationId: { $toString: "$locationId" }, userId: "$userId" },
         location: { $first: "$location" },
         userId: { $first: "$userId" },
         visitCount: { $count: {} },
@@ -364,8 +375,7 @@ export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
   ]).toArray();
 
 export interface IWorkoutLocationsView {
-  location: string;
-  userId: string;
+  location: WithId<LocationData>;
   visitCount?: number;
   mostRecentVisit: Date | null;
 }
@@ -379,6 +389,7 @@ export const getAllWorkoutLocations = async (user: Session["user"]) =>
     (location) => ({
       ...location,
       _id: location._id.toString(),
+      location: { ...location.location, _id: location.location._id.toString() },
     }),
   );
 

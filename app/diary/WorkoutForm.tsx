@@ -23,6 +23,7 @@ import {
   Unit,
   type ExerciseData,
 } from "../../models/exercises";
+import type { LocationData } from "../../models/location";
 import {
   isNextSetDue,
   WorkoutSource,
@@ -39,7 +40,7 @@ import type {
 import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
-import { WorkoutEntryExerciseSetRow } from "./WorkoutEntry";
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 /**
  * Create a date YYYY-MM-DD date string that is typecasted as a `Date`.
@@ -59,8 +60,10 @@ const getValueAs = (v: unknown) =>
 const getValueAsFont = (v: unknown) =>
   v === null || Number.isNaN(Number(v)) || v === 0 ? "" : Number(v);
 
-interface WorkoutDataFormData extends Omit<WorkoutData, "exercises"> {
+interface WorkoutDataFormData
+  extends Omit<WorkoutData, "exercises" | "locationId"> {
   _id?: string;
+  locationId?: string;
   exercises: (Omit<WorkoutExercise, "sets"> & {
     sets: (Omit<WorkoutExerciseSet, "inputs"> & {
       inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
@@ -83,7 +86,9 @@ export function WorkoutForm<R extends string>({
   workout?: WorkoutData & { _id?: string };
   date: `${number}-${number}-${number}`;
   dismissTo: Route<R>;
-  locations: IWorkoutLocationsView[];
+  locations: (Omit<IWorkoutLocationsView, "location"> & {
+    location: LocationData & { _id: string };
+  })[];
   exercisesStats: IWorkoutExercisesView[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
@@ -200,7 +205,7 @@ export function WorkoutForm<R extends string>({
             id: workout?.id,
             userId: user.id,
             // Shit that will change
-            workedOutAt: data.workedOutAt ?? workout?.workedOutAt,
+            workedOutAt: data.workedOutAt,
             createdAt: workout?.createdAt ?? new Date(),
             updatedAt: new Date(),
             exercises:
@@ -215,7 +220,7 @@ export function WorkoutForm<R extends string>({
                 })),
               })) ?? workout?.exercises,
             source: WorkoutSource.Self,
-            location: data.location ?? workout?.location,
+            locationId: data.locationId,
           };
           console.log({ workout, data, newWorkout });
           const newWorkoutId = await upsertWorkout(newWorkout);
@@ -270,7 +275,7 @@ export function WorkoutForm<R extends string>({
         </div>
         <div>
           <Controller
-            name="location"
+            name="locationId"
             control={control}
             render={({ field }) => (
               <Creatable<{ label: string; value: string }, false>
@@ -293,13 +298,18 @@ export function WorkoutForm<R extends string>({
                     compareDesc(a.mostRecentVisit ?? 0, b.mostRecentVisit ?? 0),
                   )
                   .map(({ location, visitCount }) => ({
-                    label: `${location} (${visitCount})`,
-                    value: location,
+                    label: `${location.name} (${visitCount})`,
+                    value: location._id,
                   }))}
                 {...field}
                 value={
                   field.value
-                    ? { label: field.value, value: field.value }
+                    ? {
+                        label:
+                          locations.find((l) => l.location._id === field.value)
+                            ?.location.name ?? field.value,
+                        value: field.value,
+                      }
                     : null
                 }
                 onChange={(

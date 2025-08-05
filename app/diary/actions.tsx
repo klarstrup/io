@@ -17,6 +17,7 @@ import type { ExerciseSchedule } from "../../sources/fitocracy";
 import type { UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
+import { Locations } from "../../models/location.server";
 
 export async function upsertWorkout(
   workout:
@@ -28,6 +29,31 @@ export async function upsertWorkout(
   console.time("upsertWorkout");
 
   console.time("upsertWorkout:upsertWorkout");
+
+  // Check if locationId is provided and if no such location exists with that
+  // locationId as its name or its _id, create it with that as the name and
+  // use it as the locationId in the workout document
+  if (workout.locationId && !workout.location) {
+    const newLocationName = workout.locationId.trim();
+    const location = await Locations.findOne(
+      ObjectId.isValid(workout.locationId)
+        ? { _id: new ObjectId(workout.locationId) }
+        : { name: newLocationName },
+    );
+    if (!location) {
+      const now = new Date();
+      const newLocation = await Locations.insertOne({
+        name: workout.locationId,
+        userId: user.id,
+        createdAt: now,
+        updatedAt: now,
+      });
+      workout.locationId = newLocation.insertedId.toString();
+    } else {
+      workout.locationId = location._id.toString();
+    }
+  }
+
   let _id: ObjectId;
   if ("_id" in workout) {
     const { _id: id, ...rest } = workout;

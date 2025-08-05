@@ -30,13 +30,16 @@ export interface WorkoutData {
   id: string;
   exercises: WorkoutExercise[];
   // Io ID, not source user ID
-  userId: string; // This is a string because it's a MongoDB ObjectId
+  userId: string; // This is a string because it's a MongoDB ObjectId idc
   createdAt: Date;
   updatedAt: Date;
   workedOutAt: Date;
   deletedAt?: Date;
   source?: WorkoutSource;
+  /** @deprecated Only used for materialized workouts, TODO: materialize locations with predictable location IDs */
   location?: string;
+  // this type is maybe a string or ObjectId depending on if we're clientside or serverside
+  locationId?: string;
 }
 
 export interface WorkoutExercise {

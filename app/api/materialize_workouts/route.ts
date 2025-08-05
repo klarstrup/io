@@ -1,5 +1,9 @@
 import { auth } from "../../../auth";
-import { MaterializedWorkoutsView } from "../../../models/workout.server";
+import {
+  MaterializedWorkoutsView,
+  updateExerciseCounts,
+  updateLocationCounts,
+} from "../../../models/workout.server";
 import { jsonStreamResponse } from "../scraper-utils";
 import { materializeIoWorkouts, sourceToMaterializer } from "./materializers";
 
@@ -56,6 +60,16 @@ export const GET = () =>
       "MaterializedWorkoutsView.countDocuments()":
         await MaterializedWorkoutsView.countDocuments(),
     };
+
+    const t2 = Date.now();
+    yield "updateExerciseCounts: start";
+    await updateExerciseCounts(user.id);
+    yield `updateExerciseCounts: done in ${Date.now() - t2}ms`;
+
+    const t3 = Date.now();
+    yield "updateLocationCounts: start";
+    await updateLocationCounts(user.id);
+    yield `updateLocationCounts: done in ${Date.now() - t3}ms`;
   });
 
 async function* mergeGenerators<T>(gens: AsyncGenerator<T>[]) {

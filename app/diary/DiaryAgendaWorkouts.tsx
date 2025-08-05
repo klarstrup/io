@@ -5,14 +5,16 @@ import {
   startOfDay,
   subMonths,
 } from "date-fns";
-import type { WithId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
+import { v4 as uuid } from "uuid";
 import { FieldSetY } from "../../components/FieldSet";
 import Popover from "../../components/Popover";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { PRType } from "../../lib";
+import { Locations } from "../../models/location.server";
 import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
   MaterializedWorkoutsView,
@@ -132,21 +134,33 @@ async function LeastRecentGym({
         "Beta Boulders West",
         "Beta Boulders South",
         "Beta Boulders Østerbro",
-      ].map(async (location) => {
+      ].map(async (locationName) => {
+        const location = await Locations.findOne({
+          userId: user.id,
+          name: locationName,
+        });
+
         const boulderingInThePast = await MaterializedWorkoutsView.findOne(
           {
             userId: user.id,
             "exercises.exerciseId": 2001,
-            location,
             workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
             deletedAt: { $exists: false },
+            ...(location
+              ? { locationId: location._id.toString() }
+              : { location: locationName }),
           },
           { sort: { workedOutAt: -1 } },
         );
 
         return {
-          userId: user.id,
-          location,
+          location: location ?? {
+            userId: user.id,
+            _id: new ObjectId(uuid()),
+            name: locationName,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
           mostRecentVisit: boulderingInThePast?.workedOutAt || null,
         } satisfies IWorkoutLocationsView;
       }),
@@ -158,9 +172,9 @@ async function LeastRecentGym({
       <h2 className="text-lg font-semibold">Least recent boulder gyms:</h2>
       <ul className="flex flex-col gap-1">
         {leastRecentBoulderingLocations.slice(0, 4).map((location) => (
-          <li key={location.location} className="leading-none">
+          <li key={location.location._id.toString()} className="leading-none">
             <div className="flex items-center gap-1">
-              <span className="font-semibold">{location.location}</span> -{" "}
+              <span className="font-semibold">{location.location.name}</span> -{" "}
               {location.mostRecentVisit ? (
                 <Link
                   prefetch={false}

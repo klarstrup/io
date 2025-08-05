@@ -6,7 +6,7 @@ import { StealthButton } from "../../components/StealthButton";
 import { exercisesById } from "../../models/exercises";
 import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
-import { WorkoutEntryExerciseSetRow } from "./WorkoutEntry";
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 export function NextSets({
   user,
@@ -57,9 +57,9 @@ export function NextSets({
                     }
                   </Link>
                 </span>{" "}
-                <div className="whitespace-nowrap align-baseline">
+                <div className="align-baseline whitespace-nowrap">
                   {nextWorkingSets ? (
-                    <table className="inline-table w-auto max-w-0 text-sm align-baseline">
+                    <table className="inline-table w-auto max-w-0 align-baseline text-sm">
                       <tbody>
                         <WorkoutEntryExerciseSetRow
                           exercise={exercise}
