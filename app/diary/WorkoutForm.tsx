@@ -570,7 +570,7 @@ function SetsForm({
   const lastSet = watchedSets[watchedSets.length - 1];
 
   return (
-    <table className="w-full max-w-xs min-w-1/2 border-collapse border-spacing-0">
+    <table className="w-full max-w-sm min-w-1/2 border-collapse border-spacing-0">
       <thead>
         <tr>
           <th>
@@ -807,7 +807,7 @@ function InputsForm({
   const onChange = useEvent(() => updateSet());
 
   return exercise.inputs.map((input, index) => (
-    <td key={index}>
+    <td key={index} className={index ? "pl-1" : "pr-0"}>
       {input.type === InputType.Options && input.options ? (
         <select
           disabled={isDisabled}
@@ -835,7 +835,7 @@ function InputsForm({
               onChange,
             },
           )}
-          className="w-full"
+          className={input.type === InputType.Weightassist ? "w-3/5" : "w-full"}
         >
           {input.hidden_by_default ? <option value="">---</option> : null}
           {input.options.map((option) => (
@@ -853,6 +853,7 @@ function InputsForm({
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
               { onChange },
             )}
+            className="w-full"
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
             {frenchRounded.data.map(({ value, name }) => (
@@ -871,7 +872,10 @@ function InputsForm({
             type="number"
             onFocus={(e) => e.target.select()}
             step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
-            className="w-full border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+            className={
+              "border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500 " +
+              (input.type === InputType.Weightassist ? "w-2/5" : "w-full")
+            }
             onKeyDown={(e) => {
               const input = e.currentTarget;
               const formElements = input.form?.elements;
