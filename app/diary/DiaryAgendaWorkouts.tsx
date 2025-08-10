@@ -11,8 +11,10 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import Popover from "../../components/Popover";
+import UserStuffLocationsForm from "../../components/UserStuffLocationsForm";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { PRType } from "../../lib";
+import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import { isNextSetDue, type WorkoutData } from "../../models/workout";
 import {
@@ -21,7 +23,12 @@ import {
   type IWorkoutLocationsView,
 } from "../../models/workout.server";
 import { dataSourceGroups } from "../../sources/utils";
-import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
+import {
+  dateToString,
+  DEFAULT_TIMEZONE,
+  isNonEmptyArray,
+  omit,
+} from "../../utils";
 import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
@@ -29,12 +36,14 @@ import WorkoutEntry from "./WorkoutEntry";
 export function DiaryAgendaWorkouts({
   date,
   workouts,
+  locations,
   workoutsExerciseSetPRs,
   user,
   nextSets,
 }: {
   date: `${number}-${number}-${number}`;
   workouts: WithId<WorkoutData>[];
+  locations: WithId<LocationData>[];
   workoutsExerciseSetPRs?: Record<PRType, boolean>[][][];
   user: Session["user"];
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
@@ -55,6 +64,17 @@ export function DiaryAgendaWorkouts({
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.workouts}
+              />
+            </div>
+          </Popover>
+          <Popover control="📍">
+            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+              <UserStuffLocationsForm
+                user={user}
+                locations={locations.map((document) => ({
+                  ...omit(document, "_id"),
+                  id: document._id.toString(),
+                }))}
               />
             </div>
           </Popover>

@@ -5,6 +5,8 @@ import { max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../auth";
+import { LocationData } from "../../models/location";
+import { Locations } from "../../models/location.server";
 import { Users } from "../../models/user.server";
 import type { WorkoutData } from "../../models/workout";
 import {
@@ -15,9 +17,8 @@ import {
 } from "../../models/workout.server";
 import type { ExerciseSchedule } from "../../sources/fitocracy";
 import type { UserDataSource } from "../../sources/utils";
-import { arrayFromAsyncIterable } from "../../utils";
+import { arrayFromAsyncIterable, omit } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
-import { Locations } from "../../models/location.server";
 
 export async function upsertWorkout(
   workout:
@@ -127,6 +128,38 @@ export async function updateUserDataSources(
   );
 
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!.dataSources;
+}
+
+export async function updateLocation(
+  userId: string,
+  locationId: string,
+  location: LocationData,
+) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  await Locations.updateOne(
+    { _id: new ObjectId(locationId), userId },
+    {
+      $set: {
+        ...omit(location, "updatedAt", "createdAt"),
+        updatedAt: new Date(),
+      },
+    },
+  );
+
+  const newLocation = await Locations.findOne({
+    _id: new ObjectId(locationId),
+    userId,
+  });
+
+  if (!newLocation) {
+    throw new Error("idk");
+  }
+
+  await updateLocationCounts(userId);
+
+  return { ...omit(newLocation, "_id"), id: newLocation._id.toString() };
 }
 
 export async function mostRecentlyScrapedAt(userId: string) {
