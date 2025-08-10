@@ -278,7 +278,7 @@ export default async function WorkoutEntry({
                 {isClimbingExercise(exercise.id)
                   ? calculateClimbingStats(
                       workoutExercise.sets.map((set) => [
-                        locationName || undefined,
+                        location ?? undefined,
                         set,
                       ]),
                     )

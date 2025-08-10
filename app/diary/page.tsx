@@ -11,6 +11,7 @@ import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
 import { DiaryPoller } from "./DiaryPoller";
+import { Locations } from "../../models/location.server";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -30,10 +31,15 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 
   if (isAtLimit) return [null, null] as const;
 
+  const locations = (await Locations.find({ user: user.id }).toArray()).map(
+    ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
+  );
+
   return [
     eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map((weekDate) => (
       <DiaryEntryWeekWrapper
         user={user}
+        locations={locations}
         key={String(weekDate)}
         weekDate={weekDate}
       />
@@ -56,6 +62,10 @@ export default async function DiaryLayout() {
       </div>
     );
   }
+
+  const locations = (await Locations.find({ user: user.id }).toArray()).map(
+    ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
+  );
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
@@ -103,7 +113,7 @@ export default async function DiaryLayout() {
           <UserStuff />
         </Suspense>
         <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
-          <div className="max-h-[100vh] self-stretch border-black/25 bg-white portrait:h-[75vh] portrait:border-b-[0.5px] landscape:w-1/3 overflow-x-auto p-2">
+          <div className="max-h-[100vh] self-stretch overflow-x-auto border-black/25 bg-white p-2 portrait:h-[75vh] portrait:border-b-[0.5px] landscape:w-1/3">
             <DiaryAgenda date={dateToString(now)} user={user} />
           </div>
           <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[25vh]">
@@ -117,6 +127,7 @@ export default async function DiaryLayout() {
               <Suspense
                 fallback={weeks.map((weekDate) => (
                   <DiaryEntryWeek
+                    locations={locations}
                     key={String(weekDate)}
                     user={user}
                     weekDate={weekDate}
@@ -125,6 +136,7 @@ export default async function DiaryLayout() {
               >
                 {weeks.map((weekDate) => (
                   <DiaryEntryWeekWrapper
+                    locations={locations}
                     key={String(weekDate)}
                     user={user}
                     weekDate={weekDate}

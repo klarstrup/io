@@ -443,7 +443,7 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
     const workout = await MaterializedWorkoutsView.aggregate<{
       workedOutAt: Date;
       exercise: WorkoutExercise;
-      location: string;
+      location: LocationData;
     }>([
       {
         $match: {
@@ -454,6 +454,16 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
         },
       },
       { $sort: { workedOutAt: -1 } },
+      { $addFields: { locationId: { $toObjectId: "$locationId" } } },
+      {
+        $lookup: {
+          from: "locations",
+          localField: "locationId",
+          foreignField: "_id",
+          as: "location",
+        },
+      },
+      { $set: { location: { $first: "$location" } } },
       {
         $project: {
           _id: 0,
@@ -472,7 +482,10 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
       },
     ]).toArray();
 
-    const gradePredicate = (set: WorkoutExerciseSet & { location: string }) => {
+    const gradePredicate = (
+      set: WorkoutExerciseSet & { location: LocationData },
+    ) => {
+      console.log({ set });
       const inputGrade = getSetGrade(set, set.location);
       if (inputGrade) return inputGrade >= 6.67 && inputGrade < 6.83;
     };

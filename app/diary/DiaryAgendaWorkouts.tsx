@@ -60,7 +60,7 @@ export function DiaryAgendaWorkouts({
         <div className="flex items-center gap-2">
           <DiaryAgendaWorkoutsSettings />
           <Popover control="📡">
-            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+            <div className="absolute top-4 -left-6 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.workouts}
@@ -68,7 +68,7 @@ export function DiaryAgendaWorkouts({
             </div>
           </Popover>
           <Popover control="📍">
-            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+            <div className="absolute top-4 -left-12 z-30 max-h-[66vh] w-164 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffLocationsForm
                 user={user}
                 locations={locations.map((document) => ({

@@ -11,6 +11,7 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
+import type { LocationData } from "../../models/location";
 import {
   calculateClimbingStats,
   isClimbingExercise,
@@ -22,10 +23,12 @@ export function DiaryEntryWeek({
   user,
   weekDate,
   diaryEntries,
+  locations,
 }: {
   user: Session["user"];
   weekDate: Date;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
+  locations: (LocationData & { id: string })[];
 }) {
   const weekInterval = {
     start: startOfISOWeek(weekDate),
@@ -38,7 +41,12 @@ export function DiaryEntryWeek({
         diaryEntry?.workouts?.flatMap((w) =>
           w.exercises
             .filter((e) => isClimbingExercise(e.exerciseId))
-            .flatMap((e) => e.sets.map((set) => [w.location, set] as const)),
+            .flatMap((e) =>
+              e.sets.map(
+                (set) =>
+                  [locations.find((l) => l.id === w.locationId), set] as const,
+              ),
+            ),
         ) || [],
     ) || [];
 

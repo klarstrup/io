@@ -8,6 +8,7 @@ import {
   type AssistType,
   type Unit,
 } from "./exercises";
+import type { LocationData } from "./location";
 import type { getNextSets } from "./workout.server";
 
 export enum WorkoutSource {
@@ -108,29 +109,14 @@ export const isNextSetDue = (
     nextSet.scheduleEntry.frequency,
   );
 
-const bouldersColorGradeMap = {
-  green: 3,
-  yellow: 4.33,
-  orange: 5.33,
-  blue: 5.67,
-  purple: 6.33,
-  red: 6.67,
-  black: 7,
-} as const;
-const getGradeOfColorByLocation = (
-  color: string,
-  location: string | undefined,
-) => {
-  if (location?.startsWith("Boulders ")) {
-    if (color in bouldersColorGradeMap && bouldersColorGradeMap[color]) {
-      return bouldersColorGradeMap[color] as number;
-    }
-  }
-};
+const getGradeOfColorByLocation = (color: string, location: LocationData) =>
+  location.boulderCircuits?.find(
+    (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
+  )?.gradeEstimate;
 
 export function getSetGrade(
   set: WorkoutExerciseSet,
-  location: string | undefined,
+  location: LocationData | undefined,
 ) {
   const exercise = exercisesById[2001]!;
 
@@ -162,7 +148,7 @@ export function getSetGrade(
 
 export function calculateClimbingStats(
   setAndLocationPairs: (readonly [
-    location: string | undefined,
+    location: LocationData | undefined,
     set: WorkoutExerciseSet,
   ])[],
 ) {
