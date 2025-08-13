@@ -159,28 +159,21 @@ async function LeastRecentGym({
           name: locationName,
         });
 
-        const boulderingInThePast =
-          (location &&
-            (await MaterializedWorkoutsView.findOne(
-              {
-                userId: user.id,
-                "exercises.exerciseId": 2001,
-                workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
-                deletedAt: { $exists: false },
-                locationId: location._id.toString(),
-              },
-              { sort: { workedOutAt: -1 } },
-            ))) ||
-          (await MaterializedWorkoutsView.findOne(
-            {
-              userId: user.id,
-              "exercises.exerciseId": 2001,
-              workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
-              deletedAt: { $exists: false },
-              location: locationName,
-            },
-            { sort: { workedOutAt: -1 } },
-          ));
+        const boulderingInThePast = await MaterializedWorkoutsView.findOne(
+          {
+            userId: user.id,
+            "exercises.exerciseId": 2001,
+            workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
+            deletedAt: { $exists: false },
+            $or: location
+              ? [
+                  { locationId: location._id.toString() },
+                  { location: locationName },
+                ]
+              : [{ location: locationName }],
+          },
+          { sort: { workedOutAt: -1 } },
+        );
 
         return {
           location: location ?? {
