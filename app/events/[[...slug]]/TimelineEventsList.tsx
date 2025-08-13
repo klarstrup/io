@@ -1,7 +1,7 @@
 import { isFuture, isPast } from "date-fns";
 import { Fragment } from "react";
-import { EventEntry } from "../../lib";
-import { cotemporality } from "../../utils";
+import type { EventEntry } from "../../../lib";
+import { cotemporality } from "../../../utils";
 import { BalanceColumnsScript } from "./BalanceColumnsScript";
 import TimelineEventContent from "./TimelineEventContent";
 

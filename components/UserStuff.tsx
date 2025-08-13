@@ -56,7 +56,7 @@ export default async function UserStuff() {
           <Link prefetch={false} href="/diary">
             Diary
           </Link>
-          <Link prefetch={false} href="/">
+          <Link prefetch={false} href="/events/">
             Events
           </Link>
         </div>

@@ -2,20 +2,24 @@
 import { differenceInDays, isPast, subDays } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
-import ProblemByProblem from "../../components/ProblemByProblem";
+import ProblemByProblem from "../../../components/ProblemByProblem";
 import {
-  EventEntry,
+  type EventEntry,
   EventSource,
   SCORING_SOURCE,
   SCORING_SYSTEM,
-  Score,
-} from "../../lib";
-import { getIoClimbAlongCompetitionEvent } from "../../sources/climbalong";
-import { getSongkickEvents } from "../../sources/songkick";
-import { getSportsTimingEventResults } from "../../sources/sportstiming";
-import { getIoTopLoggerCompEvent } from "../../sources/toplogger";
-import { DEFAULT_TIMEZONE, isNonEmptyArray, seconds2time } from "../../utils";
-import { getIoOnsightCompetitionEvent } from "../../sources/onsight";
+  type Score,
+} from "../../../lib";
+import { getIoClimbAlongCompetitionEvent } from "../../../sources/climbalong";
+import { getIoOnsightCompetitionEvent } from "../../../sources/onsight";
+import { getSongkickEvents } from "../../../sources/songkick";
+import { getSportsTimingEventResults } from "../../../sources/sportstiming";
+import { getIoTopLoggerCompEvent } from "../../../sources/toplogger";
+import {
+  DEFAULT_TIMEZONE,
+  isNonEmptyArray,
+  seconds2time,
+} from "../../../utils";
 
 const pr = new Intl.PluralRules("en-DK", { type: "ordinal" });
 
@@ -208,7 +212,11 @@ export default async function TimelineEventContent({
         <Link
           prefetch={false}
           title={`${discipline} ${type}`}
-          href={disciplines?.includes(discipline) ? "/" : `/${discipline}`}
+          href={
+            disciplines?.includes(discipline)
+              ? "/events/"
+              : `/events/${discipline}`
+          }
           style={{ textDecoration: "none", cursor: "pointer" }}
         >
           {discipline === "metal"
