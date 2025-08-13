@@ -19,14 +19,14 @@ export async function DiaryAgendaWeather({
   user,
   date,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   date: `${number}-${number}-${number}`;
 }) {
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
 
   const now = TZDate.tz(timeZone);
   const tzDate = new TZDate(date, timeZone);
-  const userGeohash = user.dataSources?.find(
+  const userGeohash = user?.dataSources?.find(
     (source) => source.source === DataSource.Tomorrow,
   )?.config?.geohash;
   const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;

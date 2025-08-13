@@ -8,13 +8,15 @@ export function DiaryPoller({
   loadedAt,
   mostRecentlyScrapedAtAction,
 }: {
-  userId: string;
+  userId?: string;
   loadedAt: Date;
   mostRecentlyScrapedAtAction: (userId: string) => Promise<Date>;
 }) {
   const router = useRouter();
 
   useInterval(async () => {
+    if (!userId) return;
+
     const scrapedAt = await mostRecentlyScrapedAtAction(userId);
     const loadedAtDate = new Date(loadedAt);
 

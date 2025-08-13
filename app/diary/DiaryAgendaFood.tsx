@@ -14,19 +14,13 @@ export async function DiaryAgendaFood({
   date,
   user,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   date: `${number}-${number}-${number}`;
 }) {
-  if (
-    !user.dataSources?.some(
-      (dataSource) => dataSource.source === DataSource.MyFitnessPal,
-    )
-  )
-    return;
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
   const food: (MyFitnessPal.MongoFoodEntry & { _id: string })[] = [];
-  for (const dataSource of user.dataSources) {
+  for (const dataSource of user?.dataSources ?? []) {
     if (dataSource.source !== DataSource.MyFitnessPal) continue;
 
     for await (const foodEntry of MyFitnessPalFoodEntries.find({
@@ -55,7 +49,7 @@ export async function DiaryAgendaFood({
       legend={
         <div className="flex items-center gap-2">
           <Popover control="📡">
-            <div className="absolute left-4 top-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
                 user={user}
                 sourceOptions={dataSourceGroups.food}

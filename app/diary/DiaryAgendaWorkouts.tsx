@@ -42,13 +42,13 @@ export function DiaryAgendaWorkouts({
   nextSets,
 }: {
   date: `${number}-${number}-${number}`;
-  workouts: WithId<WorkoutData>[];
-  locations: WithId<LocationData>[];
+  workouts?: WithId<WorkoutData>[];
+  locations?: WithId<LocationData>[];
   workoutsExerciseSetPRs?: Record<PRType, boolean>[][][];
-  user: Session["user"];
-  nextSets: Awaited<ReturnType<typeof getNextSets>>;
+  user?: Session["user"];
+  nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
   const dueSets = nextSets?.filter((nextSet) => isNextSetDue(tzDate, nextSet));
@@ -71,7 +71,7 @@ export function DiaryAgendaWorkouts({
             <div className="absolute top-4 -left-12 z-30 max-h-[66vh] w-164 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffLocationsForm
                 user={user}
-                locations={locations.map((document) => ({
+                locations={locations?.map((document) => ({
                   ...omit(document, "_id"),
                   id: document._id.toString(),
                 }))}
@@ -118,15 +118,17 @@ export function DiaryAgendaWorkouts({
               </Link>
             </div>
           </div>
-          {isNonEmptyArray(dueSets) ? (
+          {user && isNonEmptyArray(dueSets) ? (
             <div>
               <b>Due Sets:</b>
               <NextSets user={user} date={date} nextSets={dueSets} />
             </div>
           ) : null}
-          <Suspense>
-            <LeastRecentGym user={user} date={date} />
-          </Suspense>
+          {user ? (
+            <Suspense>
+              <LeastRecentGym user={user} date={date} />
+            </Suspense>
+          ) : null}
         </div>
       )}
     </FieldSetY>

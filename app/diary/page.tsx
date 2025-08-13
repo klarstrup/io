@@ -22,7 +22,6 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
   "use server";
 
   const user = (await auth())?.user;
-  if (!user) throw new Error("User not found");
 
   const { start, end } = cursor;
   if (!start || !end) throw new Error("isoYearAndWeek not found");
@@ -31,9 +30,11 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 
   if (isAtLimit) return [null, null] as const;
 
-  const locations = (await Locations.find({ user: user.id }).toArray()).map(
-    ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
-  );
+  const locations =
+    user &&
+    (await Locations.find({ user: user.id }).toArray()).map(
+      ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
+    );
 
   return [
     eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map((weekDate) => (
@@ -51,23 +52,13 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 export default async function DiaryLayout() {
   const user = (await auth())?.user;
 
-  if (!user) {
-    return (
-      <div>
-        <span>Hello, stranger!</span>
-        <p>
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/api/auth/signin">Sign in</a>
-        </p>
-      </div>
+  const locations =
+    user &&
+    (await Locations.find({ user: user.id }).toArray()).map(
+      ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
     );
-  }
 
-  const locations = (await Locations.find({ user: user.id }).toArray()).map(
-    ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
-  );
-
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
 
   const start = endOfISOWeek(now);
@@ -80,7 +71,7 @@ export default async function DiaryLayout() {
       <DiaryPoller
         mostRecentlyScrapedAtAction={mostRecentlyScrapedAt}
         loadedAt={now}
-        userId={user.id}
+        userId={user?.id}
       />
       <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
         <Suspense

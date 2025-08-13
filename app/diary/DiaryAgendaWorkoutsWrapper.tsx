@@ -17,49 +17,54 @@ export async function DiaryAgendaWorkoutsWrapper({
   user,
 }: {
   date: `${number}-${number}-${number}`;
-  user: Session["user"];
+  user?: Session["user"];
 }) {
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
-  const [nextSets, workouts, locations] = await Promise.all([
-    getNextSets({ user, to: endOfDay(tzDate) }),
-    MaterializedWorkoutsView.find(
-      {
-        userId: user.id,
-        workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
-        deletedAt: { $exists: false },
-      },
-      { sort: { workedOutAt: -1 } },
-    ).toArray(),
-    Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray(),
-  ]);
+  const [nextSets, workouts, locations] = user
+    ? await Promise.all([
+        getNextSets({ user, to: endOfDay(tzDate) }),
+        MaterializedWorkoutsView.find(
+          {
+            userId: user.id,
+            workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
+            deletedAt: { $exists: false },
+          },
+          { sort: { workedOutAt: -1 } },
+        ).toArray(),
+        Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray(),
+      ])
+    : [];
 
-  const workoutsExerciseSetPRs = await Promise.all(
-    workouts.map((workout) =>
-      Promise.all(
-        workout.exercises.map(async ({ exerciseId, sets }) => {
-          if (isClimbingExercise(exerciseId)) {
-            return Array.from({ length: sets.length }, () => noPR);
-          }
+  const workoutsExerciseSetPRs =
+    user &&
+    workouts &&
+    (await Promise.all(
+      workouts.map((workout) =>
+        Promise.all(
+          workout.exercises.map(async ({ exerciseId, sets }) => {
+            if (isClimbingExercise(exerciseId)) {
+              return Array.from({ length: sets.length }, () => noPR);
+            }
 
-          const precedingWorkouts = await MaterializedWorkoutsView.find(
-            {
-              userId: user.id,
-              "exercises.exerciseId": exerciseId,
-              workedOutAt: { $lt: workout.workedOutAt },
-              deletedAt: { $exists: false },
-            },
-            { sort: { workedOutAt: -1 } },
-          ).toArray();
+            const precedingWorkouts = await MaterializedWorkoutsView.find(
+              {
+                userId: user.id,
+                "exercises.exerciseId": exerciseId,
+                workedOutAt: { $lt: workout.workedOutAt },
+                deletedAt: { $exists: false },
+              },
+              { sort: { workedOutAt: -1 } },
+            ).toArray();
 
-          return sets.map((set) =>
-            getIsSetPR(workout, precedingWorkouts, exerciseId, set),
-          );
-        }),
+            return sets.map((set) =>
+              getIsSetPR(workout, precedingWorkouts, exerciseId, set),
+            );
+          }),
+        ),
       ),
-    ),
-  );
+    ));
 
   return (
     <DiaryAgendaWorkouts

@@ -25,10 +25,10 @@ export function DiaryEntryWeek({
   diaryEntries,
   locations,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   weekDate: Date;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
-  locations: (LocationData & { id: string })[];
+  locations?: (LocationData & { id: string })[];
 }) {
   const weekInterval = {
     start: startOfISOWeek(weekDate),
@@ -36,19 +36,24 @@ export function DiaryEntryWeek({
   };
 
   const weekClimbingSets =
-    diaryEntries?.flatMap(
-      ([, diaryEntry]) =>
-        diaryEntry?.workouts?.flatMap((w) =>
-          w.exercises
-            .filter((e) => isClimbingExercise(e.exerciseId))
-            .flatMap((e) =>
-              e.sets.map(
-                (set) =>
-                  [locations.find((l) => l.id === w.locationId), set] as const,
+    (locations &&
+      diaryEntries?.flatMap(
+        ([, diaryEntry]) =>
+          diaryEntry?.workouts?.flatMap((w) =>
+            w.exercises
+              .filter((e) => isClimbingExercise(e.exerciseId))
+              .flatMap((e) =>
+                e.sets.map(
+                  (set) =>
+                    [
+                      locations.find((l) => l.id === w.locationId),
+                      set,
+                    ] as const,
+                ),
               ),
-            ),
-        ) || [],
-    ) || [];
+          ) || [],
+      )) ||
+    [];
 
   return (
     <div

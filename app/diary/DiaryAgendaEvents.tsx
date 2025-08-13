@@ -31,10 +31,10 @@ export async function DiaryAgendaEvents({
   onlyGivenDay,
 }: {
   date: `${number}-${number}-${number}`;
-  user: Session["user"];
+  user?: Session["user"];
   onlyGivenDay?: boolean;
 }) {
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
   const now = TZDate.tz(timeZone);
   const todayStr = dateToString(now);
@@ -44,10 +44,9 @@ export async function DiaryAgendaEvents({
     start: startOfDay(tzDate),
     end: onlyGivenDay ? endOfDay(tzDate) : addDays(endOfDay(tzDate), 7),
   };
-  const calendarEvents = await getUserIcalEventsBetween(
-    user.id,
-    fetchingInterval,
-  );
+  const calendarEvents = user
+    ? await getUserIcalEventsBetween(user.id, fetchingInterval)
+    : [];
 
   return (
     <FieldSetY

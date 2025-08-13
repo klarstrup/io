@@ -9,14 +9,16 @@ export async function DiaryEntryWeekWrapper({
   weekDate,
   locations,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   weekDate: Date;
-  locations: (LocationData & { id: string })[];
+  locations?: (LocationData & { id: string })[];
 }) {
-  const diaryEntries = await getDiaryEntriesShallow({
-    from: startOfISOWeek(weekDate),
-    to: endOfISOWeek(weekDate),
-  });
+  const diaryEntries =
+    user &&
+    (await getDiaryEntriesShallow({
+      from: startOfISOWeek(weekDate),
+      to: endOfISOWeek(weekDate),
+    }));
   return (
     <DiaryEntryWeek
       user={user}

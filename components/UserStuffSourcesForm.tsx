@@ -448,7 +448,7 @@ export default function UserStuffSourcesForm({
   user,
   sourceOptions,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   sourceOptions: DataSource[];
 }) {
   const defaultValues = useMemo(
@@ -483,6 +483,11 @@ export default function UserStuffSourcesForm({
         <form
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={handleSubmit(async (data) => {
+            if (!user) {
+              // Log-in gate here
+              return;
+            }
+
             const sources = data.dataSources;
             console.info({ sources });
             const newSources = await updateUserDataSources(user.id, sources);

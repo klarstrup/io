@@ -14,7 +14,7 @@ function UserStuffLocationForm({
   user,
   location,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   location: LocationData & { id: string };
 }) {
   const defaultValues = useMemo(() => omit(location, "id"), [location]);
@@ -45,6 +45,11 @@ function UserStuffLocationForm({
     <form
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onSubmit={handleSubmit(async (data) => {
+        if(!user){
+          // login gate here
+          return;
+        }
+
         const newLocation = await updateLocation(user.id, location.id, data);
 
         reset(newLocation ? newLocation : defaultValues);
@@ -288,13 +293,13 @@ export default function UserStuffLocationsForm({
   user,
   locations,
 }: {
-  user: Session["user"];
-  locations: (LocationData & { id: string })[];
+  user?: Session["user"];
+  locations?: (LocationData & { id: string })[];
 }) {
   return (
     <FieldSetX legend="Locations" className="w-full">
       <div className="flex flex-col gap-1">
-        {locations.map((location) => (
+        {locations?.map((location) => (
           <UserStuffLocationForm
             key={location.id}
             user={user}

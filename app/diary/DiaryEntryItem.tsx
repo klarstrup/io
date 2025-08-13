@@ -19,7 +19,7 @@ export function DiaryEntryItem({
   date,
   diaryEntry,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   date: `${number}-${number}-${number}`;
   diaryEntry?: DiaryEntry;
 }) {
@@ -34,9 +34,9 @@ export function DiaryEntryItem({
     0,
   );
 
-  const now = TZDate.tz(user.timeZone || DEFAULT_TIMEZONE);
+  const now = TZDate.tz(user?.timeZone || DEFAULT_TIMEZONE);
   const tzDate = new TZDate(date).withTimeZone(
-    user.timeZone || DEFAULT_TIMEZONE,
+    user?.timeZone || DEFAULT_TIMEZONE,
   );
   const isToday = date === dateToString(now);
   const isFuture = now < tzDate;
