@@ -18,17 +18,17 @@ export default async function DiaryNewWorkoutModal(props: {
   const { date } = await props.params;
   const user = (await auth())?.user;
 
-  if (!user) return null;
-
-  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const isToday = date === dateToString(TZDate.tz(timeZone));
 
   const tzDate = new TZDate(date, timeZone);
-  const [locations, exercisesStats, nextSets] = await Promise.all([
-    getAllWorkoutLocations(user),
-    getAllWorkoutExercises(user),
-    getNextSets({ user, to: startOfDay(tzDate) }),
-  ]);
+  const [locations, exercisesStats, nextSets] = user
+    ? await Promise.all([
+        getAllWorkoutLocations(user),
+        getAllWorkoutExercises(user),
+        getNextSets({ user, to: startOfDay(tzDate) }),
+      ])
+    : [];
 
   const dismissTo = isToday ? "/diary" : (`/diary/${date}` as const);
 

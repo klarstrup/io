@@ -24,23 +24,24 @@ export default async function DiaryExercise({
 }) {
   const exercise = exercisesById[exerciseId]!;
   const user = (await auth())?.user;
-  if (!user) return null;
 
-  let allWorkoutsOfExercise = (
-    await MaterializedWorkoutsView.find(
-      {
-        userId: user.id,
-        "exercises.exerciseId": exercise.id,
-        deletedAt: { $exists: false },
-      },
-      { sort: { workedOutAt: -1 } },
-    ).toArray()
-  ).map((workout) => ({
-    ...workout,
-    exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
-  }));
+  let allWorkoutsOfExercise = user
+    ? (
+        await MaterializedWorkoutsView.find(
+          {
+            userId: user.id,
+            "exercises.exerciseId": exercise.id,
+            deletedAt: { $exists: false },
+          },
+          { sort: { workedOutAt: -1 } },
+        ).toArray()
+      ).map((workout) => ({
+        ...workout,
+        exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
+      }))
+    : [];
 
-  if (mergeWorkouts) {
+  if (user && mergeWorkouts) {
     allWorkoutsOfExercise = [
       allWorkoutsOfExercise.reduce(
         (acc: WithId<WorkoutData>, workout) => {

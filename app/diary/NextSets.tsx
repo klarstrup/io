@@ -14,12 +14,12 @@ export function NextSets({
   nextSets,
   onAddExercise,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   date: `${number}-${number}-${number}`;
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
   onAddExercise?: (exerciseId: number) => void;
 }) {
-  const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
+  const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
   return (
     <ol className="flex flex-col gap-1">
       {nextSets.map(
@@ -79,7 +79,7 @@ export function NextSets({
                       >
                         {formatDistanceStrict(
                           startOfDay(workedOutAt, {
-                            in: tz(user.timeZone || DEFAULT_TIMEZONE),
+                            in: tz(user?.timeZone || DEFAULT_TIMEZONE),
                           }),
                           startOfDay(tzDate),
                           { addSuffix: true, roundingMethod: "floor" },

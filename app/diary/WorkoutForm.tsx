@@ -82,18 +82,18 @@ export function WorkoutForm<R extends string>({
   exercisesStats,
   nextSets,
 }: {
-  user: Session["user"];
+  user?: Session["user"];
   workout?: WorkoutData & { _id?: string };
   date: `${number}-${number}-${number}`;
   dismissTo: Route<R>;
-  locations: (Omit<IWorkoutLocationsView, "location"> & {
+  locations?: (Omit<IWorkoutLocationsView, "location"> & {
     location: LocationData & { _id: string };
   })[];
-  exercisesStats: IWorkoutExercisesView[];
+  exercisesStats?: IWorkoutExercisesView[];
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const router = useRouter();
-  const tzDate = new TZDate(date, user.timeZone || DEFAULT_TIMEZONE);
+  const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
 
   const {
     handleSubmit,
@@ -197,6 +197,8 @@ export function WorkoutForm<R extends string>({
       <form
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(async (data) => {
+          if (!user) return;
+
           const newWorkout: Omit<WorkoutData, "id"> & {
             _id?: string;
             id?: string;
@@ -294,7 +296,7 @@ export function WorkoutForm<R extends string>({
                   ),
                 }}
                 options={locations
-                  .sort((a, b) =>
+                  ?.sort((a, b) =>
                     compareDesc(a.mostRecentVisit ?? 0, b.mostRecentVisit ?? 0),
                   )
                   .map(({ location, visitCount }) => ({
@@ -306,7 +308,7 @@ export function WorkoutForm<R extends string>({
                   field.value
                     ? {
                         label:
-                          locations.find((l) => l.location._id === field.value)
+                          locations?.find((l) => l.location._id === field.value)
                             ?.location.name ?? field.value,
                         value: field.value,
                       }
@@ -452,7 +454,7 @@ export function WorkoutForm<R extends string>({
             options={exercises
               .map((exercise) => ({
                 ...exercise,
-                stats: exercisesStats.find(
+                stats: exercisesStats?.find(
                   (stat) => stat.exerciseId === exercise.id,
                 ),
               }))
