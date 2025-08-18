@@ -334,6 +334,7 @@ type PP = NonNullable<
 >[number] & {
   angle?: number;
   circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
+  estGrade?: number | null;
 };
 
 export default function ProblemByProblem({
@@ -358,8 +359,10 @@ export default function ProblemByProblem({
     .sort((a, b) => Number(b.zone) - Number(a.zone))
     .sort((a, b) => Number(b.repeat) - Number(a.repeat))
     .sort((a, b) => Number(b.top) - Number(a.top))
-    .sort((a, b) => Number(b.flash) - Number(a.flash))
-    .sort((a, b) => Number(b.grade) - Number(a.grade))
+    .sort((a, b) => Number(b.flash) - Number(a.flash)) 
+    .sort(
+      (a, b) => Number(b.grade || b.estGrade) - Number(a.grade || a.estGrade),
+    )
     .sort((a, b) =>
       numericalCircuitNames
         ? (Number(b.circuit?.name) || 0) - (Number(a.circuit?.name) || 0)

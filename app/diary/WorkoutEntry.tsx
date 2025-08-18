@@ -93,9 +93,9 @@ export function WorkoutEntryExercise({
           );
 
           return {
-            grade:
-              getSetGrade(set, location) || set.inputs[0]!.value || undefined,
+            grade: set.inputs[0]!.value || undefined,
             circuit,
+            estGrade: getSetGrade(set, location),
             // hold color
             color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
             flash: sendType === SendType.Flash,
