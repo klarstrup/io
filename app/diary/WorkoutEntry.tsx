@@ -10,9 +10,11 @@ import {
   exercisesById,
   SendType,
 } from "../../models/exercises";
+import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import {
   calculateClimbingStats,
+  getSetGrade,
   isClimbingExercise,
   type WorkoutData,
   type WorkoutExerciseSet,
@@ -46,12 +48,14 @@ const quantile = (arr: number[], q: number) => {
 const averageGrade = false;
 
 export function WorkoutEntryExercise({
+  location,
   exercise,
   sets,
   exerciseIndex,
   exerciseSetPRs,
   onlyPRs,
 }: {
+  location: LocationData | null;
   exercise: ExerciseData;
   sets: WorkoutExerciseSet[];
   exerciseIndex: number;
@@ -83,8 +87,16 @@ export function WorkoutEntryExercise({
         groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value > -1)}
         problemByProblem={sets.map((set, i) => {
           const sendType = Number(set.inputs[2]!.value) as SendType;
+
+          const circuit = location?.boulderCircuits?.find(
+            (c) => c.id === set.meta?.boulderCircuitId,
+          );
+
           return {
-            grade: set.inputs[0]!.value,
+            grade:
+              getSetGrade(set, location) || set.inputs[0]!.value || undefined,
+            circuit,
+            // hold color
             color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
             flash: sendType === SendType.Flash,
             top: sendType === SendType.Top,
@@ -290,6 +302,7 @@ export default async function WorkoutEntry({
                 </div>
               ) : null}
               <WorkoutEntryExercise
+                location={location}
                 exercise={exercise}
                 sets={workoutExercise.sets}
                 exerciseIndex={exerciseIndex}

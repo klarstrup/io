@@ -6,6 +6,7 @@ import {
   exercisesById,
   SendType,
   type AssistType,
+  type ExerciseData,
   type Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
@@ -55,6 +56,7 @@ export interface WorkoutExerciseSet {
   updatedAt?: Date;
   inputs: WorkoutExerciseSetInput[];
   comment?: string;
+  meta?: Record<string, unknown>;
 }
 
 export interface WorkoutExerciseSetInput {
@@ -109,30 +111,68 @@ export const isNextSetDue = (
     nextSet.scheduleEntry.frequency,
   );
 
-const getGradeOfColorByLocation = (color: string, location: LocationData) =>
+export const getCircuitByLocationAndSetColor = (
+  exercise: ExerciseData,
+  set: Omit<WorkoutExerciseSet, "inputs"> & {
+    meta?: Record<string, unknown>;
+    inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
+      value: number | string;
+    })[];
+  },
+  location: LocationData,
+) => {
+  let boulderingSetColor: string | undefined;
+  if (exercise.id === 2001) {
+    const colorOptions = exercise.inputs[1]?.options;
+    if (colorOptions) {
+      const colorInput = set?.inputs[1];
+      if (colorInput) {
+        const color = colorOptions[Number(colorInput.value)]?.value;
+        if (color) {
+          boulderingSetColor = color;
+        }
+      }
+    }
+  }
+
+  const boulderingCircuit =
+    boulderingSetColor && location
+      ? getCircuitByLocationAndColor(boulderingSetColor, location)
+      : undefined;
+
+  return boulderingCircuit;
+};
+
+export const getCircuitByLocationAndColor = (
+  color: string,
+  location: LocationData,
+) =>
   location.boulderCircuits?.find(
     (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
-  )?.gradeEstimate;
+  );
+
+export const getGradeOfColorByLocation = (
+  color: string,
+  location: LocationData,
+) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
 export function getSetGrade(
   set: WorkoutExerciseSet,
-  location: LocationData | undefined,
+  location: LocationData | undefined | null,
 ) {
   const exercise = exercisesById[2001]!;
-
-  const sendType = Number(set.inputs[2]!.value) as SendType;
-  if (
-    sendType !== SendType.Flash &&
-    sendType !== SendType.Top &&
-    sendType !== SendType.Repeat
-  ) {
-    return null;
-  }
 
   const inputGrade = set.inputs[0]!.value;
   if (inputGrade) return inputGrade;
 
   if (!location) return null;
+
+  const boulderingCircuit =
+    typeof set.meta?.boulderCircuitId === "string" &&
+    location.boulderCircuits?.find((c) => c.id === set.meta?.boulderCircuitId);
+  if (boulderingCircuit && boulderingCircuit.gradeEstimate) {
+    return boulderingCircuit.gradeEstimate;
+  }
 
   const colorOptions = exercise.inputs[1]?.options;
   if (!colorOptions) return null;
@@ -173,12 +213,18 @@ export function calculateClimbingStats(
 
   return (
     <small className="block text-[10px]">
-      <span className="inline-block">PC: {problemCount},</span>{" "}
-      <span className="inline-block">GS: {gradeSum.toFixed(0)},</span>{" "}
-      <span className="inline-block">
-        T5A: {new Grade(gradeTop5Average).nameFloor}
-        <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>.
-      </span>{" "}
+      {problemCount ? (
+        <span className="inline-block">PC: {problemCount}</span>
+      ) : null}
+      {gradeSum ? (
+        <span className="inline-block">, GS: {gradeSum.toFixed(0)}</span>
+      ) : null}
+      {gradeTop5Average ? (
+        <span className="inline-block">
+          , T5A: {new Grade(gradeTop5Average).nameFloor}
+          <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>.
+        </span>
+      ) : null}
     </small>
   );
 }

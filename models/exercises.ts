@@ -57103,7 +57103,7 @@ export const exercises = [
         type: InputType.Grade,
       },
       {
-        display_name: "Color",
+        display_name: "Hold Color",
         hidden_by_default: true,
         id: 1,
         input_ordinal: 2,
@@ -57206,7 +57206,7 @@ export const exercises = [
         type: InputType.Grade,
       },
       {
-        display_name: "Color",
+        display_name: "Hold Color",
         hidden_by_default: true,
         id: 1,
         input_ordinal: 2,
@@ -57277,7 +57277,7 @@ export const exercises = [
         type: InputType.Grade,
       },
       {
-        display_name: "Color",
+        display_name: "Hold Color",
         hidden_by_default: true,
         id: 1,
         input_ordinal: 2,
@@ -57469,7 +57469,7 @@ export const exercises = [
         type: InputType.Grade,
       },
       {
-        display_name: "Color",
+        display_name: "Hold Color",
         hidden_by_default: true,
         id: 1,
         input_ordinal: 2,

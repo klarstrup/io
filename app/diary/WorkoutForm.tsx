@@ -2,7 +2,12 @@
 "use client";
 
 import { TZDate } from "@date-fns/tz";
-import { compareDesc, formatDistanceToNowStrict, isValid } from "date-fns";
+import {
+  compareDesc,
+  formatDistanceToNowStrict,
+  isPast,
+  isValid,
+} from "date-fns";
 import { Route } from "next";
 import type { Session } from "next-auth";
 import Link from "next/link";
@@ -25,6 +30,7 @@ import {
 } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import {
+  getCircuitByLocationAndSetColor,
   isNextSetDue,
   WorkoutSource,
   type WorkoutData,
@@ -66,6 +72,7 @@ interface WorkoutDataFormData
   locationId?: string;
   exercises: (Omit<WorkoutExercise, "sets"> & {
     sets: (Omit<WorkoutExerciseSet, "inputs"> & {
+      meta?: Record<string, unknown>;
       inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
         value: number | string;
       })[];
@@ -184,6 +191,10 @@ export function WorkoutForm<R extends string>({
   });
 
   const locationInstanceId = useId();
+
+  const location = locations?.find(
+    (location) => watch("locationId") === location.location._id,
+  );
 
   return (
     <div
@@ -434,6 +445,7 @@ export function WorkoutForm<R extends string>({
                   parentIndex={index}
                   exercise={exercise}
                   isDisabled={isSubmitting}
+                  location={location?.location}
                 />
               </FieldSetX>
             );
@@ -527,6 +539,7 @@ function SetsForm({
   register,
   exercise,
   isDisabled = false,
+  location,
 }: {
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
@@ -534,6 +547,7 @@ function SetsForm({
   parentIndex: number;
   exercise: ExerciseData;
   isDisabled?: boolean;
+  location?: LocationData & { _id: string };
 }) {
   const {
     fields: sets,
@@ -571,8 +585,19 @@ function SetsForm({
 
   const lastSet = watchedSets[watchedSets.length - 1];
 
+  const boulderCircuits =
+    exercise.id === 2001
+      ? location?.boulderCircuits
+          ?.filter((c) => !c.deletedAt || !isPast(c.deletedAt))
+          .sort((a, b) =>
+            a.gradeEstimate && b.gradeEstimate
+              ? a.gradeEstimate - b.gradeEstimate
+              : a.name.localeCompare(b.name),
+          )
+      : undefined;
+
   return (
-    <table className="w-full max-w-sm min-w-1/2 border-collapse border-spacing-0">
+    <table className="w-full max-w-md min-w-1/2 border-collapse border-spacing-0">
       <thead>
         <tr>
           <th>
@@ -602,62 +627,110 @@ function SetsForm({
               ➕
             </StealthButton>
           </th>
-          {exercise.inputs.map((input, inputIndex) => (
-            <th key={inputIndex} style={{ fontSize: "0.5em" }}>
-              {input.display_name}{" "}
-              <small>
-                {input.allowed_units && input.allowed_units.length > 1 ? (
-                  <select
-                    disabled={isDisabled}
-                    value={sets[0]?.inputs[inputIndex]?.unit}
-                    className="flex-1 [font-size:inherit]"
-                    onChange={(event) => {
-                      const unit = event.target.value as Unit;
-                      sets.forEach((set, setIndex) => {
-                        update(setIndex, {
-                          ...set,
-                          updatedAt: new Date(),
-                          inputs: set.inputs.map((setInput, setInputIndex) =>
-                            setInputIndex === inputIndex
-                              ? { ...setInput, unit }
-                              : setInput,
-                          ),
+          {boulderCircuits?.length ? (
+            <th style={{ fontSize: "0.5em" }}>Circuit</th>
+          ) : null}
+          {exercise.inputs.map((input, inputIndex) =>
+            boulderCircuits?.length && input.type === InputType.Grade ? null : (
+              <th key={inputIndex} style={{ fontSize: "0.5em" }}>
+                {input.display_name}{" "}
+                <small>
+                  {input.allowed_units && input.allowed_units.length > 1 ? (
+                    <select
+                      disabled={isDisabled}
+                      value={sets[0]?.inputs[inputIndex]?.unit}
+                      className="flex-1 [font-size:inherit]"
+                      onChange={(event) => {
+                        const unit = event.target.value as Unit;
+                        sets.forEach((set, setIndex) => {
+                          update(setIndex, {
+                            ...set,
+                            updatedAt: new Date(),
+                            inputs: set.inputs.map((setInput, setInputIndex) =>
+                              setInputIndex === inputIndex
+                                ? { ...setInput, unit }
+                                : setInput,
+                            ),
+                          });
                         });
-                      });
-                    }}
-                  >
-                    {[...input.allowed_units]
-                      .sort(
-                        (a, b) =>
-                          (a.name === input.metric_unit ? -1 : 1) -
-                          (b.name === input.metric_unit ? -1 : 1),
+                      }}
+                    >
+                      {[...input.allowed_units]
+                        .sort(
+                          (a, b) =>
+                            (a.name === input.metric_unit ? -1 : 1) -
+                            (b.name === input.metric_unit ? -1 : 1),
+                        )
+                        .map((unit) => (
+                          <option key={unit.name} value={unit.name}>
+                            {unit.name}
+                          </option>
+                        ))}
+                    </select>
+                  ) : input.metric_unit?.toLowerCase() !==
+                      input.display_name.toLowerCase() &&
+                    input.type !== InputType.Options &&
+                    input.type !== InputType.Grade ? (
+                    <>
+                      (
+                      <span className="w-auto flex-1">{input.metric_unit}</span>
                       )
-                      .map((unit) => (
-                        <option key={unit.name} value={unit.name}>
-                          {unit.name}
-                        </option>
-                      ))}
-                  </select>
-                ) : input.metric_unit?.toLowerCase() !==
-                    input.display_name.toLowerCase() &&
-                  input.type !== InputType.Options &&
-                  input.type !== InputType.Grade ? (
-                  <>
-                    (<span className="w-auto flex-1">{input.metric_unit}</span>)
-                  </>
-                ) : null}
-              </small>
-            </th>
-          ))}
+                    </>
+                  ) : null}
+                </small>
+              </th>
+            ),
+          )}
         </tr>
       </thead>
       <tbody>
         {sets.map((set, index) => (
           <Fragment key={set.id}>
-            <tr>
-              <td className="pr-0.5 text-sm" width="1%">
+            <tr className={index % 2 ? "bg-gray-200" : "bg-white"}>
+              <td className="pr-0.5 text-xs" width="1%">
                 {index + 1}.
               </td>
+              {boulderCircuits?.length ? (
+                <td>
+                  <select
+                    disabled={isDisabled}
+                    {...register(
+                      `exercises.${parentIndex}.sets.${index}.meta.boulderCircuitId`,
+                      {
+                        setValueAs: (v) =>
+                          typeof v === "string" && v ? v : undefined,
+                      },
+                    )}
+                    className="w-full"
+                  >
+                    <option value="">
+                      ---{" "}
+                      {location &&
+                      getCircuitByLocationAndSetColor(
+                        exercise,
+                        watchedSets[index]!,
+                        location,
+                      )
+                        ? `("${
+                            getCircuitByLocationAndSetColor(
+                              exercise,
+                              watchedSets[index]!,
+                              location,
+                            )?.name
+                          }" assumed)`
+                        : null}
+                    </option>
+                    {boulderCircuits.map((c) => (
+                      <option value={c.id} key={c.id}>
+                        {c.name}{" "}
+                        {/*c.gradeEstimate
+                          ? `(${new Grade(c.gradeEstimate).toString()})`
+                          : null*/}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+              ) : null}
               <InputsForm
                 control={control}
                 register={register}
@@ -665,6 +738,7 @@ function SetsForm({
                 setIndex={index}
                 exercise={exercise}
                 isDisabled={isDisabled}
+                locationHasBoulderingCircuits={Boolean(boulderCircuits?.length)}
               />
               <td width="1%">
                 <StealthButton
@@ -738,8 +812,14 @@ function SetsForm({
               </td>
             </tr>
             {set.comment !== undefined ? (
-              <tr>
-                <td colSpan={exercise.inputs.length + 4}>
+              <tr className={index % 2 ? "bg-gray-200" : "bg-white"}>
+                <td
+                  colSpan={
+                    exercise.inputs.length +
+                    4 +
+                    (boulderCircuits?.length ? 1 : 0)
+                  }
+                >
                   <textarea
                     disabled={isDisabled}
                     {...register(
@@ -792,6 +872,7 @@ function InputsForm({
   register,
   exercise,
   isDisabled = false,
+  locationHasBoulderingCircuits = false,
 }: {
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
@@ -799,6 +880,7 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
   isDisabled?: boolean;
+  locationHasBoulderingCircuits?: boolean;
 }) {
   const { fields: sets, update } = useFieldArray({
     control,
@@ -808,47 +890,10 @@ function InputsForm({
     update(setIndex, { ...sets[setIndex]!, updatedAt: new Date() });
   const onChange = useEvent(() => updateSet());
 
-  return exercise.inputs.map((input, index) => (
-    <td key={index} className={index ? "pl-1" : "pr-0"}>
-      {input.type === InputType.Options && input.options ? (
-        <select
-          disabled={isDisabled}
-          {...register(
-            `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-            { onChange },
-          )}
-          className="w-full"
-        >
-          {input.hidden_by_default ? <option value="">---</option> : null}
-          {input.options.map((option, i) => (
-            <option key={option.value} value={i}>
-              {option.value}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      {input.type === InputType.Weightassist && input.options ? (
-        <select
-          disabled={isDisabled}
-          {...register(
-            `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
-            {
-              setValueAs: (v) => (typeof v === "string" && v ? v : undefined),
-              onChange,
-            },
-          )}
-          className={input.type === InputType.Weightassist ? "w-3/5" : "w-full"}
-        >
-          {input.hidden_by_default ? <option value="">---</option> : null}
-          {input.options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.value}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      {input.type !== InputType.Options ? (
-        input.type === InputType.Grade ? (
+  return exercise.inputs.map((input, index) =>
+    locationHasBoulderingCircuits && input.type === InputType.Grade ? null : (
+      <td key={index} className={index ? "pl-1" : "pr-0"}>
+        {input.type === InputType.Options && input.options ? (
           <select
             disabled={isDisabled}
             {...register(
@@ -858,52 +903,115 @@ function InputsForm({
             className="w-full"
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
-            {frenchRounded.data.map(({ value, name }) => (
-              <option key={value} value={value}>
-                {name}
+            {input.options.map((option, i) => (
+              <option key={option.value} value={i}>
+                {input.display_name === "Hold Color"
+                  ? option.value === "mint"
+                    ? "🩵"
+                    : option.value === "yellow"
+                      ? "💛"
+                      : option.value === "green"
+                        ? "💚"
+                        : option.value === "red"
+                          ? "❤️"
+                          : option.value === "purple"
+                            ? "💜"
+                            : option.value === "orange"
+                              ? "🧡"
+                              : option.value === "white"
+                                ? "🤍"
+                                : option.value === "pink"
+                                  ? "🩷"
+                                  : option.value === "blue"
+                                    ? "💙"
+                                    : option.value === "black"
+                                      ? "🖤"
+                                      : option.value
+                  : option.value}
               </option>
             ))}
           </select>
-        ) : (
-          <input
+        ) : null}
+        {input.type === InputType.Weightassist && input.options ? (
+          <select
             disabled={isDisabled}
             {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-              { onChange },
+              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
+              {
+                setValueAs: (v) => (typeof v === "string" && v ? v : undefined),
+                onChange,
+              },
             )}
-            type="number"
-            onFocus={(e) => e.target.select()}
-            step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
             className={
-              "border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500 " +
-              (input.type === InputType.Weightassist ? "w-2/5" : "w-full")
+              input.type === InputType.Weightassist ? "w-3/5" : "w-full"
             }
-            onKeyDown={(e) => {
-              const input = e.currentTarget;
-              const formElements = input.form?.elements;
-              if (!formElements) return;
-              if (e.key == "Enter") {
-                const followingFormElements = Array.from(formElements).slice(
-                  Array.from(formElements).indexOf(input) + 1,
-                );
+          >
+            {input.hidden_by_default ? <option value="">---</option> : null}
+            {input.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.value}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {input.type !== InputType.Options ? (
+          input.type === InputType.Grade ? (
+            <select
+              disabled={isDisabled}
+              {...register(
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+                { onChange },
+              )}
+              className="w-full"
+            >
+              {input.hidden_by_default ? <option value="">---</option> : null}
+              {frenchRounded.data.map(({ value, name }) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              disabled={isDisabled}
+              {...register(
+                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+                { onChange },
+              )}
+              type="number"
+              onFocus={(e) => e.target.select()}
+              step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
+              className={
+                "border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500 " +
+                (input.type === InputType.Weightassist ? "w-2/5" : "w-full")
+              }
+              onKeyDown={(e) => {
+                const input = e.currentTarget;
+                const formElements = input.form?.elements;
+                if (!formElements) return;
+                if (e.key == "Enter") {
+                  const followingFormElements = Array.from(formElements).slice(
+                    Array.from(formElements).indexOf(input) + 1,
+                  );
 
-                for (const element of followingFormElements) {
-                  if (
-                    element instanceof HTMLInputElement &&
-                    element.type === "number"
-                  ) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                  for (const element of followingFormElements) {
+                    if (
+                      element instanceof HTMLInputElement &&
+                      element.type === "number"
+                    ) {
+                      e.preventDefault();
+                      e.stopPropagation();
 
-                    element.focus();
-                    break;
+                      element.focus();
+                      break;
+                    }
                   }
                 }
-              }
-            }}
-          />
-        )
-      ) : null}
-    </td>
-  ));
+              }}
+            />
+          )
+        ) : null}
+      </td>
+    ),
+  );
 }

@@ -388,7 +388,7 @@ export const getAllWorkoutLocations = async (user: Session["user"]) =>
   (await WorkoutLocationsView.find({ userId: user.id }).toArray()).map(
     (location) => ({
       ...location,
-      _id: location._id.toString(),
+      _id: JSON.stringify(location._id),
       location: { ...location.location, _id: location.location._id.toString() },
     }),
   );

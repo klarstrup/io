@@ -1,14 +1,16 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
+import type { LocationData } from "../models/location";
 import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
+import { getIoOnsightCompetitionEvent } from "../sources/onsight";
 import { type getIoTopLoggerCompEvent } from "../sources/toplogger";
 import { countBy } from "../utils";
-import { getIoOnsightCompetitionEvent } from "../sources/onsight";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
   grade?: string;
   angle?: number;
+  circuitName?: string;
 }
 
 const GradeText = ({ grade }: { grade: string }) => (
@@ -43,7 +45,13 @@ const AngleText = ({ angle }: { angle: number }) => (
   </text>
 );
 
-const FlashBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
+const FlashBadge = ({
+  title,
+  grade,
+  angle,
+  circuitName,
+  ...props
+}: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -66,10 +74,20 @@ const FlashBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       ⚡️
     </text>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
-    {grade ? <GradeText grade={grade} /> : null}
+    {circuitName ? (
+      <GradeText grade={circuitName} />
+    ) : grade ? (
+      <GradeText grade={grade} />
+    ) : null}
   </svg>
 );
-const TopBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
+const TopBadge = ({
+  title,
+  grade,
+  angle,
+  circuitName,
+  ...props
+}: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -82,10 +100,20 @@ const TopBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       strokeWidth="8"
     ></rect>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
-    {grade ? <GradeText grade={grade} /> : null}
+    {circuitName ? (
+      <GradeText grade={circuitName} />
+    ) : grade ? (
+      <GradeText grade={grade} />
+    ) : null}
   </svg>
 );
-const ZoneBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
+const ZoneBadge = ({
+  title,
+  grade,
+  angle,
+  circuitName,
+  ...props
+}: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -104,10 +132,20 @@ const ZoneBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       height="60"
     ></rect>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
-    {grade ? <GradeText grade={grade} /> : null}
+    {circuitName ? (
+      <GradeText grade={circuitName} />
+    ) : grade ? (
+      <GradeText grade={grade} />
+    ) : null}
   </svg>
 );
-const AttemptBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
+const AttemptBadge = ({
+  title,
+  grade,
+  angle,
+  circuitName,
+  ...props
+}: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -120,10 +158,20 @@ const AttemptBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       strokeWidth="8"
     ></rect>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
-    {grade ? <GradeText grade={grade} /> : null}
+    {circuitName ? (
+      <GradeText grade={circuitName} />
+    ) : grade ? (
+      <GradeText grade={grade} />
+    ) : null}
   </svg>
 );
-const RepeatBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
+const RepeatBadge = ({
+  title,
+  grade,
+  angle,
+  circuitName,
+  ...props
+}: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
     <title>{title}</title>
     <rect
@@ -147,13 +195,18 @@ const RepeatBadge = ({ title, grade, angle, ...props }: ProblemBadgeProps) => (
       🔁
     </text>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
-    {grade ? <GradeText grade={grade} /> : null}
+    {circuitName ? (
+      <GradeText grade={circuitName} />
+    ) : grade ? (
+      <GradeText grade={grade} />
+    ) : null}
   </svg>
 );
 const NoAttemptBadge = ({
   title,
   grade,
   angle,
+  circuitName,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -169,7 +222,11 @@ const NoAttemptBadge = ({
       strokeWidth="8"
     ></rect>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
-    {grade ? <GradeText grade={grade} /> : null}
+    {circuitName ? (
+      <GradeText grade={circuitName} />
+    ) : grade ? (
+      <GradeText grade={grade} />
+    ) : null}
   </svg>
 );
 
@@ -181,8 +238,9 @@ function ProblemBadge({
   attempt,
   repeat,
   grade,
-  color,
+  color: inColor,
   angle,
+  circuit,
 }: {
   number?: string | number;
   flash: boolean;
@@ -193,6 +251,7 @@ function ProblemBadge({
   grade?: number;
   color?: string;
   angle?: number;
+  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
 }) {
   const Badge = flash
     ? FlashBadge
@@ -205,6 +264,11 @@ function ProblemBadge({
           : repeat
             ? RepeatBadge
             : NoAttemptBadge;
+
+  let color = inColor;
+  if (circuit?.labelColor) {
+    color = circuit.labelColor;
+  }
 
   return (
     <Badge
@@ -229,6 +293,16 @@ function ProblemBadge({
       }}
       key={number}
       grade={grade ? new Grade(grade).name : undefined}
+      circuitName={
+        circuit?.name
+          ? (circuit.holdColor &&
+              circuit?.name.toLowerCase().trim() === circuit.holdColor) ||
+            (circuit.labelColor &&
+              circuit?.name.toLowerCase().trim() === circuit.labelColor)
+            ? " "
+            : circuit?.name
+          : undefined
+      }
       angle={angle}
       title={`${number}${
         number && grade ? `(${new Grade(grade).name})` : ""
@@ -259,21 +333,8 @@ type PP = NonNullable<
   >["problemByProblem"]
 >[number] & {
   angle?: number;
+  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
 };
-
-// TODO: different gym color order per gym
-const colorsByGrade = [
-  "mint",
-  "green",
-  "yellow",
-  "orange",
-  "blue",
-  "purple",
-  "red",
-  "black",
-  "pink",
-  "white",
-];
 
 export default function ProblemByProblem({
   problemByProblem,
@@ -288,22 +349,22 @@ export default function ProblemByProblem({
 }) {
   if (!problemByProblem?.length) return null;
 
+  const numericalCircuitNames = problemByProblem.every((p) =>
+    Number(p.circuit?.name),
+  );
+
   const sortedProblems = Array.from(problemByProblem)
     .sort((a, b) => Number(b.attempt) - Number(a.attempt))
     .sort((a, b) => Number(b.zone) - Number(a.zone))
     .sort((a, b) => Number(b.repeat) - Number(a.repeat))
     .sort((a, b) => Number(b.top) - Number(a.top))
     .sort((a, b) => Number(b.flash) - Number(a.flash))
+    .sort((a, b) => Number(b.grade) - Number(a.grade))
     .sort((a, b) =>
-      a.color &&
-      b.color &&
-      colorsByGrade.includes(a.color) &&
-      colorsByGrade.includes(b.color) &&
-      !groupByGradeAndFlash
-        ? colorsByGrade.indexOf(b.color) - colorsByGrade.indexOf(a.color)
+      numericalCircuitNames
+        ? (Number(b.circuit?.name) || 0) - (Number(a.circuit?.name) || 0)
         : 0,
-    )
-    .sort((a, b) => Number(b.grade) - Number(a.grade));
+    );
 
   // @ts-expect-error - disabled for now
   if ((groupByGradeAndFlash || groupByColorAndFlash) && !"nope") {
