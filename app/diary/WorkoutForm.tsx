@@ -111,6 +111,7 @@ export function WorkoutForm<R extends string>({
     getValues,
     formState: { isDirty, isSubmitting },
   } = useForm<WorkoutDataFormData>({
+    mode: "onChange",
     defaultValues: workout
       ? {
           ...workout,
@@ -856,7 +857,7 @@ function TimeSince({ date }: { date: Date }) {
   }, 1000);
 
   return (
-    <small>
+    <small className="italic">
       Last updated{" "}
       <span className="tabular-nums">
         {formatDistanceToNowStrict(date, {
