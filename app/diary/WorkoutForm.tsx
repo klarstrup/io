@@ -631,7 +631,9 @@ function SetsForm({
             <th style={{ fontSize: "0.5em" }}>Circuit</th>
           ) : null}
           {exercise.inputs.map((input, inputIndex) =>
-            boulderCircuits?.length && input.type === InputType.Grade ? null : (
+            boulderCircuits?.length &&
+            input.type === InputType.Grade &&
+            Math.random() > 1 ? null : (
               <th key={inputIndex} style={{ fontSize: "0.5em" }}>
                 {input.display_name}{" "}
                 <small>
@@ -891,7 +893,9 @@ function InputsForm({
   const onChange = useEvent(() => updateSet());
 
   return exercise.inputs.map((input, index) =>
-    locationHasBoulderingCircuits && input.type === InputType.Grade ? null : (
+    locationHasBoulderingCircuits &&
+    input.type === InputType.Grade &&
+    Math.random() > 1 ? null : (
       <td key={index} className={index ? "pl-1" : "pr-0"}>
         {input.type === InputType.Options && input.options ? (
           <select
