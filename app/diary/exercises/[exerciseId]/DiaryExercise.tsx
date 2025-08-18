@@ -102,7 +102,9 @@ export default async function DiaryExercise({
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{exercise.name}</h1>
+      <h1 className="text-2xl font-semibold">
+        <span className="text-gray-300">Exercise:</span> {exercise.name}
+      </h1>
       <p className="text-gray-500">
         {exercise.instructions.map((instruction, i) => (
           <Fragment key={i}>
@@ -142,7 +144,7 @@ export default async function DiaryExercise({
         style={{
           display: "grid",
           gap: "8px 4px",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
         {allWorkoutsOfExercise

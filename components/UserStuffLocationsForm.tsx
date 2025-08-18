@@ -1,6 +1,7 @@
 "use client";
 import { isPast } from "date-fns";
 import { Session } from "next-auth";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { v4 } from "uuid";
@@ -45,7 +46,7 @@ function UserStuffLocationForm({
     <form
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onSubmit={handleSubmit(async (data) => {
-        if(!user){
+        if (!user) {
           // login gate here
           return;
         }
@@ -79,7 +80,13 @@ function UserStuffLocationForm({
             </div>
           ) : (
             <>
-              {watch("name")}{" "}
+              <Link
+                href={`/diary/locations/${location.id}`}
+                className="font-bold"
+                style={{ color: "#edab00" }}
+              >
+                {watch("name")}
+              </Link>{" "}
               <button type="button" onClick={() => setIsEditingName(true)}>
                 ✍️
               </button>

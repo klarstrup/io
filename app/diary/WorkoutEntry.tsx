@@ -161,12 +161,14 @@ export function WorkoutEntryExercise({
 export default async function WorkoutEntry({
   showDate,
   showExerciseName = true,
+  showLocation = true,
   workout,
   exerciseSetPRs,
   onlyPRs,
 }: {
   showDate?: boolean;
   showExerciseName?: boolean;
+  showLocation?: boolean;
   workout: WorkoutData;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
@@ -194,14 +196,34 @@ export default async function WorkoutEntry({
               >
                 <small>{workoutDateStr}</small>
               </Link>
-              {locationName ? <small> - {locationName}</small> : null}
+              {showLocation && locationName ? (
+                <small>
+                  {" "}
+                  -{" "}
+                  <Link
+                    href={`/diary/locations/${location?._id.toString()}`}
+                    className="font-bold"
+                    style={{ color: "#edab00" }}
+                  >
+                    {locationName}
+                  </Link>
+                </small>
+              ) : null}
             </div>
-          ) : locationName ? (
+          ) : showLocation && locationName ? (
             <div>
-              <small>{locationName}</small>
+              <small>
+                <Link
+                  href={`/diary/locations/${location?._id.toString()}`}
+                  className="font-bold"
+                  style={{ color: "#edab00" }}
+                >
+                  {locationName}
+                </Link>
+              </small>
             </div>
           ) : null}
-          {showExerciseName ? (
+          {showExerciseName && showLocation ? (
             <div>
               {workout.source === WorkoutSource.Self || !workout.source ? (
                 <>
