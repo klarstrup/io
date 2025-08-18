@@ -74,7 +74,7 @@ class ApolloError extends Error {
     this.message = [
       errorMessage || generateErrorMessage(this),
       operationName,
-      variables,
+      JSON.stringify(variables),
     ]
       .filter(Boolean)
       .join("\n");
