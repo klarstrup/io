@@ -222,7 +222,10 @@ export function calculateClimbingStats(
       {gradeTop5Average ? (
         <span className="inline-block">
           , T5A: {new Grade(gradeTop5Average).nameFloor}
-          <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>.
+          {new Grade(gradeTop5Average).subGradePercent ? (
+            <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
+          ) : null}
+          .
         </span>
       ) : null}
     </small>
