@@ -13,24 +13,33 @@ export function NextSets({
   date,
   nextSets,
   onAddExercise,
+  showDetails = true,
 }: {
   user?: Session["user"];
   date: `${number}-${number}-${number}`;
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
   onAddExercise?: (exerciseId: number) => void;
+  showDetails?: boolean;
 }) {
   const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
   return (
-    <ol className="flex flex-col gap-1">
+    <ol
+      className={
+        "flex gap-1 " + (showDetails ? "flex-col" : "flex-row flex-wrap")
+      }
+    >
       {nextSets.map(
-        ({
-          exerciseId,
-          successful,
-          scheduleEntry,
-          nextWorkingSets,
-          nextWorkingSetInputs,
-          workedOutAt,
-        }) => {
+        (
+          {
+            exerciseId,
+            successful,
+            scheduleEntry,
+            nextWorkingSets,
+            nextWorkingSetInputs,
+            workedOutAt,
+          },
+          i,
+        ) => {
           const exercise = exercisesById[exerciseId]!;
 
           return (
@@ -56,41 +65,45 @@ export function NextSets({
                         .sort((a, b) => a.length - b.length)[0]!
                     }
                   </Link>
-                </span>{" "}
-                <div className="align-baseline whitespace-nowrap">
-                  {nextWorkingSets ? (
-                    <table className="inline-table w-auto max-w-0 align-baseline text-sm">
-                      <tbody>
-                        <WorkoutEntryExerciseSetRow
-                          exercise={exercise}
-                          set={{ inputs: nextWorkingSetInputs }}
-                          repeatCount={nextWorkingSets}
-                        />
-                      </tbody>
-                    </table>
-                  ) : null}{" "}
-                  <span className="text-xs">
-                    Last set{" "}
-                    {workedOutAt ? (
-                      <Link
-                        prefetch={false}
-                        href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
-                        style={{ color: "#edab00" }}
-                      >
-                        {formatDistanceStrict(
-                          startOfDay(workedOutAt, {
-                            in: tz(user?.timeZone || DEFAULT_TIMEZONE),
-                          }),
-                          startOfDay(tzDate),
-                          { addSuffix: true, roundingMethod: "floor" },
-                        )}
-                      </Link>
-                    ) : (
-                      "never"
-                    )}{" "}
-                    {successful === false ? " (failed)" : null}
-                  </span>
-                </div>
+                </span>
+                {showDetails ? (
+                  <div className="align-baseline whitespace-nowrap">
+                    {nextWorkingSets ? (
+                      <table className="inline-table w-auto max-w-0 align-baseline text-sm">
+                        <tbody>
+                          <WorkoutEntryExerciseSetRow
+                            exercise={exercise}
+                            set={{ inputs: nextWorkingSetInputs }}
+                            repeatCount={nextWorkingSets}
+                          />
+                        </tbody>
+                      </table>
+                    ) : null}{" "}
+                    <span className="text-xs">
+                      Last set{" "}
+                      {workedOutAt ? (
+                        <Link
+                          prefetch={false}
+                          href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
+                          style={{ color: "#edab00" }}
+                        >
+                          {formatDistanceStrict(
+                            startOfDay(workedOutAt, {
+                              in: tz(user?.timeZone || DEFAULT_TIMEZONE),
+                            }),
+                            startOfDay(tzDate),
+                            { addSuffix: true, roundingMethod: "floor" },
+                          )}
+                        </Link>
+                      ) : (
+                        "never"
+                      )}{" "}
+                      {successful === false ? " (failed)" : null}
+                    </span>
+                  </div>
+                ) : i < nextSets.length - 1 ? (
+                  ","
+                ) : null}
               </div>
             </li>
           );

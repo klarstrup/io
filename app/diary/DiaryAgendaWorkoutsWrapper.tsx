@@ -5,7 +5,6 @@ import { Locations } from "../../models/location.server";
 import { isClimbingExercise } from "../../models/workout";
 import {
   getIsSetPR,
-  getNextSets,
   MaterializedWorkoutsView,
   noPR,
 } from "../../models/workout.server";
@@ -22,9 +21,8 @@ export async function DiaryAgendaWorkoutsWrapper({
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
-  const [nextSets, workouts, locations] = user
+  const [workouts, locations] = user
     ? await Promise.all([
-        getNextSets({ user, to: endOfDay(tzDate) }),
         MaterializedWorkoutsView.find(
           {
             userId: user.id,
@@ -73,7 +71,6 @@ export async function DiaryAgendaWorkoutsWrapper({
       workouts={workouts}
       locations={locations}
       user={user}
-      nextSets={nextSets}
     />
   );
 }

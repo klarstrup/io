@@ -16,10 +16,9 @@ import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { PRType } from "../../lib";
 import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
-import { isNextSetDue, type WorkoutData } from "../../models/workout";
+import type { WorkoutData } from "../../models/workout";
 import {
   MaterializedWorkoutsView,
-  type getNextSets,
   type IWorkoutLocationsView,
 } from "../../models/workout.server";
 import { dataSourceGroups } from "../../sources/utils";
@@ -30,7 +29,6 @@ import {
   omit,
 } from "../../utils";
 import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
-import { NextSets } from "./NextSets";
 import WorkoutEntry from "./WorkoutEntry";
 
 export function DiaryAgendaWorkouts({
@@ -39,20 +37,13 @@ export function DiaryAgendaWorkouts({
   locations,
   workoutsExerciseSetPRs,
   user,
-  nextSets,
 }: {
   date: `${number}-${number}-${number}`;
   workouts?: WithId<WorkoutData>[];
   locations?: WithId<LocationData>[];
   workoutsExerciseSetPRs?: Record<PRType, boolean>[][][];
   user?: Session["user"];
-  nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-
-  const tzDate = new TZDate(date, timeZone);
-  const dueSets = nextSets?.filter((nextSet) => isNextSetDue(tzDate, nextSet));
-
   return (
     <FieldSetY
       className="grid flex-1 gap-x-2 gap-y-1"
@@ -118,12 +109,6 @@ export function DiaryAgendaWorkouts({
               </Link>
             </div>
           </div>
-          {user && isNonEmptyArray(dueSets) ? (
-            <div>
-              <b>Due Sets:</b>
-              <NextSets user={user} date={date} nextSets={dueSets} />
-            </div>
-          ) : null}
           {user ? (
             <Suspense>
               <LeastRecentGym user={user} date={date} />

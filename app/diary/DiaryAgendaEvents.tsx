@@ -15,6 +15,8 @@ import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 import Popover from "../../components/Popover";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { MongoVEventWithVCalendar } from "../../lib";
+import { isNextSetDue } from "../../models/workout";
+import { getNextSets } from "../../models/workout.server";
 import { getUserIcalEventsBetween } from "../../sources/ical";
 import { dataSourceGroups } from "../../sources/utils";
 import {
@@ -24,6 +26,7 @@ import {
   roundToNearestDay,
   uniqueBy,
 } from "../../utils";
+import { NextSets } from "./NextSets";
 
 export async function DiaryAgendaEvents({
   date,
@@ -48,6 +51,85 @@ export async function DiaryAgendaEvents({
     ? await getUserIcalEventsBetween(user.id, fetchingInterval)
     : [];
 
+  const eventsByDate: Record<
+    string,
+    (
+      | MongoVEventWithVCalendar
+      | Awaited<ReturnType<typeof getNextSets>>[number]
+    )[]
+  > = { [date]: [] };
+
+  for (const date of eachDayOfInterval(fetchingInterval)) {
+    const dueSets = user
+      ? (
+          await getNextSets({
+            user,
+            to: endOfDay(date, { in: tz(user.timeZone || DEFAULT_TIMEZONE) }),
+          })
+        ).filter((nextSet) => isNextSetDue(date, nextSet))
+      : [];
+    const calName = dateToString(date);
+
+    if (!eventsByDate[calName]) eventsByDate[calName] = [];
+    for (const dueSet of dueSets) {
+      if (
+        Object.values(eventsByDate)
+          .flat()
+          .some(
+            (e) =>
+              "scheduleEntry" in e &&
+              JSON.stringify(e.scheduleEntry) ===
+                JSON.stringify(dueSet.scheduleEntry),
+          )
+      ) {
+        continue;
+      }
+      eventsByDate[calName].push(dueSet);
+    }
+  }
+
+  for (const event of calendarEvents) {
+    for (const date of eachDayOfInterval(
+      {
+        start: max([
+          event.datetype === "date"
+            ? roundToNearestDay(event.start, {
+                in: tz(event.start.tz || DEFAULT_TIMEZONE),
+              })
+            : event.start,
+          fetchingInterval.start,
+        ]),
+        end: min([
+          event.datetype === "date"
+            ? roundToNearestDay(event.end, {
+                in: tz(event.end.tz || DEFAULT_TIMEZONE),
+              })
+            : event.end,
+          fetchingInterval.end,
+        ]),
+      },
+      { in: tz(timeZone) },
+    ).filter(
+      (date) =>
+        isAfter(event.end, isToday ? now : tzDate) &&
+        differenceInHours(event.end, date) > 2,
+    )) {
+      const calName = dateToString(date);
+
+      if (!eventsByDate[calName]) eventsByDate[calName] = [];
+      if (
+        !(
+          differenceInHours(event.end, event.start) < 24 &&
+          Object.values(eventsByDate).some((events) =>
+            events.some((e) => "uid" in e && e.uid === event.uid),
+          )
+        )
+      ) {
+        eventsByDate[calName].push(event);
+      }
+    }
+  }
+
   return (
     <FieldSetY
       className="min-w-[250px] flex-1"
@@ -65,53 +147,7 @@ export async function DiaryAgendaEvents({
         </div>
       }
     >
-      {Object.entries(
-        calendarEvents.reduce(
-          (memo: Record<string, MongoVEventWithVCalendar[]>, event) => {
-            for (const date of eachDayOfInterval(
-              {
-                start: max([
-                  event.datetype === "date"
-                    ? roundToNearestDay(event.start, {
-                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
-                      })
-                    : event.start,
-                  fetchingInterval.start,
-                ]),
-                end: min([
-                  event.datetype === "date"
-                    ? roundToNearestDay(event.end, {
-                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                      })
-                    : event.end,
-                  fetchingInterval.end,
-                ]),
-              },
-              { in: tz(timeZone) },
-            ).filter(
-              (date) =>
-                isAfter(event.end, isToday ? now : tzDate) &&
-                differenceInHours(event.end, date) > 2,
-            )) {
-              const calName = dateToString(date);
-
-              if (!memo[calName]) memo[calName] = [];
-              if (
-                !(
-                  differenceInHours(event.end, event.start) < 24 &&
-                  Object.values(memo).some((events) =>
-                    events.some((e) => e.uid === event.uid),
-                  )
-                )
-              ) {
-                memo[calName].push(event);
-              }
-            }
-            return memo;
-          },
-          { [date]: [] },
-        ),
-      )
+      {Object.entries(eventsByDate)
         .slice(0, 4)
         .map(([dayName, events], i) => (
           <FieldSetX
@@ -129,59 +165,90 @@ export async function DiaryAgendaEvents({
           >
             <ul>
               {isNonEmptyArray(events) ? (
-                uniqueBy(events, ({ uid }) => uid).map((event) => {
-                  const duration = intervalToDuration(event);
-
-                  const days = eachDayOfInterval(event, {
-                    in: tz(timeZone),
-                  }).filter((date) => differenceInHours(event.end, date) > 2);
-                  const dayNo =
-                    days.findIndex((date) => dateToString(date) === dayName) +
-                    1;
-                  const isLastDay = dayNo === days.length;
-
-                  return (
-                    <li key={event.uid} className="flex gap-2">
-                      <div className="text-center">
-                        <div className="leading-snug font-semibold tabular-nums">
-                          {event.datetype === "date-time" && dayNo === 1 ? (
-                            event.start.toLocaleTimeString("en-DK", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              timeZone,
-                            })
-                          ) : (
-                            <>Day {dayNo}</>
-                          )}{" "}
+                uniqueBy(events, (event) =>
+                  "uid" in event
+                    ? event.uid
+                    : JSON.stringify(event.scheduleEntry),
+                ).map((event, i, dateEvents) => {
+                  if ("scheduleEntry" in event && i == 0) {
+                    return (
+                      <li key={event.exerciseId}>
+                        <div className="flex items-center gap-1 text-[0.73em] leading-none">
+                          <span>Workout:</span>{" "}
+                          <NextSets
+                            user={user}
+                            date={date}
+                            nextSets={dateEvents.filter(
+                              (e) => "scheduleEntry" in e,
+                            )}
+                            showDetails={false}
+                          />
                         </div>
-                        <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                          {dayNo === 1 ? (
-                            <>
-                              {duration.days ? `${duration.days}d` : null}
-                              {duration.hours ? `${duration.hours}h` : null}
-                              {duration.minutes ? `${duration.minutes}m` : null}
-                              {duration.seconds ? `${duration.seconds}s` : null}
-                            </>
-                          ) : isLastDay ? (
-                            <>
-                              -
-                              {event.end.toLocaleTimeString("en-DK", {
+                        <hr className="mt-1 mb-0.5 border-gray-200" />
+                      </li>
+                    );
+                  }
+
+                  if ("uid" in event) {
+                    const duration = intervalToDuration(event);
+
+                    const days = eachDayOfInterval(event, {
+                      in: tz(timeZone),
+                    }).filter((date) => differenceInHours(event.end, date) > 2);
+                    const dayNo =
+                      days.findIndex((date) => dateToString(date) === dayName) +
+                      1;
+                    const isLastDay = dayNo === days.length;
+
+                    return (
+                      <li key={event.uid} className="flex gap-2">
+                        <div className="text-center">
+                          <div className="leading-snug font-semibold tabular-nums">
+                            {event.datetype === "date-time" && dayNo === 1 ? (
+                              event.start.toLocaleTimeString("en-DK", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                                 timeZone,
-                              })}
-                            </>
-                          ) : null}
+                              })
+                            ) : (
+                              <>Day {dayNo}</>
+                            )}{" "}
+                          </div>
+                          <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+                            {dayNo === 1 ? (
+                              <>
+                                {duration.days ? `${duration.days}d` : null}
+                                {duration.hours ? `${duration.hours}h` : null}
+                                {duration.minutes
+                                  ? `${duration.minutes}m`
+                                  : null}
+                                {duration.seconds
+                                  ? `${duration.seconds}s`
+                                  : null}
+                              </>
+                            ) : isLastDay ? (
+                              <>
+                                -
+                                {event.end.toLocaleTimeString("en-DK", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  timeZone,
+                                })}
+                              </>
+                            ) : null}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="leading-snug">{event.summary}</div>
-                        <div className="text-[0.666rem] leading-tight italic">
-                          {event.location || <>&nbsp;</>}
+                        <div className="flex-1">
+                          <div className="leading-snug">{event.summary}</div>
+                          <div className="text-[0.666rem] leading-tight italic">
+                            {event.location || <>&nbsp;</>}
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  );
+                      </li>
+                    );
+                  }
+
+                  return null;
                 })
               ) : (
                 <li>
