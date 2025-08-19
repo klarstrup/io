@@ -21,15 +21,14 @@ export const GET = () =>
       if (dataSource.source !== DataSource.Onsight) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ token }) {
+        const headers = {
+          "x-appery-database-id": "562e0e3be4b081edd3eb975d",
+          "x-appery-session-token": token,
+        };
         const competitions = (await (
           await fetch(
             "https://api.appery.io/rest/1/db/collections/Competition",
-            {
-              headers: {
-                "x-appery-database-id": "562e0e3be4b081edd3eb975d",
-                "x-appery-session-token": token,
-              },
-            },
+            { headers },
           )
         ).json()) as Onsight.Competition[];
 
@@ -65,12 +64,7 @@ export const GET = () =>
             }),
           );
           const competitionScores = (await (
-            await fetch(competitionScoreURL, {
-              headers: {
-                "x-appery-database-id": "562e0e3be4b081edd3eb975d",
-                "x-appery-session-token": token,
-              },
-            })
+            await fetch(competitionScoreURL, { headers })
           ).json()) as Onsight.CompetitionScore[];
 
           for (const competitionScore of competitionScores) {
