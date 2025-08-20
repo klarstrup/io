@@ -24,5 +24,11 @@ module.exports = {
     "@typescript-eslint/no-namespace": "off",
     "react-compiler/react-compiler": "error",
   },
-  ignorePatterns: [".eslintrc.js", "next.config.js"],
+  ignorePatterns: [
+    ".eslintrc.js",
+    "next.config.js",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "next-env.d.ts",
+  ],
 };
