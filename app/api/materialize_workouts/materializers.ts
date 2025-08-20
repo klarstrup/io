@@ -56,7 +56,7 @@ export async function* materializeToploggerWorkouts(
         as: "climb",
       },
     },
-    { $set: { climb: { $arrayElemAt: ["$climb", 0] } } },
+    { $set: { climb: { $first: "$climb" } } },
     {
       $set: {
         holdColorId: {
@@ -76,7 +76,7 @@ export async function* materializeToploggerWorkouts(
         as: "holdColor",
       },
     },
-    { $set: { holdColor: { $arrayElemAt: ["$holdColor", 0] } } },
+    { $set: { holdColor: { $first: "$holdColor" } } },
     {
       $set: {
         gymId: {
@@ -96,7 +96,7 @@ export async function* materializeToploggerWorkouts(
         as: "gym",
       },
     },
-    { $set: { gym: { $arrayElemAt: ["$gym", 0] } } },
+    { $set: { gym: { $first: "$gym" } } },
     {
       $group: {
         _id: {
@@ -116,19 +116,19 @@ export async function* materializeToploggerWorkouts(
             {
               $dateToString: {
                 format: "%Y-%m-%d",
-                date: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
+                date: { $first: "$climbLogs.climbedAtDate" },
               },
             },
           ],
         },
         _id: 0,
         userId: { $literal: user.id },
-        createdAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
-        updatedAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
-        workedOutAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
+        createdAt: { $first: "$climbLogs.climbedAtDate" },
+        updatedAt: { $first: "$climbLogs.climbedAtDate" },
+        workedOutAt: { $first: "$climbLogs.climbedAtDate" },
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.TopLogger },
-        location: { $arrayElemAt: ["$climbLogs.gym.name", 0] },
+        location: { $first: "$climbLogs.gym.name" },
         exercises: [
           {
             exerciseId: 2001,
@@ -559,15 +559,15 @@ export async function* materializeMoonBoardWorkouts(
           $concat: [
             { $literal: WorkoutSource.MoonBoard },
             ":",
-            { $toString: { $arrayElemAt: ["$entries.User.Id", 0] } },
+            { $toString: { $first: "$entries.User.Id" } },
             ":",
             "$_id",
           ],
         },
         userId: { $literal: user.id },
-        createdAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
-        updatedAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
-        workedOutAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
+        createdAt: { $first: "$entries.DateInserted" },
+        updatedAt: { $first: "$entries.DateInserted" },
+        workedOutAt: { $first: "$entries.DateInserted" },
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.MoonBoard },
         exercises: [
@@ -783,9 +783,7 @@ export async function* materializeOnsightWorkouts(
         exercises: [
           {
             exerciseId: 2001,
-            displayName: {
-              $arrayElemAt: [{ $split: ["$Competition_name", "/"] }, 0],
-            },
+            displayName: { $first: { $split: ["$Competition_name", "/"] } },
             sets: {
               $map: {
                 input: "$Ascents",
