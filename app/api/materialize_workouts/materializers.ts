@@ -59,6 +59,36 @@ export async function* materializeToploggerWorkouts(
     { $set: { climb: { $first: "$climb" } } },
     {
       $set: {
+        climbGroupClimbId: {
+          $replaceOne: {
+            input: { $first: "$climb.climbGroupClimbs.__ref" },
+            find: "ClimbGroupClimb:",
+            replacement: "",
+          },
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "toplogger_graphql",
+        localField: "climbGroupClimbId",
+        foreignField: "id",
+        as: "climbGroupClimb",
+      },
+    },
+    { $set: { climbGroupClimb: { $first: "$climbGroupClimb" } } },
+    { $set: { climbGroupId: "$climbGroupClimb.climbGroupId" } },
+    {
+      $lookup: {
+        from: "toplogger_graphql",
+        localField: "climbGroupId",
+        foreignField: "id",
+        as: "climbGroup",
+      },
+    },
+    { $set: { climbGroup: { $first: "$climbGroup" } } },
+    {
+      $set: {
         holdColorId: {
           $replaceOne: {
             input: "$climb.holdColorId",
@@ -137,6 +167,9 @@ export async function* materializeToploggerWorkouts(
                 input: "$climbLogs",
                 as: "climbLog",
                 in: {
+                  meta: {
+                    boulderCircuitId: "$$climbLog.climbGroupClimb.climbGroupId",
+                  },
                   inputs: [
                     // Grade
                     {
@@ -922,14 +955,8 @@ export async function* materializeClimbalongWorkouts(
     {
       $lookup: {
         from: "climbalong_performances",
-        let: { athleteId: "$athleteId" },
-        pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ["$athleteId", "$$athleteId"] },
-            },
-          },
-        ],
+        localField: "athleteId",
+        foreignField: "athleteId",
         as: "performances",
       },
     },
