@@ -29,9 +29,9 @@ import {
 
 export const Workouts = proxyCollection<Omit<WorkoutData, "id">>("workouts");
 
-export const MaterializedWorkoutsView = proxyCollection<WorkoutData>(
-  "materialized_workouts_view",
-);
+export const MaterializedWorkoutsView = proxyCollection<
+  WorkoutData & { materializedAt?: Date }
+>("materialized_workouts_view");
 
 export const getNextSets = async ({
   user,
