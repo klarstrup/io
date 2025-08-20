@@ -75,7 +75,7 @@ export const GET = () =>
           newestClimbInDatabase ? newestClimbInDatabase.created_at : 0,
         );
         while (true) {
-          const syncDateString = `${syncDate.toISOString().split("T")[0]}+00%3A00%3A00.000000`;
+          const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
           yield { [`climbs${syncDateString}`]: "requesting" };
           const { climbs } = (await (
             await fetch("https://kilterboardapp.com/sync", {
