@@ -269,6 +269,9 @@ function ProblemBadge({
   if (circuit?.labelColor) {
     color = circuit.labelColor;
   }
+  if (!color && circuit?.holdColor) {
+    color = circuit.holdColor;
+  }
 
   return (
     <Badge
@@ -359,7 +362,7 @@ export default function ProblemByProblem({
     .sort((a, b) => Number(b.zone) - Number(a.zone))
     .sort((a, b) => Number(b.repeat) - Number(a.repeat))
     .sort((a, b) => Number(b.top) - Number(a.top))
-    .sort((a, b) => Number(b.flash) - Number(a.flash)) 
+    .sort((a, b) => Number(b.flash) - Number(a.flash))
     .sort(
       (a, b) => Number(b.grade || b.estGrade) - Number(a.grade || a.estGrade),
     )
