@@ -121,7 +121,7 @@ export const GET = () =>
           const creationDateOfLastClimb = new Date(
             climbs.sort((a, b) =>
               compareDesc(new Date(a.created_at), new Date(b.created_at)),
-            )[climbs.length - 1]!.created_at,
+            )[0]!.created_at,
           );
           if (
             creationDateOfLastClimb.toDateString() === syncDate.toDateString()
