@@ -85,10 +85,9 @@ function optionsToId(options: IntersectionObserverInit) {
     .map(
       (key) =>
         `${key}_${
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           key === "root"
             ? getRootId(options.root)
-            : options[key as keyof IntersectionObserverInit]
+            : JSON.stringify(options[key as keyof IntersectionObserverInit])
         }`,
     )
     .toString();

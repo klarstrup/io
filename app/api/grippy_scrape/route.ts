@@ -77,7 +77,7 @@ export const GET = () =>
         );
 
         if (!response.ok || response.status !== 200) {
-          throw await response.text();
+          throw new Error(await response.text());
         }
 
         const json = (await response.json()) as Grippy.WorkoutLogsResponse;
