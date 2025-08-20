@@ -1,12 +1,7 @@
+import { compareDesc, startOfMonth, subMonths } from "date-fns";
 import { auth } from "../../../auth";
-import {
-  difficultyToGradeMap,
-  type KilterBoard,
-} from "../../../sources/kilterboard";
-import {
-  KilterBoardAscents,
-  KilterBoardBids,
-} from "../../../sources/kilterboard.server";
+import { type KilterBoard } from "../../../sources/kilterboard";
+import { KilterBoardClimbs } from "../../../sources/kilterboard.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
@@ -24,6 +19,7 @@ export const GET = () =>
       if (dataSource.source !== DataSource.KilterBoard) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ token }) {
+        /*
         const { bids, ascents } = (await (
           await fetch("https://kilterboardapp.com/sync", {
             method: "POST",
@@ -69,6 +65,74 @@ export const GET = () =>
         }
 
         yield { bids };
+*/
+
+        const newestClimbInDatabase = await KilterBoardClimbs.findOne(
+          {},
+          { sort: { created_at: -1 } },
+        );
+        let syncDate = new Date(
+          newestClimbInDatabase
+            ? subMonths(newestClimbInDatabase.created_at, 1)
+            : 0,
+        );
+        while (true) {
+          const syncDateString = `${syncDate.toISOString().split("T")[0]}+00%3A00%3A00.000000`;
+          console.log(`requested climbs for ${syncDate.toDateString()}`);
+          const { climbs } = (await (
+            await fetch("https://kilterboardapp.com/sync", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Cookie: `token=${token}`,
+              },
+              body: `climbs=${syncDateString}`,
+            })
+          ).json()) as { climbs: KilterBoard.Climb[] };
+          console.log(`got climbs for ${syncDate.toDateString()}`);
+
+          console.log(
+            `inserting ${climbs.length} climbs for ${syncDate.toDateString()}`,
+          );
+          for (const climb of climbs) {
+            await KilterBoardClimbs.updateOne(
+              { uuid: climb.uuid },
+              {
+                $set: {
+                  ...climb,
+                  created_at: new Date(climb.created_at),
+                  updated_at: new Date(climb.updated_at),
+                },
+              },
+              { upsert: true },
+            );
+          }
+          console.log(
+            `inserted ${climbs.length} climbs for ${syncDate.toDateString()}`,
+          );
+          yield { [`climbs${syncDateString}`]: climbs };
+
+          if (climbs.length < 2000) {
+            console.log(
+              `stopped fetching climbs because there were less than 2000 in the last response (${climbs.length})`,
+            );
+            break;
+          }
+          const creationDateOfLastClimb = new Date(
+            climbs.sort((a, b) =>
+              compareDesc(new Date(a.created_at), new Date(b.created_at)),
+            )[climbs.length - 1]!.created_at,
+          );
+          if (
+            creationDateOfLastClimb.toDateString() === syncDate.toDateString()
+          ) {
+            console.log(
+              `stopped fetching climbs because ${creationDateOfLastClimb.toDateString()} === ${syncDate.toDateString()}`,
+            );
+            break;
+          }
+          syncDate = creationDateOfLastClimb;
+        }
       });
     }
   });

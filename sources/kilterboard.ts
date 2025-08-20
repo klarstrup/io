@@ -32,6 +32,28 @@ export namespace KilterBoard {
     created_at: Date;
     updated_at: Date;
   }
+
+  export interface Climb {
+    uuid: string;
+    name: string;
+    description: string;
+    is_nomatch: boolean;
+    hsm: number;
+    edge_left: number;
+    edge_right: number;
+    edge_bottom: number;
+    edge_top: number;
+    frames_count: number;
+    frames_pace: number;
+    frames: string;
+    setter_id: number;
+    setter_username: string;
+    layout_id: number;
+    is_draft: boolean;
+    is_listed: boolean;
+    created_at: Date;
+    updated_at: Date;
+  }
 }
 
 export const difficulty_grades = [
