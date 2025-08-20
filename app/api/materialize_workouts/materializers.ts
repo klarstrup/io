@@ -358,7 +358,19 @@ export async function* materializeKilterBoardWorkouts(
   const { user_id } = dataSource.config;
 
   yield* KilterBoardAscents.aggregate([
+    { $unionWith: "kilterboard_bids" },
     { $match: { user_id: Number(user_id), is_listed: true } },
+    {
+      $group: {
+        _id: {
+          climb_uuid: "$climb_uuid",
+          angle: "$angle",
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
+        },
+        ascentsAndBids: { $push: "$$ROOT" },
+      },
+    },
+    { $replaceRoot: { newRoot: { $first: "$ascentsAndBids" } } },
     {
       $lookup: {
         from: "kilterboard_bids",
@@ -447,17 +459,26 @@ export async function* materializeKilterBoardWorkouts(
                     {
                       value: {
                         $cond: {
-                          if: { $gt: [{ $size: "$$ascent.climb_ascents" }, 0] },
-                          then: SendType.Repeat,
-                          else: {
+                          // Only actual ascents have an attempt_id, bids do not
+                          if: { $eq: ["$$ascent.attempt_id", 0] },
+                          then: {
                             $cond: {
                               if: {
-                                $eq: [{ $size: "$$ascent.climb_bids" }, 0],
+                                $gt: [{ $size: "$$ascent.climb_ascents" }, 0],
                               },
-                              then: SendType.Flash,
-                              else: SendType.Top,
+                              then: SendType.Repeat,
+                              else: {
+                                $cond: {
+                                  if: {
+                                    $eq: [{ $size: "$$ascent.climb_bids" }, 0],
+                                  },
+                                  then: SendType.Flash,
+                                  else: SendType.Top,
+                                },
+                              },
                             },
                           },
+                          else: SendType.Attempt,
                         },
                       },
                     },
