@@ -193,6 +193,8 @@ const climbLogsQuery = gql`
   ${PaginationFragment}
   ${ClimbLogScalarsFragment}
   ${ClimbScalarsFragment}
+  ${ClimbUserScalarsFragment}
+  ${ClimbGroupClimbScalarsFragment}
 
   query climbLogsSession(
     $gymId: ID
@@ -216,6 +218,14 @@ const climbLogsQuery = gql`
 
         climb {
           ...ClimbScalarsFragment
+
+          climbGroupClimbs {
+            ...ClimbGroupClimbScalarsFragment
+          }
+
+          climbUser(userId: $userId) {
+            ...ClimbUserScalarsFragment
+          }
         }
       }
       __typename
