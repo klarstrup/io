@@ -1,10 +1,9 @@
 import { Modal } from "../../../../components/Modal";
 import DiaryLocation from "./DiaryLocation";
 
-export default async function DiaryExerciseModal(props: {
-  params: Promise<{ locationId: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default async function DiaryExerciseModal(
+  props: PageProps<"/diary/locations/[locationId]">,
+) {
   const locationId = (await props.params).locationId;
 
   return (

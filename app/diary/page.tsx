@@ -49,7 +49,7 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
   ] as const;
 }
 
-export default async function DiaryLayout() {
+export default async function DiaryLayout(_props: PageProps<"/diary">) {
   const user = (await auth())?.user;
 
   const locations =

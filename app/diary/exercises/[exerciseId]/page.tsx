@@ -2,10 +2,9 @@ import { Modal } from "../../../../components/Modal";
 import { isPRType } from "../../../../lib";
 import DiaryExercise from "./DiaryExercise";
 
-export default async function DiaryExerciseModal(props: {
-  params: Promise<{ exerciseId: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default async function DiaryExerciseModal(
+  props: PageProps<"/diary/exercises/[exerciseId]">,
+) {
   const exerciseId = Number((await props.params).exerciseId);
 
   const searchParams = await props.searchParams;
