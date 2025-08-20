@@ -77,7 +77,7 @@ export const GET = () =>
         while (true) {
           const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
           yield { [`climbs${syncDateString}`]: "requesting" };
-          const { climbs } = (await (
+          const { climbs, shared_syncs } = (await (
             await fetch("https://kilterboardapp.com/sync", {
               method: "POST",
               headers: {
@@ -86,7 +86,13 @@ export const GET = () =>
               },
               body: `climbs=${syncDateString}`,
             })
-          ).json()) as { climbs: KilterBoard.Climb[] };
+          ).json()) as {
+            climbs: KilterBoard.Climb[];
+            shared_syncs: [
+              { table_name: "climbs"; last_synchronized_at: string },
+            ];
+          };
+
           yield { [`climbs${syncDateString}`]: "inserting " + climbs.length };
           for (const climb of climbs) {
             await KilterBoardClimbs.updateOne(
@@ -109,13 +115,8 @@ export const GET = () =>
             );
             break;
           }
-          const creationDateOfLastClimb = new Date(
-            climbs.sort((a, b) =>
-              compareDesc(new Date(a.created_at), new Date(b.created_at)),
-            )[0]!.created_at,
-          );
 
-          syncDate = creationDateOfLastClimb;
+          syncDate = new Date(shared_syncs[0].last_synchronized_at);
         }
       });
     }
