@@ -126,6 +126,7 @@ export async function* materializeToploggerWorkouts(
         createdAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
         updatedAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
         workedOutAt: { $arrayElemAt: ["$climbLogs.climbedAtDate", 0] },
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.TopLogger },
         location: { $arrayElemAt: ["$climbLogs.gym.name", 0] },
         exercises: [
@@ -252,6 +253,7 @@ export async function* materializeFitocracyWorkouts(
         createdAt: "$updated_timestamp",
         updatedAt: "$updated_timestamp",
         workedOutAt: "$workout_timestamp",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.Fitocracy },
         exercises: {
           $map: {
@@ -314,6 +316,7 @@ export async function* materializeRunDoubleWorkouts(
         createdAt: "$completedAt",
         updatedAt: "$completedAt",
         workedOutAt: "$completedAt",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.RunDouble },
         exercises: [
           {
@@ -441,6 +444,7 @@ export async function* materializeKilterBoardWorkouts(
         createdAt: { $arrayElemAt: ["$ascents.created_at", 0] },
         updatedAt: { $arrayElemAt: ["$ascents.updated_at", 0] },
         workedOutAt: { $arrayElemAt: ["$ascents.climbed_at", 0] },
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.KilterBoard },
         exercises: [
           {
@@ -539,6 +543,7 @@ export async function* materializeMoonBoardWorkouts(
         createdAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
         updatedAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
         workedOutAt: { $arrayElemAt: ["$entries.DateInserted", 0] },
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.MoonBoard },
         exercises: [
           {
@@ -632,6 +637,7 @@ export async function* materializeGrippyWorkouts(
         createdAt: "$start_time",
         updatedAt: "$start_time",
         workedOutAt: "$start_time",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.Grippy },
         exercises: [
           {
@@ -695,6 +701,7 @@ export async function* materializeCrimpdWorkouts(
         createdAt: "$dateCreated",
         updatedAt: "$lastUpdated",
         workedOutAt: "$logDate",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.Crimpd },
         exercises: [
           {
@@ -746,6 +753,7 @@ export async function* materializeOnsightWorkouts(
         createdAt: "$_createdAt",
         updatedAt: "$_updatedAt",
         workedOutAt: "$_createdAt",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.Onsight },
         exercises: [
           {
@@ -950,6 +958,7 @@ export async function* materializeClimbalongWorkouts(
         createdAt: "$registrationTime",
         updatedAt: "$registrationTime",
         workedOutAt: "$registrationTime",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.ClimbAlong },
         location: "$competition.facility",
         exercises: [
@@ -1123,6 +1132,7 @@ export async function* materializeSportstimingWorkouts(
         createdAt: "$StartTime",
         updatedAt: "$StartTime",
         workedOutAt: "$StartTime",
+        materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.Sportstiming },
         exercises: [
           {
