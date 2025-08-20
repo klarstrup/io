@@ -78,7 +78,7 @@ export const GET = () =>
         );
         while (true) {
           const syncDateString = `${syncDate.toISOString().split("T")[0]}+00%3A00%3A00.000000`;
-          console.log(`requested climbs for ${syncDate.toDateString()}`);
+          yield { [`climbs${syncDateString}`]: "requesting" };
           const { climbs } = (await (
             await fetch("https://kilterboardapp.com/sync", {
               method: "POST",
@@ -89,11 +89,7 @@ export const GET = () =>
               body: `climbs=${syncDateString}`,
             })
           ).json()) as { climbs: KilterBoard.Climb[] };
-          console.log(`got climbs for ${syncDate.toDateString()}`);
-
-          console.log(
-            `inserting ${climbs.length} climbs for ${syncDate.toDateString()}`,
-          );
+          yield { [`climbs${syncDateString}`]: "inserting " + climbs.length };
           for (const climb of climbs) {
             await KilterBoardClimbs.updateOne(
               { uuid: climb.uuid },
@@ -107,10 +103,7 @@ export const GET = () =>
               { upsert: true },
             );
           }
-          console.log(
-            `inserted ${climbs.length} climbs for ${syncDate.toDateString()}`,
-          );
-          yield { [`climbs${syncDateString}`]: climbs };
+          yield { [`climbs${syncDateString}`]: "inserted " + climbs.length };
 
           if (climbs.length < 2000) {
             console.log(
