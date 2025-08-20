@@ -1,4 +1,4 @@
-import { compareDesc, startOfMonth, subMonths } from "date-fns";
+import { compareDesc, subDays, subMinutes, subWeeks } from "date-fns";
 import { auth } from "../../../auth";
 import { type KilterBoard } from "../../../sources/kilterboard";
 import { KilterBoardClimbs } from "../../../sources/kilterboard.server";
@@ -73,7 +73,7 @@ export const GET = () =>
         );
         let syncDate = new Date(
           newestClimbInDatabase
-            ? subMonths(newestClimbInDatabase.created_at, 1)
+            ? subDays(newestClimbInDatabase.created_at, Math.random() * 10)
             : 0,
         );
         while (true) {
