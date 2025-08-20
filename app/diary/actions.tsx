@@ -168,10 +168,7 @@ export async function mostRecentlyScrapedAt(userId: string) {
 
   const workout = await MaterializedWorkoutsView.findOne(
     { userId: user.id },
-    {
-      sort: { materializedAt: -1, updatedAt: -1, deletedAt: -1 },
-      projection: { materializedAt: 1, updatedAt: 1, deletedAt: 1 },
-    },
+    { sort: { materializedAt: -1 }, projection: { materializedAt: 1 } },
   );
   const dataSourceRuns: (Date | null)[] = [];
   for (const dataSource of user.dataSources ?? []) {
@@ -184,12 +181,6 @@ export async function mostRecentlyScrapedAt(userId: string) {
     );
   }
   return max(
-    [
-      ...dataSourceRuns,
-      workout?.deletedAt,
-      workout?.updatedAt,
-      workout?.materializedAt,
-      new Date(0),
-    ].filter(Boolean),
+    [...dataSourceRuns, workout?.materializedAt, new Date(0)].filter(Boolean),
   );
 }
