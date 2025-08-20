@@ -10,3 +10,6 @@ export const KilterBoardBids =
 
 export const KilterBoardClimbs =
   proxyCollection<KilterBoard.Climb>("kilterboard_climbs");
+
+export const KilterBoardClimbStats =
+  proxyCollection<KilterBoard.ClimbStat>("kilterboard_climb_stats");

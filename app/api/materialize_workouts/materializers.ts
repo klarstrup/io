@@ -423,6 +423,28 @@ export async function* materializeKilterBoardWorkouts(
       },
     },
     {
+      $lookup: {
+        from: "kilterboard_climb_stats",
+        let: {
+          climb_uuid: "$climb_uuid",
+          angle: "$angle",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$climb_uuid", "$$climb_uuid"] },
+                  { $eq: ["$angle", "$$angle"] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "climb_stats",
+      },
+    },
+    {
       $group: {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
         ascents: { $push: "$$ROOT" },
@@ -456,7 +478,10 @@ export async function* materializeKilterBoardWorkouts(
                 in: {
                   inputs: [
                     // Grade
-                    { value: "$$ascent.grade", unit: Unit.FrenchRounded },
+                    {
+                      value: "$$ascent.climb_stats.grade_average",
+                      unit: Unit.FrenchRounded,
+                    },
                     // Color
                     { value: NaN },
                     // Sent-ness

@@ -10,13 +10,14 @@ export namespace KilterBoard {
     bid_count: number;
     quality: number;
     difficulty: number;
-    grade: number;
     is_benchmark: boolean;
     is_listed: boolean;
     comment: string;
     climbed_at: Date;
     created_at: Date;
     updated_at: Date;
+    // Not in the API, conveniency Font conversion for difficulty
+    grade: number;
   }
 
   export interface Bid {
@@ -53,6 +54,24 @@ export namespace KilterBoard {
     is_listed: boolean;
     created_at: Date;
     updated_at: Date;
+  }
+
+  export interface ClimbStat {
+    climb_uuid: string;
+    angle: number;
+    ascensionist_count: number;
+    difficulty_average: number | null;
+    quality_average: number | null;
+    fa_uid: number | null;
+    fa_username: null | string;
+    fa_at: Date | null;
+    created_at: Date;
+    updated_at: Date;
+    benchmark_difficulty?: number;
+    // Not in the API, conveniency Font conversion for difficulty
+    grade_average: number | null;
+    // Not in the API, conveniency Font conversion for difficulty
+    benchmark_grade?: number;
   }
 }
 

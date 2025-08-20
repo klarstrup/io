@@ -1,7 +1,14 @@
-import { compareDesc, isFuture, subDays, subMinutes, subWeeks } from "date-fns";
 import { auth } from "../../../auth";
-import { type KilterBoard } from "../../../sources/kilterboard";
-import { KilterBoardClimbs } from "../../../sources/kilterboard.server";
+import {
+  difficultyToGradeMap,
+  type KilterBoard,
+} from "../../../sources/kilterboard";
+import {
+  KilterBoardAscents,
+  KilterBoardBids,
+  KilterBoardClimbs,
+  KilterBoardClimbStats,
+} from "../../../sources/kilterboard.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
@@ -19,7 +26,6 @@ export const GET = () =>
       if (dataSource.source !== DataSource.KilterBoard) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ token }) {
-        /*
         const { bids, ascents } = (await (
           await fetch("https://kilterboardapp.com/sync", {
             method: "POST",
@@ -65,7 +71,6 @@ export const GET = () =>
         }
 
         yield { bids };
-*/
 
         const newestClimbInDatabase = await KilterBoardClimbs.findOne(
           {},
@@ -117,6 +122,80 @@ export const GET = () =>
           }
 
           syncDate = new Date(shared_syncs[0].last_synchronized_at);
+        }
+
+        {
+          await KilterBoardClimbStats.createIndexes([
+            { key: { climb_uuid: 1, angle: 1 }, unique: true },
+          ]);
+          const newestClimbStatInDatabase = await KilterBoardClimbStats.findOne(
+            {},
+            { sort: { created_at: -1 } },
+          );
+          let syncDate = new Date(
+            newestClimbStatInDatabase
+              ? newestClimbStatInDatabase.created_at
+              : 0,
+          );
+          while (true) {
+            const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+            yield { [`climb_stats${syncDateString}`]: "requesting" };
+            const { climb_stats, shared_syncs } = (await (
+              await fetch("https://kilterboardapp.com/sync", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  Cookie: `token=${token}`,
+                },
+                body: `climb_stats=${syncDateString}`,
+              })
+            ).json()) as {
+              climb_stats: KilterBoard.ClimbStat[];
+              shared_syncs: [
+                { table_name: "climb_stats"; last_synchronized_at: string },
+              ];
+            };
+
+            yield {
+              [`climb_stats${syncDateString}`]:
+                "inserting " + climb_stats.length,
+            };
+            for (const climb_stat of climb_stats) {
+              await KilterBoardClimbStats.updateOne(
+                { climb_uuid: climb_stat.climb_uuid, angle: climb_stat.angle },
+                {
+                  $set: {
+                    ...climb_stat,
+                    grade_average:
+                      climb_stat.difficulty_average &&
+                      (difficultyToGradeMap[
+                        Math.round(climb_stat.difficulty_average)
+                      ] as number),
+                    benchmark_grade:
+                      climb_stat.benchmark_grade &&
+                      (difficultyToGradeMap[
+                        climb_stat.benchmark_grade
+                      ] as number),
+                    created_at: new Date(climb_stat.created_at),
+                    updated_at: new Date(climb_stat.updated_at),
+                    fa_at: climb_stat.fa_at && new Date(climb_stat.fa_at),
+                  },
+                },
+                { upsert: true },
+              );
+            }
+            yield {
+              [`climb_stats${syncDateString}`]:
+                "inserted " + climb_stats.length,
+            };
+
+            if (climb_stats.length < 2000) {
+              yield `stopped fetching climb_stats because there were less than 2000 in the last response (${climb_stats.length})`;
+              break;
+            }
+
+            syncDate = new Date(shared_syncs[0].last_synchronized_at);
+          }
         }
       });
     }
