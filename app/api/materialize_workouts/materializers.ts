@@ -457,15 +457,15 @@ export async function* materializeKilterBoardWorkouts(
           $concat: [
             { $literal: WorkoutSource.KilterBoard },
             ":",
-            { $toString: { $arrayElemAt: ["$ascents.user_id", 0] } },
+            { $toString: { $first: "$ascents.user_id" } },
             ":",
             "$_id",
           ],
         },
         userId: { $literal: user.id },
-        createdAt: { $arrayElemAt: ["$ascents.created_at", 0] },
-        updatedAt: { $arrayElemAt: ["$ascents.updated_at", 0] },
-        workedOutAt: { $arrayElemAt: ["$ascents.climbed_at", 0] },
+        createdAt: { $first: "$ascents.created_at" },
+        updatedAt: { $first: "$ascents.updated_at" },
+        workedOutAt: { $first: "$ascents.climbed_at" },
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.KilterBoard },
         exercises: [
@@ -479,7 +479,7 @@ export async function* materializeKilterBoardWorkouts(
                   inputs: [
                     // Grade
                     {
-                      value: "$$ascent.climb_stats.grade_average",
+                      value: { $first: "$$ascent.climb_stats.grade_average" },
                       unit: Unit.FrenchRounded,
                     },
                     // Color
