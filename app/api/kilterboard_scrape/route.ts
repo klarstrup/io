@@ -1,4 +1,4 @@
-import { compareDesc, subDays, subMinutes, subWeeks } from "date-fns";
+import { compareDesc, isFuture, subDays, subMinutes, subWeeks } from "date-fns";
 import { auth } from "../../../auth";
 import { type KilterBoard } from "../../../sources/kilterboard";
 import { KilterBoardClimbs } from "../../../sources/kilterboard.server";
@@ -116,14 +116,7 @@ export const GET = () =>
               compareDesc(new Date(a.created_at), new Date(b.created_at)),
             )[0]!.created_at,
           );
-          if (
-            creationDateOfLastClimb.toDateString() === syncDate.toDateString()
-          ) {
-            console.log(
-              `stopped fetching climbs because ${creationDateOfLastClimb.toDateString()} === ${syncDate.toDateString()}`,
-            );
-            break;
-          }
+
           syncDate = creationDateOfLastClimb;
         }
       });
