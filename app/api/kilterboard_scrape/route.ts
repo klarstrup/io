@@ -72,9 +72,7 @@ export const GET = () =>
           { sort: { created_at: -1 } },
         );
         let syncDate = new Date(
-          newestClimbInDatabase
-            ? subDays(newestClimbInDatabase.created_at, Math.random() * 10)
-            : 0,
+          newestClimbInDatabase ? newestClimbInDatabase.created_at : 0,
         );
         while (true) {
           const syncDateString = `${syncDate.toISOString().split("T")[0]}+00%3A00%3A00.000000`;
