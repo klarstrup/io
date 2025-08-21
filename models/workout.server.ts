@@ -446,6 +446,9 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
   for (const month of months) {
     const monthKey = month.toISOString().slice(0, 7); // YYYY-MM
 
+    await MaterializedWorkoutsView.createIndexes([
+      { key: { "exercises.exerciseId": 1, userId: 1, workedOutAt: -1 } },
+    ]);
     const workout = await MaterializedWorkoutsView.aggregate<{
       workedOutAt: Date;
       exercise: WorkoutExercise;

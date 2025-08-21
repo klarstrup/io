@@ -26,7 +26,6 @@ export const GET = () =>
       if (dataSource.source !== DataSource.KilterBoard) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ token }) {
-        /*
         const { bids, ascents } = (await (
           await fetch("https://kilterboardapp.com/sync", {
             method: "POST",
@@ -73,6 +72,10 @@ export const GET = () =>
 
         yield { bids };
 
+        await KilterBoardClimbs.createIndexes([
+          { key: { created_at: -1 } },
+          { key: { frames: -1 } },
+        ]);
         const newestClimbInDatabase = await KilterBoardClimbs.findOne(
           {},
           { sort: { created_at: -1 } },
@@ -124,10 +127,11 @@ export const GET = () =>
 
           syncDate = new Date(shared_syncs[0].last_synchronized_at);
         }
-*/
+
         {
           await KilterBoardClimbStats.createIndexes([
             { key: { climb_uuid: 1, angle: 1 }, unique: true },
+            { key: { created_at: -1 } },
           ]);
           const newestClimbStatInDatabase = await KilterBoardClimbStats.findOne(
             {},

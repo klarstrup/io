@@ -10,7 +10,10 @@ import {
 import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { GrippyWorkoutLogs } from "../../../sources/grippy";
-import { KilterBoardAscents, KilterBoardBids } from "../../../sources/kilterboard.server";
+import {
+  KilterBoardAscents,
+  KilterBoardBids,
+} from "../../../sources/kilterboard.server";
 import { MoonBoardLogbookEntries } from "../../../sources/moonboard.server";
 import { OnsightCompetitionScores } from "../../../sources/onsight.server";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
@@ -275,6 +278,14 @@ export async function* materializeFitocracyWorkouts(
 
   const fitocracyUserId = dataSource.config.userId;
 
+  await FitocracyWorkouts.createIndexes([
+    {
+      key: {
+        user_id: 1,
+        "root_group.children.0.exercise.sets.0.inputs.0": 1,
+      },
+    },
+  ]);
   yield* FitocracyWorkouts.aggregate([
     {
       $match: {
@@ -398,7 +409,9 @@ export async function* materializeKilterBoardWorkouts(
 
   const { user_id } = dataSource.config;
 
-  await KilterBoardAscents.createIndexes([{ key: { user_id: 1, is_listed: 1 } }]);
+  await KilterBoardAscents.createIndexes([
+    { key: { user_id: 1, is_listed: 1 } },
+  ]);
   await KilterBoardBids.createIndexes([{ key: { user_id: 1, is_listed: 1 } }]);
   yield* KilterBoardAscents.aggregate([
     { $unionWith: "kilterboard_bids" },

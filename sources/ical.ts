@@ -55,6 +55,11 @@ export async function getUserIcalEventsBetween(
       { start: { $lte: start }, end: { $gte: end } },
     ],
   } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
+
+  await IcalEvents.createIndexes([
+    { key: { _io_userId: 1, type: 1, start: 1 } },
+    { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
+  ]);
   for await (const event of IcalEvents.find({
     _io_userId: userId,
     type: "VEVENT",
