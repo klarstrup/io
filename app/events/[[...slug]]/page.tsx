@@ -108,6 +108,7 @@ const getData = async (
           case DataSource.ClimbAlong: {
             if (!(noDisciplines || disciplines?.includes("bouldering"))) break;
 
+            await ClimbAlongAthletes.createIndexes([{ key: { userId: 1 } }]);
             for await (const athlete of ClimbAlongAthletes.find({
               userId: config.userId,
             })) {

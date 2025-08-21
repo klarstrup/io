@@ -110,6 +110,9 @@ export async function getIoOnsightCompetitionEvent(
 
   if (!competition) throw new Error("???" + competitionId);
 
+  await OnsightCompetitionScores.createIndexes([
+    { key: { Competition_name: 1 } },
+  ]);
   const competitionScores = await OnsightCompetitionScores.find({
     Competition_name: `${competition.Name}/${competitionId}`,
   }).toArray();
@@ -193,6 +196,8 @@ export async function getIoOnsightCompetitionEvent(
 export async function getIoOnsightCompetitionEventEntries(
   Username: string,
 ): Promise<EventEntry[]> {
+  await OnsightCompetitionScores.createIndexes([{ key: { Username: 1 } }]);
+
   const competitionScores = await OnsightCompetitionScores.find({
     Username,
   }).toArray();

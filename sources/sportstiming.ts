@@ -95,6 +95,7 @@ export async function getSportsTimingEventResults(
   const event = await SportstimingEvents.findOne({ EventId: eventId });
   if (!event) throw new Error("???");
 
+  await SportstimingFavorites.createIndexes([{ key: { Id: 1 } }]);
   const ioResult = await SportstimingFavorites.findOne({ Id: ioId });
   const rank = ioResult?.Position;
   const noParticipants = ioResult?._io_NumberOfParticipants || NaN;
@@ -170,10 +171,12 @@ export async function getSportsTimingEventResults(
 }
 
 export async function getSportsTimingEventEntries(ioName: string) {
+  await SportstimingFavorites.createIndexes([{ key: { Name: 1 } }]);
   const results = await SportstimingFavorites.find({
     Name: new RegExp(ioName, "i"),
   }).toArray();
 
+  await SportstimingEvents.createIndexes([{ key: { EventId: 1 } }]);
   return Promise.all(
     results.map(async (result) => {
       const event = await SportstimingEvents.findOne({

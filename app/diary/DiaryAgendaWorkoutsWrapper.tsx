@@ -21,6 +21,11 @@ export async function DiaryAgendaWorkoutsWrapper({
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
 
   const tzDate = new TZDate(date, timeZone);
+
+  await Locations.createIndexes([
+    { key: { userId: 1 } },
+    { key: { name: 1 } },
+  ]);
   const [workouts, locations] = user
     ? await Promise.all([
         MaterializedWorkoutsView.find(

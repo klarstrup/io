@@ -425,10 +425,13 @@ export const WorkoutExercisesView = proxyCollection<IWorkoutExercisesView>(
   "workout_exercises_view",
 );
 
-export const getAllWorkoutExercises = async (user: Session["user"]) =>
-  (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
+export const getAllWorkoutExercises = async (user: Session["user"]) => {
+  await WorkoutExercisesView.createIndexes([{ key: { userId: 1 } }]);
+
+  return (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
     ({ _id, ...location }) => ({ ...location, _id: _id.toString() }),
   );
+};
 
 export async function calculateFlashRateByMonth(userId: string, now: Date) {
   const months = eachMonthOfInterval({

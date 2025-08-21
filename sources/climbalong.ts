@@ -248,10 +248,14 @@ export async function getIoClimbAlongCompetitionEvent(
   const competition = await ClimbAlongCompetitions.findOne({ competitionId });
   if (!competition) throw new Error("???");
 
+  await ClimbAlongAthletes.createIndexes([{ key: { competitionId: 1 } }]);
+  await ClimbAlongCircuits.createIndexes([{ key: { competitionId: 1 } }]);
   const [athletes, circuits] = await Promise.all([
     ClimbAlongAthletes.find({ competitionId }).toArray(),
     ClimbAlongCircuits.find({ competitionId }).toArray(),
   ]);
+  await ClimbAlongPerformances.createIndexes([{ key: { circuitId: 1 } }]);
+  await ClimbAlongProblems.createIndexes([{ key: { circuitId: 1 } }]);
   const [performances, problems] = await Promise.all([
     ClimbAlongPerformances.find({
       circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
@@ -268,9 +272,13 @@ export async function getIoClimbAlongCompetitionEvent(
   const ioCircuitIds = ioPerformances
     ? unique(ioPerformances.map(({ circuitId }) => circuitId))
     : [];
+  await ClimbAlongNodes.createIndexes([{ key: { "circuit.circuitId": 1 } }]);
   const ioCircuitChallengeNode = await ClimbAlongNodes.findOne({
     "circuit.circuitId": { $in: ioCircuitIds },
   });
+  await ClimbAlongEdges.createIndexes([
+    { key: { "processedBy.nodeId": 1, "processedBy.edge": 1 } },
+  ]);
   const circuitChallengeEdges = await ClimbAlongEdges.find({
     processedBy: {
       $elemMatch: {

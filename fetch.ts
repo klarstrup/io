@@ -33,6 +33,7 @@ const rawDbFetch = async <T = string>(
 
   const db = await getDB();
   const fetchesCollection = db.collection<IFetch>("fetches");
+  await fetchesCollection.createIndexes([{ key: { fetchArgs: 1 } }]);
   const fetchRow = await fetchesCollection.findOne(filter);
   let result: string | null = null;
   let parsedResult: T | null = null;
