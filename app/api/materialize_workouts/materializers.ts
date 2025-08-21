@@ -3,11 +3,14 @@ import { SendType, Unit } from "../../../models/exercises";
 import { WorkoutSource } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
 import { HoldScore, HoldScore2 } from "../../../sources/climbalong";
-import { ClimbAlongAthletes } from "../../../sources/climbalong.server";
+import {
+  ClimbAlongAthletes,
+  ClimbAlongPerformances,
+} from "../../../sources/climbalong.server";
 import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
 import { GrippyWorkoutLogs } from "../../../sources/grippy";
-import { KilterBoardAscents } from "../../../sources/kilterboard.server";
+import { KilterBoardAscents, KilterBoardBids } from "../../../sources/kilterboard.server";
 import { MoonBoardLogbookEntries } from "../../../sources/moonboard.server";
 import { OnsightCompetitionScores } from "../../../sources/onsight.server";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
@@ -245,6 +248,7 @@ export async function* materializeIoWorkouts(user: Session["user"]) {
   yield "materializeIoWorkouts: start";
   const t = new Date();
 
+  await Workouts.createIndexes([{ key: { userId: 1 } }]);
   yield* Workouts.aggregate([
     { $match: { userId: user.id } },
     { $addFields: { id: { $toString: "$_id" }, _id: "$$REMOVE" } },
@@ -339,6 +343,7 @@ export async function* materializeRunDoubleWorkouts(
   yield "materializeRunDoubleWorkouts: start";
   const t = new Date();
 
+  await RunDoubleRuns.createIndexes([{ key: { userId: 1 } }]);
   yield* RunDoubleRuns.aggregate([
     { $match: { userId: dataSource.config.id } },
     {
@@ -393,6 +398,8 @@ export async function* materializeKilterBoardWorkouts(
 
   const { user_id } = dataSource.config;
 
+  await KilterBoardAscents.createIndexes([{ key: { user_id: 1, is_listed: 1 } }]);
+  await KilterBoardBids.createIndexes([{ key: { user_id: 1, is_listed: 1 } }]);
   yield* KilterBoardAscents.aggregate([
     { $unionWith: "kilterboard_bids" },
     { $match: { user_id: Number(user_id), is_listed: true } },
@@ -577,6 +584,7 @@ export async function* materializeMoonBoardWorkouts(
 
   const { user_id } = dataSource.config;
 
+  await MoonBoardLogbookEntries.createIndexes([{ key: { "User.Id": 1 } }]);
   yield* MoonBoardLogbookEntries.aggregate([
     { $match: { "User.Id": user_id } },
     {
@@ -685,6 +693,7 @@ export async function* materializeGrippyWorkouts(
   yield "materializeGrippyWorkouts: start";
   const t = new Date();
 
+  await GrippyWorkoutLogs.createIndexes([{ key: { _io_userId: 1 } }]);
   yield* GrippyWorkoutLogs.aggregate([
     { $match: { _io_userId: user.id } },
     {
@@ -749,6 +758,7 @@ export async function* materializeCrimpdWorkouts(
   yield "materializeCrimpdWorkouts: start";
   const t = new Date();
 
+  await CrimpdWorkoutLogs.createIndexes([{ key: { _io_userId: 1 } }]);
   yield* CrimpdWorkoutLogs.aggregate([
     { $match: { _io_userId: user.id } },
     {
@@ -950,6 +960,8 @@ export async function* materializeClimbalongWorkouts(
   yield "materializeClimbalongWorkouts: start";
   const t = new Date();
 
+  await ClimbAlongPerformances.createIndexes([{ key: { athleteId: 1 } }]);
+  await ClimbAlongAthletes.createIndexes([{ key: { athleteId: 1 } }]);
   yield* ClimbAlongAthletes.aggregate([
     { $match: { userId: dataSource.config.userId } },
     {

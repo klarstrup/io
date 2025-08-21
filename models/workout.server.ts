@@ -384,14 +384,17 @@ export const WorkoutLocationsView = proxyCollection<IWorkoutLocationsView>(
   "workout_locations_view",
 );
 
-export const getAllWorkoutLocations = async (user: Session["user"]) =>
-  (await WorkoutLocationsView.find({ userId: user.id }).toArray()).map(
+export const getAllWorkoutLocations = async (user: Session["user"]) => {
+  await WorkoutLocationsView.createIndexes([{ key: { userId: 1 } }]);
+
+  return (await WorkoutLocationsView.find({ userId: user.id }).toArray()).map(
     (location) => ({
       ...location,
       _id: JSON.stringify(location._id),
       location: { ...location.location, _id: location.location._id.toString() },
     }),
   );
+};
 
 export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
   await WorkoutExercisesView.aggregate([
