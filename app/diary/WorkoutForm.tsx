@@ -791,6 +791,7 @@ function SetsForm({
                     );
 
                     append({
+                      ...setState,
                       createdAt: new Date(),
                       updatedAt: new Date(),
                       inputs: exercise.inputs.map((input, inputIndex) => {
@@ -805,7 +806,6 @@ function SetsForm({
                             input.allowed_units?.[0]?.name,
                         };
                       }),
-                      comment: setState.comment ?? undefined,
                     });
                   }}
                   className="mx-0.5 leading-0"
