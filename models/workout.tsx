@@ -108,7 +108,9 @@ export const isNextSetDue = (
 ) =>
   (nextSet.scheduleEntry.snoozedUntil
     ? !isAfter(
-        startOfDay(nextSet.scheduleEntry.snoozedUntil),
+        startOfDay(nextSet.scheduleEntry.snoozedUntil, {
+          in: tz(tzDate.timeZone || DEFAULT_TIMEZONE),
+        }),
         startOfDay(tzDate),
       )
     : true) &&
