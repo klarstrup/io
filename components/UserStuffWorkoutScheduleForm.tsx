@@ -1,5 +1,5 @@
 "use client";
-import { compareDesc } from "date-fns";
+import { compareDesc, isFuture, isValid } from "date-fns";
 import { Session } from "next-auth";
 import Link from "next/link";
 import { useId } from "react";
@@ -10,6 +10,26 @@ import { exercises, exercisesById, InputType } from "../models/exercises";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { FieldSetY } from "./FieldSet";
+
+/**
+ * Create a date YYYY-MM-DD date string that is typecasted as a `Date`.
+ * Hack when using `defaultValues` in `react-hook-form`
+ * This is because `react-hook-form` doesn't support `defaultValue` of type `Date` even if the types say so
+ */
+function dateToInputDate(date?: Date) {
+  if (!date || !isValid(date)) return undefined;
+
+  return date.toJSON().slice(0, 10) as unknown as Date;
+}
+
+const exerciseSchedulesForForm = (exerciseSchedules?: ExerciseSchedule[]) =>
+  exerciseSchedules?.map((eS) => ({
+    ...eS,
+    snoozedUntil:
+      eS.snoozedUntil && isFuture(eS.snoozedUntil)
+        ? dateToInputDate(eS.snoozedUntil)
+        : undefined,
+  }));
 
 export default function UserStuffWorkoutScheduleForm({
   user,
@@ -26,7 +46,9 @@ export default function UserStuffWorkoutScheduleForm({
     watch,
     formState: { isDirty, isSubmitting },
   } = useForm<{ exerciseSchedules: ExerciseSchedule[] }>({
-    defaultValues: { exerciseSchedules: user?.exerciseSchedules ?? [] },
+    defaultValues: {
+      exerciseSchedules: exerciseSchedulesForForm(user?.exerciseSchedules),
+    },
   });
 
   const { fields, append } = useFieldArray({
@@ -51,12 +73,11 @@ export default function UserStuffWorkoutScheduleForm({
             user.id,
             schedules,
           );
-
-          reset(
-            newSchedules
-              ? { exerciseSchedules: newSchedules }
-              : { exerciseSchedules: user.exerciseSchedules },
-          );
+          reset({
+            exerciseSchedules: exerciseSchedulesForForm(
+              newSchedules ? newSchedules : user.exerciseSchedules,
+            ),
+          });
         })}
         className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
@@ -113,6 +134,19 @@ export default function UserStuffWorkoutScheduleForm({
                 {watch("exerciseSchedules")?.[index]?.enabled ? (
                   <>
                     <div className="grid grid-cols-2 gap-1 text-sm">
+                      <label className="flex gap-1">
+                        Snoozed until:
+                        <input
+                          type="date"
+                          {...register(
+                            `exerciseSchedules.${index}.snoozedUntil`,
+                            { valueAsDate: true },
+                          )}
+                          className={
+                            "border-b-2 border-gray-200 focus:border-gray-500"
+                          }
+                        />
+                      </label>
                       <label className="[grid-column:span_2] flex gap-1">
                         Frequency:
                         <select

@@ -59,15 +59,11 @@ export async function DiaryAgendaEvents({
     )[]
   > = { [date]: [] };
 
+  const nextSets = user
+    ? await getNextSets({ user, to: fetchingInterval.end })
+    : [];
   for (const date of eachDayOfInterval(fetchingInterval)) {
-    const dueSets = user
-      ? (
-          await getNextSets({
-            user,
-            to: endOfDay(date, { in: tz(user.timeZone || DEFAULT_TIMEZONE) }),
-          })
-        ).filter((nextSet) => isNextSetDue(date, nextSet))
-      : [];
+    const dueSets = nextSets.filter((nextSet) => isNextSetDue(date, nextSet));
     const calName = dateToString(date);
 
     if (!eventsByDate[calName]) eventsByDate[calName] = [];
@@ -184,7 +180,11 @@ export async function DiaryAgendaEvents({
                             showDetails={false}
                           />
                         </div>
-                        <hr className="mt-1 mb-0.5 border-gray-200" />
+                        {dateEvents.some((e) => !("scheduleEntry" in e)) ? (
+                          <hr className="mt-1 mb-0.5 border-gray-200" />
+                        ) : (
+                          <div className="mt-1 mb-0.5" />
+                        )}
                       </li>
                     );
                   }

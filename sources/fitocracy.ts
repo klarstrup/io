@@ -276,4 +276,5 @@ export interface ExerciseSchedule {
   workingReps?: number;
   deloadFactor?: number;
   baseWeight?: number;
+  snoozedUntil?: Date;
 }

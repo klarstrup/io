@@ -1,5 +1,10 @@
 import { tz, TZDate } from "@date-fns/tz";
-import { intervalToDuration, startOfDay, type Duration } from "date-fns";
+import {
+  intervalToDuration,
+  isAfter,
+  startOfDay,
+  type Duration,
+} from "date-fns";
 import Grade from "../grades";
 import { DEFAULT_TIMEZONE } from "../utils";
 import {
@@ -101,6 +106,12 @@ export const isNextSetDue = (
   tzDate: TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) =>
+  (nextSet.scheduleEntry.snoozedUntil
+    ? !isAfter(
+        startOfDay(nextSet.scheduleEntry.snoozedUntil),
+        startOfDay(tzDate),
+      )
+    : true) &&
   isDurationGreaterOrEqual(
     intervalToDuration({
       start: startOfDay(nextSet.workedOutAt || new Date(0), {

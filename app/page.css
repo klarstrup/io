@@ -220,6 +220,7 @@ dl > dd {
 }
 
 input[type="text"],
+input[type="date"],
 input[type="number"],
 select {
   background: white;
@@ -227,6 +228,7 @@ select {
 }
 
 input[type="text"]:disabled,
+input[type="date"]:disabled,
 input[type="number"]:disabled,
 select:disabled {
   opacity: 0.5;
