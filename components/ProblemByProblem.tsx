@@ -35,12 +35,12 @@ const AttemptBlibs = ({ attemptCount }: { attemptCount?: number }) =>
 
 const GradeText = ({ grade }: { grade: string }) => (
   <text
-    y="38"
+    y="40"
     x="4"
     dominantBaseline="central"
     textAnchor="start"
     fill="#fff"
-    fontSize="34px"
+    fontSize="30px"
     stroke="#000"
     paintOrder="stroke"
     strokeWidth="4px"
@@ -51,15 +51,15 @@ const GradeText = ({ grade }: { grade: string }) => (
 
 const AngleText = ({ angle }: { angle: number }) => (
   <text
-    y="12"
-    x="4"
+    y="25"
+    x="24"
     dominantBaseline="central"
     textAnchor="start"
     fill="#fff"
-    fontSize="20px"
+    fontSize="18px"
     stroke="#000"
     paintOrder="stroke"
-    strokeWidth="2px"
+    strokeWidth="3px"
   >
     {angle}°
   </text>
@@ -85,8 +85,8 @@ const FlashBadge = ({
       strokeWidth="8"
     ></rect>
     <text
-      y="20%"
-      x="85%"
+      y="25%"
+      x="25%"
       dominantBaseline="central"
       textAnchor="middle"
       fill="#ffff00"
@@ -212,9 +212,10 @@ const RepeatBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    <AttemptBlibs attemptCount={attemptCount} />
     <text
       y="20%"
-      x="80%"
+      x="20%"
       dominantBaseline="central"
       textAnchor="middle"
       fill="#000"
@@ -223,7 +224,6 @@ const RepeatBadge = ({
     >
       🔁
     </text>
-    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -274,6 +274,7 @@ function ProblemBadge({
   angle,
   circuit,
   attemptCount,
+  name,
 }: {
   number?: string | number;
   flash: boolean;
@@ -286,6 +287,7 @@ function ProblemBadge({
   angle?: number;
   circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
   attemptCount?: number;
+  name?: string;
 }) {
   const Badge = flash
     ? FlashBadge
@@ -342,21 +344,24 @@ function ProblemBadge({
       }
       angle={angle}
       attemptCount={attemptCount}
-      title={`${number}${
-        number && grade ? `(${new Grade(grade).name})` : ""
-      }${!number && grade ? new Grade(grade).name : ""}: ${
-        flash
-          ? "flash"
-          : top
-            ? "top"
-            : zone
-              ? "zone"
-              : attempt
-                ? "no send"
-                : repeat
-                  ? "repeat"
-                  : "no attempt"
-      }`}
+      title={
+        (name ? name + ": " : "") +
+        `${number}${
+          number && grade ? `(${new Grade(grade).name})` : ""
+        }${!number && grade ? new Grade(grade).name : ""}: ${
+          flash
+            ? "flash"
+            : top
+              ? "top"
+              : zone
+                ? "zone"
+                : attempt
+                  ? "no send"
+                  : repeat
+                    ? "repeat"
+                    : "no attempt"
+        }`
+      }
     />
   );
 }
@@ -370,6 +375,7 @@ type PP = NonNullable<
     >
   >["problemByProblem"]
 >[number] & {
+  name?: string;
   angle?: number;
   circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
   attemptCount?: number;

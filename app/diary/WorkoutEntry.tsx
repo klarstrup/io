@@ -105,6 +105,7 @@ export function WorkoutEntryExercise({
             attemptCount: set.meta?.attemptCount as number | undefined,
             repeat: sendType === SendType.Repeat,
             number: String(i + 1),
+            name: set.meta?.boulderName as string | undefined,
             angle: set.inputs[3]?.value,
           };
         })}

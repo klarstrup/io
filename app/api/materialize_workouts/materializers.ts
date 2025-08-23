@@ -429,12 +429,33 @@ export async function* materializeKilterBoardWorkouts(
     },
     { $replaceRoot: { newRoot: { $first: "$ascentsAndBids" } } },
     {
+      $set: {
+        climbed_at_day_start: {
+          $dateTrunc: { date: "$climbed_at", unit: "day" },
+        },
+        climbed_at_day_end: {
+          $dateSubtract: {
+            startDate: {
+              $dateAdd: {
+                startDate: { $dateTrunc: { date: "$climbed_at", unit: "day" } },
+                unit: "day",
+                amount: 1,
+              },
+            },
+            unit: "millisecond",
+            amount: 1,
+          },
+        },
+      },
+    },
+    {
       $lookup: {
         from: "kilterboard_bids",
         let: {
           climb_uuid: "$climb_uuid",
           angle: "$angle",
-          climbed_at: "$climbed_at",
+          climbed_at_day_start: "$climbed_at_day_start",
+          climbed_at_day_end: "$climbed_at_day_end",
         },
         pipeline: [
           {
@@ -443,7 +464,8 @@ export async function* materializeKilterBoardWorkouts(
                 $and: [
                   { $eq: ["$climb_uuid", "$$climb_uuid"] },
                   { $eq: ["$angle", "$$angle"] },
-                  { $lt: ["$climbed_at", "$$climbed_at"] },
+                  { $gt: ["$climbed_at", "$$climbed_at_day_start"] },
+                  { $lt: ["$climbed_at", "$$climbed_at_day_end"] },
                 ],
               },
             },
@@ -458,7 +480,8 @@ export async function* materializeKilterBoardWorkouts(
         let: {
           climb_uuid: "$climb_uuid",
           angle: "$angle",
-          climbed_at: "$climbed_at",
+          climbed_at_day_start: "truncatedClimbedAt",
+          climbed_at_day_end: "dayAfterTruncatedClimbedAt",
         },
         pipeline: [
           {
@@ -467,7 +490,8 @@ export async function* materializeKilterBoardWorkouts(
                 $and: [
                   { $eq: ["$climb_uuid", "$$climb_uuid"] },
                   { $eq: ["$angle", "$$angle"] },
-                  { $lt: ["$climbed_at", "$$climbed_at"] },
+                  { $gt: ["$climbed_at", "$$climbed_at_day_start"] },
+                  { $lt: ["$climbed_at", "$$climbed_at_day_end"] },
                 ],
               },
             },
@@ -498,6 +522,15 @@ export async function* materializeKilterBoardWorkouts(
         as: "climb_stats",
       },
     },
+    {
+      $lookup: {
+        from: "kilterboard_climbs",
+        foreignField: "uuid",
+        localField: "climb_uuid",
+        as: "climb",
+      },
+    },
+    { $set: { climb: { $first: "$climb" } } },
     {
       $group: {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$climbed_at" } },
@@ -530,6 +563,10 @@ export async function* materializeKilterBoardWorkouts(
                 input: "$ascents",
                 as: "ascent",
                 in: {
+                  meta: {
+                    attemptCount: { $size: "$$ascent.climb_bids" },
+                    boulderName: "$$ascent.climb.name",
+                  },
                   inputs: [
                     // Grade
                     {
