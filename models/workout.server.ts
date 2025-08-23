@@ -195,14 +195,17 @@ export const getNextSets = async ({
               null;
             const successful =
               workingSets &&
-              scheduleEntry.workingSets &&
-              scheduleEntry.workingReps &&
-              workingSets.length >= scheduleEntry.workingSets &&
-              workingSets.every(
-                ({ inputs }) =>
-                  inputs[repsInputIndex] &&
-                  inputs[repsInputIndex].value >= scheduleEntry.workingReps!,
-              );
+              (scheduleEntry.workingSets
+                ? workingSets.length >= scheduleEntry.workingSets
+                : true) &&
+              (scheduleEntry.workingReps
+                ? workingSets.every(
+                    ({ inputs }) =>
+                      inputs[repsInputIndex] &&
+                      inputs[repsInputIndex].value >=
+                        scheduleEntry.workingReps!,
+                  )
+                : true);
 
             const finalWorkingSetReps =
               workingSets?.[workingSets.length - 1]?.inputs[repsInputIndex]
