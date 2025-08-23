@@ -884,6 +884,13 @@ export async function* materializeOnsightWorkouts(
                 input: "$Ascents",
                 as: "ascent",
                 in: {
+                  meta: {
+                    attemptCount: {
+                      $toInt: {
+                        $arrayElemAt: [{ $split: ["$$ascent", "/"] }, 0],
+                      },
+                    },
+                  },
                   inputs: [
                     // Grade
                     { value: { $literal: null }, unit: Unit.FrenchRounded },
