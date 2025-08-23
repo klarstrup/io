@@ -175,6 +175,7 @@ export async function* materializeToploggerWorkouts(
                 in: {
                   meta: {
                     boulderCircuitId: "$$climbLog.climbGroupClimb.climbGroupId",
+                    attemptCount: { $add: ["$$climbLog.tryIndex", 1] },
                   },
                   inputs: [
                     // Grade

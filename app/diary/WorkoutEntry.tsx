@@ -102,6 +102,7 @@ export function WorkoutEntryExercise({
             top: sendType === SendType.Top,
             zone: sendType === SendType.Zone,
             attempt: sendType === SendType.Attempt,
+            attemptCount: set.meta?.attemptCount as number | undefined,
             repeat: sendType === SendType.Repeat,
             number: String(i + 1),
             angle: set.inputs[3]?.value,

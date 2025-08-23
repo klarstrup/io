@@ -11,7 +11,27 @@ interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   grade?: string;
   angle?: number;
   circuitName?: string;
+  attemptCount?: number;
 }
+
+const attemptRows = 5;
+const columnWidth = 10;
+const rowHeight = 10;
+const AttemptBlibs = ({ attemptCount }: { attemptCount?: number }) =>
+  attemptCount !== undefined
+    ? Array.from({ length: attemptCount - 1 }, (_, i) => (
+        <rect
+          key={i}
+          width={rowHeight}
+          height={rowHeight}
+          x={2 + ((i * (columnWidth + 1)) % (attemptRows * (columnWidth + 1)))}
+          y={2 + ~~(i / attemptRows) * (rowHeight + 1)}
+          fill="white"
+          stroke={"currentColor"}
+          strokeWidth={4}
+        ></rect>
+      ))
+    : null;
 
 const GradeText = ({ grade }: { grade: string }) => (
   <text
@@ -23,7 +43,7 @@ const GradeText = ({ grade }: { grade: string }) => (
     fontSize="34px"
     stroke="#000"
     paintOrder="stroke"
-    strokeWidth="3px"
+    strokeWidth="4px"
   >
     {grade}
   </text>
@@ -50,6 +70,7 @@ const FlashBadge = ({
   grade,
   angle,
   circuitName,
+  attemptCount,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -73,6 +94,7 @@ const FlashBadge = ({
     >
       ⚡️
     </text>
+    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -86,6 +108,7 @@ const TopBadge = ({
   grade,
   angle,
   circuitName,
+  attemptCount,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -99,6 +122,7 @@ const TopBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -112,6 +136,7 @@ const ZoneBadge = ({
   grade,
   angle,
   circuitName,
+  attemptCount,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -131,6 +156,7 @@ const ZoneBadge = ({
       width="60"
       height="60"
     ></rect>
+    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -144,6 +170,7 @@ const AttemptBadge = ({
   grade,
   angle,
   circuitName,
+  attemptCount,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -157,6 +184,7 @@ const AttemptBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -170,6 +198,7 @@ const RepeatBadge = ({
   grade,
   angle,
   circuitName,
+  attemptCount,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -194,6 +223,7 @@ const RepeatBadge = ({
     >
       🔁
     </text>
+    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -207,6 +237,7 @@ const NoAttemptBadge = ({
   grade,
   angle,
   circuitName,
+  attemptCount,
   ...props
 }: ProblemBadgeProps) => (
   <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 58 58" {...props}>
@@ -221,6 +252,7 @@ const NoAttemptBadge = ({
       height="50"
       strokeWidth="8"
     ></rect>
+    <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <GradeText grade={circuitName} />
@@ -241,6 +273,7 @@ function ProblemBadge({
   color: inColor,
   angle,
   circuit,
+  attemptCount,
 }: {
   number?: string | number;
   flash: boolean;
@@ -252,6 +285,7 @@ function ProblemBadge({
   color?: string;
   angle?: number;
   circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
+  attemptCount?: number;
 }) {
   const Badge = flash
     ? FlashBadge
@@ -307,6 +341,7 @@ function ProblemBadge({
           : undefined
       }
       angle={angle}
+      attemptCount={attemptCount}
       title={`${number}${
         number && grade ? `(${new Grade(grade).name})` : ""
       }${!number && grade ? new Grade(grade).name : ""}: ${
@@ -337,6 +372,7 @@ type PP = NonNullable<
 >[number] & {
   angle?: number;
   circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
+  attemptCount?: number;
   estGrade?: number | null;
 };
 
