@@ -670,6 +670,7 @@ export async function* materializeMoonBoardWorkouts(
                 input: "$entries",
                 as: "entry",
                 in: {
+                  meta: { attemptCount: { $add: ["$$entry.Attempts", 1] } },
                   inputs: [
                     // Grade
                     {
