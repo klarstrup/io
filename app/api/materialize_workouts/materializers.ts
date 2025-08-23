@@ -1083,6 +1083,9 @@ export async function* materializeClimbalongWorkouts(
                 input: "$performances",
                 as: "performance",
                 in: {
+                  meta: {
+                    attemptCount: "$$performance.numberOfAttempts",
+                  },
                   inputs: [
                     // Grade
                     {
