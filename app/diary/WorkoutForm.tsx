@@ -48,6 +48,29 @@ import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
+const colorNameToEmoji = (colorName: string): string =>
+  colorName === "mint"
+    ? "🩵"
+    : colorName === "yellow"
+      ? "💛"
+      : colorName === "green"
+        ? "💚"
+        : colorName === "red"
+          ? "❤️"
+          : colorName === "purple"
+            ? "💜"
+            : colorName === "orange"
+              ? "🧡"
+              : colorName === "white"
+                ? "🤍"
+                : colorName === "pink"
+                  ? "🩷"
+                  : colorName === "blue"
+                    ? "💙"
+                    : colorName === "black"
+                      ? "🖤"
+                      : colorName;
+
 /**
  * Create a date YYYY-MM-DD date string that is typecasted as a `Date`.
  * Hack when using `defaultValues` in `react-hook-form`
@@ -633,8 +656,9 @@ function SetsForm({
           ) : null}
           {exercise.inputs.map((input, inputIndex) =>
             boulderCircuits?.length &&
-            input.type === InputType.Grade &&
-            Math.random() > 1 ? null : (
+            (input.type === InputType.Grade ||
+              (input.display_name === "Hold Color" &&
+                boulderCircuits?.every((c) => c.holdColor))) ? null : (
               <th key={inputIndex} style={{ fontSize: "0.5em" }}>
                 {input.display_name}{" "}
                 <small>
@@ -725,7 +749,9 @@ function SetsForm({
                     </option>
                     {boulderCircuits.map((c) => (
                       <option value={c.id} key={c.id}>
-                        {c.name}{" "}
+                        {boulderCircuits.every((bC) => bC.holdColor)
+                          ? colorNameToEmoji(c.holdColor!)
+                          : c.name}{" "}
                         {/*c.gradeEstimate
                           ? `(${new Grade(c.gradeEstimate).toString()})`
                           : null*/}
@@ -741,7 +767,7 @@ function SetsForm({
                 setIndex={index}
                 exercise={exercise}
                 isDisabled={isDisabled}
-                locationHasBoulderingCircuits={Boolean(boulderCircuits?.length)}
+                boulderCircuits={boulderCircuits}
               />
               <td width="1%">
                 <StealthButton
@@ -875,7 +901,7 @@ function InputsForm({
   register,
   exercise,
   isDisabled = false,
-  locationHasBoulderingCircuits = false,
+  boulderCircuits,
 }: {
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
@@ -883,7 +909,7 @@ function InputsForm({
   setIndex: number;
   exercise: ExerciseData;
   isDisabled?: boolean;
-  locationHasBoulderingCircuits?: boolean;
+  boulderCircuits?: LocationData["boulderCircuits"];
 }) {
   const { fields: sets, update } = useFieldArray({
     control,
@@ -894,9 +920,10 @@ function InputsForm({
   const onChange = useEvent(() => updateSet());
 
   return exercise.inputs.map((input, index) =>
-    locationHasBoulderingCircuits &&
-    input.type === InputType.Grade &&
-    Math.random() > 1 ? null : (
+    boulderCircuits?.length &&
+    (input.type === InputType.Grade ||
+      (input.display_name === "Hold Color" &&
+        boulderCircuits?.every((c) => c.holdColor))) ? null : (
       <td key={index} className={index ? "pl-1" : "pr-0"}>
         {input.type === InputType.Options && input.options ? (
           <select
@@ -911,27 +938,7 @@ function InputsForm({
             {input.options.map((option, i) => (
               <option key={option.value} value={i}>
                 {input.display_name === "Hold Color"
-                  ? option.value === "mint"
-                    ? "🩵"
-                    : option.value === "yellow"
-                      ? "💛"
-                      : option.value === "green"
-                        ? "💚"
-                        : option.value === "red"
-                          ? "❤️"
-                          : option.value === "purple"
-                            ? "💜"
-                            : option.value === "orange"
-                              ? "🧡"
-                              : option.value === "white"
-                                ? "🤍"
-                                : option.value === "pink"
-                                  ? "🩷"
-                                  : option.value === "blue"
-                                    ? "💙"
-                                    : option.value === "black"
-                                      ? "🖤"
-                                      : option.value
+                  ? colorNameToEmoji(option.value)
                   : option.value}
               </option>
             ))}
