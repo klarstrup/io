@@ -190,7 +190,7 @@ export function WorkoutForm<R extends string>({
 
     const goalWeight = dueSets.find(
       (nextSet) => nextSet.exerciseId === exerciseId,
-    )?.nextWorkingSetInputs[weightInputIndex]?.value;
+    )?.nextWorkingSetInputs?.[weightInputIndex]?.value;
     const warmupIncrement = ((goalWeight ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
 
     const setWeights: number[] = [goalWeight ?? NaN];
