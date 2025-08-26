@@ -16,6 +16,7 @@ import {
   InputType,
   SendType,
   TagType,
+  Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
 import {
@@ -160,19 +161,24 @@ export const getNextSets = async ({
 
             const exercise = workout?.exercise;
             const exerciseDefinition = exercisesById[scheduleEntry.exerciseId]!;
-            const weightInputIndex = exerciseDefinition.inputs.findIndex(
+            let effortInputIndex = exerciseDefinition.inputs.findIndex(
               ({ type }) =>
                 type === InputType.Weight ||
                 type === InputType.Weightassist ||
                 type === InputType.Time,
             );
+            if (effortInputIndex === -1) {
+              effortInputIndex = exerciseDefinition.inputs.findIndex(
+                ({ type }) => type === InputType.Reps,
+              );
+            }
             const repsInputIndex = exerciseDefinition.inputs.findIndex(
               ({ type }) => type === InputType.Reps,
             );
             const heaviestSet = exercise?.sets.reduce((acc, set) => {
               const setReps = set.inputs[repsInputIndex]?.value;
-              const setWeight = set.inputs[weightInputIndex]?.value;
-              const accWeight = acc?.inputs[weightInputIndex]?.value;
+              const setWeight = set.inputs[effortInputIndex]?.value;
+              const accWeight = acc?.inputs[effortInputIndex]?.value;
               return setWeight &&
                 setReps &&
                 scheduleEntry.workingReps &&
@@ -182,15 +188,15 @@ export const getNextSets = async ({
                 : acc;
             }, exercise.sets[0]);
 
-            const heaviestSetWeight =
-              heaviestSet?.inputs[weightInputIndex]?.value ||
+            let heaviestSetEffort =
+              heaviestSet?.inputs[effortInputIndex]?.value ||
               scheduleEntry.baseWeight;
 
             const workingSets =
-              (heaviestSetWeight !== undefined &&
+              (heaviestSetEffort !== undefined &&
                 exercise?.sets.filter(
                   ({ inputs }) =>
-                    inputs[weightInputIndex]?.value === heaviestSetWeight,
+                    inputs[effortInputIndex]?.value === heaviestSetEffort,
                 )) ||
               null;
             const successful =
@@ -199,60 +205,99 @@ export const getNextSets = async ({
                 ? workingSets.length >= scheduleEntry.workingSets
                 : true) &&
               (scheduleEntry.workingReps
-                ? workingSets.every(
+                ? !scheduleEntry.workingSets &&
+                  workingSets.every(
                     ({ inputs }) =>
-                      inputs[repsInputIndex] &&
-                      inputs[repsInputIndex].value >=
-                        scheduleEntry.workingReps!,
+                      inputs.length === 1 &&
+                      inputs.every(({ unit }) => unit === Unit.Reps),
                   )
+                  ? workingSets.reduce((m, s) => m + s.inputs[0]!.value, 0) >=
+                    scheduleEntry.workingReps
+                  : workingSets.every(
+                      ({ inputs }) =>
+                        inputs[repsInputIndex] &&
+                        inputs[repsInputIndex].value >=
+                          scheduleEntry.workingReps!,
+                    )
                 : true);
+
+            if (
+              !scheduleEntry.workingSets &&
+              workingSets?.every(
+                ({ inputs }) =>
+                  inputs.length === 1 &&
+                  inputs.every(({ unit }) => unit === Unit.Reps),
+              )
+            ) {
+              heaviestSetEffort = workingSets.reduce(
+                (m, s) => m + Number(s.inputs[0]!.value),
+                0,
+              );
+            }
 
             const finalWorkingSetReps =
               workingSets?.[workingSets.length - 1]?.inputs[repsInputIndex]
                 ?.value;
 
-            const goalWeight =
-              scheduleEntry.deloadFactor && scheduleEntry.increment
-                ? heaviestSetWeight !== undefined
-                  ? successful
-                    ? finalWorkingSetReps === scheduleEntry.workingReps! * 2
-                      ? scheduleEntry.increment * 2 + heaviestSetWeight
-                      : scheduleEntry.increment + heaviestSetWeight
-                    : scheduleEntry.deloadFactor * heaviestSetWeight
-                  : scheduleEntry.baseWeight
-                : null;
+            const goalEffort = scheduleEntry.increment
+              ? heaviestSetEffort !== undefined
+                ? successful
+                  ? finalWorkingSetReps &&
+                    scheduleEntry.workingReps &&
+                    finalWorkingSetReps >= scheduleEntry.workingReps * 2
+                    ? scheduleEntry.increment * 2 + heaviestSetEffort
+                    : scheduleEntry.increment + heaviestSetEffort
+                  : scheduleEntry.deloadFactor
+                    ? scheduleEntry.deloadFactor * heaviestSetEffort
+                    : scheduleEntry.baseWeight
+                : scheduleEntry.baseWeight
+              : null;
 
-            const nextWorkingSetsWeight = goalWeight
+            const nextWorkingSetsEffort = goalEffort
               ? // Barbell exercises use two plates so not all subdivisions are possible
                 exerciseDefinition.tags?.find(
                   ({ name, type }) =>
                     name === "Barbell" && type === TagType.Equipment,
-                ) && Math.abs(goalWeight - Math.round(goalWeight)) < 0.5
-                ? Math.round(goalWeight)
-                : goalWeight
-              : goalWeight;
+                ) && Math.abs(goalEffort - Math.round(goalEffort)) < 0.5
+                ? Math.round(goalEffort)
+                : goalEffort
+              : goalEffort;
 
-            return {
-              workedOutAt: workout?.workedOutAt || null,
-              exerciseId: scheduleEntry.exerciseId,
-              successful,
-              nextWorkingSetInputs: exerciseDefinition.inputs.map(
+            let nextWorkingSetInputs: WorkoutExerciseSetInput[] | null =
+              exerciseDefinition.inputs.map(
                 ({ type, metric_unit }, inputIndex): WorkoutExerciseSetInput =>
-                  nextWorkingSetsWeight &&
-                  (type === InputType.Weight ||
-                    type === InputType.Weightassist ||
-                    type === InputType.Time)
+                  nextWorkingSetsEffort && inputIndex === effortInputIndex
                     ? {
-                        value: nextWorkingSetsWeight,
+                        value: nextWorkingSetsEffort,
                         unit:
                           exercise?.sets[0]?.inputs[inputIndex]?.unit ||
                           metric_unit,
                       }
                     : scheduleEntry.workingReps && type === InputType.Reps
-                      ? { value: scheduleEntry.workingReps }
-                      : { value: 0 },
-              ),
-              nextWorkingSets: scheduleEntry.workingSets ?? NaN,
+                      ? {
+                          value:
+                            scheduleEntry.workingReps ??
+                            scheduleEntry.baseWeight,
+                          unit: Unit.Reps,
+                        }
+                      : { value: NaN },
+              );
+
+            const nextWorkingSets = scheduleEntry.workingSets ?? NaN;
+
+            if (
+              nextWorkingSetInputs.every(({ value }) => Number.isNaN(value)) &&
+              !nextWorkingSets
+            ) {
+              nextWorkingSetInputs = null;
+            }
+
+            return {
+              workedOutAt: workout?.workedOutAt || null,
+              exerciseId: scheduleEntry.exerciseId,
+              successful,
+              nextWorkingSetInputs,
+              nextWorkingSets,
               scheduleEntry,
             };
           }),

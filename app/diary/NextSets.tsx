@@ -68,12 +68,12 @@ export function NextSets({
                 </span>
                 {showDetails ? (
                   <div className="align-baseline whitespace-nowrap">
-                    {nextWorkingSets ? (
+                    {nextWorkingSetInputs?.length || nextWorkingSets ? (
                       <table className="inline-table w-auto max-w-0 align-baseline text-sm">
                         <tbody>
                           <WorkoutEntryExerciseSetRow
                             exercise={exercise}
-                            set={{ inputs: nextWorkingSetInputs }}
+                            set={{ inputs: nextWorkingSetInputs ?? [] }}
                             repeatCount={nextWorkingSets}
                           />
                         </tbody>

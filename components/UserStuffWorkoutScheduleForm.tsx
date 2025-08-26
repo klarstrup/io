@@ -201,7 +201,8 @@ export default function UserStuffWorkoutScheduleForm({
                         (input) =>
                           input.type === InputType.Weight ||
                           input.type === InputType.Weightassist ||
-                          input.type === InputType.Time,
+                          input.type === InputType.Time ||
+                          input.type === InputType.Reps,
                       ) ? (
                         <>
                           <label className="flex gap-1">
@@ -219,7 +220,8 @@ export default function UserStuffWorkoutScheduleForm({
                                 (input) =>
                                   input.type === InputType.Weight ||
                                   input.type === InputType.Weightassist ||
-                                  input.type === InputType.Time,
+                                  input.type === InputType.Time ||
+                                  input.type === InputType.Reps,
                               )?.metric_unit
                             }
                           </label>
@@ -230,9 +232,7 @@ export default function UserStuffWorkoutScheduleForm({
                               step={0.01}
                               {...register(
                                 `exerciseSchedules.${index}.increment`,
-                                {
-                                  valueAsNumber: true,
-                                },
+                                { valueAsNumber: true },
                               )}
                               className="w-full"
                             />
@@ -241,7 +241,8 @@ export default function UserStuffWorkoutScheduleForm({
                                 (input) =>
                                   input.type === InputType.Weight ||
                                   input.type === InputType.Weightassist ||
-                                  input.type === InputType.Time,
+                                  input.type === InputType.Time ||
+                                  input.type === InputType.Reps,
                               )?.metric_unit
                             }
                           </label>

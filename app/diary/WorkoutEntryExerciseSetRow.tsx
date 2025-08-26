@@ -104,11 +104,14 @@ export function WorkoutEntryExerciseSetRow({
                         {input.value.toLocaleString("en-DK", {
                           maximumFractionDigits: 2,
                         })}
-                        {!(
-                          input.unit === Unit.Reps &&
+                        {set.inputs.length === 1 ||
+                        !(
+                          inputDefinition.type === InputType.Reps &&
                           set.inputs.some(
                             (_, i) =>
-                              exercise.inputs[i]?.type === InputType.Weight,
+                              exercise.inputs[i]?.type === InputType.Weight ||
+                              exercise.inputs[i]?.type ===
+                                InputType.Weightassist,
                           )
                         ) ? (
                           <small>{input.unit}</small>
@@ -169,14 +172,14 @@ export function WorkoutEntryExerciseSetRow({
                 </Fragment>
               );
             })
-        ) : (
+        ) : repeatCount ? (
           <Fragment>
-            <td className="p-0 px-0.5"></td>
+            <td className="p-0"></td>
             <td width="0.01%" className="p-0 text-right">
-              sets
+              <small>sets</small>
             </td>
           </Fragment>
-        )}
+        ) : null}
         {setPR ? (
           <td
             className="p-0 pl-1 text-left text-[10px] leading-0"
