@@ -3,6 +3,8 @@
 
 import { TZDate } from "@date-fns/tz";
 import {
+  addMilliseconds,
+  compareAsc,
   compareDesc,
   formatDistanceToNowStrict,
   isPast,
@@ -12,7 +14,7 @@ import { Route } from "next";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useId, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
@@ -34,6 +36,7 @@ import {
 } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import {
+  durationToMs,
   getCircuitByLocationAndSetColor,
   isClimbingExercise,
   isNextSetDue,
@@ -128,7 +131,10 @@ export function WorkoutForm<R extends string>({
   nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const router = useRouter();
-  const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
+  const tzDate = useMemo(
+    () => new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE),
+    [date, user?.timeZone],
+  );
 
   const {
     handleSubmit,
@@ -166,23 +172,45 @@ export function WorkoutForm<R extends string>({
     name: "exercises",
   });
 
-  const dueSets = nextSets
-    ?.filter((nextSet) => isNextSetDue(tzDate, nextSet))
-    .filter(
-      (nextSet) =>
-        !watch("exercises")?.some(
-          (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId,
+  const dueSets = useMemo(
+    () =>
+      nextSets
+        ?.filter((nextSet) => isNextSetDue(tzDate, nextSet))
+        .filter(
+          (nextSet) =>
+            !watch("exercises")?.some(
+              (exerciseValue) =>
+                exerciseValue.exerciseId === nextSet.exerciseId,
+            ),
         ),
-    );
+    [nextSets, tzDate, watch],
+  );
 
-  const futureSets = nextSets
-    ?.filter((nextSet) => !isNextSetDue(tzDate, nextSet))
-    .filter(
-      (nextSet) =>
-        !watch("exercises")?.some(
-          (exerciseValue) => exerciseValue.exerciseId === nextSet.exerciseId,
+  const futureSets = useMemo(
+    () =>
+      nextSets
+        ?.filter((nextSet) => !isNextSetDue(tzDate, nextSet))
+        .filter(
+          (nextSet) =>
+            !watch("exercises")?.some(
+              (exerciseValue) =>
+                exerciseValue.exerciseId === nextSet.exerciseId,
+            ),
+        )
+        .sort((a, b) =>
+          compareAsc(
+            addMilliseconds(
+              a.workedOutAt!,
+              durationToMs(a.scheduleEntry.frequency),
+            ),
+            addMilliseconds(
+              b.workedOutAt!,
+              durationToMs(b.scheduleEntry.frequency),
+            ),
+          ),
         ),
-    );
+    [nextSets, tzDate, watch],
+  );
 
   const handleAddExercise = useEvent((exerciseId: number) => {
     if (!dueSets) return;
