@@ -542,9 +542,8 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
     const gradePredicate = (
       set: WorkoutExerciseSet & { location: LocationData },
     ) => {
-      console.log({ set });
       const inputGrade = getSetGrade(set, set.location);
-      if (inputGrade) return inputGrade >= 6.67 && inputGrade < 6.83;
+      if (inputGrade) return inputGrade >= 6.67;
     };
 
     const sets = workout
@@ -578,3 +577,5 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
 
   console.table(flashRateByMonth);
 }
+
+//  void calculateFlashRateByMonth("65a85e2c9a437530d3de2e35", new Date());
