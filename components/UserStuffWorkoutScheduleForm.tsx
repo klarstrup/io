@@ -182,6 +182,9 @@ export default function UserStuffWorkoutScheduleForm({
                       </label>
                       {exercise.inputs.some(
                         (input) => input.type === InputType.Reps,
+                      ) &&
+                      !exercise.inputs.every(
+                        (input) => input.type === InputType.Reps,
                       ) ? (
                         <>
                           <label className="flex gap-1">
