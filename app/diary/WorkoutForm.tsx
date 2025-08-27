@@ -554,6 +554,7 @@ export function WorkoutForm<R extends string>({
                 date={date}
                 nextSets={futureSets}
                 onAddExercise={handleAddExercise}
+                showDueDate
               />
             </small>
           </div>
