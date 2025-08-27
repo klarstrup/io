@@ -25,12 +25,14 @@ import {
   exercises,
   exercisesById,
   InputType,
+  SendType,
   Unit,
   type ExerciseData,
 } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import {
   getCircuitByLocationAndSetColor,
+  isClimbingExercise,
   isNextSetDue,
   WorkoutSource,
   type WorkoutData,
@@ -132,6 +134,7 @@ export function WorkoutForm<R extends string>({
     control,
     watch,
     getValues,
+    setValue,
     formState: { isDirty, isSubmitting },
   } = useForm<WorkoutDataFormData>({
     mode: "onChange",
@@ -465,6 +468,7 @@ export function WorkoutForm<R extends string>({
                 <SetsForm
                   control={control}
                   register={register}
+                  setValue={setValue}
                   getValues={getValues}
                   parentIndex={index}
                   exercise={exercise}
@@ -559,6 +563,7 @@ export function WorkoutForm<R extends string>({
 function SetsForm({
   control,
   getValues,
+  setValue,
   parentIndex,
   register,
   exercise,
@@ -568,6 +573,7 @@ function SetsForm({
   control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
   getValues: ReturnType<typeof useForm<WorkoutDataFormData>>["getValues"];
+  setValue: ReturnType<typeof useForm<WorkoutDataFormData>>["setValue"];
   parentIndex: number;
   exercise: ExerciseData;
   isDisabled?: boolean;
@@ -619,6 +625,19 @@ function SetsForm({
               : a.name.localeCompare(b.name),
           )
       : undefined;
+
+  const showAttemptsInput =
+    isClimbingExercise(exercise.id) &&
+    watchedSets.some(
+      (set) =>
+        (set.meta &&
+          "attemptCount" in set.meta &&
+          set.meta?.attemptCount &&
+          Number(set.meta.attemptCount) >= 0) ||
+        Number(set.inputs[2]?.value) === Number(SendType.Attempt) ||
+        Number(set.inputs[2]?.value) === Number(SendType.Top) ||
+        Number(set.inputs[2]?.value) === Number(SendType.Zone),
+    );
 
   return (
     <table className="w-full max-w-md min-w-1/2 border-collapse border-spacing-0">
@@ -708,6 +727,9 @@ function SetsForm({
               </th>
             ),
           )}
+          {showAttemptsInput ? (
+            <th style={{ fontSize: "0.5em" }}>Attempts</th>
+          ) : null}
         </tr>
       </thead>
       <tbody>
@@ -728,7 +750,7 @@ function SetsForm({
                           typeof v === "string" && v ? v : undefined,
                       },
                     )}
-                    className="w-full"
+                    className="w-full text-2xl"
                   >
                     <option value="">
                       ---{" "}
@@ -761,14 +783,77 @@ function SetsForm({
                 </td>
               ) : null}
               <InputsForm
-                control={control}
                 register={register}
+                getValues={getValues}
+                setValue={setValue}
                 parentIndex={parentIndex}
                 setIndex={index}
                 exercise={exercise}
                 isDisabled={isDisabled}
                 boulderCircuits={boulderCircuits}
               />
+              <td className={"pl-1"}>
+                {showAttemptsInput ? (
+                  <input
+                    disabled={
+                      isDisabled ||
+                      Number(watchedSets[index]?.inputs[2]?.value ?? -1) ===
+                        Number(SendType.Flash)
+                    }
+                    {...register(
+                      `exercises.${parentIndex}.sets.${index}.meta.attemptCount`,
+                      {
+                        setValueAs: (v) =>
+                          v === "" || Number.isNaN(Number(v))
+                            ? undefined
+                            : Number(v),
+                        onChange: () => {
+                          const setKey =
+                            `exercises.${parentIndex}.sets.${index}` as const;
+                          const setState = getValues(setKey);
+
+                          if (setState.meta?.attemptCount === 1) {
+                            const newInputs = [...setState.inputs];
+                            newInputs[2] = {
+                              ...newInputs[2],
+                              value: SendType.Flash,
+                            };
+                            setValue(setKey, {
+                              ...setState,
+                              inputs: newInputs,
+                              updatedAt: new Date(),
+                            });
+                          } else if (
+                            setState.meta?.attemptCount &&
+                            Number(setState.meta.attemptCount) >= 1 &&
+                            setState.inputs[2]?.value === SendType.Flash
+                          ) {
+                            const newInputs = [...setState.inputs];
+                            newInputs[2] = {
+                              ...newInputs[2],
+                              value: SendType.Attempt,
+                            };
+                            setValue(setKey, {
+                              ...setState,
+                              inputs: newInputs,
+                              updatedAt: new Date(),
+                            });
+                          } else {
+                            setValue(
+                              setKey,
+                              { ...setState, updatedAt: new Date() },
+                              { shouldDirty: true },
+                            );
+                          }
+                        },
+                      },
+                    )}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="w-12 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+                  />
+                ) : null}
+              </td>
               <td width="1%">
                 <StealthButton
                   disabled={isDisabled}
@@ -897,26 +982,30 @@ function TimeSince({ date }: { date: Date }) {
 function InputsForm({
   parentIndex,
   setIndex,
-  control,
   register,
+  getValues,
+  setValue,
   exercise,
   isDisabled = false,
   boulderCircuits,
 }: {
-  control: ReturnType<typeof useForm<WorkoutDataFormData>>["control"];
   register: ReturnType<typeof useForm<WorkoutDataFormData>>["register"];
+  getValues: ReturnType<typeof useForm<WorkoutDataFormData>>["getValues"];
+  setValue: ReturnType<typeof useForm<WorkoutDataFormData>>["setValue"];
   parentIndex: number;
   setIndex: number;
   exercise: ExerciseData;
   isDisabled?: boolean;
   boulderCircuits?: LocationData["boulderCircuits"];
 }) {
-  const { fields: sets, update } = useFieldArray({
-    control,
-    name: `exercises.${parentIndex}.sets`,
-  });
-  const updateSet = () =>
-    update(setIndex, { ...sets[setIndex]!, updatedAt: new Date() });
+  const updateSet = () => {
+    const setKey = `exercises.${parentIndex}.sets.${setIndex}` as const;
+
+    setValue(setKey, {
+      ...getValues(setKey),
+      updatedAt: new Date(),
+    });
+  };
   const onChange = useEvent(() => updateSet());
 
   return exercise.inputs.map((input, index) =>
@@ -930,9 +1019,38 @@ function InputsForm({
             disabled={isDisabled}
             {...register(
               `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-              { onChange },
+              {
+                onChange: () => {
+                  if (exercise.id === 2001 && index === 2) {
+                    const setKey =
+                      `exercises.${parentIndex}.sets.${setIndex}` as const;
+                    const setState = getValues(setKey);
+                    const sendType = Number(
+                      setState.inputs[2]?.value ?? -1,
+                    ) as SendType;
+
+                    if (sendType === SendType.Flash) {
+                      setValue(setKey, {
+                        ...setState,
+                        meta: { ...setState.meta, attemptCount: 1 },
+                      });
+                    } else if (sendType === SendType.Top) {
+                      if (
+                        !setState.meta?.attemptCount ||
+                        Number(setState.meta.attemptCount) <= 1
+                      ) {
+                        setValue(setKey, {
+                          ...setState,
+                          meta: { ...setState.meta, attemptCount: 2 },
+                        });
+                      }
+                    }
+                  }
+                  onChange();
+                },
+              },
             )}
-            className="w-full"
+            className="w-full text-2xl"
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
             {input.options.map((option, i) => (
@@ -955,7 +1073,9 @@ function InputsForm({
               },
             )}
             className={
-              input.type === InputType.Weightassist ? "w-3/5" : "w-full"
+              input.type === InputType.Weightassist
+                ? "w-3/5 text-2xl"
+                : "w-full text-2xl"
             }
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
@@ -974,7 +1094,7 @@ function InputsForm({
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
                 { onChange },
               )}
-              className="w-full"
+              className="w-full text-2xl"
             >
               {input.hidden_by_default ? <option value="">---</option> : null}
               {frenchRounded.data.map(({ value, name }) => (
