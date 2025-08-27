@@ -1,5 +1,5 @@
 import { tz, TZDate } from "@date-fns/tz";
-import { formatDistanceStrict, startOfDay } from "date-fns";
+import { addMilliseconds, formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { StealthButton } from "../../components/StealthButton";
@@ -110,12 +110,16 @@ export function NextSets({
                       <span className="text-xs">
                         , due{" "}
                         {formatDistanceStrict(
-                          new TZDate(
-                            workedOutAt.getTime() +
-                              durationToMs(scheduleEntry.frequency),
+                          addMilliseconds(
+                            workedOutAt,
+                            durationToMs(scheduleEntry.frequency),
                           ),
-                          startOfDay(tzDate),
-                          { addSuffix: true, roundingMethod: "floor" },
+                          date,
+                          {
+                            addSuffix: true,
+                            roundingMethod: "floor",
+                            unit: "day",
+                          },
                         )}
                       </span>
                     ) : null}
