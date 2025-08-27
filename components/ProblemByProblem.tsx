@@ -1,6 +1,8 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
+import { exercises, SendType } from "../models/exercises";
 import type { LocationData } from "../models/location";
+import { getSetGrade, WorkoutExerciseSet } from "../models/workout";
 import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
 import { getIoOnsightCompetitionEvent } from "../sources/onsight";
 import { type getIoTopLoggerCompEvent } from "../sources/toplogger";
@@ -381,6 +383,37 @@ type PP = NonNullable<
   attemptCount?: number;
   estGrade?: number | null;
 };
+
+const boulderingExercise = exercises.find(({ id }) => id === 2001)!;
+const colorOptions = boulderingExercise.inputs[1]!.options!;
+export const exerciseSetsToProblemByProblem = (
+  location: LocationData | null | undefined,
+  sets: WorkoutExerciseSet[],
+): PP[] =>
+  sets.map((set, i) => {
+    const sendType = Number(set.inputs[2]!.value) as SendType;
+
+    const circuit = location?.boulderCircuits?.find(
+      (c) => c.id === set.meta?.boulderCircuitId,
+    );
+
+    return {
+      grade: set.inputs[0]!.value || undefined,
+      circuit,
+      estGrade: getSetGrade(set, location),
+      // hold color
+      color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
+      flash: sendType === SendType.Flash,
+      top: sendType === SendType.Top,
+      zone: sendType === SendType.Zone,
+      attempt: sendType === SendType.Attempt,
+      attemptCount: set.meta?.attemptCount as number | undefined,
+      repeat: sendType === SendType.Repeat,
+      number: String(i + 1),
+      name: set.meta?.boulderName as string | undefined,
+      angle: set.inputs[3]?.value,
+    };
+  });
 
 export default function ProblemByProblem({
   problemByProblem,

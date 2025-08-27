@@ -2,19 +2,16 @@ import { ObjectId } from "mongodb";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import ProblemByProblem from "../../components/ProblemByProblem";
+import ProblemByProblem, {
+  exerciseSetsToProblemByProblem,
+} from "../../components/ProblemByProblem";
 import Grade from "../../grades";
 import { PRType } from "../../lib";
-import {
-  type ExerciseData,
-  exercisesById,
-  SendType,
-} from "../../models/exercises";
+import { type ExerciseData, exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import {
   calculateClimbingStats,
-  getSetGrade,
   isClimbingExercise,
   type WorkoutData,
   type WorkoutExerciseSet,
@@ -74,41 +71,11 @@ export function WorkoutEntryExercise({
       return null;
     }
 
-    const colorOptions =
-      exercise.inputs[1] &&
-      "options" in exercise.inputs[1] &&
-      exercise.inputs[1].options;
-
-    if (!colorOptions) return null;
-
     return (
       <ProblemByProblem
         groupByGradeAndFlash={sets.every((set) => set.inputs[0]!.value)}
         groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value > -1)}
-        problemByProblem={sets.map((set, i) => {
-          const sendType = Number(set.inputs[2]!.value) as SendType;
-
-          const circuit = location?.boulderCircuits?.find(
-            (c) => c.id === set.meta?.boulderCircuitId,
-          );
-
-          return {
-            grade: set.inputs[0]!.value || undefined,
-            circuit,
-            estGrade: getSetGrade(set, location),
-            // hold color
-            color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
-            flash: sendType === SendType.Flash,
-            top: sendType === SendType.Top,
-            zone: sendType === SendType.Zone,
-            attempt: sendType === SendType.Attempt,
-            attemptCount: set.meta?.attemptCount as number | undefined,
-            repeat: sendType === SendType.Repeat,
-            number: String(i + 1),
-            name: set.meta?.boulderName as string | undefined,
-            angle: set.inputs[3]?.value,
-          };
-        })}
+        problemByProblem={exerciseSetsToProblemByProblem(location, sets)}
       />
     );
   }

@@ -17,6 +17,9 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
+import ProblemByProblem, {
+  exerciseSetsToProblemByProblem,
+} from "../../components/ProblemByProblem";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import { useEvent } from "../../hooks";
@@ -737,7 +740,15 @@ function SetsForm({
           <Fragment key={set.id}>
             <tr className={index % 2 ? "bg-gray-200" : "bg-white"}>
               <td className="pr-0.5 text-xs" width="1%">
-                {index + 1}.
+                {isClimbingExercise(exercise.id) ? (
+                  <ProblemByProblem
+                    problemByProblem={exerciseSetsToProblemByProblem(location, [
+                      watchedSets[index] as WorkoutExerciseSet,
+                    ])}
+                  />
+                ) : (
+                  `${index + 1}.`
+                )}
               </td>
               {boulderCircuits?.length ? (
                 <td>
