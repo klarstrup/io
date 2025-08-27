@@ -3,7 +3,9 @@ import { Fragment } from "react";
 import { auth } from "../../../../auth";
 import { PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
+import { Locations } from "../../../../models/location.server";
 import {
+  getSetGrade,
   isClimbingExercise,
   type WorkoutData,
 } from "../../../../models/workout";
@@ -40,23 +42,47 @@ export default async function DiaryExercise({
         exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
       }))
     : [];
+  const [locations] = user
+    ? await Promise.all([
+        Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray(),
+      ])
+    : [];
 
   if (user && mergeWorkouts) {
     allWorkoutsOfExercise = [
       allWorkoutsOfExercise.reduce(
         (acc: WithId<WorkoutData>, workout) => {
+          const location = workout.locationId
+            ? locations?.find((l) => l._id.toString() === workout.locationId)
+            : workout.location
+              ? locations?.find((l) => l.name === workout.location)
+              : undefined;
+
           for (const exercise of workout.exercises) {
             const existingExercise = acc.exercises.find(
               (e) => e.exerciseId === exercise.exerciseId,
             );
 
+            let reversedSets = [...exercise.sets].reverse();
+
+            if (exercise.exerciseId === 2001) {
+              reversedSets = reversedSets.map((set) => ({
+                ...set,
+                inputs: set.inputs.map((input, index) =>
+                  index === 0
+                    ? {
+                        ...input,
+                        value: input.value ?? getSetGrade(set, location),
+                      }
+                    : input,
+                ),
+              }));
+            }
+
             if (existingExercise) {
-              existingExercise.sets.push(...exercise.sets.reverse());
+              existingExercise.sets.push(...reversedSets);
             } else {
-              acc.exercises.push({
-                ...exercise,
-                sets: exercise.sets.reverse(),
-              });
+              acc.exercises.push({ ...exercise, sets: reversedSets });
             }
           }
 
