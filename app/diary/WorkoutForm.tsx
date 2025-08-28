@@ -790,7 +790,7 @@ function SetsForm({
                           typeof v === "string" && v ? v : undefined,
                       },
                     )}
-                    className="w-full min-w-12 text-xl"
+                    className="w-full min-w-11 text-xl"
                   >
                     <option value="">
                       ---{" "}
@@ -890,7 +890,7 @@ function SetsForm({
                     )}
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="w-10 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+                    className="w-9 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
                   />
                 ) : null}
               </td>
