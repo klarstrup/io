@@ -780,7 +780,7 @@ function SetsForm({
                 )}
               </td>
               {boulderCircuits?.length ? (
-                <td>
+                <td valign="bottom">
                   <select
                     disabled={isDisabled}
                     {...register(
@@ -790,7 +790,7 @@ function SetsForm({
                           typeof v === "string" && v ? v : undefined,
                       },
                     )}
-                    className="w-full min-w-11 text-xl"
+                    className="w-full min-w-11 text-lg"
                   >
                     <option value="">
                       ---{" "}
@@ -832,7 +832,7 @@ function SetsForm({
                 isDisabled={isDisabled}
                 boulderCircuits={boulderCircuits}
               />
-              <td className="pl-1" width="1%">
+              <td className="pl-1" width="1%" valign="bottom">
                 {showAttemptsInput ? (
                   <input
                     disabled={
@@ -890,7 +890,7 @@ function SetsForm({
                     )}
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="w-9 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+                    className="w-full border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
                   />
                 ) : null}
               </td>
@@ -1053,7 +1053,7 @@ function InputsForm({
     (input.type === InputType.Grade ||
       (input.display_name === "Hold Color" &&
         boulderCircuits?.every((c) => c.holdColor))) ? null : (
-      <td key={index} className={index ? "pl-1" : "pr-0"}>
+      <td key={index} className={index ? "pl-1" : "pr-0"} valign="bottom">
         {input.type === InputType.Options && input.options ? (
           <select
             disabled={isDisabled}
@@ -1090,7 +1090,7 @@ function InputsForm({
                 },
               },
             )}
-            className="w-full text-xl"
+            className="w-full text-lg"
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
             {input.options.map((option, i) => (
@@ -1114,8 +1114,8 @@ function InputsForm({
             )}
             className={
               input.type === InputType.Weightassist
-                ? "w-3/5 text-xl"
-                : "w-full text-xl"
+                ? "w-3/5 text-lg"
+                : "w-full text-lg"
             }
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
@@ -1134,7 +1134,7 @@ function InputsForm({
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
                 { onChange },
               )}
-              className="w-full text-xl"
+              className="w-full text-lg"
             >
               {input.hidden_by_default ? <option value="">---</option> : null}
               {frenchRounded.data.map(({ value, name }) => (
