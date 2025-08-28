@@ -790,7 +790,7 @@ function SetsForm({
                           typeof v === "string" && v ? v : undefined,
                       },
                     )}
-                    className="w-full min-w-12 text-2xl"
+                    className="w-full min-w-12 text-xl"
                   >
                     <option value="">
                       ---{" "}
@@ -1090,7 +1090,7 @@ function InputsForm({
                 },
               },
             )}
-            className="w-full text-2xl"
+            className="w-full text-xl"
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
             {input.options.map((option, i) => (
@@ -1114,8 +1114,8 @@ function InputsForm({
             )}
             className={
               input.type === InputType.Weightassist
-                ? "w-3/5 text-2xl"
-                : "w-full text-2xl"
+                ? "w-3/5 text-xl"
+                : "w-full text-xl"
             }
           >
             {input.hidden_by_default ? <option value="">---</option> : null}
@@ -1134,7 +1134,7 @@ function InputsForm({
                 `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
                 { onChange },
               )}
-              className="w-full text-2xl"
+              className="w-full text-xl"
             >
               {input.hidden_by_default ? <option value="">---</option> : null}
               {frenchRounded.data.map(({ value, name }) => (
