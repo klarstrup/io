@@ -790,7 +790,7 @@ function SetsForm({
                           typeof v === "string" && v ? v : undefined,
                       },
                     )}
-                    className="w-full text-2xl min-w-10"
+                    className="w-full min-w-12 text-2xl"
                   >
                     <option value="">
                       ---{" "}
@@ -832,7 +832,7 @@ function SetsForm({
                 isDisabled={isDisabled}
                 boulderCircuits={boulderCircuits}
               />
-              <td className={"pl-1"}>
+              <td className="pl-1" width="1%">
                 {showAttemptsInput ? (
                   <input
                     disabled={
@@ -890,7 +890,7 @@ function SetsForm({
                     )}
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="w-12 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+                    className="w-10 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
                   />
                 ) : null}
               </td>
