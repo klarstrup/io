@@ -769,7 +769,7 @@ function SetsForm({
           <Fragment key={set.id}>
             <tr className={index % 2 ? "bg-gray-200" : "bg-white"}>
               <td className="pr-0.5 text-xs" width="1%">
-                {isClimbingExercise(exercise.id) ? (
+                {isClimbingExercise(exercise.id) && Math.random() > 1 ? (
                   <ProblemByProblem
                     problemByProblem={exerciseSetsToProblemByProblem(location, [
                       watchedSets[index] as WorkoutExerciseSet,
