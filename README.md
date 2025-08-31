@@ -40,7 +40,7 @@ this system and app is developed principally to suit my needs, but anyone with a
 
 1. populate .env.local
 
-<!-- TODO: write how to do this
+<!-- TODO: write how to do this -->
 
 3. install dependencies and run the development server:
 
