@@ -19,7 +19,7 @@ this system and app is developed principally to suit my needs, but anyone with a
 
 - **workout tracking**, from basic sets of exercises of various weights and reps to more climbing-specific augmentations such as the ability to associate "circuits" of predefined colors/grades with the climbing gym "locations" of workouts
 - **exercise development programming**, enabling linear progressive overload style strength and skill development
-- **calendar agenda aggregation** via any provided **iCal/`.ical`/`.ics` source**
+- **calendar agenda aggregation** with any provided **iCal/`.ical`/`.ics` source**
 
 ## third party features
 
