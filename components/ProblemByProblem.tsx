@@ -6,7 +6,7 @@ import { getSetGrade, WorkoutExerciseSet } from "../models/workout";
 import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
 import { getIoOnsightCompetitionEvent } from "../sources/onsight";
 import { type getIoTopLoggerCompEvent } from "../sources/toplogger";
-import { countBy } from "../utils";
+import { colorNameToHTMLColor, countBy } from "../utils";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
@@ -48,6 +48,21 @@ const GradeText = ({ grade }: { grade: string }) => (
     strokeWidth="4px"
   >
     {grade}
+  </text>
+);
+const CircuitText = ({ circuitName }: { circuitName: string }) => (
+  <text
+    y={circuitName.length > 2 ? "44" : "38"}
+    x="6"
+    dominantBaseline="central"
+    textAnchor="start"
+    fill="#fff"
+    fontSize={circuitName.length > 2 ? "17px" : "34px"}
+    stroke="#000"
+    paintOrder="stroke"
+    strokeWidth={circuitName.length > 2 ? "3px" : "4px"}
+  >
+    {circuitName}
   </text>
 );
 
@@ -99,7 +114,7 @@ const FlashBadge = ({
     <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
-      <GradeText grade={circuitName} />
+      <CircuitText circuitName={circuitName} />
     ) : grade ? (
       <GradeText grade={grade} />
     ) : null}
@@ -127,7 +142,7 @@ const TopBadge = ({
     <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
-      <GradeText grade={circuitName} />
+      <CircuitText circuitName={circuitName} />
     ) : grade ? (
       <GradeText grade={grade} />
     ) : null}
@@ -161,7 +176,7 @@ const ZoneBadge = ({
     <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
-      <GradeText grade={circuitName} />
+      <CircuitText circuitName={circuitName} />
     ) : grade ? (
       <GradeText grade={grade} />
     ) : null}
@@ -189,7 +204,7 @@ const AttemptBadge = ({
     <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
-      <GradeText grade={circuitName} />
+      <CircuitText circuitName={circuitName} />
     ) : grade ? (
       <GradeText grade={grade} />
     ) : null}
@@ -228,7 +243,7 @@ const RepeatBadge = ({
     </text>
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
-      <GradeText grade={circuitName} />
+      <CircuitText circuitName={circuitName} />
     ) : grade ? (
       <GradeText grade={grade} />
     ) : null}
@@ -257,7 +272,7 @@ const NoAttemptBadge = ({
     <AttemptBlibs attemptCount={attemptCount} />
     {angle !== undefined ? <AngleText angle={angle} /> : null}
     {circuitName ? (
-      <GradeText grade={circuitName} />
+      <CircuitText circuitName={circuitName} />
     ) : grade ? (
       <GradeText grade={grade} />
     ) : null}
@@ -315,22 +330,7 @@ function ProblemBadge({
     <Badge
       style={{
         maxWidth: "100%",
-        color:
-          color === "mint"
-            ? "#00E0E6"
-            : color === "yellow"
-              ? "#FFDE00"
-              : color === "green"
-                ? "#0CE600"
-                : color === "red"
-                  ? "#E60000"
-                  : color === "purple"
-                    ? "#800080"
-                    : color === "orange"
-                      ? "#FF9B2F"
-                      : color === "white"
-                        ? "#FFEFC1"
-                        : color || "#c84821",
+        color: colorNameToHTMLColor(color) || "#c84821",
       }}
       key={number}
       grade={grade ? new Grade(grade).name : undefined}

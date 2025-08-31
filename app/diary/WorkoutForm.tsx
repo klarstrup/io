@@ -51,33 +51,15 @@ import type {
   IWorkoutExercisesView,
   IWorkoutLocationsView,
 } from "../../models/workout.server";
-import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
+import {
+  colorNameToEmoji,
+  dateToString,
+  DEFAULT_TIMEZONE,
+  isNonEmptyArray,
+} from "../../utils";
 import { deleteWorkout, upsertWorkout } from "./actions";
 import { NextSets } from "./NextSets";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
-
-const colorNameToEmoji = (colorName: string): string =>
-  colorName === "mint"
-    ? "🩵"
-    : colorName === "yellow"
-      ? "💛"
-      : colorName === "green"
-        ? "💚"
-        : colorName === "red"
-          ? "❤️"
-          : colorName === "purple"
-            ? "💜"
-            : colorName === "orange"
-              ? "🧡"
-              : colorName === "white"
-                ? "🤍"
-                : colorName === "pink"
-                  ? "🩷"
-                  : colorName === "blue"
-                    ? "💙"
-                    : colorName === "black"
-                      ? "🖤"
-                      : colorName;
 
 /**
  * Create a date YYYY-MM-DD date string that is typecasted as a `Date`.

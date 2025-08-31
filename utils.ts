@@ -557,3 +557,42 @@ export const parseDateFields = (doc: Record<string, unknown>) => {
   }
   return doc;
 };
+
+export const colorNameToEmoji = (colorName: string): string =>
+  colorName === "mint"
+    ? "🩵"
+    : colorName === "yellow"
+      ? "💛"
+      : colorName === "green"
+        ? "💚"
+        : colorName === "red"
+          ? "❤️"
+          : colorName === "purple"
+            ? "💜"
+            : colorName === "orange"
+              ? "🧡"
+              : colorName === "white"
+                ? "🤍"
+                : colorName === "pink"
+                  ? "🩷"
+                  : colorName === "blue"
+                    ? "💙"
+                    : colorName === "black"
+                      ? "🖤"
+                      : colorName;
+export const colorNameToHTMLColor = (color?: string) =>
+  color === "mint"
+    ? "#00E0E6"
+    : color === "yellow"
+      ? "#FFDE00"
+      : color === "green"
+        ? "#0CE600"
+        : color === "red"
+          ? "#E60000"
+          : color === "purple"
+            ? "#800080"
+            : color === "orange"
+              ? "#FF9B2F"
+              : color === "white"
+                ? "#FFEFC1"
+                : color;
