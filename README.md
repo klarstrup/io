@@ -4,6 +4,8 @@
 <table><tbody><tr><td>
 <img width="1709" height="988" alt="Screenshot 2025-08-31 at 13 20 57" src="https://github.com/user-attachments/assets/8483b3ef-d768-4def-afb5-6ea39589e5d4" />
 </td><td>
+<img width="755" height="1114" alt="Screenshot 2025-08-31 at 14 38 37" src="https://github.com/user-attachments/assets/c2820199-74c0-4ede-9b3b-1491e2266fcd" />
+</td><td>
 <img width="550" height="927" alt="Screenshot 2025-08-31 at 13 21 07" src="https://github.com/user-attachments/assets/8e0b9e9c-0ee1-4bfc-9080-84761a0202ea" />
 </td><td>
 <img width="702" height="918" alt="Screenshot 2025-08-31 at 13 23 27" src="https://github.com/user-attachments/assets/b9c5cc09-8c02-4cb4-8154-62992f9cec46" />
