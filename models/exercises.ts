@@ -18384,6 +18384,15 @@ export const exercises = [
     is_hidden: false,
     is_popular: false,
     name: "Zercher Squat",
+    tags: [
+      { name: "Legs", type: "Muscle Group" },
+      { name: "Lower Back", type: "Muscle Group" },
+      { name: "Advanced", type: "Experience Level" },
+      { name: "Glutes", type: "Muscle Group" },
+      { name: "Quadriceps", type: "Muscle Group" },
+      { name: "Hamstrings", type: "Muscle Group" },
+      { name: "Barbell", type: "Equipment" },
+    ],
   },
   {
     aliases: [],
