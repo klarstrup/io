@@ -36,14 +36,21 @@ this system and app is developed principally to suit my needs, but anyone with a
 
 ## Getting Started
 
-First, run the development server:
+0. have bun installed and a mongodb instance running
+
+1. populate .env.local
+
+<!-- TODO: write how to do this
+
+3. install dependencies and run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+bun install
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. open the local URL provided in the Next.js console output
+
+4.  ❓❔❓❔
+
+5.  profit!
