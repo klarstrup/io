@@ -25,6 +25,7 @@ this system and app is developed principally to suit my needs, but anyone with a
 
 - **workout tracking** via ~~[Fitocracy](https://www.fitocracy.com/)~~, [TopLogger](https://toplogger.nu/en), [RunDouble](https://www.rundouble.com/home), [Kilter Board](https://play.google.com/store/apps/details?id=com.auroraclimbing.kilterboard), [MoonBoard](https://moonclimbing.com/moonboard), [Grippy](https://griptonite.io/grippy/), [Crimpd](https://www.crimpd.com/)
 - **competition journaling** via [Sportstiming](https://www.sportstiming.dk/), [TopLogger](https://toplogger.nu/en), [Onsight](https://onsight.one/), [ClimbAlong](https://climbalong.com/)
+- **food diary** via [MyFitnessPal](https://www.myfitnesspal.com/)
 - **weather forecast** via [tomorrow.io](https://www.tomorrow.io/)
 
 | <h1>**API<br/>404**</h1> | <img width="201" height="169" alt="image" src="https://github.com/user-attachments/assets/0068e0f7-fdce-424e-9685-76906a0c5fcd" /> | <img width="358" height="331" alt="image" src="https://github.com/user-attachments/assets/34f814cc-4f03-47f3-bd12-2d93134f60a3" /> |
