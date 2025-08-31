@@ -34,7 +34,7 @@ this system and app is developed principally to suit my needs, but anyone with a
 # development
 
 
-## Getting Started
+## getting Started
 
 0. have bun installed and a mongodb instance running
 
