@@ -1,3 +1,39 @@
+# the [io](https://io.klarstrup.dk/) app
+
+
+<table><tbody><tr><td>
+<img width="1709" height="988" alt="Screenshot 2025-08-31 at 13 20 57" src="https://github.com/user-attachments/assets/8483b3ef-d768-4def-afb5-6ea39589e5d4" />
+</td><td>
+<img width="550" height="927" alt="Screenshot 2025-08-31 at 13 21 07" src="https://github.com/user-attachments/assets/8e0b9e9c-0ee1-4bfc-9080-84761a0202ea" />
+</td><td>
+<img width="702" height="918" alt="Screenshot 2025-08-31 at 13 23 27" src="https://github.com/user-attachments/assets/b9c5cc09-8c02-4cb4-8154-62992f9cec46" />
+</td><td>
+<img width="710" height="924" alt="Screenshot 2025-08-31 at 13 24 45" src="https://github.com/user-attachments/assets/d774c706-7711-47e2-a5b5-3938f77ba3a4" />
+</td></tr></tbody></table>
+
+hi im io and [io.klarstrup.dk](https://io.klarstrup.dk/) is my attempt to make a personal system for consolidating my life/fitness data from a ton of different apps and planning & for journaling and planning my life and fitness goals  
+
+this system and app is developed principally to suit my needs, but anyone with a GitHub account can sign in and start using it
+
+## first party features
+
+- **workout tracking**, from basic sets of exercises of various weights and reps to more climbing-specific augmentations such as the ability to associate "circuits" of predefined colors/grades with the climbing gym "locations" of workouts
+- **exercise development programming**, enabling linear progressive overload style strength and skill development
+- **calendar agenda aggregation** via any provided **iCal/`.ical`/`.ics` source**
+
+## third party features
+
+- **workout tracking** via ~~[Fitocracy](https://www.fitocracy.com/)~~, [TopLogger](https://toplogger.nu/en), [RunDouble](https://www.rundouble.com/home), [Kilter Board](https://play.google.com/store/apps/details?id=com.auroraclimbing.kilterboard), [MoonBoard](https://moonclimbing.com/moonboard), [Grippy](https://griptonite.io/grippy/), [Crimpd](https://www.crimpd.com/)
+- **competition journaling** via [Sportstiming](https://www.sportstiming.dk/), [TopLogger](https://toplogger.nu/en), [Onsight](https://onsight.one/), [ClimbAlong](https://climbalong.com/)
+- **weather forecast** via [tomorrow.io](https://www.tomorrow.io/)
+
+| <img width="201" height="169" alt="image" src="https://github.com/user-attachments/assets/0068e0f7-fdce-424e-9685-76906a0c5fcd" /> |
+| :----: |
+| <i>most of these data sources currently don't use official 3rd party APIs, as most of these service providers do not have one. mostly they require the user to manually extract authentication/session data from an existing sign-on, and inputting them in the settings for the given data source</i> |
+
+# development
+
+
 ## Getting Started
 
 First, run the development server:
