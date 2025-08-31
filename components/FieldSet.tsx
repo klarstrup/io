@@ -1,4 +1,4 @@
-import { HTMLProps } from "react";
+import type { HTMLProps } from "react";
 
 export const FieldSetY = ({
   children,
@@ -12,7 +12,7 @@ export const FieldSetY = ({
     <fieldset
       {...props}
       className={
-        "flex-1 rounded-lg border-x-0 border-y-4 border-gray-900/20 px-1 pb-2 pt-1 " +
+        "flex-1 rounded-lg border-x-0 border-y-4 border-gray-900/20 px-1 pt-1 pb-2 " +
         className
       }
     >
