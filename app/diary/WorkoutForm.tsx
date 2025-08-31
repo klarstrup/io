@@ -653,11 +653,23 @@ function SetsForm({
         Number(set.inputs[2]?.value) === Number(SendType.Zone),
     );
 
+  const showZoneAttemptsInput =
+    isClimbingExercise(exercise.id) &&
+    watchedSets.some(
+      (set) =>
+        (set.meta &&
+          "zoneAttemptCount" in set.meta &&
+          set.meta?.zoneAttemptCount &&
+          Number(set.meta.zoneAttemptCount) >= 0) ||
+        Number(set.inputs[2]?.value) === Number(SendType.Zone) ||
+        location?.boulderCircuits?.some((c) => c.hasZones),
+    );
+
   return (
-    <table className="w-full max-w-md min-w-1/2 border-collapse border-spacing-0">
+    <table className="w-full max-w-md min-w-1/2 border-separate border-spacing-0.5">
       <thead>
-        <tr>
-          <th>
+        <tr className="text-xs">
+          <th className="text-base">
             <StealthButton
               disabled={isDisabled}
               onClick={() =>
@@ -684,15 +696,13 @@ function SetsForm({
               ➕
             </StealthButton>
           </th>
-          {boulderCircuits?.length ? (
-            <th style={{ fontSize: "0.5em" }}>Circuit</th>
-          ) : null}
+          {boulderCircuits?.length ? <th>Circuit</th> : null}
           {exercise.inputs.map((input, inputIndex) =>
             boulderCircuits?.length &&
             (input.type === InputType.Grade ||
               (input.display_name === "Hold Color" &&
                 boulderCircuits?.every((c) => c.holdColor))) ? null : (
-              <th key={inputIndex} style={{ fontSize: "0.5em" }}>
+              <th key={inputIndex}>
                 {input.display_name}{" "}
                 <small>
                   {input.allowed_units && input.allowed_units.length > 1 ? (
@@ -741,17 +751,18 @@ function SetsForm({
               </th>
             ),
           )}
-          {showAttemptsInput ? (
-            <th style={{ fontSize: "0.5em" }}>Attempts</th>
-          ) : null}
+          {showZoneAttemptsInput ? <th>aZ</th> : null}
+          {showAttemptsInput ? <th>aT</th> : null}
         </tr>
       </thead>
       <tbody>
         {sets.map((set, index) => (
           <Fragment key={set.id}>
-            <tr className={index % 2 ? "bg-gray-200" : "bg-white"}>
-              <td className="pr-0.5 text-xs" width="1%">
-                {isClimbingExercise(exercise.id) && watchedSets[index] ? (
+            <tr className={index % 2 ? "bg-gray-100" : "bg-gray-300"}>
+              <td width="1%">
+                {isClimbingExercise(exercise.id) &&
+                watchedSets[index] &&
+                Math.random() > 1 ? (
                   <ProblemByProblem
                     problemByProblem={exerciseSetsToProblemByProblem(location, [
                       watchedSets[index] as WorkoutExerciseSet,
@@ -762,7 +773,7 @@ function SetsForm({
                 )}
               </td>
               {boulderCircuits?.length ? (
-                <td valign="bottom">
+                <td width="20%">
                   <select
                     disabled={isDisabled}
                     {...register(
@@ -772,7 +783,7 @@ function SetsForm({
                           typeof v === "string" && v ? v : undefined,
                       },
                     )}
-                    className="w-full min-w-11 text-lg"
+                    className="w-full"
                   >
                     <option value="">
                       ---{" "}
@@ -793,12 +804,7 @@ function SetsForm({
                     </option>
                     {boulderCircuits.map((c) => (
                       <option value={c.id} key={c.id}>
-                        {boulderCircuits.every((bC) => bC.holdColor)
-                          ? colorNameToEmoji(c.holdColor!)
-                          : c.name}{" "}
-                        {/*c.gradeEstimate
-                          ? `(${new Grade(c.gradeEstimate).toString()})`
-                          : null*/}
+                        {colorNameToEmoji(c.holdColor) || c.name}
                       </option>
                     ))}
                   </select>
@@ -814,8 +820,36 @@ function SetsForm({
                 isDisabled={isDisabled}
                 boulderCircuits={boulderCircuits}
               />
-              <td className="pl-1" width="1%" valign="bottom">
-                {showAttemptsInput ? (
+              {showZoneAttemptsInput ? (
+                <td width="1%">
+                  {location?.boulderCircuits?.find(
+                    (bC) =>
+                      bC.id === watchedSets[index]?.meta?.boulderCircuitId,
+                  )?.hasZones ? (
+                    <input
+                      disabled={
+                        isDisabled ||
+                        Number(watchedSets[index]?.inputs[2]?.value ?? -1) ===
+                          Number(SendType.Flash)
+                      }
+                      {...register(
+                        `exercises.${parentIndex}.sets.${index}.meta.zoneAttemptCount`,
+                        {
+                          setValueAs: (v) =>
+                            v === "" || Number.isNaN(Number(v))
+                              ? undefined
+                              : Number(v),
+                        },
+                      )}
+                      type="number"
+                      onFocus={(e) => e.target.select()}
+                      className="w-7 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+                    />
+                  ) : null}
+                </td>
+              ) : null}
+              {showAttemptsInput ? (
+                <td width="1%">
                   <input
                     disabled={
                       isDisabled ||
@@ -829,58 +863,18 @@ function SetsForm({
                           v === "" || Number.isNaN(Number(v))
                             ? undefined
                             : Number(v),
-                        onChange: () => {
-                          const setKey =
-                            `exercises.${parentIndex}.sets.${index}` as const;
-                          const setState = getValues(setKey);
-
-                          if (setState.meta?.attemptCount === 1) {
-                            const newInputs = [...setState.inputs];
-                            newInputs[2] = {
-                              ...newInputs[2],
-                              value: SendType.Flash,
-                            };
-                            setValue(setKey, {
-                              ...setState,
-                              inputs: newInputs,
-                              updatedAt: new Date(),
-                            });
-                          } else if (
-                            setState.meta?.attemptCount &&
-                            Number(setState.meta.attemptCount) >= 1 &&
-                            setState.inputs[2]?.value === SendType.Flash
-                          ) {
-                            const newInputs = [...setState.inputs];
-                            newInputs[2] = {
-                              ...newInputs[2],
-                              value: SendType.Attempt,
-                            };
-                            setValue(setKey, {
-                              ...setState,
-                              inputs: newInputs,
-                              updatedAt: new Date(),
-                            });
-                          } else {
-                            setValue(
-                              setKey,
-                              { ...setState, updatedAt: new Date() },
-                              { shouldDirty: true },
-                            );
-                          }
-                        },
                       },
                     )}
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="w-full border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
+                    className="w-7 border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500"
                   />
-                ) : null}
-              </td>
+                </td>
+              ) : null}
               <td width="1%">
                 <StealthButton
                   disabled={isDisabled}
                   onClick={() => remove(index)}
-                  className="mx-1 leading-0"
                 >
                   ❌
                 </StealthButton>
@@ -896,7 +890,6 @@ function SetsForm({
 
                       update(index, { ...setState, comment: undefined });
                     }}
-                    className="mx-0.5"
                   >
                     ✍️
                   </StealthButton>
@@ -909,7 +902,6 @@ function SetsForm({
                       );
                       update(index, { ...setState, comment: "" });
                     }}
-                    className="mx-0.5"
                   >
                     ✍️
                   </StealthButton>
@@ -941,7 +933,6 @@ function SetsForm({
                       }),
                     });
                   }}
-                  className="mx-0.5 leading-0"
                 >
                   ➕
                 </StealthButton>
@@ -952,7 +943,7 @@ function SetsForm({
                 <td
                   colSpan={
                     exercise.inputs.length +
-                    4 +
+                    5 +
                     (boulderCircuits?.length ? 1 : 0)
                   }
                 >
@@ -972,7 +963,7 @@ function SetsForm({
       {lastSet?.updatedAt ? (
         <tfoot>
           <tr>
-            <td colSpan={exercise.inputs.length + 4}>
+            <td colSpan={exercise.inputs.length + 5}>
               <TimeSince date={lastSet.updatedAt} />
             </td>
           </tr>
@@ -1035,136 +1026,160 @@ function InputsForm({
     (input.type === InputType.Grade ||
       (input.display_name === "Hold Color" &&
         boulderCircuits?.every((c) => c.holdColor))) ? null : (
-      <td key={index} className={index ? "pl-1" : "pr-0"} valign="bottom">
-        {input.type === InputType.Options && input.options ? (
-          <select
-            disabled={isDisabled}
-            {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-              {
-                onChange: () => {
-                  if (exercise.id === 2001 && index === 2) {
-                    const setKey =
-                      `exercises.${parentIndex}.sets.${setIndex}` as const;
-                    const setState = getValues(setKey);
-                    const sendType = Number(
-                      setState.inputs[2]?.value ?? -1,
-                    ) as SendType;
+      <td key={index}>
+        {input.display_name === "Hold Color" &&
+        boulderCircuits?.find(
+          (bC) =>
+            bC.id ===
+            getValues(
+              `exercises.${parentIndex}.sets.${setIndex}.meta.boulderCircuitId`,
+            ),
+        )?.holdColor ? null : (
+          <>
+            {input.type === InputType.Options && input.options ? (
+              <select
+                disabled={isDisabled}
+                {...register(
+                  `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+                  {
+                    onChange: () => {
+                      if (exercise.id === 2001 && index === 2) {
+                        const setKey =
+                          `exercises.${parentIndex}.sets.${setIndex}` as const;
+                        const setState = getValues(setKey);
+                        const sendType = Number(
+                          setState.inputs[2]?.value ?? -1,
+                        ) as SendType;
 
-                    if (sendType === SendType.Flash) {
-                      setValue(setKey, {
-                        ...setState,
-                        meta: { ...setState.meta, attemptCount: 1 },
-                      });
-                    } else if (sendType === SendType.Top) {
-                      if (
-                        !setState.meta?.attemptCount ||
-                        Number(setState.meta.attemptCount) <= 1
-                      ) {
-                        setValue(setKey, {
-                          ...setState,
-                          meta: { ...setState.meta, attemptCount: 2 },
-                        });
+                        if (sendType === SendType.Flash) {
+                          setValue(setKey, {
+                            ...setState,
+                            meta: { ...setState.meta, attemptCount: 1 },
+                          });
+                        } else if (sendType === SendType.Top) {
+                          if (
+                            !setState.meta?.attemptCount ||
+                            Number(setState.meta.attemptCount) <= 1
+                          ) {
+                            setValue(setKey, {
+                              ...setState,
+                              meta: { ...setState.meta, attemptCount: 2 },
+                            });
+                          }
+                        }
+                      }
+                      onChange();
+                    },
+                  },
+                )}
+                className="w-full min-w-9"
+              >
+                {input.hidden_by_default ? <option value="">---</option> : null}
+                {input.options.map((option, i) => (
+                  <option key={option.value} value={i}>
+                    {input.display_name === "Hold Color"
+                      ? colorNameToEmoji(option.value)
+                      : input.display_name === "Send"
+                        ? option.value === "flash"
+                          ? "⚡️"
+                          : option.value === "top"
+                            ? "■"
+                            : option.value === "zone"
+                              ? "◪"
+                              : option.value === "repeat"
+                                ? "🔁"
+                                : option.value === "attempt"
+                                  ? "□"
+                                  : option.value
+                        : option.value}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            {input.type === InputType.Weightassist && input.options ? (
+              <select
+                disabled={isDisabled}
+                {...register(
+                  `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
+                  {
+                    setValueAs: (v) =>
+                      typeof v === "string" && v ? v : undefined,
+                    onChange,
+                  },
+                )}
+                className={
+                  input.type === InputType.Weightassist ? "w-3/5" : "w-full"
+                }
+              >
+                {input.hidden_by_default ? <option value="">---</option> : null}
+                {input.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.value}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            {input.type !== InputType.Options ? (
+              input.type === InputType.Grade ? (
+                <select
+                  disabled={isDisabled}
+                  {...register(
+                    `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+                    { onChange },
+                  )}
+                  className="w-full"
+                >
+                  {input.hidden_by_default ? (
+                    <option value="">---</option>
+                  ) : null}
+                  {frenchRounded.data.map(({ value, name }) => (
+                    <option key={value} value={value}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  disabled={isDisabled}
+                  {...register(
+                    `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
+                    { onChange },
+                  )}
+                  type="number"
+                  onFocus={(e) => e.target.select()}
+                  step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
+                  className={
+                    "border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500 " +
+                    (input.type === InputType.Weightassist ? "w-2/5" : "w-full")
+                  }
+                  onKeyDown={(e) => {
+                    const input = e.currentTarget;
+                    const formElements = input.form?.elements;
+                    if (!formElements) return;
+                    if (e.key == "Enter") {
+                      const followingFormElements = Array.from(
+                        formElements,
+                      ).slice(Array.from(formElements).indexOf(input) + 1);
+
+                      for (const element of followingFormElements) {
+                        if (
+                          element instanceof HTMLInputElement &&
+                          element.type === "number"
+                        ) {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          element.focus();
+                          break;
+                        }
                       }
                     }
-                  }
-                  onChange();
-                },
-              },
-            )}
-            className="w-full text-lg"
-          >
-            {input.hidden_by_default ? <option value="">---</option> : null}
-            {input.options.map((option, i) => (
-              <option key={option.value} value={i}>
-                {input.display_name === "Hold Color"
-                  ? colorNameToEmoji(option.value)
-                  : option.value}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {input.type === InputType.Weightassist && input.options ? (
-          <select
-            disabled={isDisabled}
-            {...register(
-              `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.assistType`,
-              {
-                setValueAs: (v) => (typeof v === "string" && v ? v : undefined),
-                onChange,
-              },
-            )}
-            className={
-              input.type === InputType.Weightassist
-                ? "w-3/5 text-lg"
-                : "w-full text-lg"
-            }
-          >
-            {input.hidden_by_default ? <option value="">---</option> : null}
-            {input.options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.value}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {input.type !== InputType.Options ? (
-          input.type === InputType.Grade ? (
-            <select
-              disabled={isDisabled}
-              {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { onChange },
-              )}
-              className="w-full text-lg"
-            >
-              {input.hidden_by_default ? <option value="">---</option> : null}
-              {frenchRounded.data.map(({ value, name }) => (
-                <option key={value} value={value}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              disabled={isDisabled}
-              {...register(
-                `exercises.${parentIndex}.sets.${setIndex}.inputs.${index}.value`,
-                { onChange },
-              )}
-              type="number"
-              onFocus={(e) => e.target.select()}
-              step={input.metric_unit === Unit.Reps ? "1" : "0.01"}
-              className={
-                "border-b-2 border-gray-200 text-right text-2xl leading-none focus:border-gray-500 " +
-                (input.type === InputType.Weightassist ? "w-2/5" : "w-full")
-              }
-              onKeyDown={(e) => {
-                const input = e.currentTarget;
-                const formElements = input.form?.elements;
-                if (!formElements) return;
-                if (e.key == "Enter") {
-                  const followingFormElements = Array.from(formElements).slice(
-                    Array.from(formElements).indexOf(input) + 1,
-                  );
-
-                  for (const element of followingFormElements) {
-                    if (
-                      element instanceof HTMLInputElement &&
-                      element.type === "number"
-                    ) {
-                      e.preventDefault();
-                      e.stopPropagation();
-
-                      element.focus();
-                      break;
-                    }
-                  }
-                }
-              }}
-            />
-          )
-        ) : null}
+                  }}
+                />
+              )
+            ) : null}
+          </>
+        )}
       </td>
     ),
   );

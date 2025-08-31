@@ -558,7 +558,7 @@ export const parseDateFields = (doc: Record<string, unknown>) => {
   return doc;
 };
 
-export const colorNameToEmoji = (colorName: string): string =>
+export const colorNameToEmoji = (colorName?: string) =>
   colorName === "mint"
     ? "🩵"
     : colorName === "yellow"

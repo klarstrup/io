@@ -8,6 +8,7 @@ export interface LocationData {
     id: string;
     name: string;
     description?: string;
+    hasZones?: boolean;
     // Internal estimate by io
     gradeEstimate?: number;
     // Stated corresponding grade

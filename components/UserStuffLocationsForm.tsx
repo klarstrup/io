@@ -99,7 +99,7 @@ function UserStuffLocationForm({
           legend="Bouldering Circuits"
           className="flex flex-col items-stretch gap-1"
         >
-          <table>
+          <table className="border-separate border-spacing-1">
             <thead>
               <tr>
                 <th>
@@ -118,7 +118,7 @@ function UserStuffLocationForm({
                   </button>
                 </th>
                 <th>Name</th>
-                <th>Description</th>
+                <th>Zones</th>
                 <th>Hold Color</th>
                 <th>Label Color</th>
                 <th>Grade</th>
@@ -174,26 +174,34 @@ function UserStuffLocationForm({
                     <td>
                       <input
                         type="text"
-                        className="w-16"
+                        className="w-full"
                         {...register(`boulderCircuits.${index}.name`)}
                       />
-                    </td>
-                    <td>
                       <input
                         type="text"
-                        className="w-24"
+                        className="w-full"
+                        placeholder="Description"
                         {...register(`boulderCircuits.${index}.description`)}
                       />
                     </td>
                     <td>
                       <input
+                        type="checkbox"
+                        className="w-full"
+                        {...register(`boulderCircuits.${index}.hasZones`)}
+                      />
+                    </td>
+                    <td>
+                      <input
                         type="text"
-                        className="w-16"
+                        className="w-full"
+                        placeholder="Primary"
                         {...register(`boulderCircuits.${index}.holdColor`)}
                       />{" "}
                       <input
                         type="text"
-                        className="w-16"
+                        className="w-full"
+                        placeholder="Secondary"
                         {...register(
                           `boulderCircuits.${index}.holdColorSecondary`,
                         )}
@@ -202,7 +210,7 @@ function UserStuffLocationForm({
                     <td>
                       <input
                         type="text"
-                        className="w-16"
+                        className="w-full"
                         {...register(`boulderCircuits.${index}.labelColor`)}
                       />
                     </td>
@@ -212,6 +220,7 @@ function UserStuffLocationForm({
                         {...register(`boulderCircuits.${index}.gradeEstimate`, {
                           valueAsNumber: true,
                         })}
+                        className="w-full"
                       >
                         <option value="">---</option>
                         {frenchRounded.data.map(({ value, name }) => (
@@ -222,33 +231,41 @@ function UserStuffLocationForm({
                       </select>
                     </td>
                     <td>
-                      <select
-                        disabled={isDisabled}
-                        {...register(`boulderCircuits.${index}.gradeRange.0`, {
-                          valueAsNumber: true,
-                        })}
-                      >
-                        <option value="">---</option>
-                        {frenchRounded.data.map(({ value, name }) => (
-                          <option key={value} value={value}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
-                      -
-                      <select
-                        disabled={isDisabled}
-                        {...register(`boulderCircuits.${index}.gradeRange.1`, {
-                          valueAsNumber: true,
-                        })}
-                      >
-                        <option value="">---</option>
-                        {frenchRounded.data.map(({ value, name }) => (
-                          <option key={value} value={value}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex items-center justify-center gap-1">
+                        <select
+                          disabled={isDisabled}
+                          {...register(
+                            `boulderCircuits.${index}.gradeRange.0`,
+                            {
+                              valueAsNumber: true,
+                            },
+                          )}
+                        >
+                          <option value="">---</option>
+                          {frenchRounded.data.map(({ value, name }) => (
+                            <option key={value} value={value}>
+                              {name}
+                            </option>
+                          ))}
+                        </select>
+                        -
+                        <select
+                          disabled={isDisabled}
+                          {...register(
+                            `boulderCircuits.${index}.gradeRange.1`,
+                            {
+                              valueAsNumber: true,
+                            },
+                          )}
+                        >
+                          <option value="">---</option>
+                          {frenchRounded.data.map(({ value, name }) => (
+                            <option key={value} value={value}>
+                              {name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </td>
                   </tr>
                 );
