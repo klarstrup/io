@@ -27,9 +27,9 @@ this system and app is developed principally to suit my needs, but anyone with a
 - **competition journaling** via [Sportstiming](https://www.sportstiming.dk/), [TopLogger](https://toplogger.nu/en), [Onsight](https://onsight.one/), [ClimbAlong](https://climbalong.com/)
 - **weather forecast** via [tomorrow.io](https://www.tomorrow.io/)
 
-| <img width="201" height="169" alt="image" src="https://github.com/user-attachments/assets/0068e0f7-fdce-424e-9685-76906a0c5fcd" /> |
-| :----: |
-| <i>most of these data sources currently don't use official 3rd party APIs, as most of these service providers do not have one. mostly they require the user to manually extract authentication/session data from an existing sign-on, and inputting them in the settings for the given data source</i> |
+| **API 404** | <img width="201" height="169" alt="image" src="https://github.com/user-attachments/assets/0068e0f7-fdce-424e-9685-76906a0c5fcd" /> | <img width="358" height="331" alt="image" src="https://github.com/user-attachments/assets/34f814cc-4f03-47f3-bd12-2d93134f60a3" /> |
+| :----: | :----: | :----: |
+| <i>most of these data sources currently don't use official 3rd party APIs, as most of these service providers do not have one.</i> | <i>generally they require the user to manually extract authentication/session data from an existing sign-on, and inputting them in the settings for the given data source</i> | <i>weather forecasts are fetched based on a simple geohash input</i> |
 
 # development
 
