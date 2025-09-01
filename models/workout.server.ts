@@ -8,6 +8,7 @@ import {
 } from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
+import { frenchRounded } from "../grades";
 import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
 import {
@@ -19,6 +20,7 @@ import {
   Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
+import { Locations } from "./location.server";
 import {
   getSetGrade,
   isClimbingExercise,
@@ -579,3 +581,82 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
 }
 
 //  void calculateFlashRateByMonth("65a85e2c9a437530d3de2e35", new Date());
+
+const flashGradeRateThreshold = 0.95;
+export const calculateFlashGradeOn = async (userId: string, date: Date) => {
+  const workouts = await MaterializedWorkoutsView.find({
+    userId,
+    "exercises.exerciseId": 2001,
+    workedOutAt: { $lte: date, $gt: subMonths(date, 1) },
+    deletedAt: { $exists: false },
+  }).toArray();
+  const locations = await Locations.find({ userId }).toArray();
+
+  const climbingSets = workouts.flatMap((w) =>
+    w.exercises
+      .filter((e) => isClimbingExercise(e.exerciseId))
+      .flatMap((e) =>
+        e.sets
+          .filter((s) => (s.inputs[2]?.value as SendType) !== SendType.Repeat)
+          .map(
+            (set) =>
+              [
+                set,
+                locations.find((l) => l._id.toString() === w.locationId),
+              ] as const,
+          ),
+      ),
+  );
+
+  if (!climbingSets.length) return null;
+
+  const grades = climbingSets
+    .map(
+      ([set, location]) =>
+        [set, location, getSetGrade(set, location)!] as const,
+    )
+    .filter(([, , grade]) => typeof grade === "number" && grade > 0);
+
+  if (!grades.length) return null;
+
+  let flashGrade: number | null = null;
+  for (const systemGrade of frenchRounded.data) {
+    const lowerGrade =
+      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) - 1]?.value ||
+      0;
+    const upperGrade =
+      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) + 1]?.value ||
+      Infinity;
+    const setsInGrade = grades.filter(
+      ([, , grade]) => grade > lowerGrade && grade < upperGrade,
+    );
+    if (!setsInGrade.length) continue;
+    const flashedSetsInGrade = setsInGrade.filter(
+      ([set]) => (set.inputs[2]?.value as SendType) === SendType.Flash,
+    );
+    const flashRate = flashedSetsInGrade.length / setsInGrade.length;
+
+    /*
+    const sentSetsInGrade = setsInGrade.filter(
+      ([set]) =>
+        (set.inputs[2]?.value as SendType) === SendType.Flash ||
+        (set.inputs[2]?.value as SendType) === SendType.Top,
+    );
+    const sendRate = sentSetsInGrade.length / setsInGrade.length;
+    console.log({
+      systemGrade: systemGrade.name,
+      sendRate: sendRate.toLocaleString("en-US", { style: "percent" }),
+      flashRate: flashRate.toLocaleString("en-US", { style: "percent" }),
+    });
+    */
+
+    if (
+      flashRate >= flashGradeRateThreshold &&
+      (!flashGrade || systemGrade.value > flashGrade)
+    ) {
+      flashGrade = systemGrade.value;
+    }
+  }
+
+  return flashGrade;
+};

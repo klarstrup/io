@@ -16,10 +16,12 @@ import {
   calculateClimbingStats,
   isClimbingExercise,
 } from "../../models/workout";
+import { calculateFlashGradeOn } from "../../models/workout.server";
 import { dateToString, isNonEmptyArray } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
+import Grade from "../../grades";
 
-export function DiaryEntryWeek({
+export async function DiaryEntryWeek({
   user,
   weekDate,
   diaryEntries,
@@ -55,6 +57,10 @@ export function DiaryEntryWeek({
       )) ||
     [];
 
+  const flashGrade = user?.id
+    ? await calculateFlashGradeOn(user?.id, weekInterval.end)
+    : null;
+
   return (
     <div
       key={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
@@ -86,6 +92,11 @@ export function DiaryEntryWeek({
         </span>
         {isNonEmptyArray(weekClimbingSets) &&
           calculateClimbingStats(weekClimbingSets)}
+        {flashGrade ? (
+          <small>
+            <small>1mo Flash Grade: {new Grade(flashGrade).name}</small>
+          </small>
+        ) : null}
       </div>
       {eachDayOfInterval(weekInterval).map((dayte) => {
         const dateStr = dateToString(dayte);
