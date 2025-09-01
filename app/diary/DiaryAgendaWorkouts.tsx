@@ -149,8 +149,6 @@ async function LeastRecentGym({
           { sort: { workedOutAt: -1 } },
         );
 
-        console.log({ workoutInThePast });
-
         return {
           location,
           mostRecentVisit: workoutInThePast?.workedOutAt || null,
