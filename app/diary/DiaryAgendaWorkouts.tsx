@@ -1,10 +1,5 @@
 import { tz, TZDate } from "@date-fns/tz";
-import {
-  compareAsc,
-  formatDistanceStrict,
-  startOfDay,
-  subMonths,
-} from "date-fns";
+import { compareAsc, formatDistance, startOfDay, subMonths } from "date-fns";
 import { type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
@@ -177,12 +172,12 @@ async function LeastRecentGym({
                   style={{ color: "#edab00" }}
                 >
                   {location.mostRecentVisit
-                    ? formatDistanceStrict(
+                    ? formatDistance(
                         startOfDay(location.mostRecentVisit, {
                           in: tz(tzDate.timeZone || DEFAULT_TIMEZONE),
                         }),
                         startOfDay(tzDate),
-                        { addSuffix: true, roundingMethod: "ceil" },
+                        { addSuffix: true },
                       )
                     : "never"}
                 </Link>
