@@ -595,4 +595,6 @@ export const colorNameToHTMLColor = (color?: string) =>
               ? "#FF9B2F"
               : color === "white"
                 ? "#FFEFC1"
-                : color;
+                : color === "pink"
+                  ? "#F0F"
+                  : color;
