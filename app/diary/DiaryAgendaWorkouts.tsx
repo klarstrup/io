@@ -5,7 +5,7 @@ import {
   startOfDay,
   subMonths,
 } from "date-fns";
-import { ObjectId, type WithId } from "mongodb";
+import { type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -129,58 +129,45 @@ async function LeastRecentGym({
 }) {
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
-  const leastRecentBoulderingLocations = (
+  const favoriteLocations = await Locations.find({
+    userId: user.id,
+    isFavorite: true,
+  }).toArray();
+  const leastRecentLocations = (
     await Promise.all(
-      [
-        "Bison Boulders",
-        "Boulders Hvidovre",
-        "Boulders Sydhavn",
-        "Boulders Valby",
-        "Boulders Amager",
-        "Beta Boulders West",
-        "Beta Boulders South",
-        "Beta Boulders Østerbro",
-      ].map(async (locationName) => {
-        const location = await Locations.findOne({
-          userId: user.id,
-          name: locationName,
-        });
-
-        const boulderingInThePast = await MaterializedWorkoutsView.findOne(
+      favoriteLocations.map(async (location) => {
+        const workoutInThePast = await MaterializedWorkoutsView.findOne(
           {
             userId: user.id,
-            "exercises.exerciseId": 2001,
             workedOutAt: { $gte: subMonths(tzDate, 1), $lte: tzDate },
             deletedAt: { $exists: false },
-            $or: location
-              ? [
-                  { locationId: location._id.toString() },
-                  { location: locationName },
-                ]
-              : [{ location: locationName }],
+            $or: [
+              { locationId: location._id.toString() },
+              { location: location.name },
+            ],
           },
           { sort: { workedOutAt: -1 } },
         );
 
+        console.log({ workoutInThePast });
+
         return {
-          location: location ?? {
-            userId: user.id,
-            _id: new ObjectId(ObjectId.generate()),
-            name: locationName,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          mostRecentVisit: boulderingInThePast?.workedOutAt || null,
+          location,
+          mostRecentVisit: workoutInThePast?.workedOutAt || null,
         } satisfies IWorkoutLocationsView;
       }),
     )
   ).sort((a, b) => compareAsc(a.mostRecentVisit || 0, b.mostRecentVisit || 0));
 
+  if (!isNonEmptyArray(leastRecentLocations)) {
+    return null;
+  }
+
   return (
     <div>
-      <h2 className="text-lg font-semibold">Least recent boulder gyms:</h2>
+      <h2 className="text-lg font-semibold">Least recent gyms:</h2>
       <ul className="flex flex-col gap-1">
-        {leastRecentBoulderingLocations.slice(0, 4).map((location) => (
+        {leastRecentLocations.slice(0, 4).map((location) => (
           <li key={location.location._id.toString()} className="leading-none">
             <div className="flex items-center gap-1">
               <span className="font-semibold">{location.location.name}</span> -{" "}

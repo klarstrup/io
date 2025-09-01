@@ -4,6 +4,7 @@ export interface LocationData {
   updatedAt: Date;
   deletedAt?: Date;
   name: string;
+  isFavorite?: boolean;
   boulderCircuits?: {
     id: string;
     name: string;

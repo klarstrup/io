@@ -95,6 +95,9 @@ function UserStuffLocationForm({
         }
         className="flex flex-col items-stretch gap-1"
       >
+        <label>
+          Favorite: <input type="checkbox" {...register("isFavorite")} />
+        </label>
         <FieldSetX
           legend="Bouldering Circuits"
           className="flex flex-col items-stretch gap-1"
