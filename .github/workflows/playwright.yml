@@ -11,4 +11,5 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun ci
       - run: bunx playwright install --with-deps
+      - run: bun run build
       - run: bunx playwright test
