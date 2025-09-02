@@ -630,7 +630,10 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
     const setsInGrade = grades.filter(
       ([, , grade]) => grade > lowerGrade && grade < upperGrade,
     );
+
     if (!setsInGrade.length) continue;
+    if (setsInGrade.length < 2) continue;
+
     const flashedSetsInGrade = setsInGrade.filter(
       ([set]) => (set.inputs[2]?.value as SendType) === SendType.Flash,
     );
@@ -659,4 +662,73 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
   }
 
   return flashGrade;
+};
+
+export const calculate95thSendGradeOn = async (userId: string, date: Date) => {
+  const workouts = await MaterializedWorkoutsView.find({
+    userId,
+    "exercises.exerciseId": 2001,
+    workedOutAt: { $lte: date, $gt: subMonths(date, 1) },
+    deletedAt: { $exists: false },
+  }).toArray();
+  const locations = await Locations.find({ userId }).toArray();
+
+  const climbingSets = workouts.flatMap((w) =>
+    w.exercises
+      .filter((e) => isClimbingExercise(e.exerciseId))
+      .flatMap((e) =>
+        e.sets
+          .filter((s) => (s.inputs[2]?.value as SendType) !== SendType.Repeat)
+          .map(
+            (set) =>
+              [
+                set,
+                locations.find((l) => l._id.toString() === w.locationId),
+              ] as const,
+          ),
+      ),
+  );
+
+  if (!climbingSets.length) return null;
+
+  const grades = climbingSets
+    .map(
+      ([set, location]) =>
+        [set, location, getSetGrade(set, location)!] as const,
+    )
+    .filter(([, , grade]) => typeof grade === "number" && grade > 0);
+
+  if (!grades.length) return null;
+
+  let sendGrade: number | null = null;
+  for (const systemGrade of frenchRounded.data) {
+    const lowerGrade =
+      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) - 1]?.value ||
+      0;
+    const upperGrade =
+      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) + 1]?.value ||
+      Infinity;
+    const setsInGrade = grades.filter(
+      ([, , grade]) => grade > lowerGrade && grade < upperGrade,
+    );
+
+    if (!setsInGrade.length) continue;
+    if (setsInGrade.length < 2) continue;
+
+    const sentSetsInGrade = setsInGrade.filter(
+      ([set]) =>
+        (set.inputs[2]?.value as SendType) === SendType.Flash ||
+        (set.inputs[2]?.value as SendType) === SendType.Top,
+    );
+    const sendRate = sentSetsInGrade.length / setsInGrade.length;
+
+    if (
+      sendRate >= flashGradeRateThreshold &&
+      (!sendGrade || systemGrade.value > sendGrade)
+    ) {
+      sendGrade = systemGrade.value;
+    }
+  }
+
+  return sendGrade;
 };

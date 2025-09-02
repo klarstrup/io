@@ -1,3 +1,9 @@
+import {
+  eachWeekOfInterval,
+  endOfISOWeek,
+  endOfWeek,
+  subMonths,
+} from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import { Fragment } from "react";
 import { auth } from "../../../../auth";
@@ -10,10 +16,13 @@ import {
   type WorkoutData,
 } from "../../../../models/workout";
 import {
+  calculate95thSendGradeOn,
+  calculateFlashGradeOn,
   getIsSetPR,
   MaterializedWorkoutsView,
 } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
+import DiaryExerciseGraph from "./DiaryExerciseGraph";
 
 export default async function DiaryExercise({
   exerciseId,
@@ -166,6 +175,45 @@ export default async function DiaryExercise({
           </button>
         </form>
       </div>
+      {user && exerciseId === 2001 ? (
+        <DiaryExerciseGraph
+          data={[
+            {
+              id: "95% Flash Grade",
+              data: await Promise.all(
+                eachWeekOfInterval(
+                  {
+                    start: subMonths(new Date(), 14),
+                    end: new Date(),
+                  },
+                  { weekStartsOn: 1 },
+                ).map(async (date) => ({
+                  x: endOfISOWeek(date),
+                  y: await calculateFlashGradeOn(user.id, endOfISOWeek(date)),
+                })),
+              ),
+            },
+            {
+              id: "95% Send Grade",
+              data: await Promise.all(
+                eachWeekOfInterval(
+                  {
+                    start: subMonths(new Date(), 14),
+                    end: new Date(),
+                  },
+                  { weekStartsOn: 1 },
+                ).map(async (date) => ({
+                  x: endOfISOWeek(date),
+                  y: await calculate95thSendGradeOn(
+                    user.id,
+                    endOfISOWeek(date),
+                  ),
+                })),
+              ),
+            },
+          ]}
+        />
+      ) : null}
       <ul
         style={{
           display: "grid",
