@@ -37,3 +37,10 @@ next-env.d.ts
 # dumps
 dump
 mongodump
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

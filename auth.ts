@@ -10,6 +10,7 @@ const {
   signIn,
   signOut,
 } = NextAuth({
+  trustHost: true,
   adapter: MongoDBAdapter(mongoClient),
   providers: [
     GithubProvider({
