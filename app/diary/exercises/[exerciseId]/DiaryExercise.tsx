@@ -1,9 +1,4 @@
-import {
-  eachWeekOfInterval,
-  endOfISOWeek,
-  endOfWeek,
-  subMonths,
-} from "date-fns";
+import { eachMonthOfInterval, endOfMonth, min, subMonths } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import { Fragment } from "react";
 import { auth } from "../../../../auth";
@@ -181,32 +176,29 @@ export default async function DiaryExercise({
             {
               id: "95% Flash Grade",
               data: await Promise.all(
-                eachWeekOfInterval(
-                  {
-                    start: subMonths(new Date(), 14),
-                    end: new Date(),
-                  },
-                  { weekStartsOn: 1 },
-                ).map(async (date) => ({
-                  x: endOfISOWeek(date),
-                  y: await calculateFlashGradeOn(user.id, endOfISOWeek(date)),
+                eachMonthOfInterval({
+                  start: subMonths(new Date(), 12),
+                  end: new Date(),
+                }).map(async (date) => ({
+                  x: min([endOfMonth(date), new Date()]),
+                  y: await calculateFlashGradeOn(
+                    user.id,
+                    min([endOfMonth(date), new Date()]),
+                  ),
                 })),
               ),
             },
             {
               id: "95% Send Grade",
               data: await Promise.all(
-                eachWeekOfInterval(
-                  {
-                    start: subMonths(new Date(), 14),
-                    end: new Date(),
-                  },
-                  { weekStartsOn: 1 },
-                ).map(async (date) => ({
-                  x: endOfISOWeek(date),
+                eachMonthOfInterval({
+                  start: subMonths(new Date(), 12),
+                  end: new Date(),
+                }).map(async (date) => ({
+                  x: min([endOfMonth(date), new Date()]),
                   y: await calculate95thSendGradeOn(
                     user.id,
-                    endOfISOWeek(date),
+                    min([endOfMonth(date), new Date()]),
                   ),
                 })),
               ),
