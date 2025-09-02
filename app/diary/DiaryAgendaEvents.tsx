@@ -66,7 +66,6 @@ export async function DiaryAgendaEvents({
     const dueSets = nextSets.filter((nextSet) => isNextSetDue(date, nextSet));
     const calName = dateToString(date);
 
-    if (!eventsByDate[calName]) eventsByDate[calName] = [];
     for (const dueSet of dueSets) {
       if (
         Object.values(eventsByDate)
@@ -80,6 +79,7 @@ export async function DiaryAgendaEvents({
       ) {
         continue;
       }
+      if (!eventsByDate[calName]) eventsByDate[calName] = [];
       eventsByDate[calName].push(dueSet);
     }
   }
@@ -121,6 +121,7 @@ export async function DiaryAgendaEvents({
           )
         )
       ) {
+        if (!eventsByDate[calName]) eventsByDate[calName] = [];
         eventsByDate[calName].push(event);
       }
     }
