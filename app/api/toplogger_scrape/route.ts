@@ -244,7 +244,6 @@ export const GET = (request: NextRequest) =>
                     yield updateResult;
                   }
 
-                  /*
                   // Also get all the Comp Climbs of the best ranked climber,
                   // presuming that they've attempted every Comp Climb.
                   // This allows for backfilling of Climbs for comps that are no longer
@@ -282,7 +281,6 @@ export const GET = (request: NextRequest) =>
 
                     yield updateResult;
                   }
-                  */
                 }
               }
             }
