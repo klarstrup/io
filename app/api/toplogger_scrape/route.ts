@@ -191,9 +191,9 @@ export const GET = (request: NextRequest) =>
               (comp) => comp.compUserMe,
             );
 
-            for (const comp of randomSliceOfSize(userComps || [], 1)) {
-              for (const poule of randomSliceOfSize(comp.compPoules, 1)) {
-                for (const round of randomSliceOfSize(poule.compRounds, 1)) {
+            for (const comp of userComps || []) {
+              for (const poule of comp.compPoules) {
+                for (const round of poule.compRounds) {
                   const [compRoundUsersForRankingResponse, updateResult] =
                     await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                       compRoundUsersForRankingQuery,
@@ -244,6 +244,7 @@ export const GET = (request: NextRequest) =>
                     yield updateResult;
                   }
 
+                  /*
                   // Also get all the Comp Climbs of the best ranked climber,
                   // presuming that they've attempted every Comp Climb.
                   // This allows for backfilling of Climbs for comps that are no longer
@@ -281,6 +282,7 @@ export const GET = (request: NextRequest) =>
 
                     yield updateResult;
                   }
+                  */
                 }
               }
             }
