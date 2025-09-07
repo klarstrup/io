@@ -83,9 +83,9 @@ body {
   border-radius: 10px;
 
   max-width: calc(100% - 35px);
-  padding: 10px 15px 10px;
+  padding: 5px 10px 10px;
 
-  margin-right: 25px;
+  margin-right: 15px;
   margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -100,7 +100,7 @@ body {
   float: left;
 
   margin-right: 0;
-  margin-left: 25px;
+  margin-left: 15px;
 }
 
 #timeline article div.content:after {
@@ -130,8 +130,8 @@ body {
   content: " ";
   display: block;
   position: absolute;
-  top: 20px;
-  right: -10px;
+  top: 25px;
+  right: -5px;
   z-index: 10;
 
   width: 10px;
@@ -152,7 +152,7 @@ body {
 }
 #timeline article.right::after,
 #timeline article:not(.right):not(.left):nth-child(even)::after {
-  left: -10px;
+  left: -5px;
 }
 
 /* Media queries - Responsive timeline on screens less than 600px wide */
