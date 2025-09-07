@@ -1,11 +1,12 @@
 import { addHours, addMinutes } from "date-fns";
 import {
-  DistanceRaceScore,
-  EventEntry,
+  type DistanceRaceScore,
+  type EventDetails,
+  type EventEntry,
   EventSource,
   SCORING_SOURCE,
   SCORING_SYSTEM,
-  Score,
+  type Score,
 } from "../lib";
 import { percentile } from "../utils";
 import {
@@ -91,7 +92,7 @@ export namespace SportsTiming {
 export async function getSportsTimingEventResults(
   eventId: number,
   ioId: number,
-) {
+): Promise<EventDetails> {
   const event = await SportstimingEvents.findOne({ EventId: eventId });
   if (!event) throw new Error("???");
 
@@ -116,17 +117,16 @@ export async function getSportsTimingEventResults(
   }
 
   return {
-    source: "sportstiming",
+    source: EventSource.Sportstiming,
     type: "competition",
     discipline: "running",
     id: eventId,
     ioId,
     url: `https://www.sportstiming.dk/event/${eventId}/results/${ioId}`,
-    event: event.Name.replace("Copenhagen Urban", "")
+    eventName: event.Name.replace("Copenhagen Urban", "")
       .replace("Copenhagen Beach", "")
       .replace("Refshaleøen", "")
       .replace("Strandparken", ""),
-    subEvent: null,
     venue:
       event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
         .replace("Copenhagen Urban", "Refshaleøen")
@@ -134,7 +134,6 @@ export async function getSportsTimingEventResults(
         .replace("København S", "Amager Strandpark") ||
       (event.Name.includes("Strandparken") && "Amager Strandpark") ||
       null,
-    location: null,
     team:
       eventId === 11107
         ? "L"
@@ -153,20 +152,23 @@ export async function getSportsTimingEventResults(
                     : eventId === 12920
                       ? "S"
                       : null,
-    noParticipants,
+    rounds: [
+      {
+        id: eventId,
+        noParticipants,
+        category:
+          ioResult?.DistanceName.replace("Strandparken 2018", "Open Race")
+            .replace("Refshaleøen ", "")
+            .replace("Strandparken ", "") + " (M)",
+        scores,
+      },
+    ],
     start: ioResult?.StartTime
       ? new Date(ioResult.StartTime)
       : addMinutes(addHours(new Date(event.RawDate), 8), 30),
     end: ioResult?.StartTime
       ? new Date(ioResult.StartTime.valueOf() + duration * 1000)
       : addHours(new Date(event.RawDate), 16),
-    category:
-      ioResult?.DistanceName.replace("Strandparken 2018", "Open Race")
-        .replace("Refshaleøen ", "")
-        .replace("Strandparken ", "") + " (M)",
-    scores,
-    problems: null,
-    problemByProblem: null,
   } as const;
 }
 
@@ -189,12 +191,11 @@ export async function getSportsTimingEventEntries(ioName: string) {
         type: "competition",
         discipline: "running",
         id: result._io_EventId,
-        event: event.Name.replace("Copenhagen Urban", "")
+        eventName: event.Name.replace("Copenhagen Urban", "")
           .replace("Copenhagen Beach", "")
           .replace("Refshaleøen", "")
           .replace("Strandparken", "")
           .replace("  ", " "),
-        subEvent: null,
         venue:
           event.Location?.replace("Copenhagen Beach", "Amager Strandpark")
             .replace("Copenhagen Urban", "Refshaleøen")
@@ -202,7 +203,6 @@ export async function getSportsTimingEventEntries(ioName: string) {
             .replace("København S", "Amager Strandpark") ||
           (event.Name.includes("Strandparken") && "Amager Strandpark") ||
           null,
-        location: null,
         ioId: result.Id,
         start: addMinutes(addHours(new Date(event.RawDate), 8), 30),
         end: addHours(new Date(event.RawDate), 16),

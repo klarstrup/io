@@ -98,7 +98,7 @@ export async function GET() {
       end: DateTime.fromJSDate(event.end, { zone: "UTC" }).setZone(
         "Europe/Copenhagen",
       ),
-      summary: event.event,
+      summary: event.eventName,
       categories: [
         new ICalCategory({ name: event.discipline }),
         new ICalCategory({ name: event.type }),

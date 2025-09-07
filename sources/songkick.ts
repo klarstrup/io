@@ -1,6 +1,6 @@
 import { isAfter } from "date-fns";
 import { dbFetch } from "../fetch";
-import { EventSource, Score } from "../lib";
+import { type EventDetails, EventSource } from "../lib";
 import { DAY_IN_SECONDS } from "../utils";
 
 export namespace Songkick {
@@ -130,7 +130,7 @@ const getPastEvents = (artistId: number) =>
 const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
 
-export async function getSongkickEvents() {
+export async function getSongkickEvents(): Promise<EventDetails[]> {
   if (!process.env.SONGKICK_APIKEY) {
     console.error("Missing SONGKICK_APIKEY");
 
@@ -147,14 +147,14 @@ export async function getSongkickEvents() {
   ];
 
   return events.map(
-    (event) =>
+    (event): EventDetails =>
       ({
         source: EventSource.Songkick,
         type: "performance",
         discipline: "metal",
         id: event.id,
         url: event.uri,
-        event:
+        eventName:
           event.series?.displayName?.replace(" - A Decade Of Noise", "") ??
           event.venue.displayName,
         location: event.venue.metroArea.displayName,
@@ -162,13 +162,11 @@ export async function getSongkickEvents() {
           event.venue.displayName !== "Unknown venue"
             ? event.venue.displayName
             : null,
-        subEvent: null,
         team:
           event.performance.find(
             ({ artist }) =>
               artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID,
           )?.displayName || null,
-        noParticipants: null,
         start:
           event.id === 41027597
             ? new Date("2023-08-26T14:15:00.000Z")
@@ -186,10 +184,6 @@ export async function getSongkickEvents() {
                     event.start.datetime ||
                     event.start.date,
                 ),
-        category: null,
-        scores: [] as Score[],
-        problems: null,
-        problemByProblem: null,
       }) as const,
   );
 }

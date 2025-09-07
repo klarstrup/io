@@ -1,7 +1,9 @@
 import { isAfter, isBefore, isFuture, max, min } from "date-fns";
 import {
+  EventDetails,
   EventEntry,
   EventSource,
+  PP,
   SCORING_SOURCE,
   SCORING_SYSTEM,
   Score,
@@ -244,7 +246,7 @@ const PTS_FLASH_BONUS = 20;
 export async function getIoClimbAlongCompetitionEvent(
   competitionId: number,
   athleteId: number,
-) {
+): Promise<EventDetails> {
   const competition = await ClimbAlongCompetitions.findOne({ competitionId });
   if (!competition) throw new Error("???");
 
@@ -451,15 +453,15 @@ export async function getIoClimbAlongCompetitionEvent(
       source: SCORING_SOURCE.OFFICIAL,
       rank: ioPerformanceSum.rank,
       percentile: percentile(ioPerformanceSum.rank, noParticipants),
-      tops: ioResults?.tops || tops || NaN,
-      zones: ioResults?.zones || zones || NaN,
-      topsAttempts: ioResults?.topsAttempts || topsAttempts || NaN,
-      zonesAttempts: ioResults?.zonesAttempts || zonesAttempts || NaN,
+      tops: ioResults?.tops ?? tops ?? NaN,
+      zones: ioResults?.zones ?? zones ?? NaN,
+      topsAttempts: ioResults?.topsAttempts ?? topsAttempts ?? NaN,
+      zonesAttempts: ioResults?.zonesAttempts ?? zonesAttempts ?? NaN,
     } satisfies TopsAndZonesScore);
   }
 
   return {
-    source: "climbalong",
+    source: EventSource.ClimbAlong,
     type: "competition",
     discipline: "bouldering",
     id: competitionId,
@@ -487,75 +489,68 @@ export async function getIoClimbAlongCompetitionEvent(
           ].filter(Boolean),
         ),
     venue: competition.facility.trim(),
-    event: competition.title.trim(),
-    subEvent: null,
+    eventName: competition.title.trim(),
     location: competition.address,
-    category:
-      ioCircuitChallenge?.title
-        ?.replace("Mænd/", "")
-        ?.replace("Male / ", "")
-        ?.replace("Male", "Open") || null,
-    team: null,
-    noParticipants,
-    problems: noProblems,
-    problemByProblem: problems.length
-      ? Array.from(
-          problems
-            .filter((problem) => ioCircuitIds.includes(problem.circuitId))
-            .reduce(
-              (memo, problem) => {
-                const ioPerformance = ioPerformances?.find(
-                  (performance) => performance.problemId === problem.problemId,
-                );
+    rounds: [
+      {
+        id:
+          ioCircuitChallengeNode?.circuit.circuitId ||
+          competition.competitionId,
+        category:
+          ioCircuitChallenge?.title
+            ?.replace("Mænd/", "")
+            ?.replace("Male / ", "")
+            ?.replace("Male", "Open") || null,
+        noParticipants,
+        problems: noProblems,
+        problemByProblem: problems.length
+          ? Array.from(
+              problems
+                .filter((problem) => ioCircuitIds.includes(problem.circuitId))
+                .reduce((memo, problem) => {
+                  const ioPerformance = ioPerformances?.find(
+                    (performance) =>
+                      performance.problemId === problem.problemId,
+                  );
 
-                // More nastiness here because each problem is repeated for each lane
-                const key = problem.title;
-                memo.set(key, {
-                  number: problem.title,
-                  color: undefined,
-                  grade: undefined,
-                  attempt: Boolean(
-                    ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
-                  ),
-                  zone: Boolean(
-                    ioPerformance?.scores.some((score) =>
-                      isZone(score.holdScore),
-                    ) || memo.get(key)?.zone,
-                  ),
-                  top: Boolean(
-                    ioPerformance?.scores.some((score) =>
-                      isTop(score.holdScore),
-                    ) || memo.get(key)?.top,
-                  ),
-                  flash: Boolean(
-                    ioPerformance?.scores.some(
-                      (score) =>
-                        isTop(score.holdScore) && score.reachedInAttempt === 1,
-                    ) || memo.get(key)?.flash,
-                  ),
-                  repeat: false,
-                });
+                  // More nastiness here because each problem is repeated for each lane
+                  const key = problem.title;
+                  memo.set(key, {
+                    number: problem.title,
+                    color: undefined,
+                    grade: undefined,
+                    attempt: Boolean(
+                      ioPerformance?.numberOfAttempts || memo.get(key)?.attempt,
+                    ),
+                    attemptCount: ioPerformance?.numberOfAttempts,
+                    zone: Boolean(
+                      ioPerformance?.scores.some((score) =>
+                        isZone(score.holdScore),
+                      ) || memo.get(key)?.zone,
+                    ),
+                    top: Boolean(
+                      ioPerformance?.scores.some((score) =>
+                        isTop(score.holdScore),
+                      ) || memo.get(key)?.top,
+                    ),
+                    flash: Boolean(
+                      ioPerformance?.scores.some(
+                        (score) =>
+                          isTop(score.holdScore) &&
+                          score.reachedInAttempt === 1,
+                      ) || memo.get(key)?.flash,
+                    ),
+                    repeat: false,
+                  });
 
-                return memo;
-              },
-              new Map<
-                string,
-                {
-                  number: string;
-                  color: string | undefined;
-                  grade: number | undefined;
-                  attempt: boolean;
-                  zone: boolean;
-                  top: boolean;
-                  flash: boolean;
-                  repeat: false;
-                }
-              >(),
+                  return memo;
+                }, new Map<string, PP>())
+                .values(),
             )
-            .values(),
-        )
-      : null,
-    scores,
+          : null,
+        scores,
+      },
+    ],
   } as const;
 }
 
@@ -575,8 +570,7 @@ export async function getIoClimbAlongCompetitionEventEntry(
     discipline: "bouldering",
     id: competitionId,
     venue: competition.facility.trim(),
-    event: competition.title.trim(),
-    subEvent: null,
+    eventName: competition.title.trim(),
     location: competition.address,
     ioId: athleteId,
     start: new Date(competition.startTime),

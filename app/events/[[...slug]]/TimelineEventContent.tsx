@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { differenceInDays, isPast, subDays } from "date-fns";
+import { differenceInDays, isPast } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
 import ProblemByProblem from "../../../components/ProblemByProblem";
@@ -122,47 +122,39 @@ export default async function TimelineEventContent({
     end,
     venue,
     location,
-    event,
-    subEvent,
-    scores,
-    noParticipants,
-    problems,
-    problemByProblem,
-    category,
+    eventName,
+    subEventName,
     team,
     id,
     url,
+    rounds,
   } = await (
     eventEntry.source === EventSource.ClimbAlong
-      ? getIoClimbAlongCompetitionEvent(eventEntry.id, eventEntry.ioId)
+      ? getIoClimbAlongCompetitionEvent(
+          Number(eventEntry.id),
+          Number(eventEntry.ioId),
+        )
       : eventEntry.source === EventSource.TopLogger
-        ? getIoTopLoggerCompEvent(eventEntry.id, eventEntry.ioId)
+        ? getIoTopLoggerCompEvent(
+            String(eventEntry.id),
+            String(eventEntry.ioId),
+          )
         : eventEntry.source === EventSource.Onsight
-          ? getIoOnsightCompetitionEvent(eventEntry.id, eventEntry.ioId)
+          ? getIoOnsightCompetitionEvent(
+              String(eventEntry.id),
+              String(eventEntry.ioId),
+            )
           : eventEntry.source === EventSource.Sportstiming
-            ? getSportsTimingEventResults(eventEntry.id, eventEntry.ioId)
+            ? getSportsTimingEventResults(
+                Number(eventEntry.id),
+                Number(eventEntry.ioId),
+              )
             : eventEntry.source === EventSource.Songkick
               ? (await getSongkickEvents()).find(
                   ({ id }) => eventEntry.id === id,
                 )!
               : undefined
   )!;
-
-  const officialScores = scores.filter(
-    (score) => score.source === SCORING_SOURCE.OFFICIAL,
-  );
-  const derivedScores = scores
-    .filter((score) => score.source === SCORING_SOURCE.DERIVED)
-    .filter(
-      (derivedScore) =>
-        !scores
-          .filter((score) => score.source === SCORING_SOURCE.OFFICIAL)
-          .some(
-            (officialScore) =>
-              JSON.stringify({ ...officialScore, source: undefined }) ===
-              JSON.stringify({ ...derivedScore, source: undefined }),
-          ),
-    );
 
   const timeZone = DEFAULT_TIMEZONE;
 
@@ -187,12 +179,12 @@ export default async function TimelineEventContent({
             ]),
           )}
         </b>
-        {venue && !event.includes(venue) ? (
+        {venue && !eventName.includes(venue) ? (
           <span style={{ whiteSpace: "nowrap" }}>
             {" "}
             at <b>{venue}</b>
           </span>
-        ) : location && !event.includes(location) ? (
+        ) : location && !eventName.includes(location) ? (
           <span style={{ whiteSpace: "nowrap" }}>
             {" "}
             in <b>{location}</b>
@@ -229,7 +221,7 @@ export default async function TimelineEventContent({
         </Link>
         <span>
           <a href={url} rel="external noopener" target="_blank">
-            {event
+            {eventName
               .replace(
                 new RegExp(
                   `#${new Date(start).toLocaleDateString("da-DK", {
@@ -266,97 +258,87 @@ export default async function TimelineEventContent({
           ) : null}
         </span>
       </h2>
-      {subEvent || problems || noParticipants || category ? (
-        <small>
-          {subEvent ? <>{subEvent}, </> : null}
-          {isPast(subDays(start, 1)) && problems ? (
-            <b>{problems} problems</b>
-          ) : null}
-          {isPast(subDays(start, 1)) && problems && noParticipants ? (
-            <> between </>
-          ) : null}
-          {noParticipants ? <b>{noParticipants} participants</b> : null}
-          {noParticipants && category ? <> in the </> : null}
-          {category ? (
-            <b>
-              {category === "male"
-                ? "M"
-                : category === "female"
-                  ? "F"
-                  : category}{" "}
-              bracket
-            </b>
-          ) : null}
-        </small>
-      ) : null}
-      {isNonEmptyArray(officialScores)
-        ? officialScores.map((score) => (
-            <div
-              key={score.system}
-              style={{
-                display: "flex",
-                flexFlow: "wrap",
-                alignItems: "center",
-                gap: "10px",
-                marginTop: "0.25em",
-              }}
-            >
-              <RankBadge score={score} />
-              <ResultList score={score} />
-            </div>
-          ))
+      {subEventName ? <small>{subEventName}, </small> : null}
+      {rounds
+        ? rounds.map((round) => {
+            const officialScores = round.scores?.filter(
+              (score) => score.source === SCORING_SOURCE.OFFICIAL,
+            );
+            return (
+              <Fragment key={round.id}>
+                <small className="leading-none!">
+                  {round.start && round.end ? (
+                    <b>
+                      {new Intl.DateTimeFormat("en-DK", {
+                        month: "long",
+                        day: "numeric",
+                        hour: differenceInDays(round.start, round.end)
+                          ? undefined
+                          : "numeric",
+                        minute: differenceInDays(round.start, round.end)
+                          ? undefined
+                          : "2-digit",
+                        timeZone: timeZone,
+                      }).formatRange(
+                        ...([round.start, round.end].sort(
+                          (a, b) => Number(a) - Number(b),
+                        ) as [Date, Date]),
+                      )}{" "}
+                    </b>
+                  ) : null}
+                  {round.category ? (
+                    <b>
+                      {round.category === "male"
+                        ? "M"
+                        : round.category === "female"
+                          ? "F"
+                          : round.category}{" "}
+                    </b>
+                  ) : null}
+                  {round.roundName ? <>{round.roundName}: </> : null}
+                  {round.noParticipants ? (
+                    <b>{round.noParticipants} participants</b>
+                  ) : null}
+                  {round.venue && !eventName.includes(round.venue) ? (
+                    <span>
+                      {" "}
+                      at <b>{round.venue}</b>
+                    </span>
+                  ) : round.location && !eventName.includes(round.location) ? (
+                    <span>
+                      {" "}
+                      in <b>{round.location}</b>
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </small>
+                {isNonEmptyArray(officialScores)
+                  ? officialScores.map((score) => (
+                      <div
+                        key={score.system}
+                        style={{
+                          display: "flex",
+                          flexFlow: "wrap",
+                          alignItems: "center",
+                          gap: "10px",
+                          marginTop: "0.25em",
+                        }}
+                      >
+                        <RankBadge score={score} />
+                        <ResultList score={score} />
+                      </div>
+                    ))
+                  : null}
+                {Array.isArray(round.problemByProblem) &&
+                round.problemByProblem.length &&
+                (round.start ? isPast(round.start) : true) ? (
+                  <ProblemByProblem problemByProblem={round.problemByProblem} />
+                ) : null}
+              </Fragment>
+            );
+          })
         : null}
-      {disciplines?.includes(discipline) && isNonEmptyArray(derivedScores) ? (
-        <div style={{ display: "flex", flexWrap: "wrap", marginTop: "0.25em" }}>
-          {derivedScores.map((score) => (
-            <fieldset
-              key={score.source + score.system}
-              style={{
-                fontSize: "0.75em",
-              }}
-            >
-              <legend
-                title={
-                  score.system === SCORING_SYSTEM.POINTS
-                    ? "100 per top, 20 bonus per flash"
-                    : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
-                      ? "Each top grants 1000 points divided by the number of climbers who have topped it. 10% flash bonus."
-                      : undefined
-                }
-              >
-                {score.system === SCORING_SYSTEM.TOPS_AND_ZONES
-                  ? "Tops & Zones"
-                  : score.system === SCORING_SYSTEM.DISTANCE_RACE
-                    ? "Race"
-                    : score.system === SCORING_SYSTEM.POINTS
-                      ? "Points"
-                      : score.system === SCORING_SYSTEM.THOUSAND_DIVIDE_BY
-                        ? "1000 / Tops"
-                        : null}{" "}
-                Scoring
-              </legend>
-              <div
-                key={score.system}
-                style={{
-                  display: "flex",
-                  flexFlow: "wrap",
-                  alignItems: "center",
-                  gap: "10px",
-                  marginTop: "0.25em",
-                }}
-              >
-                <RankBadge score={score} />
-                <ResultList score={score} />
-              </div>
-            </fieldset>
-          ))}
-        </div>
-      ) : null}
-      {Array.isArray(problemByProblem) &&
-      problemByProblem.length &&
-      isPast(start) ? (
-        <ProblemByProblem problemByProblem={problemByProblem} />
-      ) : null}
     </Fragment>
   );
 }

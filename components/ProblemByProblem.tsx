@@ -1,11 +1,9 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
+import { PP } from "../lib";
 import { exercises, SendType } from "../models/exercises";
 import type { LocationData } from "../models/location";
 import { getSetGrade, WorkoutExerciseSet } from "../models/workout";
-import { type getIoClimbAlongCompetitionEvent } from "../sources/climbalong";
-import { getIoOnsightCompetitionEvent } from "../sources/onsight";
-import { type getIoTopLoggerCompEvent } from "../sources/toplogger";
 import { colorNameToHTMLColor, countBy } from "../utils";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
@@ -13,14 +11,14 @@ interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   grade?: string;
   angle?: number;
   circuitName?: string;
-  attemptCount?: number;
+  attemptCount?: number | null;
 }
 
 const attemptRows = 5;
 const columnWidth = 10;
 const rowHeight = 10;
-const AttemptBlibs = ({ attemptCount }: { attemptCount?: number }) =>
-  attemptCount !== undefined
+const AttemptBlibs = ({ attemptCount }: { attemptCount?: number | null }) =>
+  attemptCount !== undefined && attemptCount !== null
     ? Array.from({ length: attemptCount - 1 }, (_, i) => (
         <rect
           key={i}
@@ -292,20 +290,7 @@ function ProblemBadge({
   circuit,
   attemptCount,
   name,
-}: {
-  number?: string | number;
-  flash: boolean;
-  top: boolean;
-  zone: boolean;
-  attempt: boolean;
-  repeat: boolean;
-  grade?: number;
-  color?: string;
-  angle?: number;
-  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
-  attemptCount?: number;
-  name?: string;
-}) {
+}: PP) {
   const Badge = flash
     ? FlashBadge
     : top
@@ -367,22 +352,6 @@ function ProblemBadge({
     />
   );
 }
-
-type PP = NonNullable<
-  Awaited<
-    ReturnType<
-      | typeof getIoClimbAlongCompetitionEvent
-      | typeof getIoTopLoggerCompEvent
-      | typeof getIoOnsightCompetitionEvent
-    >
-  >["problemByProblem"]
->[number] & {
-  name?: string;
-  angle?: number;
-  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
-  attemptCount?: number;
-  estGrade?: number | null;
-};
 
 const boulderingExercise = exercises.find(({ id }) => id === 2001)!;
 const colorOptions = boulderingExercise.inputs[1]!.options!;

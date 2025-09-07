@@ -1,3 +1,4 @@
+import type { LocationData } from "./models/location";
 import type { WorkoutData } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
@@ -62,71 +63,55 @@ export enum EventSource {
   Onsight = "onsight",
 }
 
-export type EventEntry =
-  | {
-      id: string;
-      ioId: string;
-      source: EventSource.TopLogger;
-      type: "competition";
-      discipline: "bouldering";
-      event: string;
-      subEvent: string | null;
-      venue: string | null;
-      location: string | null;
-      start: Date;
-      end: Date;
-    }
-  | {
-      id: number;
-      ioId: number;
-      source: EventSource.ClimbAlong;
-      type: "competition";
-      discipline: "bouldering";
-      event: string;
-      subEvent: string | null;
-      venue: string | null;
-      location: string | null;
-      start: Date;
-      end: Date;
-    }
-  | {
-      id: string;
-      ioId: string;
-      source: EventSource.Onsight;
-      type: "competition";
-      discipline: "bouldering";
-      event: string;
-      subEvent: string | null;
-      venue: string | null;
-      location: string | null;
-      start: Date;
-      end: Date;
-    }
-  | {
-      id: number;
-      ioId: number;
-      source: EventSource.Sportstiming;
-      type: "competition";
-      discipline: "running";
-      event: string;
-      subEvent: string | null;
-      venue: string | null;
-      location: string | null;
-      start: Date;
-      end: Date;
-    }
-  | {
-      id: number;
-      source: EventSource.Songkick;
-      type: "performance";
-      discipline: "metal";
-      event: string;
-      subEvent: string | null;
-      venue: string | null;
-      location: string | null;
-      start: Date;
-      end: Date;
-    };
+export interface EventEntry {
+  id: string | number;
+  ioId?: string | number;
+  source: EventSource;
+  type: "competition" | "performance";
+  discipline: "bouldering" | "running" | "metal";
+  eventName: string;
+  subEventName?: string | null;
+  venue: string | null;
+  location?: string | null;
+  start: Date;
+  end: Date;
+}
+
+export interface EventDetails extends EventEntry {
+  url: string;
+  team?: string | null;
+  rounds?: EventRound[];
+}
+
+export interface EventRound {
+  id?: string | number;
+  venue?: string | null;
+  location?: string | null;
+  start?: Date;
+  end?: Date;
+  roundName?: string;
+  category?: string | null;
+  noParticipants?: number;
+  problems?: number;
+  problemByProblem?: PP[] | null;
+  scores?: Score[];
+}
+
+export interface PP {
+  number: string | number;
+  color: string | undefined;
+  grade: number | undefined;
+  attempt: boolean;
+  zone: boolean;
+  top: boolean;
+  flash: boolean;
+  repeat: boolean;
+  name?: string;
+  angle?: number;
+  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
+  attemptCount?: number | null;
+  estGrade?: number | null;
+}
 
 export interface DiaryEntry {
   workouts?: (WorkoutData & { _id: string })[];

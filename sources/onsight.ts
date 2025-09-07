@@ -1,7 +1,8 @@
 import {
-  EventEntry,
+  type EventDetails,
+  type EventEntry,
   EventSource,
-  Score,
+  type Score,
   SCORING_SOURCE,
   SCORING_SYSTEM,
 } from "../lib";
@@ -105,7 +106,7 @@ export namespace Onsight {
 export async function getIoOnsightCompetitionEvent(
   competitionId: string,
   Username: string,
-) {
+): Promise<EventDetails> {
   const competition = await OnsightCompetitions.findOne({ _id: competitionId });
 
   if (!competition) throw new Error("???" + competitionId);
@@ -139,7 +140,7 @@ export async function getIoOnsightCompetitionEvent(
       ) + 1;
 
   return {
-    source: "onsight",
+    source: EventSource.Onsight,
     type: "competition",
     discipline: "bouldering",
     id: competitionId,
@@ -148,48 +149,57 @@ export async function getIoOnsightCompetitionEvent(
     start: competition.startAt,
     end: competition.endAt,
     venue: "Blocs & Walls",
-    event: competition.Name,
-    subEvent: competition.Name.includes("KVAL") ? "Qualification" : null,
+    eventName: competition.Name,
+    subEventName: competition.Name.includes("KVAL") ? "Qualification" : null,
     location: "Refshalevej 163D, 1432 København K",
-    category: ioCompetitionScore.Gender[0],
-    team: null,
-    noParticipants,
-    problems: Number(competition.Routes),
-    problemByProblem: ioCompetitionScore.Ascents?.length
-      ? Array.from(
-          ioCompetitionScore.Ascents.map((ascent, index) => {
-            const attemptsToTop = ascent.split("/")[0]!;
-            const result = ascent.split("/")[2]!;
-
-            return {
-              number: index + 1,
-              color: undefined,
-              grade: undefined,
-              attempt: Number(attemptsToTop) > 0,
-              zone: result === "1",
-              top: result === "2",
-              flash: result === "2" && attemptsToTop === "1",
-              repeat: false,
-            };
-          }),
-        )
-      : null,
-    scores: [
+    rounds: [
       {
-        source: SCORING_SOURCE.OFFICIAL,
-        system: SCORING_SYSTEM.TOPS_AND_ZONES,
-        tops: Number(ioCompetitionScore.Score.split("-")[1]!.split("/")[0]!),
-        zones: Number(ioCompetitionScore.Score.split("-")[1]!.split("/")[2]!),
-        topsAttempts: Number(
-          ioCompetitionScore.Score.split("-")[1]!.split("/")[1]!,
-        ),
-        zonesAttempts: Number(
-          ioCompetitionScore.Score.split("-")[1]!.split("/")[3]!,
-        ),
-        rank,
-        percentile: percentile(rank, noParticipants),
+        id: competitionId,
+        category: ioCompetitionScore.Gender[0],
+        problems: Number(competition.Routes),
+        noParticipants,
+        problemByProblem: ioCompetitionScore.Ascents?.length
+          ? Array.from(
+              ioCompetitionScore.Ascents.map((ascent, index) => {
+                const attemptsToTop = ascent.split("/")[0]!;
+                const result = ascent.split("/")[2]!;
+
+                return {
+                  number: index + 1,
+                  color: undefined,
+                  grade: undefined,
+                  attempt: Number(attemptsToTop) > 0,
+                  attemptCount: Number(attemptsToTop),
+                  zone: result === "1",
+                  top: result === "2",
+                  flash: result === "2" && attemptsToTop === "1",
+                  repeat: false,
+                };
+              }),
+            )
+          : null,
+        scores: [
+          {
+            source: SCORING_SOURCE.OFFICIAL,
+            system: SCORING_SYSTEM.TOPS_AND_ZONES,
+            tops: Number(
+              ioCompetitionScore.Score.split("-")[1]!.split("/")[0]!,
+            ),
+            zones: Number(
+              ioCompetitionScore.Score.split("-")[1]!.split("/")[2]!,
+            ),
+            topsAttempts: Number(
+              ioCompetitionScore.Score.split("-")[1]!.split("/")[1]!,
+            ),
+            zonesAttempts: Number(
+              ioCompetitionScore.Score.split("-")[1]!.split("/")[3]!,
+            ),
+            rank,
+            percentile: percentile(rank, noParticipants),
+          },
+        ] satisfies Score[],
       },
-    ] satisfies Score[],
+    ],
   } as const;
 }
 
@@ -216,8 +226,8 @@ export async function getIoOnsightCompetitionEventEntries(
         discipline: "bouldering",
         id: competitionScore.Competition_name.split("/")[1]!,
         venue: "Blocs & Walls",
-        event: competitionScore.Competition_name.split("/")[0]!.trim(),
-        subEvent: competitionScore.Competition_name.split("/")[0]!
+        eventName: competitionScore.Competition_name.split("/")[0]!.trim(),
+        subEventName: competitionScore.Competition_name.split("/")[0]!
           .trim()
           .includes("KVAL")
           ? "Qualification"
