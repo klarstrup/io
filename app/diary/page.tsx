@@ -68,7 +68,7 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
 
   return (
     <>
-      <DiaryPoller loadedAt={now} userId={user?.id} />
+      {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
       <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
         <Suspense
           fallback={

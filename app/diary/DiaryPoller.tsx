@@ -8,7 +8,7 @@ export function DiaryPoller({
   userId,
   loadedAt,
 }: {
-  userId?: string;
+  userId: string;
   loadedAt: Date;
 }) {
   usePartySocket({
