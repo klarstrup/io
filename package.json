@@ -37,7 +37,8 @@
     "react-select": "^5.10.2",
     "sharp": "^0.34.3",
     "tailwindcss": "^4.1.13",
-    "uuid": "^12.0.0"
+    "uuid": "^12.0.0",
+    "partysocket": "1.1.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
@@ -52,7 +53,8 @@
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "partykit": "0.0.115"
   },
   "overrides": {
     "react": "npm:react@rc",
@@ -61,6 +63,9 @@
     "@types/react-dom": "npm:types-react-dom@rc"
   },
   "trustedDependencies": [
-    "@tailwindcss/oxide"
+    "@tailwindcss/oxide",
+    "esbuild",
+    "sharp",
+    "workerd"
   ]
 }

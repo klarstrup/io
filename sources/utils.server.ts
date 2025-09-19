@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
+import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
 import { Users } from "../models/user.server";
 import type { UserDataSource } from "./utils";
@@ -62,5 +63,20 @@ export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - some runtimes think this is too complex
     yield* materializer?.(user, dataSource);
+  }
+
+  try {
+    new PartySocket({
+      id: process.env.VERCEL_DEPLOYMENT_ID,
+      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+      room: user.id,
+    }).send(
+      JSON.stringify({
+        source: dataSource.source,
+        scrapedAt: new Date().valueOf(),
+      }),
+    );
+  } catch (error) {
+    console.error(error);
   }
 }

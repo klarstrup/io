@@ -1,16 +1,15 @@
 "use server";
 
 import { waitUntil } from "@vercel/functions";
-import { max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
+import PartySocket from "partysocket";
 import { auth } from "../../auth";
 import { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import { Users } from "../../models/user.server";
 import type { WorkoutData } from "../../models/workout";
 import {
-  MaterializedWorkoutsView,
   updateExerciseCounts,
   updateLocationCounts,
   Workouts,
@@ -76,6 +75,16 @@ export async function upsertWorkout(
   revalidatePath("/diary");
 
   console.timeEnd("upsertWorkout");
+
+  try {
+    new PartySocket({
+      id: process.env.VERCEL_DEPLOYMENT_ID,
+      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+      room: user.id,
+    }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
+  } catch (error) {
+    console.error(error);
+  }
 
   return String(_id);
 }
@@ -160,27 +169,4 @@ export async function updateLocation(
   await updateLocationCounts(userId);
 
   return { ...omit(newLocation, "_id"), id: newLocation._id.toString() };
-}
-
-export async function mostRecentlyScrapedAt(userId: string) {
-  const user = (await auth())?.user;
-  if (!user || user.id !== userId) throw new Error("Unauthorized");
-
-  const workout = await MaterializedWorkoutsView.findOne(
-    { userId: user.id },
-    { sort: { materializedAt: -1 }, projection: { materializedAt: 1 } },
-  );
-  const dataSourceRuns: (Date | null)[] = [];
-  for (const dataSource of user.dataSources ?? []) {
-    dataSourceRuns.push(
-      dataSource.createdAt,
-      dataSource.updatedAt,
-      dataSource.lastAttemptedAt,
-      dataSource.lastSuccessfulAt,
-      dataSource.lastFailedAt,
-    );
-  }
-  return max(
-    [...dataSourceRuns, workout?.materializedAt, new Date(0)].filter(Boolean),
-  );
 }

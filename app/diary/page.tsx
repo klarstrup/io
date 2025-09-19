@@ -4,14 +4,13 @@ import { Suspense } from "react";
 import { auth } from "../../auth";
 import LoadMore from "../../components/LoadMore";
 import UserStuff from "../../components/UserStuff";
+import { Locations } from "../../models/location.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import "../page.css";
-import { mostRecentlyScrapedAt } from "./actions";
 import { DiaryAgenda } from "./DiaryAgenda";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
 import { DiaryPoller } from "./DiaryPoller";
-import { Locations } from "../../models/location.server";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -69,11 +68,7 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
 
   return (
     <>
-      <DiaryPoller
-        mostRecentlyScrapedAtAction={mostRecentlyScrapedAt}
-        loadedAt={now}
-        userId={user?.id}
-      />
+      <DiaryPoller loadedAt={now} userId={user?.id} />
       <div className="max-h-[100vh] min-h-[100vh] overflow-hidden">
         <Suspense
           fallback={

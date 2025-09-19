@@ -1,32 +1,46 @@
 "use client";
 import { useRouter } from "next/navigation";
+import usePartySocket from "partysocket/react";
 import useInterval from "../../hooks/useInterval";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
 export function DiaryPoller({
   userId,
   loadedAt,
-  mostRecentlyScrapedAtAction,
 }: {
   userId?: string;
   loadedAt: Date;
-  mostRecentlyScrapedAtAction: (userId: string) => Promise<Date>;
 }) {
+  usePartySocket({
+    host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+    room: userId,
+    onMessage(event) {
+      console.log(event);
+      try {
+        const data = JSON.parse(event.data as string) as unknown;
+        console.log(data);
+
+        const loadedAtDate = new Date(loadedAt);
+
+        if (
+          data &&
+          typeof data === "object" &&
+          "scrapedAt" in data &&
+          typeof data.scrapedAt === "number" &&
+          new Date(data.scrapedAt) > loadedAtDate
+        ) {
+          console.info(
+            `Refreshing diary because scrapedAt ${new Date(data.scrapedAt).toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
+          );
+          router.refresh();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  });
+
   const router = useRouter();
-
-  useInterval(async () => {
-    if (!userId) return;
-
-    const scrapedAt = await mostRecentlyScrapedAtAction(userId);
-    const loadedAtDate = new Date(loadedAt);
-
-    if (scrapedAt > loadedAtDate) {
-      console.info(
-        `Refreshing diary because scrapedAt ${scrapedAt.toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
-      );
-      router.refresh();
-    }
-  }, 10000);
 
   useInterval(
     async () => {
