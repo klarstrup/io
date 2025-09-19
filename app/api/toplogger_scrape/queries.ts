@@ -256,6 +256,10 @@ export const compsQuery = gql`
           compRounds {
             ...CompRoundScalarsFragment
 
+            compRoundUserMe {
+              ...CompRoundUserScalarsFragment
+            }
+
             compRoundUsers {
               ...CompRoundUserScalarsFragment
             }
