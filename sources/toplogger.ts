@@ -106,11 +106,7 @@ export async function getIoTopLoggerCompEvent(
         compRounds.map(async (compRound): Promise<EventRound | null> => {
           const compRoundUsers =
             await TopLoggerGraphQL.find<CompRoundUserScalars>(
-              {
-                __typename: "CompRoundUser",
-                compId: comp.id,
-                compRoundId: compRound.id,
-              },
+              { __typename: "CompRoundUser", compRoundId: compRound.id },
               { sort: { score: -1 } },
             ).toArray();
           let ioCompRoundUser = compRoundUsers.find(
