@@ -1,4 +1,4 @@
-import { compareDesc } from "date-fns";
+import { compareAsc, compareDesc } from "date-fns";
 import type {
   ClimbLogScalars,
   ClimbScalars,
@@ -103,159 +103,160 @@ export async function getIoTopLoggerCompEvent(
           : null,
     rounds: (
       await Promise.all(
-        compRounds.map(async (compRound): Promise<EventRound | null> => {
-          const compRoundUsers =
-            await TopLoggerGraphQL.find<CompRoundUserScalars>(
-              { __typename: "CompRoundUser", compRoundId: compRound.id },
-              { sort: { score: -1 } },
+        compRounds
+          .sort((a, b) => compareAsc(a.loggableStartAt, b.loggableStartAt))
+          .map(async (compRound): Promise<EventRound | null> => {
+            const compRoundUsers =
+              await TopLoggerGraphQL.find<CompRoundUserScalars>(
+                { __typename: "CompRoundUser", compRoundId: compRound.id },
+                { sort: { score: -1 } },
+              ).toArray();
+            let ioCompRoundUser = compRoundUsers.find(
+              (cRU) => cRU.userId === ioId,
+            );
+
+            if (
+              comp.id === "evybi3cx5lg54liqya27s" &&
+              compRound.id === "2rozz53yr5mx6lqhi5o1h"
+            ) {
+              ioCompRoundUser = ioCompRoundUser ?? {
+                __typename: "CompRoundUser",
+                id:
+                  "I don't think this matters here but it does have to be unique so " +
+                  ioId +
+                  comp.id,
+                compUserId: "I don't think this matters here",
+                userId: ioId,
+                compId: comp.id,
+                compRoundId: compRound.id,
+                score: NaN,
+                totMaxClips: NaN,
+                totMaxHolds: NaN,
+                totMaxZones: NaN,
+                totMinTries: NaN,
+                totMinDuration: NaN,
+                climbsWithScoresCount: NaN,
+                participating: true,
+              };
+            }
+            if (
+              comp.id === "odclzwjsasupvyrdlsv59" &&
+              compRound.id === "roe9mllv90n3oa3lak423"
+            ) {
+              ioCompRoundUser = undefined;
+            }
+
+            if (!ioCompRoundUser) return null;
+
+            const compRoundClimbs =
+              await TopLoggerGraphQL.find<CompRoundClimbScalars>({
+                __typename: "CompRoundClimb",
+                compRoundId: compRound.id,
+              }).toArray();
+            const thisCompRoundClimbs =
+              await TopLoggerGraphQL.find<ClimbScalars>({
+                __typename: "Climb",
+                id: { $in: compRoundClimbs.map((cCU) => cCU.climbId) },
+              }).toArray();
+            const thisCompClimbUsers =
+              await TopLoggerGraphQL.find<CompClimbUserScalars>({
+                __typename: "CompClimbUser",
+                compId: comp.id,
+              }).toArray();
+            const thisCompClimbUsersClimbs =
+              await TopLoggerGraphQL.find<ClimbScalars>({
+                __typename: "Climb",
+                id: { $in: thisCompClimbUsers.map((cCU) => cCU.climbId) },
+              }).toArray();
+
+            const roundClimbs = thisCompRoundClimbs.length
+              ? thisCompRoundClimbs
+              : thisCompClimbUsersClimbs;
+            const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>(
+              {
+                __typename: "ClimbLog",
+                userId: ioId,
+                climbId: { $in: roundClimbs.map(({ id }) => id) },
+                climbedAtDate: { $gt: new Date(0) },
+              },
+              { sort: { tickType: -1, climbedAtDate: 1 } },
             ).toArray();
-          let ioCompRoundUser = compRoundUsers.find(
-            (cRU) => cRU.userId === ioId,
-          );
 
-          if (
-            comp.id === "evybi3cx5lg54liqya27s" &&
-            compRound.id === "2rozz53yr5mx6lqhi5o1h"
-          ) {
-            ioCompRoundUser = ioCompRoundUser ?? {
-              __typename: "CompRoundUser",
-              id:
-                "I don't think this matters here but it does have to be unique so " +
-                ioId +
-                comp.id,
-              compUserId: "I don't think this matters here",
-              userId: ioId,
-              compId: comp.id,
-              compRoundId: compRound.id,
-              score: NaN,
-              totMaxClips: NaN,
-              totMaxHolds: NaN,
-              totMaxZones: NaN,
-              totMinTries: NaN,
-              totMinDuration: NaN,
-              climbsWithScoresCount: NaN,
-              participating: true,
+            const ioRank =
+              ioCompRoundUser &&
+              compRoundUsers.findIndex(({ id }) => id === ioCompRoundUser?.id) +
+                1;
+
+            const roundGyms = gyms.filter((gym) =>
+              roundClimbs.some((crc) => crc.gymId === gym.id),
+            );
+
+            return {
+              id: compRound.id,
+              start: compRound.loggableStartAt,
+              end: compRound.loggableEndAt,
+              roundName: compRound.nameLoc,
+              noParticipants: compRoundUsers.length,
+              venue:
+                roundGyms
+                  .map(({ name }) => name)
+                  .join(", ")
+                  .replaceAll(commonVenue, "") || null,
+              category: compPoules
+                .find((cP) => cP.id === compRound?.compPouleId)
+                ?.nameLoc.replace("♀️", "F")
+                .replace("♂️", "M")
+                .replace("Female", "F")
+                .replace("Male", "M")
+                .trim(),
+              scores:
+                ioCompRoundUser && !isNaN(ioCompRoundUser.score)
+                  ? [
+                      {
+                        source: SCORING_SOURCE.OFFICIAL,
+                        points: ioCompRoundUser.score,
+                        percentile: percentile(ioRank, compRoundUsers.length),
+                        system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
+                        rank: ioRank,
+                      } as const,
+                    ]
+                  : [],
+              problems: roundClimbs.length,
+              problemByProblem: Array.from(roundClimbs)
+                .map((climb) => ({
+                  climb,
+                  climbLog: ioClimbLogs.find(
+                    (climbLog) => climbLog.climbId === climb.id,
+                  ),
+                }))
+                .sort((a, b) =>
+                  compareDesc(
+                    a.climbLog?.climbedAtDate || a.climb.inAt,
+                    b.climbLog?.climbedAtDate || b.climb.inAt,
+                  ),
+                )
+                .map(({ climb, climbLog }) => ({
+                  number: climb.name || "",
+                  color:
+                    holdColors.find(({ id }) => id === climb.holdColorId)
+                      ?.color || undefined,
+                  grade: climb.grade ? Number(climb.grade / 100) : undefined,
+                  attemptCount: climbLog ? climbLog?.tryIndex + 1 : null,
+                  attempt: climbLog ? climbLog.tickType == 0 : false,
+                  // TopLogger does not do zones, at least not for Beta Boulders
+                  zone: climbLog ? climbLog.tickType >= 1 : false,
+                  top: climbLog ? climbLog.tickType >= 1 : false,
+                  flash: climbLog ? climbLog.tickType >= 2 : false,
+                  repeat: false,
+                }))
+                .sort((a, b) =>
+                  Intl.Collator("en-DK", { numeric: true }).compare(
+                    a.number,
+                    b.number,
+                  ),
+                ),
             };
-          }
-          if (
-            comp.id === "odclzwjsasupvyrdlsv59" &&
-            compRound.id === "roe9mllv90n3oa3lak423"
-          ) {
-            ioCompRoundUser = undefined;
-          }
-
-          if (!ioCompRoundUser) return null;
-
-          const compRoundClimbs =
-            await TopLoggerGraphQL.find<CompRoundClimbScalars>({
-              __typename: "CompRoundClimb",
-              compRoundId: compRound.id,
-            }).toArray();
-          const thisCompRoundClimbs = await TopLoggerGraphQL.find<ClimbScalars>(
-            {
-              __typename: "Climb",
-              id: { $in: compRoundClimbs.map((cCU) => cCU.climbId) },
-            },
-          ).toArray();
-          const thisCompClimbUsers =
-            await TopLoggerGraphQL.find<CompClimbUserScalars>({
-              __typename: "CompClimbUser",
-              compId: comp.id,
-            }).toArray();
-          const thisCompClimbUsersClimbs =
-            await TopLoggerGraphQL.find<ClimbScalars>({
-              __typename: "Climb",
-              id: { $in: thisCompClimbUsers.map((cCU) => cCU.climbId) },
-            }).toArray();
-
-          const roundClimbs = thisCompRoundClimbs.length
-            ? thisCompRoundClimbs
-            : thisCompClimbUsersClimbs;
-          const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>(
-            {
-              __typename: "ClimbLog",
-              userId: ioId,
-              climbId: { $in: roundClimbs.map(({ id }) => id) },
-              climbedAtDate: { $gt: new Date(0) },
-            },
-            { sort: { tickType: -1, climbedAtDate: 1 } },
-          ).toArray();
-
-          const ioRank =
-            ioCompRoundUser &&
-            compRoundUsers.findIndex(({ id }) => id === ioCompRoundUser?.id) +
-              1;
-
-          const roundGyms = gyms.filter((gym) =>
-            roundClimbs.some((crc) => crc.gymId === gym.id),
-          );
-
-          return {
-            id: compRound.id,
-            start: compRound.loggableStartAt,
-            end: compRound.loggableEndAt,
-            roundName: compRound.nameLoc,
-            noParticipants: compRoundUsers.length,
-            venue:
-              roundGyms
-                .map(({ name }) => name)
-                .join(", ")
-                .replaceAll(commonVenue, "") || null,
-            category: compPoules
-              .find((cP) => cP.id === compRound?.compPouleId)
-              ?.nameLoc.replace("♀️", "F")
-              .replace("♂️", "M")
-              .replace("Female", "F")
-              .replace("Male", "M")
-              .trim(),
-            scores:
-              ioCompRoundUser && !isNaN(ioCompRoundUser.score)
-                ? [
-                    {
-                      source: SCORING_SOURCE.OFFICIAL,
-                      points: ioCompRoundUser.score,
-                      percentile: percentile(ioRank, compRoundUsers.length),
-                      system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
-                      rank: ioRank,
-                    } as const,
-                  ]
-                : [],
-            problems: roundClimbs.length,
-            problemByProblem: Array.from(roundClimbs)
-              .map((climb) => ({
-                climb,
-                climbLog: ioClimbLogs.find(
-                  (climbLog) => climbLog.climbId === climb.id,
-                ),
-              }))
-              .sort((a, b) =>
-                compareDesc(
-                  a.climbLog?.climbedAtDate || a.climb.inAt,
-                  b.climbLog?.climbedAtDate || b.climb.inAt,
-                ),
-              )
-              .map(({ climb, climbLog }) => ({
-                number: climb.name || "",
-                color:
-                  holdColors.find(({ id }) => id === climb.holdColorId)
-                    ?.color || undefined,
-                grade: climb.grade ? Number(climb.grade / 100) : undefined,
-                attemptCount: climbLog ? climbLog?.tryIndex + 1 : null,
-                attempt: climbLog ? climbLog.tickType == 0 : false,
-                // TopLogger does not do zones, at least not for Beta Boulders
-                zone: climbLog ? climbLog.tickType >= 1 : false,
-                top: climbLog ? climbLog.tickType >= 1 : false,
-                flash: climbLog ? climbLog.tickType >= 2 : false,
-                repeat: false,
-              }))
-              .sort((a, b) =>
-                Intl.Collator("en-DK", { numeric: true }).compare(
-                  a.number,
-                  b.number,
-                ),
-              ),
-          };
-        }),
+          }),
       )
     ).filter(Boolean),
   } as const;
