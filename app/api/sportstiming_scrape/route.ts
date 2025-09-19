@@ -66,11 +66,13 @@ export const GET = () =>
         },
         { upsert: true },
       );
+    }
 
-      for (const dataSource of user.dataSources ?? []) {
-        if (dataSource.source !== DataSource.Sportstiming) continue;
+    for (const dataSource of user.dataSources ?? []) {
+      if (dataSource.source !== DataSource.Sportstiming) continue;
 
-        yield* wrapSource(dataSource, user, async function* ({ name }) {
+      yield* wrapSource(dataSource, user, async function* ({ name }) {
+        for (const event of events) {
           const liveSearchResultsURL = new URL(
             "https://www.sportstiming.dk/Results/ResultLiveSearch.aspx",
           );
@@ -168,7 +170,7 @@ export const GET = () =>
           }
 
           yield event;
-        });
-      }
+        }
+      });
     }
   });
