@@ -264,6 +264,10 @@ export const compsQuery = gql`
 
         compUserMe {
           ...CompUserScalarsFragment
+
+          compRoundUsers {
+            ...CompRoundUserScalarsFragment
+          }
         }
       }
       __typename
