@@ -158,20 +158,21 @@ export async function getIoTopLoggerCompEvent(
                 __typename: "Climb",
                 id: { $in: compRoundClimbs.map((cCU) => cCU.climbId) },
               }).toArray();
-            const thisCompClimbUsers =
-              await TopLoggerGraphQL.find<CompClimbUserScalars>({
-                __typename: "CompClimbUser",
-                compId: comp.id,
-              }).toArray();
-            const thisCompClimbUsersClimbs =
-              await TopLoggerGraphQL.find<ClimbScalars>({
-                __typename: "Climb",
-                id: { $in: thisCompClimbUsers.map((cCU) => cCU.climbId) },
-              }).toArray();
 
             const roundClimbs = thisCompRoundClimbs.length
               ? thisCompRoundClimbs
-              : thisCompClimbUsersClimbs;
+              : await TopLoggerGraphQL.find<ClimbScalars>({
+                  __typename: "Climb",
+                  id: {
+                    $in: (
+                      await TopLoggerGraphQL.find<CompClimbUserScalars>({
+                        __typename: "CompClimbUser",
+                        compId: comp.id,
+                      }).toArray()
+                    ).map((cCU) => cCU.climbId),
+                  },
+                }).toArray();
+
             const ioClimbLogs = await TopLoggerGraphQL.find<ClimbLogScalars>(
               {
                 __typename: "ClimbLog",
