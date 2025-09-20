@@ -3,12 +3,13 @@ import {
   eachMonthOfInterval,
   endOfMonth,
   startOfMonth,
+  subDays,
   subMonths,
   subYears,
 } from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
-import { frenchRounded } from "../grades";
+import Grade, { frenchRounded } from "../grades";
 import type { PRType } from "../lib";
 import { proxyCollection } from "../utils.server";
 import {
@@ -28,6 +29,7 @@ import {
   type WorkoutExercise,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
+  WorkoutSource,
 } from "./workout";
 
 export const Workouts = proxyCollection<Omit<WorkoutData, "id">>("workouts");
@@ -582,12 +584,12 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
 
 //  void calculateFlashRateByMonth("65a85e2c9a437530d3de2e35", new Date());
 
-const flashGradeRateThreshold = 0.95;
+const flashGradeRateThreshold = 0.9;
 export const calculateFlashGradeOn = async (userId: string, date: Date) => {
   const workouts = await MaterializedWorkoutsView.find({
     userId,
     "exercises.exerciseId": 2001,
-    workedOutAt: { $lte: date, $gt: subMonths(date, 1) },
+    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
   const locations = await Locations.find({ userId }).toArray();
@@ -627,31 +629,21 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
     const upperGrade =
       frenchRounded.data[frenchRounded.data.indexOf(systemGrade) + 1]?.value ||
       Infinity;
-    const setsInGrade = grades.filter(
-      ([, , grade]) => grade > lowerGrade && grade < upperGrade,
-    );
+    const sentSetsInGrade = grades
+      .filter(([, , grade]) => grade > lowerGrade && grade < upperGrade)
+      .filter(
+        ([s]) =>
+          (s.inputs[2]?.value as SendType) === SendType.Top ||
+          (s.inputs[2]?.value as SendType) === SendType.Flash,
+      );
 
-    if (!setsInGrade.length) continue;
-    if (setsInGrade.length < 2) continue;
+    if (!sentSetsInGrade.length) continue;
+    if (sentSetsInGrade.length < 3) continue;
 
-    const flashedSetsInGrade = setsInGrade.filter(
-      ([set]) => (set.inputs[2]?.value as SendType) === SendType.Flash,
-    );
-    const flashRate = flashedSetsInGrade.length / setsInGrade.length;
-
-    /*
-    const sentSetsInGrade = setsInGrade.filter(
-      ([set]) =>
-        (set.inputs[2]?.value as SendType) === SendType.Flash ||
-        (set.inputs[2]?.value as SendType) === SendType.Top,
-    );
-    const sendRate = sentSetsInGrade.length / setsInGrade.length;
-    console.log({
-      systemGrade: systemGrade.name,
-      sendRate: sendRate.toLocaleString("en-US", { style: "percent" }),
-      flashRate: flashRate.toLocaleString("en-US", { style: "percent" }),
-    });
-    */
+    const flashRate =
+      sentSetsInGrade.filter(
+        ([set]) => (set.inputs[2]?.value as SendType) === SendType.Flash,
+      ).length / sentSetsInGrade.length;
 
     if (
       flashRate >= flashGradeRateThreshold &&
@@ -664,11 +656,15 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
   return flashGrade;
 };
 
-export const calculate95thSendGradeOn = async (userId: string, date: Date) => {
+export const calculate60dayTop10AverageSendGrade = async (
+  userId: string,
+  date: Date,
+) => {
   const workouts = await MaterializedWorkoutsView.find({
     userId,
     "exercises.exerciseId": 2001,
-    workedOutAt: { $lte: date, $gt: subMonths(date, 1) },
+    source: WorkoutSource.TopLogger,
+    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
   const locations = await Locations.find({ userId }).toArray();
@@ -678,7 +674,11 @@ export const calculate95thSendGradeOn = async (userId: string, date: Date) => {
       .filter((e) => isClimbingExercise(e.exerciseId))
       .flatMap((e) =>
         e.sets
-          .filter((s) => (s.inputs[2]?.value as SendType) !== SendType.Repeat)
+          .filter(
+            (s) =>
+              (s.inputs[2]?.value as SendType) === SendType.Top ||
+              (s.inputs[2]?.value as SendType) === SendType.Flash,
+          )
           .map(
             (set) =>
               [
@@ -696,39 +696,145 @@ export const calculate95thSendGradeOn = async (userId: string, date: Date) => {
       ([set, location]) =>
         [set, location, getSetGrade(set, location)!] as const,
     )
-    .filter(([, , grade]) => typeof grade === "number" && grade > 0);
+    .filter(([, , grade]) => typeof grade === "number" && grade > 0)
+    .sort((a, b) => b[2] - a[2]);
 
   if (!grades.length) return null;
 
-  let sendGrade: number | null = null;
-  for (const systemGrade of frenchRounded.data) {
-    const lowerGrade =
-      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) - 1]?.value ||
-      0;
-    const upperGrade =
-      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) + 1]?.value ||
-      Infinity;
-    const setsInGrade = grades.filter(
-      ([, , grade]) => grade > lowerGrade && grade < upperGrade,
-    );
-
-    if (!setsInGrade.length) continue;
-    if (setsInGrade.length < 2) continue;
-
-    const sentSetsInGrade = setsInGrade.filter(
-      ([set]) =>
-        (set.inputs[2]?.value as SendType) === SendType.Flash ||
-        (set.inputs[2]?.value as SendType) === SendType.Top,
-    );
-    const sendRate = sentSetsInGrade.length / setsInGrade.length;
-
-    if (
-      sendRate >= flashGradeRateThreshold &&
-      (!sendGrade || systemGrade.value > sendGrade)
-    ) {
-      sendGrade = systemGrade.value;
-    }
-  }
-
-  return sendGrade;
+  return grades.slice(0, 10).reduce((sum, [, , grade]) => sum + grade, 0) / 10;
 };
+
+export const calculate60dayTop10AverageFlashGrade = async (
+  userId: string,
+  date: Date,
+) => {
+  const workouts = await MaterializedWorkoutsView.find({
+    userId,
+    "exercises.exerciseId": 2001,
+    source: WorkoutSource.TopLogger,
+    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
+    deletedAt: { $exists: false },
+  }).toArray();
+  const locations = await Locations.find({ userId }).toArray();
+
+  const climbingSets = workouts.flatMap((w) =>
+    w.exercises
+      .filter((e) => isClimbingExercise(e.exerciseId))
+      .flatMap((e) =>
+        e.sets
+          .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Flash)
+          .map(
+            (set) =>
+              [
+                set,
+                locations.find((l) => l._id.toString() === w.locationId),
+              ] as const,
+          ),
+      ),
+  );
+
+  if (!climbingSets.length) return null;
+
+  const grades = climbingSets
+    .map(
+      ([set, location]) =>
+        [set, location, getSetGrade(set, location)!] as const,
+    )
+    .filter(([, , grade]) => typeof grade === "number" && grade > 0)
+    .sort((a, b) => b[2] - a[2]);
+
+  if (!grades.length) return null;
+
+  return grades.slice(0, 10).reduce((sum, [, , grade]) => sum + grade, 0) / 10;
+};
+
+export const calculate60dayTop10AverageAttemptGrade = async (
+  userId: string,
+  date: Date,
+) => {
+  const workouts = await MaterializedWorkoutsView.find({
+    userId,
+    "exercises.exerciseId": 2001,
+    source: WorkoutSource.TopLogger,
+    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
+    deletedAt: { $exists: false },
+  }).toArray();
+  const locations = await Locations.find({ userId }).toArray();
+
+  const climbingSets = workouts.flatMap((w) =>
+    w.exercises
+      .filter((e) => isClimbingExercise(e.exerciseId))
+      .flatMap((e) =>
+        e.sets
+          .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Attempt)
+          .map(
+            (set) =>
+              [
+                set,
+                locations.find((l) => l._id.toString() === w.locationId),
+              ] as const,
+          ),
+      ),
+  );
+
+  if (!climbingSets.length || climbingSets.length <= 10) return null;
+
+  const grades = climbingSets
+    .map(
+      ([set, location]) =>
+        [set, location, getSetGrade(set, location)!] as const,
+    )
+    .filter(([, , grade]) => typeof grade === "number" && grade > 0)
+    .sort((a, b) => b[2] - a[2]);
+
+  if (!grades.length) return null;
+
+  return grades.slice(0, 10).reduce((sum, [, , grade]) => sum + grade, 0) / 10;
+};
+
+export async function calculateClimbingStats(
+  setAndLocationPairs: (readonly [
+    location: LocationData | undefined,
+    set: WorkoutExerciseSet,
+  ])[],
+  userId?: string,
+  on?: Date,
+) {
+  const successfulSetAndLocationPairs = setAndLocationPairs.filter(
+    ([, set]) =>
+      (set.inputs[2]!.value as SendType) !== SendType.Attempt &&
+      (set.inputs[2]!.value as SendType) !== SendType.Zone,
+  );
+  const problemCount = successfulSetAndLocationPairs.length;
+  const gradeSum = successfulSetAndLocationPairs.reduce(
+    (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
+    0,
+  );
+  const gradeTop5Average =
+    successfulSetAndLocationPairs
+      .map(([location, set]) => getSetGrade(set, location) ?? 0)
+      .filter((grade) => grade > 0)
+      .sort((a, b) => b - a)
+      .slice(0, Math.min(5, successfulSetAndLocationPairs.length))
+      .reduce((sum, grade) => sum + grade, 0) /
+    Math.min(5, successfulSetAndLocationPairs.length);
+
+  const flashGrade =
+    userId && on ? await calculateFlashGradeOn(userId, on) : null;
+
+  return (
+    <small className="text-[10px]">
+      {problemCount ? <span>PC: {problemCount}</span> : null}
+      {gradeSum ? <span>, GS: {gradeSum.toFixed(0)}</span> : null}
+      {gradeTop5Average ? (
+        <span>
+          , T5A: {new Grade(gradeTop5Average).nameFloor}
+          {new Grade(gradeTop5Average).subGradePercent ? (
+            <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
+          ) : null}
+        </span>
+      ) : null}
+      {flashGrade ? <span>, 1MFG: {new Grade(flashGrade).name}</span> : null}
+    </small>
+  );
+}

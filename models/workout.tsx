@@ -5,11 +5,9 @@ import {
   startOfDay,
   type Duration,
 } from "date-fns";
-import Grade from "../grades";
 import { DEFAULT_TIMEZONE } from "../utils";
 import {
   exercisesById,
-  SendType,
   type AssistType,
   type ExerciseData,
   type Unit,
@@ -194,50 +192,4 @@ export function getSetGrade(
   if (colorGrade) return colorGrade;
 
   return null;
-}
-
-export function calculateClimbingStats(
-  setAndLocationPairs: (readonly [
-    location: LocationData | undefined,
-    set: WorkoutExerciseSet,
-  ])[],
-) {
-  const successfulSetAndLocationPairs = setAndLocationPairs.filter(
-    ([, set]) =>
-      (set.inputs[2]!.value as SendType) !== SendType.Attempt &&
-      (set.inputs[2]!.value as SendType) !== SendType.Zone,
-  );
-  const problemCount = successfulSetAndLocationPairs.length;
-  const gradeSum = successfulSetAndLocationPairs.reduce(
-    (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
-    0,
-  );
-  const gradeTop5Average =
-    successfulSetAndLocationPairs
-      .map(([location, set]) => getSetGrade(set, location) ?? 0)
-      .filter((grade) => grade > 0)
-      .sort((a, b) => b - a)
-      .slice(0, Math.min(5, successfulSetAndLocationPairs.length))
-      .reduce((sum, grade) => sum + grade, 0) /
-    Math.min(5, successfulSetAndLocationPairs.length);
-
-  return (
-    <small className="block text-[10px]">
-      {problemCount ? (
-        <span className="inline-block">PC: {problemCount}</span>
-      ) : null}
-      {gradeSum ? (
-        <span className="inline-block">, GS: {gradeSum.toFixed(0)}</span>
-      ) : null}
-      {gradeTop5Average ? (
-        <span className="inline-block">
-          , T5A: {new Grade(gradeTop5Average).nameFloor}
-          {new Grade(gradeTop5Average).subGradePercent ? (
-            <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
-          ) : null}
-          .
-        </span>
-      ) : null}
-    </small>
-  );
 }

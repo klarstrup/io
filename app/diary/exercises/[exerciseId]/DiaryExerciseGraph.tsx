@@ -49,10 +49,11 @@ export default function DiaryExerciseGraph({
             anchor: "top",
             direction: "row",
             translateY: -25,
-            itemWidth: 120,
+            itemWidth: 140,
             itemHeight: 22,
           },
         ]}
+        pointSize={0}
         defs={[
           linearGradientDef("gradientA", [
             { offset: 0, color: "inherit" },

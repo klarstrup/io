@@ -11,13 +11,13 @@ import { type ExerciseData, exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import {
-  calculateClimbingStats,
   isClimbingExercise,
   type WorkoutData,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
+import { calculateClimbingStats } from "../../models/workout.server";
 import { dateToString, omit } from "../../utils";
 import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
@@ -279,7 +279,7 @@ export default async function WorkoutEntry({
                   </Link>
                 ) : null}
                 {isClimbingExercise(exercise.id)
-                  ? calculateClimbingStats(
+                  ? calculateClimbingStats( 
                       workoutExercise.sets.map((set) => [
                         location ?? undefined,
                         set,

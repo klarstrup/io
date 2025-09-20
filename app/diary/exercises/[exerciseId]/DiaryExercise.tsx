@@ -1,6 +1,5 @@
-import { eachMonthOfInterval, endOfMonth, min, subMonths } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
 import { auth } from "../../../../auth";
 import { PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
@@ -11,12 +10,11 @@ import {
   type WorkoutData,
 } from "../../../../models/workout";
 import {
-  calculate95thSendGradeOn,
-  calculateFlashGradeOn,
   getIsSetPR,
   MaterializedWorkoutsView,
 } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
+import BoulderingGraph from "./BoulderingGraph";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
 
 export default async function DiaryExercise({
@@ -31,13 +29,79 @@ export default async function DiaryExercise({
   const exercise = exercisesById[exerciseId]!;
   const user = (await auth())?.user;
 
-  let allWorkoutsOfExercise = user
+  return (
+    <>
+      <h1 className="text-2xl font-semibold">
+        <span className="text-gray-300">Exercise:</span> {exercise.name}
+      </h1>
+      <p className="text-gray-500">
+        {exercise.instructions.map((instruction, i) => (
+          <Fragment key={i}>
+            {instruction.value}
+            {i < exercise.instructions.length - 1 ? <br /> : null}
+          </Fragment>
+        ))}
+      </p>
+      <div className="mt-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold">Workouts</h2>
+        <form method="GET" className="flex flex-wrap gap-2">
+          <select
+            className="rounded-md bg-gray-100 p-1"
+            name="prType"
+            defaultValue={prType || ""}
+          >
+            <option value="">All workouts</option>
+            <option value={PRType.AllTime}>All Time PR workouts</option>
+            <option value={PRType.OneYear}>Year PR workouts</option>
+            <option value={PRType.ThreeMonths}>3 Month PR workouts</option>
+          </select>
+          <label>
+            <input
+              type="checkbox"
+              name="mergeWorkouts"
+              value="true"
+              defaultChecked={mergeWorkouts}
+            />{" "}
+            Merge workouts
+          </label>
+          <button type="submit" className="rounded-md bg-gray-100 px-2">
+            Filter
+          </button>
+        </form>
+      </div>
+      {user ? (
+        <Suspense>
+          <DiaryExerciseList
+            userId={user.id}
+            exerciseId={exerciseId}
+            prType={prType}
+            mergeWorkouts={mergeWorkouts}
+          />
+        </Suspense>
+      ) : null}
+    </>
+  );
+}
+
+async function DiaryExerciseList({
+  userId,
+  exerciseId,
+  prType,
+  mergeWorkouts,
+}: {
+  userId: string;
+  exerciseId: number;
+  prType?: PRType;
+  mergeWorkouts?: boolean;
+}) {
+  let allWorkoutsOfExercise = userId
     ? (
         await MaterializedWorkoutsView.find(
           {
-            userId: user.id,
-            "exercises.exerciseId": exercise.id,
+            userId,
+            "exercises.exerciseId": exerciseId,
             deletedAt: { $exists: false },
+            workedOutAt: { $gte: new Date("2025-01-01") },
           },
           { sort: { workedOutAt: -1 } },
         ).toArray()
@@ -46,13 +110,13 @@ export default async function DiaryExercise({
         exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
       }))
     : [];
-  const [locations] = user
+  const [locations] = userId
     ? await Promise.all([
-        Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray(),
+        Locations.find({ userId }, { sort: { name: 1 } }).toArray(),
       ])
     : [];
 
-  if (user && mergeWorkouts) {
+  if (userId && mergeWorkouts) {
     allWorkoutsOfExercise = [
       allWorkoutsOfExercise.reduce(
         (acc: WithId<WorkoutData>, workout) => {
@@ -97,7 +161,7 @@ export default async function DiaryExercise({
           id: new ObjectId().toString(),
           workedOutAt: new Date(),
           exercises: [],
-          userId: user.id,
+          userId,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -129,82 +193,15 @@ export default async function DiaryExercise({
       workoutsExerciseSetPRs[workout.id]!.push(exerciseSetsPRs);
     }
   }
-
   return (
     <>
-      <h1 className="text-2xl font-semibold">
-        <span className="text-gray-300">Exercise:</span> {exercise.name}
-      </h1>
-      <p className="text-gray-500">
-        {exercise.instructions.map((instruction, i) => (
-          <Fragment key={i}>
-            {instruction.value}
-            {i < exercise.instructions.length - 1 ? <br /> : null}
-          </Fragment>
-        ))}
-      </p>
-      <div className="mt-4 flex items-center gap-2">
-        <h2 className="text-xl font-semibold">Workouts</h2>
-        <form method="GET" className="flex flex-wrap gap-2">
-          <select
-            className="rounded-md bg-gray-100 p-1"
-            name="prType"
-            defaultValue={prType || ""}
-          >
-            <option value="">All workouts</option>
-            <option value={PRType.AllTime}>All Time PR workouts</option>
-            <option value={PRType.OneYear}>Year PR workouts</option>
-            <option value={PRType.ThreeMonths}>3 Month PR workouts</option>
-          </select>
-          <label>
-            <input
-              type="checkbox"
-              name="mergeWorkouts"
-              value="true"
-              defaultChecked={mergeWorkouts}
-            />{" "}
-            Merge workouts
-          </label>
-          <button type="submit" className="rounded-md bg-gray-100 px-2">
-            Filter
-          </button>
-        </form>
-      </div>
-      {user && exerciseId === 2001 ? (
-        <DiaryExerciseGraph
-          data={[
-            {
-              id: "95% Flash Grade",
-              data: await Promise.all(
-                eachMonthOfInterval({
-                  start: subMonths(new Date(), 12),
-                  end: new Date(),
-                }).map(async (date) => ({
-                  x: min([endOfMonth(date), new Date()]),
-                  y: await calculateFlashGradeOn(
-                    user.id,
-                    min([endOfMonth(date), new Date()]),
-                  ),
-                })),
-              ),
-            },
-            {
-              id: "95% Send Grade",
-              data: await Promise.all(
-                eachMonthOfInterval({
-                  start: subMonths(new Date(), 12),
-                  end: new Date(),
-                }).map(async (date) => ({
-                  x: min([endOfMonth(date), new Date()]),
-                  y: await calculate95thSendGradeOn(
-                    user.id,
-                    min([endOfMonth(date), new Date()]),
-                  ),
-                })),
-              ),
-            },
-          ]}
-        />
+      {userId && exerciseId === 2001 ? (
+        <Suspense fallback={<DiaryExerciseGraph data={[]} />}>
+          <BoulderingGraph
+            allWorkoutsOfExercise={allWorkoutsOfExercise}
+            userId={userId}
+          />
+        </Suspense>
       ) : null}
       <ul
         style={{

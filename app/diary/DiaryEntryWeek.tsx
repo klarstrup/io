@@ -12,14 +12,10 @@ import {
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
 import type { LocationData } from "../../models/location";
-import {
-  calculateClimbingStats,
-  isClimbingExercise,
-} from "../../models/workout";
-import { calculateFlashGradeOn } from "../../models/workout.server";
+import { isClimbingExercise } from "../../models/workout";
+import { calculateClimbingStats } from "../../models/workout.server";
 import { dateToString, isNonEmptyArray } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
-import Grade from "../../grades";
 
 export async function DiaryEntryWeek({
   user,
@@ -57,10 +53,6 @@ export async function DiaryEntryWeek({
       )) ||
     [];
 
-  const flashGrade = user?.id
-    ? await calculateFlashGradeOn(user?.id, weekInterval.end)
-    : null;
-
   return (
     <div
       key={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
@@ -91,12 +83,11 @@ export async function DiaryEntryWeek({
               : null}
         </span>
         {isNonEmptyArray(weekClimbingSets) &&
-          calculateClimbingStats(weekClimbingSets)}
-        {flashGrade ? (
-          <small>
-            <small>1mo Flash Grade: {new Grade(flashGrade).name}</small>
-          </small>
-        ) : null}
+          (await calculateClimbingStats(
+            weekClimbingSets,
+            user?.id,
+            weekInterval.end,
+          ))}
       </div>
       {eachDayOfInterval(weekInterval).map((dayte) => {
         const dateStr = dateToString(dayte);
