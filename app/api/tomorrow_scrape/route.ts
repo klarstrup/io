@@ -85,8 +85,8 @@ export const GET = () =>
                 ...interval,
                 startTime,
                 _io_geohash: truncatedGeohash,
-                _io_scrapedAt: new Date(),
               },
+              $setOnInsert: { _io_scrapedAt: new Date() },
             },
             { upsert: true },
           );

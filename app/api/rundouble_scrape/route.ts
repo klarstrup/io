@@ -41,8 +41,8 @@ export const GET = () =>
                   ...run,
                   userId: id,
                   completedAt: new Date(run.completedLong),
-                  _io_scrapedAt: new Date(),
                 },
+                $setOnInsert: { _io_scrapedAt: new Date() },
               },
               { upsert: true },
             );
