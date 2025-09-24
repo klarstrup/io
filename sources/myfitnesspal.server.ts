@@ -1,40 +1,14 @@
-import { endOfMonth, getDaysInMonth, startOfMonth } from "date-fns";
-import { dbFetch } from "../fetch";
-import { HOUR_IN_SECONDS, getMaxAgeFactor } from "../utils";
-import { MyFitnessPal } from "./myfitnesspal";
+import { getDaysInMonth } from "date-fns";
 import { proxyCollection } from "../utils.server";
+import { MyFitnessPal } from "./myfitnesspal";
 
 export const MyFitnessPalFoodEntries =
   proxyCollection<MyFitnessPal.MongoFoodEntry>("myfitnesspal_food_entries");
 
-const fetchMyFitnessPal = async <T>(
-  input: string | URL,
-  init?: RequestInit | null,
-  dbOptions?: Parameters<typeof dbFetch>[2],
-) =>
-  await dbFetch<T>(
-    new URL(input, "https://www.myfitnesspal.com/api/"),
-    init,
-    dbOptions,
+const fetchMyFitnessPal = <T>(input: string | URL, init?: RequestInit) =>
+  fetch(new URL(input, "https://www.myfitnesspal.com/api/"), init).then(
+    (r) => r.json() as Promise<T>,
   );
-
-export const getMyFitnessPalSession = async (myFitnessPalToken: string) => {
-  const session = await fetchMyFitnessPal<
-    MyFitnessPal.Session | Record<string, never>
-  >(
-    "auth/session",
-    {
-      headers: {
-        cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,
-      },
-    },
-    { maxAge: HOUR_IN_SECONDS },
-  );
-
-  if (!session.user) throw new Error("myFitnessPalToken is not valid");
-
-  return session as MyFitnessPal.Session;
-};
 
 export const getMyFitnessPalReport = async (
   myFitnessPalToken: string,
@@ -68,11 +42,6 @@ export const getMyFitnessPalReport = async (
       headers: {
         cookie: "__Secure-next-auth.session-token=" + myFitnessPalToken,
       },
-    },
-    {
-      maxAge:
-        (HOUR_IN_SECONDS / 2) *
-        getMaxAgeFactor({ start: startOfMonth(month), end: endOfMonth(month) }),
     },
   );
   if (!Array.isArray(reportEntries)) {
