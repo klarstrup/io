@@ -5,7 +5,12 @@ import { sourceToMaterializer } from "../app/api/materialize_workouts/materializ
 import { Users } from "../models/user.server";
 import type { UserDataSource } from "./utils";
 
-export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
+export async function* wrapSource<
+  DS extends UserDataSource,
+  T,
+  TReturn extends boolean | void,
+  TNext,
+>(
   dataSource: DS,
   user: Session["user"],
   fn: (config: DS["config"]) => AsyncGenerator<T, TReturn, TNext>,
@@ -14,13 +19,14 @@ export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
   const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
 
   const attemptedAt = new Date();
+  let updatedDatabase: boolean | null | undefined | void = null;
   await Users.updateOne(
     filter,
     { $set: { "dataSources.$[source].lastAttemptedAt": attemptedAt } },
     updateOptions,
   );
   try {
-    yield* fn(dataSource.config);
+    updatedDatabase = yield* fn(dataSource.config);
 
     const successfulAt = new Date();
     await Users.updateOne(
@@ -65,18 +71,20 @@ export async function* wrapSource<DS extends UserDataSource, T, TReturn, TNext>(
     yield* materializer?.(user, dataSource);
   }
 
-  try {
-    new PartySocket({
-      id: process.env.VERCEL_DEPLOYMENT_ID,
-      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
-      room: user.id,
-    }).send(
-      JSON.stringify({
-        source: dataSource.source,
-        scrapedAt: new Date().valueOf(),
-      }),
-    );
-  } catch (error) {
-    console.error(error);
+  if (updatedDatabase !== false) {
+    try {
+      new PartySocket({
+        id: process.env.VERCEL_DEPLOYMENT_ID,
+        host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+        room: user.id,
+      }).send(
+        JSON.stringify({
+          source: dataSource.source,
+          scrapedAt: new Date().valueOf(),
+        }),
+      );
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
