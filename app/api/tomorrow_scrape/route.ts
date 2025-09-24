@@ -70,29 +70,38 @@ export const GET = () =>
     for (const dataSources of user.dataSources ?? []) {
       if (dataSources.source !== DataSource.Tomorrow) continue;
 
-      yield* wrapSource(dataSources, user, async function* ({ geohash }) {
-        const truncatedGeohash = geohash.slice(0, 4);
-        const intervals = await fetchTomorrowTimelineIntervals({
-          geohash: truncatedGeohash,
-        });
+      yield* wrapSource(
+        dataSources,
+        user,
+        async function* ({ geohash }, setUpdated) {
+          setUpdated(false);
+          const truncatedGeohash = geohash.slice(0, 4);
+          const intervals = await fetchTomorrowTimelineIntervals({
+            geohash: truncatedGeohash,
+          });
 
-        for (const interval of intervals) {
-          const startTime = new Date(interval.startTime);
-          const updateResult = await TomorrowIntervals.updateOne(
-            { _io_geohash: truncatedGeohash, startTime },
-            {
-              $set: {
-                ...interval,
-                startTime,
-                _io_geohash: truncatedGeohash,
+          for (const interval of intervals) {
+            const startTime = new Date(interval.startTime);
+            const updateResult = await TomorrowIntervals.updateOne(
+              { _io_geohash: truncatedGeohash, startTime },
+              {
+                $set: {
+                  ...interval,
+                  startTime,
+                  _io_geohash: truncatedGeohash,
+                },
+                $setOnInsert: { _io_scrapedAt: new Date() },
               },
-              $setOnInsert: { _io_scrapedAt: new Date() },
-            },
-            { upsert: true },
-          );
+              { upsert: true },
+            );
 
-          yield [interval.startTime, updateResult] as const;
-        }
-      });
+            setUpdated(
+              (updateResult.modifiedCount || updateResult.upsertedCount) > 0,
+            );
+
+            yield [interval.startTime, updateResult] as const;
+          }
+        },
+      );
     }
   });

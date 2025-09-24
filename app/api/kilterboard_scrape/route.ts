@@ -29,6 +29,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ token }, setUpdated) {
+          setUpdated(false);
+
           const { bids, ascents } = (await (
             await fetch("https://kilterboardapp.com/sync", {
               method: "POST",
