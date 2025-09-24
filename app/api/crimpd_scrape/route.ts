@@ -20,6 +20,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ token }, setUpdated) {
+          setUpdated(false);
+
           const workoutLogs = (
             (await (
               await fetch("https://api.crimpd.com/workout_log", {

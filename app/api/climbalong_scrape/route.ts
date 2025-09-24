@@ -33,6 +33,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ token }, setUpdated) {
+          setUpdated(false);
+
           const handleUpdateResult = (r: UpdateResult) =>
             setUpdated(r.modifiedCount > 0 || r.upsertedCount > 0);
 

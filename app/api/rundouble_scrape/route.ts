@@ -32,6 +32,8 @@ export const GET = () =>
       if (dataSource.source !== DataSource.RunDouble) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ id }, setUpdated) {
+        setUpdated(false);
+
         for await (const run of getRuns(id)) {
           const { modifiedCount, upsertedCount } =
             await RunDoubleRuns.updateOne(

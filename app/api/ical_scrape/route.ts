@@ -23,10 +23,9 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ url }, setUpdated) {
-          if (!url) {
-            setUpdated(false);
-            return;
-          }
+          setUpdated(false);
+
+          if (!url) return;
 
           const icalData = parseICS(await fetch(url).then((r) => r.text()));
 

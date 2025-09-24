@@ -23,6 +23,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ authTokens }, setUpdated) {
+          setUpdated(false);
+
           let headers: HeadersInit = {
             authorization: `Bearer ${authTokens.access_token}`,
           };

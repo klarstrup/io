@@ -75,6 +75,7 @@ export const GET = () =>
         user,
         async function* ({ geohash }, setUpdated) {
           setUpdated(false);
+
           const truncatedGeohash = geohash.slice(0, 4);
           const intervals = await fetchTomorrowTimelineIntervals({
             geohash: truncatedGeohash,

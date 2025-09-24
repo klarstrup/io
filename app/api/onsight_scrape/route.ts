@@ -24,6 +24,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ token }, setUpdated) {
+          setUpdated(false);
+
           const headers = {
             "x-appery-database-id": "562e0e3be4b081edd3eb975d",
             "x-appery-session-token": token,

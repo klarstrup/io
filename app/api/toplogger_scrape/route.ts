@@ -47,6 +47,8 @@ export const GET = (request: NextRequest) =>
         dataSource,
         user,
         async function* ({ authTokens }, setUpdated) {
+          setUpdated(false);
+
           const handleUpdateResults = (updateResults: {
             [key: string]:
               | string

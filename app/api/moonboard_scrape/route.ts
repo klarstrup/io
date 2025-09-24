@@ -26,6 +26,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ token, user_id }, setUpdated) {
+          setUpdated(false);
+
           const logbook = (await fetch(
             `https://www.moonboard.com/Account/GetLogbook/${user_id}`,
             {

@@ -79,6 +79,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ name }, setUpdated) {
+          setUpdated(false);
+
           for (const event of events) {
             const liveSearchResultsURL = new URL(
               "https://www.sportstiming.dk/Results/ResultLiveSearch.aspx",
