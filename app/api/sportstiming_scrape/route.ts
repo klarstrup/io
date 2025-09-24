@@ -54,24 +54,30 @@ export const GET = () =>
       ({ EventId }) => EventId,
     );
 
+    let updatedSportstimingEvents = false;
     for (const event of events) {
-      await SportstimingEvents.updateOne(
-        { EventId: event.EventId },
-        {
-          $set: {
-            ...event,
-            RawDate: new Date(event.RawDate),
-            EntryEndDate: new Date(event.EntryEndDate),
+      const { upsertedCount, modifiedCount } =
+        await SportstimingEvents.updateOne(
+          { EventId: event.EventId },
+          {
+            $set: {
+              ...event,
+              RawDate: new Date(event.RawDate),
+              EntryEndDate: new Date(event.EntryEndDate),
+            },
           },
-        },
-        { upsert: true },
-      );
+          { upsert: true },
+        );
+
+      updatedSportstimingEvents ||= upsertedCount > 0 || modifiedCount > 0;
     }
 
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.Sportstiming) continue;
 
       yield* wrapSource(dataSource, user, async function* ({ name }) {
+        let updatedSportstimingFavorites = false;
+
         for (const event of events) {
           const liveSearchResultsURL = new URL(
             "https://www.sportstiming.dk/Results/ResultLiveSearch.aspx",
@@ -140,30 +146,34 @@ export const GET = () =>
                   .split(" af ")[1],
               );
 
-              await SportstimingFavorites.updateOne(
-                { Id: favorite.Id },
-                {
-                  $set: {
-                    ...favorite,
-                    StartTime:
-                      favorite.StartTime &&
-                      new Date(Number(favorite.StartTime)),
-                    LastSplitTimeOfDay:
-                      favorite.LastSplitTimeOfDay &&
-                      new Date(
-                        Number(
-                          String(favorite.LastSplitTimeOfDay).match(
-                            /\/Date\((.+)\)\//,
-                          )![1],
+              const { upsertedCount, modifiedCount } =
+                await SportstimingFavorites.updateOne(
+                  { Id: favorite.Id },
+                  {
+                    $set: {
+                      ...favorite,
+                      StartTime:
+                        favorite.StartTime &&
+                        new Date(Number(favorite.StartTime)),
+                      LastSplitTimeOfDay:
+                        favorite.LastSplitTimeOfDay &&
+                        new Date(
+                          Number(
+                            String(favorite.LastSplitTimeOfDay).match(
+                              /\/Date\((.+)\)\//,
+                            )![1],
+                          ),
                         ),
-                      ),
-                    _io_NumberOfParticipants: noParticipants,
-                    _io_TotalDistance: distance,
-                    _io_EventId: event.EventId,
+                      _io_NumberOfParticipants: noParticipants,
+                      _io_TotalDistance: distance,
+                      _io_EventId: event.EventId,
+                    },
                   },
-                },
-                { upsert: true },
-              );
+                  { upsert: true },
+                );
+
+              updatedSportstimingFavorites ||=
+                upsertedCount > 0 || modifiedCount > 0;
 
               yield favorite;
             }
@@ -171,6 +181,8 @@ export const GET = () =>
 
           yield event;
         }
+
+        return updatedSportstimingEvents || updatedSportstimingFavorites;
       });
     }
   });
