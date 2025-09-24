@@ -42,6 +42,8 @@ export const GET = () =>
         dataSource,
         user,
         async function* ({ token, userName, userId }) {
+          let updatedDatabase = false;
+
           const now = new Date();
           yearLoop: for (const year of years) {
             for (const month of months) {
@@ -76,19 +78,26 @@ export const GET = () =>
               for (const reportEntry of reportEntries) {
                 if (reportEntry.food_entries) {
                   for (const foodEntry of reportEntry.food_entries) {
-                    await MyFitnessPalFoodEntries.updateOne(
-                      { id: foodEntry.id },
-                      {
-                        $set: {
-                          ...foodEntry,
-                          user_id: userId,
-                          datetime: DateTime.fromISO(foodEntry.date, {
-                            zone: "utc",
-                          }).toJSDate(),
+                    const updateResult =
+                      await MyFitnessPalFoodEntries.updateOne(
+                        { id: foodEntry.id },
+                        {
+                          $set: {
+                            ...foodEntry,
+                            user_id: userId,
+                            datetime: DateTime.fromISO(foodEntry.date, {
+                              zone: "utc",
+                            }).toJSDate(),
+                          },
                         },
-                      },
-                      { upsert: true },
-                    );
+                        { upsert: true },
+                      );
+                    if (
+                      updateResult.modifiedCount > 0 ||
+                      updateResult.upsertedCount > 0
+                    ) {
+                      updatedDatabase = true;
+                    }
                   }
 
                   yield reportEntry.date;
@@ -96,6 +105,8 @@ export const GET = () =>
               }
             }
           }
+
+          return updatedDatabase;
         },
       );
     }
