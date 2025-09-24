@@ -25,7 +25,7 @@ const months = [
   "12",
 ] as const;
 
-const years = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] as const;
+const years = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -60,6 +60,8 @@ export const GET = () =>
 
                 if (entriesForMonth > 0) continue;
               }
+              // TODO: Also skip anything prior to a few months before the last populated month
+
               const reportEntries = await getMyFitnessPalReport(
                 token,
                 userName,
