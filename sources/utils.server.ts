@@ -60,34 +60,34 @@ export async function* wrapSource<
       updateOptions,
     );
     throw e;
-  }
-
-  const materializer =
-    sourceToMaterializer[
-      dataSource.source as keyof typeof sourceToMaterializer
-    ];
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore - some runtimes think this is too complex
-  if (materializer) {
+  } finally {
+    const materializer =
+      sourceToMaterializer[
+        dataSource.source as keyof typeof sourceToMaterializer
+      ];
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - some runtimes think this is too complex
-    yield* materializer?.(user, dataSource);
-  }
+    if (materializer) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - some runtimes think this is too complex
+      yield* materializer?.(user, dataSource);
+    }
 
-  if (updatedDatabase !== false) {
-    try {
-      new PartySocket({
-        id: process.env.VERCEL_DEPLOYMENT_ID,
-        host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
-        room: user.id,
-      }).send(
-        JSON.stringify({
-          source: dataSource.source,
-          scrapedAt: new Date().valueOf(),
-        }),
-      );
-    } catch (error) {
-      console.error(error);
+    if (updatedDatabase !== false) {
+      try {
+        new PartySocket({
+          id: process.env.VERCEL_DEPLOYMENT_ID,
+          host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+          room: user.id,
+        }).send(
+          JSON.stringify({
+            source: dataSource.source,
+            scrapedAt: new Date().valueOf(),
+          }),
+        );
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 }
