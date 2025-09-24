@@ -1,6 +1,7 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
+  compareAsc,
   differenceInHours,
   eachDayOfInterval,
   endOfDay,
@@ -112,7 +113,6 @@ export async function DiaryAgendaEvents({
     )) {
       const calName = dateToString(date);
 
-      if (!eventsByDate[calName]) eventsByDate[calName] = [];
       if (
         !(
           differenceInHours(event.end, event.start) < 24 &&
@@ -145,6 +145,7 @@ export async function DiaryAgendaEvents({
       }
     >
       {Object.entries(eventsByDate)
+        .sort(([a], [b]) => compareAsc(new Date(a), new Date(b)))
         .slice(0, 4)
         .map(([dayName, events], i) => (
           <FieldSetX
