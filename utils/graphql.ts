@@ -14,6 +14,7 @@ import {
   type SelectionSetNode,
   type ValueNode,
 } from "graphql";
+import { UpdateResult } from "mongodb";
 import { TopLoggerGraphQL } from "../sources/toplogger.server";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
 interface ApolloErrorOptions {
@@ -676,14 +677,7 @@ export async function normalizeAndUpsertQueryData(
   const updateResults: {
     [key: string]:
       | string
-      | {
-          /** The number of documents that matched the filter */
-          matchedCount: number;
-          /** The number of documents that were modified */
-          modifiedCount: number;
-          /** The number of documents that were upserted */
-          upsertedCount: number;
-        };
+      | Pick<UpdateResult, "matchedCount" | "modifiedCount" | "upsertedCount">;
     operationName: string;
   } = {
     operationName: query.definitions.find(

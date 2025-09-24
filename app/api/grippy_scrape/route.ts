@@ -19,87 +19,97 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.Grippy) continue;
 
-      yield* wrapSource(dataSource, user, async function* ({ authTokens }) {
-        let headers: HeadersInit = {
-          authorization: `Bearer ${authTokens.access_token}`,
-        };
-        yield { authTokens };
-
-        yield "refreshing token";
-
-        const body = new FormData();
-        body.append("grant_type", "refresh_token");
-        body.append("refresh_token", authTokens.refresh_token);
-
-        const authSigninRefreshTokenResponse = await (
-          await fetch("https://api.griptonite.io/auth/token", {
-            method: "POST",
-            headers: {
-              "Accept-Encoding": "gzip",
-              authorization:
-                "Basic RkVLdm9xSkJTTW44RE41cmZYaEtyQmgyMnMyNUh4cFIzajNiMk95bDo2d3h0S1BlNEZrZlFhQVVUaVc4QVBwQjZKSmk3c1JjSk5PT1RkekZLVGhCeGpxNkFyaGJsTmVqd0hzdnZHWWxpNDVLemtMQmdzdmxNSUZIbFE0VHBuZUhvQkI0cWZTbHR2RUtxdGpvRUFPRmhKczhzc1VrM1lqZkRZcGppVzlqZQ==",
-              "User-Agent": "okhttp/4.9.2",
-              Host: "api.griptonite.io",
-            },
-            body,
-          })
-        ).text();
-
-        const authSigninRefreshTokenResponseJSON = JSON.parse(
-          authSigninRefreshTokenResponse,
-        ) as unknown;
-
-        if (isGrippyAuthTokens(authSigninRefreshTokenResponseJSON)) {
-          authTokens = authSigninRefreshTokenResponseJSON;
-          await Users.updateOne(
-            { _id: new ObjectId(user.id) },
-            {
-              $set: { "dataSources.$[source].config.authTokens": authTokens },
-            },
-            { arrayFilters: [{ "source.id": dataSource.id }] },
-          );
-          yield "Updated authTokens with refresh token";
+      yield* wrapSource(
+        dataSource,
+        user,
+        async function* ({ authTokens }, setUpdated) {
+          let headers: HeadersInit = {
+            authorization: `Bearer ${authTokens.access_token}`,
+          };
           yield { authTokens };
-        } else {
-          try {
-            yield JSON.parse(authSigninRefreshTokenResponse);
-          } catch {
-            yield authSigninRefreshTokenResponse;
-          }
-          throw new Error("Failed to refresh token");
-        }
 
-        headers = { authorization: `Bearer ${authTokens.access_token}` };
+          yield "refreshing token";
 
-        const response = await fetch(
-          "https://api.griptonite.io/workouts/logs",
-          { headers },
-        );
+          const body = new FormData();
+          body.append("grant_type", "refresh_token");
+          body.append("refresh_token", authTokens.refresh_token);
 
-        if (!response.ok || response.status !== 200) {
-          throw new Error(await response.text());
-        }
-
-        const json = (await response.json()) as Grippy.WorkoutLogsResponse;
-
-        const workoutLogs = json.data;
-
-        for (const workoutLog of workoutLogs) {
-          await GrippyWorkoutLogs.updateOne(
-            { uuid: workoutLog.uuid },
-            {
-              $set: {
-                ...workoutLog,
-                start_time: new Date(workoutLog.start_time),
-                end_time: new Date(workoutLog.end_time),
-                _io_userId: user.id,
+          const authSigninRefreshTokenResponse = await (
+            await fetch("https://api.griptonite.io/auth/token", {
+              method: "POST",
+              headers: {
+                "Accept-Encoding": "gzip",
+                authorization:
+                  "Basic RkVLdm9xSkJTTW44RE41cmZYaEtyQmgyMnMyNUh4cFIzajNiMk95bDo2d3h0S1BlNEZrZlFhQVVUaVc4QVBwQjZKSmk3c1JjSk5PT1RkekZLVGhCeGpxNkFyaGJsTmVqd0hzdnZHWWxpNDVLemtMQmdzdmxNSUZIbFE0VHBuZUhvQkI0cWZTbHR2RUtxdGpvRUFPRmhKczhzc1VrM1lqZkRZcGppVzlqZQ==",
+                "User-Agent": "okhttp/4.9.2",
+                Host: "api.griptonite.io",
               },
-            },
-            { upsert: true },
-          );
-        }
+              body,
+            })
+          ).text();
 
-        yield { workoutLogs };
-      });
+          const authSigninRefreshTokenResponseJSON = JSON.parse(
+            authSigninRefreshTokenResponse,
+          ) as unknown;
+
+          if (isGrippyAuthTokens(authSigninRefreshTokenResponseJSON)) {
+            authTokens = authSigninRefreshTokenResponseJSON;
+            await Users.updateOne(
+              { _id: new ObjectId(user.id) },
+              {
+                $set: { "dataSources.$[source].config.authTokens": authTokens },
+              },
+              { arrayFilters: [{ "source.id": dataSource.id }] },
+            );
+            yield "Updated authTokens with refresh token";
+            yield { authTokens };
+          } else {
+            try {
+              yield JSON.parse(authSigninRefreshTokenResponse);
+            } catch {
+              yield authSigninRefreshTokenResponse;
+            }
+
+            setUpdated(false);
+            throw new Error("Failed to refresh token");
+          }
+
+          headers = { authorization: `Bearer ${authTokens.access_token}` };
+
+          const response = await fetch(
+            "https://api.griptonite.io/workouts/logs",
+            { headers },
+          );
+
+          if (!response.ok || response.status !== 200) {
+            setUpdated(false);
+            throw new Error(await response.text());
+          }
+
+          const json = (await response.json()) as Grippy.WorkoutLogsResponse;
+
+          const workoutLogs = json.data;
+
+          for (const workoutLog of workoutLogs) {
+            const { modifiedCount, upsertedCount } =
+              await GrippyWorkoutLogs.updateOne(
+                { uuid: workoutLog.uuid },
+                {
+                  $set: {
+                    ...workoutLog,
+                    start_time: new Date(workoutLog.start_time),
+                    end_time: new Date(workoutLog.end_time),
+                    _io_userId: user.id,
+                  },
+                },
+                { upsert: true },
+              );
+
+            setUpdated(modifiedCount > 0 || upsertedCount > 0);
+          }
+
+          yield { workoutLogs };
+        },
+      );
     }
   });

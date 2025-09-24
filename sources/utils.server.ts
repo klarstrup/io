@@ -8,12 +8,15 @@ import type { UserDataSource } from "./utils";
 export async function* wrapSource<
   DS extends UserDataSource,
   T,
-  TReturn extends boolean | void,
+  TReturn extends void,
   TNext,
 >(
   dataSource: DS,
   user: Session["user"],
-  fn: (config: DS["config"]) => AsyncGenerator<T, TReturn, TNext>,
+  fn: (
+    config: DS["config"],
+    setUpdated: (updated: boolean) => void,
+  ) => AsyncGenerator<T, TReturn, TNext>,
 ) {
   const filter = { _id: new ObjectId(user.id) };
   const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
@@ -26,7 +29,7 @@ export async function* wrapSource<
     updateOptions,
   );
   try {
-    updatedDatabase = yield* fn(dataSource.config);
+    yield* fn(dataSource.config, (updated) => (updatedDatabase ||= updated));
 
     const successfulAt = new Date();
     await Users.updateOne(

@@ -22,80 +22,87 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.MoonBoard) continue;
 
-      yield* wrapSource(dataSource, user, async function* ({ token, user_id }) {
-        const logbook = (await fetch(
-          `https://www.moonboard.com/Account/GetLogbook/${user_id}`,
-          {
-            headers: {
-              "content-type":
-                "application/x-www-form-urlencoded; charset=UTF-8",
-              cookie: `_MoonBoard=${token};`,
-            },
-            body: "sort=&page=1&pageSize=40&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
-            method: "POST",
-          },
-        ).then((res) => res.json())) as MoonBoard.GetLogbookResponse;
-
-        yield { logbook };
-
-        for (const logbookDate of logbook.Data) {
-          const logbookEntries = (await fetch(
-            `https://www.moonboard.com/Account/GetLogbookEntries/${user_id}/${logbookDate.Id}`,
+      yield* wrapSource(
+        dataSource,
+        user,
+        async function* ({ token, user_id }, setUpdated) {
+          const logbook = (await fetch(
+            `https://www.moonboard.com/Account/GetLogbook/${user_id}`,
             {
               headers: {
                 "content-type":
                   "application/x-www-form-urlencoded; charset=UTF-8",
                 cookie: `_MoonBoard=${token};`,
               },
-              body: "sort=&page=1&pageSize=30&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
+              body: "sort=&page=1&pageSize=40&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
               method: "POST",
             },
-          ).then((res) => res.json())) as MoonBoard.GetLogbookEntriesResponse;
+          ).then((res) => res.json())) as MoonBoard.GetLogbookResponse;
 
-          const dateFromASPNet = (dateStr: string) =>
-            new TZDate(
-              Number(dateStr.replace(/\/Date\((\d+)\)\//, "$1")),
-              "UTC",
-            );
+          yield { logbook };
 
-          for (const entry of logbookEntries.Data) {
-            await MoonBoardLogbookEntries.updateOne(
-              { Id: entry.Id },
+          for (const logbookDate of logbook.Data) {
+            const logbookEntries = (await fetch(
+              `https://www.moonboard.com/Account/GetLogbookEntries/${user_id}/${logbookDate.Id}`,
               {
-                $set: {
-                  ...entry,
-                  DateClimbed: roundToNearestDay(
-                    dateFromASPNet(entry.DateClimbed),
-                    { in: tz("UTC") },
-                  ),
-                  DateInserted: entry.DateInserted
-                    ? dateFromASPNet(entry.DateInserted)
-                    : null,
-                  GradeNumber:
-                    entry.Grade && moonboardGradeStringToNumber[entry.Grade],
-                  Problem: {
-                    ...entry.Problem,
-                    DateInserted: entry.Problem.DateInserted
-                      ? dateFromASPNet(entry.Problem.DateInserted)
-                      : null,
-                    DateUpdated: entry.Problem.DateUpdated
-                      ? dateFromASPNet(entry.Problem.DateUpdated)
-                      : null,
-                    GradeNumber:
-                      entry.Problem.Grade &&
-                      moonboardGradeStringToNumber[entry.Problem.Grade],
-                    UserGradeNumber:
-                      entry.Problem.UserGrade &&
-                      moonboardGradeStringToNumber[entry.Problem.UserGrade],
-                  },
+                headers: {
+                  "content-type":
+                    "application/x-www-form-urlencoded; charset=UTF-8",
+                  cookie: `_MoonBoard=${token};`,
                 },
+                body: "sort=&page=1&pageSize=30&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
+                method: "POST",
               },
-              { upsert: true },
-            );
-          }
+            ).then((res) => res.json())) as MoonBoard.GetLogbookEntriesResponse;
 
-          yield { logbookEntries };
-        }
-      });
+            const dateFromASPNet = (dateStr: string) =>
+              new TZDate(
+                Number(dateStr.replace(/\/Date\((\d+)\)\//, "$1")),
+                "UTC",
+              );
+
+            for (const entry of logbookEntries.Data) {
+              const { modifiedCount, upsertedCount } =
+                await MoonBoardLogbookEntries.updateOne(
+                  { Id: entry.Id },
+                  {
+                    $set: {
+                      ...entry,
+                      DateClimbed: roundToNearestDay(
+                        dateFromASPNet(entry.DateClimbed),
+                        { in: tz("UTC") },
+                      ),
+                      DateInserted: entry.DateInserted
+                        ? dateFromASPNet(entry.DateInserted)
+                        : null,
+                      GradeNumber:
+                        entry.Grade &&
+                        moonboardGradeStringToNumber[entry.Grade],
+                      Problem: {
+                        ...entry.Problem,
+                        DateInserted: entry.Problem.DateInserted
+                          ? dateFromASPNet(entry.Problem.DateInserted)
+                          : null,
+                        DateUpdated: entry.Problem.DateUpdated
+                          ? dateFromASPNet(entry.Problem.DateUpdated)
+                          : null,
+                        GradeNumber:
+                          entry.Problem.Grade &&
+                          moonboardGradeStringToNumber[entry.Problem.Grade],
+                        UserGradeNumber:
+                          entry.Problem.UserGrade &&
+                          moonboardGradeStringToNumber[entry.Problem.UserGrade],
+                      },
+                    },
+                  },
+                  { upsert: true },
+                );
+              setUpdated(modifiedCount > 0 || upsertedCount > 0);
+            }
+
+            yield { logbookEntries };
+          }
+        },
+      );
     }
   });

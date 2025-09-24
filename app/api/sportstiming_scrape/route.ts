@@ -75,114 +75,123 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.Sportstiming) continue;
 
-      yield* wrapSource(dataSource, user, async function* ({ name }) {
-        let updatedSportstimingFavorites = false;
+      yield* wrapSource(
+        dataSource,
+        user,
+        async function* ({ name }, setUpdated) {
+          for (const event of events) {
+            const liveSearchResultsURL = new URL(
+              "https://www.sportstiming.dk/Results/ResultLiveSearch.aspx",
+            );
+            liveSearchResultsURL.searchParams.set(
+              "Rally",
+              String(event.EventId),
+            );
+            liveSearchResultsURL.searchParams.set("q", name);
+            const liveSearchResultsText = await fetch(liveSearchResultsURL, {
+              headers: { ...sportstimingHeaders },
+            }).then((r) => r.text());
 
-        for (const event of events) {
-          const liveSearchResultsURL = new URL(
-            "https://www.sportstiming.dk/Results/ResultLiveSearch.aspx",
-          );
-          liveSearchResultsURL.searchParams.set("Rally", String(event.EventId));
-          liveSearchResultsURL.searchParams.set("q", name);
-          const liveSearchResultsText = await fetch(liveSearchResultsURL, {
-            headers: { ...sportstimingHeaders },
-          }).then((r) => r.text());
+            for (const line of liveSearchResultsText.split("\n")) {
+              const [, id] = line.split("|").map((s) => s.trim());
+              if (!id || !Number(id)) continue;
 
-          for (const line of liveSearchResultsText.split("\n")) {
-            const [, id] = line.split("|").map((s) => s.trim());
-            if (!id || !Number(id)) continue;
-
-            const favorite = (
-              await fetch(
-                `https://www.sportstiming.dk/event/${event.EventId}/favorites/UpdateFavorites`,
-                {
-                  headers: {
-                    cookie: `cookies_allowed=required,statistics,settings; favorites_${event.EventId}=1_${id},`,
-                    ...sportstimingHeaders,
-                  },
-                },
-              ).then((r) => r.json() as Promise<SportsTiming.FavoriteUpdate[]>)
-            ).find(({ Id }) => Id === Number(id));
-
-            if (favorite) {
-              const $ = cheerio.load(
+              const favorite = (
                 await fetch(
-                  `https://www.sportstiming.dk/event/${event.EventId}/results/${favorite.Id}`,
-                  { headers: { ...sportstimingHeaders } },
-                ).then((r) => r.text()),
-              );
-
-              const distance =
-                favorite?.TotalDistance ||
-                $("td.splits-valuecol.splits-vertdivide")
-                  .filter((_, e) => $(e).text().trim().endsWith(" km"))
-                  .prev()
-                  .filter((_, e) => $(e).text().trim() !== "Total")
-                  .next()
-                  .toArray()
-                  .map(
-                    (t) =>
-                      Number($(t).text().replace(" km", "").replace(",", ".")) *
-                      1000,
-                  )
-                  .reduce((sum, value) => sum + value, 0) ||
-                Number(
-                  $(".panel-primary td")
-                    .filter((_, e) => $(e).text().trim() === "Distance")
-                    .last()
-                    .next()
-                    .text()
-                    .trim()
-                    .replace(" km", "")
-                    .replace(",", "."),
-                ) * 1000 ||
-                NaN;
-              const noParticipants = Number(
-                $(".panel-primary td")
-                  .filter((_, e) => $(e).text().trim() === "Mænd")
-                  .first()
-                  .next()
-                  .text()
-                  .split(" af ")[1],
-              );
-
-              const { upsertedCount, modifiedCount } =
-                await SportstimingFavorites.updateOne(
-                  { Id: favorite.Id },
+                  `https://www.sportstiming.dk/event/${event.EventId}/favorites/UpdateFavorites`,
                   {
-                    $set: {
-                      ...favorite,
-                      StartTime:
-                        favorite.StartTime &&
-                        new Date(Number(favorite.StartTime)),
-                      LastSplitTimeOfDay:
-                        favorite.LastSplitTimeOfDay &&
-                        new Date(
-                          Number(
-                            String(favorite.LastSplitTimeOfDay).match(
-                              /\/Date\((.+)\)\//,
-                            )![1],
-                          ),
-                        ),
-                      _io_NumberOfParticipants: noParticipants,
-                      _io_TotalDistance: distance,
-                      _io_EventId: event.EventId,
+                    headers: {
+                      cookie: `cookies_allowed=required,statistics,settings; favorites_${event.EventId}=1_${id},`,
+                      ...sportstimingHeaders,
                     },
                   },
-                  { upsert: true },
+                ).then(
+                  (r) => r.json() as Promise<SportsTiming.FavoriteUpdate[]>,
+                )
+              ).find(({ Id }) => Id === Number(id));
+
+              if (favorite) {
+                const $ = cheerio.load(
+                  await fetch(
+                    `https://www.sportstiming.dk/event/${event.EventId}/results/${favorite.Id}`,
+                    { headers: { ...sportstimingHeaders } },
+                  ).then((r) => r.text()),
                 );
 
-              updatedSportstimingFavorites ||=
-                upsertedCount > 0 || modifiedCount > 0;
+                const distance =
+                  favorite?.TotalDistance ||
+                  $("td.splits-valuecol.splits-vertdivide")
+                    .filter((_, e) => $(e).text().trim().endsWith(" km"))
+                    .prev()
+                    .filter((_, e) => $(e).text().trim() !== "Total")
+                    .next()
+                    .toArray()
+                    .map(
+                      (t) =>
+                        Number(
+                          $(t).text().replace(" km", "").replace(",", "."),
+                        ) * 1000,
+                    )
+                    .reduce((sum, value) => sum + value, 0) ||
+                  Number(
+                    $(".panel-primary td")
+                      .filter((_, e) => $(e).text().trim() === "Distance")
+                      .last()
+                      .next()
+                      .text()
+                      .trim()
+                      .replace(" km", "")
+                      .replace(",", "."),
+                  ) * 1000 ||
+                  NaN;
+                const noParticipants = Number(
+                  $(".panel-primary td")
+                    .filter((_, e) => $(e).text().trim() === "Mænd")
+                    .first()
+                    .next()
+                    .text()
+                    .split(" af ")[1],
+                );
 
-              yield favorite;
+                const { upsertedCount, modifiedCount } =
+                  await SportstimingFavorites.updateOne(
+                    { Id: favorite.Id },
+                    {
+                      $set: {
+                        ...favorite,
+                        StartTime:
+                          favorite.StartTime &&
+                          new Date(Number(favorite.StartTime)),
+                        LastSplitTimeOfDay:
+                          favorite.LastSplitTimeOfDay &&
+                          new Date(
+                            Number(
+                              String(favorite.LastSplitTimeOfDay).match(
+                                /\/Date\((.+)\)\//,
+                              )![1],
+                            ),
+                          ),
+                        _io_NumberOfParticipants: noParticipants,
+                        _io_TotalDistance: distance,
+                        _io_EventId: event.EventId,
+                      },
+                    },
+                    { upsert: true },
+                  );
+
+                setUpdated(
+                  modifiedCount > 0 ||
+                    upsertedCount > 0 ||
+                    updatedSportstimingEvents,
+                );
+
+                yield favorite;
+              }
             }
+
+            yield event;
           }
-
-          yield event;
-        }
-
-        return updatedSportstimingEvents || updatedSportstimingFavorites;
-      });
+        },
+      );
     }
   });

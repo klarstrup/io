@@ -31,24 +31,26 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.RunDouble) continue;
 
-      yield* wrapSource(dataSource, user, async function* ({ id }) {
+      yield* wrapSource(dataSource, user, async function* ({ id }, setUpdated) {
         for await (const run of getRuns(id)) {
-          const updateResult = await RunDoubleRuns.updateOne(
-            { key: run.key },
-            {
-              $set: {
-                ...run,
-                userId: id,
-                completedAt: new Date(run.completedLong),
-                _io_scrapedAt: new Date(),
+          const { modifiedCount, upsertedCount } =
+            await RunDoubleRuns.updateOne(
+              { key: run.key },
+              {
+                $set: {
+                  ...run,
+                  userId: id,
+                  completedAt: new Date(run.completedLong),
+                  _io_scrapedAt: new Date(),
+                },
               },
-            },
-            { upsert: true },
-          );
+              { upsert: true },
+            );
 
           yield run.completed;
+          setUpdated(modifiedCount > 0 || upsertedCount > 0);
 
-          if (!updateResult.upsertedCount) break;
+          if (!upsertedCount) break;
         }
       });
     }

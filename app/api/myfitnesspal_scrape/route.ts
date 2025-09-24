@@ -42,8 +42,8 @@ export const GET = () =>
       yield* wrapSource(
         dataSource,
         user,
-        async function* ({ token, userName, userId }) {
-          let updatedDatabase = false;
+        async function* ({ token, userName, userId }, setUpdated) {
+          setUpdated(false);
 
           const now = new Date();
           yearLoop: for (const year of years) {
@@ -87,7 +87,7 @@ export const GET = () =>
                       { upsert: true },
                     );
 
-                  updatedDatabase ||= modifiedCount > 0 || upsertedCount > 0;
+                  setUpdated(modifiedCount > 0 || upsertedCount > 0);
                 }
 
                 yield reportEntry.date;
@@ -112,11 +112,9 @@ export const GET = () =>
                 { id: { $in: foodEntryIdsToBeDeleted } },
               );
 
-              if (deletedCount > 0) updatedDatabase ||= true;
+              setUpdated(deletedCount > 0);
             }
           }
-
-          return updatedDatabase;
         },
       );
     }

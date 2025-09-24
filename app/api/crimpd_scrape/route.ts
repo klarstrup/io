@@ -16,32 +16,39 @@ export const GET = () =>
     for (const dataSource of user.dataSources ?? []) {
       if (dataSource.source !== DataSource.Crimpd) continue;
 
-      yield* wrapSource(dataSource, user, async function* ({ token }) {
-        const workoutLogs = (
-          (await (
-            await fetch("https://api.crimpd.com/workout_log", {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-          ).json()) as Crimpd.WorkoutLogResponse
-        ).workout_logs;
+      yield* wrapSource(
+        dataSource,
+        user,
+        async function* ({ token }, setUpdated) {
+          const workoutLogs = (
+            (await (
+              await fetch("https://api.crimpd.com/workout_log", {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+            ).json()) as Crimpd.WorkoutLogResponse
+          ).workout_logs;
 
-        for (const workoutLog of workoutLogs) {
-          await CrimpdWorkoutLogs.updateOne(
-            { _id: workoutLog._id },
-            {
-              $set: {
-                ...workoutLog,
-                logDate: new Date(workoutLog.logDate),
-                dateCreated: new Date(workoutLog.dateCreated),
-                lastUpdated: new Date(workoutLog.lastUpdated),
-                _io_userId: user.id,
-              },
-            },
-            { upsert: true },
-          );
-        }
+          for (const workoutLog of workoutLogs) {
+            const { modifiedCount, upsertedCount } =
+              await CrimpdWorkoutLogs.updateOne(
+                { _id: workoutLog._id },
+                {
+                  $set: {
+                    ...workoutLog,
+                    logDate: new Date(workoutLog.logDate),
+                    dateCreated: new Date(workoutLog.dateCreated),
+                    lastUpdated: new Date(workoutLog.lastUpdated),
+                    _io_userId: user.id,
+                  },
+                },
+                { upsert: true },
+              );
 
-        yield { workoutLogs };
-      });
+            setUpdated(modifiedCount > 0 || upsertedCount > 0);
+          }
+
+          yield { workoutLogs };
+        },
+      );
     }
   });
