@@ -60,41 +60,33 @@ export function FoodEntry({
                     </span>{" "}
                     {mealTotalEnergy && mealTotalProtein ? (
                       <small>
-                        {Math.round(mealTotalEnergy)} kcal,{" "}
+                        {Math.round(mealTotalEnergy)}kcal,{" "}
                         {Math.round(mealTotalProtein)}g protein
                       </small>
                     ) : null}
                   </div>
-                  <ul style={{ paddingInlineStart: "20px" }}>
+                  <ul className="list-disc ps-4">
                     {foodEntries
                       ?.filter((foodEntry) => foodEntry.meal_name === mealName)
-                      .map((foodEntry) => (
-                        <li key={foodEntry.id}>
-                          {foodEntry.food.description.replace(/\s+/g, " ")}
-                          <small>
-                            {" "}
-                            {foodEntry.servings *
-                              foodEntry.serving_size.value !==
-                            1 ? (
-                              <>
-                                {Math.round(
-                                  foodEntry.servings *
-                                    foodEntry.serving_size.value,
-                                )}{" "}
-                                {foodEntry.serving_size.unit.match(/container/i)
-                                  ? "x "
-                                  : null}
-                              </>
-                            ) : null}
-                            {foodEntry.serving_size.unit.match(/container/i)
-                              ? foodEntry.serving_size.unit.replace(
-                                  /(container \((.+)\))/i,
-                                  "$2",
-                                )
-                              : foodEntry.serving_size.unit}
-                          </small>
-                        </li>
-                      ))}
+                      .map((foodEntry) => {
+                        const unit =
+                          foodEntry.food.serving_sizes[0]!.unit.replace(
+                            "grams",
+                            "g",
+                          ).replace("gram", "g");
+
+                        return (
+                          <li key={foodEntry.id}>
+                            {foodEntry.food.description.replace(/\s+/g, " ")}{" "}
+                            <small className="whitespace-nowrap">
+                              {foodEntry.servings *
+                                foodEntry.serving_size.nutrition_multiplier *
+                                foodEntry.food.serving_sizes[0]!.value}
+                              {unit.length <= 2 ? unit : <> {unit}</>}
+                            </small>
+                          </li>
+                        );
+                      })}
                   </ul>
                 </li>
               );

@@ -47,7 +47,7 @@ export async function DiaryAgendaFood({
     <FieldSetY
       className="min-w-[250px] flex-1"
       legend={
-        <div className="flex items-center gap-2">
+        <div className="flex items-baseline gap-2">
           <Popover control="📡">
             <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
               <UserStuffSourcesForm
@@ -59,8 +59,8 @@ export async function DiaryAgendaFood({
           Food{" "}
           {dayTotalEnergy && dayTotalProtein ? (
             <small>
-              {Math.round(dayTotalEnergy)} kcal, {Math.round(dayTotalProtein)}g
-              protein
+              <b>{Math.round(dayTotalEnergy)}</b>kcal,{" "}
+              <b>{Math.round(dayTotalProtein)}</b>g protein
             </small>
           ) : null}
         </div>
