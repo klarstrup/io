@@ -6,6 +6,7 @@ import {
   ClimbAlongCircuits,
   ClimbAlongCompetitions,
   ClimbAlongEdges,
+  ClimbAlongHolds,
   ClimbAlongLanes,
   ClimbAlongNodes,
   ClimbAlongPerformances,
@@ -89,6 +90,20 @@ export const GET = () =>
                 { upsert: true },
               ).then(handleUpdateResult);
               yield lane;
+            }
+
+            const holds = (await (
+              await fetch(
+                `https://comp.climbalong.com/api/v0/competitions/${competition.competitionId}/holds`,
+              )
+            ).json()) as Climbalong.Hold[];
+            for (const hold of holds) {
+              await ClimbAlongHolds.updateOne(
+                { holdId: hold.holdId },
+                { $set: { ...hold } },
+                { upsert: true },
+              ).then(handleUpdateResult);
+              yield hold;
             }
 
             const rounds = (await (

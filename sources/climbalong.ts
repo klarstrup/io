@@ -203,6 +203,14 @@ export namespace Climbalong {
     imageName: string;
     categoryId: string;
   }
+  export interface Hold {
+    holdId: number;
+    problemId: number;
+    label: string;
+    holdScore: number;
+    climbAlongHoldId: string;
+    wkt: null | string;
+  }
   export interface Circuit {
     competitionId: number;
     circuitId: number;

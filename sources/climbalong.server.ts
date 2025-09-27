@@ -27,6 +27,9 @@ export const ClimbAlongProblems = proxyCollection<Climbalong.Problem>(
   "climbalong_problems",
 );
 
+export const ClimbAlongHolds =
+  proxyCollection<Climbalong.Hold>("climbalong_holds");
+
 export const ClimbAlongPerformances = proxyCollection<Climbalong.Performance>(
   "climbalong_performances",
 );
