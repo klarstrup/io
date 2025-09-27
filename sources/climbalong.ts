@@ -1,13 +1,14 @@
 import { isAfter, isBefore, isFuture, max, min } from "date-fns";
 import {
-  EventDetails,
-  EventEntry,
+  type EventDetails,
+  type EventEntry,
   EventSource,
-  PP,
+  type PP,
+  type PointsScore,
   SCORING_SOURCE,
   SCORING_SYSTEM,
-  Score,
-  TopsAndZonesScore,
+  type Score,
+  type TopsAndZonesScore,
 } from "../lib";
 import { percentile, unique } from "../utils";
 import {
@@ -15,6 +16,7 @@ import {
   ClimbAlongCircuits,
   ClimbAlongCompetitions,
   ClimbAlongEdges,
+  ClimbAlongHolds,
   ClimbAlongNodes,
   ClimbAlongPerformances,
   ClimbAlongProblems,
@@ -23,6 +25,7 @@ import {
 export namespace Climbalong {
   export enum ScoreSystem {
     BoulderTopAndZones = "BOULDER_TOP_AND_ZONES",
+    BoulderOlympic = "BOULDER_OLYMPIC",
     LeadScorePerHold = "LEAD_SCORE_PER_HOLD",
     LeadScorePerHoldPlus = "LEAD_SCORE_PER_HOLD_PLUS",
     Unknown = "UNKNOWN",
@@ -240,16 +243,27 @@ export enum HoldScore2 {
   "ZONE" = 10,
 }
 
-const isTop = (holdScore: HoldScore | HoldScore2) =>
-  holdScore === HoldScore.TOP || holdScore === HoldScore2.TOP;
+const isTop = (score: Climbalong.Score, holds: Climbalong.Hold[]) => {
+  const problemId = holds.find(
+    (hold) => hold.holdId === score.holdId,
+  )?.problemId;
+  const sortedHolds = holds
+    .filter((hold) => hold.problemId === problemId)
+    .sort((a, b) => b.holdScore - a.holdScore);
 
-const isZone = (holdScore: HoldScore | HoldScore2) =>
-  holdScore === HoldScore.ZONE || holdScore === HoldScore2.ZONE;
+  return score.holdId === sortedHolds[0]?.holdId;
+};
 
-const TDB_BASE = 1000;
-const TDB_FLASH_MULTIPLIER = 1.1;
-const PTS_SEND = 100;
-const PTS_FLASH_BONUS = 20;
+const isZone = (score: Climbalong.Score, holds: Climbalong.Hold[]) => {
+  const problemId = holds.find(
+    (hold) => hold.holdId === score.holdId,
+  )?.problemId;
+  const sortedHolds = holds
+    .filter((hold) => hold.problemId === problemId)
+    .sort((a, b) => b.holdScore - a.holdScore);
+
+  return sortedHolds.slice(1).some((hold) => hold.holdId === score.holdId);
+};
 
 export async function getIoClimbAlongCompetitionEvent(
   competitionId: number,
@@ -274,6 +288,13 @@ export async function getIoClimbAlongCompetitionEvent(
       circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
     }).toArray(),
   ]);
+  const holds = (
+    await ClimbAlongHolds.find({
+      problemId: { $in: problems.map(({ problemId }) => problemId) },
+    }).toArray()
+  )
+    // Exclude zero-score holds(typically start holds unrelated to scoring)
+    .filter((hold) => hold.holdScore > 0);
 
   const io = athletes.find((athlete) => athlete.athleteId === athleteId);
   const ioPerformances =
@@ -321,93 +342,6 @@ export async function getIoClimbAlongCompetitionEvent(
     }
   }
 
-  const [topsByProblemTitle, zonesByProblemTitle] = performances.reduce(
-    ([topMemo, zoneMemo], performance) => {
-      const problem = problems.find(
-        (p) => p.problemId === performance.problemId,
-      );
-
-      if (
-        problem &&
-        problem.circuitId === ioCircuitChallengeNode?.circuit.circuitId &&
-        athletes.some((athlete) => athlete.athleteId === performance.athleteId)
-      ) {
-        const key = problem.title;
-        for (const score of performance.scores) {
-          if (isZone(score.holdScore)) {
-            zoneMemo.set(key, (zoneMemo.get(key) || 0) + 1);
-          }
-          if (isTop(score.holdScore)) {
-            topMemo.set(key, (topMemo.get(key) || 0) + 1);
-          }
-        }
-      }
-      return [topMemo, zoneMemo] as const;
-    },
-    [new Map<string, number>(), new Map<string, number>()],
-  );
-
-  const atheletesWithResults = athletes
-    .map((athlete) => {
-      let topsTDBScore = 0;
-      let zonesTDBScore = 0;
-      let ptsScore = 0;
-      let tops = 0;
-      let zones = 0;
-      let topsAttempts = 0;
-      let zonesAttempts = 0;
-
-      const athletePerformances = performances.filter(
-        (performance) => performance.athleteId === athlete.athleteId,
-      );
-      for (const performance of athletePerformances) {
-        const problem = problems.find(
-          (p) => p.problemId === performance.problemId,
-        );
-        if (!problem) continue;
-
-        const key = problem.title;
-        let problemTopTDBScore = TDB_BASE / (topsByProblemTitle.get(key) || 0);
-        let problemZoneTDBScore =
-          TDB_BASE / (zonesByProblemTitle.get(key) || 0);
-
-        for (const score of performance.scores) {
-          if (isTop(score.holdScore)) {
-            topsAttempts += score.reachedInAttempt;
-            tops += 1;
-            ptsScore += PTS_SEND;
-            if (score.reachedInAttempt === 1) {
-              ptsScore += PTS_FLASH_BONUS;
-              problemTopTDBScore *= TDB_FLASH_MULTIPLIER;
-            }
-            topsTDBScore += problemTopTDBScore;
-          } else if (isZone(score.holdScore)) {
-            if (score.reachedInAttempt === 1) {
-              problemZoneTDBScore *= TDB_FLASH_MULTIPLIER;
-            }
-            zonesAttempts += score.reachedInAttempt;
-            zones += 1;
-            zonesTDBScore += problemZoneTDBScore;
-          }
-        }
-      }
-
-      return {
-        athlete,
-        ptsScore,
-        topsTDBScore,
-        zonesTDBScore,
-        tops,
-        zones,
-        topsAttempts,
-        zonesAttempts,
-      } as const;
-    })
-    .filter(
-      ({ tops, zones, topsAttempts, zonesAttempts }) =>
-        tops + zones + topsAttempts + zonesAttempts,
-    );
-
   const ioCircuitChallenge =
     io &&
     circuitChallengeEdges.find(({ athletes }) =>
@@ -418,54 +352,72 @@ export async function getIoClimbAlongCompetitionEvent(
     (athlete) => athlete.athleteId === io?.athleteId,
   )?.performanceSum;
 
-  const noParticipants =
-    (ioCircuitChallenge?.athletes?.length ?? atheletesWithResults.length) ||
-    NaN;
+  // Using max rank for percentile calculations because some athletes DNF or not rank (i.e. GDPR deletion)
+  const maxRank = ioCircuitChallenge?.athletes.reduce(
+    (max, athlete) =>
+      athlete.performanceSum && athlete.performanceSum.rank > max
+        ? athlete.performanceSum.rank
+        : max,
+    0,
+  );
+
+  const noParticipants = ioCircuitChallenge?.athletes?.length || NaN;
 
   const scores: Score[] = [];
 
-  const ioResults =
-    io &&
-    atheletesWithResults.find(
-      ({ athlete }) => athlete.athleteId === io.athleteId,
+  if (
+    ioPerformanceSum &&
+    ioCircuitChallengeNode?.nodeOutputType.scoreSystem ===
+      Climbalong.ScoreSystem.BoulderTopAndZones
+  ) {
+    const descendingHolds = Array.from(holds).sort(
+      (a, b) => b.holdScore - a.holdScore,
     );
-
-  if (ioPerformanceSum) {
-    const tops = ioPerformanceSum.scoreSums
-      .filter(({ holdScore }) => isTop(holdScore))
-      .reduce(
-        (sum, { totalNumberOfTimesReached }) => sum + totalNumberOfTimesReached,
-        0,
-      );
-    const topsAttempts = ioPerformanceSum.scoreSums
-      .filter(({ holdScore }) => isTop(holdScore))
-      .reduce(
-        (sum, { totalNumberOfAttemptsUsed }) => sum + totalNumberOfAttemptsUsed,
-        0,
-      );
-    const zones = ioPerformanceSum.scoreSums
-      .filter(({ holdScore }) => isZone(holdScore))
-      .reduce(
-        (sum, { totalNumberOfTimesReached }) => sum + totalNumberOfTimesReached,
-        0,
-      );
-    const zonesAttempts = ioPerformanceSum.scoreSums
-      .filter(({ holdScore }) => isZone(holdScore))
-      .reduce(
-        (sum, { totalNumberOfAttemptsUsed }) => sum + totalNumberOfAttemptsUsed,
-        0,
-      );
-
+    const topScore = descendingHolds[0]?.holdScore;
+    const zoneScore = descendingHolds[descendingHolds.length - 1]?.holdScore;
+    const topSums = ioPerformanceSum.scoreSums.filter(
+      (sum) => sum.holdScore === topScore,
+    );
+    const zoneSums = ioPerformanceSum.scoreSums.filter(
+      (sum) => sum.holdScore === zoneScore,
+    );
     scores.push({
       system: SCORING_SYSTEM.TOPS_AND_ZONES,
       source: SCORING_SOURCE.OFFICIAL,
       rank: ioPerformanceSum.rank,
-      percentile: percentile(ioPerformanceSum.rank, noParticipants),
-      tops: ioResults?.tops ?? tops ?? NaN,
-      zones: ioResults?.zones ?? zones ?? NaN,
-      topsAttempts: ioResults?.topsAttempts ?? topsAttempts ?? NaN,
-      zonesAttempts: ioResults?.zonesAttempts ?? zonesAttempts ?? NaN,
+      percentile: percentile(ioPerformanceSum.rank, maxRank ?? noParticipants),
+      tops: topSums.reduce(
+        (total, sum) => total + sum.totalNumberOfTimesReached,
+        0,
+      ),
+      zones: zoneSums.reduce(
+        (total, sum) => total + sum.totalNumberOfTimesReached,
+        0,
+      ),
+      topsAttempts: topSums.reduce(
+        (total, sum) => total + sum.totalNumberOfAttemptsUsed,
+        0,
+      ),
+      zonesAttempts: zoneSums.reduce(
+        (total, sum) => total + sum.totalNumberOfAttemptsUsed,
+        0,
+      ),
     } satisfies TopsAndZonesScore);
+  } else if (
+    ioPerformanceSum &&
+    ioCircuitChallengeNode?.nodeOutputType.scoreSystem ===
+      Climbalong.ScoreSystem.BoulderOlympic
+  ) {
+    scores.push({
+      system: SCORING_SYSTEM.POINTS,
+      source: SCORING_SOURCE.OFFICIAL,
+      rank: ioPerformanceSum.rank,
+      percentile: percentile(ioPerformanceSum.rank, maxRank ?? noParticipants),
+      points:
+        typeof ioPerformanceSum.points === "number"
+          ? Math.round(ioPerformanceSum.points * 10) / 10
+          : NaN,
+    } satisfies PointsScore);
   }
 
   return {
@@ -533,19 +485,18 @@ export async function getIoClimbAlongCompetitionEvent(
                     attemptCount: ioPerformance?.numberOfAttempts,
                     zone: Boolean(
                       ioPerformance?.scores.some((score) =>
-                        isZone(score.holdScore),
+                        isZone(score, holds),
                       ) || memo.get(key)?.zone,
                     ),
                     top: Boolean(
                       ioPerformance?.scores.some((score) =>
-                        isTop(score.holdScore),
+                        isTop(score, holds),
                       ) || memo.get(key)?.top,
                     ),
                     flash: Boolean(
                       ioPerformance?.scores.some(
                         (score) =>
-                          isTop(score.holdScore) &&
-                          score.reachedInAttempt === 1,
+                          isTop(score, holds) && score.reachedInAttempt === 1,
                       ) || memo.get(key)?.flash,
                     ),
                     repeat: false,
