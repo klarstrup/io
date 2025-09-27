@@ -1034,6 +1034,23 @@ export async function* materializeClimbalongWorkouts(
     { $unwind: "$performances" },
     { $replaceRoot: { newRoot: "$performances" } },
     { $match: { numberOfAttempts: { $gt: 0 } } },
+    // TODO: Actually figure out what holds are zones and tops instead of assuming
+    // there are only 0-2 scores per performance
+    /*
+    {
+      $lookup: {
+        from: "climbalong_holds",
+        localField: "problemId",
+        foreignField: "problemId",
+        as: "holds",
+      },
+    },
+    {
+      $set: {
+        holds: { $sortArray: { input: "$holds", sortBy: { holdScore: -1 } } },
+      },
+    },
+    */
     {
       $group: {
         _id: {
@@ -1063,6 +1080,7 @@ export async function* materializeClimbalongWorkouts(
       },
     },
     { $set: { competition: { $first: "$competition" } } },
+    ///*
     {
       $project: {
         _id: 0,
@@ -1096,115 +1114,33 @@ export async function* materializeClimbalongWorkouts(
                   },
                   inputs: [
                     // Grade
-                    {
-                      value: { $literal: null },
-                      unit: Unit.FrenchRounded,
-                    },
+                    { value: { $literal: null }, unit: Unit.FrenchRounded },
                     // Color
                     { value: { $literal: null } },
                     // Sent-ness
                     {
+                      // There's an assumption here that there are only 0 to 2 scores; nada, zone, top
                       value: {
                         $cond: {
                           if: {
                             $and: [
                               { $eq: ["$$performance.numberOfAttempts", 1] },
-                              {
-                                $gt: [
-                                  {
-                                    $size: {
-                                      $filter: {
-                                        input: "$$performance.scores",
-                                        as: "score",
-                                        cond: {
-                                          $or: [
-                                            {
-                                              $eq: [
-                                                "$$score.holdScore",
-                                                HoldScore.TOP,
-                                              ],
-                                            },
-                                            {
-                                              $eq: [
-                                                "$$score.holdScore",
-                                                HoldScore2.TOP,
-                                              ],
-                                            },
-                                          ],
-                                        },
-                                        limit: 1,
-                                      },
-                                    },
-                                  },
-                                  0,
-                                ],
-                              },
+                              { $gte: [{ $size: "$$performance.scores" }, 2] },
                             ],
                           },
                           then: SendType.Flash,
                           else: {
                             $cond: {
                               if: {
-                                $gt: [
-                                  {
-                                    $size: {
-                                      $filter: {
-                                        input: "$$performance.scores",
-                                        as: "score",
-                                        cond: {
-                                          $or: [
-                                            {
-                                              $eq: [
-                                                "$$score.holdScore",
-                                                HoldScore.TOP,
-                                              ],
-                                            },
-                                            {
-                                              $eq: [
-                                                "$$score.holdScore",
-                                                HoldScore2.TOP,
-                                              ],
-                                            },
-                                          ],
-                                        },
-                                        limit: 1,
-                                      },
-                                    },
-                                  },
-                                  0,
-                                ],
+                                $gte: [{ $size: "$$performance.scores" }, 2],
                               },
                               then: SendType.Top,
                               else: {
                                 $cond: {
                                   if: {
-                                    $gt: [
-                                      {
-                                        $size: {
-                                          $filter: {
-                                            input: "$$performance.scores",
-                                            as: "score",
-                                            cond: {
-                                              $or: [
-                                                {
-                                                  $eq: [
-                                                    "$$score.holdScore",
-                                                    HoldScore.ZONE,
-                                                  ],
-                                                },
-                                                {
-                                                  $eq: [
-                                                    "$$score.holdScore",
-                                                    HoldScore2.ZONE,
-                                                  ],
-                                                },
-                                              ],
-                                            },
-                                            limit: 1,
-                                          },
-                                        },
-                                      },
-                                      0,
+                                    $gte: [
+                                      { $size: "$$performance.scores" },
+                                      1,
                                     ],
                                   },
                                   then: SendType.Zone,
