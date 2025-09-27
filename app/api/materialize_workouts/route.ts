@@ -1,3 +1,4 @@
+import PartySocket from "partysocket";
 import { auth } from "../../../auth";
 import {
   MaterializedWorkoutsView,
@@ -70,6 +71,21 @@ export const GET = () =>
     yield "updateLocationCounts: start";
     await updateLocationCounts(user.id);
     yield `updateLocationCounts: done in ${Date.now() - t3}ms`;
+
+    try {
+      new PartySocket({
+        id: process.env.VERCEL_DEPLOYMENT_ID,
+        host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+        room: user.id,
+      }).send(
+        JSON.stringify({
+          source: "materialize_workouts",
+          scrapedAt: new Date().valueOf(),
+        }),
+      );
+    } catch (error) {
+      console.error(error);
+    }
   });
 
 async function* mergeGenerators<T>(gens: AsyncGenerator<T>[]) {
