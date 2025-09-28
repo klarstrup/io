@@ -4,9 +4,7 @@ export const scraperEndpoints = Object.values(DataSource).map(
   (source) => `/${source}_scrape`,
 );
 
-export function jsonStreamResponse(
-  generator: (flushJSON: (data: unknown) => Promise<void>) => AsyncGenerator,
-) {
+export function jsonStreamResponse(generator: () => AsyncGenerator) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
   const encoder = new TextEncoder();
@@ -22,7 +20,7 @@ export function jsonStreamResponse(
   (async () => {
     await writer.write(encoder.encode("[\n"));
 
-    for await (const value of generator(flushJSON)) await flushJSON(value);
+    for await (const value of generator()) await flushJSON(value);
   })()
     .catch(async (error: Error) => {
       console.error(error);
