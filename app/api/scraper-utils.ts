@@ -63,10 +63,6 @@ export async function* deadlineLoop<T>(
 ) {
   let slowestLoopMs = 0;
   for (const item of items) {
-    console.log({
-      slowestLoopMs,
-      timeRemaining: getTimeRemaining(),
-    });
     if (slowestLoopMs > getTimeRemaining()) {
       yield "deadlineLoop: Deadline reached, loop broken";
       break;
