@@ -203,7 +203,7 @@ export const GET = (request: NextRequest) =>
 
           yield gyms;
 
-          if (gyms) {
+          if (gyms && "") {
             for (const gymId of gyms.map(({ id }) => id)) {
               const [compsResponse, updateResult] =
                 await fetchQueryAndNormalizeAndUpsertQueryData<CompsResponse>(
