@@ -56,14 +56,15 @@ export function jsonStreamResponse(generator: () => AsyncGenerator) {
   });
 }
 
+let averageLoopMs = 0;
+const loopDurations: number[] = [];
 export async function* deadlineLoop<T>(
   items: T[],
   getTimeRemaining: () => number,
   fn: (item: T) => AsyncGenerator<unknown, void>,
 ) {
-  let slowestLoopMs = 0;
   for (const item of items) {
-    if (slowestLoopMs > getTimeRemaining()) {
+    if (averageLoopMs > getTimeRemaining()) {
       yield "deadlineLoop: Deadline reached, loop broken";
       break;
     }
@@ -71,6 +72,9 @@ export async function* deadlineLoop<T>(
 
     yield* fn(item);
 
-    slowestLoopMs = Math.max(slowestLoopMs, Date.now() - loopStartedAt);
+    loopDurations.push(Date.now() - loopStartedAt);
+    if (loopDurations.length > 10) loopDurations.shift();
+    averageLoopMs =
+      loopDurations.reduce((a, b) => a + b, 0) / loopDurations.length;
   }
 }
