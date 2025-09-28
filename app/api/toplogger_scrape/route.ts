@@ -235,39 +235,12 @@ export const GET = (request: NextRequest) =>
               for (const comp of userComps || []) {
                 // TODO: Skip past comps that are long done and already fully scraped
                 for (const poule of comp.compPoules) {
-                  for (const round of poule.compRounds) {
-                    const [compRoundUsersForRankingResponse, updateResult] =
-                      await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
-                        compRoundUsersForRankingQuery,
-                        {
-                          gymId,
-                          compId: comp.id,
-                          compRoundId: round.id,
-                          pagination: {
-                            page: 1,
-                            perPage: 100,
-                            orderBy: [
-                              { key: "compUser.disqualifiedInt", order: "asc" },
-                              { key: "score", order: "desc" },
-                            ],
-                          },
-                        },
-                      );
-
-                    const bestClimberId =
-                      compRoundUsersForRankingResponse.data?.ranking.data[0]
-                        ?.compUser.userId;
-                    yield updateResult;
-                    handleUpdateResults(updateResult);
-
-                    if (
-                      compRoundUsersForRankingResponse.data &&
-                      compRoundUsersForRankingResponse.data?.ranking.pagination
-                        .total >
-                        compRoundUsersForRankingResponse.data?.ranking
-                          .pagination.perPage
-                    ) {
-                      const [, updateResult] =
+                  yield* deadlineLoop(
+                    poule.compRounds,
+                    // Only spend half the remaining time on this loop, to save time for climb days and logs
+                    () => getTimeRemaining() / 2,
+                    async function* (round) {
+                      const [compRoundUsersForRankingResponse, updateResult] =
                         await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
                           compRoundUsersForRankingQuery,
                           {
@@ -275,7 +248,7 @@ export const GET = (request: NextRequest) =>
                             compId: comp.id,
                             compRoundId: round.id,
                             pagination: {
-                              page: 2,
+                              page: 1,
                               perPage: 100,
                               orderBy: [
                                 {
@@ -287,52 +260,90 @@ export const GET = (request: NextRequest) =>
                             },
                           },
                         );
+
+                      const bestClimberId =
+                        compRoundUsersForRankingResponse.data?.ranking.data[0]
+                          ?.compUser.userId;
                       yield updateResult;
                       handleUpdateResults(updateResult);
-                    }
 
-                    // Also get all the Comp Climbs of the best ranked climber,
-                    // presuming that they've attempted every Comp Climb.
-                    // This allows for backfilling of Climbs for comps that are no longer
-                    // set, I haven't found a better way of doing this.
-                    for (const userIddd of [userId, bestClimberId].filter(
-                      Boolean,
-                    )) {
-                      const [, compClimbUsersForRankingClimbUserUpdateResult] =
-                        await fetchQueryAndNormalizeAndUpsertQueryData<CompClimbUsersForRankingClimbUserResponse>(
-                          compClimbUsersForRankingClimbUserQuery,
-                          {
-                            gymId,
-                            userId: userIddd,
-                            compId: comp.id,
-                            compRoundId: round.id,
-                            pagination: {
-                              page: 1,
-                              perPage: 100,
-                              orderBy: [{ key: "points", order: "desc" }],
+                      if (
+                        compRoundUsersForRankingResponse.data &&
+                        compRoundUsersForRankingResponse.data?.ranking
+                          .pagination.total >
+                          compRoundUsersForRankingResponse.data?.ranking
+                            .pagination.perPage
+                      ) {
+                        const [, updateResult] =
+                          await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
+                            compRoundUsersForRankingQuery,
+                            {
+                              gymId,
+                              compId: comp.id,
+                              compRoundId: round.id,
+                              pagination: {
+                                page: 2,
+                                perPage: 100,
+                                orderBy: [
+                                  {
+                                    key: "compUser.disqualifiedInt",
+                                    order: "asc",
+                                  },
+                                  { key: "score", order: "desc" },
+                                ],
+                              },
                             },
-                          },
-                        );
-                      yield compClimbUsersForRankingClimbUserUpdateResult;
-                      handleUpdateResults(
-                        compClimbUsersForRankingClimbUserUpdateResult,
-                      );
+                          );
+                        yield updateResult;
+                        handleUpdateResults(updateResult);
+                      }
 
-                      const [, updateResult] =
-                        await fetchQueryAndNormalizeAndUpsertQueryData<ClimbsResponse>(
-                          climbsQuery,
-                          {
-                            gymId,
-                            climbType: "boulder",
-                            compRoundId: round.id,
-                            userId: userIddd,
-                          },
+                      // Also get all the Comp Climbs of the best ranked climber,
+                      // presuming that they've attempted every Comp Climb.
+                      // This allows for backfilling of Climbs for comps that are no longer
+                      // set, I haven't found a better way of doing this.
+                      for (const userIddd of [userId, bestClimberId].filter(
+                        Boolean,
+                      )) {
+                        const [
+                          ,
+                          compClimbUsersForRankingClimbUserUpdateResult,
+                        ] =
+                          await fetchQueryAndNormalizeAndUpsertQueryData<CompClimbUsersForRankingClimbUserResponse>(
+                            compClimbUsersForRankingClimbUserQuery,
+                            {
+                              gymId,
+                              userId: userIddd,
+                              compId: comp.id,
+                              compRoundId: round.id,
+                              pagination: {
+                                page: 1,
+                                perPage: 100,
+                                orderBy: [{ key: "points", order: "desc" }],
+                              },
+                            },
+                          );
+                        yield compClimbUsersForRankingClimbUserUpdateResult;
+                        handleUpdateResults(
+                          compClimbUsersForRankingClimbUserUpdateResult,
                         );
 
-                      yield updateResult;
-                      handleUpdateResults(updateResult);
-                    }
-                  }
+                        const [, updateResult] =
+                          await fetchQueryAndNormalizeAndUpsertQueryData<ClimbsResponse>(
+                            climbsQuery,
+                            {
+                              gymId,
+                              climbType: "boulder",
+                              compRoundId: round.id,
+                              userId: userIddd,
+                            },
+                          );
+
+                        yield updateResult;
+                        handleUpdateResults(updateResult);
+                      }
+                    },
+                  );
                 }
               }
             },
