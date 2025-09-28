@@ -62,7 +62,7 @@ export const GET = () =>
 
           yield* deadlineLoop(
             shuffle(userInCompetitions),
-            () => getTimeRemaining() / 1000,
+            () => getTimeRemaining(),
             async function* ({ competition, athlete }) {
               await ClimbAlongCompetitions.updateOne(
                 { competitionId: competition.competitionId },
