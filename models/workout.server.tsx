@@ -584,7 +584,7 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
 
 //  void calculateFlashRateByMonth("65a85e2c9a437530d3de2e35", new Date());
 
-const flashGradeRateThreshold = 0.9;
+const flashGradeRateThreshold = 0.8;
 export const calculateFlashGradeOn = async (userId: string, date: Date) => {
   const workouts = await MaterializedWorkoutsView.find({
     userId,
