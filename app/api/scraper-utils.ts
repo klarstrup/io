@@ -55,3 +55,26 @@ export function jsonStreamResponse(generator: () => AsyncGenerator) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+export async function* deadlineLoop<T>(
+  items: T[],
+  getTimeRemaining: () => number,
+  fn: (item: T) => AsyncGenerator<unknown, void>,
+) {
+  let slowestLoopMs = 0;
+  for (const item of items) {
+    console.log({
+      slowestLoopMs,
+      timeRemaining: getTimeRemaining(),
+    });
+    if (slowestLoopMs > getTimeRemaining()) {
+      yield "deadlineLoop: Deadline reached, loop broken";
+      break;
+    }
+    const loopStartedAt = Date.now();
+
+    yield* fn(item);
+
+    slowestLoopMs = Math.max(slowestLoopMs, Date.now() - loopStartedAt);
+  }
+}

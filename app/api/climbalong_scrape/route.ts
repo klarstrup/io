@@ -16,7 +16,7 @@ import {
 import { DataSource } from "../../../sources/utils";
 import { wrapSource } from "../../../sources/utils.server";
 import { shuffle } from "../../../utils";
-import { jsonStreamResponse } from "../scraper-utils";
+import { deadlineLoop, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -60,181 +60,176 @@ export const GET = () =>
             official: null;
           }[];
 
-          let slowestLoopMs = 0;
-          for (const { competition, athlete } of shuffle(userInCompetitions)) {
-            if (slowestLoopMs > getTimeRemaining()) {
-              console.log(`No time to fetch more competitions`);
-              break;
-            }
-            const loopStartedAt = Date.now();
-
-            await ClimbAlongCompetitions.updateOne(
-              { competitionId: competition.competitionId },
-              {
-                $set: {
-                  ...competition,
-                  endTime: new Date(competition.endTime),
-                  startTime: new Date(competition.startTime),
-                },
-              },
-              { upsert: true },
-            ).then(handleUpdateResult);
-
-            yield competition;
-
-            await ClimbAlongAthletes.updateOne(
-              { athleteId: athlete.athleteId },
-              { $set: { ...athlete } },
-              { upsert: true },
-            ).then(handleUpdateResult);
-            yield athlete;
-
-            const lanes = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/lanes`,
-              )
-            ).json()) as Climbalong.Lane[];
-            for (const lane of lanes) {
-              await ClimbAlongLanes.updateOne(
-                { laneId: lane.laneId },
-                { $set: { ...lane } },
-                { upsert: true },
-              ).then(handleUpdateResult);
-              yield lane;
-            }
-
-            const holds = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v0/competitions/${competition.competitionId}/holds`,
-              )
-            ).json()) as Climbalong.Hold[];
-            for (const hold of holds) {
-              await ClimbAlongHolds.updateOne(
-                { holdId: hold.holdId },
-                { $set: { ...hold } },
-                { upsert: true },
-              ).then(handleUpdateResult);
-              yield hold;
-            }
-
-            const rounds = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/rounds`,
-              )
-            ).json()) as Climbalong.Round[];
-            for (const round of rounds) {
-              await ClimbAlongRounds.updateOne(
-                { roundId: round.roundId },
-                { $set: { ...round } },
-                { upsert: true },
-              ).then(handleUpdateResult);
-              yield round;
-            }
-
-            const circuitChallengeNodesGroupedByLane = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/circuitchallengenodesgroupedbylane`,
-              )
-            ).json()) as Climbalong.CircuitChallengeNodesGroupedByLane;
-
-            for (const [
-              _lane,
-              circuitChallengeNodes,
-            ] of circuitChallengeNodesGroupedByLane) {
-              for (const circuitChallengeNode of circuitChallengeNodes) {
-                const circuit = circuitChallengeNode.circuit;
-
-                await ClimbAlongCircuits.updateOne(
-                  { circuitId: circuit.circuitId },
-                  { $set: { ...circuit } },
-                  { upsert: true },
-                ).then(handleUpdateResult);
-
-                await ClimbAlongNodes.updateOne(
-                  { nodeId: circuitChallengeNode.nodeId },
-                  {
-                    $set: {
-                      ...circuitChallengeNode,
-                      selfscoringOpen:
-                        circuitChallengeNode.selfscoringOpen &&
-                        new Date(circuitChallengeNode.selfscoringOpen),
-                      selfscoringClose:
-                        circuitChallengeNode.selfscoringClose &&
-                        new Date(circuitChallengeNode.selfscoringClose),
-                    },
+          yield* deadlineLoop(
+            shuffle(userInCompetitions),
+            () => getTimeRemaining() / 1000,
+            async function* ({ competition, athlete }) {
+              await ClimbAlongCompetitions.updateOne(
+                { competitionId: competition.competitionId },
+                {
+                  $set: {
+                    ...competition,
+                    endTime: new Date(competition.endTime),
+                    startTime: new Date(competition.startTime),
                   },
+                },
+                { upsert: true },
+              ).then(handleUpdateResult);
+
+              yield competition;
+
+              await ClimbAlongAthletes.updateOne(
+                { athleteId: athlete.athleteId },
+                { $set: { ...athlete } },
+                { upsert: true },
+              ).then(handleUpdateResult);
+              yield athlete;
+
+              const lanes = (await (
+                await fetch(
+                  `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/lanes`,
+                )
+              ).json()) as Climbalong.Lane[];
+              for (const lane of lanes) {
+                await ClimbAlongLanes.updateOne(
+                  { laneId: lane.laneId },
+                  { $set: { ...lane } },
                   { upsert: true },
                 ).then(handleUpdateResult);
-                yield circuitChallengeNode;
+                yield lane;
+              }
 
-                const circuitChallengeEdge = await fetch(
-                  `https://comp.climbalong.com/api/v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
-                ).then(
-                  (r) => r.json() as Promise<Climbalong.CircuitChallengeEdge>,
-                );
-
-                await ClimbAlongEdges.updateOne(
-                  { processedBy: circuitChallengeEdge.processedBy },
-                  { $set: { ...circuitChallengeEdge } },
+              const holds = (await (
+                await fetch(
+                  `https://comp.climbalong.com/api/v0/competitions/${competition.competitionId}/holds`,
+                )
+              ).json()) as Climbalong.Hold[];
+              for (const hold of holds) {
+                await ClimbAlongHolds.updateOne(
+                  { holdId: hold.holdId },
+                  { $set: { ...hold } },
                   { upsert: true },
                 ).then(handleUpdateResult);
-                yield circuitChallengeEdge;
+                yield hold;
+              }
 
-                const problems = (await (
-                  await fetch(
-                    `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/problems`,
-                  )
-                ).json()) as Climbalong.Problem[];
-                for (const problem of problems) {
-                  await ClimbAlongProblems.updateOne(
-                    { problemId: problem.problemId },
-                    { $set: { ...problem } },
+              const rounds = (await (
+                await fetch(
+                  `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/rounds`,
+                )
+              ).json()) as Climbalong.Round[];
+              for (const round of rounds) {
+                await ClimbAlongRounds.updateOne(
+                  { roundId: round.roundId },
+                  { $set: { ...round } },
+                  { upsert: true },
+                ).then(handleUpdateResult);
+                yield round;
+              }
+
+              const circuitChallengeNodesGroupedByLane = (await (
+                await fetch(
+                  `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/circuitchallengenodesgroupedbylane`,
+                )
+              ).json()) as Climbalong.CircuitChallengeNodesGroupedByLane;
+
+              for (const [
+                _lane,
+                circuitChallengeNodes,
+              ] of circuitChallengeNodesGroupedByLane) {
+                for (const circuitChallengeNode of circuitChallengeNodes) {
+                  const circuit = circuitChallengeNode.circuit;
+
+                  await ClimbAlongCircuits.updateOne(
+                    { circuitId: circuit.circuitId },
+                    { $set: { ...circuit } },
                     { upsert: true },
                   ).then(handleUpdateResult);
-                  yield problem;
-                }
 
-                const performances = (await (
-                  await fetch(
-                    `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/performances`,
-                  )
-                ).json()) as Climbalong.Performance[];
-
-                for (const performance of performances) {
-                  if (performance.athleteId !== athlete.athleteId) {
-                    continue;
-                  }
-
-                  await ClimbAlongPerformances.updateOne(
-                    {
-                      athleteId: performance.athleteId,
-                      circuitId: performance.circuitId,
-                      problemId: performance.problemId,
-                    },
+                  await ClimbAlongNodes.updateOne(
+                    { nodeId: circuitChallengeNode.nodeId },
                     {
                       $set: {
-                        ...performance,
-                        registrationTime: new Date(
-                          performance.registrationTime,
-                        ),
-                        performanceStartedTime: new Date(
-                          performance.performanceStartedTime,
-                        ),
-                        performanceEndedTime:
-                          performance.performanceEndedTime &&
-                          new Date(performance.performanceEndedTime),
+                        ...circuitChallengeNode,
+                        selfscoringOpen:
+                          circuitChallengeNode.selfscoringOpen &&
+                          new Date(circuitChallengeNode.selfscoringOpen),
+                        selfscoringClose:
+                          circuitChallengeNode.selfscoringClose &&
+                          new Date(circuitChallengeNode.selfscoringClose),
                       },
                     },
                     { upsert: true },
                   ).then(handleUpdateResult);
+                  yield circuitChallengeNode;
 
-                  yield performance;
+                  const circuitChallengeEdge = await fetch(
+                    `https://comp.climbalong.com/api/v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
+                  ).then(
+                    (r) => r.json() as Promise<Climbalong.CircuitChallengeEdge>,
+                  );
+
+                  await ClimbAlongEdges.updateOne(
+                    { processedBy: circuitChallengeEdge.processedBy },
+                    { $set: { ...circuitChallengeEdge } },
+                    { upsert: true },
+                  ).then(handleUpdateResult);
+                  yield circuitChallengeEdge;
+
+                  const problems = (await (
+                    await fetch(
+                      `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/problems`,
+                    )
+                  ).json()) as Climbalong.Problem[];
+                  for (const problem of problems) {
+                    await ClimbAlongProblems.updateOne(
+                      { problemId: problem.problemId },
+                      { $set: { ...problem } },
+                      { upsert: true },
+                    ).then(handleUpdateResult);
+                    yield problem;
+                  }
+
+                  const performances = (await (
+                    await fetch(
+                      `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/performances`,
+                    )
+                  ).json()) as Climbalong.Performance[];
+
+                  for (const performance of performances) {
+                    if (performance.athleteId !== athlete.athleteId) {
+                      continue;
+                    }
+
+                    await ClimbAlongPerformances.updateOne(
+                      {
+                        athleteId: performance.athleteId,
+                        circuitId: performance.circuitId,
+                        problemId: performance.problemId,
+                      },
+                      {
+                        $set: {
+                          ...performance,
+                          registrationTime: new Date(
+                            performance.registrationTime,
+                          ),
+                          performanceStartedTime: new Date(
+                            performance.performanceStartedTime,
+                          ),
+                          performanceEndedTime:
+                            performance.performanceEndedTime &&
+                            new Date(performance.performanceEndedTime),
+                        },
+                      },
+                      { upsert: true },
+                    ).then(handleUpdateResult);
+
+                    yield performance;
+                  }
                 }
               }
-            }
-
-            slowestLoopMs = Math.max(slowestLoopMs, Date.now() - loopStartedAt);
-          }
+            },
+          );
         },
       );
     }
