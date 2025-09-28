@@ -5,18 +5,13 @@ import { sourceToMaterializer } from "../app/api/materialize_workouts/materializ
 import { Users } from "../models/user.server";
 import type { UserDataSource } from "./utils";
 
-export async function* wrapSource<
-  DS extends UserDataSource,
-  T,
-  TReturn extends void,
-  TNext,
->(
+export async function* wrapSource<DS extends UserDataSource, T>(
   dataSource: DS,
   user: Session["user"],
   fn: (
     config: DS["config"],
     setUpdated: (updated: boolean) => void,
-  ) => AsyncGenerator<T, TReturn, TNext>,
+  ) => AsyncGenerator<T>,
 ) {
   const filter = { _id: new ObjectId(user.id) };
   const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
