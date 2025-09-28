@@ -2,7 +2,6 @@ import type { Session } from "next-auth";
 import { SendType, Unit } from "../../../models/exercises";
 import { WorkoutSource } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
-import { HoldScore, HoldScore2 } from "../../../sources/climbalong";
 import {
   ClimbAlongAthletes,
   ClimbAlongPerformances,
