@@ -13,7 +13,7 @@ import {
   normalizeAndUpsertQueryData,
   type Variables,
 } from "../../../utils/graphql";
-import { jsonStreamResponse } from "../scraper-utils";
+import { deadlineLoop, jsonStreamResponse } from "../scraper-utils";
 import {
   authSigninRefreshTokenQuery,
   climbDaysSessionsQuery,
@@ -37,6 +37,11 @@ export const maxDuration = 60;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
+    //
+    const startedAt = Date.now();
+    const getTimeRemaining = () =>
+      maxDuration * 1000 - (Date.now() - startedAt);
+
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
@@ -203,8 +208,11 @@ export const GET = (request: NextRequest) =>
 
           yield gyms;
 
-          if (gyms && Math.random()>1) {
-            for (const gymId of gyms.map(({ id }) => id)) {
+          yield* deadlineLoop(
+            gyms.map(({ id }) => id),
+            // Only spend half the remaining time on this loop, to save time for climb days and logs
+            () => getTimeRemaining() / 2,
+            async function* (gymId) {
               const [compsResponse, updateResult] =
                 await fetchQueryAndNormalizeAndUpsertQueryData<CompsResponse>(
                   compsQuery,
@@ -225,6 +233,7 @@ export const GET = (request: NextRequest) =>
               );
 
               for (const comp of userComps || []) {
+                // TODO: Skip past comps that are long done and already fully scraped
                 for (const poule of comp.compPoules) {
                   for (const round of poule.compRounds) {
                     const [compRoundUsersForRankingResponse, updateResult] =
@@ -326,8 +335,8 @@ export const GET = (request: NextRequest) =>
                   }
                 }
               }
-            }
-          }
+            },
+          );
 
           let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
             [];
@@ -387,16 +396,20 @@ export const GET = (request: NextRequest) =>
             ...randomSliceOfSize(climbDays.slice(recentDays), backfillDays),
           ];
 
-          for (const climbDay of climbDaysToFetch) {
-            const [, updateResult] =
-              await fetchQueryAndNormalizeAndUpsertQueryData<ClimbLogsResponse>(
-                climbLogsQuery,
-                { userId, climbedAtDate: climbDay.statsAtDate },
-              );
+          yield* deadlineLoop(
+            climbDaysToFetch,
+            () => getTimeRemaining(),
+            async function* (climbDay) {
+              const [, updateResult] =
+                await fetchQueryAndNormalizeAndUpsertQueryData<ClimbLogsResponse>(
+                  climbLogsQuery,
+                  { userId, climbedAtDate: climbDay.statsAtDate },
+                );
 
-            yield updateResult;
-            handleUpdateResults(updateResult);
-          }
+              yield updateResult;
+              handleUpdateResults(updateResult);
+            },
+          );
         },
       );
     }
