@@ -24,6 +24,10 @@ export const maxDuration = 60;
 export const GET = () =>
   // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
+    const startedAt = Date.now();
+    const getTimeRemaining = () =>
+      maxDuration * 1000 - (Date.now() - startedAt);
+
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
@@ -56,7 +60,14 @@ export const GET = () =>
             official: null;
           }[];
 
+          let slowestLoopMs = 0;
           for (const { competition, athlete } of shuffle(userInCompetitions)) {
+            if (slowestLoopMs > getTimeRemaining()) {
+              console.log(`No time to fetch more competitions`);
+              break;
+            }
+            const loopStartedAt = Date.now();
+
             await ClimbAlongCompetitions.updateOne(
               { competitionId: competition.competitionId },
               {
@@ -221,6 +232,8 @@ export const GET = () =>
                 }
               }
             }
+
+            slowestLoopMs = Math.max(slowestLoopMs, Date.now() - loopStartedAt);
           }
         },
       );
