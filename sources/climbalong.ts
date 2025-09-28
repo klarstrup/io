@@ -70,7 +70,7 @@ export namespace Climbalong {
         athleteId: number;
         rank: number;
         scoreSums: {
-          holdScore: HoldScore | HoldScore2;
+          holdScore: number;
           totalNumberOfTimesReached: number;
           totalNumberOfAttemptsUsed: number;
           points?: number;
@@ -166,7 +166,7 @@ export namespace Climbalong {
 
   export interface Score {
     holdId: number;
-    holdScore: HoldScore | HoldScore2;
+    holdScore: number;
     reachedInAttempt: number;
     reachedTime: Date | null;
   }
@@ -233,14 +233,6 @@ export namespace Climbalong {
     TimeTiebreaker = 602,
     ReRanker = 701,
   }
-}
-export enum HoldScore {
-  "TOP" = 4,
-  "ZONE" = 1,
-}
-export enum HoldScore2 {
-  "TOP" = 25,
-  "ZONE" = 10,
 }
 
 const isTop = (score: Climbalong.Score, holds: Climbalong.Hold[]) => {
