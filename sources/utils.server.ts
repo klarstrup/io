@@ -3,8 +3,30 @@ import type { Session } from "next-auth";
 import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
 import { Users } from "../models/user.server";
-import type { UserDataSource } from "./utils";
+import type { DataSource, UserDataSource } from "./utils";
 
+export async function* wrapSources<
+  S extends DataSource,
+  DS extends UserDataSource & { source: S },
+  T,
+>(
+  source: S,
+  dataSources: UserDataSource[],
+  user: Session["user"],
+  fn: (
+    dataSource: DS,
+    config: DS["config"],
+    setUpdated: (updated: boolean) => void,
+  ) => AsyncGenerator<T>,
+) {
+  for (const dataSource of dataSources) {
+    if (dataSource.source !== source) continue;
+
+    yield* wrapSource(dataSource as DS, user, (...args) =>
+      fn(dataSource as DS, ...args),
+    );
+  }
+}
 export async function* wrapSource<DS extends UserDataSource, T>(
   dataSource: DS,
   user: Session["user"],
