@@ -16,6 +16,7 @@ import {
 import { deadlineLoop, jsonStreamResponse } from "../scraper-utils";
 import {
   authSigninRefreshTokenQuery,
+  type AuthSigninRefreshTokenResponse,
   climbDaysSessionsQuery,
   type ClimbDaysSessionsResponse,
   climbLogsQuery,
@@ -112,25 +113,16 @@ export const GET = (request: NextRequest) =>
           if (new Date(authTokens.access.expiresAt) < new Date()) {
             yield "Access token expired, refreshing token";
             const refreshToken = authTokens.refresh.token;
-            const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
-              "https://app.toplogger.nu/graphql",
-              authSigninRefreshTokenQuery,
-              { refreshToken },
-              { headers: { authorization: `Bearer ${refreshToken}` } },
-              "authSigninRefreshToken",
-            );
-
+            const authSigninRefreshTokenResponse =
+              await fetchGraphQLQuery<AuthSigninRefreshTokenResponse>(
+                "https://app.toplogger.nu/graphql",
+                authSigninRefreshTokenQuery,
+                { refreshToken },
+                { headers: { authorization: `Bearer ${refreshToken}` } },
+              );
             if (
-              typeof authSigninRefreshTokenResponse === "object" &&
-              authSigninRefreshTokenResponse &&
-              "data" in authSigninRefreshTokenResponse &&
-              typeof authSigninRefreshTokenResponse.data === "object" &&
-              authSigninRefreshTokenResponse.data &&
-              "authSigninRefreshToken" in authSigninRefreshTokenResponse.data &&
-              typeof authSigninRefreshTokenResponse.data
-                .authSigninRefreshToken === "object" &&
               isAuthTokens(
-                authSigninRefreshTokenResponse.data.authSigninRefreshToken,
+                authSigninRefreshTokenResponse.data?.authSigninRefreshToken,
               )
             ) {
               authTokens =
@@ -193,11 +185,7 @@ export const GET = (request: NextRequest) =>
                   (definition) => definition.kind === Kind.OPERATION_DEFINITION,
                 )?.name?.value,
                 updates,
-                timing: {
-                  requestMs,
-                  upsertMs,
-                  totalMs: requestMs + upsertMs,
-                },
+                timing: { requestMs, upsertMs, totalMs: requestMs + upsertMs },
               },
             ] as const;
           };

@@ -1,4 +1,5 @@
 import gql from "graphql-tag";
+import type { TopLoggerAuthTokens } from "../../../lib";
 import {
   ClimbDayScalars,
   ClimbDayScalarsFragment,
@@ -134,6 +135,9 @@ export const authSigninRefreshTokenQuery = gql`
     }
   }
 `;
+export interface AuthSigninRefreshTokenResponse {
+  authSigninRefreshToken: TopLoggerAuthTokens;
+}
 
 export const climbDaysSessionsQuery = gql`
   ${PaginationFragment}
