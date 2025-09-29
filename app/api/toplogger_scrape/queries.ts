@@ -144,16 +144,19 @@ export const climbDaysSessionsQuery = gql`
   ${ClimbDayScalarsFragment}
 
   query climbDaysSessions(
+    $gymId: ID
     $userId: ID!
-    $bouldersTotalTriesMin: Int
+    # $bouldersTotalTriesMin: Int
     $routesTotalTriesMin: Int
     $statsAtDateMin: DateTime
     $statsAtDateMax: DateTime
     $pagination: PaginationInputClimbDays
   ) {
     climbDaysPaginated(
+      gymId: $gymId
       userId: $userId
-      bouldersTotalTriesMin: $bouldersTotalTriesMin
+      # bouldersTotalTriesMin: $bouldersTotalTriesMin
+      bouldersTotalTriesMin: 1
       routesTotalTriesMin: $routesTotalTriesMin
       statsAtDateMin: $statsAtDateMin
       statsAtDateMax: $statsAtDateMax
@@ -181,7 +184,7 @@ export const climbLogsQuery = gql`
   ${ClimbUserScalarsFragment}
   ${ClimbGroupClimbScalarsFragment}
 
-  query climbLogsSession(
+  query climbLogs(
     $gymId: ID
     $userId: ID!
     $climbedAtDate: DateTime!
