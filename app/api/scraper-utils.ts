@@ -64,7 +64,7 @@ export async function* deadlineLoop<T>(
   fn: (item: T) => AsyncGenerator<unknown, void>,
 ) {
   for (const item of items) {
-    if (averageLoopMs / getTimeRemaining() > 0.9) {
+    if (averageLoopMs / getTimeRemaining() > 0.8) {
       yield "deadlineLoop: Deadline reached, loop broken";
       break;
     }
