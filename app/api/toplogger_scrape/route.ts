@@ -55,15 +55,22 @@ export const GET = (request: NextRequest) =>
           setUpdated(false);
 
           const handleUpdateResults = (updateResults: {
-            [key: string]:
-              | string
-              | Pick<
-                  UpdateResult<Document>,
-                  "matchedCount" | "modifiedCount" | "upsertedCount"
-                >;
+            timing: {
+              requestMs: number;
+              upsertMs: number;
+              totalMs: number;
+            };
             operationName: string;
+            updates: {
+              [key: string]:
+                | string
+                | Pick<
+                    UpdateResult<Document>,
+                    "matchedCount" | "modifiedCount" | "upsertedCount"
+                  >;
+            };
           }) => {
-            for (const r of Object.values(updateResults)) {
+            for (const r of Object.values(updateResults.updates)) {
               setUpdated(
                 typeof r == "object" &&
                   (r.modifiedCount > 0 || r.upsertedCount > 0),
@@ -168,34 +175,47 @@ export const GET = (request: NextRequest) =>
           agentHeaders.set("origin", "https://app.toplogger.nu");
           agentHeaders.set("x-app-locale", "en-us");
 
-          const fetchQueryAndNormalizeAndUpsertQueryData = async <
-            TData = Record<string, unknown>,
-          >(
+          // Helper to fetch, normalize and upsert query data
+          const fetchsert = async <TData = Record<string, unknown>>(
             query: DocumentNode,
             variables?: Variables,
           ) => {
+            const requestStarted = Date.now();
             const response = await fetchGraphQLQuery<TData>(
               "https://app.toplogger.nu/graphql",
               query,
               variables,
               { headers: { ...agentHeaders, ...headers } },
             );
-
+            const requestMs = Date.now() - requestStarted;
+            const upsertStarted = Date.now();
             const updateResult = await normalizeAndUpsertQueryData(
               query,
               variables,
               response.data!,
             );
+            const upsertMs = Date.now() - upsertStarted;
 
-            return [response, updateResult] as const;
+            const { operationName, ...updates } = updateResult;
+
+            return [
+              response,
+              {
+                operationName,
+                timing: {
+                  requestMs,
+                  upsertMs,
+                  totalMs: requestMs + upsertMs,
+                },
+                updates,
+              },
+            ] as const;
           };
 
           const userId = dataSource.config.graphQLId;
 
           const [userMeStoreResponse, updateResult] =
-            await fetchQueryAndNormalizeAndUpsertQueryData<UserMeStoreResponse>(
-              userMeStoreQuery,
-            );
+            await fetchsert<UserMeStoreResponse>(userMeStoreQuery);
           yield updateResult;
           handleUpdateResults(updateResult);
 
@@ -214,17 +234,14 @@ export const GET = (request: NextRequest) =>
             () => getTimeRemaining() / 2,
             async function* (gymId) {
               const [compsResponse, updateResult] =
-                await fetchQueryAndNormalizeAndUpsertQueryData<CompsResponse>(
-                  compsQuery,
-                  {
-                    gymId,
-                    pagination: {
-                      page: 1,
-                      perPage: 10, // Max is 10
-                      orderBy: [{ key: "loggableStartAt", order: "desc" }],
-                    },
+                await fetchsert<CompsResponse>(compsQuery, {
+                  gymId,
+                  pagination: {
+                    page: 1,
+                    perPage: 10, // Max is 10
+                    orderBy: [{ key: "loggableStartAt", order: "desc" }],
                   },
-                );
+                });
               yield updateResult;
               handleUpdateResults(updateResult);
 
@@ -240,25 +257,24 @@ export const GET = (request: NextRequest) =>
                     // Only spend half the remaining time on this loop, to save time for climb days and logs
                     () => getTimeRemaining() / 2,
                     async function* (round) {
+                      const compRoundUsersForRankingVariables = {
+                        gymId,
+                        compId: comp.id,
+                        compRoundId: round.id,
+                        pagination: {
+                          page: 1,
+                          perPage: 100,
+                          orderBy: [
+                            { key: "compUser.disqualifiedInt", order: "asc" },
+                            { key: "score", order: "desc" },
+                          ],
+                        },
+                      };
+
                       const [compRoundUsersForRankingResponse, updateResult] =
-                        await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
+                        await fetchsert<CompRoundUsersForRankingResponse>(
                           compRoundUsersForRankingQuery,
-                          {
-                            gymId,
-                            compId: comp.id,
-                            compRoundId: round.id,
-                            pagination: {
-                              page: 1,
-                              perPage: 100,
-                              orderBy: [
-                                {
-                                  key: "compUser.disqualifiedInt",
-                                  order: "asc",
-                                },
-                                { key: "score", order: "desc" },
-                              ],
-                            },
-                          },
+                          compRoundUsersForRankingVariables,
                         );
 
                       const bestClimberId =
@@ -275,22 +291,13 @@ export const GET = (request: NextRequest) =>
                             .pagination.perPage
                       ) {
                         const [, updateResult] =
-                          await fetchQueryAndNormalizeAndUpsertQueryData<CompRoundUsersForRankingResponse>(
+                          await fetchsert<CompRoundUsersForRankingResponse>(
                             compRoundUsersForRankingQuery,
                             {
-                              gymId,
-                              compId: comp.id,
-                              compRoundId: round.id,
+                              ...compRoundUsersForRankingVariables,
                               pagination: {
+                                ...compRoundUsersForRankingVariables.pagination,
                                 page: 2,
-                                perPage: 100,
-                                orderBy: [
-                                  {
-                                    key: "compUser.disqualifiedInt",
-                                    order: "asc",
-                                  },
-                                  { key: "score", order: "desc" },
-                                ],
                               },
                             },
                           );
@@ -309,7 +316,7 @@ export const GET = (request: NextRequest) =>
                           ,
                           compClimbUsersForRankingClimbUserUpdateResult,
                         ] =
-                          await fetchQueryAndNormalizeAndUpsertQueryData<CompClimbUsersForRankingClimbUserResponse>(
+                          await fetchsert<CompClimbUsersForRankingClimbUserResponse>(
                             compClimbUsersForRankingClimbUserQuery,
                             {
                               gymId,
@@ -329,15 +336,12 @@ export const GET = (request: NextRequest) =>
                         );
 
                         const [, updateResult] =
-                          await fetchQueryAndNormalizeAndUpsertQueryData<ClimbsResponse>(
-                            climbsQuery,
-                            {
-                              gymId,
-                              climbType: "boulder",
-                              compRoundId: round.id,
-                              userId: userIddd,
-                            },
-                          );
+                          await fetchsert<ClimbsResponse>(climbsQuery, {
+                            gymId,
+                            climbType: "boulder",
+                            compRoundId: round.id,
+                            userId: userIddd,
+                          });
 
                         yield updateResult;
                         handleUpdateResults(updateResult);
@@ -354,14 +358,11 @@ export const GET = (request: NextRequest) =>
           let page = 1;
           // eslint-disable-next-line prefer-const
           let [graphqlClimbDaysPaginatedResponse, updateResult2] =
-            await fetchQueryAndNormalizeAndUpsertQueryData<ClimbDaysSessionsResponse>(
-              climbDaysSessionsQuery,
-              {
-                userId,
-                bouldersTotalTriesMin: 1,
-                pagination: { page, perPage: 100 },
-              },
-            );
+            await fetchsert<ClimbDaysSessionsResponse>(climbDaysSessionsQuery, {
+              userId,
+              bouldersTotalTriesMin: 1,
+              pagination: { page, perPage: 100 },
+            });
           handleUpdateResults(updateResult2);
 
           if (!graphqlClimbDaysPaginatedResponse.data) {
@@ -379,7 +380,7 @@ export const GET = (request: NextRequest) =>
 
           for (; page <= totalPages; page++) {
             [graphqlClimbDaysPaginatedResponse, updateResult2] =
-              await fetchQueryAndNormalizeAndUpsertQueryData<ClimbDaysSessionsResponse>(
+              await fetchsert<ClimbDaysSessionsResponse>(
                 climbDaysSessionsQuery,
                 {
                   userId,
@@ -411,11 +412,10 @@ export const GET = (request: NextRequest) =>
             climbDaysToFetch,
             () => getTimeRemaining(),
             async function* (climbDay) {
-              const [, updateResult] =
-                await fetchQueryAndNormalizeAndUpsertQueryData<ClimbLogsResponse>(
-                  climbLogsQuery,
-                  { userId, climbedAtDate: climbDay.statsAtDate },
-                );
+              const [, updateResult] = await fetchsert<ClimbLogsResponse>(
+                climbLogsQuery,
+                { userId, climbedAtDate: climbDay.statsAtDate },
+              );
 
               yield updateResult;
               handleUpdateResults(updateResult);
