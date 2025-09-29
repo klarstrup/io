@@ -671,24 +671,24 @@ export async function normalizeAndUpsertQueryData(
   variables: Variables | undefined,
   data: RootFields,
 ) {
-  const objects = Object.values(normalize(query, variables, data)).filter(
-    (o) => o.__typename && o.id,
-  );
+  const normMap = normalize(query, variables, data);
+  const objects = Object.values(normMap).filter((o) => o.__typename && o.id);
   const updateResults: {
-    [key: string]:
-      | string
-      | Pick<UpdateResult, "matchedCount" | "modifiedCount" | "upsertedCount">;
-    operationName: string;
-  } = {
-    operationName: query.definitions.find(
-      (definition) => definition.kind === Kind.OPERATION_DEFINITION,
-    )!.name!.value,
-  };
+    [key: string]: Pick<
+      UpdateResult,
+      "matchedCount" | "modifiedCount" | "upsertedCount"
+    >;
+  } = {};
+  const _io_scrapedAt = new Date();
+
   for (const object of objects) {
     const __typename = object.__typename as string;
     const updateResult = await TopLoggerGraphQL.updateOne(
       { __typename, id: object.id as string },
-      { $set: parseDateFields(object) },
+      {
+        $set: parseDateFields(object),
+        $setOnInsert: { _io_scrapedAt },
+      },
       { upsert: true },
     );
 

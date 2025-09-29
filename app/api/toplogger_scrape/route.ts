@@ -1,4 +1,4 @@
-import { type DocumentNode } from "graphql";
+import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
 import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
@@ -55,19 +55,12 @@ export const GET = (request: NextRequest) =>
           setUpdated(false);
 
           const handleUpdateResults = (updateResults: {
-            timing: {
-              requestMs: number;
-              upsertMs: number;
-              totalMs: number;
-            };
-            operationName: string;
+            timing: { requestMs: number; upsertMs: number; totalMs: number };
             updates: {
-              [key: string]:
-                | string
-                | Pick<
-                    UpdateResult<Document>,
-                    "matchedCount" | "modifiedCount" | "upsertedCount"
-                  >;
+              [key: string]: Pick<
+                UpdateResult<Document>,
+                "matchedCount" | "modifiedCount" | "upsertedCount"
+              >;
             };
           }) => {
             for (const r of Object.values(updateResults.updates)) {
@@ -118,15 +111,12 @@ export const GET = (request: NextRequest) =>
 
           if (new Date(authTokens.access.expiresAt) < new Date()) {
             yield "Access token expired, refreshing token";
+            const refreshToken = authTokens.refresh.token;
             const authSigninRefreshTokenResponse = await fetchGraphQLQuery(
               "https://app.toplogger.nu/graphql",
               authSigninRefreshTokenQuery,
-              { refreshToken: authTokens.refresh.token },
-              {
-                headers: {
-                  authorization: `Bearer ${authTokens.refresh.token}`,
-                },
-              },
+              { refreshToken },
+              { headers: { authorization: `Bearer ${refreshToken}` } },
               "authSigninRefreshToken",
             );
 
@@ -189,25 +179,25 @@ export const GET = (request: NextRequest) =>
             );
             const requestMs = Date.now() - requestStarted;
             const upsertStarted = Date.now();
-            const updateResult = await normalizeAndUpsertQueryData(
+            const updates = await normalizeAndUpsertQueryData(
               query,
               variables,
               response.data!,
             );
             const upsertMs = Date.now() - upsertStarted;
 
-            const { operationName, ...updates } = updateResult;
-
             return [
               response,
               {
-                operationName,
+                operationName: query.definitions.find(
+                  (definition) => definition.kind === Kind.OPERATION_DEFINITION,
+                )?.name?.value,
+                updates,
                 timing: {
                   requestMs,
                   upsertMs,
                   totalMs: requestMs + upsertMs,
                 },
-                updates,
               },
             ] as const;
           };
@@ -250,7 +240,6 @@ export const GET = (request: NextRequest) =>
               );
 
               for (const comp of userComps || []) {
-                // TODO: Skip past comps that are long done and already fully scraped
                 for (const poule of comp.compPoules) {
                   yield* deadlineLoop(
                     poule.compRounds,
