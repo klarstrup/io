@@ -1,5 +1,5 @@
 import { type DocumentNode } from "graphql";
-import { ObjectId, UpdateResult } from "mongodb";
+import { ObjectId, type UpdateResult } from "mongodb";
 import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
@@ -17,19 +17,19 @@ import { deadlineLoop, jsonStreamResponse } from "../scraper-utils";
 import {
   authSigninRefreshTokenQuery,
   climbDaysSessionsQuery,
-  ClimbDaysSessionsResponse,
+  type ClimbDaysSessionsResponse,
   climbLogsQuery,
-  ClimbLogsResponse,
+  type ClimbLogsResponse,
   climbsQuery,
-  ClimbsResponse,
+  type ClimbsResponse,
   compClimbUsersForRankingClimbUserQuery,
-  CompClimbUsersForRankingClimbUserResponse,
+  type CompClimbUsersForRankingClimbUserResponse,
   compRoundUsersForRankingQuery,
-  CompRoundUsersForRankingResponse,
+  type CompRoundUsersForRankingResponse,
   compsQuery,
-  CompsResponse,
+  type CompsResponse,
   userMeStoreQuery,
-  UserMeStoreResponse,
+  type UserMeStoreResponse,
 } from "./queries";
 
 export const dynamic = "force-dynamic";
