@@ -225,9 +225,17 @@ export const GET = (request: NextRequest) =>
               );
 
               for (const comp of shuffle(userComps || [])) {
-                for (const poule of shuffle(comp.compPoules)) {
+                for (const { compRounds } of shuffle(comp.compPoules)) {
+                  const userCompRounds = compRounds.filter(
+                    (r) => r.compRoundUserMe,
+                  );
+
                   yield* deadlineLoop(
-                    poule.compRounds,
+                    shuffle(
+                      // Cover a scenario where the user is in a comp but isn't in
+                      // any rounds (weird, but possible).
+                      userCompRounds.length ? userCompRounds : compRounds,
+                    ),
                     // Only spend half the remaining time on this loop, to save time for climb days and logs
                     () => getTimeRemaining() / 2,
                     async function* (round) {

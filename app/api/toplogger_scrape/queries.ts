@@ -291,6 +291,7 @@ export interface CompsResponse {
       compGyms: CompGymScalars[];
       compPoules: (CompPouleScalars & {
         compRounds: (CompRoundScalars & {
+          compRoundUserMe: CompRoundUserScalars | null;
           compRoundUsers: CompRoundUserScalars[];
         })[];
       })[];
