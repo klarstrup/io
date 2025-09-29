@@ -316,6 +316,7 @@ function ProblemBadge({
       style={{
         maxWidth: "100%",
         color: colorNameToHTMLColor(color) || "#c84821",
+        boxShadow: "rgba(0, 0, 0, 0.5) 0 0 3px",
       }}
       key={number}
       grade={grade ? new Grade(grade).name : undefined}
