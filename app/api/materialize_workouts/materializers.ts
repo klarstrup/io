@@ -1099,6 +1099,45 @@ export async function* materializeClimbalongWorkouts(
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.ClimbAlong },
         location: "$competition.facility",
+        // Hard coded location IDs for ClimbAlong gyms in Copenhagen,
+        // gotta actually materialize these somehow X.X
+        locationId: {
+          $cond: {
+            if: {
+              $regexMatch: {
+                input: "$competition.address",
+                regex: /Tobaksvejen/,
+              },
+            },
+            // Bison Boulders Tobaksbyen
+            then: "6892682eb5dadadcf3f9d0e6",
+            else: {
+              $cond: {
+                if: {
+                  $regexMatch: {
+                    input: "$competition.address",
+                    regex: /Flæsketorvet/,
+                  },
+                },
+                // Bison Boulders Kødbyen
+                then: "68daaf911eff67d40a5c52ec",
+                else: {
+                  $cond: {
+                    if: {
+                      $regexMatch: {
+                        input: "$competition.address",
+                        regex: /Strandmarksvej/,
+                      },
+                    },
+                    // Boulders Hvidovre
+                    then: "6892682db5dadadcf3f9d0e3",
+                    else: null,
+                  },
+                },
+              },
+            },
+          },
+        },
         exercises: [
           {
             exerciseId: 2001,
