@@ -34,7 +34,7 @@ export default async function BoulderingGraph({
     <DiaryExerciseGraph
       data={await allPromises(
         async () => ({
-          id: "95% Flash Grade",
+          id: "80% Flash Grade",
           data: await Promise.all(
             allWorkoutsOfExercise.map(async ({ workedOutAt }) => ({
               x: min([endOfDay(workedOutAt), new Date()]),
@@ -70,7 +70,7 @@ export default async function BoulderingGraph({
           ),
         }),
         async () => ({
-          id: "Average Attempt Grade",
+          id: "Top 10 Attempt Grade",
           data: await Promise.all(
             allWorkoutsOfExercise.map(async ({ workedOutAt }) => ({
               x: min([endOfDay(workedOutAt), new Date()]),
