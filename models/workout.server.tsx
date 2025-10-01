@@ -9,7 +9,7 @@ import {
 } from "date-fns";
 import type { WithId } from "mongodb";
 import type { Session } from "next-auth";
-import Grade, { frenchRounded } from "../grades";
+import Grade from "../grades";
 import type { PRType } from "../lib";
 import { ExerciseSchedule } from "../sources/fitocracy";
 import { proxyCollection } from "../utils.server";
@@ -615,14 +615,16 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
 
   if (!grades.length) return null;
 
+  const distinctGrades = Array.from(
+    new Set(grades.map(([, , grade]) => grade)),
+  ).sort((a, b) => a - b);
+
   let flashGrade: number | null = null;
-  for (const systemGrade of frenchRounded.data) {
+  for (const distinctGrade of distinctGrades) {
     const lowerGrade =
-      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) - 1]?.value ||
-      0;
+      distinctGrades[distinctGrades.indexOf(distinctGrade) - 1] || 0;
     const upperGrade =
-      frenchRounded.data[frenchRounded.data.indexOf(systemGrade) + 1]?.value ||
-      Infinity;
+      distinctGrades[distinctGrades.indexOf(distinctGrade) + 1] || Infinity;
     const sentSetsInGrade = grades
       .filter(([, , grade]) => grade > lowerGrade && grade < upperGrade)
       .filter(
@@ -641,9 +643,9 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
 
     if (
       flashRate >= flashGradeRateThreshold &&
-      (!flashGrade || systemGrade.value > flashGrade)
+      (!flashGrade || distinctGrade > flashGrade)
     ) {
-      flashGrade = systemGrade.value;
+      flashGrade = distinctGrade;
     }
   }
 
