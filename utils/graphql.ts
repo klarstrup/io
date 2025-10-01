@@ -457,11 +457,6 @@ export interface RootFields {
   readonly [rootField: string]: unknown;
 }
 
-export interface DenormalizationResult {
-  readonly data: RootFields | undefined;
-  readonly fields: FieldsMap;
-}
-
 export interface FieldsMap {
   readonly [key: string]: ReadonlySet<string>;
 }
@@ -582,7 +577,6 @@ export function normalize(
               normObj,
               // @ts-expect-error -- ?
               responseFieldValue,
-              //path + "." + normFieldName
               // Use the current key plus fieldname as fallback id
               keyOrNewParentArray + "." + normFieldName,
             ]);
@@ -666,12 +660,34 @@ const parseDateFields = (doc: Record<string, unknown>) => {
   return doc;
 };
 
+function denormalizeFieldOfTypeInNormMap(
+  normMap: MutableNormMap,
+  typename: string,
+  key: string,
+) {
+  for (const objKey in normMap) {
+    const obj = normMap[objKey];
+    if (obj && obj.__typename === typename && key in obj) {
+      const fieldValue = obj[key];
+      for (const ref of Array.isArray(fieldValue) ? fieldValue : [fieldValue]) {
+        if (isReference(ref)) {
+          const refObj = normMap[ref.__ref];
+          if (refObj) obj[key] = refObj as NormFieldValue;
+        }
+      }
+    }
+  }
+}
+
 export async function normalizeAndUpsertQueryData(
   query: DocumentNode,
   variables: Variables | undefined,
   data: RootFields,
 ) {
-  const normMap = normalize(query, variables, data);
+  const normMap = normalize(query, variables, data) as MutableNormMap;
+  // Denormalize gradeVoteStats of Climb objects, they are not discrete objects.
+  denormalizeFieldOfTypeInNormMap(normMap, "Climb", "gradeVoteStats");
+
   const objects = Object.values(normMap).filter((o) => o.__typename && o.id);
   const updateResults: {
     [key: string]: Pick<
