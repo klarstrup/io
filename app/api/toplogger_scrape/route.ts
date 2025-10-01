@@ -358,7 +358,7 @@ export const GET = (request: NextRequest) =>
             }
 
             yield* deadlineLoop(
-              randomSliceOfSize(climbDays, 60),
+              shuffle(climbDays),
               () => getTimeRemaining(),
               async function* ({ statsAtDate: climbedAtDate }) {
                 const [, updateResult] = await fetchsert<ClimbLogsResponse>(
