@@ -207,7 +207,6 @@ export const ClimbScalarsFragment = gql`
     gradeVoteStats {
       count
       grade
-      __typename
     }
     picPath
     label
@@ -232,12 +231,6 @@ export const ClimbScalarsFragment = gql`
   }
 `;
 
-export interface GradeVotesStatisticScalars
-  extends GraphQLObject<"GradeVotesStatistic"> {
-  count: number;
-  grade: number;
-}
-
 export interface ClimbScalars extends GraphQLObject<"Climb"> {
   gymId: string;
   wallId: string | null;
@@ -251,7 +244,7 @@ export interface ClimbScalars extends GraphQLObject<"Climb"> {
   gradeVotesCount: number;
   gradeUsersVsAdmin: number;
   gradeAdmin: number;
-  gradeVoteStats: GradeVotesStatisticScalars[];
+  gradeVoteStats: { count: number; grade: number }[];
   picPath: null;
   label: null | string;
   name: null | string;
