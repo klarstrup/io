@@ -179,7 +179,57 @@ export async function* materializeToploggerWorkouts(
                   inputs: [
                     // Grade
                     {
-                      value: { $divide: ["$$climbLog.climb.grade", 100] },
+                      value: {
+                        $cond: [
+                          {
+                            $and: [
+                              { $isArray: "$$climbLog.climb.gradeVoteStats" },
+                              {
+                                $gt: [
+                                  { $size: "$$climbLog.climb.gradeVoteStats" },
+                                  0,
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            $divide: [
+                              {
+                                $divide: [
+                                  {
+                                    $reduce: {
+                                      input: "$$climbLog.climb.gradeVoteStats",
+                                      initialValue: 0,
+                                      in: {
+                                        $add: [
+                                          "$$value",
+                                          {
+                                            $multiply: [
+                                              "$$this.grade",
+                                              "$$this.count",
+                                            ],
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  },
+                                  {
+                                    $reduce: {
+                                      input: "$$climbLog.climb.gradeVoteStats",
+                                      initialValue: 0,
+                                      in: {
+                                        $add: ["$$value", "$$this.count"],
+                                      },
+                                    },
+                                  },
+                                ],
+                              },
+                              100,
+                            ],
+                          },
+                          { $divide: ["$$climbLog.climb.grade", 100] },
+                        ],
+                      },
                       unit: Unit.FrenchRounded,
                     },
                     // Color
