@@ -5,7 +5,6 @@ import {
   calculate60dayTop10AverageAttemptGrade,
   calculate60dayTop10AverageFlashGrade,
   calculate60dayTop10AverageSendGrade,
-  calculateFlashGradeOn,
 } from "../../../../models/workout.server";
 import { allPromises } from "../../../../utils";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
@@ -33,6 +32,7 @@ export default async function BoulderingGraph({
   return (
     <DiaryExerciseGraph
       data={await allPromises(
+        /*
         async () => ({
           id: "80% Flash Grade",
           data: await Promise.all(
@@ -45,6 +45,7 @@ export default async function BoulderingGraph({
             })),
           ),
         }),
+        */
         async () => ({
           id: "Top 10 Send Grade",
           data: await Promise.all(
