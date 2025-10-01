@@ -11,11 +11,11 @@ import { materializeIoWorkouts, sourceToMaterializer } from "./materializers";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export const GET = () =>
-  jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
-    if (!user) return new Response("Unauthorized", { status: 401 });
+export const GET = async () => {
+  const user = (await auth())?.user;
+  if (!user) return new Response("Unauthorized", { status: 401 });
 
+  return jsonStreamResponse(async function* () {
     await MaterializedWorkoutsView.createIndexes([
       { key: { id: 1 }, unique: true },
       { key: { userId: 1 } },
@@ -87,6 +87,7 @@ export const GET = () =>
       console.error(error);
     }
   });
+};
 
 async function* mergeGenerators<T>(gens: AsyncGenerator<T>[]) {
   const promises: (Promise<{ r: IteratorResult<T>; i: number }> | null)[] =
