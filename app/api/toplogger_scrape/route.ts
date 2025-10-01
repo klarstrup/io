@@ -21,12 +21,20 @@ import {
   type ClimbDaysSessionsResponse,
   climbLogsQuery,
   type ClimbLogsResponse,
+  climbsQuery,
+  type ClimbsResponse,
+  compClimbUsersForRankingClimbUserQuery,
+  type CompClimbUsersForRankingClimbUserResponse,
+  compRoundUsersForRankingQuery,
+  type CompRoundUsersForRankingResponse,
+  compsQuery,
+  type CompsResponse,
   userMeStoreQuery,
   type UserMeStoreResponse,
 } from "./queries";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 100;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
@@ -197,7 +205,6 @@ export const GET = (request: NextRequest) =>
 
             const gymId = gym.id;
 
-            /*
             const [compsResponse, updateResult] =
               await fetchsert<CompsResponse>(compsQuery, {
                 gymId,
@@ -318,7 +325,6 @@ export const GET = (request: NextRequest) =>
                 );
               }
             }
-              */
 
             let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
               [];
@@ -357,8 +363,17 @@ export const GET = (request: NextRequest) =>
               climbDays = climbDays.concat(data.climbDaysPaginated.data);
             }
 
+            const recentDays = 3;
+            const backfillDays = 6;
+            const climbDaysToFetch = [
+              // Most recent days
+              ...climbDays.slice(0, recentDays),
+              // other random days, for backfilling. TODO: General backfilling strategy
+              ...randomSliceOfSize(climbDays.slice(recentDays), backfillDays),
+            ];
+
             yield* deadlineLoop(
-              shuffle(climbDays),
+              climbDaysToFetch,
               () => getTimeRemaining(),
               async function* ({ statsAtDate: climbedAtDate }) {
                 const [, updateResult] = await fetchsert<ClimbLogsResponse>(
