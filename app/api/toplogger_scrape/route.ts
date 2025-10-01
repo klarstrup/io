@@ -234,8 +234,8 @@ export const GET = (request: NextRequest) =>
                     // any rounds (weird, but possible).
                     userCompRounds.length ? userCompRounds : compRounds,
                   ),
-                  // Only spend half the remaining time on this loop, to save time for climb days and logs
-                  () => getTimeRemaining() / 2,
+                  // Only spend a fraction of the remaining time on this loop, to save time for climb logs
+                  () => getTimeRemaining() / 3,
                   async function* ({ id: compRoundId }) {
                     const compRoundUsersForRankingVariables = {
                       gymId,
