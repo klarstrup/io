@@ -669,11 +669,14 @@ function denormalizeFieldOfTypeInNormMap(
     const obj = normMap[objKey];
     if (obj && obj.__typename === typename && key in obj) {
       const fieldValue = obj[key];
-      for (const ref of Array.isArray(fieldValue) ? fieldValue : [fieldValue]) {
-        if (isReference(ref)) {
-          const refObj = normMap[ref.__ref];
-          if (refObj) obj[key] = refObj as NormFieldValue;
-        }
+      if (!fieldValue) continue;
+      if (Array.isArray(fieldValue)) {
+        obj[key] = fieldValue.map(
+          (v) => ((isReference(v) && normMap[v.__ref]) || v) as NormFieldValue,
+        );
+      } else {
+        obj[key] = ((isReference(fieldValue) && normMap[fieldValue.__ref]) ||
+          fieldValue) as NormFieldValue;
       }
     }
   }
