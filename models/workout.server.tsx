@@ -48,42 +48,38 @@ const getNextSet = async ({
   to: Date;
   scheduleEntry: ExerciseSchedule;
 }) => {
-  const workout = (
-    await MaterializedWorkoutsView.aggregate<{
-      workedOutAt: Date;
-      exercise: WorkoutExercise;
-    }>([
-      {
-        $match: {
-          userId,
-          "exercises.exerciseId": scheduleEntry.exerciseId,
-          workedOutAt: { $lte: to },
-          deletedAt: { $exists: false },
-        },
+  const [workout] = await MaterializedWorkoutsView.aggregate<{
+    workedOutAt: Date;
+    exercise: WorkoutExercise;
+  }>([
+    {
+      $match: {
+        userId,
+        "exercises.exerciseId": scheduleEntry.exerciseId,
+        workedOutAt: { $lte: to },
+        deletedAt: { $exists: false },
       },
-      { $sort: { workedOutAt: -1 } },
-      { $limit: 1 },
-      {
-        $project: {
-          _id: 0,
-          workedOutAt: 1,
-          exercise: {
-            $first: {
-              $filter: {
-                input: "$exercises",
-                as: "exercise",
-                cond: {
-                  $eq: ["$$exercise.exerciseId", scheduleEntry.exerciseId],
-                },
+    },
+    { $sort: { workedOutAt: -1 } },
+    { $limit: 1 },
+    {
+      $project: {
+        _id: 0,
+        workedOutAt: 1,
+        exercise: {
+          $first: {
+            $filter: {
+              input: "$exercises",
+              as: "exercise",
+              cond: {
+                $eq: ["$$exercise.exerciseId", scheduleEntry.exerciseId],
               },
             },
           },
         },
       },
-    ])
-      [Symbol.asyncIterator]()
-      .next()
-  ).value;
+    },
+  ]).toArray();
 
   if (isClimbingExercise(scheduleEntry.exerciseId)) {
     if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {
@@ -174,9 +170,8 @@ const getNextSet = async ({
     const accWeight = acc?.inputs[effortInputIndex]?.value;
     return setWeight &&
       setReps &&
-      scheduleEntry.workingReps &&
       (!accWeight || setWeight > accWeight) &&
-      setReps >= scheduleEntry.workingReps
+      (scheduleEntry.workingReps ? setReps >= scheduleEntry.workingReps : true)
       ? set
       : acc;
   }, exercise.sets[0]);
