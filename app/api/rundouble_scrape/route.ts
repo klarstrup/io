@@ -2,7 +2,7 @@ import { auth } from "../../../auth";
 import { RunDouble } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DataSource } from "../../../sources/utils";
-import { wrapSource } from "../../../sources/utils.server";
+import { wrapSources } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -28,10 +28,11 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
-    for (const dataSource of user.dataSources ?? []) {
-      if (dataSource.source !== DataSource.RunDouble) continue;
-
-      yield* wrapSource(dataSource, user, async function* ({ id }, setUpdated) {
+    yield* wrapSources(
+      DataSource.RunDouble,
+      user.dataSources ?? [],
+      user,
+      async function* (_dataSource, { id }, setUpdated) {
         setUpdated(false);
 
         for await (const run of getRuns(id)) {
@@ -54,6 +55,6 @@ export const GET = () =>
 
           if (!upsertedCount) break;
         }
-      });
-    }
+      },
+    );
   });

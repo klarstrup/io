@@ -4,7 +4,7 @@ import { isGrippyAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { Grippy, GrippyWorkoutLogs } from "../../../sources/grippy";
 import { DataSource } from "../../../sources/utils";
-import { wrapSource } from "../../../sources/utils.server";
+import { wrapSources } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -16,102 +16,99 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
-    for (const dataSource of user.dataSources ?? []) {
-      if (dataSource.source !== DataSource.Grippy) continue;
+    yield* wrapSources(
+      DataSource.Grippy,
+      user.dataSources ?? [],
+      user,
+      async function* (dataSource, { authTokens }, setUpdated) {
+        setUpdated(false);
 
-      yield* wrapSource(
-        dataSource,
-        user,
-        async function* ({ authTokens }, setUpdated) {
-          setUpdated(false);
+        let headers: HeadersInit = {
+          authorization: `Bearer ${authTokens.access_token}`,
+        };
+        yield { authTokens };
 
-          let headers: HeadersInit = {
-            authorization: `Bearer ${authTokens.access_token}`,
-          };
-          yield { authTokens };
+        yield "refreshing token";
 
-          yield "refreshing token";
+        const body = new FormData();
+        body.append("grant_type", "refresh_token");
+        body.append("refresh_token", authTokens.refresh_token);
 
-          const body = new FormData();
-          body.append("grant_type", "refresh_token");
-          body.append("refresh_token", authTokens.refresh_token);
+        const authSigninRefreshTokenResponse = await (
+          await fetch("https://api.griptonite.io/auth/token", {
+            method: "POST",
+            headers: {
+              "Accept-Encoding": "gzip",
+              authorization:
+                "Basic RkVLdm9xSkJTTW44RE41cmZYaEtyQmgyMnMyNUh4cFIzajNiMk95bDo2d3h0S1BlNEZrZlFhQVVUaVc4QVBwQjZKSmk3c1JjSk5PT1RkekZLVGhCeGpxNkFyaGJsTmVqd0hzdnZHWWxpNDVLemtMQmdzdmxNSUZIbFE0VHBuZUhvQkI0cWZTbHR2RUtxdGpvRUFPRmhKczhzc1VrM1lqZkRZcGppVzlqZQ==",
+              "User-Agent": "okhttp/4.9.2",
+              Host: "api.griptonite.io",
+            },
+            body,
+          })
+        ).text();
 
-          const authSigninRefreshTokenResponse = await (
-            await fetch("https://api.griptonite.io/auth/token", {
-              method: "POST",
-              headers: {
-                "Accept-Encoding": "gzip",
-                authorization:
-                  "Basic RkVLdm9xSkJTTW44RE41cmZYaEtyQmgyMnMyNUh4cFIzajNiMk95bDo2d3h0S1BlNEZrZlFhQVVUaVc4QVBwQjZKSmk3c1JjSk5PT1RkekZLVGhCeGpxNkFyaGJsTmVqd0hzdnZHWWxpNDVLemtMQmdzdmxNSUZIbFE0VHBuZUhvQkI0cWZTbHR2RUtxdGpvRUFPRmhKczhzc1VrM1lqZkRZcGppVzlqZQ==",
-                "User-Agent": "okhttp/4.9.2",
-                Host: "api.griptonite.io",
-              },
-              body,
-            })
-          ).text();
+        const authSigninRefreshTokenResponseJSON = JSON.parse(
+          authSigninRefreshTokenResponse,
+        ) as unknown;
 
-          const authSigninRefreshTokenResponseJSON = JSON.parse(
-            authSigninRefreshTokenResponse,
-          ) as unknown;
-
-          if (isGrippyAuthTokens(authSigninRefreshTokenResponseJSON)) {
-            authTokens = authSigninRefreshTokenResponseJSON;
-            await Users.updateOne(
-              { _id: new ObjectId(user.id) },
-              {
-                $set: { "dataSources.$[source].config.authTokens": authTokens },
-              },
-              { arrayFilters: [{ "source.id": dataSource.id }] },
-            );
-            yield "Updated authTokens with refresh token";
-            yield { authTokens };
-          } else {
-            try {
-              yield JSON.parse(authSigninRefreshTokenResponse);
-            } catch {
-              yield authSigninRefreshTokenResponse;
-            }
-
-            setUpdated(false);
-            throw new Error("Failed to refresh token");
-          }
-
-          headers = { authorization: `Bearer ${authTokens.access_token}` };
-
-          const response = await fetch(
-            "https://api.griptonite.io/workouts/logs",
-            { headers },
+        if (isGrippyAuthTokens(authSigninRefreshTokenResponseJSON)) {
+          authTokens = authSigninRefreshTokenResponseJSON;
+          await Users.updateOne(
+            { _id: new ObjectId(user.id) },
+            {
+              $set: { "dataSources.$[source].config.authTokens": authTokens },
+            },
+            { arrayFilters: [{ "source.id": dataSource.id }] },
           );
-
-          if (!response.ok || response.status !== 200) {
-            setUpdated(false);
-            throw new Error(await response.text());
+          yield "Updated authTokens with refresh token";
+          yield { authTokens };
+        } else {
+          try {
+            yield JSON.parse(authSigninRefreshTokenResponse);
+          } catch {
+            yield authSigninRefreshTokenResponse;
           }
 
-          const json = (await response.json()) as Grippy.WorkoutLogsResponse;
+          setUpdated(false);
+          throw new Error("Failed to refresh token");
+        }
 
-          const workoutLogs = json.data;
+        headers = { authorization: `Bearer ${authTokens.access_token}` };
 
-          for (const workoutLog of workoutLogs) {
-            const { modifiedCount, upsertedCount } =
-              await GrippyWorkoutLogs.updateOne(
-                { uuid: workoutLog.uuid },
-                {
-                  $set: {
-                    ...workoutLog,
-                    start_time: new Date(workoutLog.start_time),
-                    end_time: new Date(workoutLog.end_time),
-                    _io_userId: user.id,
-                  },
+        const response = await fetch(
+          "https://api.griptonite.io/workouts/logs",
+          { headers },
+        );
+
+        if (!response.ok || response.status !== 200) {
+          setUpdated(false);
+          throw new Error(await response.text());
+        }
+
+        const json = (await response.json()) as Grippy.WorkoutLogsResponse;
+
+        const workoutLogs = json.data;
+
+        for (const workoutLog of workoutLogs) {
+          const { modifiedCount, upsertedCount } =
+            await GrippyWorkoutLogs.updateOne(
+              { uuid: workoutLog.uuid },
+              {
+                $set: {
+                  ...workoutLog,
+                  start_time: new Date(workoutLog.start_time),
+                  end_time: new Date(workoutLog.end_time),
+                  _io_userId: user.id,
                 },
-                { upsert: true },
-              );
+              },
+              { upsert: true },
+            );
 
-            setUpdated(modifiedCount > 0 || upsertedCount > 0);
-          }
+          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+        }
 
-          yield { workoutLogs };
-        },
-      );
-    }
+        yield { workoutLogs };
+      },
+    );
   });

@@ -6,7 +6,7 @@ import {
   MyFitnessPalFoodEntries,
 } from "../../../sources/myfitnesspal.server";
 import { DataSource } from "../../../sources/utils";
-import { wrapSource } from "../../../sources/utils.server";
+import { wrapSources } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 const months = [
@@ -36,86 +36,83 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
-    for (const dataSource of user.dataSources ?? []) {
-      if (dataSource.source !== DataSource.MyFitnessPal) continue;
+    yield* wrapSources(
+      DataSource.MyFitnessPal,
+      user.dataSources ?? [],
+      user,
+      async function* (_dataSource, { token, userName, userId }, setUpdated) {
+        setUpdated(false);
 
-      yield* wrapSource(
-        dataSource,
-        user,
-        async function* ({ token, userName, userId }, setUpdated) {
-          setUpdated(false);
+        const now = new Date();
+        yearLoop: for (const year of years) {
+          for (const month of months) {
+            if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
 
-          const now = new Date();
-          yearLoop: for (const year of years) {
-            for (const month of months) {
-              if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
-
-              if (
-                differenceInMonths(now, new Date(year, Number(month) - 1)) > 1
-              ) {
-                const entriesForMonth =
-                  await MyFitnessPalFoodEntries.countDocuments({
-                    user_id: userId,
-                    date: { $regex: new RegExp(`^${year}-${month}-`) },
-                  });
-
-                if (entriesForMonth > 0) continue;
-              }
-              // TODO: Also skip anything prior to a few months before the last populated month
-
-              const reportEntries = await getMyFitnessPalReport(
-                token,
-                userName,
-                year,
-                month,
-              );
-
-              for (const reportEntry of reportEntries) {
-                for (const foodEntry of reportEntry.food_entries) {
-                  const { modifiedCount, upsertedCount } =
-                    await MyFitnessPalFoodEntries.updateOne(
-                      { id: foodEntry.id },
-                      {
-                        $set: {
-                          ...foodEntry,
-                          user_id: userId,
-                          datetime: DateTime.fromISO(foodEntry.date, {
-                            zone: "utc",
-                          }).toJSDate(),
-                        },
-                      },
-                      { upsert: true },
-                    );
-
-                  setUpdated(modifiedCount > 0 || upsertedCount > 0);
-                }
-
-                yield reportEntry.date;
-              }
-
-              const foodEntryIdsToBeDeleted = (
-                await MyFitnessPalFoodEntries.find({
+            if (
+              differenceInMonths(now, new Date(year, Number(month) - 1)) > 1
+            ) {
+              const entriesForMonth =
+                await MyFitnessPalFoodEntries.countDocuments({
                   user_id: userId,
                   date: { $regex: new RegExp(`^${year}-${month}-`) },
-                }).toArray()
-              )
-                .filter(
-                  (entry) =>
-                    !reportEntries
-                      .map((reportEntry) => reportEntry.food_entries)
-                      .flat()
-                      .some((foodEntry) => foodEntry.id === entry.id),
-                )
-                .map(({ id }) => id);
+                });
 
-              const { deletedCount } = await MyFitnessPalFoodEntries.deleteMany(
-                { id: { $in: foodEntryIdsToBeDeleted } },
-              );
-
-              setUpdated(deletedCount > 0);
+              if (entriesForMonth > 0) continue;
             }
+            // TODO: Also skip anything prior to a few months before the last populated month
+
+            const reportEntries = await getMyFitnessPalReport(
+              token,
+              userName,
+              year,
+              month,
+            );
+
+            for (const reportEntry of reportEntries) {
+              for (const foodEntry of reportEntry.food_entries) {
+                const { modifiedCount, upsertedCount } =
+                  await MyFitnessPalFoodEntries.updateOne(
+                    { id: foodEntry.id },
+                    {
+                      $set: {
+                        ...foodEntry,
+                        user_id: userId,
+                        datetime: DateTime.fromISO(foodEntry.date, {
+                          zone: "utc",
+                        }).toJSDate(),
+                      },
+                    },
+                    { upsert: true },
+                  );
+
+                setUpdated(modifiedCount > 0 || upsertedCount > 0);
+              }
+
+              yield reportEntry.date;
+            }
+
+            const foodEntryIdsToBeDeleted = (
+              await MyFitnessPalFoodEntries.find({
+                user_id: userId,
+                date: { $regex: new RegExp(`^${year}-${month}-`) },
+              }).toArray()
+            )
+              .filter(
+                (entry) =>
+                  !reportEntries
+                    .map((reportEntry) => reportEntry.food_entries)
+                    .flat()
+                    .some((foodEntry) => foodEntry.id === entry.id),
+              )
+              .map(({ id }) => id);
+
+            const { deletedCount } = await MyFitnessPalFoodEntries.deleteMany({
+              id: { $in: foodEntryIdsToBeDeleted },
+            });
+
+            setUpdated(deletedCount > 0);
           }
-        },
-      );
-    }
+        }
+      },
+    );
   });

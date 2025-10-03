@@ -38,7 +38,6 @@ export const maxDuration = 100;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    //
     const startedAt = Date.now();
     const getTimeRemaining = () =>
       maxDuration * 1000 - (Date.now() - startedAt);
@@ -50,7 +49,7 @@ export const GET = (request: NextRequest) =>
       DataSource.TopLogger,
       user.dataSources || [],
       user,
-      async function* (dataSource, { authTokens }, setUpdated) {
+      async function* (dataSource, { authTokens, graphQLId }, setUpdated) {
         setUpdated(false);
 
         const handleUpdateResults = (updateResults: {
@@ -187,7 +186,7 @@ export const GET = (request: NextRequest) =>
           ] as const;
         };
 
-        const userId = dataSource.config.graphQLId;
+        const userId = graphQLId;
 
         const [userMeStoreResponse, updateResult] =
           await fetchsert<UserMeStoreResponse>(userMeStoreQuery);

@@ -4,7 +4,7 @@ import { auth } from "../../../auth";
 import type { TomorrowResponse } from "../../../sources/tomorrow";
 import { TomorrowIntervals } from "../../../sources/tomorrow.server";
 import { DataSource } from "../../../sources/utils";
-import { wrapSource } from "../../../sources/utils.server";
+import { wrapSources } from "../../../sources/utils.server";
 import { decodeGeohash, DEFAULT_TIMEZONE } from "../../../utils";
 import { jsonStreamResponse } from "../scraper-utils";
 
@@ -67,42 +67,39 @@ export const GET = () =>
       { key: { _io_geohash: 1, startTime: 1 } },
     ]);
 
-    for (const dataSources of user.dataSources ?? []) {
-      if (dataSources.source !== DataSource.Tomorrow) continue;
+    yield* wrapSources(
+      DataSource.Tomorrow,
+      user.dataSources ?? [],
+      user,
+      async function* (_dataSource, { geohash }, setUpdated) {
+        setUpdated(false);
 
-      yield* wrapSource(
-        dataSources,
-        user,
-        async function* ({ geohash }, setUpdated) {
-          setUpdated(false);
+        const truncatedGeohash = geohash.slice(0, 4);
+        const intervals = await fetchTomorrowTimelineIntervals({
+          geohash: truncatedGeohash,
+        });
 
-          const truncatedGeohash = geohash.slice(0, 4);
-          const intervals = await fetchTomorrowTimelineIntervals({
-            geohash: truncatedGeohash,
-          });
-
-          for (const interval of intervals) {
-            const startTime = new Date(interval.startTime);
-            const updateResult = await TomorrowIntervals.updateOne(
-              { _io_geohash: truncatedGeohash, startTime },
-              {
-                $set: {
-                  ...interval,
-                  startTime,
-                  _io_geohash: truncatedGeohash,
-                },
-                $setOnInsert: { _io_scrapedAt: new Date() },
+        for (const interval of intervals) {
+          const startTime = new Date(interval.startTime);
+          const updateResult = await TomorrowIntervals.updateOne(
+            { _io_geohash: truncatedGeohash, startTime },
+            {
+              $set: {
+                ...interval,
+                startTime,
+                _io_geohash: truncatedGeohash,
               },
-              { upsert: true },
-            );
+              $setOnInsert: { _io_scrapedAt: new Date() },
+            },
+            { upsert: true },
+          );
 
-            setUpdated(
-              (updateResult.modifiedCount || updateResult.upsertedCount) > 0,
-            );
+          setUpdated(
+            (updateResult.modifiedCount || updateResult.upsertedCount) > 0,
+          );
 
-            yield [interval.startTime, updateResult] as const;
-          }
-        },
-      );
-    }
+          yield [interval.startTime, updateResult] as const;
+        }
+      },
+    );
   });

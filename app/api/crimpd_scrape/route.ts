@@ -1,7 +1,7 @@
 import { auth } from "../../../auth";
 import { Crimpd, CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { DataSource } from "../../../sources/utils";
-import { wrapSource } from "../../../sources/utils.server";
+import { wrapSources } from "../../../sources/utils.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -13,44 +13,41 @@ export const GET = () =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
-    for (const dataSource of user.dataSources ?? []) {
-      if (dataSource.source !== DataSource.Crimpd) continue;
+    yield* wrapSources(
+      DataSource.Crimpd,
+      user.dataSources ?? [],
+      user,
+      async function* (_dataSource, { token }, setUpdated) {
+        setUpdated(false);
 
-      yield* wrapSource(
-        dataSource,
-        user,
-        async function* ({ token }, setUpdated) {
-          setUpdated(false);
+        const workoutLogs = (
+          (await (
+            await fetch("https://api.crimpd.com/workout_log", {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+          ).json()) as Crimpd.WorkoutLogResponse
+        ).workout_logs;
 
-          const workoutLogs = (
-            (await (
-              await fetch("https://api.crimpd.com/workout_log", {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-            ).json()) as Crimpd.WorkoutLogResponse
-          ).workout_logs;
-
-          for (const workoutLog of workoutLogs) {
-            const { modifiedCount, upsertedCount } =
-              await CrimpdWorkoutLogs.updateOne(
-                { _id: workoutLog._id },
-                {
-                  $set: {
-                    ...workoutLog,
-                    logDate: new Date(workoutLog.logDate),
-                    dateCreated: new Date(workoutLog.dateCreated),
-                    lastUpdated: new Date(workoutLog.lastUpdated),
-                    _io_userId: user.id,
-                  },
+        for (const workoutLog of workoutLogs) {
+          const { modifiedCount, upsertedCount } =
+            await CrimpdWorkoutLogs.updateOne(
+              { _id: workoutLog._id },
+              {
+                $set: {
+                  ...workoutLog,
+                  logDate: new Date(workoutLog.logDate),
+                  dateCreated: new Date(workoutLog.dateCreated),
+                  lastUpdated: new Date(workoutLog.lastUpdated),
+                  _io_userId: user.id,
                 },
-                { upsert: true },
-              );
+              },
+              { upsert: true },
+            );
 
-            setUpdated(modifiedCount > 0 || upsertedCount > 0);
-          }
+          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+        }
 
-          yield { workoutLogs };
-        },
-      );
-    }
+        yield { workoutLogs };
+      },
+    );
   });
