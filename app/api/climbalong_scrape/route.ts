@@ -35,7 +35,7 @@ export const GET = () =>
       DataSource.ClimbAlong,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { token }, setUpdated) {
+      async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
         const handleUpdateResult = (r: UpdateResult) =>

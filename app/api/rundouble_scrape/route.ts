@@ -32,7 +32,7 @@ export const GET = () =>
       DataSource.RunDouble,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { id }, setUpdated) {
+      async function* ({ config: { id } }, setUpdated) {
         setUpdated(false);
 
         for await (const run of getRuns(id)) {

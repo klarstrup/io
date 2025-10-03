@@ -49,7 +49,10 @@ export const GET = (request: NextRequest) =>
       DataSource.TopLogger,
       user.dataSources || [],
       user,
-      async function* (dataSource, { authTokens, graphQLId }, setUpdated) {
+      async function* (
+        { config: { authTokens, graphQLId }, ...source },
+        setUpdated,
+      ) {
         setUpdated(false);
 
         const handleUpdateResults = (updateResults: {
@@ -130,7 +133,7 @@ export const GET = (request: NextRequest) =>
               {
                 $set: { "dataSources.$[source].config.authTokens": authTokens },
               },
-              { arrayFilters: [{ "source.id": dataSource.id }] },
+              { arrayFilters: [{ "source.id": source.id }] },
             );
             yield "Updated authTokens with refresh token";
             yield { authTokens };

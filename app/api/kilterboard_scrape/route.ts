@@ -26,7 +26,7 @@ export const GET = () =>
       DataSource.KilterBoard,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { token }, setUpdated) {
+      async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
         const { bids, ascents } = (await (

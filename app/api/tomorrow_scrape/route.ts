@@ -71,7 +71,7 @@ export const GET = () =>
       DataSource.Tomorrow,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { geohash }, setUpdated) {
+      async function* ({ config: { geohash } }, setUpdated) {
         setUpdated(false);
 
         const truncatedGeohash = geohash.slice(0, 4);

@@ -20,7 +20,7 @@ export const GET = () =>
       DataSource.ICal,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { url }, setUpdated) {
+      async function* ({ config: { url } }, setUpdated) {
         setUpdated(false);
 
         if (!url) return;

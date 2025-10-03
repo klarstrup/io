@@ -15,15 +15,14 @@ export async function* wrapSources<
   user: Session["user"],
   fn: (
     dataSource: DS,
-    config: DS["config"],
     setUpdated: (updated: boolean) => void,
   ) => AsyncGenerator<T>,
 ) {
   for (const dataSource of dataSources) {
     if (dataSource.source !== source) continue;
 
-    yield* wrapSource(dataSource as DS, user, (...args) =>
-      fn(dataSource as DS, ...args),
+    yield* wrapSource(dataSource, user, (_config, setUpdated) =>
+      fn(dataSource as DS, setUpdated),
     );
   }
 }

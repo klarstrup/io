@@ -40,7 +40,7 @@ export const GET = () =>
       DataSource.MyFitnessPal,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { token, userName, userId }, setUpdated) {
+      async function* ({ config: { token, userName, userId } }, setUpdated) {
         setUpdated(false);
 
         const now = new Date();

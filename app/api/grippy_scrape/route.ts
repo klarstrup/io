@@ -20,7 +20,7 @@ export const GET = () =>
       DataSource.Grippy,
       user.dataSources ?? [],
       user,
-      async function* (dataSource, { authTokens }, setUpdated) {
+      async function* ({ config: { authTokens }, ...source }, setUpdated) {
         setUpdated(false);
 
         let headers: HeadersInit = {
@@ -59,7 +59,7 @@ export const GET = () =>
             {
               $set: { "dataSources.$[source].config.authTokens": authTokens },
             },
-            { arrayFilters: [{ "source.id": dataSource.id }] },
+            { arrayFilters: [{ "source.id": source.id }] },
           );
           yield "Updated authTokens with refresh token";
           yield { authTokens };

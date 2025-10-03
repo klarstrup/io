@@ -23,7 +23,7 @@ export const GET = () =>
       DataSource.MoonBoard,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { token, user_id }, setUpdated) {
+      async function* ({ config: { token, user_id } }, setUpdated) {
         setUpdated(false);
 
         const logbook = (await fetch(

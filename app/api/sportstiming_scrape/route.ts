@@ -76,7 +76,7 @@ export const GET = () =>
       DataSource.Sportstiming,
       user.dataSources ?? [],
       user,
-      async function* (_dataSource, { name }, setUpdated) {
+      async function* ({ config: { name } }, setUpdated) {
         setUpdated(false);
 
         for (const event of events) {
