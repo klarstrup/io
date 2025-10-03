@@ -20,7 +20,9 @@ export function NextSets({
   user?: Session["user"];
   date: `${number}-${number}-${number}`;
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
-  onAddExercise?: (exerciseId: number) => void;
+  onAddExercise?: (
+    dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
+  ) => void;
   showDetails?: boolean;
   showDueDate?: boolean;
 }) {
@@ -31,107 +33,100 @@ export function NextSets({
         "flex gap-1 " + (showDetails ? "flex-col" : "flex-row flex-wrap")
       }
     >
-      {nextSets.map(
-        (
-          {
-            exerciseId,
-            successful,
-            scheduleEntry,
-            nextWorkingSets,
-            nextWorkingSetInputs,
-            workedOutAt,
-          },
-          i,
-        ) => {
-          const exercise = exercisesById[exerciseId]!;
+      {nextSets.map((dueSet, i) => {
+        const {
+          exerciseId,
+          successful,
+          scheduleEntry,
+          nextWorkingSets,
+          nextWorkingSetInputs,
+          workedOutAt,
+        } = dueSet;
+        const exercise = exercisesById[exerciseId]!;
 
-          return (
-            <li
-              key={JSON.stringify(scheduleEntry)}
-              className="flex items-start"
-            >
-              {onAddExercise ? (
-                <StealthButton onClick={() => onAddExercise(exercise.id)}>
-                  ➕
-                </StealthButton>
+        return (
+          <li key={JSON.stringify(scheduleEntry)} className="flex items-start">
+            {onAddExercise ? (
+              <StealthButton onClick={() => onAddExercise(dueSet)}>
+                ➕
+              </StealthButton>
+            ) : null}
+            <div className="leading-tight">
+              <Link
+                prefetch={false}
+                href={`/diary/exercises/${exercise.id}`}
+                style={{ color: "#edab00" }}
+                className="font-semibold whitespace-nowrap"
+              >
+                {
+                  [exercise.name, ...exercise.aliases]
+                    .filter((name) => name.length >= 4)
+                    .sort((a, b) => a.length - b.length)[0]!
+                }
+              </Link>
+              {showDetails &&
+              (nextWorkingSetInputs?.length || nextWorkingSets) ? (
+                <>
+                  {" "}
+                  <table className="inline-table w-auto max-w-0 align-baseline text-sm">
+                    <tbody>
+                      <WorkoutEntryExerciseSetRow
+                        exercise={exercise}
+                        set={{ inputs: nextWorkingSetInputs ?? [] }}
+                        repeatCount={nextWorkingSets}
+                      />
+                    </tbody>
+                  </table>
+                </>
               ) : null}
-              <div className="leading-tight">
-                <Link
-                  prefetch={false}
-                  href={`/diary/exercises/${exercise.id}`}
-                  style={{ color: "#edab00" }}
-                  className="font-semibold whitespace-nowrap"
-                >
-                  {
-                    [exercise.name, ...exercise.aliases]
-                      .filter((name) => name.length >= 4)
-                      .sort((a, b) => a.length - b.length)[0]!
-                  }
-                </Link>
-                {showDetails &&
-                (nextWorkingSetInputs?.length || nextWorkingSets) ? (
-                  <>
-                    {" "}
-                    <table className="inline-table w-auto max-w-0 align-baseline text-sm">
-                      <tbody>
-                        <WorkoutEntryExerciseSetRow
-                          exercise={exercise}
-                          set={{ inputs: nextWorkingSetInputs ?? [] }}
-                          repeatCount={nextWorkingSets}
-                        />
-                      </tbody>
-                    </table>
-                  </>
-                ) : null}
-                {showDetails ? (
-                  <div className="align-baseline whitespace-nowrap">
-                    <span className="text-xs">
-                      Last set{" "}
-                      {workedOutAt ? (
-                        <Link
-                          prefetch={false}
-                          href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
-                          style={{ color: "#edab00" }}
-                        >
-                          {formatDistanceStrict(
-                            startOfDay(workedOutAt, {
-                              in: tz(user?.timeZone || DEFAULT_TIMEZONE),
-                            }),
-                            startOfDay(tzDate),
-                            { addSuffix: true, roundingMethod: "floor" },
-                          )}
-                        </Link>
-                      ) : (
-                        "never"
-                      )}
-                      {successful === false ? " (failed)" : null}
-                    </span>
-                    {showDueDate && scheduleEntry?.frequency && workedOutAt ? (
-                      <span className="text-xs">
-                        , due{" "}
+              {showDetails ? (
+                <div className="align-baseline whitespace-nowrap">
+                  <span className="text-xs">
+                    Last set{" "}
+                    {workedOutAt ? (
+                      <Link
+                        prefetch={false}
+                        href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
+                        style={{ color: "#edab00" }}
+                      >
                         {formatDistanceStrict(
-                          addMilliseconds(
-                            workedOutAt,
-                            durationToMs(scheduleEntry.frequency),
-                          ),
-                          date,
-                          {
-                            addSuffix: true,
-                            roundingMethod: "floor",
-                            unit: "day",
-                          },
+                          startOfDay(workedOutAt, {
+                            in: tz(user?.timeZone || DEFAULT_TIMEZONE),
+                          }),
+                          startOfDay(tzDate),
+                          { addSuffix: true, roundingMethod: "floor" },
                         )}
-                      </span>
-                    ) : null}
-                  </div>
-                ) : i < nextSets.length - 1 ? (
-                  ","
-                ) : null}
-              </div>
-            </li>
-          );
-        },
-      )}
+                      </Link>
+                    ) : (
+                      "never"
+                    )}
+                    {successful === false ? " (failed)" : null}
+                  </span>
+                  {showDueDate && scheduleEntry?.frequency && workedOutAt ? (
+                    <span className="text-xs">
+                      , due{" "}
+                      {formatDistanceStrict(
+                        addMilliseconds(
+                          workedOutAt,
+                          durationToMs(scheduleEntry.frequency),
+                        ),
+                        date,
+                        {
+                          addSuffix: true,
+                          roundingMethod: "floor",
+                          unit: "day",
+                        },
+                      )}
+                    </span>
+                  ) : null}
+                </div>
+              ) : i < nextSets.length - 1 ? (
+                ","
+              ) : null}
+            </div>
+          </li>
+        );
+      })}
     </ol>
   );
 }

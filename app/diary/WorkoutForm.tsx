@@ -194,56 +194,53 @@ export function WorkoutForm<R extends string>({
     [nextSets, tzDate, watch],
   );
 
-  const handleAddExercise = useEvent((exerciseId: number) => {
-    if (!dueSets) return;
+  const handleAddExercise = useEvent(
+    (dueSet: Awaited<ReturnType<typeof getNextSets>>[number]) => {
+      const scheduleEntry = dueSet.scheduleEntry;
 
-    const dueSet = dueSets.find((nextSet) => nextSet.exerciseId === exerciseId);
-    if (!dueSet) return;
+      const exerciseDefinition = exercisesById[dueSet.exerciseId]!;
 
-    const scheduleEntry = dueSet.scheduleEntry;
-
-    const exerciseDefinition = exercisesById[exerciseId]!;
-
-    let effortInputIndex = exerciseDefinition.inputs.findIndex(
-      ({ type }) =>
-        type === InputType.Weight ||
-        type === InputType.Weightassist ||
-        type === InputType.Time,
-    );
-    if (effortInputIndex === -1) {
-      effortInputIndex = exerciseDefinition.inputs.findIndex(
-        ({ type }) => type === InputType.Reps,
+      let effortInputIndex = exerciseDefinition.inputs.findIndex(
+        ({ type }) =>
+          type === InputType.Weight ||
+          type === InputType.Weightassist ||
+          type === InputType.Time,
       );
-    }
-
-    const goalEffort = dueSet.nextWorkingSetInputs?.[effortInputIndex]?.value;
-    const warmupIncrement = ((goalEffort ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
-
-    const setEfforts: number[] = [goalEffort ?? NaN];
-
-    // Schedule entries without a working set goal don't get warmup sets 
-    if (scheduleEntry.workingSets) {
-      while (setEfforts[setEfforts.length - 1]! > 20 + warmupIncrement) {
-        setEfforts.push(setEfforts[setEfforts.length - 1]! - warmupIncrement);
+      if (effortInputIndex === -1) {
+        effortInputIndex = exerciseDefinition.inputs.findIndex(
+          ({ type }) => type === InputType.Reps,
+        );
       }
-    }
 
-    const sets = setEfforts.reverse().map(
-      (setEffort): WorkoutExerciseSet => ({
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        inputs: exerciseDefinition.inputs.map(
-          (input, i): WorkoutExerciseSetInput => ({
-            value:
-              i === effortInputIndex ? setEffort : (input.default_value ?? 0),
-            unit: input.metric_unit,
-          }),
-        ),
-      }),
-    );
+      const goalEffort = dueSet.nextWorkingSetInputs?.[effortInputIndex]?.value;
+      const warmupIncrement = ((goalEffort ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
 
-    append({ exerciseId, sets });
-  });
+      const setEfforts: number[] = [goalEffort ?? NaN];
+
+      // Schedule entries without a working set goal don't get warmup sets
+      if (scheduleEntry.workingSets) {
+        while (setEfforts[setEfforts.length - 1]! > 20 + warmupIncrement) {
+          setEfforts.push(setEfforts[setEfforts.length - 1]! - warmupIncrement);
+        }
+      }
+
+      const sets = setEfforts.reverse().map(
+        (setEffort): WorkoutExerciseSet => ({
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          inputs: exerciseDefinition.inputs.map(
+            (input, i): WorkoutExerciseSetInput => ({
+              value:
+                i === effortInputIndex ? setEffort : (input.default_value ?? 0),
+              unit: input.metric_unit,
+            }),
+          ),
+        }),
+      );
+
+      append({ exerciseId: dueSet.exerciseId, sets });
+    },
+  );
 
   const locationInstanceId = useId();
 
