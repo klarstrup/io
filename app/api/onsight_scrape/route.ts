@@ -36,28 +36,27 @@ export const GET = () =>
         ).json()) as Onsight.Competition[];
 
         for (const competition of competitions) {
-          const { modifiedCount, upsertedCount } =
-            await OnsightCompetitions.updateOne(
-              { _id: competition._id },
-              {
-                $set: {
-                  ...competition,
-                  _createdAt: new Date(competition._createdAt),
-                  _updatedAt: new Date(competition._updatedAt),
-                  startAt: new TZDate(
-                    `${competition.Date} ${competition.Start.split(" - ")[0]}`,
-                    "Europe/Copenhagen",
-                  ),
-                  endAt: new TZDate(
-                    `${competition.Date} ${competition.Start.split(" - ")[1]}`,
-                    "Europe/Copenhagen",
-                  ),
-                },
+          const updateResult = await OnsightCompetitions.updateOne(
+            { _id: competition._id },
+            {
+              $set: {
+                ...competition,
+                _createdAt: new Date(competition._createdAt),
+                _updatedAt: new Date(competition._updatedAt),
+                startAt: new TZDate(
+                  `${competition.Date} ${competition.Start.split(" - ")[0]}`,
+                  "Europe/Copenhagen",
+                ),
+                endAt: new TZDate(
+                  `${competition.Date} ${competition.Start.split(" - ")[1]}`,
+                  "Europe/Copenhagen",
+                ),
               },
-              { upsert: true },
-            );
+            },
+            { upsert: true },
+          );
           yield competition;
-          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+          setUpdated(updateResult);
 
           const competitionScoreURL = new URL(
             "https://api.appery.io/rest/1/db/collections/Competition_score",
@@ -73,20 +72,19 @@ export const GET = () =>
           ).json()) as Onsight.CompetitionScore[];
 
           for (const competitionScore of competitionScores) {
-            const { modifiedCount, upsertedCount } =
-              await OnsightCompetitionScores.updateOne(
-                { _id: competitionScore._id },
-                {
-                  $set: {
-                    ...competitionScore,
-                    _createdAt: new Date(competitionScore._createdAt),
-                    _updatedAt: new Date(competitionScore._updatedAt),
-                  },
+            const updateResult = await OnsightCompetitionScores.updateOne(
+              { _id: competitionScore._id },
+              {
+                $set: {
+                  ...competitionScore,
+                  _createdAt: new Date(competitionScore._createdAt),
+                  _updatedAt: new Date(competitionScore._updatedAt),
                 },
-                { upsert: true },
-              );
+              },
+              { upsert: true },
+            );
             yield competitionScore;
-            setUpdated(modifiedCount > 0 || upsertedCount > 0);
+            setUpdated(updateResult);
           }
         }
       },

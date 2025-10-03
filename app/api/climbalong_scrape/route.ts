@@ -38,9 +38,6 @@ export const GET = () =>
       async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
-        const handleUpdateResult = (r: UpdateResult) =>
-          setUpdated(r.modifiedCount > 0 || r.upsertedCount > 0);
-
         const res = await fetch(
           "https://comp.climbalong.com/api/v0/userInCompetitions",
           { headers: { Authorization: `Bearer ${token}` } },
@@ -72,7 +69,7 @@ export const GET = () =>
                 },
               },
               { upsert: true },
-            ).then(handleUpdateResult);
+            ).then(setUpdated);
 
             yield competition;
 
@@ -80,7 +77,7 @@ export const GET = () =>
               { athleteId: athlete.athleteId },
               { $set: { ...athlete } },
               { upsert: true },
-            ).then(handleUpdateResult);
+            ).then(setUpdated);
             yield athlete;
 
             const lanes = (await (
@@ -93,7 +90,7 @@ export const GET = () =>
                 { laneId: lane.laneId },
                 { $set: { ...lane } },
                 { upsert: true },
-              ).then(handleUpdateResult);
+              ).then(setUpdated);
               yield lane;
             }
 
@@ -107,7 +104,7 @@ export const GET = () =>
                 { holdId: hold.holdId },
                 { $set: { ...hold } },
                 { upsert: true },
-              ).then(handleUpdateResult);
+              ).then(setUpdated);
               yield hold;
             }
 
@@ -121,7 +118,7 @@ export const GET = () =>
                 { roundId: round.roundId },
                 { $set: { ...round } },
                 { upsert: true },
-              ).then(handleUpdateResult);
+              ).then(setUpdated);
               yield round;
             }
 
@@ -142,7 +139,7 @@ export const GET = () =>
                   { circuitId: circuit.circuitId },
                   { $set: { ...circuit } },
                   { upsert: true },
-                ).then(handleUpdateResult);
+                ).then(setUpdated);
 
                 await ClimbAlongNodes.updateOne(
                   { nodeId: circuitChallengeNode.nodeId },
@@ -158,7 +155,7 @@ export const GET = () =>
                     },
                   },
                   { upsert: true },
-                ).then(handleUpdateResult);
+                ).then(setUpdated);
                 yield circuitChallengeNode;
 
                 const circuitChallengeEdge = await fetch(
@@ -171,7 +168,7 @@ export const GET = () =>
                   { processedBy: circuitChallengeEdge.processedBy },
                   { $set: { ...circuitChallengeEdge } },
                   { upsert: true },
-                ).then(handleUpdateResult);
+                ).then(setUpdated);
                 yield circuitChallengeEdge;
 
                 const problems = (await (
@@ -184,7 +181,7 @@ export const GET = () =>
                     { problemId: problem.problemId },
                     { $set: { ...problem } },
                     { upsert: true },
-                  ).then(handleUpdateResult);
+                  ).then(setUpdated);
                   yield problem;
                 }
 
@@ -220,7 +217,7 @@ export const GET = () =>
                       },
                     },
                     { upsert: true },
-                  ).then(handleUpdateResult);
+                  ).then(setUpdated);
 
                   yield performance;
                 }

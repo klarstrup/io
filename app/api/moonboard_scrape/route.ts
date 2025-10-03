@@ -62,41 +62,40 @@ export const GET = () =>
             );
 
           for (const entry of logbookEntries.Data) {
-            const { modifiedCount, upsertedCount } =
-              await MoonBoardLogbookEntries.updateOne(
-                { Id: entry.Id },
-                {
-                  $set: {
-                    ...entry,
-                    DateClimbed: roundToNearestDay(
-                      dateFromASPNet(entry.DateClimbed),
-                      { in: tz("UTC") },
-                    ),
-                    DateInserted: entry.DateInserted
-                      ? dateFromASPNet(entry.DateInserted)
+            const updateResult = await MoonBoardLogbookEntries.updateOne(
+              { Id: entry.Id },
+              {
+                $set: {
+                  ...entry,
+                  DateClimbed: roundToNearestDay(
+                    dateFromASPNet(entry.DateClimbed),
+                    { in: tz("UTC") },
+                  ),
+                  DateInserted: entry.DateInserted
+                    ? dateFromASPNet(entry.DateInserted)
+                    : null,
+                  GradeNumber:
+                    entry.Grade && moonboardGradeStringToNumber[entry.Grade],
+                  Problem: {
+                    ...entry.Problem,
+                    DateInserted: entry.Problem.DateInserted
+                      ? dateFromASPNet(entry.Problem.DateInserted)
+                      : null,
+                    DateUpdated: entry.Problem.DateUpdated
+                      ? dateFromASPNet(entry.Problem.DateUpdated)
                       : null,
                     GradeNumber:
-                      entry.Grade && moonboardGradeStringToNumber[entry.Grade],
-                    Problem: {
-                      ...entry.Problem,
-                      DateInserted: entry.Problem.DateInserted
-                        ? dateFromASPNet(entry.Problem.DateInserted)
-                        : null,
-                      DateUpdated: entry.Problem.DateUpdated
-                        ? dateFromASPNet(entry.Problem.DateUpdated)
-                        : null,
-                      GradeNumber:
-                        entry.Problem.Grade &&
-                        moonboardGradeStringToNumber[entry.Problem.Grade],
-                      UserGradeNumber:
-                        entry.Problem.UserGrade &&
-                        moonboardGradeStringToNumber[entry.Problem.UserGrade],
-                    },
+                      entry.Problem.Grade &&
+                      moonboardGradeStringToNumber[entry.Problem.Grade],
+                    UserGradeNumber:
+                      entry.Problem.UserGrade &&
+                      moonboardGradeStringToNumber[entry.Problem.UserGrade],
                   },
                 },
-                { upsert: true },
-              );
-            setUpdated(modifiedCount > 0 || upsertedCount > 0);
+              },
+              { upsert: true },
+            );
+            setUpdated(updateResult);
           }
 
           yield { logbookEntries };

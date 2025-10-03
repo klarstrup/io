@@ -1,9 +1,16 @@
-import { ObjectId } from "mongodb";
+import { DeleteResult, ObjectId, UpdateResult } from "mongodb";
 import type { Session } from "next-auth";
 import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
 import { Users } from "../models/user.server";
 import type { DataSource, UserDataSource } from "./utils";
+
+type SetUpdatedFn = (
+  updated:
+    | boolean
+    | Pick<UpdateResult, "matchedCount" | "modifiedCount" | "upsertedCount">
+    | Pick<DeleteResult, "deletedCount">,
+) => void;
 
 export async function* wrapSources<
   S extends DataSource,
@@ -13,10 +20,7 @@ export async function* wrapSources<
   source: S,
   dataSources: UserDataSource[],
   user: Session["user"],
-  fn: (
-    dataSource: DS,
-    setUpdated: (updated: boolean) => void,
-  ) => AsyncGenerator<T>,
+  fn: (dataSource: DS, setUpdated: SetUpdatedFn) => AsyncGenerator<T>,
 ) {
   for (const dataSource of dataSources) {
     if (dataSource.source !== source) continue;
@@ -29,7 +33,7 @@ export async function* wrapSources<
 export async function* wrapSource<DS extends UserDataSource, T>(
   dataSource: DS,
   user: Session["user"],
-  fn: (setUpdated: (updated: boolean) => void) => AsyncGenerator<T>,
+  fn: (setUpdated: SetUpdatedFn) => AsyncGenerator<T>,
 ) {
   const filter = { _id: new ObjectId(user.id) };
   const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
@@ -42,7 +46,20 @@ export async function* wrapSource<DS extends UserDataSource, T>(
     updateOptions,
   );
   try {
-    yield* fn((updated) => (updatedDatabase ||= updated));
+    yield* fn((updated) => {
+      if (typeof updated !== "boolean") {
+        if ("modifiedCount" in updated) {
+          updatedDatabase ||=
+            updated.modifiedCount > 0 || updated.upsertedCount > 0;
+        } else {
+          updatedDatabase ||= updated.deletedCount > 0;
+        }
+      } else {
+        updatedDatabase ||= updated;
+      }
+
+      return updatedDatabase;
+    });
 
     const successfulAt = new Date();
     await Users.updateOne(

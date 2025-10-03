@@ -70,22 +70,21 @@ export const GET = () =>
 
             for (const reportEntry of reportEntries) {
               for (const foodEntry of reportEntry.food_entries) {
-                const { modifiedCount, upsertedCount } =
-                  await MyFitnessPalFoodEntries.updateOne(
-                    { id: foodEntry.id },
-                    {
-                      $set: {
-                        ...foodEntry,
-                        user_id: userId,
-                        datetime: DateTime.fromISO(foodEntry.date, {
-                          zone: "utc",
-                        }).toJSDate(),
-                      },
+                const updateResult = await MyFitnessPalFoodEntries.updateOne(
+                  { id: foodEntry.id },
+                  {
+                    $set: {
+                      ...foodEntry,
+                      user_id: userId,
+                      datetime: DateTime.fromISO(foodEntry.date, {
+                        zone: "utc",
+                      }).toJSDate(),
                     },
-                    { upsert: true },
-                  );
+                  },
+                  { upsert: true },
+                );
 
-                setUpdated(modifiedCount > 0 || upsertedCount > 0);
+                setUpdated(updateResult);
               }
 
               yield reportEntry.date;
@@ -106,11 +105,11 @@ export const GET = () =>
               )
               .map(({ id }) => id);
 
-            const { deletedCount } = await MyFitnessPalFoodEntries.deleteMany({
+            const deleteResult = await MyFitnessPalFoodEntries.deleteMany({
               id: { $in: foodEntryIdsToBeDeleted },
             });
 
-            setUpdated(deletedCount > 0);
+            setUpdated(deleteResult);
           }
         }
       },

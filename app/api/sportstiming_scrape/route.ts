@@ -147,37 +147,32 @@ export const GET = () =>
                   .split(" af ")[1],
               );
 
-              const { upsertedCount, modifiedCount } =
-                await SportstimingFavorites.updateOne(
-                  { Id: favorite.Id },
-                  {
-                    $set: {
-                      ...favorite,
-                      StartTime:
-                        favorite.StartTime &&
-                        new Date(Number(favorite.StartTime)),
-                      LastSplitTimeOfDay:
-                        favorite.LastSplitTimeOfDay &&
-                        new Date(
-                          Number(
-                            String(favorite.LastSplitTimeOfDay).match(
-                              /\/Date\((.+)\)\//,
-                            )![1],
-                          ),
+              const updateResult = await SportstimingFavorites.updateOne(
+                { Id: favorite.Id },
+                {
+                  $set: {
+                    ...favorite,
+                    StartTime:
+                      favorite.StartTime &&
+                      new Date(Number(favorite.StartTime)),
+                    LastSplitTimeOfDay:
+                      favorite.LastSplitTimeOfDay &&
+                      new Date(
+                        Number(
+                          String(favorite.LastSplitTimeOfDay).match(
+                            /\/Date\((.+)\)\//,
+                          )![1],
                         ),
-                      _io_NumberOfParticipants: noParticipants,
-                      _io_TotalDistance: distance,
-                      _io_EventId: event.EventId,
-                    },
+                      ),
+                    _io_NumberOfParticipants: noParticipants,
+                    _io_TotalDistance: distance,
+                    _io_EventId: event.EventId,
                   },
-                  { upsert: true },
-                );
-
-              setUpdated(
-                modifiedCount > 0 ||
-                  upsertedCount > 0 ||
-                  updatedSportstimingEvents,
+                },
+                { upsert: true },
               );
+
+              setUpdated(updatedSportstimingEvents || updateResult);
 
               yield favorite;
             }

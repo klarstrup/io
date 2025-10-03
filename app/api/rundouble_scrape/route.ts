@@ -36,24 +36,23 @@ export const GET = () =>
         setUpdated(false);
 
         for await (const run of getRuns(id)) {
-          const { modifiedCount, upsertedCount } =
-            await RunDoubleRuns.updateOne(
-              { key: run.key },
-              {
-                $set: {
-                  ...run,
-                  userId: id,
-                  completedAt: new Date(run.completedLong),
-                },
-                $setOnInsert: { _io_scrapedAt: new Date() },
+          const updateResult = await RunDoubleRuns.updateOne(
+            { key: run.key },
+            {
+              $set: {
+                ...run,
+                userId: id,
+                completedAt: new Date(run.completedLong),
               },
-              { upsert: true },
-            );
+              $setOnInsert: { _io_scrapedAt: new Date() },
+            },
+            { upsert: true },
+          );
 
           yield run.completed;
-          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+          setUpdated(updateResult);
 
-          if (!upsertedCount) break;
+          if (!updateResult.upsertedCount) break;
         }
       },
     );

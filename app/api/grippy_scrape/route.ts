@@ -91,21 +91,20 @@ export const GET = () =>
         const workoutLogs = json.data;
 
         for (const workoutLog of workoutLogs) {
-          const { modifiedCount, upsertedCount } =
-            await GrippyWorkoutLogs.updateOne(
-              { uuid: workoutLog.uuid },
-              {
-                $set: {
-                  ...workoutLog,
-                  start_time: new Date(workoutLog.start_time),
-                  end_time: new Date(workoutLog.end_time),
-                  _io_userId: user.id,
-                },
+          const updateResult = await GrippyWorkoutLogs.updateOne(
+            { uuid: workoutLog.uuid },
+            {
+              $set: {
+                ...workoutLog,
+                start_time: new Date(workoutLog.start_time),
+                end_time: new Date(workoutLog.end_time),
+                _io_userId: user.id,
               },
-              { upsert: true },
-            );
+            },
+            { upsert: true },
+          );
 
-          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+          setUpdated(updateResult);
         }
 
         yield { workoutLogs };

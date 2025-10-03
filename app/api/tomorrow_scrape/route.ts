@@ -93,10 +93,7 @@ export const GET = () =>
             },
             { upsert: true },
           );
-
-          setUpdated(
-            (updateResult.modifiedCount || updateResult.upsertedCount) > 0,
-          );
+          setUpdated(updateResult);
 
           yield [interval.startTime, updateResult] as const;
         }

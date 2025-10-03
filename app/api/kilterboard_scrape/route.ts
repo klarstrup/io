@@ -44,40 +44,38 @@ export const GET = () =>
         };
 
         for (const ascent of ascents) {
-          const { modifiedCount, upsertedCount } =
-            await KilterBoardAscents.updateOne(
-              { uuid: ascent.uuid },
-              {
-                $set: {
-                  ...ascent,
-                  grade: difficultyToGradeMap[ascent.difficulty] as number,
-                  climbed_at: new Date(ascent.climbed_at),
-                  created_at: new Date(ascent.created_at),
-                  updated_at: new Date(ascent.updated_at),
-                },
+          const updateResult = await KilterBoardAscents.updateOne(
+            { uuid: ascent.uuid },
+            {
+              $set: {
+                ...ascent,
+                grade: difficultyToGradeMap[ascent.difficulty] as number,
+                climbed_at: new Date(ascent.climbed_at),
+                created_at: new Date(ascent.created_at),
+                updated_at: new Date(ascent.updated_at),
               },
-              { upsert: true },
-            );
-          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+            },
+            { upsert: true },
+          );
+          setUpdated(updateResult);
         }
 
         yield { ascents };
 
         for (const bid of bids) {
-          const { modifiedCount, upsertedCount } =
-            await KilterBoardBids.updateOne(
-              { uuid: bid.uuid },
-              {
-                $set: {
-                  ...bid,
-                  climbed_at: new Date(bid.climbed_at),
-                  created_at: new Date(bid.created_at),
-                  updated_at: new Date(bid.updated_at),
-                },
+          const updateResult = await KilterBoardBids.updateOne(
+            { uuid: bid.uuid },
+            {
+              $set: {
+                ...bid,
+                climbed_at: new Date(bid.climbed_at),
+                created_at: new Date(bid.created_at),
+                updated_at: new Date(bid.updated_at),
               },
-              { upsert: true },
-            );
-          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+            },
+            { upsert: true },
+          );
+          setUpdated(updateResult);
         }
 
         yield { bids };
@@ -114,19 +112,18 @@ export const GET = () =>
 
           yield { [`climbs${syncDateString}`]: "inserting " + climbs.length };
           for (const climb of climbs) {
-            const { modifiedCount, upsertedCount } =
-              await KilterBoardClimbs.updateOne(
-                { uuid: climb.uuid },
-                {
-                  $set: {
-                    ...climb,
-                    created_at: new Date(climb.created_at),
-                    updated_at: new Date(climb.updated_at),
-                  },
+            const updateResult = await KilterBoardClimbs.updateOne(
+              { uuid: climb.uuid },
+              {
+                $set: {
+                  ...climb,
+                  created_at: new Date(climb.created_at),
+                  updated_at: new Date(climb.updated_at),
                 },
-                { upsert: true },
-              );
-            setUpdated(modifiedCount > 0 || upsertedCount > 0);
+              },
+              { upsert: true },
+            );
+            setUpdated(updateResult);
           }
           yield { [`climbs${syncDateString}`]: "inserted " + climbs.length };
 
@@ -178,33 +175,29 @@ export const GET = () =>
                 "inserting " + climb_stats.length,
             };
             for (const climb_stat of climb_stats) {
-              const { modifiedCount, upsertedCount } =
-                await KilterBoardClimbStats.updateOne(
-                  {
-                    climb_uuid: climb_stat.climb_uuid,
-                    angle: climb_stat.angle,
+              const updateResult = await KilterBoardClimbStats.updateOne(
+                { climb_uuid: climb_stat.climb_uuid, angle: climb_stat.angle },
+                {
+                  $set: {
+                    ...climb_stat,
+                    grade_average:
+                      climb_stat.difficulty_average &&
+                      (difficultyToGradeMap[
+                        Math.round(climb_stat.difficulty_average)
+                      ] as number),
+                    benchmark_grade:
+                      climb_stat.benchmark_grade &&
+                      (difficultyToGradeMap[
+                        climb_stat.benchmark_grade
+                      ] as number),
+                    created_at: new Date(climb_stat.created_at),
+                    updated_at: new Date(climb_stat.updated_at),
+                    fa_at: climb_stat.fa_at && new Date(climb_stat.fa_at),
                   },
-                  {
-                    $set: {
-                      ...climb_stat,
-                      grade_average:
-                        climb_stat.difficulty_average &&
-                        (difficultyToGradeMap[
-                          Math.round(climb_stat.difficulty_average)
-                        ] as number),
-                      benchmark_grade:
-                        climb_stat.benchmark_grade &&
-                        (difficultyToGradeMap[
-                          climb_stat.benchmark_grade
-                        ] as number),
-                      created_at: new Date(climb_stat.created_at),
-                      updated_at: new Date(climb_stat.updated_at),
-                      fa_at: climb_stat.fa_at && new Date(climb_stat.fa_at),
-                    },
-                  },
-                  { upsert: true },
-                );
-              setUpdated(modifiedCount > 0 || upsertedCount > 0);
+                },
+                { upsert: true },
+              );
+              setUpdated(updateResult);
             }
             yield {
               [`climb_stats${syncDateString}`]:

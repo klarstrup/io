@@ -64,12 +64,8 @@ export const GET = (request: NextRequest) =>
             >;
           };
         }) => {
-          for (const r of Object.values(updateResults.updates)) {
-            setUpdated(
-              typeof r == "object" &&
-                (r.modifiedCount > 0 || r.upsertedCount > 0),
-            );
-          }
+          for (const r of Object.values(updateResults.updates)) setUpdated(r);
+
           return updateResults;
         };
 

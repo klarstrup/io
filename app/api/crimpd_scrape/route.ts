@@ -29,22 +29,21 @@ export const GET = () =>
         ).workout_logs;
 
         for (const workoutLog of workoutLogs) {
-          const { modifiedCount, upsertedCount } =
-            await CrimpdWorkoutLogs.updateOne(
-              { _id: workoutLog._id },
-              {
-                $set: {
-                  ...workoutLog,
-                  logDate: new Date(workoutLog.logDate),
-                  dateCreated: new Date(workoutLog.dateCreated),
-                  lastUpdated: new Date(workoutLog.lastUpdated),
-                  _io_userId: user.id,
-                },
+          const updateResult = await CrimpdWorkoutLogs.updateOne(
+            { _id: workoutLog._id },
+            {
+              $set: {
+                ...workoutLog,
+                logDate: new Date(workoutLog.logDate),
+                dateCreated: new Date(workoutLog.dateCreated),
+                lastUpdated: new Date(workoutLog.lastUpdated),
+                _io_userId: user.id,
               },
-              { upsert: true },
-            );
+            },
+            { upsert: true },
+          );
 
-          setUpdated(modifiedCount > 0 || upsertedCount > 0);
+          setUpdated(updateResult);
         }
 
         yield { workoutLogs };
