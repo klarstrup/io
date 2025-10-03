@@ -58,7 +58,7 @@ export const GET = (request: NextRequest) =>
           timing: { requestMs: number; upsertMs: number; totalMs: number };
           updates: {
             [key: string]: Pick<
-              UpdateResult<Document>,
+              UpdateResult,
               "matchedCount" | "modifiedCount" | "upsertedCount"
             >;
           };
