@@ -7,7 +7,7 @@ import {
 } from "../../../sources/onsight.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -27,12 +27,10 @@ export const GET = () =>
           "x-appery-database-id": "562e0e3be4b081edd3eb975d",
           "x-appery-session-token": token,
         };
-        const competitions = (await (
-          await fetch(
-            "https://api.appery.io/rest/1/db/collections/Competition",
-            { headers },
-          )
-        ).json()) as Onsight.Competition[];
+        const competitions = await fetchJson<Onsight.Competition[]>(
+          "https://api.appery.io/rest/1/db/collections/Competition",
+          { headers },
+        );
 
         for (const competition of competitions) {
           const updateResult = await OnsightCompetitions.updateOne(
@@ -66,9 +64,10 @@ export const GET = () =>
               Competition_name: `${competition.Name}/${competition._id}`,
             }),
           );
-          const competitionScores = (await (
-            await fetch(competitionScoreURL, { headers })
-          ).json()) as Onsight.CompetitionScore[];
+          const competitionScores = await fetchJson<Onsight.CompetitionScore[]>(
+            competitionScoreURL,
+            { headers },
+          );
 
           for (const competitionScore of competitionScores) {
             const updateResult = await OnsightCompetitionScores.updateOne(

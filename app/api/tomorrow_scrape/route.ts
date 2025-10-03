@@ -6,7 +6,7 @@ import { TomorrowIntervals } from "../../../sources/tomorrow.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { decodeGeohash, DEFAULT_TIMEZONE } from "../../../utils";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -49,9 +49,7 @@ async function fetchTomorrowTimelineIntervals({
   tomorrowUrl.searchParams.set("units", "metric");
   tomorrowUrl.searchParams.set("apikey", process.env.TOMORROW_API_KEY);
 
-  const tomorrowResponse = await fetch(tomorrowUrl).then(
-    (r) => r.json() as Promise<TomorrowResponse>,
-  );
+  const tomorrowResponse = await fetchJson<TomorrowResponse>(tomorrowUrl);
 
   return tomorrowResponse.data?.timelines[0]?.intervals ?? [];
 }

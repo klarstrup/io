@@ -17,6 +17,7 @@ import {
 import { UpdateResult } from "mongodb";
 import { TopLoggerGraphQL } from "../sources/toplogger.server";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
+import { fetchJson } from "../app/api/scraper-utils";
 interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   errorMessage?: string;
@@ -147,15 +148,13 @@ export const fetchGraphQLQuery = async <TData = Record<string, unknown>>(
   init?: RequestInit,
   operationName?: string,
 ): Promise<FetchResult<TData>> => {
-  const response = await fetch(url, {
+  const result = await fetchJson<FetchResult<TData>>(url, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
     body: JSON.stringify({ operationName, variables, query: print(query) }),
     method: "POST",
     next: { revalidate: 0 },
   });
-
-  const result = (await response.json()) as FetchResult<TData>;
 
   if (graphQLResultHasError(result)) {
     throw new ApolloError({
@@ -178,7 +177,7 @@ export const fetchGraphQLQueries = async <
   init?: RequestInit,
   operationName?: string,
 ): Promise<FetchResult<TData>[]> => {
-  const response = await fetch(url, {
+  const results = await fetchJson<FetchResult<TData>[]>(url, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
     body: JSON.stringify(
@@ -191,8 +190,6 @@ export const fetchGraphQLQueries = async <
     method: "POST",
     next: { revalidate: 0 },
   });
-
-  const results = (await response.json()) as FetchResult<TData>[];
 
   for (const result of results) {
     if (graphQLResultHasError(result)) {

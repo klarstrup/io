@@ -4,6 +4,9 @@ export const scraperEndpoints = Object.values(DataSource).map(
   (source) => `/${source}_scrape`,
 );
 
+export const fetchJson = async <T>(url: string | URL, init?: RequestInit) =>
+  fetch(url, init).then((res) => res.json() as Promise<T>);
+
 export function jsonStreamResponse(generator: () => AsyncGenerator) {
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();

@@ -2,7 +2,7 @@ import { auth } from "../../../auth";
 import { Crimpd, CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -19,13 +19,11 @@ export const GET = () =>
       async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
-        const workoutLogs = (
-          (await (
-            await fetch("https://api.crimpd.com/workout_log", {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-          ).json()) as Crimpd.WorkoutLogResponse
-        ).workout_logs;
+        const { workout_logs: workoutLogs } =
+          await fetchJson<Crimpd.WorkoutLogResponse>(
+            "https://api.crimpd.com/workout_log",
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
 
         for (const workoutLog of workoutLogs) {
           const updateResult = await CrimpdWorkoutLogs.updateOne(

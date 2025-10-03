@@ -8,7 +8,7 @@ import { MoonBoardLogbookEntries } from "../../../sources/moonboard.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { roundToNearestDay } from "../../../utils";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -25,7 +25,7 @@ export const GET = () =>
       async function* ({ config: { token, user_id } }, setUpdated) {
         setUpdated(false);
 
-        const logbook = (await fetch(
+        const logbook = await fetchJson<MoonBoard.GetLogbookResponse>(
           `https://www.moonboard.com/Account/GetLogbook/${user_id}`,
           {
             headers: {
@@ -36,23 +36,24 @@ export const GET = () =>
             body: "sort=&page=1&pageSize=40&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
             method: "POST",
           },
-        ).then((res) => res.json())) as MoonBoard.GetLogbookResponse;
+        );
 
         yield { logbook };
 
         for (const logbookDate of logbook.Data) {
-          const logbookEntries = (await fetch(
-            `https://www.moonboard.com/Account/GetLogbookEntries/${user_id}/${logbookDate.Id}`,
-            {
-              headers: {
-                "content-type":
-                  "application/x-www-form-urlencoded; charset=UTF-8",
-                cookie: `_MoonBoard=${token};`,
+          const logbookEntries =
+            await fetchJson<MoonBoard.GetLogbookEntriesResponse>(
+              `https://www.moonboard.com/Account/GetLogbookEntries/${user_id}/${logbookDate.Id}`,
+              {
+                headers: {
+                  "content-type":
+                    "application/x-www-form-urlencoded; charset=UTF-8",
+                  cookie: `_MoonBoard=${token};`,
+                },
+                body: "sort=&page=1&pageSize=30&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
+                method: "POST",
               },
-              body: "sort=&page=1&pageSize=30&group=&filter=setupId~eq~'17'~and~Configuration~eq~2",
-              method: "POST",
-            },
-          ).then((res) => res.json())) as MoonBoard.GetLogbookEntriesResponse;
+            );
 
           const dateFromASPNet = (dateStr: string) =>
             new TZDate(

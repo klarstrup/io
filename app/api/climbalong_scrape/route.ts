@@ -1,4 +1,3 @@
-import { UpdateResult } from "mongodb";
 import { auth } from "../../../auth";
 import { Climbalong } from "../../../sources/climbalong";
 import {
@@ -16,10 +15,13 @@ import {
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { shuffle } from "../../../utils";
-import { deadlineLoop, jsonStreamResponse } from "../scraper-utils";
+import { deadlineLoop, fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+const fetchCA = <T>(path: string, init?: RequestInit) =>
+  fetchJson<T>(new URL(path, `https://comp.climbalong.com/api/`), init);
 
 export const GET = () =>
   // eslint-disable-next-line require-yield
@@ -79,12 +81,9 @@ export const GET = () =>
             ).then(setUpdated);
             yield athlete;
 
-            const lanes = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/lanes`,
-              )
-            ).json()) as Climbalong.Lane[];
-            for (const lane of lanes) {
+            for (const lane of await fetchCA<Climbalong.Lane[]>(
+              `/v1/competitions/${competition.competitionId}/lanes`,
+            )) {
               await ClimbAlongLanes.updateOne(
                 { laneId: lane.laneId },
                 { $set: { ...lane } },
@@ -93,12 +92,9 @@ export const GET = () =>
               yield lane;
             }
 
-            const holds = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v0/competitions/${competition.competitionId}/holds`,
-              )
-            ).json()) as Climbalong.Hold[];
-            for (const hold of holds) {
+            for (const hold of await fetchCA<Climbalong.Hold[]>(
+              `/v0/competitions/${competition.competitionId}/holds`,
+            )) {
               await ClimbAlongHolds.updateOne(
                 { holdId: hold.holdId },
                 { $set: { ...hold } },
@@ -107,12 +103,9 @@ export const GET = () =>
               yield hold;
             }
 
-            const rounds = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/rounds`,
-              )
-            ).json()) as Climbalong.Round[];
-            for (const round of rounds) {
+            for (const round of await fetchCA<Climbalong.Round[]>(
+              `/v1/competitions/${competition.competitionId}/rounds`,
+            )) {
               await ClimbAlongRounds.updateOne(
                 { roundId: round.roundId },
                 { $set: { ...round } },
@@ -121,16 +114,12 @@ export const GET = () =>
               yield round;
             }
 
-            const circuitChallengeNodesGroupedByLane = (await (
-              await fetch(
-                `https://comp.climbalong.com/api/v1/competitions/${competition.competitionId}/circuitchallengenodesgroupedbylane`,
-              )
-            ).json()) as Climbalong.CircuitChallengeNodesGroupedByLane;
-
             for (const [
               _lane,
               circuitChallengeNodes,
-            ] of circuitChallengeNodesGroupedByLane) {
+            ] of await fetchCA<Climbalong.CircuitChallengeNodesGroupedByLane>(
+              `/v1/competitions/${competition.competitionId}/circuitchallengenodesgroupedbylane`,
+            )) {
               for (const circuitChallengeNode of circuitChallengeNodes) {
                 const circuit = circuitChallengeNode.circuit;
 
@@ -157,12 +146,10 @@ export const GET = () =>
                 ).then(setUpdated);
                 yield circuitChallengeNode;
 
-                const circuitChallengeEdge = await fetch(
-                  `https://comp.climbalong.com/api/v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
-                ).then(
-                  (r) => r.json() as Promise<Climbalong.CircuitChallengeEdge>,
-                );
-
+                const circuitChallengeEdge =
+                  await fetchCA<Climbalong.CircuitChallengeEdge>(
+                    `/v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
+                  );
                 await ClimbAlongEdges.updateOne(
                   { processedBy: circuitChallengeEdge.processedBy },
                   { $set: { ...circuitChallengeEdge } },
@@ -170,12 +157,9 @@ export const GET = () =>
                 ).then(setUpdated);
                 yield circuitChallengeEdge;
 
-                const problems = (await (
-                  await fetch(
-                    `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/problems`,
-                  )
-                ).json()) as Climbalong.Problem[];
-                for (const problem of problems) {
+                for (const problem of await fetchCA<Climbalong.Problem[]>(
+                  `/v0/circuits/${circuit.circuitId}/problems`,
+                )) {
                   await ClimbAlongProblems.updateOne(
                     { problemId: problem.problemId },
                     { $set: { ...problem } },
@@ -184,13 +168,9 @@ export const GET = () =>
                   yield problem;
                 }
 
-                const performances = (await (
-                  await fetch(
-                    `https://comp.climbalong.com/api/v0/circuits/${circuit.circuitId}/performances`,
-                  )
-                ).json()) as Climbalong.Performance[];
-
-                for (const performance of performances) {
+                for (const performance of await fetchCA<
+                  Climbalong.Performance[]
+                >(`/v0/circuits/${circuit.circuitId}/performances`)) {
                   if (performance.athleteId !== athlete.athleteId) {
                     continue;
                   }

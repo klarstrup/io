@@ -1,14 +1,13 @@
 import { getDaysInMonth } from "date-fns";
 import { proxyCollection } from "../utils.server";
 import { MyFitnessPal } from "./myfitnesspal";
+import { fetchJson } from "../app/api/scraper-utils";
 
 export const MyFitnessPalFoodEntries =
   proxyCollection<MyFitnessPal.MongoFoodEntry>("myfitnesspal_food_entries");
 
 const fetchMyFitnessPal = <T>(input: string | URL, init?: RequestInit) =>
-  fetch(new URL(input, "https://www.myfitnesspal.com/api/"), init).then(
-    (r) => r.json() as Promise<T>,
-  );
+  fetchJson<T>(new URL(input, "https://www.myfitnesspal.com/api/"), init);
 
 export const getMyFitnessPalReport = async (
   myFitnessPalToken: string,

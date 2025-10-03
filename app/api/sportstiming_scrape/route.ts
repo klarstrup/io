@@ -8,7 +8,7 @@ import {
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { uniqueBy } from "../../../utils";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -27,7 +27,7 @@ export const GET = () =>
     const events = uniqueBy(
       (
         await Promise.all([
-          fetch(
+          fetchJson<{ Events: SportsTiming.Event[] }>(
             "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Coming&keyword=Nordic%20Race&maxResults=10000",
             {
               headers: {
@@ -35,10 +35,8 @@ export const GET = () =>
                 ...sportstimingHeaders,
               },
             },
-          )
-            .then((r) => r.json() as Promise<{ Events: SportsTiming.Event[] }>)
-            .then(({ Events }) => Events),
-          fetch(
+          ).then(({ Events }) => Events),
+          fetchJson<{ Events: SportsTiming.Event[] }>(
             "https://www.sportstiming.dk/General/EventList/SearchEvents?type=Finished&keyword=Nordic%20Race&maxResults=10000",
             {
               headers: {
@@ -46,9 +44,7 @@ export const GET = () =>
                 ...sportstimingHeaders,
               },
             },
-          )
-            .then((r) => r.json() as Promise<{ Events: SportsTiming.Event[] }>)
-            .then(({ Events }) => Events),
+          ).then(({ Events }) => Events),
         ])
       ).flat(),
       ({ EventId }) => EventId,
@@ -93,7 +89,7 @@ export const GET = () =>
             if (!id || !Number(id)) continue;
 
             const favorite = (
-              await fetch(
+              await fetchJson<SportsTiming.FavoriteUpdate[]>(
                 `https://www.sportstiming.dk/event/${event.EventId}/favorites/UpdateFavorites`,
                 {
                   headers: {
@@ -101,7 +97,7 @@ export const GET = () =>
                     ...sportstimingHeaders,
                   },
                 },
-              ).then((r) => r.json() as Promise<SportsTiming.FavoriteUpdate[]>)
+              )
             ).find(({ Id }) => Id === Number(id));
 
             if (favorite) {

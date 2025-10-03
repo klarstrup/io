@@ -3,7 +3,7 @@ import { RunDouble } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -15,9 +15,8 @@ async function* getRuns(userId: string) {
     url.searchParams.set("user", userId);
     if (cursor) url.searchParams.set("cursor", cursor);
 
-    const response = await fetch(url).then(
-      (r) => r.json() as Promise<RunDouble.HistoryResponse>,
-    );
+    const response = await fetchJson<RunDouble.HistoryResponse>(url);
+
     cursor = response.cursor;
     yield* response.history;
   } while (cursor);

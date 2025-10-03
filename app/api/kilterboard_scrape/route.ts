@@ -11,7 +11,7 @@ import {
 } from "../../../sources/kilterboard.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -28,19 +28,17 @@ export const GET = () =>
       async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
-        const { bids, ascents } = (await (
-          await fetch("https://kilterboardapp.com/sync", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              Cookie: `token=${token}`,
-            },
-            body: "ascents=1970-01-01+00%3A00%3A00.000000&bids=1970-01-01+00%3A00%3A00.000000",
-          })
-        ).json()) as {
+        const { bids, ascents } = await fetchJson<{
           ascents: KilterBoard.Ascent[];
           bids: KilterBoard.Bid[];
-        };
+        }>("https://kilterboardapp.com/sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Cookie: `token=${token}`,
+          },
+          body: "ascents=1970-01-01+00%3A00%3A00.000000&bids=1970-01-01+00%3A00%3A00.000000",
+        });
 
         for (const ascent of ascents) {
           const updateResult = await KilterBoardAscents.updateOne(
@@ -93,21 +91,19 @@ export const GET = () =>
         while (true) {
           const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
           yield { [`climbs${syncDateString}`]: "requesting" };
-          const { climbs, shared_syncs } = (await (
-            await fetch("https://kilterboardapp.com/sync", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                Cookie: `token=${token}`,
-              },
-              body: `climbs=${syncDateString}`,
-            })
-          ).json()) as {
+          const { climbs, shared_syncs } = await fetchJson<{
             climbs: KilterBoard.Climb[];
             shared_syncs: [
               { table_name: "climbs"; last_synchronized_at: string },
             ];
-          };
+          }>("https://kilterboardapp.com/sync", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Cookie: `token=${token}`,
+            },
+            body: `climbs=${syncDateString}`,
+          });
 
           yield { [`climbs${syncDateString}`]: "inserting " + climbs.length };
           for (const climb of climbs) {
@@ -153,21 +149,19 @@ export const GET = () =>
           while (true) {
             const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
             yield { [`climb_stats${syncDateString}`]: "requesting" };
-            const { climb_stats, shared_syncs } = (await (
-              await fetch("https://kilterboardapp.com/sync", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                  Cookie: `token=${token}`,
-                },
-                body: `climb_stats=${syncDateString}`,
-              })
-            ).json()) as {
+            const { climb_stats, shared_syncs } = await fetchJson<{
               climb_stats: KilterBoard.ClimbStat[];
               shared_syncs: [
                 { table_name: "climb_stats"; last_synchronized_at: string },
               ];
-            };
+            }>("https://kilterboardapp.com/sync", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Cookie: `token=${token}`,
+              },
+              body: `climb_stats=${syncDateString}`,
+            });
 
             yield {
               [`climb_stats${syncDateString}`]:
