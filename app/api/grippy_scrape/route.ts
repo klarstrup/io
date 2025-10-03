@@ -5,7 +5,7 @@ import { Users } from "../../../models/user.server";
 import { Grippy, GrippyWorkoutLogs } from "../../../sources/grippy";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -33,8 +33,9 @@ export const GET = () =>
         body.append("grant_type", "refresh_token");
         body.append("refresh_token", authTokens.refresh_token);
 
-        const authSigninRefreshTokenResponse = await (
-          await fetch("https://api.griptonite.io/auth/token", {
+        const authSigninRefreshTokenResponse = await fetchText(
+          "https://api.griptonite.io/auth/token",
+          {
             method: "POST",
             headers: {
               "Accept-Encoding": "gzip",
@@ -44,8 +45,8 @@ export const GET = () =>
               Host: "api.griptonite.io",
             },
             body,
-          })
-        ).text();
+          },
+        );
 
         const authSigninRefreshTokenResponseJSON = JSON.parse(
           authSigninRefreshTokenResponse,

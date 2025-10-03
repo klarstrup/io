@@ -6,7 +6,7 @@ import { IcalEvents } from "../../../sources/ical.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { parseICS } from "../../../vendor/ical";
-import { jsonStreamResponse } from "../scraper-utils";
+import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -24,7 +24,7 @@ export const GET = () =>
 
         if (!url) return;
 
-        const icalData = parseICS(await fetch(url).then((r) => r.text()));
+        const icalData = parseICS(await fetchText(url));
 
         const icalUrlHash = createHash("sha256")
           .update(url + user.id)

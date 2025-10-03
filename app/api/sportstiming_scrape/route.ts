@@ -8,7 +8,7 @@ import {
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { uniqueBy } from "../../../utils";
-import { fetchJson, jsonStreamResponse } from "../scraper-utils";
+import { fetchJson, fetchText, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -80,9 +80,9 @@ export const GET = () =>
           );
           liveSearchResultsURL.searchParams.set("Rally", String(event.EventId));
           liveSearchResultsURL.searchParams.set("q", name);
-          const liveSearchResultsText = await fetch(liveSearchResultsURL, {
+          const liveSearchResultsText = await fetchText(liveSearchResultsURL, {
             headers: { ...sportstimingHeaders },
-          }).then((r) => r.text());
+          });
 
           for (const line of liveSearchResultsText.split("\n")) {
             const [, id] = line.split("|").map((s) => s.trim());
@@ -102,10 +102,10 @@ export const GET = () =>
 
             if (favorite) {
               const $ = cheerio.load(
-                await fetch(
+                await fetchText(
                   `https://www.sportstiming.dk/event/${event.EventId}/results/${favorite.Id}`,
                   { headers: { ...sportstimingHeaders } },
-                ).then((r) => r.text()),
+                ),
               );
 
               const distance =
