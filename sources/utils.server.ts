@@ -21,7 +21,7 @@ export async function* wrapSources<
   for (const dataSource of dataSources) {
     if (dataSource.source !== source) continue;
 
-    yield* wrapSource(dataSource, user, (_config, setUpdated) =>
+    yield* wrapSource(dataSource, user, (setUpdated) =>
       fn(dataSource as DS, setUpdated),
     );
   }
@@ -29,10 +29,7 @@ export async function* wrapSources<
 export async function* wrapSource<DS extends UserDataSource, T>(
   dataSource: DS,
   user: Session["user"],
-  fn: (
-    config: DS["config"],
-    setUpdated: (updated: boolean) => void,
-  ) => AsyncGenerator<T>,
+  fn: (setUpdated: (updated: boolean) => void) => AsyncGenerator<T>,
 ) {
   const filter = { _id: new ObjectId(user.id) };
   const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
@@ -45,7 +42,7 @@ export async function* wrapSource<DS extends UserDataSource, T>(
     updateOptions,
   );
   try {
-    yield* fn(dataSource.config, (updated) => (updatedDatabase ||= updated));
+    yield* fn((updated) => (updatedDatabase ||= updated));
 
     const successfulAt = new Date();
     await Users.updateOne(
