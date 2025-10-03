@@ -3,6 +3,7 @@
 
 import { TZDate } from "@date-fns/tz";
 import {
+  addDays,
   addMilliseconds,
   compareAsc,
   compareDesc,
@@ -57,7 +58,11 @@ import {
   DEFAULT_TIMEZONE,
   isNonEmptyArray,
 } from "../../utils";
-import { deleteWorkout, upsertWorkout } from "./actions";
+import {
+  deleteWorkout,
+  snoozeUserExerciseSchedule,
+  upsertWorkout,
+} from "./actions";
 import { NextSets } from "./NextSets";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
@@ -239,6 +244,21 @@ export function WorkoutForm<R extends string>({
       );
 
       append({ exerciseId: dueSet.exerciseId, sets });
+    },
+  );
+
+  const handleSnoozeDueSet = useEvent(
+    async (dueSet: Awaited<ReturnType<typeof getNextSets>>[number]) => {
+      if (!user) return;
+      const newNextDueDate = addDays(tzDate, 1);
+
+      await snoozeUserExerciseSchedule(
+        user.id,
+        dueSet.exerciseId,
+        newNextDueDate,
+      );
+
+      router.refresh();
     },
   );
 
@@ -564,6 +584,7 @@ export function WorkoutForm<R extends string>({
               date={date}
               nextSets={dueSets}
               onAddExercise={handleAddExercise}
+              onSnoozeDueSet={handleSnoozeDueSet}
             />
           </div>
         ) : null}

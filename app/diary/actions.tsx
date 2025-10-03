@@ -108,6 +108,30 @@ export async function deleteWorkout(workoutId: string) {
   return result.modifiedCount;
 }
 
+export async function snoozeUserExerciseSchedule(
+  userId: string,
+  exerciseId: number,
+  snoozedUntil: Date,
+) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  await Users.updateOne(
+    { _id: new ObjectId(user.id) },
+    {
+      $set: {
+        exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
+          s.exerciseId === exerciseId ? { ...s, snoozedUntil } : s,
+        ),
+      },
+    },
+  );
+
+  return (await Users.findOne({
+    _id: new ObjectId(user.id),
+  }))!.exerciseSchedules!.find((s) => s.exerciseId === exerciseId);
+}
+
 export async function updateUserExerciseSchedules(
   userId: string,
   schedules: ExerciseSchedule[],

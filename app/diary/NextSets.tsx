@@ -14,6 +14,7 @@ export function NextSets({
   date,
   nextSets,
   onAddExercise,
+  onSnoozeDueSet,
   showDetails = true,
   showDueDate = false,
 }: {
@@ -21,6 +22,9 @@ export function NextSets({
   date: `${number}-${number}-${number}`;
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
   onAddExercise?: (
+    dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
+  ) => void;
+  onSnoozeDueSet?: (
     dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
   ) => void;
   showDetails?: boolean;
@@ -45,12 +49,19 @@ export function NextSets({
         const exercise = exercisesById[exerciseId]!;
 
         return (
-          <li key={JSON.stringify(scheduleEntry)} className="flex items-start">
-            {onAddExercise ? (
-              <StealthButton onClick={() => onAddExercise(dueSet)}>
-                ➕
-              </StealthButton>
-            ) : null}
+          <li key={JSON.stringify(scheduleEntry)} className="flex gap-2 items-start">
+            <div className="flex flex-col leading-tight">
+              {onAddExercise ? (
+                <StealthButton onClick={() => onAddExercise(dueSet)}>
+                  ➕
+                </StealthButton>
+              ) : null}
+              {onSnoozeDueSet ? (
+                <StealthButton onClick={() => onSnoozeDueSet(dueSet)}>
+                  💤
+                </StealthButton>
+              ) : null}
+            </div>
             <div className="leading-tight">
               <Link
                 prefetch={false}
