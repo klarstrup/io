@@ -17,9 +17,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.ICal,
-      user.dataSources ?? [],
       user,
+      DataSource.ICal,
       async function* ({ config: { url } }, setUpdated) {
         setUpdated(false);
 

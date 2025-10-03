@@ -73,9 +73,8 @@ export const GET = () =>
     }
 
     yield* wrapSources(
-      DataSource.Sportstiming,
-      user.dataSources ?? [],
       user,
+      DataSource.Sportstiming,
       async function* ({ config: { name } }, setUpdated) {
         setUpdated(false);
 

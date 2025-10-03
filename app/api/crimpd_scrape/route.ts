@@ -14,9 +14,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.Crimpd,
-      user.dataSources ?? [],
       user,
+      DataSource.Crimpd,
       async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 

@@ -17,16 +17,16 @@ export async function* wrapSources<
   DS extends UserDataSource & { source: S },
   T,
 >(
-  source: S,
-  dataSources: UserDataSource[],
   user: Session["user"],
+  source: S,
   fn: (dataSource: DS, setUpdated: SetUpdatedFn) => AsyncGenerator<T>,
 ) {
+  const dataSources = (user.dataSources ?? []).filter(
+    (ds): ds is DS => ds.source === source,
+  );
   for (const dataSource of dataSources) {
-    if (dataSource.source !== source) continue;
-
     yield* wrapSource(dataSource, user, (setUpdated) =>
-      fn(dataSource as DS, setUpdated),
+      fn(dataSource, setUpdated),
     );
   }
 }

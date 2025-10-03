@@ -46,9 +46,8 @@ export const GET = (request: NextRequest) =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.TopLogger,
-      user.dataSources || [],
       user,
+      DataSource.TopLogger,
       async function* (
         { config: { authTokens, graphQLId }, ...source },
         setUpdated,

@@ -17,9 +17,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.Grippy,
-      user.dataSources ?? [],
       user,
+      DataSource.Grippy,
       async function* ({ config: { authTokens }, ...source }, setUpdated) {
         setUpdated(false);
 

@@ -68,9 +68,8 @@ export const GET = () =>
     ]);
 
     yield* wrapSources(
-      DataSource.Tomorrow,
-      user.dataSources ?? [],
       user,
+      DataSource.Tomorrow,
       async function* ({ config: { geohash } }, setUpdated) {
         setUpdated(false);
 

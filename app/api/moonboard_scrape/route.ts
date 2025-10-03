@@ -20,9 +20,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.MoonBoard,
-      user.dataSources ?? [],
       user,
+      DataSource.MoonBoard,
       async function* ({ config: { token, user_id } }, setUpdated) {
         setUpdated(false);
 

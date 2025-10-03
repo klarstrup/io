@@ -29,9 +29,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.RunDouble,
-      user.dataSources ?? [],
       user,
+      DataSource.RunDouble,
       async function* ({ config: { id } }, setUpdated) {
         setUpdated(false);
 

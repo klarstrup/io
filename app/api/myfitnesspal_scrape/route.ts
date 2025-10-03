@@ -37,9 +37,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.MyFitnessPal,
-      user.dataSources ?? [],
       user,
+      DataSource.MyFitnessPal,
       async function* ({ config: { token, userName, userId } }, setUpdated) {
         setUpdated(false);
 

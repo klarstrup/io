@@ -23,9 +23,8 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
-      DataSource.KilterBoard,
-      user.dataSources ?? [],
       user,
+      DataSource.KilterBoard,
       async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
