@@ -28,11 +28,7 @@ export const revalidate = 600; // 10 minutes
 export async function GET() {
   const user = await Users.findOne();
 
-  const eventsPromises: (
-    | Promise<EventEntry[]>
-    | Promise<EventEntry>
-    | EventEntry
-  )[] = [];
+  const eventsPromises: (Promise<EventEntry[]> | Promise<EventEntry>)[] = [];
 
   eventsPromises.push(
     ...(user?.dataSources?.some(
@@ -76,7 +72,7 @@ export async function GET() {
       : []),
   );
 
-  eventsPromises.push(...(await getSongkickEvents()));
+  eventsPromises.push(getSongkickEvents());
 
   const events = (await Promise.all(eventsPromises))
     .flat()
