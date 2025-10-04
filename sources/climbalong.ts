@@ -265,14 +265,22 @@ export async function getIoClimbAlongCompetitionEvent(
   const competition = await ClimbAlongCompetitions.findOne({ competitionId });
   if (!competition) throw new Error("???");
 
-  await ClimbAlongAthletes.createIndexes([{ key: { competitionId: 1 } }]);
-  await ClimbAlongCircuits.createIndexes([{ key: { competitionId: 1 } }]);
-  const [athletes, circuits] = await Promise.all([
+  await Promise.all([
+    ClimbAlongAthletes.createIndexes([{ key: { competitionId: 1 } }]),
+    ClimbAlongCircuits.createIndexes([{ key: { competitionId: 1 } }]),
+    ClimbAlongPerformances.createIndexes([{ key: { circuitId: 1 } }]),
+    ClimbAlongProblems.createIndexes([{ key: { circuitId: 1 } }]),
+    ClimbAlongNodes.createIndexes([{ key: { "circuit.circuitId": 1 } }]),
+    ClimbAlongEdges.createIndexes([
+      { key: { "processedBy.nodeId": 1, "processedBy.edge": 1 } },
+    ]),
+  ]);
+
+  const [athletes, circuits, lanes] = await Promise.all([
     ClimbAlongAthletes.find({ competitionId }).toArray(),
     ClimbAlongCircuits.find({ competitionId }).toArray(),
+    ClimbAlongLanes.find({ competitionId }).toArray(),
   ]);
-  await ClimbAlongPerformances.createIndexes([{ key: { circuitId: 1 } }]);
-  await ClimbAlongProblems.createIndexes([{ key: { circuitId: 1 } }]);
   const [performances, problems] = await Promise.all([
     ClimbAlongPerformances.find({
       circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
@@ -281,13 +289,6 @@ export async function getIoClimbAlongCompetitionEvent(
       circuitId: { $in: circuits.map(({ circuitId }) => circuitId) },
     }).toArray(),
   ]);
-  const holds = (
-    await ClimbAlongHolds.find({
-      problemId: { $in: problems.map(({ problemId }) => problemId) },
-    }).toArray()
-  )
-    // Exclude zero-score holds(typically start holds unrelated to scoring)
-    .filter((hold) => hold.holdScore > 0);
 
   const io = athletes.find((athlete) => athlete.athleteId === athleteId);
   const ioPerformances =
@@ -296,12 +297,18 @@ export async function getIoClimbAlongCompetitionEvent(
   const ioCircuitIds = ioPerformances
     ? unique(ioPerformances.map(({ circuitId }) => circuitId))
     : [];
-  await ClimbAlongNodes.createIndexes([{ key: { "circuit.circuitId": 1 } }]);
-  const ioCircuitChallengeNode = await ClimbAlongNodes.findOne({
-    "circuit.circuitId": { $in: ioCircuitIds },
-  });
-  await ClimbAlongEdges.createIndexes([
-    { key: { "processedBy.nodeId": 1, "processedBy.edge": 1 } },
+  const [ioCircuitChallengeNode, holds] = await Promise.all([
+    ClimbAlongNodes.findOne({
+      "circuit.circuitId": { $in: ioCircuitIds },
+    }),
+    ClimbAlongHolds.find({
+      problemId: { $in: problems.map(({ problemId }) => problemId) },
+    })
+      .toArray()
+      .then((holds) =>
+        // Exclude zero-score holds(typically start holds unrelated to scoring)
+        holds.filter((hold) => hold.holdScore > 0),
+      ),
   ]);
   const circuitChallengeEdges = await ClimbAlongEdges.find({
     processedBy: {
@@ -311,7 +318,6 @@ export async function getIoClimbAlongCompetitionEvent(
       },
     },
   }).toArray();
-  const lanes = await ClimbAlongLanes.find({ competitionId }).toArray();
 
   const noProblems = problems.filter(
     (problem) =>
