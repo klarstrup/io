@@ -17,6 +17,7 @@ import {
   ClimbAlongCompetitions,
   ClimbAlongEdges,
   ClimbAlongHolds,
+  ClimbAlongLanes,
   ClimbAlongNodes,
   ClimbAlongPerformances,
   ClimbAlongProblems,
@@ -310,6 +311,7 @@ export async function getIoClimbAlongCompetitionEvent(
       },
     },
   }).toArray();
+  const lanes = await ClimbAlongLanes.find({ competitionId }).toArray();
 
   const noProblems = problems.filter(
     (problem) =>
@@ -412,6 +414,26 @@ export async function getIoClimbAlongCompetitionEvent(
     } satisfies PointsScore);
   }
 
+  let url = new URL(
+    `https://climbalong.com/competitions/${competitionId}/info`,
+  );
+  if (performances.length) {
+    url = new URL(
+      `https://climbalong.com/competitions/${competitionId}/results`,
+    );
+
+    const ioLane =
+      ioCircuitChallengeNode &&
+      lanes.find((lane) => lane.endNodeId === ioCircuitChallengeNode.nodeId);
+
+    if (ioLane) {
+      url.searchParams.set("lane", String(ioLane.laneId));
+      // The comp link is not round-specific.
+      // EventDetails.rounds(defined below) may have more specific links in the future.
+      // url.searchParams.set("round", String(ioLane.roundId));
+    }
+  }
+
   return {
     source: EventSource.ClimbAlong,
     type: "competition",
@@ -419,9 +441,7 @@ export async function getIoClimbAlongCompetitionEvent(
     id: competitionId,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
     ioId: io?.athleteId!,
-    url: performances.length
-      ? `https://climbalong.com/competitions/${competitionId}/results`
-      : `https://climbalong.com/competitions/${competitionId}/info`,
+    url: url.toString(),
     start: max(
       [
         firstPerformance && new Date(firstPerformance),
