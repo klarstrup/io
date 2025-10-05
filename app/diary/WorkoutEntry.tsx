@@ -131,6 +131,7 @@ export default async function WorkoutEntry({
   showDate,
   showExerciseName = true,
   showLocation = true,
+  showSource = true,
   workout,
   exerciseSetPRs,
   onlyPRs,
@@ -138,6 +139,7 @@ export default async function WorkoutEntry({
   showDate?: boolean;
   showExerciseName?: boolean;
   showLocation?: boolean;
+  showSource?: boolean;
   workout: WorkoutData;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
@@ -153,7 +155,7 @@ export default async function WorkoutEntry({
   return (
     <FieldSetX
       key={workout.id}
-      className={"min-w-[50%] " + (showDate ? "w-full" : "")}
+      className={"relative min-w-[50%] " + (showDate ? "w-full" : "")}
       legend={
         <small className="-ml-2 block leading-none">
           {showDate ? (
@@ -192,7 +194,7 @@ export default async function WorkoutEntry({
               </small>
             </div>
           ) : null}
-          {showExerciseName && showLocation ? (
+          {showExerciseName && showLocation && showSource ? (
             <div>
               {workout.source === WorkoutSource.Self || !workout.source ? (
                 <>
@@ -248,6 +250,16 @@ export default async function WorkoutEntry({
         </small>
       }
     >
+      {!(showExerciseName && showLocation && showSource) ? (
+        <Link
+          prefetch={false}
+          href={`/diary/${workoutDateStr}/workout/${workout.id}`}
+          style={{ color: "#edab00" }}
+          className="absolute top-1 right-2 text-xs font-semibold"
+        >
+          ⏎
+        </Link>
+      ) : null}
       <div
         style={{
           display: "grid",
@@ -263,7 +275,7 @@ export default async function WorkoutEntry({
 
           return (
             <div key={exerciseIndex}>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1">
                 {showExerciseName || workoutExercise.displayName ? (
                   <Link
                     prefetch={false}
@@ -279,7 +291,7 @@ export default async function WorkoutEntry({
                   </Link>
                 ) : null}
                 {isClimbingExercise(exercise.id)
-                  ? calculateClimbingStats( 
+                  ? calculateClimbingStats(
                       workoutExercise.sets.map((set) => [
                         location ?? undefined,
                         set,
