@@ -6390,7 +6390,7 @@ export const exercises = [
     name: "Alternating Hang Clean",
   },
   {
-    aliases: [],
+    aliases: ["Arnold Press"],
     id: 181,
     inputs: [
       {
@@ -18395,7 +18395,7 @@ export const exercises = [
     ],
   },
   {
-    aliases: [],
+    aliases: ["Barbell Bulgarian Squat"],
     id: 474,
     inputs: [
       {
@@ -57092,7 +57092,7 @@ export const exercises = [
     ],
     is_hidden: false,
     is_popular: false,
-    name: "Dead Hangs",
+    name: "Dead Hang",
     tags: [{ type: TagType.Type, name: "Calisthenics" }],
   },
   // From here custom post-fitocracy exercises
