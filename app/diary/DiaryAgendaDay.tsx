@@ -262,8 +262,7 @@ export async function DiaryAgendaDay({
                         href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
                         target="_blank"
                         className={
-                          "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 font-semibold " +
-                          (todayStr === dayName ? "text-sm" : "text-xs")
+                          "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 text-xs font-semibold"
                         }
                       >
                         <span className="text-xs">➕</span>
@@ -272,7 +271,7 @@ export async function DiaryAgendaDay({
                   </div>
                 }
                 className={
-                  "mb-1 w-full pt-1 pb-1 flex-0! " +
+                  "mb-1 w-full flex-0! pt-1 pb-1 " +
                   (todayStr === dayName ? "bg-[#ff0]/20" : "bg-gray-100/50")
                 }
               >
@@ -280,11 +279,9 @@ export async function DiaryAgendaDay({
                   {isNonEmptyArray(allDayEvents) ? (
                     <li
                       className="grid gap-1.5"
-                      style={{ gridTemplateColumns: "4px minmax(0, 1fr)" }}
+                      style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                     >
-                      <span className="-ml-1 font-mono text-[8px] leading-[2.5em]">
-                        📅
-                      </span>
+                      <span className="font-mono text-xs leading-7">📅</span>
                       <div className="flex flex-wrap items-stretch gap-0.5">
                         {allDayEvents.map((event) => {
                           const duration = intervalToDuration(event);
@@ -301,7 +298,7 @@ export async function DiaryAgendaDay({
                           return (
                             <span
                               key={event.uid}
-                              className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/10 bg-white text-xs"
+                              className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/10 bg-white"
                             >
                               {days.length > 1 ? (
                                 <>
@@ -313,11 +310,11 @@ export async function DiaryAgendaDay({
                                       timeZone,
                                     })
                                   ) : (
-                                    <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/90 px-px text-[9px] leading-none opacity-40">
+                                    <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
                                       <span className="px-px text-white">
                                         {dayNo}
                                       </span>
-                                      <hr className="mb-[-0.5px] w-full border-t-[0.5px] border-solid border-white opacity-40" />
+                                      <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
                                       <span className="px-px text-white">
                                         {days.length}
                                       </span>
@@ -471,7 +468,7 @@ export async function DiaryAgendaDay({
                   ) : null}
                   <li
                     className="grid gap-1.5"
-                    style={{ gridTemplateColumns: "4px minmax(0, 1fr)" }}
+                    style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                   >
                     {isNonEmptyArray(events)
                       ? dayEvents.map((event, eventI, dateEvents) => {
@@ -480,7 +477,7 @@ export async function DiaryAgendaDay({
                               <Fragment
                                 key={JSON.stringify(event.scheduleEntry)}
                               >
-                                <span className="-ml-1 font-mono leading-none">
+                                <span className="-ml-0.5 font-mono text-3xl leading-6 text-gray-900/50">
                                   ☐
                                 </span>
                                 <div className="flex flex-wrap items-center gap-0.5">
@@ -489,7 +486,7 @@ export async function DiaryAgendaDay({
                                     .map((todo, index) => (
                                       <div
                                         key={index}
-                                        className="rounded-md border border-solid border-black/10 bg-white px-1 py-0.5 text-xs"
+                                        className="rounded-md border border-solid border-black/10 bg-white px-1 py-0.5"
                                       >
                                         {todo}
                                       </div>
@@ -505,7 +502,7 @@ export async function DiaryAgendaDay({
                                           key={JSON.stringify(
                                             dueSet.scheduleEntry,
                                           )}
-                                          className="rounded-md border border-solid border-black/10 bg-white px-1 py-0.5 text-xs"
+                                          className="rounded-md border border-solid border-black/10 bg-white px-1 py-0.5"
                                         >
                                           {
                                             [exercise.name, ...exercise.aliases]
@@ -539,7 +536,9 @@ export async function DiaryAgendaDay({
                     ) : null}
                     {isPast(dayDate) && isNonEmptyArray(workouts) ? (
                       <>
-                        <span className="-ml-1 font-mono leading-none">☑</span>
+                        <span className="-ml-0.5 font-mono text-3xl leading-6 text-gray-900/50">
+                          ☑
+                        </span>
                         <div>
                           {isNonEmptyArray(workouts)
                             ? Array.from(workouts)
