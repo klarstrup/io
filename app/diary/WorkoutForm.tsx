@@ -236,7 +236,9 @@ export function WorkoutForm<R extends string>({
           inputs: exerciseDefinition.inputs.map(
             (input, i): WorkoutExerciseSetInput => ({
               value:
-                i === effortInputIndex ? setEffort : (input.default_value ?? 0),
+                i === effortInputIndex
+                  ? setEffort
+                  : (input.default_value ?? NaN),
               unit: input.metric_unit,
             }),
           ),
@@ -714,7 +716,7 @@ function SetsForm({
                       sets[sets.length - 1]?.inputs[inputIndex];
 
                     return {
-                      value: lastSetInput?.value ?? input.default_value ?? 0,
+                      value: lastSetInput?.value ?? input.default_value ?? NaN,
                       assistType: lastSetInput?.assistType,
                       unit:
                         lastSetInput?.unit ??
