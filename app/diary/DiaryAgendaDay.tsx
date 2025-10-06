@@ -272,7 +272,7 @@ export async function DiaryAgendaDay({
                 }
                 className={
                   "mb-1 w-full flex-0! pt-1 pb-1 " +
-                  (todayStr === dayName ? "bg-[#ff0]/20" : "bg-gray-100/50")
+                  (todayStr === dayName ? "bg-[#ff0]/30" : "bg-gray-100/80")
                 }
               >
                 <ul>
@@ -298,7 +298,7 @@ export async function DiaryAgendaDay({
                           return (
                             <span
                               key={event.uid}
-                              className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/10 bg-white"
+                              className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/20 bg-white"
                             >
                               {days.length > 1 ? (
                                 <>
@@ -345,7 +345,7 @@ export async function DiaryAgendaDay({
                                   ) : null}
                                 </>
                               ) : null}
-                              <div className="px-1 py-0.5">
+                              <div className="flex items-center gap-1 px-1.5">
                                 <span>{event.summary}</span>
                                 {event.location ? (
                                   <span>{event.location}</span>
@@ -477,7 +477,7 @@ export async function DiaryAgendaDay({
                               <Fragment
                                 key={JSON.stringify(event.scheduleEntry)}
                               >
-                                <span className="-ml-0.5 font-mono text-3xl leading-6 text-gray-900/50">
+                                <span className="-ml-0.5 text-right font-mono text-xl leading-6 text-gray-900/50">
                                   ☐
                                 </span>
                                 <div className="flex flex-wrap items-center gap-0.5">
@@ -486,7 +486,7 @@ export async function DiaryAgendaDay({
                                     .map((todo, index) => (
                                       <div
                                         key={index}
-                                        className="rounded-md border border-solid border-black/10 bg-white px-1 py-0.5"
+                                        className="rounded-md border border-solid border-black/20 bg-white px-1.5"
                                       >
                                         {todo}
                                       </div>
@@ -502,7 +502,7 @@ export async function DiaryAgendaDay({
                                           key={JSON.stringify(
                                             dueSet.scheduleEntry,
                                           )}
-                                          className="rounded-md border border-solid border-black/10 bg-white px-1 py-0.5"
+                                          className="rounded-md border border-solid border-black/20 bg-white px-1.5"
                                         >
                                           {
                                             [exercise.name, ...exercise.aliases]
@@ -536,7 +536,7 @@ export async function DiaryAgendaDay({
                     ) : null}
                     {isPast(dayDate) && isNonEmptyArray(workouts) ? (
                       <>
-                        <span className="-ml-0.5 font-mono text-3xl leading-6 text-gray-900/50">
+                        <span className="-ml-0.5 text-right font-mono text-xl leading-6 text-gray-900/50">
                           ☑
                         </span>
                         <div>
