@@ -184,7 +184,7 @@ export async function DiaryAgendaDay({
           <FieldSetX
             key={dayI}
             legend={
-              <div className="-ml-2 flex items-center gap-1">
+              <div className="-ml-3 flex items-center gap-1">
                 <span
                   className={
                     "font-mono text-xs [letter-spacing:-2px] text-gray-900/50 tabular-nums"
@@ -209,7 +209,7 @@ export async function DiaryAgendaDay({
                       prefetch={false}
                       href={`/diary/${date}/workout`}
                       className={
-                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold"
+                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
                       }
                     >
                       <span className="text-xs">➕</span> Workout
@@ -218,21 +218,21 @@ export async function DiaryAgendaDay({
                       href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
                       target="_blank"
                       className={
-                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold"
+                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
                       }
                     >
                       <span className="text-xs">➕</span> Food
                     </a>
                     <span
                       className={
-                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold"
+                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
                       }
                     >
                       <span className="text-xs">➕</span> Todo
                     </span>
                     <span
                       className={
-                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold"
+                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
                       }
                     >
                       <span className="text-xs">➕</span> Event
