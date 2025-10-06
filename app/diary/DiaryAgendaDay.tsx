@@ -173,7 +173,8 @@ export async function DiaryAgendaDay({
 
         const allDayEvents = dayEvents.filter(
           (event): event is MongoVEventWithVCalendar =>
-            differenceInDays(event.end, event.start) > 0,
+            differenceInDays(event.end, event.start) > 0 &&
+            event.datetype === "date",
         );
 
         const isDayEmpty =
@@ -389,7 +390,7 @@ export async function DiaryAgendaDay({
                         <div className="flex-1">
                           <div className="leading-snug">{event.summary}</div>
                           <div className="text-[0.666rem] leading-tight italic">
-                            {event.location || <>&nbsp;</>}
+                            {event.location}
                           </div>
                         </div>
                       </li>
