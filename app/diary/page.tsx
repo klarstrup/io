@@ -7,7 +7,7 @@ import UserStuff from "../../components/UserStuff";
 import { Locations } from "../../models/location.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 import "../page.css";
-import { DiaryAgenda } from "./DiaryAgenda";
+import { DiaryAgendaDay } from "./DiaryAgendaDay";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
 import { DiaryPoller } from "./DiaryPoller";
@@ -101,7 +101,7 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
         </Suspense>
         <div className="flex min-h-[100vh] items-start portrait:flex-col portrait:items-stretch">
           <div className="max-h-[100vh] self-stretch overflow-x-auto border-black/25 bg-white p-2 portrait:h-[75vh] portrait:border-b-[0.5px] landscape:w-1/3">
-            <DiaryAgenda date={dateToString(now)} user={user} />
+            <DiaryAgendaDay date={dateToString(now)} user={user} />
           </div>
           <div className="flex max-h-[100vh] flex-1 flex-col items-stretch overflow-y-scroll overscroll-contain portrait:max-h-[25vh]">
             <LoadMore
