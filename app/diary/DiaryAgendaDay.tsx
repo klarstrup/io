@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addDays,
   compareAsc,
+  differenceInDays,
   differenceInHours,
   eachDayOfInterval,
   endOfDay,
@@ -171,10 +172,8 @@ export async function DiaryAgendaDay({
         const dayDueSets = dueSetsByDate[dayName] || [];
 
         const allDayEvents = dayEvents.filter(
-          (event): event is MongoVEventWithVCalendar => {
-            const { days } = intervalToDuration(event);
-            return Boolean(days && days > 0);
-          },
+          (event): event is MongoVEventWithVCalendar =>
+            differenceInDays(event.end, event.start) > 0,
         );
 
         const isDayEmpty =
@@ -269,7 +268,6 @@ export async function DiaryAgendaDay({
                   </span>
                   <div className="flex flex-wrap items-stretch gap-0.5">
                     {allDayEvents.map((event) => {
-                      const duration = intervalToDuration(event);
                       const days = eachDayOfInterval(event, {
                         in: tz(timeZone),
                       }).filter(
@@ -279,6 +277,7 @@ export async function DiaryAgendaDay({
                         days.findIndex(
                           (date) => dateToString(date) === dayName,
                         ) + 1;
+                      const duration = dayNo === 1 && intervalToDuration(event);
                       const isLastDay = dayNo === days.length;
                       return (
                         <span
@@ -304,7 +303,7 @@ export async function DiaryAgendaDay({
                                   </span>
                                 </div>
                               )}
-                              {dayNo === 1 ? (
+                              {dayNo === 1 && duration ? (
                                 <>
                                   {duration.hours ? `${duration.hours}h` : null}
                                   {duration.minutes
@@ -351,7 +350,6 @@ export async function DiaryAgendaDay({
                       return null;
                     }
 
-                    const duration = intervalToDuration(event);
                     const days = eachDayOfInterval(event, {
                       in: tz(timeZone),
                     }).filter((date) => differenceInHours(event.end, date) > 2);
@@ -359,6 +357,7 @@ export async function DiaryAgendaDay({
                       days.findIndex((date) => dateToString(date) === dayName) +
                       1;
                     const isLastDay = dayNo === days.length;
+                    const duration = dayNo === 1 && intervalToDuration(event);
 
                     return (
                       <li key={event.uid} className="flex gap-1.5">
@@ -375,7 +374,7 @@ export async function DiaryAgendaDay({
                             )}{" "}
                           </div>
                           <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                            {dayNo === 1 ? (
+                            {dayNo === 1 && duration ? (
                               <>
                                 {duration.days ? `${duration.days}d` : null}
                                 {duration.hours ? `${duration.hours}h` : null}

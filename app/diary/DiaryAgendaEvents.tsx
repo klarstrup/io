@@ -192,14 +192,13 @@ export async function DiaryAgendaEvents({
                   }
 
                   if ("uid" in event) {
-                    const duration = intervalToDuration(event);
-
                     const days = eachDayOfInterval(event, {
                       in: tz(timeZone),
                     }).filter((date) => differenceInHours(event.end, date) > 2);
                     const dayNo =
                       days.findIndex((date) => dateToString(date) === dayName) +
                       1;
+                    const duration = dayNo === 1 && intervalToDuration(event);
                     const isLastDay = dayNo === days.length;
 
                     return (
@@ -217,7 +216,7 @@ export async function DiaryAgendaEvents({
                             )}{" "}
                           </div>
                           <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                            {dayNo === 1 ? (
+                            {dayNo === 1 && duration ? (
                               <>
                                 {duration.days ? `${duration.days}d` : null}
                                 {duration.hours ? `${duration.hours}h` : null}

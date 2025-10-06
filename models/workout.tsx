@@ -100,24 +100,25 @@ export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
 export const isNextSetDue = (
   tzDate: TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
-) =>
-  (nextSet.scheduleEntry.snoozedUntil
-    ? !isAfter(
-        startOfDay(nextSet.scheduleEntry.snoozedUntil, {
-          in: tz(tzDate.timeZone || DEFAULT_TIMEZONE),
-        }),
-        startOfDay(tzDate),
-      )
-    : true) &&
-  isDurationGreaterOrEqual(
-    intervalToDuration({
-      start: startOfDay(nextSet.workedOutAt || new Date(0), {
-        in: tz(tzDate.timeZone || DEFAULT_TIMEZONE),
+) => {
+  const end = startOfDay(tzDate);
+  const inn = tz(tzDate.timeZone || DEFAULT_TIMEZONE);
+  return (
+    (nextSet.scheduleEntry.snoozedUntil
+      ? !isAfter(
+          startOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }),
+          end,
+        )
+      : true) &&
+    isDurationGreaterOrEqual(
+      intervalToDuration({
+        start: startOfDay(nextSet.workedOutAt || new Date(0), { in: inn }),
+        end,
       }),
-      end: startOfDay(tzDate),
-    }),
-    nextSet.scheduleEntry.frequency,
+      nextSet.scheduleEntry.frequency,
+    )
   );
+};
 
 export const getCircuitByLocationAndSetColor = (
   exercise: ExerciseData,
