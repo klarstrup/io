@@ -277,7 +277,7 @@ export async function DiaryAgendaDay({
                         days.findIndex(
                           (date) => dateToString(date) === dayName,
                         ) + 1;
-                      const duration = dayNo === 1 && intervalToDuration(event);
+                      const isFirstDay = dayNo === 1;
                       const isLastDay = dayNo === days.length;
                       return (
                         <span
@@ -285,33 +285,24 @@ export async function DiaryAgendaDay({
                           className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/20 bg-white"
                         >
                           {days.length > 1 ? (
-                            <>
-                              {event.datetype === "date-time" && dayNo === 1 ? (
-                                event.start.toLocaleTimeString("en-DK", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  timeZone,
-                                })
-                              ) : (
-                                <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
-                                  <span className="px-px text-white">
-                                    {dayNo}
-                                  </span>
-                                  <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
-                                  <span className="px-px text-white">
-                                    {days.length}
-                                  </span>
-                                </div>
-                              )}
-                              {dayNo === 1 && duration ? (
+                            <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
+                              <span className="px-px text-white">{dayNo}</span>
+                              <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
+                              <span className="px-px text-white">
+                                {days.length}
+                              </span>
+                            </div>
+                          ) : null}
+                          <div className="flex items-center gap-1 px-1.5">
+                            {days.length > 1 ? (
+                              isFirstDay && event.datetype === "date-time" ? (
                                 <>
-                                  {duration.hours ? `${duration.hours}h` : null}
-                                  {duration.minutes
-                                    ? `${duration.minutes}m`
-                                    : null}
-                                  {duration.seconds
-                                    ? `${duration.seconds}s`
-                                    : null}
+                                  {event.start.toLocaleTimeString("en-DK", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    timeZone,
+                                  })}
+                                  -
                                 </>
                               ) : isLastDay &&
                                 event.datetype === "date-time" ? (
@@ -323,10 +314,8 @@ export async function DiaryAgendaDay({
                                     timeZone,
                                   })}
                                 </>
-                              ) : null}
-                            </>
-                          ) : null}
-                          <div className="flex items-center gap-1 px-1.5">
+                              ) : null
+                            ) : null}
                             <span>{event.summary}</span>
                             {event.location ? (
                               <span>{event.location}</span>
