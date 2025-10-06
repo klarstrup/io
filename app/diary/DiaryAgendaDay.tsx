@@ -275,8 +275,10 @@ export async function DiaryAgendaDay({
                   </div>
                 }
                 className={
-                  "mb-1 w-full flex-0! pt-1 pb-1 " +
-                  (todayStr === dayName ? "bg-[#ff0]/30" : "bg-gray-100/80")
+                  "mb-1 w-full flex-0! pb-1 " +
+                  (todayStr === dayName
+                    ? "bg-[#ff0]/30 pt-2"
+                    : "bg-gray-100/80 pt-1")
                 }
               >
                 <ul>
