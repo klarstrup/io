@@ -61,7 +61,7 @@ export async function DiaryAgendaDay({
 
   const fetchingInterval = {
     start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), 0),
-    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 14),
+    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 28),
   };
   const calendarEvents = user
     ? await getUserIcalEventsBetween(user.id, fetchingInterval)
@@ -143,7 +143,7 @@ export async function DiaryAgendaDay({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col justify-start">
       {await Promise.all(
         Object.entries(eventsByDate)
           .sort(([a], [b]) => compareAsc(new Date(a), new Date(b)))
@@ -272,7 +272,7 @@ export async function DiaryAgendaDay({
                   </div>
                 }
                 className={
-                  "mb-1 w-full pt-1 pb-1 " +
+                  "mb-1 w-full pt-1 pb-1 flex-0! " +
                   (todayStr === dayName ? "bg-[#ff0]/20" : "bg-gray-100/50")
                 }
               >
