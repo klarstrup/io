@@ -62,7 +62,7 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -1),
+    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), 0),
     end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 28),
   };
   const daysOfInterval = eachDayOfInterval(fetchingInterval, {
@@ -184,7 +184,15 @@ export async function DiaryAgendaDay({
           <FieldSetX
             key={dayI}
             legend={
-              <div className="ml-4 flex items-center gap-1">
+              <div className="-ml-2 flex items-center gap-1">
+                <span
+                  className={"font-mono text-xs text-gray-900/50 tabular-nums"}
+                >
+                  {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
+                    month: "numeric",
+                    day: "numeric",
+                  })}
+                </span>
                 {!isToday
                   ? new TZDate(dayName, timeZone).toLocaleDateString("da-DK")
                   : todayStr === dayName
