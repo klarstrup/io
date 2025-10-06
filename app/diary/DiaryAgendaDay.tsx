@@ -186,7 +186,9 @@ export async function DiaryAgendaDay({
             legend={
               <div className="-ml-2 flex items-center gap-1">
                 <span
-                  className={"font-mono text-xs text-gray-900/50 tabular-nums"}
+                  className={
+                    "font-mono text-xs [letter-spacing:-2px] text-gray-900/50 tabular-nums"
+                  }
                 >
                   {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
                     month: "numeric",
