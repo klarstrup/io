@@ -215,7 +215,7 @@ export async function DiaryAgendaDay({
               <FieldSetX
                 key={dayI}
                 legend={
-                  <div className="-ml-2 flex items-center gap-1">
+                  <div className="ml-4 flex items-center gap-1">
                     {!isToday
                       ? new TZDate(dayName, timeZone).toLocaleDateString(
                           "da-DK",
