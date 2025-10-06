@@ -1,4 +1,8 @@
 import { tz, TZDate } from "@date-fns/tz";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons/faCalendar";
+import { faCircle } from "@fortawesome/free-regular-svg-icons/faCircle";
+import { faCircleCheck } from "@fortawesome/free-regular-svg-icons/faCircleCheck";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addDays,
   compareAsc,
@@ -281,7 +285,9 @@ export async function DiaryAgendaDay({
                       className="grid gap-1.5"
                       style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                     >
-                      <span className="font-mono text-xs leading-7">📅</span>
+                      <span className="-ml-0.5 pt-[4px] text-right font-mono text-xs text-gray-900/50">
+                        <FontAwesomeIcon icon={faCalendar} />
+                      </span>
                       <div className="flex flex-wrap items-stretch gap-0.5">
                         {allDayEvents.map((event) => {
                           const duration = intervalToDuration(event);
@@ -477,8 +483,8 @@ export async function DiaryAgendaDay({
                               <Fragment
                                 key={JSON.stringify(event.scheduleEntry)}
                               >
-                                <span className="-ml-0.5 text-right font-mono text-xl leading-6 text-gray-900/50">
-                                  ☐
+                                <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
+                                  <FontAwesomeIcon icon={faCircle} />
                                 </span>
                                 <div className="flex flex-wrap items-center gap-0.5">
                                   {[exampleChores[dayI % exampleChores.length]]
@@ -536,8 +542,8 @@ export async function DiaryAgendaDay({
                     ) : null}
                     {isPast(dayDate) && isNonEmptyArray(workouts) ? (
                       <>
-                        <span className="-ml-0.5 text-right font-mono text-xl leading-6 text-gray-900/50">
-                          ☑
+                        <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
+                          <FontAwesomeIcon icon={faCircleCheck} />
                         </span>
                         <div>
                           {isNonEmptyArray(workouts)
