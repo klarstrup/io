@@ -22,12 +22,10 @@ import { Fragment } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import type { MongoVEventWithVCalendar } from "../../lib";
 import { exercisesById } from "../../models/exercises";
-import { isClimbingExercise, isNextSetDue } from "../../models/workout";
+import { isNextSetDue } from "../../models/workout";
 import {
-  getIsSetPR,
   getNextSets,
   MaterializedWorkoutsView,
-  noPR,
 } from "../../models/workout.server";
 import { getUserIcalEventsBetween } from "../../sources/ical";
 import {
@@ -64,43 +62,57 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), 0),
+    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -1),
     end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 28),
   };
-  const calendarEvents = user
-    ? await getUserIcalEventsBetween(user.id, fetchingInterval)
-    : [];
+  const daysOfInterval = eachDayOfInterval(fetchingInterval, {
+    in: tz(timeZone),
+  });
+  const [calendarEvents = [], nextSets = [], workouts = []] = await Promise.all(
+    [
+      user && getUserIcalEventsBetween(user.id, fetchingInterval),
+      user && getNextSets({ user, to: fetchingInterval.end }),
+      user &&
+        MaterializedWorkoutsView.find(
+          {
+            userId: user.id,
+            workedOutAt: rangeToQuery(
+              fetchingInterval.start,
+              fetchingInterval.end,
+            ),
+            deletedAt: { $exists: false },
+          },
+          { sort: { workedOutAt: -1 } },
+        ).toArray(),
+    ],
+  );
 
-  const eventsByDate: Record<
+  const eventsByDate: Record<string, MongoVEventWithVCalendar[]> = {
+    [date]: [],
+  };
+  const dueSetsByDate: Record<
     string,
-    (
-      | MongoVEventWithVCalendar
-      | Awaited<ReturnType<typeof getNextSets>>[number]
-    )[]
+    Awaited<ReturnType<typeof getNextSets>>
   > = { [date]: [] };
 
-  const nextSets = user
-    ? await getNextSets({ user, to: fetchingInterval.end })
-    : [];
-  for (const date of eachDayOfInterval(fetchingInterval)) {
+  for (const date of daysOfInterval) {
     const dueSets = nextSets.filter((nextSet) => isNextSetDue(date, nextSet));
     const calName = dateToString(date);
 
     for (const dueSet of dueSets) {
       if (
-        Object.values(eventsByDate)
+        Object.values(dueSetsByDate)
           .flat()
           .some(
             (e) =>
-              "scheduleEntry" in e &&
               JSON.stringify(e.scheduleEntry) ===
-                JSON.stringify(dueSet.scheduleEntry),
+              JSON.stringify(dueSet.scheduleEntry),
           )
       ) {
         continue;
       }
-      if (!eventsByDate[calName]) eventsByDate[calName] = [];
-      eventsByDate[calName].push(dueSet);
+      if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
+      dueSetsByDate[calName].push(dueSet);
     }
   }
 
@@ -136,7 +148,7 @@ export async function DiaryAgendaDay({
         !(
           differenceInHours(event.end, event.start) < 24 &&
           Object.values(eventsByDate).some((events) =>
-            events.some((e) => "uid" in e && e.uid === event.uid),
+            events.some((e) => e.uid === event.uid),
           )
         )
       ) {
@@ -148,433 +160,327 @@ export async function DiaryAgendaDay({
 
   return (
     <div className="flex h-full flex-col justify-start">
-      {await Promise.all(
-        Object.entries(eventsByDate)
-          .sort(([a], [b]) => compareAsc(new Date(a), new Date(b)))
-          .map(async ([dayName, events], dayI) => {
-            const dayDate = new Date(dayName);
-            const [workouts] = user
-              ? await Promise.all([
-                  MaterializedWorkoutsView.find(
-                    {
-                      userId: user.id,
-                      workedOutAt: rangeToQuery(
-                        startOfDay(dayDate),
-                        endOfDay(dayDate),
-                      ),
-                      deletedAt: { $exists: false },
-                    },
-                    { sort: { workedOutAt: -1 } },
-                  ).toArray(),
-                ])
-              : [];
+      {daysOfInterval.map((dayDate, dayI) => {
+        const events = eventsByDate[dateToString(dayDate)] || [];
+        const dayName = dateToString(dayDate);
+        const dayEvents = uniqueBy(events, (event) => event.uid);
+        const dayWorkouts = workouts.filter(
+          (workout) =>
+            dateToString(workout.workedOutAt) === dateToString(dayDate),
+        );
+        const dayDueSets = dueSetsByDate[dayName] || [];
 
-            const workoutsExerciseSetPRs =
-              user &&
-              workouts &&
-              (await Promise.all(
-                workouts.map((workout) =>
-                  Promise.all(
-                    workout.exercises.map(async ({ exerciseId, sets }) => {
-                      if (isClimbingExercise(exerciseId)) {
-                        return Array.from({ length: sets.length }, () => noPR);
+        const allDayEvents = dayEvents.filter(
+          (event): event is MongoVEventWithVCalendar => {
+            const { days } = intervalToDuration(event);
+            return Boolean(days && days > 0);
+          },
+        );
+
+        const isDayEmpty =
+          !dayEvents.length && !dayWorkouts.length && !dayDueSets.length;
+
+        return (
+          <FieldSetX
+            key={dayI}
+            legend={
+              <div className="ml-4 flex items-center gap-1">
+                {!isToday
+                  ? new TZDate(dayName, timeZone).toLocaleDateString("da-DK")
+                  : todayStr === dayName
+                    ? "Today"
+                    : new TZDate(dayName, timeZone).toLocaleDateString(
+                        "en-DK",
+                        { weekday: "long" },
+                      )}
+                {todayStr === dayName ? (
+                  <>
+                    <Link
+                      prefetch={false}
+                      href={`/diary/${date}/workout`}
+                      className={
+                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold"
                       }
-
-                      const precedingWorkouts =
-                        await MaterializedWorkoutsView.find(
-                          {
-                            userId: user.id,
-                            "exercises.exerciseId": exerciseId,
-                            workedOutAt: { $lt: workout.workedOutAt },
-                            deletedAt: { $exists: false },
-                          },
-                          { sort: { workedOutAt: -1 } },
-                        ).toArray();
-
-                      return sets.map((set) =>
-                        getIsSetPR(workout, precedingWorkouts, exerciseId, set),
-                      );
-                    }),
-                  ),
-                ),
-              ));
-
-            const dayEvents = uniqueBy(events, (event) =>
-              "uid" in event ? event.uid : JSON.stringify(event.scheduleEntry),
-            );
-
-            const allDayEvents = dayEvents.filter(
-              (event): event is MongoVEventWithVCalendar => {
-                if (!("uid" in event)) return false;
-                const interval = intervalToDuration(event);
-                return Boolean(interval.days && interval.days > 0);
-              },
-            );
-
-            return (
-              <FieldSetX
-                key={dayI}
-                legend={
-                  <div className="ml-4 flex items-center gap-1">
-                    {!isToday
-                      ? new TZDate(dayName, timeZone).toLocaleDateString(
-                          "da-DK",
-                        )
-                      : todayStr === dayName
-                        ? "Today"
-                        : new TZDate(dayName, timeZone).toLocaleDateString(
-                            "en-DK",
-                            { weekday: "long" },
-                          )}
-                    {todayStr === dayName ? (
-                      <>
-                        <Link
-                          prefetch={false}
-                          href={`/diary/${date}/workout`}
-                          className={
-                            "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold"
-                          }
-                        >
-                          <span className="text-xs">➕</span> Workout
-                        </Link>
-                        <a
-                          href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
-                          target="_blank"
-                          className={
-                            "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold"
-                          }
-                        >
-                          <span className="text-xs">➕</span> Food
-                        </a>
-                        <span
-                          className={
-                            "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold"
-                          }
-                        >
-                          <span className="text-xs">➕</span> Todo
-                        </span>
-                        <span
-                          className={
-                            "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold"
-                          }
-                        >
-                          <span className="text-xs">➕</span> Event
-                        </span>
-                      </>
-                    ) : (
-                      <a
-                        href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
-                        target="_blank"
-                        className={
-                          "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 text-xs font-semibold"
-                        }
-                      >
-                        <span className="text-xs">➕</span>
-                      </a>
-                    )}
-                  </div>
-                }
-                className={
-                  "mb-1 w-full flex-0! pb-1 " +
-                  (todayStr === dayName
-                    ? "bg-[#ff0]/30 pt-2"
-                    : "bg-gray-100/80 pt-1")
-                }
-              >
-                <ul>
-                  {isNonEmptyArray(allDayEvents) ? (
-                    <li
-                      className="grid gap-1.5"
-                      style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                     >
-                      <span className="-ml-0.5 pt-[4px] text-right font-mono text-xs text-gray-900/50">
-                        <FontAwesomeIcon icon={faCalendar} />
-                      </span>
-                      <div className="flex flex-wrap items-stretch gap-0.5">
-                        {allDayEvents.map((event) => {
-                          const duration = intervalToDuration(event);
-                          const days = eachDayOfInterval(event, {
-                            in: tz(timeZone),
-                          }).filter(
-                            (date) => differenceInHours(event.end, date) > 2,
-                          );
-                          const dayNo =
-                            days.findIndex(
-                              (date) => dateToString(date) === dayName,
-                            ) + 1;
-                          const isLastDay = dayNo === days.length;
-                          return (
-                            <span
-                              key={event.uid}
-                              className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/20 bg-white"
-                            >
-                              {days.length > 1 ? (
-                                <>
-                                  {event.datetype === "date-time" &&
-                                  dayNo === 1 ? (
-                                    event.start.toLocaleTimeString("en-DK", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      timeZone,
-                                    })
-                                  ) : (
-                                    <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
-                                      <span className="px-px text-white">
-                                        {dayNo}
-                                      </span>
-                                      <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
-                                      <span className="px-px text-white">
-                                        {days.length}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {dayNo === 1 ? (
-                                    <>
-                                      {duration.hours
-                                        ? `${duration.hours}h`
-                                        : null}
-                                      {duration.minutes
-                                        ? `${duration.minutes}m`
-                                        : null}
-                                      {duration.seconds
-                                        ? `${duration.seconds}s`
-                                        : null}
-                                    </>
-                                  ) : isLastDay &&
-                                    event.datetype === "date-time" ? (
-                                    <>
-                                      -
-                                      {event.end.toLocaleTimeString("en-DK", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        timeZone,
-                                      })}
-                                    </>
-                                  ) : null}
-                                </>
-                              ) : null}
-                              <div className="flex items-center gap-1 px-1.5">
-                                <span>{event.summary}</span>
-                                {event.location ? (
-                                  <span>{event.location}</span>
-                                ) : null}
-                              </div>
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </li>
-                  ) : null}
-                  {dayEvents
-                    .filter((e) => "uid" in e)
-                    .some((e) =>
-                      allDayEvents
-                        .filter((e) => "uid" in e)
-                        .some((e2) => e === e2),
-                    ) &&
-                  dayEvents
-                    .filter((e) => "uid" in e)
-                    .some(
-                      (e) =>
-                        !allDayEvents
-                          .filter((e) => "uid" in e)
-                          .some((e2) => e === e2),
-                    ) ? (
-                    <hr className="mt-1 mb-0.5 border-gray-200" />
-                  ) : null}
-                  {isNonEmptyArray(dayEvents) ? (
-                    uniqueBy(events, (event) =>
-                      "uid" in event
-                        ? event.uid
-                        : JSON.stringify(event.scheduleEntry),
-                    ).map((event) => {
-                      if (
-                        allDayEvents.some(
-                          (allDayEvent) => allDayEvent === event,
-                        )
-                      ) {
-                        return null;
+                      <span className="text-xs">➕</span> Workout
+                    </Link>
+                    <a
+                      href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
+                      target="_blank"
+                      className={
+                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold"
                       }
-
-                      if ("uid" in event) {
-                        const duration = intervalToDuration(event);
-                        const days = eachDayOfInterval(event, {
-                          in: tz(timeZone),
-                        }).filter(
-                          (date) => differenceInHours(event.end, date) > 2,
-                        );
-                        const dayNo =
-                          days.findIndex(
-                            (date) => dateToString(date) === dayName,
-                          ) + 1;
-                        const isLastDay = dayNo === days.length;
-
-                        return (
-                          <li key={event.uid} className="flex gap-1.5">
-                            <div className="text-center">
-                              <div className="leading-snug font-semibold tabular-nums">
-                                {event.datetype === "date-time" &&
-                                dayNo === 1 ? (
-                                  event.start.toLocaleTimeString("en-DK", {
+                    >
+                      <span className="text-xs">➕</span> Food
+                    </a>
+                    <span
+                      className={
+                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold"
+                      }
+                    >
+                      <span className="text-xs">➕</span> Todo
+                    </span>
+                    <span
+                      className={
+                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold"
+                      }
+                    >
+                      <span className="text-xs">➕</span> Event
+                    </span>
+                  </>
+                ) : (
+                  <a
+                    href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
+                    target="_blank"
+                    className={
+                      "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 text-xs font-semibold"
+                    }
+                  >
+                    <span className="text-xs">➕</span>
+                  </a>
+                )}
+              </div>
+            }
+            className={
+              "mb-1 w-full flex-0! pb-2 " +
+              (todayStr === dayName
+                ? "bg-[#ff0]/30 pt-2"
+                : "bg-gray-100/80 pt-1")
+            }
+          >
+            <ul>
+              {isNonEmptyArray(allDayEvents) ? (
+                <li
+                  className="grid gap-1.5"
+                  style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
+                >
+                  <span className="-ml-0.5 pt-[4px] text-right font-mono text-xs text-gray-900/50">
+                    <FontAwesomeIcon icon={faCalendar} />
+                  </span>
+                  <div className="flex flex-wrap items-stretch gap-0.5">
+                    {allDayEvents.map((event) => {
+                      const duration = intervalToDuration(event);
+                      const days = eachDayOfInterval(event, {
+                        in: tz(timeZone),
+                      }).filter(
+                        (date) => differenceInHours(event.end, date) > 2,
+                      );
+                      const dayNo =
+                        days.findIndex(
+                          (date) => dateToString(date) === dayName,
+                        ) + 1;
+                      const isLastDay = dayNo === days.length;
+                      return (
+                        <span
+                          key={event.uid}
+                          className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/20 bg-white"
+                        >
+                          {days.length > 1 ? (
+                            <>
+                              {event.datetype === "date-time" && dayNo === 1 ? (
+                                event.start.toLocaleTimeString("en-DK", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  timeZone,
+                                })
+                              ) : (
+                                <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
+                                  <span className="px-px text-white">
+                                    {dayNo}
+                                  </span>
+                                  <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
+                                  <span className="px-px text-white">
+                                    {days.length}
+                                  </span>
+                                </div>
+                              )}
+                              {dayNo === 1 ? (
+                                <>
+                                  {duration.hours ? `${duration.hours}h` : null}
+                                  {duration.minutes
+                                    ? `${duration.minutes}m`
+                                    : null}
+                                  {duration.seconds
+                                    ? `${duration.seconds}s`
+                                    : null}
+                                </>
+                              ) : isLastDay &&
+                                event.datetype === "date-time" ? (
+                                <>
+                                  -
+                                  {event.end.toLocaleTimeString("en-DK", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     timeZone,
-                                  })
-                                ) : (
-                                  <>Day {dayNo}</>
-                                )}{" "}
-                              </div>
-                              <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                                {dayNo === 1 ? (
-                                  <>
-                                    {duration.days ? `${duration.days}d` : null}
-                                    {duration.hours
-                                      ? `${duration.hours}h`
-                                      : null}
-                                    {duration.minutes
-                                      ? `${duration.minutes}m`
-                                      : null}
-                                    {duration.seconds
-                                      ? `${duration.seconds}s`
-                                      : null}
-                                  </>
-                                ) : isLastDay ? (
-                                  <>
-                                    -
-                                    {event.end.toLocaleTimeString("en-DK", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      timeZone,
-                                    })}
-                                  </>
-                                ) : null}
-                              </div>
-                            </div>
-                            <div className="flex-1">
-                              <div className="leading-snug">
-                                {event.summary}
-                              </div>
-                              <div className="text-[0.666rem] leading-tight italic">
-                                {event.location || <>&nbsp;</>}
-                              </div>
-                            </div>
-                          </li>
-                        );
-                      }
-
+                                  })}
+                                </>
+                              ) : null}
+                            </>
+                          ) : null}
+                          <div className="flex items-center gap-1 px-1.5">
+                            <span>{event.summary}</span>
+                            {event.location ? (
+                              <span>{event.location}</span>
+                            ) : null}
+                          </div>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </li>
+              ) : null}
+              {dayEvents.some((e) => allDayEvents.some((e2) => e === e2)) &&
+              dayEvents.some((e) => !allDayEvents.some((e2) => e === e2)) ? (
+                <hr className="mt-1 mb-0.5 border-gray-200" />
+              ) : null}
+              {isNonEmptyArray(dayEvents)
+                ? uniqueBy(events, (event) => event.uid).map((event) => {
+                    if (
+                      allDayEvents.some((allDayEvent) => allDayEvent === event)
+                    ) {
                       return null;
-                    })
-                  ) : (
-                    <li>
-                      <i>Nothing scheduled</i>
-                    </li>
-                  )}
-                  {dayEvents.some((e) => !("scheduleEntry" in e)) &&
-                  (dayEvents.some((e) => "scheduleEntry" in e) ||
-                    isNonEmptyArray(workouts)) ? (
-                    <hr className="my-1 border-gray-200" />
-                  ) : null}
-                  <li
-                    className="grid gap-1.5"
-                    style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
-                  >
-                    {isNonEmptyArray(events)
-                      ? dayEvents.map((event, eventI, dateEvents) => {
-                          if ("scheduleEntry" in event && eventI == 0) {
-                            return (
-                              <Fragment
-                                key={JSON.stringify(event.scheduleEntry)}
-                              >
-                                <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
-                                  <FontAwesomeIcon icon={faCircle} />
-                                </span>
-                                <div className="flex flex-wrap items-center gap-0.5">
-                                  {[exampleChores[dayI % exampleChores.length]]
-                                    .filter(Boolean)
-                                    .map((todo, index) => (
-                                      <div
-                                        key={index}
-                                        className="rounded-md border border-solid border-black/20 bg-white px-1.5"
-                                      >
-                                        {todo}
-                                      </div>
-                                    ))}
-                                  {dateEvents
-                                    .filter((e) => "scheduleEntry" in e)
-                                    .map((dueSet) => {
-                                      const exercise =
-                                        exercisesById[dueSet.exerciseId]!;
+                    }
 
-                                      return (
-                                        <div
-                                          key={JSON.stringify(
-                                            dueSet.scheduleEntry,
-                                          )}
-                                          className="rounded-md border border-solid border-black/20 bg-white px-1.5"
-                                        >
-                                          {
-                                            [exercise.name, ...exercise.aliases]
-                                              .filter(
-                                                (name) => name.length >= 4,
-                                              )
-                                              .sort(
-                                                (a, b) => a.length - b.length,
-                                              )[0]!
-                                          }
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </Fragment>
-                            );
-                          }
+                    const duration = intervalToDuration(event);
+                    const days = eachDayOfInterval(event, {
+                      in: tz(timeZone),
+                    }).filter((date) => differenceInHours(event.end, date) > 2);
+                    const dayNo =
+                      days.findIndex((date) => dateToString(date) === dayName) +
+                      1;
+                    const isLastDay = dayNo === days.length;
 
-                          return null;
-                        })
-                      : null}
-                    {isPast(dayDate) &&
-                    isNonEmptyArray(workouts) &&
-                    dayEvents.some((e) => "scheduleEntry" in e) ? (
-                      <>
-                        <span></span>
-                        <span>
-                          <hr className="border-gray-200" />
-                        </span>
-                      </>
-                    ) : null}
-                    {isPast(dayDate) && isNonEmptyArray(workouts) ? (
-                      <>
-                        <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
-                          <FontAwesomeIcon icon={faCircleCheck} />
-                        </span>
-                        <div>
-                          {isNonEmptyArray(workouts)
-                            ? Array.from(workouts)
-                                .sort((a, b) =>
-                                  compareAsc(a.workedOutAt, b.workedOutAt),
-                                )
-                                ?.map((workout) => (
-                                  <WorkoutEntry
-                                    exerciseSetPRs={
-                                      workoutsExerciseSetPRs?.[
-                                        workouts.indexOf(workout)
-                                      ]
-                                    }
-                                    key={workout._id.toString()}
-                                    workout={workout}
-                                    showLocation={false}
-                                  />
-                                ))
-                            : null}
+                    return (
+                      <li key={event.uid} className="flex gap-1.5">
+                        <div className="text-center">
+                          <div className="leading-snug font-semibold tabular-nums">
+                            {event.datetype === "date-time" && dayNo === 1 ? (
+                              event.start.toLocaleTimeString("en-DK", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone,
+                              })
+                            ) : (
+                              <>Day {dayNo}</>
+                            )}{" "}
+                          </div>
+                          <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+                            {dayNo === 1 ? (
+                              <>
+                                {duration.days ? `${duration.days}d` : null}
+                                {duration.hours ? `${duration.hours}h` : null}
+                                {duration.minutes
+                                  ? `${duration.minutes}m`
+                                  : null}
+                                {duration.seconds
+                                  ? `${duration.seconds}s`
+                                  : null}
+                              </>
+                            ) : isLastDay ? (
+                              <>
+                                -
+                                {event.end.toLocaleTimeString("en-DK", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  timeZone,
+                                })}
+                              </>
+                            ) : null}
+                          </div>
                         </div>
-                      </>
-                    ) : null}
-                  </li>
-                </ul>
-              </FieldSetX>
-            );
-          }),
-      )}
+                        <div className="flex-1">
+                          <div className="leading-snug">{event.summary}</div>
+                          <div className="text-[0.666rem] leading-tight italic">
+                            {event.location || <>&nbsp;</>}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })
+                : null}
+              {dayEvents.length &&
+              (dayDueSets.length || isNonEmptyArray(dayWorkouts)) ? (
+                <hr className="my-1 border-gray-200" />
+              ) : null}
+              <li
+                className="grid gap-1.5"
+                style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
+              >
+                {isNonEmptyArray(dayDueSets) ? (
+                  <Fragment>
+                    <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
+                      <FontAwesomeIcon icon={faCircle} />
+                    </span>
+                    <div className="flex flex-wrap items-center gap-0.5">
+                      {[exampleChores[dayI % exampleChores.length]]
+                        .filter(Boolean)
+                        .map((todo, index) => (
+                          <div
+                            key={index}
+                            className="rounded-md border border-solid border-black/20 bg-white px-1.5"
+                          >
+                            {todo}
+                          </div>
+                        ))}
+                      {dayDueSets.map((dueSet) => {
+                        const exercise = exercisesById[dueSet.exerciseId]!;
+
+                        return (
+                          <div
+                            key={JSON.stringify(dueSet.scheduleEntry)}
+                            className="rounded-md border border-solid border-black/20 bg-white px-1.5"
+                          >
+                            {
+                              [exercise.name, ...exercise.aliases]
+                                .filter((name) => name.length >= 4)
+                                .sort((a, b) => a.length - b.length)[0]!
+                            }
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Fragment>
+                ) : null}
+                {isPast(dayDate) &&
+                isNonEmptyArray(dayWorkouts) &&
+                isNonEmptyArray(dayDueSets) ? (
+                  <>
+                    <span></span>
+                    <span>
+                      <hr className="border-gray-200" />
+                    </span>
+                  </>
+                ) : null}
+                {isPast(dayDate) && isNonEmptyArray(dayWorkouts) ? (
+                  <>
+                    <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
+                      <FontAwesomeIcon icon={faCircleCheck} />
+                    </span>
+                    <div>
+                      {dayWorkouts
+                        .sort((a, b) =>
+                          compareAsc(a.workedOutAt, b.workedOutAt),
+                        )
+                        ?.map((workout) => (
+                          <WorkoutEntry
+                            key={workout._id.toString()}
+                            workout={workout}
+                            showLocation={false}
+                          />
+                        ))}
+                    </div>
+                  </>
+                ) : null}
+              </li>
+              {isDayEmpty ? (
+                <li className="text-gray-400/50 italic">
+                  No events, workouts or todos
+                </li>
+              ) : null}
+            </ul>
+          </FieldSetX>
+        );
+      })}
     </div>
   );
 }
