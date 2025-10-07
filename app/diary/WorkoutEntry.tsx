@@ -250,7 +250,8 @@ export default async function WorkoutEntry({
         </small>
       }
     >
-      {!(showExerciseName && showLocation && showSource) ? (
+      {!(showExerciseName && showLocation && showSource) &&
+      (workout.source === WorkoutSource.Self || !workout.source) ? (
         <Link
           prefetch={false}
           href={`/diary/${workoutDateStr}/workout/${workout.id}`}
