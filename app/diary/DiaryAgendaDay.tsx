@@ -271,13 +271,13 @@ export async function DiaryAgendaDay({
                     {allDayEvents.map(({ start, end, ...event }) => {
                       const eventStart =
                         event.datetype === "date"
-                          ? startOfDay(start, {
+                          ? roundToNearestDay(start, {
                               in: tz(start.tz || DEFAULT_TIMEZONE),
                             })
                           : start;
                       const eventEnd =
                         event.datetype === "date"
-                          ? endOfDay(end, {
+                          ? roundToNearestDay(end, {
                               in: tz(end.tz || DEFAULT_TIMEZONE),
                             })
                           : end;
