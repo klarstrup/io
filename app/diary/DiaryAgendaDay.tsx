@@ -64,7 +64,7 @@ export async function DiaryAgendaDay({
 
   const fetchingInterval = {
     start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), 0),
-    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 28),
+    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 7),
   };
   const daysOfInterval = eachDayOfInterval(fetchingInterval, {
     in: tz(timeZone),
@@ -147,7 +147,7 @@ export async function DiaryAgendaDay({
 
       if (
         !(
-          differenceInHours(event.end, event.start) < 24 &&
+          differenceInHours(event.end, event.start) <= 24 &&
           Object.values(eventsByDate).some((events) =>
             events.some((e) => e.uid === event.uid),
           )
@@ -268,37 +268,43 @@ export async function DiaryAgendaDay({
                     <FontAwesomeIcon icon={faCalendar} />
                   </span>
                   <div className="flex flex-wrap items-stretch gap-0.5">
-                    {allDayEvents.map((event) => {
-                      const days = eachDayOfInterval(event, {
-                        in: tz(timeZone),
-                      }).filter(
-                        (date) => differenceInHours(event.end, date) > 2,
-                      );
-                      const dayNo =
-                        days.findIndex(
-                          (date) => dateToString(date) === dayName,
-                        ) + 1;
+                    {allDayEvents.map(({ start, end, ...event }) => {
+                      const eventStart =
+                        event.datetype === "date"
+                          ? startOfDay(start, {
+                              in: tz(start.tz || DEFAULT_TIMEZONE),
+                            })
+                          : start;
+                      const eventEnd =
+                        event.datetype === "date"
+                          ? endOfDay(end, {
+                              in: tz(end.tz || DEFAULT_TIMEZONE),
+                            })
+                          : end;
+
+                      const dayNo = differenceInDays(dayDate, eventStart) + 1;
+                      const numDays = differenceInDays(eventEnd, eventStart);
                       const isFirstDay = dayNo === 1;
-                      const isLastDay = dayNo === days.length;
+                      const isLastDay = dayNo === numDays;
                       return (
                         <span
                           key={event.uid}
                           className="inline-flex items-stretch overflow-hidden rounded-sm border border-solid border-black/20 bg-white"
                         >
-                          {days.length > 1 ? (
+                          {numDays > 1 ? (
                             <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
                               <span className="px-px text-white">{dayNo}</span>
                               <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
                               <span className="px-px text-white">
-                                {days.length}
+                                {numDays}
                               </span>
                             </div>
                           ) : null}
                           <div className="flex items-center gap-1 px-1.5">
-                            {days.length > 1 ? (
+                            {numDays > 1 ? (
                               isFirstDay && event.datetype === "date-time" ? (
                                 <>
-                                  {event.start.toLocaleTimeString("en-DK", {
+                                  {eventStart.toLocaleTimeString("en-DK", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     timeZone,
@@ -309,7 +315,7 @@ export async function DiaryAgendaDay({
                                 event.datetype === "date-time" ? (
                                 <>
                                   -
-                                  {event.end.toLocaleTimeString("en-DK", {
+                                  {eventEnd.toLocaleTimeString("en-DK", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     timeZone,
@@ -333,7 +339,7 @@ export async function DiaryAgendaDay({
                 <hr className="mt-1 mb-0.5 border-gray-200" />
               ) : null}
               {isNonEmptyArray(dayEvents)
-                ? uniqueBy(events, (event) => event.uid).map((event) => {
+                ? uniqueBy(events, ({ uid }) => uid).map((event) => {
                     if (
                       allDayEvents.some((allDayEvent) => allDayEvent === event)
                     ) {
