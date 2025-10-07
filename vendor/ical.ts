@@ -20,7 +20,7 @@ export type NodeIcalCallback = (error: unknown, data: CalendarResponse) => void;
 
 export type CalendarResponse = Record<string, CalendarComponent>;
 
-export type CalendarComponent = VTimeZone | VEvent | VCalendar;
+export type CalendarComponent = VTimeZone | VEvent | VCalendar | VTodo;
 
 export type VTimeZone = TimeZoneProps & TimeZoneDictionary;
 
@@ -105,6 +105,30 @@ export interface VEvent extends BaseComponent {
   completed: DateWithTimeZone;
 
   alarms?: VAlarm[];
+}
+
+export interface VTodo extends BaseComponent {
+  uid: string;
+  type: "VTODO";
+  alarms?: VAlarm[];
+  dtstamp: DateWithTimeZone;
+  class?: Class;
+  completed?: DateWithTimeZone | boolean;
+  created?: DateWithTimeZone;
+  description?: string;
+  dtstart?: DateWithTimeZone;
+  geo?: { lat: number; lon: number };
+  lastmodified?: DateWithTimeZone;
+  organizer?: Organizer;
+  percent?: number;
+  recurrenceid?: DateWithTimeZone;
+  sequence?: string;
+  status?: "NEEDS-ACTION" | "COMPLETED" | "IN-PROCESS" | "CANCELLED";
+  summary?: string;
+  url?: string;
+  rrule?: RRule;
+  due?: DateWithTimeZone;
+  duration?: string; // dur-value
 }
 
 /**
@@ -359,7 +383,8 @@ const dateParameter =
       | "created"
       | "lastmodified"
       | "dtstamp"
-      | "recurrenceid",
+      | "recurrenceid"
+      | "due",
   ) =>
   <Component extends BaseComponent | CalendarResponse>(
     value: string,
@@ -604,7 +629,7 @@ const exdateParameter =
 
 const objectHandlers = {
   BEGIN(
-    component: "VCALENDAR" | "VEVENT" | "VALARM" | "VTIMEZONE",
+    component: "VCALENDAR" | "VEVENT" | "VALARM" | "VTIMEZONE" | "VTODO",
     parameters: string[],
     curr: CalendarComponent,
     stack: CalendarComponent[],
@@ -786,7 +811,6 @@ const objectHandlers = {
         }
       } else if (
         component === "VALARM" &&
-        // @ts-expect-error - didn't type out VTODO
         (parent.type === "VEVENT" || parent.type === "VTODO")
       ) {
         curr = curr as unknown as VAlarm;
@@ -899,11 +923,12 @@ const objectHandlers = {
   CLASS: storeParameter("class"), // Should there be a space in this property?
   TRANSP: storeParameter("transparency"),
   GEO: geoParameter("geo"),
-  "PERCENT-COMPLETE": storeParameter("completion"),
+  "PERCENT-COMPLETE": storeParameter("percent"),
   COMPLETED: dateParameter("completed"),
   CATEGORIES: categoriesParameter("categories"),
   DTSTAMP: dateParameter("dtstamp"),
   CREATED: dateParameter("created"),
+  DUE: dateParameter("due"),
   "LAST-MODIFIED": dateParameter("lastmodified"),
   "RECURRENCE-ID": dateParameter("recurrenceid"),
   RRULE(
