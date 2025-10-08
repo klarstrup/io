@@ -38,6 +38,7 @@ import {
   uniqueBy,
 } from "../../utils";
 import WorkoutEntry from "./WorkoutEntry";
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 const exampleChores = [
   /*
