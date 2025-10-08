@@ -223,6 +223,8 @@ export async function upsertTodo(
         _io_userId: user.id,
         uid: todo.uid ?? new ObjectId().toString(),
         ...todo,
+        // Dates do not get deserialized properly in server actions
+        start: todo.start ? new Date(todo.start) : todo.start,
       } satisfies MongoVTodo,
     },
     { upsert: true },

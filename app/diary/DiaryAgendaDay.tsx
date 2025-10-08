@@ -11,7 +11,6 @@ import {
   eachDayOfInterval,
   endOfDay,
   intervalToDuration,
-  isAfter,
   isBefore,
   isPast,
   max,
@@ -37,6 +36,7 @@ import {
   roundToNearestDay,
   uniqueBy,
 } from "../../utils";
+import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import WorkoutEntry from "./WorkoutEntry";
@@ -81,8 +81,8 @@ export async function DiaryAgendaDay({
     ],
   );
 
-  const eventsByDate: Record<string, MongoVEvent[]> = { [date]: [] };
-  const todosByDate: Record<string, MongoVTodo[]> = { [date]: [] };
+  const eventsByDate: Record<string, MongoVEvent[]> = {};
+  const todosByDate: Record<string, MongoVTodo[]> = {};
   const dueSetsByDate: Record<
     string,
     Awaited<ReturnType<typeof getNextSets>>
@@ -141,17 +141,7 @@ export async function DiaryAgendaDay({
         ),
       },
       { in: tz(timeZone) },
-    )
-      .filter((date) =>
-        "end" in event
-          ? isAfter(event.end, fetchingInterval.start) &&
-            differenceInHours(event.end, date) > 2
-          : "start" in event && event.start
-            ? isAfter(event.start, fetchingInterval.start) &&
-              differenceInHours(event.start, date) > 2
-            : true,
-      )
-      .sort((a, b) => a.getTime() - b.getTime())) {
+    ).sort((a, b) => a.getTime() - b.getTime())) {
       const calName = dateToString(date);
 
       if (
@@ -185,7 +175,7 @@ export async function DiaryAgendaDay({
   }
 
   return (
-    <div className="flex h-full flex-col justify-start">
+    <div className="flex flex-col justify-start">
       {daysOfInterval.map((dayDate, dayI) => {
         const events = eventsByDate[dateToString(dayDate)] || [];
         const dayName = dateToString(dayDate);
@@ -254,7 +244,7 @@ export async function DiaryAgendaDay({
                     >
                       <span className="text-xs">➕</span> Workout
                     </Link>
-                    <DiaryAgendaDayCreateTodo />
+                    <DiaryAgendaDayCreateTodo date={dayDate} />
                     <span
                       className={
                         "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
@@ -264,15 +254,9 @@ export async function DiaryAgendaDay({
                     </span>
                   </>
                 ) : (
-                  <a
-                    href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
-                    target="_blank"
-                    className={
-                      "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 text-xs font-semibold"
-                    }
-                  >
-                    <span className="text-xs">➕</span>
-                  </a>
+                  <DiaryAgendaDayCreateExpander>
+                    <DiaryAgendaDayCreateTodo date={dayDate} />
+                  </DiaryAgendaDayCreateExpander>
                 )}
               </div>
             }
@@ -486,8 +470,7 @@ export async function DiaryAgendaDay({
                     </div>
                   </Fragment>
                 ) : null}
-                {isPast(dayDate) &&
-                dayWorkouts.length + dayDones.length + dayDueSets.length ? (
+                {isPast(dayDate) && dayWorkouts.length + dayDones.length ? (
                   <>
                     <span></span>
                     <span>

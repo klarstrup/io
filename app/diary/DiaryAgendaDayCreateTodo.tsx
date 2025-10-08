@@ -3,14 +3,13 @@ import { useRef, useState } from "react";
 import { useClickOutside } from "../../hooks";
 import { upsertTodo } from "./actions";
 
-export function DiaryAgendaDayCreateTodo() {
+export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const onClickOutside = () => setIsActive(false);
   useClickOutside(ref, onClickOutside);
 
-  console.log({ isActive });
   return (
     <div
       ref={ref}
@@ -43,7 +42,7 @@ export function DiaryAgendaDayCreateTodo() {
               const formData = new FormData(e.currentTarget);
               const summary = formData.get("summary");
               if (typeof summary === "string" && summary.trim().length > 0) {
-                await upsertTodo({ summary: summary.trim() });
+                await upsertTodo({ summary: summary.trim(), start: date });
                 setIsActive(false);
               }
             }}
