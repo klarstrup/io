@@ -161,6 +161,7 @@ export function WorkoutEntryExerciseSetRow({
                   </td>
                   <td width="0.01%" className="p-0 text-right">
                     {repeatCount &&
+                    repeatCount > 1 &&
                     exercise.inputs[index]?.type === InputType.Reps ? (
                       <>
                         <span>{repeatCount}</span>
