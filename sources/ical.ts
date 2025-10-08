@@ -107,6 +107,7 @@ export async function getUserIcalEventsBetween(
             _io_icalUrlHash: event._io_icalUrlHash,
             _io_userId: event._io_userId,
             _io_scrapedAt: event._io_scrapedAt,
+            _io_source: event._io_source,
           });
         }
       }
