@@ -130,6 +130,8 @@ export async function snoozeUserExerciseSchedule(
     },
   );
 
+  revalidatePath("/diary");
+
   return (await Users.findOne({
     _id: new ObjectId(user.id),
   }))!.exerciseSchedules!.find((s) => s.exerciseId === exerciseId);

@@ -14,10 +14,7 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const onClickOutside = () => {
-    console.log("click outside");
-    setIsActive(false);
-  };
+  const onClickOutside = () => setIsActive(false);
   useClickOutside(ref, onClickOutside);
 
   return (

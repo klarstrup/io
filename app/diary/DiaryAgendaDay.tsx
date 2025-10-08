@@ -22,7 +22,6 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import type { MongoVEvent, MongoVTodo } from "../../lib";
-import { exercisesById } from "../../models/exercises";
 import { isNextSetDue } from "../../models/workout";
 import {
   getNextSets,
@@ -38,9 +37,9 @@ import {
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
+import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import WorkoutEntry from "./WorkoutEntry";
-import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 export async function DiaryAgendaDay({
   date,
@@ -430,43 +429,14 @@ export async function DiaryAgendaDay({
                       {dayTodos.map((todo) => (
                         <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                       ))}
-                      {dayDueSets.map((dueSet) => {
-                        const exercise = exercisesById[dueSet.exerciseId]!;
-
-                        return (
-                          <div
-                            key={JSON.stringify(dueSet.scheduleEntry)}
-                            className="inline-flex flex-col items-stretch justify-center overflow-hidden rounded-md border border-solid border-black/10 bg-white"
-                          >
-                            <div className="h-full self-stretch px-1.5 py-0.5 text-center">
-                              {
-                                [exercise.name, ...exercise.aliases]
-                                  .filter((name) => name.length >= 4)
-                                  .sort((a, b) => a.length - b.length)[0]!
-                              }
-                            </div>
-                            <div className="flex items-center justify-center self-stretch bg-black/60 px-1.5 text-xs text-white opacity-40">
-                              {dueSet.nextWorkingSetInputs?.length ||
-                              dueSet.nextWorkingSets ? (
-                                <table className="w-auto max-w-0">
-                                  <tbody>
-                                    <WorkoutEntryExerciseSetRow
-                                      exercise={exercise}
-                                      set={{
-                                        inputs:
-                                          dueSet.nextWorkingSetInputs ?? [],
-                                      }}
-                                      repeatCount={dueSet.nextWorkingSets}
-                                    />
-                                  </tbody>
-                                </table>
-                              ) : (
-                                "Exercise"
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {dayDueSets.map((dueSet) => (
+                        <DiaryAgendaDayDueSet
+                          key={JSON.stringify(dueSet.scheduleEntry)}
+                          userId={user!.id}
+                          dueSet={dueSet}
+                          date={dayDate}
+                        />
+                      ))}
                     </div>
                   </Fragment>
                 ) : null}
