@@ -1,5 +1,10 @@
-/* eslint-disable react-compiler/react-compiler */
-import { useEffect, useInsertionEffect, useRef, useState } from "react";
+import {
+  type RefObject,
+  useEffect,
+  useInsertionEffect,
+  useRef,
+  useState,
+} from "react";
 
 type AnyFunction = (...args: unknown[]) => unknown;
 
@@ -375,3 +380,20 @@ export function useInView({
 
   return result;
 }
+
+export const useClickOutside = (
+  ref: RefObject<HTMLElement | null>,
+  callback: () => void,
+) => {
+  const handleClick = useEvent((event: MouseEvent) => {
+    if (ref.current && !ref.current.contains(event.target as HTMLElement)) {
+      callback();
+    }
+  });
+
+  useEffect(() => {
+    document.addEventListener("click", handleClick);
+
+    return () => document.removeEventListener("click", handleClick);
+  });
+};
