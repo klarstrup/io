@@ -1,8 +1,9 @@
 import type { LocationData } from "./models/location";
-import type { WorkoutData } from "./models/workout";
+import type { WorkoutData, WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
 import type { MyFitnessPal } from "./sources/myfitnesspal";
-import type { VCalendar, VEvent } from "./vendor/ical";
+import type { DataSource } from "./sources/utils";
+import type { VCalendar, VEvent, VTodo } from "./vendor/ical";
 
 export interface DateInterval {
   start: Date;
@@ -137,6 +138,18 @@ export interface MongoVEventWithVCalendar
     ScrapedAt,
     IcalIoMeta {
   recurrences?: Omit<VEvent, "recurrences">[];
+}
+export interface MongoVEvent
+  extends Omit<VEvent, "recurrences">,
+    ScrapedAt,
+    IcalIoMeta {
+  recurrences?: Omit<VEvent, "recurrences">[];
+}
+export interface MongoVTodo
+  extends Omit<VTodo, "recurrences">,
+    ScrapedAt,
+    IcalIoMeta {
+  recurrences?: Omit<VTodo, "recurrences">[];
 }
 
 export interface TopLoggerAuthToken {
