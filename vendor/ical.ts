@@ -102,7 +102,6 @@ export interface VEvent extends BaseComponent {
   exdate: Record<string, DateWithTimeZone>;
   geo?: { lat: number; lon: number };
   recurrenceid?: Date;
-  completed: DateWithTimeZone;
 
   alarms?: VAlarm[];
 }
@@ -113,16 +112,17 @@ export interface VTodo extends BaseComponent {
   alarms?: VAlarm[];
   dtstamp: DateWithTimeZone;
   class?: Class;
-  completed?: DateWithTimeZone | boolean;
+  completed?: DateWithTimeZone;
   created?: DateWithTimeZone;
   description?: string;
-  dtstart?: DateWithTimeZone;
+  start?: DateWithTimeZone;
   geo?: { lat: number; lon: number };
   lastmodified?: DateWithTimeZone;
   organizer?: Organizer;
   percent?: number;
-  recurrenceid?: DateWithTimeZone;
+  recurrenceid?: Date;
   sequence?: string;
+  recurrences?: Record<string, Omit<VTodo, "recurrences">>;
   status?: "NEEDS-ACTION" | "COMPLETED" | "IN-PROCESS" | "CANCELLED";
   summary?: string;
   url?: string;
