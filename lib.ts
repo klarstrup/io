@@ -129,7 +129,8 @@ export interface VEventWithVCalendar extends VEvent {
 export interface IcalIoMeta {
   _io_userId: string;
   /** This is a hash of the iCal URL and the user ID */
-  _io_icalUrlHash: string;
+  _io_icalUrlHash?: string;
+  _io_source: DataSource.ICal | WorkoutSource.Self;
 }
 export interface MongoVEventWithVCalendar
   extends Omit<VEventWithVCalendar, "recurrences">,

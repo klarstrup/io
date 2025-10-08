@@ -34,6 +34,7 @@ export const GET = () =>
         const ioIcalMeta: IcalIoMeta = {
           _io_userId: user.id,
           _io_icalUrlHash: icalUrlHash,
+          _io_source: DataSource.ICal,
         };
         const { calendar, events } = extractIcalCalendarAndEvents(icalData);
 
