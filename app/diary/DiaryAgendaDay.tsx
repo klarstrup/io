@@ -433,13 +433,34 @@ export async function DiaryAgendaDay({
                         return (
                           <div
                             key={JSON.stringify(dueSet.scheduleEntry)}
-                            className="rounded-md border border-solid border-black/20 bg-white px-1.5"
+                            className="inline-flex flex-col items-stretch justify-center overflow-hidden rounded-md border border-solid border-black/10 bg-white"
                           >
-                            {
-                              [exercise.name, ...exercise.aliases]
-                                .filter((name) => name.length >= 4)
-                                .sort((a, b) => a.length - b.length)[0]!
-                            }
+                            <div className="h-full self-stretch px-1.5 py-0.5">
+                              {
+                                [exercise.name, ...exercise.aliases]
+                                  .filter((name) => name.length >= 4)
+                                  .sort((a, b) => a.length - b.length)[0]!
+                              }
+                            </div>
+                            <div className="flex items-center justify-center self-stretch bg-black/60 px-1.5 text-xs text-white opacity-40">
+                              {dueSet.nextWorkingSetInputs?.length ||
+                              dueSet.nextWorkingSets ? (
+                                <table className="w-auto max-w-0">
+                                  <tbody>
+                                    <WorkoutEntryExerciseSetRow
+                                      exercise={exercise}
+                                      set={{
+                                        inputs:
+                                          dueSet.nextWorkingSetInputs ?? [],
+                                      }}
+                                      repeatCount={dueSet.nextWorkingSets}
+                                    />
+                                  </tbody>
+                                </table>
+                              ) : (
+                                "Exercise"
+                              )}
+                            </div>
                           </div>
                         );
                       })}
