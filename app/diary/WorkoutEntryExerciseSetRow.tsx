@@ -34,7 +34,7 @@ export function WorkoutEntryExerciseSetRow({
 }) {
   return (
     <Fragment>
-      <tr className="align-baseline leading-tight whitespace-nowrap">
+      <tr className="align-baseline whitespace-nowrap">
         {repeatCount &&
         !set.inputs.some(
           (_, i) => exercise.inputs[i]?.type === InputType.Reps,
