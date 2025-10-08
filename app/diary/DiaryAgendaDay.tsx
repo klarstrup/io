@@ -12,6 +12,7 @@ import {
   endOfDay,
   intervalToDuration,
   isAfter,
+  isBefore,
   isPast,
   max,
   min,
@@ -21,7 +22,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { Fragment } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import type { MongoVEventWithVCalendar } from "../../lib";
+import type { MongoVEvent, MongoVTodo } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { isNextSetDue } from "../../models/workout";
 import {
@@ -32,23 +33,14 @@ import { getUserIcalEventsBetween } from "../../sources/ical";
 import {
   dateToString,
   DEFAULT_TIMEZONE,
-  isNonEmptyArray,
   rangeToQuery,
   roundToNearestDay,
   uniqueBy,
 } from "../../utils";
+import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
+import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import WorkoutEntry from "./WorkoutEntry";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
-
-const exampleChores = [
-  /*
-  "Take out the trash",
-  "Clean the kitchen",
-  "Mow the lawn",
-  "Wash the car",
-  "Organize the garage",
-  */
-];
 
 export async function DiaryAgendaDay({
   date,
@@ -89,9 +81,8 @@ export async function DiaryAgendaDay({
     ],
   );
 
-  const eventsByDate: Record<string, MongoVEventWithVCalendar[]> = {
-    [date]: [],
-  };
+  const eventsByDate: Record<string, MongoVEvent[]> = { [date]: [] };
+  const todosByDate: Record<string, MongoVTodo[]> = { [date]: [] };
   const dueSetsByDate: Record<
     string,
     Awaited<ReturnType<typeof getNextSets>>
@@ -121,41 +112,74 @@ export async function DiaryAgendaDay({
   for (const event of calendarEvents) {
     for (const date of eachDayOfInterval(
       {
-        start: max([
-          event.datetype === "date"
-            ? roundToNearestDay(event.start, {
-                in: tz(event.start.tz || DEFAULT_TIMEZONE),
-              })
-            : event.start,
-          fetchingInterval.start,
-        ]),
-        end: min([
-          event.datetype === "date"
-            ? roundToNearestDay(event.end, {
-                in: tz(event.end.tz || DEFAULT_TIMEZONE),
-              })
-            : event.end,
-          fetchingInterval.end,
-        ]),
+        start: max(
+          [
+            "datetype" in event && event.datetype === "date"
+              ? roundToNearestDay(event.start, {
+                  in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                })
+              : null,
+
+            "completed" in event ? event.completed : null,
+            "due" in event ? event.due : null,
+            "start" in event ? event.start : null,
+            fetchingInterval.start,
+          ].filter(Boolean),
+        ),
+        end: min(
+          [
+            "datetype" in event && event.datetype === "date"
+              ? roundToNearestDay(event.end, {
+                  in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                })
+              : null,
+            "completed" in event ? event.completed : null,
+            "due" in event ? event.due : null,
+            "end" in event ? event.end : null,
+            fetchingInterval.end,
+          ].filter(Boolean),
+        ),
       },
       { in: tz(timeZone) },
-    ).filter(
-      (date) =>
-        isAfter(event.end, fetchingInterval.start) &&
-        differenceInHours(event.end, date) > 2,
-    )) {
+    )
+      .filter((date) =>
+        "end" in event
+          ? isAfter(event.end, fetchingInterval.start) &&
+            differenceInHours(event.end, date) > 2
+          : "start" in event && event.start
+            ? isAfter(event.start, fetchingInterval.start) &&
+              differenceInHours(event.start, date) > 2
+            : true,
+      )
+      .sort((a, b) => a.getTime() - b.getTime())) {
       const calName = dateToString(date);
 
       if (
         !(
-          differenceInHours(event.end, event.start) <= 24 &&
+          ("end" in event
+            ? differenceInHours(event.end, event.start) <= 24
+            : "start" in event && event.start
+              ? isBefore(event.start, date)
+              : false) &&
           Object.values(eventsByDate).some((events) =>
             events.some((e) => e.uid === event.uid),
           )
         )
       ) {
-        if (!eventsByDate[calName]) eventsByDate[calName] = [];
-        eventsByDate[calName].push(event);
+        if (event.type !== "VTODO") {
+          if (!eventsByDate[calName]) eventsByDate[calName] = [];
+          eventsByDate[calName].push(event);
+          continue;
+        }
+        if (
+          Object.values(todosByDate)
+            .flat()
+            .some((e) => e.uid === event.uid)
+        ) {
+          continue;
+        }
+        if (!todosByDate[calName]) todosByDate[calName] = [];
+        todosByDate[calName].push(event);
       }
     }
   }
@@ -171,15 +195,30 @@ export async function DiaryAgendaDay({
             dateToString(workout.workedOutAt) === dateToString(dayDate),
         );
         const dayDueSets = dueSetsByDate[dayName] || [];
-
+        const dayTodos = (todosByDate[dayName] || []).filter(
+          (todo) => !todo.completed,
+        );
+        const dayDones = (todosByDate[dayName] || []).filter(
+          (todo) => todo.completed,
+        );
         const allDayEvents = dayEvents.filter(
-          (event): event is MongoVEventWithVCalendar =>
+          (event) =>
             differenceInDays(event.end, event.start) > 0 &&
             event.datetype === "date",
         );
+        const onDayEvents = dayEvents.filter(
+          (event) =>
+            !(
+              differenceInDays(event.end, event.start) > 0 &&
+              event.datetype === "date"
+            ),
+        );
 
         const isDayEmpty =
-          !dayEvents.length && !dayWorkouts.length && !dayDueSets.length;
+          !dayEvents.length &&
+          !dayWorkouts.length &&
+          !dayDueSets.length &&
+          !dayTodos.length;
 
         return (
           <FieldSetX
@@ -215,22 +254,7 @@ export async function DiaryAgendaDay({
                     >
                       <span className="text-xs">➕</span> Workout
                     </Link>
-                    <a
-                      href={`https://www.myfitnesspal.com/food/diary?date=${date}`}
-                      target="_blank"
-                      className={
-                        "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
-                      }
-                    >
-                      <span className="text-xs">➕</span> Food
-                    </a>
-                    <span
-                      className={
-                        "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
-                      }
-                    >
-                      <span className="text-xs">➕</span> Todo
-                    </span>
+                    <DiaryAgendaDayCreateTodo />
                     <span
                       className={
                         "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
@@ -260,7 +284,7 @@ export async function DiaryAgendaDay({
             }
           >
             <ul>
-              {isNonEmptyArray(allDayEvents) ? (
+              {allDayEvents.length ? (
                 <li
                   className="grid gap-1.5"
                   style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
@@ -335,18 +359,19 @@ export async function DiaryAgendaDay({
                   </div>
                 </li>
               ) : null}
-              {dayEvents.some((e) => allDayEvents.some((e2) => e === e2)) &&
-              dayEvents.some((e) => !allDayEvents.some((e2) => e === e2)) ? (
-                <hr className="mt-1 mb-0.5 border-gray-200" />
+              {allDayEvents.length && onDayEvents.length ? (
+                <li
+                  className="grid gap-1.5"
+                  style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
+                >
+                  <span></span>
+                  <span>
+                    <hr className="mt-1 mb-0.5 border-gray-200" />
+                  </span>
+                </li>
               ) : null}
-              {isNonEmptyArray(dayEvents)
-                ? uniqueBy(events, ({ uid }) => uid).map((event) => {
-                    if (
-                      allDayEvents.some((allDayEvent) => allDayEvent === event)
-                    ) {
-                      return null;
-                    }
-
+              {onDayEvents.length
+                ? uniqueBy(onDayEvents, ({ uid }) => uid).map((event) => {
                     const days = eachDayOfInterval(event, {
                       in: tz(timeZone),
                     }).filter((date) => differenceInHours(event.end, date) > 2);
@@ -404,30 +429,23 @@ export async function DiaryAgendaDay({
                     );
                   })
                 : null}
-              {dayEvents.length &&
-              (dayDueSets.length || isNonEmptyArray(dayWorkouts)) ? (
+              {onDayEvents.length &&
+              dayTodos.length + dayDueSets.length + dayWorkouts.length ? (
                 <hr className="my-1 border-gray-200" />
               ) : null}
               <li
                 className="grid gap-1.5"
                 style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
               >
-                {isNonEmptyArray(dayDueSets) ? (
+                {dayDueSets.length + dayTodos.length ? (
                   <Fragment>
                     <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                       <FontAwesomeIcon icon={faCircle} />
                     </span>
                     <div className="flex flex-wrap items-center gap-0.5">
-                      {[exampleChores[dayI % exampleChores.length]]
-                        .filter(Boolean)
-                        .map((todo, index) => (
-                          <div
-                            key={index}
-                            className="rounded-md border border-solid border-black/20 bg-white px-1.5"
-                          >
-                            {todo}
-                          </div>
-                        ))}
+                      {dayTodos.map((todo) => (
+                        <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+                      ))}
                       {dayDueSets.map((dueSet) => {
                         const exercise = exercisesById[dueSet.exerciseId]!;
 
@@ -436,7 +454,7 @@ export async function DiaryAgendaDay({
                             key={JSON.stringify(dueSet.scheduleEntry)}
                             className="inline-flex flex-col items-stretch justify-center overflow-hidden rounded-md border border-solid border-black/10 bg-white"
                           >
-                            <div className="h-full self-stretch px-1.5 py-0.5">
+                            <div className="h-full self-stretch px-1.5 py-0.5 text-center">
                               {
                                 [exercise.name, ...exercise.aliases]
                                   .filter((name) => name.length >= 4)
@@ -469,8 +487,7 @@ export async function DiaryAgendaDay({
                   </Fragment>
                 ) : null}
                 {isPast(dayDate) &&
-                isNonEmptyArray(dayWorkouts) &&
-                isNonEmptyArray(dayDueSets) ? (
+                dayWorkouts.length + dayDones.length + dayDueSets.length ? (
                   <>
                     <span></span>
                     <span>
@@ -478,23 +495,30 @@ export async function DiaryAgendaDay({
                     </span>
                   </>
                 ) : null}
-                {isPast(dayDate) && isNonEmptyArray(dayWorkouts) ? (
+                {isPast(dayDate) && dayWorkouts.length + dayDones.length ? (
                   <>
                     <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                       <FontAwesomeIcon icon={faCircleCheck} />
                     </span>
                     <div>
-                      {dayWorkouts
-                        .sort((a, b) =>
-                          compareAsc(a.workedOutAt, b.workedOutAt),
-                        )
-                        ?.map((workout) => (
-                          <WorkoutEntry
-                            key={workout._id.toString()}
-                            workout={workout}
-                            showLocation={false}
-                          />
+                      <div className="flex flex-wrap items-baseline gap-0.5">
+                        {dayDones.map((todo) => (
+                          <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                         ))}
+                        <div>
+                          {dayWorkouts
+                            .sort((a, b) =>
+                              compareAsc(a.workedOutAt, b.workedOutAt),
+                            )
+                            .map((workout) => (
+                              <WorkoutEntry
+                                key={workout._id.toString()}
+                                workout={workout}
+                                showLocation={false}
+                              />
+                            ))}
+                        </div>
+                      </div>
                     </div>
                   </>
                 ) : null}

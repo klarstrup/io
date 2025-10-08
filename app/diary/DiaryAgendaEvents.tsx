@@ -15,7 +15,7 @@ import type { Session } from "next-auth";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
 import Popover from "../../components/Popover";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
-import type { MongoVEventWithVCalendar } from "../../lib";
+import type { MongoVEvent } from "../../lib";
 import { isNextSetDue } from "../../models/workout";
 import { getNextSets } from "../../models/workout.server";
 import { getUserIcalEventsBetween } from "../../sources/ical";
@@ -49,15 +49,14 @@ export async function DiaryAgendaEvents({
     end: onlyGivenDay ? endOfDay(tzDate) : addDays(endOfDay(tzDate), 7),
   };
   const calendarEvents = user
-    ? await getUserIcalEventsBetween(user.id, fetchingInterval)
+    ? (await getUserIcalEventsBetween(user.id, fetchingInterval)).filter(
+        (event): event is MongoVEvent => event.type === "VEVENT",
+      )
     : [];
 
   const eventsByDate: Record<
     string,
-    (
-      | MongoVEventWithVCalendar
-      | Awaited<ReturnType<typeof getNextSets>>[number]
-    )[]
+    (MongoVEvent | Awaited<ReturnType<typeof getNextSets>>[number])[]
   > = { [date]: [] };
 
   const nextSets = user
