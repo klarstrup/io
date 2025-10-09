@@ -501,7 +501,7 @@ export async function DiaryAgendaDay({
                               >
                                 <div
                                   className={
-                                    "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-xs text-white opacity-40"
+                                    "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40"
                                   }
                                 >
                                   <div className="flex flex-wrap gap-1 px-0.5 py-0.5 leading-none">
