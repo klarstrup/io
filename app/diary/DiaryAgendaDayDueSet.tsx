@@ -38,7 +38,7 @@ export function DiaryAgendaDayDueSet({
             .sort((a, b) => a.length - b.length)[0]!
         }
       </div>
-      <div className="flex items-center justify-center self-stretch bg-black/60 px-1.5 text-xs text-white opacity-40">
+      <div className="flex items-center justify-center self-stretch rounded-b-md bg-black/60 px-1.5 text-xs text-white opacity-40">
         {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
           <table className="w-auto max-w-0">
             <tbody>

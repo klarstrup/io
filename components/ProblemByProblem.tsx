@@ -453,7 +453,7 @@ export default function ProblemByProblem({
       <div
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))" }}
         className={
-          "mt-0.5 grid content-between justify-between gap-0.5 " +
+          "mt-0.5 grid w-full content-between justify-between gap-0.5 " +
           (className ? className : "")
         }
       >
@@ -482,7 +482,7 @@ export default function ProblemByProblem({
   return (
     <div
       style={{ gridTemplateColumns: "repeat(auto-fill, minmax(30px, 1fr))" }}
-      className={"mt-0.5 grid gap-0.5 " + (className ? className : "")}
+      className={"mt-0.5 grid w-full gap-0.5 " + (className ? className : "")}
     >
       {sortedProblems.map((problem, i) => (
         <ProblemBadge key={i} {...problem} />

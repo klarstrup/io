@@ -21,8 +21,9 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
     <div
       ref={ref}
       className={
-        "group relative inline-flex flex-col items-stretch justify-center rounded-md border border-black/10 bg-white " +
-        (isActive ? "rounded-b-none" : "cursor-pointer")
+        "group relative flex flex-col items-stretch justify-center rounded-md border border-black/10 bg-white " +
+        (isActive ? "rounded-b-none" : "cursor-pointer") +
+        (todo.completed ? " flex-col-reverse" : "")
       }
       onClick={() => setIsActive(true)}
     >
@@ -56,8 +57,9 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
       </div>
       <div
         className={
-          "flex items-center justify-center self-stretch rounded-b-md bg-black/60 px-1.5 text-xs text-white opacity-40 " +
-          (isActive ? "rounded-b-none" : "")
+          "flex items-center justify-center self-stretch bg-black/60 px-1.5 text-xs text-white opacity-40 " +
+          (isActive ? "rounded-b-none" : "") +
+          (todo.completed ? " rounded-t-md" : "rounded-b-md")
         }
       >
         Todo
