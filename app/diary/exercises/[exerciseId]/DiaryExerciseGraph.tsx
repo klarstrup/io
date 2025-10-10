@@ -53,7 +53,7 @@ export default function DiaryExerciseGraph({
             itemHeight: 22,
           },
         ]}
-        pointSize={0}
+        pointSize={4}
         defs={[
           linearGradientDef("gradientA", [
             { offset: 0, color: "inherit" },

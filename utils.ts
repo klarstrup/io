@@ -4,6 +4,7 @@ import {
   type ContextOptions,
   differenceInDays,
   type Interval,
+  isDate,
   isWithinInterval,
   type RoundingMethod,
   type RoundingOptions,
@@ -597,3 +598,60 @@ export const colorNameToHTMLColor = (color?: string) =>
                 : color === "pink"
                   ? "#F0F"
                   : color;
+
+const getAverage = (arr: Array<number>) =>
+  arr.reduce<number>((acc, c) => acc + c, 0) / arr.length;
+
+export const getSum = (arr: Array<number>) =>
+  arr.reduce((acc, c) => acc + c, 0);
+
+export const getLimits = (array: Array<number>): [min: number, max: number] => {
+  let min = Number.MAX_SAFE_INTEGER,
+    max = Number.MIN_SAFE_INTEGER;
+
+  for (const value of array) {
+    min = value < min ? value : min;
+    max = value > max ? value : max;
+  }
+
+  return [min, max] as const;
+};
+
+export function createTrend(data: Array<{ x: number | Date; y: number }>): {
+  slope: number;
+  yStart: number;
+  calcY: (x: number) => number;
+} {
+  const xData: number[] = [];
+  const yData: number[] = [];
+  for (const { x, y } of data) {
+    xData.push(isDate(x) ? x.valueOf() : x);
+    yData.push(y);
+  }
+
+  // average of X values and Y values
+  const xMean = getAverage(xData);
+  const yMean = getAverage(yData);
+
+  // Subtract X or Y mean from corresponding axis value
+  const xMinusxMean: number[] = [];
+  const yMinusyMean: number[] = [];
+  for (let i = 0; i < data.length; i++) {
+    xMinusxMean.push(xData[i]! - xMean);
+    yMinusyMean.push(yData[i]! - yMean);
+  }
+
+  const xMinusxMeanSq = xMinusxMean.map((val) => Math.pow(val, 2));
+
+  const xy: Array<number> = [];
+  for (let i = 0; i < data.length; i++) {
+    xy.push(xMinusxMean[i]! * yMinusyMean[i]!);
+  }
+
+  // b1 is the slope
+  const slope = getSum(xy) / getSum(xMinusxMeanSq);
+  // b0 is the start of the slope on the Y axis
+  const yStart = yMean - slope * xMean;
+
+  return { slope, yStart, calcY: (x: number) => yStart + slope * x };
+}

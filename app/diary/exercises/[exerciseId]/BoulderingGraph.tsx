@@ -6,8 +6,11 @@ import {
   calculate60dayTop10AverageFlashGrade,
   calculate60dayTop10AverageSendGrade,
 } from "../../../../models/workout.server";
-import { allPromises } from "../../../../utils";
+import { createTrend, getLimits } from "../../../../utils";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
+
+const filterNullData = <T,>(data: { x: Date; y: T | null }[]) =>
+  data.filter((d): d is { x: Date; y: T } => d.y !== null);
 
 export default async function BoulderingGraph({
   userId,
@@ -29,60 +32,66 @@ export default async function BoulderingGraph({
     _id: ObjectId;
   }[];
 }) {
+  const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] =
+    await Promise.all([
+      Promise.all(
+        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
+          const x = min([endOfDay(workedOutAt), new Date()]);
+          return {
+            x,
+            y: await calculate60dayTop10AverageSendGrade(userId, x),
+          };
+        }),
+      ).then(filterNullData),
+      Promise.all(
+        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
+          const x = min([endOfDay(workedOutAt), new Date()]);
+          return {
+            x,
+            y: await calculate60dayTop10AverageFlashGrade(userId, x),
+          };
+        }),
+      ).then(filterNullData),
+      Promise.all(
+        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
+          const x = min([endOfDay(workedOutAt), new Date()]);
+          return {
+            x,
+            y: await calculate60dayTop10AverageAttemptGrade(userId, x),
+          };
+        }),
+      ).then(filterNullData),
+    ]);
+
+  const top10sendGradeDataTrend = (() => {
+    const trend = createTrend(top10sendGradeData);
+    return getLimits(top10sendGradeData.map((data) => data.x.valueOf())).map(
+      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    );
+  })();
+  const top10flashGradeDataTrend = (() => {
+    const trend = createTrend(top10flashGradeData);
+    return getLimits(top10flashGradeData.map((data) => data.x.valueOf())).map(
+      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    );
+  })();
+  const top10attemptGradeDataTrend = (() => {
+    const trend = createTrend(top10attemptGradeData);
+    return getLimits(top10attemptGradeData.map((data) => data.x.valueOf())).map(
+      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    );
+  })();
+
   return (
     <DiaryExerciseGraph
-      data={await allPromises(
-        /*
-        async () => ({
-          id: "80% Flash Grade",
-          data: await Promise.all(
-            allWorkoutsOfExercise.map(async ({ workedOutAt }) => ({
-              x: min([endOfDay(workedOutAt), new Date()]),
-              y: await calculateFlashGradeOn(
-                userId,
-                min([endOfDay(workedOutAt), new Date()]),
-              ),
-            })),
-          ),
-        }),
-        */
-        async () => ({
-          id: "Top 10 Send Grade",
-          data: await Promise.all(
-            allWorkoutsOfExercise.map(async ({ workedOutAt }) => ({
-              x: min([endOfDay(workedOutAt), new Date()]),
-              y: await calculate60dayTop10AverageSendGrade(
-                userId,
-                min([endOfDay(workedOutAt), new Date()]),
-              ),
-            })),
-          ),
-        }),
-        async () => ({
-          id: "Top 10 Flash Grade",
-          data: await Promise.all(
-            allWorkoutsOfExercise.map(async ({ workedOutAt }) => ({
-              x: min([endOfDay(workedOutAt), new Date()]),
-              y: await calculate60dayTop10AverageFlashGrade(
-                userId,
-                min([endOfDay(workedOutAt), new Date()]),
-              ),
-            })),
-          ),
-        }),
-        async () => ({
-          id: "Top 10 Attempt Grade",
-          data: await Promise.all(
-            allWorkoutsOfExercise.map(async ({ workedOutAt }) => ({
-              x: min([endOfDay(workedOutAt), new Date()]),
-              y: await calculate60dayTop10AverageAttemptGrade(
-                userId,
-                min([endOfDay(workedOutAt), new Date()]),
-              ),
-            })),
-          ),
-        }),
-      )}
+      data={[
+        { id: "Top 10 Send Grade", data: top10sendGradeData },
+        { id: "Top 10 Send Grade Trend", data: top10sendGradeDataTrend },
+        { id: "Top 10 Flash Grade", data: top10flashGradeData },
+        { id: "Top 10 Flash Grade Trend", data: top10flashGradeDataTrend },
+        { id: "Top 10 Attempt Grade", data: top10attemptGradeData },
+        { id: "Top 10 Attempt Grade Trend", data: top10attemptGradeDataTrend },
+      ]}
     />
   );
 }

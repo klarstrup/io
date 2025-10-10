@@ -101,6 +101,7 @@ async function DiaryExerciseList({
             userId,
             "exercises.exerciseId": exerciseId,
             deletedAt: { $exists: false },
+            //            workedOutAt: { $gte: new Date(2025, 0, 1) },
           },
           { sort: { workedOutAt: -1 } },
         ).toArray()
