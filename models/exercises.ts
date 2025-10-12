@@ -15784,7 +15784,12 @@ export const exercises = [
     name: "Clap Push-Up",
   },
   {
-    aliases: [],
+    aliases: [
+      "Wide Grip Push-Up",
+      "Wide Push-Up",
+      "Wide Arm Press-Up",
+      "Wide Press-Up",
+    ],
     id: 415,
     inputs: [
       {
@@ -15831,6 +15836,7 @@ export const exercises = [
       { name: "P90X 09: Chest, Shoulder & Triceps", type: TagType.Program },
       { name: "P90X", type: TagType.Program },
       { name: "Strength", type: TagType.Type },
+      { name: "Calisthenics", type: TagType.Type },
       { name: "P90X 01: Chest and Back", type: TagType.Program },
       { name: "Arms", type: TagType.MuscleGroup },
       { name: "Intermediate", type: TagType.ExperienceLevel },
