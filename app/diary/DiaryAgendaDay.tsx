@@ -504,7 +504,7 @@ export async function DiaryAgendaDay({
                                     "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40"
                                   }
                                 >
-                                  <div className="flex flex-wrap gap-1 px-0.5 py-0.5 leading-none">
+                                  <div className="flex flex-wrap items-center gap-1 px-0.5 py-0.5 leading-none">
                                     <Link
                                       prefetch={false}
                                       href={`/diary/exercises/${exercise.id}`}
