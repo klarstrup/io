@@ -124,7 +124,8 @@ export function jsonReadableStreamFromAsyncIterable<T>(
   return responseStream.readable;
 }
 
-export const shuffle = <A>(arrRaw: A[]): A[] => {
+export const shuffle = <A>(arrRaw?: A[]): A[] => {
+  if (!arrRaw?.length) return [];
   const arr = [...arrRaw];
   return arr.reduceRight<A[]>((acc) => {
     acc.push(arr.splice(0 | (Math.random() * arr.length), 1)[0]!);
