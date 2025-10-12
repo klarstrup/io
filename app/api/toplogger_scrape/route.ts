@@ -1,3 +1,4 @@
+import { addDays, isFuture, subDays } from "date-fns";
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
 import { NextRequest } from "next/server";
@@ -55,6 +56,7 @@ export const GET = (request: NextRequest) =>
         setUpdated(false);
 
         const handleUpdateResults = (updateResults: {
+          operationName?: string | undefined;
           timing: { requestMs: number; upsertMs: number; totalMs: number };
           updates: {
             [key: string]: Pick<
@@ -152,10 +154,10 @@ export const GET = (request: NextRequest) =>
         agentHeaders.set("x-app-locale", "en-us");
 
         // Helper to fetch, normalize and upsert query data
-        const fetchsert = async <TData = Record<string, unknown>>(
+        async function* fetchsert<TData = Record<string, unknown>>(
           query: DocumentNode,
           variables?: Variables,
-        ) => {
+        ) {
           const requestStarted = Date.now();
           const response = await fetchGraphQLQuery<TData>(
             "https://app.toplogger.nu/graphql",
@@ -172,213 +174,213 @@ export const GET = (request: NextRequest) =>
           );
           const upsertMs = Date.now() - upsertStarted;
 
-          return [
-            response,
-            {
-              operationName: query.definitions.find(
-                (definition) => definition.kind === Kind.OPERATION_DEFINITION,
-              )?.name?.value,
-              updates,
-              timing: { requestMs, upsertMs, totalMs: requestMs + upsertMs },
-            },
-          ] as const;
-        };
+          yield handleUpdateResults({
+            operationName: query.definitions.find(
+              (definition) => definition.kind === Kind.OPERATION_DEFINITION,
+            )?.name?.value,
+            updates,
+            timing: { requestMs, upsertMs, totalMs: requestMs + upsertMs },
+          });
+
+          return response;
+        }
+        async function* fetchsertComp(
+          comp: CompsResponse["comps"]["data"][number],
+        ) {
+          const { id: compId, compPoules, climbType, compGyms } = comp;
+          for (const { compRounds } of shuffle(compPoules)) {
+            const userCompRounds = compRounds.filter((r) => r.compRoundUserMe);
+
+            yield* deadlineLoop(
+              // Cover a scenario where the user is in a comp but isn't in
+              // any rounds (weird, but possible).
+              shuffle(userCompRounds.length ? userCompRounds : compRounds),
+              // Only spend a fraction of the remaining time on this loop, to save time for climb logs
+              () => getTimeRemaining() / 3,
+              async function* ({ id: compRoundId }) {
+                for (const { id: gymId } of shuffle(compGyms)) {
+                  const compRoundUsersVariables = {
+                    gymId,
+                    compId,
+                    compRoundId,
+                    pagination: {
+                      page: 1,
+                      perPage: 100,
+                      orderBy: [
+                        { key: "compUser.disqualifiedInt", order: "asc" },
+                        { key: "score", order: "desc" },
+                      ],
+                    },
+                  };
+
+                  const { data: compRoundUsersData } =
+                    yield* fetchsert<CompRoundUsersForRankingResponse>(
+                      compRoundUsersForRankingQuery,
+                      compRoundUsersVariables,
+                    );
+
+                  const bestClimberId =
+                    compRoundUsersData?.ranking.data[0]?.compUser.userId;
+
+                  if (
+                    compRoundUsersData &&
+                    compRoundUsersData?.ranking.pagination.total >
+                      compRoundUsersData?.ranking.pagination.perPage
+                  ) {
+                    yield* fetchsert<CompRoundUsersForRankingResponse>(
+                      compRoundUsersForRankingQuery,
+                      {
+                        ...compRoundUsersVariables,
+                        pagination: {
+                          ...compRoundUsersVariables.pagination,
+                          page: 2,
+                        },
+                      },
+                    );
+                  }
+
+                  // Also get all the Comp Climbs of the best ranked climber,
+                  // presuming that they've attempted every Comp Climb.
+                  // This allows for backfilling of Climbs for comps that are no longer
+                  // set, I haven't found a better way of doing this.
+                  for (const userIddd of [userId, bestClimberId].filter(
+                    Boolean,
+                  )) {
+                    yield* fetchsert<CompClimbUsersForRankingClimbUserResponse>(
+                      compClimbUsersForRankingClimbUserQuery,
+                      {
+                        gymId,
+                        userId: userIddd,
+                        compId,
+                        compRoundId,
+                        pagination: {
+                          page: 1,
+                          perPage: 100,
+                          orderBy: [{ key: "points", order: "desc" }],
+                        },
+                      },
+                    );
+
+                    yield* fetchsert<ClimbsResponse>(climbsQuery, {
+                      gymId,
+                      compRoundId,
+                      userId: userIddd,
+                      climbType,
+                    });
+                  }
+                }
+              },
+            );
+          }
+        }
 
         const userId = graphQLId;
 
-        const [userMeStoreResponse, updateResult] =
-          await fetchsert<UserMeStoreResponse>(userMeStoreQuery);
-        yield handleUpdateResults(updateResult);
+        // Fetch the most recent climb day, and from that climb day fetch the climb logs.
+        const climbDaysResponse = yield* fetchsert<ClimbDaysSessionsResponse>(
+          climbDaysSessionsQuery,
+          { userId, pagination: { perPage: 1 } },
+        );
+        yield* deadlineLoop(
+          climbDaysResponse.data?.climbDaysPaginated.data || [],
+          () => getTimeRemaining(),
+          async function* ({ statsAtDate: climbedAtDate }) {
+            yield* fetchsert<ClimbLogsResponse>(climbLogsQuery, {
+              userId,
+              climbedAtDate,
+            });
+          },
+        );
+
+        const userMeStoreResponse =
+          yield* fetchsert<UserMeStoreResponse>(userMeStoreQuery);
 
         const gyms = userMeStoreResponse.data?.userMe?.gymUsers.map(
           (fav) => fav.gym,
         );
 
+        // Fetch all active and upcoming comps for each gym first.
         yield* deadlineLoop(
-          shuffle(gyms || []),
+          shuffle(gyms),
+          () => getTimeRemaining(),
+          async function* ({ id: gymId }) {
+            const { data: compsData } = yield* fetchsert<CompsResponse>(
+              compsQuery,
+              { gymId, registered: true, pagination: { page: 1, perPage: 10 } },
+            );
+
+            for (const comp of shuffle(compsData?.comps.data).filter(
+              (c) =>
+                isFuture(addDays(new Date(c.loggableEndAt), 1)) ||
+                isFuture(subDays(new Date(c.loggableStartAt), 1)),
+            )) {
+              yield* fetchsertComp(comp);
+            }
+          },
+        );
+
+        yield* deadlineLoop(
+          shuffle(gyms),
           () => getTimeRemaining(),
           async function* (gym) {
             yield pick(gym, "id", "name", "city");
 
             const gymId = gym.id;
 
-            const [compsResponse, updateResult] =
-              await fetchsert<CompsResponse>(compsQuery, {
-                gymId,
-                pagination: {
-                  page: 1,
-                  perPage: 10, // Max is 10
-                  orderBy: [{ key: "loggableStartAt", order: "desc" }],
-                },
-              });
-            yield handleUpdateResults(updateResult);
-
-            const userComps = compsResponse.data?.comps.data?.filter(
-              (comp) => comp.compUserMe,
+            const { data: compsData } = yield* fetchsert<CompsResponse>(
+              compsQuery,
+              { gymId, registered: true, pagination: { page: 1, perPage: 10 } },
             );
 
-            for (const { id: compId, compPoules, climbType } of shuffle(
-              userComps || [],
-            )) {
-              for (const { compRounds } of shuffle(compPoules)) {
-                const userCompRounds = compRounds.filter(
-                  (r) => r.compRoundUserMe,
-                );
-
-                yield* deadlineLoop(
-                  shuffle(
-                    // Cover a scenario where the user is in a comp but isn't in
-                    // any rounds (weird, but possible).
-                    userCompRounds.length ? userCompRounds : compRounds,
-                  ),
-                  // Only spend a fraction of the remaining time on this loop, to save time for climb logs
-                  () => getTimeRemaining() / 3,
-                  async function* ({ id: compRoundId }) {
-                    const compRoundUsersForRankingVariables = {
-                      gymId,
-                      compId,
-                      compRoundId,
-                      pagination: {
-                        page: 1,
-                        perPage: 100,
-                        orderBy: [
-                          { key: "compUser.disqualifiedInt", order: "asc" },
-                          { key: "score", order: "desc" },
-                        ],
-                      },
-                    };
-
-                    const [compRoundUsersForRankingResponse, updateResult] =
-                      await fetchsert<CompRoundUsersForRankingResponse>(
-                        compRoundUsersForRankingQuery,
-                        compRoundUsersForRankingVariables,
-                      );
-
-                    const bestClimberId =
-                      compRoundUsersForRankingResponse.data?.ranking.data[0]
-                        ?.compUser.userId;
-                    yield handleUpdateResults(updateResult);
-
-                    if (
-                      compRoundUsersForRankingResponse.data &&
-                      compRoundUsersForRankingResponse.data?.ranking.pagination
-                        .total >
-                        compRoundUsersForRankingResponse.data?.ranking
-                          .pagination.perPage
-                    ) {
-                      const [, updateResult] =
-                        await fetchsert<CompRoundUsersForRankingResponse>(
-                          compRoundUsersForRankingQuery,
-                          {
-                            ...compRoundUsersForRankingVariables,
-                            pagination: {
-                              ...compRoundUsersForRankingVariables.pagination,
-                              page: 2,
-                            },
-                          },
-                        );
-                      yield handleUpdateResults(updateResult);
-                    }
-
-                    // Also get all the Comp Climbs of the best ranked climber,
-                    // presuming that they've attempted every Comp Climb.
-                    // This allows for backfilling of Climbs for comps that are no longer
-                    // set, I haven't found a better way of doing this.
-                    for (const userIddd of [userId, bestClimberId].filter(
-                      Boolean,
-                    )) {
-                      const [, compClimbUsersForRankingClimbUserUpdateResult] =
-                        await fetchsert<CompClimbUsersForRankingClimbUserResponse>(
-                          compClimbUsersForRankingClimbUserQuery,
-                          {
-                            gymId,
-                            userId: userIddd,
-                            compId,
-                            compRoundId,
-                            pagination: {
-                              page: 1,
-                              perPage: 100,
-                              orderBy: [{ key: "points", order: "desc" }],
-                            },
-                          },
-                        );
-                      yield handleUpdateResults(
-                        compClimbUsersForRankingClimbUserUpdateResult,
-                      );
-
-                      const [, updateResult] = await fetchsert<ClimbsResponse>(
-                        climbsQuery,
-                        {
-                          gymId,
-                          compRoundId,
-                          userId: userIddd,
-                          climbType,
-                        },
-                      );
-
-                      yield handleUpdateResults(updateResult);
-                    }
-                  },
-                );
-              }
+            for (const comp of randomSliceOfSize(
+              compsData?.comps.data ?? [],
+              3,
+            ).filter((c) => new Date(c.loggableEndAt) < new Date())) {
+              yield* fetchsertComp(comp);
             }
 
             let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
               [];
             let page = 1;
-            // eslint-disable-next-line prefer-const
-            let [graphqlClimbDaysPaginatedResponse, updateResult2] =
-              await fetchsert<ClimbDaysSessionsResponse>(
+            const climbDaysResponse =
+              yield* fetchsert<ClimbDaysSessionsResponse>(
                 climbDaysSessionsQuery,
                 { gymId, userId, pagination: { page, perPage: 100 } },
               );
-            yield handleUpdateResults(updateResult2);
 
-            if (!graphqlClimbDaysPaginatedResponse.data) {
+            if (!climbDaysResponse.data) {
               throw new Error("Failed to fetch climb days");
             }
             climbDays = climbDays.concat(
-              graphqlClimbDaysPaginatedResponse.data.climbDaysPaginated.data,
+              climbDaysResponse.data.climbDaysPaginated.data,
             );
             const { total, perPage } =
-              graphqlClimbDaysPaginatedResponse.data.climbDaysPaginated
-                .pagination;
+              climbDaysResponse.data.climbDaysPaginated.pagination;
             const totalPages = Math.ceil(total / perPage);
 
             for (; page <= totalPages; page++) {
               if (totalPages === 1) break;
 
-              const [{ data }, updateResult] =
-                await fetchsert<ClimbDaysSessionsResponse>(
-                  climbDaysSessionsQuery,
-                  { gymId, userId, pagination: { page, perPage } },
-                );
-              yield handleUpdateResults(updateResult);
+              const { data } = yield* fetchsert<ClimbDaysSessionsResponse>(
+                climbDaysSessionsQuery,
+                { gymId, userId, pagination: { page, perPage } },
+              );
 
               if (!data) throw new Error("Failed to fetch climb days");
 
               climbDays = climbDays.concat(data.climbDaysPaginated.data);
             }
 
-            const recentDays = 3;
-            const backfillDays = 6;
-            const climbDaysToFetch = [
-              // Most recent days
-              ...climbDays.slice(0, recentDays),
-              // other random days, for backfilling. TODO: General backfilling strategy
-              ...randomSliceOfSize(climbDays.slice(recentDays), backfillDays),
-            ];
-
             yield* deadlineLoop(
-              climbDaysToFetch,
+              // Backfill a random 7 days each time
+              randomSliceOfSize(climbDays, 7),
               () => getTimeRemaining(),
               async function* ({ statsAtDate: climbedAtDate }) {
-                const [, updateResult] = await fetchsert<ClimbLogsResponse>(
-                  climbLogsQuery,
-                  { gymId, userId, climbedAtDate },
-                );
-
-                yield handleUpdateResults(updateResult);
+                yield* fetchsert<ClimbLogsResponse>(climbLogsQuery, {
+                  gymId,
+                  userId,
+                  climbedAtDate,
+                });
               },
             );
           },

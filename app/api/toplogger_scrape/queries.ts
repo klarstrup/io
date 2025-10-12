@@ -238,6 +238,7 @@ export const compsQuery = gql`
     $search: String
     $climbType: ClimbType
     $inviteOnly: Boolean
+    $registered: Boolean
     $pagination: PaginationInputComps
   ) {
     comps(
@@ -245,6 +246,7 @@ export const compsQuery = gql`
       search: $search
       climbType: $climbType
       inviteOnly: $inviteOnly
+      registered: $registered
       pagination: $pagination
     ) {
       pagination {
