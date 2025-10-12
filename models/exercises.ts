@@ -15840,7 +15840,6 @@ export const exercises = [
       { name: "P90X 01: Chest and Back", type: TagType.Program },
       { name: "Arms", type: TagType.MuscleGroup },
       { name: "Intermediate", type: TagType.ExperienceLevel },
-      { name: "Barbell", type: TagType.Equipment },
       { name: "Triceps", type: TagType.MuscleGroup },
       { name: "Shoulders", type: TagType.MuscleGroup },
     ],
