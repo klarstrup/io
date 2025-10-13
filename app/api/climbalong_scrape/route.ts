@@ -1,3 +1,4 @@
+import { addDays } from "date-fns";
 import { auth } from "../../../auth";
 import { Climbalong } from "../../../sources/climbalong";
 import {
@@ -14,7 +15,7 @@ import {
 } from "../../../sources/climbalong.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { shuffle } from "../../../utils";
+import { randomSliceOfSize } from "../../../utils";
 import { deadlineLoop, fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -56,33 +57,46 @@ export const GET = () =>
           official: null;
         }[];
 
+        const activeUserCompetitions = userInCompetitions.filter(
+          ({ competition }) =>
+            addDays(new Date(competition.endTime), 1) > new Date(),
+        );
+        const pastUserCompetitions = userInCompetitions.filter(
+          ({ competition }) => new Date(competition.endTime) <= new Date(),
+        );
+
         yield* deadlineLoop(
-          shuffle(userInCompetitions),
+          [
+            ...activeUserCompetitions,
+            ...randomSliceOfSize(pastUserCompetitions, 2),
+          ],
           () => getTimeRemaining(),
           async function* ({ competition, athlete }) {
+            const { competitionId } = competition;
+            const { athleteId } = athlete;
+
             await ClimbAlongCompetitions.updateOne(
-              { competitionId: competition.competitionId },
+              { competitionId },
               {
                 $set: {
                   ...competition,
-                  endTime: new Date(competition.endTime),
                   startTime: new Date(competition.startTime),
+                  endTime: new Date(competition.endTime),
                 },
               },
               { upsert: true },
             ).then(setUpdated);
-
             yield competition;
 
             await ClimbAlongAthletes.updateOne(
-              { athleteId: athlete.athleteId },
+              { athleteId },
               { $set: { ...athlete } },
               { upsert: true },
             ).then(setUpdated);
             yield athlete;
 
             for (const lane of await fetchCA<Climbalong.Lane[]>(
-              `/v1/competitions/${competition.competitionId}/lanes`,
+              `/v1/competitions/${competitionId}/lanes`,
             )) {
               await ClimbAlongLanes.updateOne(
                 { laneId: lane.laneId },
@@ -93,7 +107,7 @@ export const GET = () =>
             }
 
             for (const hold of await fetchCA<Climbalong.Hold[]>(
-              `/v0/competitions/${competition.competitionId}/holds`,
+              `/v0/competitions/${competitionId}/holds`,
             )) {
               await ClimbAlongHolds.updateOne(
                 { holdId: hold.holdId },
@@ -104,7 +118,7 @@ export const GET = () =>
             }
 
             for (const round of await fetchCA<Climbalong.Round[]>(
-              `/v1/competitions/${competition.competitionId}/rounds`,
+              `/v1/competitions/${competitionId}/rounds`,
             )) {
               await ClimbAlongRounds.updateOne(
                 { roundId: round.roundId },
@@ -118,7 +132,7 @@ export const GET = () =>
               _lane,
               circuitChallengeNodes,
             ] of await fetchCA<Climbalong.CircuitChallengeNodesGroupedByLane>(
-              `/v1/competitions/${competition.competitionId}/circuitchallengenodesgroupedbylane`,
+              `/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
             )) {
               for (const circuitChallengeNode of circuitChallengeNodes) {
                 const circuit = circuitChallengeNode.circuit;
@@ -128,6 +142,7 @@ export const GET = () =>
                   { $set: { ...circuit } },
                   { upsert: true },
                 ).then(setUpdated);
+                yield circuit;
 
                 await ClimbAlongNodes.updateOne(
                   { nodeId: circuitChallengeNode.nodeId },
@@ -171,9 +186,7 @@ export const GET = () =>
                 for (const performance of await fetchCA<
                   Climbalong.Performance[]
                 >(`/v0/circuits/${circuit.circuitId}/performances`)) {
-                  if (performance.athleteId !== athlete.athleteId) {
-                    continue;
-                  }
+                  if (performance.athleteId !== athleteId) continue;
 
                   await ClimbAlongPerformances.updateOne(
                     {
@@ -197,7 +210,6 @@ export const GET = () =>
                     },
                     { upsert: true },
                   ).then(setUpdated);
-
                   yield performance;
                 }
               }
