@@ -57375,7 +57375,7 @@ export const exercises = [
     ],
   },
   {
-    aliases: [],
+    aliases: ["Hangboarding"],
     id: 2006,
     inputs: [
       {

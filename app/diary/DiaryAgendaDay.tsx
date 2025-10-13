@@ -477,7 +477,7 @@ export async function DiaryAgendaDay({
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircleCheck} />
                       </span>
-                      <div className="flex flex-wrap items-start gap-0.5">
+                      <div className="break-inside-avoid-column gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1]">
                         {dayDones.map((todo) => (
                           <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                         ))}
@@ -496,7 +496,10 @@ export async function DiaryAgendaDay({
                               <div
                                 key={exerciseIndex}
                                 className={
-                                  "flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white"
+                                  "mb-0.5 inline-flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white " +
+                                  (isClimbingExercise(exercise.id)
+                                    ? "mr-0 w-full"
+                                    : "mr-0.5 w-auto last:mr-0")
                                 }
                               >
                                 <div
@@ -504,18 +507,15 @@ export async function DiaryAgendaDay({
                                     "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40"
                                   }
                                 >
-                                  <div className="flex flex-wrap items-center gap-1 px-0.5 py-0.5 leading-none">
+                                  <div className="flex flex-wrap items-center gap-1 px-0.5 py-0.5 text-sm leading-none">
                                     <Link
                                       prefetch={false}
                                       href={`/diary/exercises/${exercise.id}`}
                                     >
-                                      {workoutExercise.displayName ??
-                                        [exercise.name, ...exercise.aliases]
-                                          .filter((name) => name.length >= 4)
-                                          .sort(
-                                            (a, b) => a.length - b.length,
-                                          )[0]!
-                                          .replace("Barbell", "")}
+                                      {[exercise.name, ...exercise.aliases]
+                                        .filter((name) => name.length >= 4)
+                                        .sort((a, b) => a.length - b.length)[0]!
+                                        .replace("Barbell", "")}
                                     </Link>
                                     {isClimbingExercise(exercise.id)
                                       ? calculateClimbingStats(
