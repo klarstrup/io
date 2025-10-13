@@ -477,7 +477,7 @@ export async function DiaryAgendaDay({
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircleCheck} />
                       </span>
-                      <div className="break-inside-avoid-column gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1]">
+                      <div className="break-inside-avoid-column gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
                         {dayDones.map((todo) => (
                           <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                         ))}
@@ -496,7 +496,7 @@ export async function DiaryAgendaDay({
                               <div
                                 key={exerciseIndex}
                                 className={
-                                  "mb-0.5 inline-flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white " +
+                                  "inline-flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white " +
                                   (isClimbingExercise(exercise.id)
                                     ? "mr-0 w-full"
                                     : "mr-0.5 w-auto last:mr-0")
