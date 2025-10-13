@@ -8,12 +8,19 @@ import { Users } from "../../../models/user.server";
 import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { pick, randomSliceOfSize, shuffle } from "../../../utils";
+import {
+  partition,
+  pick,
+  randomSliceOfSize,
+  shuffle,
+  uniqueBy,
+} from "../../../utils";
 import {
   fetchGraphQLQuery,
   normalizeAndUpsertQueryData,
   type Variables,
 } from "../../../utils/graphql";
+import { materializeToploggerWorkouts } from "../materialize_workouts/materializers";
 import { deadlineLoop, jsonStreamResponse } from "../scraper-utils";
 import {
   authSigninRefreshTokenQuery,
@@ -49,10 +56,11 @@ export const GET = (request: NextRequest) =>
     yield* wrapSources(
       user,
       DataSource.TopLogger,
-      async function* (
-        { config: { authTokens, graphQLId }, ...source },
-        setUpdated,
-      ) {
+      async function* (dataSource, setUpdated) {
+        let {
+          // eslint-disable-next-line prefer-const
+          config: { authTokens, graphQLId },
+        } = dataSource;
         setUpdated(false);
 
         const handleUpdateResults = (updateResults: {
@@ -130,7 +138,7 @@ export const GET = (request: NextRequest) =>
               {
                 $set: { "dataSources.$[source].config.authTokens": authTokens },
               },
-              { arrayFilters: [{ "source.id": source.id }] },
+              { arrayFilters: [{ "source.id": dataSource.id }] },
             );
             yield "Updated authTokens with refresh token";
             yield { authTokens };
@@ -184,95 +192,6 @@ export const GET = (request: NextRequest) =>
 
           return response;
         }
-        async function* fetchsertComp(
-          comp: CompsResponse["comps"]["data"][number],
-        ) {
-          const { id: compId, compPoules, climbType, compGyms } = comp;
-          for (const { compRounds } of shuffle(compPoules)) {
-            const userCompRounds = compRounds.filter((r) => r.compRoundUserMe);
-
-            yield* deadlineLoop(
-              // Cover a scenario where the user is in a comp but isn't in
-              // any rounds (weird, but possible).
-              shuffle(userCompRounds.length ? userCompRounds : compRounds),
-              // Only spend a fraction of the remaining time on this loop, to save time for climb logs
-              () => getTimeRemaining() / 3,
-              async function* ({ id: compRoundId }) {
-                for (const { id: gymId } of shuffle(compGyms)) {
-                  const compRoundUsersVariables = {
-                    gymId,
-                    compId,
-                    compRoundId,
-                    pagination: {
-                      page: 1,
-                      perPage: 100,
-                      orderBy: [
-                        { key: "compUser.disqualifiedInt", order: "asc" },
-                        { key: "score", order: "desc" },
-                      ],
-                    },
-                  };
-
-                  const { data: compRoundUsersData } =
-                    yield* fetchsert<CompRoundUsersForRankingResponse>(
-                      compRoundUsersForRankingQuery,
-                      compRoundUsersVariables,
-                    );
-
-                  const bestClimberId =
-                    compRoundUsersData?.ranking.data[0]?.compUser.userId;
-
-                  if (
-                    compRoundUsersData &&
-                    compRoundUsersData?.ranking.pagination.total >
-                      compRoundUsersData?.ranking.pagination.perPage
-                  ) {
-                    yield* fetchsert<CompRoundUsersForRankingResponse>(
-                      compRoundUsersForRankingQuery,
-                      {
-                        ...compRoundUsersVariables,
-                        pagination: {
-                          ...compRoundUsersVariables.pagination,
-                          page: 2,
-                        },
-                      },
-                    );
-                  }
-
-                  // Also get all the Comp Climbs of the best ranked climber,
-                  // presuming that they've attempted every Comp Climb.
-                  // This allows for backfilling of Climbs for comps that are no longer
-                  // set, I haven't found a better way of doing this.
-                  for (const userIddd of [userId, bestClimberId].filter(
-                    Boolean,
-                  )) {
-                    yield* fetchsert<CompClimbUsersForRankingClimbUserResponse>(
-                      compClimbUsersForRankingClimbUserQuery,
-                      {
-                        gymId,
-                        userId: userIddd,
-                        compId,
-                        compRoundId,
-                        pagination: {
-                          page: 1,
-                          perPage: 100,
-                          orderBy: [{ key: "points", order: "desc" }],
-                        },
-                      },
-                    );
-
-                    yield* fetchsert<ClimbsResponse>(climbsQuery, {
-                      gymId,
-                      compRoundId,
-                      userId: userIddd,
-                      climbType,
-                    });
-                  }
-                }
-              },
-            );
-          }
-        }
 
         const userId = graphQLId;
 
@@ -291,30 +210,125 @@ export const GET = (request: NextRequest) =>
             });
           },
         );
+        // Aggressive materialize not to wait for the rest of the scrape to finish
+        yield* materializeToploggerWorkouts(user, dataSource);
 
-        const userMeStoreResponse =
+        const { data: userMeStoreData } =
           yield* fetchsert<UserMeStoreResponse>(userMeStoreQuery);
+        const gyms = userMeStoreData?.userMe?.gymUsers.map((fav) => fav.gym);
 
-        const gyms = userMeStoreResponse.data?.userMe?.gymUsers.map(
-          (fav) => fav.gym,
-        );
-
-        // Fetch all active and upcoming comps for each gym first.
+        const userComps: CompsResponse["comps"]["data"] = [];
         yield* deadlineLoop(
           shuffle(gyms),
           () => getTimeRemaining(),
           async function* ({ id: gymId }) {
             const { data: compsData } = yield* fetchsert<CompsResponse>(
               compsQuery,
-              { gymId, registered: true, pagination: { page: 1, perPage: 10 } },
+              { gymId, registered: true, pagination: { perPage: 10 } },
             );
+            if (compsData?.comps?.data) userComps.push(...compsData.comps.data);
+          },
+        );
+        const [activeComps, pastComps] = partition(
+          uniqueBy(userComps, (c) => c.id),
+          (c) =>
+            isFuture(addDays(new Date(c.loggableEndAt), 1)) ||
+            isFuture(subDays(new Date(c.loggableStartAt), 1)),
+        );
 
-            for (const comp of shuffle(compsData?.comps.data).filter(
-              (c) =>
-                isFuture(addDays(new Date(c.loggableEndAt), 1)) ||
-                isFuture(subDays(new Date(c.loggableStartAt), 1)),
-            )) {
-              yield* fetchsertComp(comp);
+        // Fetch all active and backfill one past comp
+        yield* deadlineLoop(
+          [...activeComps, ...randomSliceOfSize(pastComps, 1)],
+          () => getTimeRemaining(),
+          async function* (comp) {
+            yield pick(comp, "id", "name");
+
+            const { id: compId, compPoules, climbType, compGyms } = comp;
+            for (const { compRounds } of shuffle(compPoules)) {
+              const userCompRounds = compRounds.filter(
+                (r) => r.compRoundUserMe,
+              );
+
+              yield* deadlineLoop(
+                // Cover a scenario where the user is in a comp but isn't in
+                // any rounds (weird, but possible).
+                shuffle(userCompRounds.length ? userCompRounds : compRounds),
+                // Only spend a fraction of the remaining time on this loop, to save time for climb logs
+                () => getTimeRemaining() / 3,
+                async function* ({ id: compRoundId }) {
+                  for (const { id: gymId } of shuffle(compGyms)) {
+                    const compRoundUsersVariables = {
+                      gymId,
+                      compId,
+                      compRoundId,
+                      pagination: {
+                        page: 1,
+                        perPage: 100,
+                        orderBy: [
+                          { key: "compUser.disqualifiedInt", order: "asc" },
+                          { key: "score", order: "desc" },
+                        ],
+                      },
+                    };
+
+                    const { data: compRoundUsersData } =
+                      yield* fetchsert<CompRoundUsersForRankingResponse>(
+                        compRoundUsersForRankingQuery,
+                        compRoundUsersVariables,
+                      );
+
+                    const bestClimberId =
+                      compRoundUsersData?.ranking.data[0]?.compUser.userId;
+
+                    if (
+                      compRoundUsersData &&
+                      compRoundUsersData?.ranking.pagination.total >
+                        compRoundUsersData?.ranking.pagination.perPage
+                    ) {
+                      yield* fetchsert<CompRoundUsersForRankingResponse>(
+                        compRoundUsersForRankingQuery,
+                        {
+                          ...compRoundUsersVariables,
+                          pagination: {
+                            ...compRoundUsersVariables.pagination,
+                            page: 2,
+                          },
+                        },
+                      );
+                    }
+
+                    // Also get all the Comp Climbs of the best ranked climber,
+                    // presuming that they've attempted every Comp Climb.
+                    // This allows for backfilling of Climbs for comps that are no longer
+                    // set, I haven't found a better way of doing this.
+                    for (const userIddd of [userId, bestClimberId].filter(
+                      Boolean,
+                    )) {
+                      yield* fetchsert<CompClimbUsersForRankingClimbUserResponse>(
+                        compClimbUsersForRankingClimbUserQuery,
+                        {
+                          gymId,
+                          userId: userIddd,
+                          compId,
+                          compRoundId,
+                          pagination: {
+                            page: 1,
+                            perPage: 100,
+                            orderBy: [{ key: "points", order: "desc" }],
+                          },
+                        },
+                      );
+
+                      yield* fetchsert<ClimbsResponse>(climbsQuery, {
+                        gymId,
+                        compRoundId,
+                        userId: userIddd,
+                        climbType,
+                      });
+                    }
+                  }
+                },
+              );
             }
           },
         );
@@ -326,19 +340,6 @@ export const GET = (request: NextRequest) =>
             yield pick(gym, "id", "name", "city");
 
             const gymId = gym.id;
-
-            const { data: compsData } = yield* fetchsert<CompsResponse>(
-              compsQuery,
-              { gymId, registered: true, pagination: { page: 1, perPage: 10 } },
-            );
-
-            for (const comp of randomSliceOfSize(
-              compsData?.comps.data ?? [],
-              3,
-            ).filter((c) => new Date(c.loggableEndAt) < new Date())) {
-              yield* fetchsertComp(comp);
-            }
-
             let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
               [];
             let page = 1;
@@ -372,7 +373,7 @@ export const GET = (request: NextRequest) =>
             }
 
             yield* deadlineLoop(
-              // Backfill a random 7 days each time
+              // Backfill a random 7 climb days each time
               randomSliceOfSize(climbDays, 7),
               () => getTimeRemaining(),
               async function* ({ statsAtDate: climbedAtDate }) {

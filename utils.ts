@@ -656,3 +656,6 @@ export function createTrend(data: Array<{ x: number | Date; y: number }>): {
 
   return { slope, yStart, calcY: (x: number) => yStart + slope * x };
 }
+
+export const partition = <T>(a: T[], fn: (v: T) => boolean) =>
+  a.reduce<[T[], T[]]>((m, v) => (m[fn(v) ? 0 : 1].push(v), m), [[], []]);
