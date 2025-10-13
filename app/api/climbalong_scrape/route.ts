@@ -15,7 +15,7 @@ import {
 } from "../../../sources/climbalong.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { randomSliceOfSize } from "../../../utils";
+import { partition, randomSliceOfSize } from "../../../utils";
 import { deadlineLoop, fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
@@ -57,18 +57,15 @@ export const GET = () =>
           official: null;
         }[];
 
-        const activeUserCompetitions = userInCompetitions.filter(
+        const [activeUserCompetitions, pastUserCompetitions] = partition(
+          userInCompetitions,
           ({ competition }) =>
             addDays(new Date(competition.endTime), 1) > new Date(),
         );
-        const pastUserCompetitions = userInCompetitions.filter(
-          ({ competition }) => new Date(competition.endTime) <= new Date(),
-        );
-
         yield* deadlineLoop(
           [
             ...activeUserCompetitions,
-            ...randomSliceOfSize(pastUserCompetitions, 2),
+            ...randomSliceOfSize(pastUserCompetitions, 1),
           ],
           () => getTimeRemaining(),
           async function* ({ competition, athlete }) {
