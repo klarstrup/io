@@ -373,8 +373,8 @@ export const GET = (request: NextRequest) =>
             }
 
             yield* deadlineLoop(
-              // Backfill a random 7 climb days each time
-              randomSliceOfSize(climbDays, 7),
+              // Backfill a random climb days each time
+              randomSliceOfSize(climbDays, 2),
               () => getTimeRemaining(),
               async function* ({ statsAtDate: climbedAtDate }) {
                 yield* fetchsert<ClimbLogsResponse>(climbLogsQuery, {
