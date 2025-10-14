@@ -31,7 +31,7 @@ export function DiaryAgendaDayDueSet({
       }
       onClick={() => setIsActive(true)}
     >
-      <div className="h-full self-stretch px-1.5 py-0.5">
+      <div className="h-full self-stretch text-center px-1.5 py-0.5">
         {
           [exercise.name, ...exercise.aliases]
             .filter((name) => name.length >= 4)
