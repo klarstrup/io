@@ -1,7 +1,8 @@
+import { startOfYear, subMonths, subYears } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import { Fragment, Suspense } from "react";
 import { auth } from "../../../../auth";
-import { PRType } from "../../../../lib";
+import { ExerciseHistoryTimeframe, PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
 import { Locations } from "../../../../models/location.server";
 import {
@@ -21,10 +22,12 @@ export default async function DiaryExercise({
   exerciseId,
   prType,
   mergeWorkouts,
+  timeframe,
 }: {
   exerciseId: number;
   prType?: PRType;
   mergeWorkouts?: boolean;
+  timeframe?: ExerciseHistoryTimeframe;
 }) {
   const exercise = exercisesById[exerciseId]!;
   const user = (await auth())?.user;
@@ -55,6 +58,17 @@ export default async function DiaryExercise({
             <option value={PRType.OneYear}>Year PR workouts</option>
             <option value={PRType.ThreeMonths}>3 Month PR workouts</option>
           </select>
+          <select
+            className="rounded-md bg-gray-100 p-1"
+            name="timeframe"
+            defaultValue={timeframe || ""}
+          >
+            <option value="">All time</option>
+            <option value="this-year">This year</option>
+            <option value="past-year">Past year</option>
+            <option value="past-3-months">Past 3 months</option>
+            <option value="past-month">Past month</option>
+          </select>
           <label>
             <input
               type="checkbox"
@@ -75,6 +89,7 @@ export default async function DiaryExercise({
             userId={user.id}
             exerciseId={exerciseId}
             prType={prType}
+            timeframe={timeframe}
             mergeWorkouts={mergeWorkouts}
           />
         </Suspense>
@@ -88,12 +103,32 @@ async function DiaryExerciseList({
   exerciseId,
   prType,
   mergeWorkouts,
+  timeframe,
 }: {
   userId: string;
   exerciseId: number;
   prType?: PRType;
   mergeWorkouts?: boolean;
+  timeframe?: ExerciseHistoryTimeframe;
 }) {
+  const now = new Date();
+  let workedOutAtFilter: Date | undefined;
+  if (timeframe === undefined) {
+    workedOutAtFilter = undefined;
+  } else if (timeframe === ExerciseHistoryTimeframe.ThisYear) {
+    workedOutAtFilter = startOfYear(now);
+  } else if (timeframe === ExerciseHistoryTimeframe.PastYear) {
+    workedOutAtFilter = subYears(now, 1);
+  } else if (timeframe === ExerciseHistoryTimeframe.Past6Months) {
+    workedOutAtFilter = subMonths(now, 6);
+  } else if (timeframe === ExerciseHistoryTimeframe.Past3Months) {
+    workedOutAtFilter = subMonths(now, 3);
+  } else if (timeframe === ExerciseHistoryTimeframe.PastMonth) {
+    workedOutAtFilter = subMonths(now, 1);
+  } else {
+    timeframe satisfies never;
+  }
+
   let allWorkoutsOfExercise = userId
     ? (
         await MaterializedWorkoutsView.find(
@@ -101,7 +136,9 @@ async function DiaryExerciseList({
             userId,
             "exercises.exerciseId": exerciseId,
             deletedAt: { $exists: false },
-            //            workedOutAt: { $gte: new Date(2025, 0, 1) },
+            ...(workedOutAtFilter
+              ? { workedOutAt: { $gte: workedOutAtFilter } }
+              : undefined),
           },
           { sort: { workedOutAt: -1 } },
         ).toArray()
