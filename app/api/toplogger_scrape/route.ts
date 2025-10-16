@@ -264,7 +264,7 @@ export const GET = (request: NextRequest) =>
                 // Only spend a fraction of the remaining time on this loop, to save time for climb logs
                 () => getTimeRemaining() / 3,
                 async function* ({ id: compRoundId }) {
-                  for (const { id: gymId } of shuffle(compGyms)) {
+                  for (const { gymId } of shuffle(compGyms)) {
                     const compRoundUsersVariables = {
                       gymId,
                       compId,
@@ -334,6 +334,8 @@ export const GET = (request: NextRequest) =>
                         climbType,
                       });
                     }
+
+                    break; // I'm not convinced this data is different between gyms in the same comp round
                   }
                 },
               );
