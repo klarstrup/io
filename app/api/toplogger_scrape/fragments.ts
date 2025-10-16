@@ -421,7 +421,7 @@ export const CompRoundScalarsFragment = gql`
     selfLoggable
     loggableStartAt
     participantsPickedByAdmin
-    participantsCount
+    #    participantsCount
     participantsMax
     participantsSpotsLeft
     nameLoc
@@ -435,7 +435,7 @@ export interface CompRoundScalars extends GraphQLObject<"CompRound"> {
   selfLoggable: boolean;
   loggableStartAt: Date;
   participantsPickedByAdmin: boolean;
-  participantsCount: number;
+  //  participantsCount: number;
   participantsMax: number;
   participantsSpotsLeft: number;
   nameLoc: string;
@@ -665,7 +665,7 @@ export const CompScalarsFragment = gql`
     isMultiRound
     registrationStartAt
     registrationEndAt
-    participantsCount
+    #    participantsCount
     participantsMax
     participantsSpotsLeft
     registrationMessageLoc
@@ -688,7 +688,7 @@ export interface CompScalars extends GraphQLObject<"Comp"> {
   isMultiRound: boolean;
   registrationStartAt: null;
   registrationEndAt: Date | null;
-  participantsCount: number;
+  //  participantsCount: number;
   participantsMax: number;
   participantsSpotsLeft: number;
   registrationMessageLoc: null | string;

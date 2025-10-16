@@ -195,7 +195,7 @@ export async function getIoTopLoggerCompEvent(
               start: compRound.loggableStartAt,
               end: compRound.loggableEndAt,
               roundName: compRound.nameLoc,
-              noParticipants: compRound.participantsCount,
+              noParticipants: compRoundUsers.length,
               venue:
                 roundGyms
                   .map(({ name }) => name)
@@ -214,10 +214,7 @@ export async function getIoTopLoggerCompEvent(
                       {
                         source: SCORING_SOURCE.OFFICIAL,
                         points: ioCompRoundUser.score,
-                        percentile: percentile(
-                          ioRank,
-                          compRound.participantsCount,
-                        ),
+                        percentile: percentile(ioRank, compRoundUsers.length),
                         system: SCORING_SYSTEM.THOUSAND_DIVIDE_BY,
                         rank: ioRank,
                       } as const,
