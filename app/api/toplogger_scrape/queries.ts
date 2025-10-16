@@ -269,10 +269,9 @@ export const compsQuery = gql`
               ...CompRoundUserScalarsFragment
             }
 
-            # Entrust scraping this to the compRoundUsersForRanking query
-            # compRoundUsers {
-            #   ...CompRoundUserScalarsFragment
-            # }
+            compRoundUsers {
+              ...CompRoundUserScalarsFragment
+            }
           }
         }
 
