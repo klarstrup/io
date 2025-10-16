@@ -264,14 +264,6 @@ export const compsQuery = gql`
 
           compRounds {
             ...CompRoundScalarsFragment
-
-            compRoundUserMe {
-              ...CompRoundUserScalarsFragment
-            }
-
-            compRoundUsers {
-              ...CompRoundUserScalarsFragment
-            }
           }
         }
 
@@ -292,12 +284,9 @@ export interface CompsResponse {
     CompScalars & {
       compGyms: CompGymScalars[];
       compPoules: (CompPouleScalars & {
-        compRounds: (CompRoundScalars & {
-          compRoundUserMe: CompRoundUserScalars | null;
-          compRoundUsers: CompRoundUserScalars[];
-        })[];
+        compRounds: CompRoundScalars[];
       })[];
-      compUserMe: CompUserScalars;
+      compUserMe: CompUserScalars & { compRoundUsers: CompRoundUserScalars[] };
     }
   >;
 }
