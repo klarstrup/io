@@ -243,18 +243,10 @@ export const GET = (request: NextRequest) =>
           async function* (comp) {
             yield pick(comp, "id", "name");
 
-            const {
-              id: compId,
-              compPoules,
-              climbType,
-              compGyms,
-              compUserMe,
-            } = comp;
+            const { id: compId, compPoules, climbType, compGyms } = comp;
             for (const { compRounds } of shuffle(compPoules)) {
-              const userCompRounds = compRounds.filter((r) =>
-                compUserMe?.compRoundUsers.some(
-                  (ur) => ur.compRoundId === r.id,
-                ),
+              const userCompRounds = compRounds.filter(
+                (r) => r.compRoundUserMe,
               );
 
               yield* deadlineLoop(
