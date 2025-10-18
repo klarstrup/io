@@ -22,7 +22,7 @@ export default async function DiaryExercise({
   exerciseId,
   prType,
   mergeWorkouts,
-  timeframe,
+  timeframe = ExerciseHistoryTimeframe.Past3Months,
 }: {
   exerciseId: number;
   prType?: PRType;
