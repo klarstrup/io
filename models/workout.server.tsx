@@ -7,7 +7,7 @@ import {
   subMonths,
   subYears,
 } from "date-fns";
-import type { WithId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Grade from "../grades";
 import type { PRType } from "../lib";
@@ -827,5 +827,64 @@ export async function calculateClimbingStats(
       ) : null}
       {flashGrade ? <span>, 1MFG: {new Grade(flashGrade).name}</span> : null}
     </small>
+  );
+}
+
+export function mergeWorkoutsOfExercise(
+  workouts: WithId<WorkoutData>[],
+  userId: string,
+  locations?: WithId<LocationData>[] | null,
+) {
+  return workouts.reduce<WithId<WorkoutData>>(
+    (acc, workout) => {
+      const location = workout.locationId
+        ? locations?.find((l) => l._id.toString() === workout.locationId)
+        : workout.location
+          ? locations?.find((l) => l.name === workout.location)
+          : undefined;
+
+      for (const exercise of workout.exercises) {
+        const existingExercise = acc.exercises.find(
+          (e) => e.exerciseId === exercise.exerciseId,
+        );
+
+        let reversedSets = [...exercise.sets].reverse();
+
+        if (exercise.exerciseId === 2001) {
+          reversedSets = reversedSets.map((set) => ({
+            ...set,
+            inputs: set.inputs.map((input, index) =>
+              index === 0
+                ? {
+                    ...input,
+                    value: input.value ?? getSetGrade(set, location),
+                  }
+                : input,
+            ),
+          }));
+        }
+
+        if (existingExercise) {
+          existingExercise.sets.push(...reversedSets);
+        } else {
+          acc.exercises.push({ ...exercise, sets: reversedSets });
+          acc.workedOutAt =
+            workout.workedOutAt > acc.workedOutAt
+              ? workout.workedOutAt
+              : acc.workedOutAt;
+        }
+      }
+
+      return acc;
+    },
+    {
+      _id: new ObjectId(),
+      id: new ObjectId().toString(),
+      workedOutAt: new Date(),
+      exercises: [],
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   );
 }

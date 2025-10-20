@@ -1,18 +1,14 @@
 import { startOfYear, subMonths, subYears } from "date-fns";
-import { ObjectId, type WithId } from "mongodb";
 import { Fragment, Suspense } from "react";
 import { auth } from "../../../../auth";
 import { ExerciseHistoryTimeframe, PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
 import { Locations } from "../../../../models/location.server";
-import {
-  getSetGrade,
-  isClimbingExercise,
-  type WorkoutData,
-} from "../../../../models/workout";
+import { isClimbingExercise } from "../../../../models/workout";
 import {
   getIsSetPR,
   MaterializedWorkoutsView,
+  mergeWorkoutsOfExercise,
 } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
 import BoulderingGraph from "./BoulderingGraph";
@@ -155,55 +151,8 @@ async function DiaryExerciseList({
 
   if (userId && mergeWorkouts) {
     allWorkoutsOfExercise = [
-      allWorkoutsOfExercise.reduce(
-        (acc: WithId<WorkoutData>, workout) => {
-          const location = workout.locationId
-            ? locations?.find((l) => l._id.toString() === workout.locationId)
-            : workout.location
-              ? locations?.find((l) => l.name === workout.location)
-              : undefined;
-
-          for (const exercise of workout.exercises) {
-            const existingExercise = acc.exercises.find(
-              (e) => e.exerciseId === exercise.exerciseId,
-            );
-
-            let reversedSets = [...exercise.sets].reverse();
-
-            if (exercise.exerciseId === 2001) {
-              reversedSets = reversedSets.map((set) => ({
-                ...set,
-                inputs: set.inputs.map((input, index) =>
-                  index === 0
-                    ? {
-                        ...input,
-                        value: input.value ?? getSetGrade(set, location),
-                      }
-                    : input,
-                ),
-              }));
-            }
-
-            if (existingExercise) {
-              existingExercise.sets.push(...reversedSets);
-            } else {
-              acc.exercises.push({ ...exercise, sets: reversedSets });
-            }
-          }
-
-          return acc;
-        },
-        {
-          _id: new ObjectId(),
-          id: new ObjectId().toString(),
-          workedOutAt: new Date(),
-          exercises: [],
-          userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ),
-    ] as const;
+      mergeWorkoutsOfExercise(allWorkoutsOfExercise, userId, locations),
+    ];
   }
 
   const workoutsExerciseSetPRs: Record<string, Record<PRType, boolean>[][]> =
