@@ -168,13 +168,23 @@ export const climbDaysSessionsQuery = gql`
       }
       data {
         ...ClimbDayScalarsFragment
+        climbUserDaysBoulders {
+          ...ClimbLogScalarsFragment
+          climb {
+            ...ClimbScalarsFragment
+          }
+        }
       }
       __typename
     }
   }
 `;
 export interface ClimbDaysSessionsResponse {
-  climbDaysPaginated: PaginatedObjects<ClimbDayScalars>;
+  climbDaysPaginated: PaginatedObjects<
+    ClimbDayScalars & {
+      climbUserDaysBoulders: (ClimbLogScalars & { climb: ClimbScalars })[];
+    }
+  >;
 }
 
 export const climbLogsQuery = gql`
@@ -220,6 +230,7 @@ export const climbLogsQuery = gql`
     }
   }
 `;
+
 export interface ClimbLogsResponse {
   climbLogs: PaginatedObjects<ClimbLogScalars & { climb: ClimbScalars }>;
 }

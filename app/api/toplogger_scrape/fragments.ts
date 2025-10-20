@@ -140,6 +140,21 @@ export const CompGymScalarsFragment = gql`
     gymId
   }
 `;
+
+export interface ClimbUserDayScalars extends GraphQLObject<"ClimbUserDay"> {
+  tickType: number;
+  wasRepeat: boolean;
+}
+
+export const ClimbUserDayScalarsFragment = gql`
+  fragment ClimbUserDayScalarsFragment on ClimbUserDay {
+    __typename
+    id
+    tickType
+    wasRepeat
+  }
+`;
+
 export interface CompGymScalars extends GraphQLObject<"CompGym"> {
   compId: string;
   gymId: string;
