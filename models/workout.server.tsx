@@ -785,25 +785,25 @@ export const calculate60dayTop10AverageAttemptGrade = async (
 
 export async function calculateClimbingStats(
   setAndLocationPairs: (readonly [
-    location: LocationData | undefined,
     set: WorkoutExerciseSet,
+    location: LocationData | undefined,
   ])[],
   userId?: string,
   on?: Date,
 ) {
   const successfulSetAndLocationPairs = setAndLocationPairs.filter(
-    ([, set]) =>
+    ([set]) =>
       (set.inputs[2]!.value as SendType) !== SendType.Attempt &&
       (set.inputs[2]!.value as SendType) !== SendType.Zone,
   );
   const problemCount = successfulSetAndLocationPairs.length;
   const gradeSum = successfulSetAndLocationPairs.reduce(
-    (sum, [location, set]) => sum + (getSetGrade(set, location) || 0),
+    (sum, [set, location]) => sum + (getSetGrade(set, location) || 0),
     0,
   );
   const gradeTop5Average =
     successfulSetAndLocationPairs
-      .map(([location, set]) => getSetGrade(set, location) ?? 0)
+      .map(([set, location]) => getSetGrade(set, location) ?? 0)
       .filter((grade) => grade > 0)
       .sort((a, b) => b - a)
       .slice(0, Math.min(5, successfulSetAndLocationPairs.length))

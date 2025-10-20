@@ -17,7 +17,7 @@ import {
   min,
   startOfDay,
 } from "date-fns";
-import { ObjectId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Fragment } from "react";
@@ -25,7 +25,12 @@ import { FieldSetX } from "../../components/FieldSet";
 import type { MongoVEvent, MongoVTodo } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { Locations } from "../../models/location.server";
-import { isClimbingExercise, isNextSetDue } from "../../models/workout";
+import {
+  isClimbingExercise,
+  isNextSetDue,
+  type WorkoutData,
+  type WorkoutExercise,
+} from "../../models/workout";
 import {
   calculateClimbingStats,
   getNextSets,
@@ -196,12 +201,42 @@ export async function DiaryAgendaDay({
               ),
             },
           }).toArray();
-          const dayExercises = dayWorkouts
+          const dayExercisesById = dayWorkouts
             .flatMap((workout) =>
               workout.exercises.map((exercise) => [exercise, workout] as const),
             )
             .sort(([, a], [, b]) => compareAsc(a.workedOutAt, b.workedOutAt))
-            .sort(([a], [b]) => b.sets.length - a.sets.length);
+            // Group by exerciseId to merge multiple workouts of the same exercise on the same day
+            .reduce<Record<string, [WorkoutExercise, WithId<WorkoutData>][]>>(
+              (acc, [exercise, workout]) => {
+                const key = exercise.exerciseId;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push([exercise, workout]);
+                return acc;
+              },
+              {},
+            );
+
+          const dayExerciseSets = Object.entries(dayExercisesById)
+            .map(
+              ([exerciseId, exerciseWorkouts]) =>
+                [
+                  exercisesById[parseInt(exerciseId)]!,
+                  exerciseWorkouts.flatMap(([{ sets }, { locationId }]) =>
+                    sets.map(
+                      (set) =>
+                        [
+                          set,
+                          dayLocations.find(
+                            (loc) => loc._id.toString() === locationId,
+                          ),
+                        ] as const,
+                    ),
+                  ),
+                ] as const,
+            )
+            .sort(([, a], [, b]) => b.length - a.length);
+
           const dayDueSets = dueSetsByDate[dayName] || [];
           const dayTodos = (todosByDate[dayName] || []).filter(
             (todo) => !todo.completed,
@@ -481,17 +516,8 @@ export async function DiaryAgendaDay({
                         {dayDones.map((todo) => (
                           <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                         ))}
-                        {dayExercises.map(
-                          ([workoutExercise, workout], exerciseIndex) => {
-                            const exercise =
-                              exercisesById[workoutExercise.exerciseId]!;
-
-                            const location =
-                              dayLocations.find(
-                                (loc) =>
-                                  loc._id.toString() === workout.locationId,
-                              ) ?? null;
-
+                        {dayExerciseSets.map(
+                          ([exercise, setsWithLocation], exerciseIndex) => {
                             return (
                               <div
                                 key={exerciseIndex}
@@ -518,25 +544,14 @@ export async function DiaryAgendaDay({
                                         .replace("Barbell", "")}
                                     </Link>
                                     {isClimbingExercise(exercise.id)
-                                      ? calculateClimbingStats(
-                                          workoutExercise.sets.map((set) => [
-                                            location ?? undefined,
-                                            set,
-                                          ]),
-                                        )
+                                      ? calculateClimbingStats(setsWithLocation)
                                       : null}
                                   </div>
                                 </div>
                                 <div className="flex justify-center px-1 py-0.5 pb-1 text-xs">
-                                  {workoutExercise.comment ? (
-                                    <div className="pb-1 whitespace-nowrap italic">
-                                      {workoutExercise.comment}
-                                    </div>
-                                  ) : null}
                                   <WorkoutEntryExercise
-                                    location={location}
                                     exercise={exercise}
-                                    sets={workoutExercise.sets}
+                                    setsWithLocations={setsWithLocation}
                                     exerciseIndex={exerciseIndex}
                                   />
                                 </div>

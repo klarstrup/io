@@ -357,10 +357,12 @@ function ProblemBadge({
 const boulderingExercise = exercises.find(({ id }) => id === 2001)!;
 const colorOptions = boulderingExercise.inputs[1]!.options!;
 export const exerciseSetsToProblemByProblem = (
-  location: LocationData | null | undefined,
-  sets: WorkoutExerciseSet[],
+  setsWithLocations: (readonly [
+    WorkoutExerciseSet,
+    LocationData | undefined,
+  ])[],
 ): PP[] =>
-  sets.map((set, i) => {
+  setsWithLocations.map(([set, location], i) => {
     const sendType = Number(set.inputs[2]!.value) as SendType;
 
     const circuit = location?.boulderCircuits?.find(

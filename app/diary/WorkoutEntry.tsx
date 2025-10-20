@@ -11,6 +11,7 @@ import { type ExerciseData, exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import {
+  getSetGrade,
   isClimbingExercise,
   type WorkoutData,
   type WorkoutExerciseSet,
@@ -45,20 +46,23 @@ const quantile = (arr: number[], q: number) => {
 const averageGrade = false;
 
 export function WorkoutEntryExercise({
-  location,
   exercise,
-  sets,
+  setsWithLocations,
   exerciseIndex,
   exerciseSetPRs,
   onlyPRs,
 }: {
-  location: LocationData | null;
   exercise: ExerciseData;
-  sets: WorkoutExerciseSet[];
+  setsWithLocations: (readonly [
+    WorkoutExerciseSet,
+    LocationData | undefined,
+  ])[];
   exerciseIndex: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
+  const sets = setsWithLocations.map(([set]) => set);
+
   if (isClimbingExercise(exercise.id)) {
     if (averageGrade) {
       const values = sets.map((set) => set.inputs[0]!.value);
@@ -73,9 +77,11 @@ export function WorkoutEntryExercise({
 
     return (
       <ProblemByProblem
-        groupByGradeAndFlash={sets.every((set) => set.inputs[0]!.value)}
+        groupByGradeAndFlash={setsWithLocations.every(([set, location]) =>
+          getSetGrade(set, location),
+        )}
         groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value > -1)}
-        problemByProblem={exerciseSetsToProblemByProblem(location, sets)}
+        problemByProblem={exerciseSetsToProblemByProblem(setsWithLocations)}
       />
     );
   }
@@ -294,8 +300,8 @@ export default async function WorkoutEntry({
                 {isClimbingExercise(exercise.id)
                   ? calculateClimbingStats(
                       workoutExercise.sets.map((set) => [
-                        location ?? undefined,
                         set,
+                        location ?? undefined,
                       ]),
                     )
                   : null}
@@ -306,9 +312,11 @@ export default async function WorkoutEntry({
                 </div>
               ) : null}
               <WorkoutEntryExercise
-                location={location}
                 exercise={exercise}
-                sets={workoutExercise.sets}
+                setsWithLocations={workoutExercise.sets.map((set) => [
+                  set,
+                  location ?? undefined,
+                ])}
                 exerciseIndex={exerciseIndex}
                 exerciseSetPRs={exerciseSetPRs}
                 onlyPRs={onlyPRs}

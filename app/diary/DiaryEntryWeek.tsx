@@ -44,8 +44,8 @@ export async function DiaryEntryWeek({
                 e.sets.map(
                   (set) =>
                     [
-                      locations.find((l) => l.id === w.locationId),
                       set,
+                      locations.find((l) => l.id === w.locationId),
                     ] as const,
                 ),
               ),
