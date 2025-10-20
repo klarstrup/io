@@ -475,11 +475,16 @@ export async function DiaryAgendaDay({
                 dayDueSets.length ? (
                   <hr className="my-1 border-gray-200" />
                 ) : null}
+                {!(onDayEvents.length || dayTodos.length) &&
+                dayEvents.length &&
+                dayDueSets.length ? (
+                  <hr className="my-1 border-gray-200" />
+                ) : null}
                 <li
                   className="grid gap-1.5"
                   style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                 >
-                  {dayDueSets.length + dayTodos.length ? (
+                  {dayDueSets.length || dayTodos.length ? (
                     <Fragment>
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircle} />
@@ -499,7 +504,7 @@ export async function DiaryAgendaDay({
                       </div>
                     </Fragment>
                   ) : null}
-                  {isPast(dayDate) && dayWorkouts.length + dayDones.length ? (
+                  {isPast(dayDate) && dayWorkouts.length && dayDones.length ? (
                     <>
                       <span></span>
                       <span>
@@ -507,7 +512,8 @@ export async function DiaryAgendaDay({
                       </span>
                     </>
                   ) : null}
-                  {isPast(dayDate) && dayWorkouts.length + dayDones.length ? (
+                  {isPast(dayDate) &&
+                  (dayWorkouts.length || dayDones.length) ? (
                     <>
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircleCheck} />
