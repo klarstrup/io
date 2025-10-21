@@ -11,6 +11,7 @@ import {
   ClimbLogScalarsFragment,
   ClimbScalars,
   ClimbScalarsFragment,
+  ClimbUserDayScalarsFragment,
   ClimbUserScalars,
   ClimbUserScalarsFragment,
   CompClimbUserScalars,
@@ -142,7 +143,7 @@ export interface AuthSigninRefreshTokenResponse {
 export const climbDaysSessionsQuery = gql`
   ${PaginationFragment}
   ${ClimbDayScalarsFragment}
-  ${ClimbLogScalarsFragment}
+  ${ClimbUserDayScalarsFragment}
   ${ClimbScalarsFragment}
 
   query climbDaysSessions(
@@ -171,7 +172,7 @@ export const climbDaysSessionsQuery = gql`
       data {
         ...ClimbDayScalarsFragment
         climbUserDays {
-          ...ClimbLogScalarsFragment
+          ...ClimbUserDayScalarsFragment
           climb {
             ...ClimbScalarsFragment
           }
