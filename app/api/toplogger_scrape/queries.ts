@@ -142,6 +142,8 @@ export interface AuthSigninRefreshTokenResponse {
 export const climbDaysSessionsQuery = gql`
   ${PaginationFragment}
   ${ClimbDayScalarsFragment}
+  ${ClimbLogScalarsFragment}
+  ${ClimbScalarsFragment}
 
   query climbDaysSessions(
     $gymId: ID
