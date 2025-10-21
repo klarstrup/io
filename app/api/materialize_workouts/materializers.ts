@@ -135,7 +135,10 @@ export async function* materializeToploggerWorkouts(
     {
       $group: {
         _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$climbedAtDate" },
+          climbedAtDate: {
+            $dateToString: { format: "%Y-%m-%d", date: "$climbedAtDate" },
+          },
+          gymId: "$gymId",
         },
         climbLogs: { $push: "$$ROOT" },
       },
@@ -154,6 +157,8 @@ export async function* materializeToploggerWorkouts(
                 date: { $first: "$climbLogs.climbedAtDate" },
               },
             },
+            ":",
+            { $first: "$climbLogs.gymId" },
           ],
         },
         _id: 0,
