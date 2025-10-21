@@ -11,6 +11,7 @@ import {
   ClimbLogScalarsFragment,
   ClimbScalars,
   ClimbScalarsFragment,
+  ClimbUserDayScalars,
   ClimbUserDayScalarsFragment,
   ClimbUserScalars,
   ClimbUserScalarsFragment,
@@ -185,7 +186,7 @@ export const climbDaysSessionsQuery = gql`
 export interface ClimbDaysSessionsResponse {
   climbDaysPaginated: PaginatedObjects<
     ClimbDayScalars & {
-      climbUserDays: (ClimbLogScalars & { climb: ClimbScalars })[];
+      climbUserDays: (ClimbUserDayScalars & { climb: ClimbScalars })[];
     }
   >;
 }
