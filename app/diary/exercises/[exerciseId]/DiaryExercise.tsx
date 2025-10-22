@@ -121,6 +121,8 @@ async function DiaryExerciseList({
     workedOutAtFilter = subMonths(now, 3);
   } else if (timeframe === ExerciseHistoryTimeframe.PastMonth) {
     workedOutAtFilter = subMonths(now, 1);
+  } else if (timeframe === ExerciseHistoryTimeframe.AllTime) {
+    workedOutAtFilter = undefined;
   } else {
     timeframe satisfies never;
   }

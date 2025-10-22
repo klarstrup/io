@@ -205,6 +205,7 @@ export const isPRType = (value: unknown): value is PRType =>
   typeof value === "string" && Object.values(PRType).includes(value as PRType);
 
 export enum ExerciseHistoryTimeframe {
+  AllTime = "all-time",
   ThisYear = "this-year",
   PastYear = "past-year",
   Past6Months = "past-6-months",
