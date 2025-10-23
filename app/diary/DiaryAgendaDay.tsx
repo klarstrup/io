@@ -256,6 +256,15 @@ export async function DiaryAgendaDay({
                 event.datetype === "date"
               ),
           );
+          const passedOnDayEvents = onDayEvents.filter((event) =>
+            isPast(dayDate)
+              ? true
+              : isBefore(event.end, now) &&
+                differenceInHours(event.end, now) > 2,
+          );
+          const upcomingOnDayEvents = onDayEvents.filter(
+            (event) => !passedOnDayEvents.some((e) => e.uid === event.uid),
+          );
 
           const isDayEmpty =
             !dayEvents.length &&
@@ -398,113 +407,118 @@ export async function DiaryAgendaDay({
                     </div>
                   </li>
                 ) : null}
-                {allDayEvents.length && onDayEvents.length ? (
-                  <li
-                    className="grid gap-1.5"
-                    style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
-                  >
-                    <span></span>
-                    <span>
-                      <hr className="mt-1 mb-0.5 border-gray-200" />
-                    </span>
-                  </li>
-                ) : null}
-                {onDayEvents.length
-                  ? uniqueBy(onDayEvents, ({ uid }) => uid).map((event) => {
-                      const days = eachDayOfInterval(event, {
-                        in: tz(timeZone),
-                      }).filter(
-                        (date) => differenceInHours(event.end, date) > 2,
-                      );
-                      const dayNo =
-                        days.findIndex(
-                          (date) => dateToString(date) === dayName,
-                        ) + 1;
-                      const isLastDay = dayNo === days.length;
-                      const duration = dayNo === 1 && intervalToDuration(event);
 
-                      return (
-                        <li key={event.uid} className="flex gap-1.5">
-                          <div className="text-center">
-                            <div className="leading-snug font-semibold tabular-nums">
-                              {event.datetype === "date-time" && dayNo === 1 ? (
-                                event.start.toLocaleTimeString("en-DK", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  timeZone,
-                                })
-                              ) : (
-                                <>Day {dayNo}</>
-                              )}{" "}
-                            </div>
-                            <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                              {dayNo === 1 && duration ? (
-                                <>
-                                  {duration.days ? `${duration.days}d` : null}
-                                  {duration.hours ? `${duration.hours}h` : null}
-                                  {duration.minutes
-                                    ? `${duration.minutes}m`
-                                    : null}
-                                  {duration.seconds
-                                    ? `${duration.seconds}s`
-                                    : null}
-                                </>
-                              ) : isLastDay ? (
-                                <>
-                                  -
-                                  {event.end.toLocaleTimeString("en-DK", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    timeZone,
-                                  })}
-                                </>
-                              ) : null}
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <div className="leading-snug">{event.summary}</div>
-                            <div className="text-[0.666rem] leading-tight italic">
-                              {event.location}
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })
-                  : null}
-                {(onDayEvents.length || dayTodos.length) &&
-                dayDueSets.length ? (
-                  <hr className="my-1 border-gray-200" />
-                ) : null}
-                {!(onDayEvents.length || dayTodos.length) &&
-                dayEvents.length &&
-                dayDueSets.length ? (
-                  <hr className="my-1 border-gray-200" />
-                ) : null}
                 <li
                   className="grid gap-1.5"
                   style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                 >
-                  {dayDueSets.length || dayTodos.length ? (
+                  {dayDueSets.length ||
+                  dayTodos.length ||
+                  passedOnDayEvents.length ? (
                     <Fragment>
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircle} />
                       </span>
-                      <div className="flex flex-wrap items-center gap-0.5">
-                        {dayTodos.map((todo) => (
-                          <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
-                        ))}
-                        {dayDueSets.map((dueSet) => (
-                          <DiaryAgendaDayDueSet
-                            key={JSON.stringify(dueSet.scheduleEntry)}
-                            userId={user!.id}
-                            dueSet={dueSet}
-                            date={dayDate}
-                          />
-                        ))}
+                      <div>
+                        {upcomingOnDayEvents.length
+                          ? uniqueBy(upcomingOnDayEvents, ({ uid }) => uid).map(
+                              (event) => {
+                                const days = eachDayOfInterval(event, {
+                                  in: tz(timeZone),
+                                }).filter(
+                                  (date) =>
+                                    differenceInHours(event.end, date) > 2,
+                                );
+                                const dayNo =
+                                  days.findIndex(
+                                    (date) => dateToString(date) === dayName,
+                                  ) + 1;
+                                const isLastDay = dayNo === days.length;
+                                const duration =
+                                  dayNo === 1 && intervalToDuration(event);
+
+                                return (
+                                  <li key={event.uid} className="flex gap-1.5">
+                                    <div className="text-center">
+                                      <div className="leading-snug font-semibold tabular-nums">
+                                        {event.datetype === "date-time" &&
+                                        dayNo === 1 ? (
+                                          event.start.toLocaleTimeString(
+                                            "en-DK",
+                                            {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                              timeZone,
+                                            },
+                                          )
+                                        ) : (
+                                          <>Day {dayNo}</>
+                                        )}{" "}
+                                      </div>
+                                      <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+                                        {dayNo === 1 && duration ? (
+                                          <>
+                                            {duration.days
+                                              ? `${duration.days}d`
+                                              : null}
+                                            {duration.hours
+                                              ? `${duration.hours}h`
+                                              : null}
+                                            {duration.minutes
+                                              ? `${duration.minutes}m`
+                                              : null}
+                                            {duration.seconds
+                                              ? `${duration.seconds}s`
+                                              : null}
+                                          </>
+                                        ) : isLastDay ? (
+                                          <>
+                                            -
+                                            {event.end.toLocaleTimeString(
+                                              "en-DK",
+                                              {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                timeZone,
+                                              },
+                                            )}
+                                          </>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="leading-snug">
+                                        {event.summary}
+                                      </div>
+                                      <div className="text-[0.666rem] leading-tight italic">
+                                        {event.location}
+                                      </div>
+                                    </div>
+                                  </li>
+                                );
+                              },
+                            )
+                          : null}
+                        <div className="flex flex-wrap items-center gap-0.5">
+                          {dayTodos.map((todo) => (
+                            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+                          ))}
+                          {dayDueSets.map((dueSet) => (
+                            <DiaryAgendaDayDueSet
+                              key={JSON.stringify(dueSet.scheduleEntry)}
+                              userId={user!.id}
+                              dueSet={dueSet}
+                              date={dayDate}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </Fragment>
                   ) : null}
-                  {isPast(dayDate) && dayWorkouts.length && dayDones.length ? (
+                  {isPast(dayDate) &&
+                  (dayWorkouts.length ||
+                    dayDones.length ||
+                    passedOnDayEvents.length) ? (
                     <>
                       <span></span>
                       <span>
@@ -513,58 +527,145 @@ export async function DiaryAgendaDay({
                     </>
                   ) : null}
                   {isPast(dayDate) &&
-                  (dayWorkouts.length || dayDones.length) ? (
+                  (dayWorkouts.length ||
+                    dayDones.length ||
+                    passedOnDayEvents.length) ? (
                     <>
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircleCheck} />
                       </span>
-                      <div className="break-inside-avoid-column gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
-                        {dayDones.map((todo) => (
-                          <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
-                        ))}
-                        {dayExerciseSets.map(
-                          ([exercise, setsWithLocation], exerciseIndex) => {
-                            return (
-                              <div
-                                key={exerciseIndex}
-                                className={
-                                  "inline-flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white " +
-                                  (isClimbingExercise(exercise.id)
-                                    ? "mr-0 w-full"
-                                    : "mr-0.5 w-auto last:mr-0")
-                                }
-                              >
+                      <div>
+                        {passedOnDayEvents.length
+                          ? uniqueBy(passedOnDayEvents, ({ uid }) => uid).map(
+                              (event) => {
+                                const days = eachDayOfInterval(event, {
+                                  in: tz(timeZone),
+                                }).filter(
+                                  (date) =>
+                                    differenceInHours(event.end, date) > 2,
+                                );
+                                const dayNo =
+                                  days.findIndex(
+                                    (date) => dateToString(date) === dayName,
+                                  ) + 1;
+                                const isLastDay = dayNo === days.length;
+                                const duration =
+                                  dayNo === 1 && intervalToDuration(event);
+
+                                return (
+                                  <li key={event.uid} className="flex gap-1.5">
+                                    <div className="text-center">
+                                      <div className="leading-snug font-semibold tabular-nums">
+                                        {event.datetype === "date-time" &&
+                                        dayNo === 1 ? (
+                                          event.start.toLocaleTimeString(
+                                            "en-DK",
+                                            {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                              timeZone,
+                                            },
+                                          )
+                                        ) : (
+                                          <>Day {dayNo}</>
+                                        )}{" "}
+                                      </div>
+                                      <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+                                        {dayNo === 1 && duration ? (
+                                          <>
+                                            {duration.days
+                                              ? `${duration.days}d`
+                                              : null}
+                                            {duration.hours
+                                              ? `${duration.hours}h`
+                                              : null}
+                                            {duration.minutes
+                                              ? `${duration.minutes}m`
+                                              : null}
+                                            {duration.seconds
+                                              ? `${duration.seconds}s`
+                                              : null}
+                                          </>
+                                        ) : isLastDay ? (
+                                          <>
+                                            -
+                                            {event.end.toLocaleTimeString(
+                                              "en-DK",
+                                              {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                timeZone,
+                                              },
+                                            )}
+                                          </>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="leading-snug">
+                                        {event.summary}
+                                      </div>
+                                      <div className="text-[0.666rem] leading-tight italic">
+                                        {event.location}
+                                      </div>
+                                    </div>
+                                  </li>
+                                );
+                              },
+                            )
+                          : null}
+                        <div className="break-inside-avoid-column gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
+                          {dayDones.map((todo) => (
+                            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+                          ))}
+                          {dayExerciseSets.map(
+                            ([exercise, setsWithLocation], exerciseIndex) => {
+                              return (
                                 <div
+                                  key={exerciseIndex}
                                   className={
-                                    "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40"
+                                    "inline-flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white " +
+                                    (isClimbingExercise(exercise.id)
+                                      ? "mr-0 w-full"
+                                      : "mr-0.5 w-auto last:mr-0")
                                   }
                                 >
-                                  <div className="flex flex-wrap items-center gap-1 px-0.5 py-0.5 text-sm leading-none">
-                                    <Link
-                                      prefetch={false}
-                                      href={`/diary/exercises/${exercise.id}`}
-                                    >
-                                      {[exercise.name, ...exercise.aliases]
-                                        .filter((name) => name.length >= 4)
-                                        .sort((a, b) => a.length - b.length)[0]!
-                                        .replace("Barbell", "")}
-                                    </Link>
-                                    {isClimbingExercise(exercise.id)
-                                      ? calculateClimbingStats(setsWithLocation)
-                                      : null}
+                                  <div
+                                    className={
+                                      "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40"
+                                    }
+                                  >
+                                    <div className="flex flex-wrap items-center gap-1 px-0.5 py-0.5 text-sm leading-none">
+                                      <Link
+                                        prefetch={false}
+                                        href={`/diary/exercises/${exercise.id}`}
+                                      >
+                                        {[exercise.name, ...exercise.aliases]
+                                          .filter((name) => name.length >= 4)
+                                          .sort(
+                                            (a, b) => a.length - b.length,
+                                          )[0]!
+                                          .replace("Barbell", "")}
+                                      </Link>
+                                      {isClimbingExercise(exercise.id)
+                                        ? calculateClimbingStats(
+                                            setsWithLocation,
+                                          )
+                                        : null}
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-center px-1 py-0.5 pb-1 text-xs">
+                                    <WorkoutEntryExercise
+                                      exercise={exercise}
+                                      setsWithLocations={setsWithLocation}
+                                      exerciseIndex={exerciseIndex}
+                                    />
                                   </div>
                                 </div>
-                                <div className="flex justify-center px-1 py-0.5 pb-1 text-xs">
-                                  <WorkoutEntryExercise
-                                    exercise={exercise}
-                                    setsWithLocations={setsWithLocation}
-                                    exerciseIndex={exerciseIndex}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          },
-                        )}
+                              );
+                            },
+                          )}
+                        </div>
                       </div>
                     </>
                   ) : null}
