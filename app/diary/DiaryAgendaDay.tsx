@@ -414,7 +414,7 @@ export async function DiaryAgendaDay({
                 >
                   {dayDueSets.length ||
                   dayTodos.length ||
-                  passedOnDayEvents.length ? (
+                  upcomingOnDayEvents.length ? (
                     <Fragment>
                       <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircle} />
@@ -515,7 +515,9 @@ export async function DiaryAgendaDay({
                       </div>
                     </Fragment>
                   ) : null}
-                  {isPast(dayDate) &&
+                  {(dayTodos.length ||
+                    upcomingOnDayEvents.length ||
+                    dayDueSets.length) &&
                   (dayWorkouts.length ||
                     dayDones.length ||
                     passedOnDayEvents.length) ? (
