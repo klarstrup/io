@@ -11,6 +11,7 @@ import {
   eachDayOfInterval,
   endOfDay,
   intervalToDuration,
+  isAfter,
   isBefore,
   isPast,
   max,
@@ -257,13 +258,10 @@ export async function DiaryAgendaDay({
               ),
           );
           const passedOnDayEvents = onDayEvents.filter((event) =>
-            isPast(dayDate)
-              ? true
-              : isBefore(event.end, now) &&
-                differenceInHours(event.end, now) > 2,
+            isBefore(event.end, now),
           );
-          const upcomingOnDayEvents = onDayEvents.filter(
-            (event) => !passedOnDayEvents.some((e) => e.uid === event.uid),
+          const upcomingOnDayEvents = onDayEvents.filter((event) =>
+            isAfter(event.end, now),
           );
 
           const isDayEmpty =
