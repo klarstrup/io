@@ -34,7 +34,7 @@
     "luxon": "^3.7.2",
     "mongodb": "^6.20.0",
     "next": "^15.5.5",
-    "next-auth": "^5.0.0-beta.29",
+    "next-auth": "^5.0.0-beta.30",
     "partysocket": "1.1.6",
     "postcss": "^8.5.6",
     "react": "^19.2.0",
