@@ -59,7 +59,7 @@ export async function DiaryEntryWeek({
       className="grid flex-1 grid-cols-8 bg-white"
     >
       <div
-        className="flex flex-1 flex-col flex-wrap items-center justify-center border-[0.5px] border-black/25"
+        className="flex flex-1 flex-col flex-wrap items-center justify-center border-b-[0.5px] border-r-[0.5px] border-black/10 border-r-white"
         style={{ background: "#edab00" }}
       >
         <span>{getISOWeek(weekDate)}</span>
