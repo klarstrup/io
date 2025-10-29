@@ -46,6 +46,7 @@ export async function DiaryEntryWeek({
                     [
                       set,
                       locations.find((l) => l.id === w.locationId),
+                      w,
                     ] as const,
                 ),
               ),
@@ -59,7 +60,7 @@ export async function DiaryEntryWeek({
       className="grid flex-1 grid-cols-8 bg-white"
     >
       <div
-        className="flex flex-1 flex-col flex-wrap items-center justify-center border-b-[0.5px] border-r-[0.5px] border-black/10 border-r-white"
+        className="flex flex-1 flex-col flex-wrap items-center justify-center border-r-[0.5px] border-b-[0.5px] border-black/10 border-r-white"
         style={{ background: "#edab00" }}
       >
         <span>{getISOWeek(weekDate)}</span>

@@ -800,7 +800,11 @@ function SetsForm({
                 Math.random() > 1 ? (
                   <ProblemByProblem
                     problemByProblem={exerciseSetsToProblemByProblem([
-                      [watchedSets[index] as WorkoutExerciseSet, location],
+                      [
+                        watchedSets[index] as WorkoutExerciseSet,
+                        location,
+                        undefined,
+                      ],
                     ] as const)}
                   />
                 ) : (

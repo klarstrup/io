@@ -787,6 +787,7 @@ export async function calculateClimbingStats(
   setAndLocationPairs: (readonly [
     set: WorkoutExerciseSet,
     location: LocationData | undefined,
+    workout: WorkoutData | undefined,
   ])[],
   userId?: string,
   on?: Date,

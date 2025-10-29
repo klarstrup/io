@@ -56,6 +56,7 @@ export function WorkoutEntryExercise({
   setsWithLocations: (readonly [
     WorkoutExerciseSet,
     LocationData | undefined,
+    workout: WorkoutData | undefined,
   ])[];
   exerciseIndex: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
@@ -302,6 +303,7 @@ export default async function WorkoutEntry({
                       workoutExercise.sets.map((set) => [
                         set,
                         location ?? undefined,
+                        workout,
                       ]),
                     )
                   : null}
@@ -316,6 +318,7 @@ export default async function WorkoutEntry({
                 setsWithLocations={workoutExercise.sets.map((set) => [
                   set,
                   location ?? undefined,
+                  workout,
                 ])}
                 exerciseIndex={exerciseIndex}
                 exerciseSetPRs={exerciseSetPRs}

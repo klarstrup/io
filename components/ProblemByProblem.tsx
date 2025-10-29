@@ -3,7 +3,11 @@ import Grade from "../grades";
 import { PP } from "../lib";
 import { exercises, SendType } from "../models/exercises";
 import type { LocationData } from "../models/location";
-import { getSetGrade, WorkoutExerciseSet } from "../models/workout";
+import {
+  getSetGrade,
+  WorkoutData,
+  WorkoutExerciseSet,
+} from "../models/workout";
 import { colorNameToHTMLColor, countBy } from "../utils";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
@@ -360,6 +364,7 @@ export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet,
     LocationData | undefined,
+    workout: WorkoutData | undefined,
   ])[],
 ): PP[] =>
   setsWithLocations.map(([set, location], i) => {

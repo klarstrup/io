@@ -29,6 +29,7 @@ import { Locations } from "../../models/location.server";
 import {
   isClimbingExercise,
   isNextSetDue,
+  WorkoutSource,
   type WorkoutData,
   type WorkoutExercise,
 } from "../../models/workout";
@@ -223,14 +224,15 @@ export async function DiaryAgendaDay({
               ([exerciseId, exerciseWorkouts]) =>
                 [
                   exercisesById[parseInt(exerciseId)]!,
-                  exerciseWorkouts.flatMap(([{ sets }, { locationId }]) =>
+                  exerciseWorkouts.flatMap(([{ sets }, workout]) =>
                     sets.map(
                       (set) =>
                         [
                           set,
                           dayLocations.find(
-                            (loc) => loc._id.toString() === locationId,
+                            (loc) => loc._id.toString() === workout.locationId,
                           ),
+                          workout,
                         ] as const,
                     ),
                   ),
@@ -627,6 +629,24 @@ export async function DiaryAgendaDay({
                           ))}
                           {dayExerciseSets.map(
                             ([exercise, setsWithLocation], exerciseIndex) => {
+                              const workouts = uniqueBy(
+                                setsWithLocation.map(
+                                  ([, , workout]) => workout,
+                                ),
+                                (workout) => workout.id,
+                              );
+                              const mostRecentWorkout =
+                                workouts.length === 1
+                                  ? workouts.sort(
+                                      (a, b) =>
+                                        b.workedOutAt.getTime() -
+                                        a.workedOutAt.getTime(),
+                                    )[0]!
+                                  : null;
+                              const workoutDateStr =
+                                mostRecentWorkout &&
+                                dateToString(mostRecentWorkout.workedOutAt);
+
                               return (
                                 <div
                                   key={exerciseIndex}
@@ -659,6 +679,19 @@ export async function DiaryAgendaDay({
                                             setsWithLocation,
                                           )
                                         : null}
+                                      {mostRecentWorkout &&
+                                      (mostRecentWorkout.source ===
+                                        WorkoutSource.Self ||
+                                        !mostRecentWorkout.source) ? (
+                                        <Link
+                                          prefetch={false}
+                                          href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
+                                          style={{ color: "#edab00" }}
+                                          className="text-sm leading-0 font-semibold"
+                                        >
+                                          ⏎
+                                        </Link>
+                                      ) : null}
                                     </div>
                                   </div>
                                   <div className="flex justify-center px-1 py-0.5 pb-1 text-xs">
