@@ -636,13 +636,7 @@ export async function DiaryAgendaDay({
                                 (workout) => workout.id,
                               );
                               const mostRecentWorkout =
-                                workouts.length === 1
-                                  ? workouts.sort(
-                                      (a, b) =>
-                                        b.workedOutAt.getTime() -
-                                        a.workedOutAt.getTime(),
-                                    )[0]!
-                                  : null;
+                                workouts.length === 1 ? workouts[0]! : null;
                               const workoutDateStr =
                                 mostRecentWorkout &&
                                 dateToString(mostRecentWorkout.workedOutAt);
