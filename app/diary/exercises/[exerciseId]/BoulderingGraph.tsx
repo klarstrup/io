@@ -1,4 +1,4 @@
-import { endOfDay, min } from "date-fns";
+import { endOfDay, endOfWeek, min } from "date-fns";
 import { ObjectId } from "mongodb";
 import { WorkoutExercise, WorkoutSource } from "../../../../models/workout";
 import {
@@ -12,6 +12,7 @@ import DiaryExerciseGraph from "./DiaryExerciseGraph";
 const filterNullData = <T,>(data: { x: Date; y: T | null }[]) =>
   data.filter((d): d is { x: Date; y: T } => d.y !== null);
 
+const roundDataToWeeks = false;
 export default async function BoulderingGraph({
   userId,
   allWorkoutsOfExercise,
@@ -33,7 +34,11 @@ export default async function BoulderingGraph({
   }[];
 }) {
   const uniqueWorkedOutAts = uniqueBy(
-    allWorkoutsOfExercise.map((w) => w.workedOutAt),
+    allWorkoutsOfExercise.map((w) =>
+      roundDataToWeeks
+        ? min([endOfWeek(w.workedOutAt), new Date()])
+        : w.workedOutAt,
+    ),
     (workedOutAt) => workedOutAt.toISOString(),
   );
   const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] =
