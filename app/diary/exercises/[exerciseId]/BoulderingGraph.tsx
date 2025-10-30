@@ -6,7 +6,7 @@ import {
   calculate60dayTop10AverageFlashGrade,
   calculate60dayTop10AverageSendGrade,
 } from "../../../../models/workout.server";
-import { createTrend, getLimits } from "../../../../utils";
+import { createTrend, getLimits, uniqueBy } from "../../../../utils";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
 
 const filterNullData = <T,>(data: { x: Date; y: T | null }[]) =>
@@ -32,10 +32,14 @@ export default async function BoulderingGraph({
     _id: ObjectId;
   }[];
 }) {
+  const uniqueWorkedOutAts = uniqueBy(
+    allWorkoutsOfExercise.map((w) => w.workedOutAt),
+    (workedOutAt) => workedOutAt.toISOString(),
+  );
   const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] =
     await Promise.all([
       Promise.all(
-        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
+        uniqueWorkedOutAts.map(async (workedOutAt) => {
           const x = min([endOfDay(workedOutAt), new Date()]);
           return {
             x,
@@ -44,7 +48,7 @@ export default async function BoulderingGraph({
         }),
       ).then(filterNullData),
       Promise.all(
-        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
+        uniqueWorkedOutAts.map(async (workedOutAt) => {
           const x = min([endOfDay(workedOutAt), new Date()]);
           return {
             x,
@@ -53,7 +57,7 @@ export default async function BoulderingGraph({
         }),
       ).then(filterNullData),
       Promise.all(
-        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
+        uniqueWorkedOutAts.map(async (workedOutAt) => {
           const x = min([endOfDay(workedOutAt), new Date()]);
           return {
             x,
