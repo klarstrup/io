@@ -30,7 +30,6 @@ import {
   type WorkoutExercise,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
-  WorkoutSource,
 } from "./workout";
 
 export const Workouts = proxyCollection<Omit<WorkoutData, "id">>("workouts");
@@ -654,7 +653,6 @@ export const calculate60dayTop10AverageSendGrade = async (
   const workouts = await MaterializedWorkoutsView.find({
     userId,
     "exercises.exerciseId": 2001,
-    source: WorkoutSource.TopLogger,
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
@@ -702,7 +700,6 @@ export const calculate60dayTop10AverageFlashGrade = async (
   const workouts = await MaterializedWorkoutsView.find({
     userId,
     "exercises.exerciseId": 2001,
-    source: WorkoutSource.TopLogger,
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
@@ -746,7 +743,6 @@ export const calculate60dayTop10AverageAttemptGrade = async (
   const workouts = await MaterializedWorkoutsView.find({
     userId,
     "exercises.exerciseId": 2001,
-    source: WorkoutSource.TopLogger,
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
