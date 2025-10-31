@@ -658,12 +658,12 @@ export function createTrend(data: Array<{ x: number | Date; y: number }>): {
 }
 export const getTrendLine = (
   data: Array<{ x: number | Date; y: number }>,
-): { x: Date; y: number }[] => {
-  const limit = getLimits(data.map((d) => (isDate(d.x) ? d.x.valueOf() : d.x)));
-  const trend = createTrend(data);
-
-  return limit.map((x) => ({ x: new Date(x), y: trend.calcY(x) }));
-};
+  limit: [min: number, max: number] = getLimits(
+    data.map((d) => (isDate(d.x) ? d.x.valueOf() : d.x)),
+  ),
+  trend: ReturnType<typeof createTrend> = createTrend(data),
+): { x: Date; y: number }[] =>
+  limit.map((x) => ({ x: new Date(x), y: trend.calcY(x) }));
 
 export const partition = <T>(a: T[], fn: (v: T) => boolean) =>
   a.reduce<[T[], T[]]>((m, v) => (m[fn(v) ? 0 : 1].push(v), m), [[], []]);
