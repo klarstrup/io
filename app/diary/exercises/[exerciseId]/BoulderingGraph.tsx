@@ -50,54 +50,54 @@ export default async function BoulderingGraph({
     }).toArray(),
   ]);
 
-  const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] = [
-    uniqueWorkedOutAts
-      .map((workedOutAt) => {
-        const x = min([endOfDay(workedOutAt), new Date()]);
-        return {
-          x,
-          y: calculate60dayTop10AverageSendGrade(workouts, locations, x),
-        };
-      })
-      .filter((d): d is { x: Date; y: number } => d.y !== null),
-    uniqueWorkedOutAts
-      .map((workedOutAt) => {
-        const x = min([endOfDay(workedOutAt), new Date()]);
-        return {
-          x,
-          y: calculate60dayTop10AverageFlashGrade(workouts, locations, x),
-        };
-      })
-      .filter((d): d is { x: Date; y: number } => d.y !== null),
-    uniqueWorkedOutAts
-      .map((workedOutAt) => {
-        const x = min([endOfDay(workedOutAt), new Date()]);
-        return {
-          x,
-          y: calculate60dayTop10AverageAttemptGrade(workouts, locations, x),
-        };
-      })
-      .filter((d): d is { x: Date; y: number } => d.y !== null),
-  ];
+  const top10sendGradeData: { x: Date; y: number }[] = [];
+  const top10flashGradeData: { x: Date; y: number }[] = [];
+  const top10attemptGradeData: { x: Date; y: number }[] = [];
+  for (const workedOutAt of uniqueWorkedOutAts) {
+    const x = endOfDay(workedOutAt);
 
-  const top10sendGradeDataTrend = (() => {
-    const trend = createTrend(top10sendGradeData);
-    return getLimits(top10sendGradeData.map((data) => data.x.valueOf())).map(
-      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    const sendGrade = calculate60dayTop10AverageSendGrade(
+      workouts,
+      locations,
+      x,
     );
-  })();
-  const top10flashGradeDataTrend = (() => {
-    const trend = createTrend(top10flashGradeData);
-    return getLimits(top10flashGradeData.map((data) => data.x.valueOf())).map(
-      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    if (sendGrade) top10sendGradeData.push({ x, y: sendGrade });
+
+    const flashGrade = calculate60dayTop10AverageFlashGrade(
+      workouts,
+      locations,
+      x,
     );
-  })();
-  const top10attemptGradeDataTrend = (() => {
-    const trend = createTrend(top10attemptGradeData);
-    return getLimits(top10attemptGradeData.map((data) => data.x.valueOf())).map(
-      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    if (flashGrade) top10flashGradeData.push({ x, y: flashGrade });
+
+    const attemptGrade = calculate60dayTop10AverageAttemptGrade(
+      workouts,
+      locations,
+      x,
     );
-  })();
+    if (attemptGrade) top10attemptGradeData.push({ x, y: attemptGrade });
+  }
+
+  const limits = getLimits([
+    ...top10sendGradeData.map((data) => data.x.valueOf()),
+    ...top10flashGradeData.map((data) => data.x.valueOf()),
+    ...top10attemptGradeData.map((data) => data.x.valueOf()),
+  ]);
+  const top10sendGradeTrend = createTrend(top10sendGradeData);
+  const top10sendGradeDataTrend = limits.map((x) => ({
+    x: new Date(x),
+    y: top10sendGradeTrend.calcY(x),
+  }));
+  const top10flashGradeTrend = createTrend(top10flashGradeData);
+  const top10flashGradeDataTrend = limits.map((x) => ({
+    x: new Date(x),
+    y: top10flashGradeTrend.calcY(x),
+  }));
+  const top10attemptGradeTrend = createTrend(top10attemptGradeData);
+  const top10attemptGradeDataTrend = limits.map((x) => ({
+    x: new Date(x),
+    y: top10attemptGradeTrend.calcY(x),
+  }));
 
   return (
     <DiaryExerciseGraph
