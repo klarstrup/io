@@ -8,7 +8,7 @@ import {
   calculate60dayTop10AverageSendGrade,
   MaterializedWorkoutsView,
 } from "../../../../models/workout.server";
-import { createTrend, getLimits, uniqueBy } from "../../../../utils";
+import { getTrendLine, uniqueBy } from "../../../../utils";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
 
 const roundDataToWeeks = false;
@@ -78,36 +78,19 @@ export default async function BoulderingGraph({
     if (attemptGrade) top10attemptGradeData.push({ x, y: attemptGrade });
   }
 
-  const limits = getLimits([
-    ...top10sendGradeData.map((data) => data.x.valueOf()),
-    ...top10flashGradeData.map((data) => data.x.valueOf()),
-    ...top10attemptGradeData.map((data) => data.x.valueOf()),
-  ]);
-  const top10sendGradeTrend = createTrend(top10sendGradeData);
-  const top10sendGradeDataTrend = limits.map((x) => ({
-    x: new Date(x),
-    y: top10sendGradeTrend.calcY(x),
-  }));
-  const top10flashGradeTrend = createTrend(top10flashGradeData);
-  const top10flashGradeDataTrend = limits.map((x) => ({
-    x: new Date(x),
-    y: top10flashGradeTrend.calcY(x),
-  }));
-  const top10attemptGradeTrend = createTrend(top10attemptGradeData);
-  const top10attemptGradeDataTrend = limits.map((x) => ({
-    x: new Date(x),
-    y: top10attemptGradeTrend.calcY(x),
-  }));
+  const top10sendGradeTrend = getTrendLine(top10sendGradeData);
+  const top10flashGradeTrend = getTrendLine(top10flashGradeData);
+  const top10attemptGradeTrend = getTrendLine(top10attemptGradeData);
 
   return (
     <DiaryExerciseGraph
       data={[
         { id: "Top 10 Send Grade", data: top10sendGradeData },
-        { id: "Top 10 Send Grade Trend", data: top10sendGradeDataTrend },
+        { id: "Top 10 Send Grade Trend", data: top10sendGradeTrend },
         { id: "Top 10 Flash Grade", data: top10flashGradeData },
-        { id: "Top 10 Flash Grade Trend", data: top10flashGradeDataTrend },
+        { id: "Top 10 Flash Grade Trend", data: top10flashGradeTrend },
         { id: "Top 10 Attempt Grade", data: top10attemptGradeData },
-        { id: "Top 10 Attempt Grade Trend", data: top10attemptGradeDataTrend },
+        { id: "Top 10 Attempt Grade Trend", data: top10attemptGradeTrend },
       ]}
     />
   );
