@@ -646,18 +646,14 @@ export const calculateFlashGradeOn = async (
   return flashGrade;
 };
 
-export const calculate60dayTop10AverageSendGrade = async (
+export const calculate60dayTop10AverageSendGrade = (
+  allBoulderingWorkouts: WithId<WorkoutData>[],
   locations: WithId<LocationData>[],
-  userId: string,
   date: Date,
 ) => {
-  const workouts = await MaterializedWorkoutsView.find({
-    userId,
-    "exercises.exerciseId": 2001,
-    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
-    deletedAt: { $exists: false },
-  }).toArray();
-
+  const workouts = allBoulderingWorkouts.filter(
+    (w) => w.workedOutAt <= date && w.workedOutAt > subDays(date, 60),
+  );
   const grades = workouts
     .flatMap((w) => {
       const location = locations.find((l) => l._id.toString() === w.locationId);
@@ -681,17 +677,14 @@ export const calculate60dayTop10AverageSendGrade = async (
   return grades.slice(0, 10).reduce((sum, grade) => sum + grade, 0) / 10;
 };
 
-export const calculate60dayTop10AverageFlashGrade = async (
+export const calculate60dayTop10AverageFlashGrade = (
+  allBoulderingWorkouts: WithId<WorkoutData>[],
   locations: WithId<LocationData>[],
-  userId: string,
   date: Date,
 ) => {
-  const workouts = await MaterializedWorkoutsView.find({
-    userId,
-    "exercises.exerciseId": 2001,
-    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
-    deletedAt: { $exists: false },
-  }).toArray();
+  const workouts = allBoulderingWorkouts.filter(
+    (w) => w.workedOutAt <= date && w.workedOutAt > subDays(date, 60),
+  );
 
   const grades = workouts
     .flatMap((w) => {
@@ -712,17 +705,14 @@ export const calculate60dayTop10AverageFlashGrade = async (
   return grades.slice(0, 10).reduce((sum, grade) => sum + grade, 0) / 10;
 };
 
-export const calculate60dayTop10AverageAttemptGrade = async (
+export const calculate60dayTop10AverageAttemptGrade = (
+  allBoulderingWorkouts: WithId<WorkoutData>[],
   locations: WithId<LocationData>[],
-  userId: string,
   date: Date,
 ) => {
-  const workouts = await MaterializedWorkoutsView.find({
-    userId,
-    "exercises.exerciseId": 2001,
-    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
-    deletedAt: { $exists: false },
-  }).toArray();
+  const workouts = allBoulderingWorkouts.filter(
+    (w) => w.workedOutAt <= date && w.workedOutAt > subDays(date, 60),
+  );
 
   const grades = workouts
     .flatMap((w) => {

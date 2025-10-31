@@ -6,12 +6,10 @@ import {
   calculate60dayTop10AverageAttemptGrade,
   calculate60dayTop10AverageFlashGrade,
   calculate60dayTop10AverageSendGrade,
+  MaterializedWorkoutsView,
 } from "../../../../models/workout.server";
 import { createTrend, getLimits, uniqueBy } from "../../../../utils";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
-
-const filterNullData = <T,>(data: { x: Date; y: T | null }[]) =>
-  data.filter((d): d is { x: Date; y: T } => d.y !== null);
 
 const roundDataToWeeks = false;
 export default async function BoulderingGraph({
@@ -44,41 +42,41 @@ export default async function BoulderingGraph({
   );
 
   const locations = await Locations.find({ userId }).toArray();
+  const workouts = await MaterializedWorkoutsView.find({
+    userId,
+    "exercises.exerciseId": 2001,
+    deletedAt: { $exists: false },
+  }).toArray();
 
-  const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] =
-    await Promise.all([
-      Promise.all(
-        uniqueWorkedOutAts.map(async (workedOutAt) => {
-          const x = min([endOfDay(workedOutAt), new Date()]);
-          return {
-            x,
-            y: await calculate60dayTop10AverageSendGrade(locations, userId, x),
-          };
-        }),
-      ).then(filterNullData),
-      Promise.all(
-        uniqueWorkedOutAts.map(async (workedOutAt) => {
-          const x = min([endOfDay(workedOutAt), new Date()]);
-          return {
-            x,
-            y: await calculate60dayTop10AverageFlashGrade(locations, userId, x),
-          };
-        }),
-      ).then(filterNullData),
-      Promise.all(
-        uniqueWorkedOutAts.map(async (workedOutAt) => {
-          const x = min([endOfDay(workedOutAt), new Date()]);
-          return {
-            x,
-            y: await calculate60dayTop10AverageAttemptGrade(
-              locations,
-              userId,
-              x,
-            ),
-          };
-        }),
-      ).then(filterNullData),
-    ]);
+  const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] = [
+    uniqueWorkedOutAts
+      .map((workedOutAt) => {
+        const x = min([endOfDay(workedOutAt), new Date()]);
+        return {
+          x,
+          y: calculate60dayTop10AverageSendGrade(workouts, locations, x),
+        };
+      })
+      .filter((d): d is { x: Date; y: number } => d.y !== null),
+    uniqueWorkedOutAts
+      .map((workedOutAt) => {
+        const x = min([endOfDay(workedOutAt), new Date()]);
+        return {
+          x,
+          y: calculate60dayTop10AverageFlashGrade(workouts, locations, x),
+        };
+      })
+      .filter((d): d is { x: Date; y: number } => d.y !== null),
+    uniqueWorkedOutAts
+      .map((workedOutAt) => {
+        const x = min([endOfDay(workedOutAt), new Date()]);
+        return {
+          x,
+          y: calculate60dayTop10AverageAttemptGrade(workouts, locations, x),
+        };
+      })
+      .filter((d): d is { x: Date; y: number } => d.y !== null),
+  ];
 
   const top10sendGradeDataTrend = (() => {
     const trend = createTrend(top10sendGradeData);
