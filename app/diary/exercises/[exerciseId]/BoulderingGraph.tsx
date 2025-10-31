@@ -1,5 +1,6 @@
 import { endOfDay, endOfWeek, min } from "date-fns";
 import { ObjectId } from "mongodb";
+import { Locations } from "../../../../models/location.server";
 import { WorkoutExercise, WorkoutSource } from "../../../../models/workout";
 import {
   calculate60dayTop10AverageAttemptGrade,
@@ -41,6 +42,9 @@ export default async function BoulderingGraph({
     ),
     (workedOutAt) => workedOutAt.toISOString(),
   );
+
+  const locations = await Locations.find({ userId }).toArray();
+
   const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] =
     await Promise.all([
       Promise.all(
@@ -48,7 +52,7 @@ export default async function BoulderingGraph({
           const x = min([endOfDay(workedOutAt), new Date()]);
           return {
             x,
-            y: await calculate60dayTop10AverageSendGrade(userId, x),
+            y: await calculate60dayTop10AverageSendGrade(locations, userId, x),
           };
         }),
       ).then(filterNullData),
@@ -57,7 +61,7 @@ export default async function BoulderingGraph({
           const x = min([endOfDay(workedOutAt), new Date()]);
           return {
             x,
-            y: await calculate60dayTop10AverageFlashGrade(userId, x),
+            y: await calculate60dayTop10AverageFlashGrade(locations, userId, x),
           };
         }),
       ).then(filterNullData),
@@ -66,7 +70,11 @@ export default async function BoulderingGraph({
           const x = min([endOfDay(workedOutAt), new Date()]);
           return {
             x,
-            y: await calculate60dayTop10AverageAttemptGrade(userId, x),
+            y: await calculate60dayTop10AverageAttemptGrade(
+              locations,
+              userId,
+              x,
+            ),
           };
         }),
       ).then(filterNullData),

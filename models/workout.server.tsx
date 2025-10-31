@@ -573,14 +573,17 @@ export async function calculateFlashRateByMonth(userId: string, now: Date) {
 //  void calculateFlashRateByMonth("65a85e2c9a437530d3de2e35", new Date());
 
 const flashGradeRateThreshold = 0.8;
-export const calculateFlashGradeOn = async (userId: string, date: Date) => {
+export const calculateFlashGradeOn = async (
+  locations: WithId<LocationData>[],
+  userId: string,
+  date: Date,
+) => {
   const workouts = await MaterializedWorkoutsView.find({
     userId,
     "exercises.exerciseId": 2001,
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
-  const locations = await Locations.find({ userId }).toArray();
 
   const climbingSets = workouts.flatMap((w) =>
     w.exercises
@@ -601,16 +604,13 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
   if (!climbingSets.length) return null;
 
   const grades = climbingSets
-    .map(
-      ([set, location]) =>
-        [set, location, getSetGrade(set, location)!] as const,
-    )
-    .filter(([, , grade]) => typeof grade === "number" && grade > 0);
+    .map(([set, location]) => [set, getSetGrade(set, location)!] as const)
+    .filter(([, grade]) => typeof grade === "number" && grade > 0);
 
   if (!grades.length) return null;
 
   const distinctGrades = Array.from(
-    new Set(grades.map(([, , grade]) => grade)),
+    new Set(grades.map(([, grade]) => grade)),
   ).sort((a, b) => a - b);
 
   let flashGrade: number | null = null;
@@ -620,7 +620,7 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
     const upperGrade =
       distinctGrades[distinctGrades.indexOf(distinctGrade) + 1] || Infinity;
     const sentSetsInGrade = grades
-      .filter(([, , grade]) => grade > lowerGrade && grade < upperGrade)
+      .filter(([, grade]) => grade > lowerGrade && grade < upperGrade)
       .filter(
         ([s]) =>
           (s.inputs[2]?.value as SendType) === SendType.Top ||
@@ -647,6 +647,7 @@ export const calculateFlashGradeOn = async (userId: string, date: Date) => {
 };
 
 export const calculate60dayTop10AverageSendGrade = async (
+  locations: WithId<LocationData>[],
   userId: string,
   date: Date,
 ) => {
@@ -656,44 +657,32 @@ export const calculate60dayTop10AverageSendGrade = async (
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
-  const locations = await Locations.find({ userId }).toArray();
 
-  const climbingSets = workouts.flatMap((w) =>
-    w.exercises
-      .filter((e) => isClimbingExercise(e.exerciseId))
-      .flatMap((e) =>
-        e.sets
-          .filter(
-            (s) =>
-              (s.inputs[2]?.value as SendType) === SendType.Top ||
-              (s.inputs[2]?.value as SendType) === SendType.Flash,
-          )
-          .map(
-            (set) =>
-              [
-                set,
-                locations.find((l) => l._id.toString() === w.locationId),
-              ] as const,
-          ),
-      ),
-  );
-
-  if (!climbingSets.length) return null;
-
-  const grades = climbingSets
-    .map(
-      ([set, location]) =>
-        [set, location, getSetGrade(set, location)!] as const,
-    )
-    .filter(([, , grade]) => typeof grade === "number" && grade > 0)
-    .sort((a, b) => b[2] - a[2]);
+  const grades = workouts
+    .flatMap((w) => {
+      const location = locations.find((l) => l._id.toString() === w.locationId);
+      return w.exercises
+        .filter((e) => isClimbingExercise(e.exerciseId))
+        .flatMap((e) =>
+          e.sets
+            .filter(
+              (s) =>
+                (s.inputs[2]?.value as SendType) === SendType.Top ||
+                (s.inputs[2]?.value as SendType) === SendType.Flash,
+            )
+            .map((set) => getSetGrade(set, location)),
+        );
+    })
+    .filter((grade): grade is number => typeof grade === "number" && grade > 0)
+    .sort((a, b) => b - a);
 
   if (!grades.length) return null;
 
-  return grades.slice(0, 10).reduce((sum, [, , grade]) => sum + grade, 0) / 10;
+  return grades.slice(0, 10).reduce((sum, grade) => sum + grade, 0) / 10;
 };
 
 export const calculate60dayTop10AverageFlashGrade = async (
+  locations: WithId<LocationData>[],
   userId: string,
   date: Date,
 ) => {
@@ -703,40 +692,28 @@ export const calculate60dayTop10AverageFlashGrade = async (
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
-  const locations = await Locations.find({ userId }).toArray();
 
-  const climbingSets = workouts.flatMap((w) =>
-    w.exercises
-      .filter((e) => isClimbingExercise(e.exerciseId))
-      .flatMap((e) =>
-        e.sets
-          .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Flash)
-          .map(
-            (set) =>
-              [
-                set,
-                locations.find((l) => l._id.toString() === w.locationId),
-              ] as const,
-          ),
-      ),
-  );
-
-  if (!climbingSets.length) return null;
-
-  const grades = climbingSets
-    .map(
-      ([set, location]) =>
-        [set, location, getSetGrade(set, location)!] as const,
-    )
-    .filter(([, , grade]) => typeof grade === "number" && grade > 0)
-    .sort((a, b) => b[2] - a[2]);
+  const grades = workouts
+    .flatMap((w) => {
+      const location = locations.find((l) => l._id.toString() === w.locationId);
+      return w.exercises
+        .filter((e) => isClimbingExercise(e.exerciseId))
+        .flatMap((e) =>
+          e.sets
+            .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Flash)
+            .map((set) => getSetGrade(set, location)),
+        );
+    })
+    .filter((grade): grade is number => typeof grade === "number" && grade > 0)
+    .sort((a, b) => b - a);
 
   if (!grades.length) return null;
 
-  return grades.slice(0, 10).reduce((sum, [, , grade]) => sum + grade, 0) / 10;
+  return grades.slice(0, 10).reduce((sum, grade) => sum + grade, 0) / 10;
 };
 
 export const calculate60dayTop10AverageAttemptGrade = async (
+  locations: WithId<LocationData>[],
   userId: string,
   date: Date,
 ) => {
@@ -746,37 +723,26 @@ export const calculate60dayTop10AverageAttemptGrade = async (
     workedOutAt: { $lte: date, $gt: subDays(date, 60) },
     deletedAt: { $exists: false },
   }).toArray();
-  const locations = await Locations.find({ userId }).toArray();
 
-  const climbingSets = workouts.flatMap((w) =>
-    w.exercises
-      .filter((e) => isClimbingExercise(e.exerciseId))
-      .flatMap((e) =>
-        e.sets
-          .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Attempt)
-          .map(
-            (set) =>
-              [
-                set,
-                locations.find((l) => l._id.toString() === w.locationId),
-              ] as const,
-          ),
-      ),
-  );
-
-  if (!climbingSets.length || climbingSets.length <= 10) return null;
-
-  const grades = climbingSets
-    .map(
-      ([set, location]) =>
-        [set, location, getSetGrade(set, location)!] as const,
-    )
-    .filter(([, , grade]) => typeof grade === "number" && grade > 0)
-    .sort((a, b) => b[2] - a[2]);
+  const grades = workouts
+    .flatMap((w) => {
+      const location = locations.find((l) => l._id.toString() === w.locationId);
+      return w.exercises
+        .filter((e) => isClimbingExercise(e.exerciseId))
+        .flatMap((e) =>
+          e.sets
+            .filter(
+              (s) => (s.inputs[2]?.value as SendType) === SendType.Attempt,
+            )
+            .map((set) => getSetGrade(set, location)),
+        );
+    })
+    .filter((grade): grade is number => typeof grade === "number" && grade > 0)
+    .sort((a, b) => b - a);
 
   if (!grades.length) return null;
 
-  return grades.slice(0, 10).reduce((sum, [, , grade]) => sum + grade, 0) / 10;
+  return grades.slice(0, 10).reduce((sum, grade) => sum + grade, 0) / 10;
 };
 
 export async function calculateClimbingStats(
@@ -807,8 +773,9 @@ export async function calculateClimbingStats(
       .reduce((sum, grade) => sum + grade, 0) /
     Math.min(5, successfulSetAndLocationPairs.length);
 
+  const locations = await Locations.find({ userId }).toArray();
   const flashGrade =
-    userId && on ? await calculateFlashGradeOn(userId, on) : null;
+    userId && on ? await calculateFlashGradeOn(locations, userId, on) : null;
 
   return (
     <small className="text-[10px]">
