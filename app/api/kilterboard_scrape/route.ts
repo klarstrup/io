@@ -18,6 +18,15 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
+  const newestAscentInDatabase = await KilterBoardAscents.findOne(
+    {},
+    { sort: { created_at: -1 } },
+  );
+  const syncDate = new Date(
+    newestAscentInDatabase ? newestAscentInDatabase.created_at : 0,
+  );
+  const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+
   const { ascents } = await fetchJson<{
     ascents: KilterBoard.Ascent[];
   }>("https://kilterboardapp.com/sync", {
@@ -26,7 +35,7 @@ async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
       "Content-Type": "application/x-www-form-urlencoded",
       Cookie: `token=${token}`,
     },
-    body: "ascents=1970-01-01+00%3A00%3A00.000000",
+    body: `ascents=${syncDateString}`,
   });
 
   for (const ascent of ascents) {
@@ -49,6 +58,15 @@ async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
   yield { ascents };
 }
 async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
+  const newestBidInDatabase = await KilterBoardBids.findOne(
+    {},
+    { sort: { created_at: -1 } },
+  );
+  const syncDate = new Date(
+    newestBidInDatabase ? newestBidInDatabase.created_at : 0,
+  );
+  const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+
   const { bids } = await fetchJson<{ bids: KilterBoard.Bid[] }>(
     "https://kilterboardapp.com/sync",
     {
@@ -57,7 +75,7 @@ async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
         "Content-Type": "application/x-www-form-urlencoded",
         Cookie: `token=${token}`,
       },
-      body: "bids=1970-01-01+00%3A00%3A00.000000",
+      body: `bids=${syncDateString}`,
     },
   );
 
