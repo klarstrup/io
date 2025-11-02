@@ -5,7 +5,7 @@ import { sourceToMaterializer } from "../app/api/materialize_workouts/materializ
 import { Users } from "../models/user.server";
 import type { DataSource, UserDataSource } from "./utils";
 
-type SetUpdatedFn = (
+export type SetUpdatedFn = (
   updated:
     | boolean
     | Pick<UpdateResult, "matchedCount" | "modifiedCount" | "upsertedCount">
