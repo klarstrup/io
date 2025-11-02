@@ -17,20 +17,16 @@ import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-async function* fetchSertBidsAndAscents(
-  token: string,
-  setUpdated: SetUpdatedFn,
-) {
-  const { bids, ascents } = await fetchJson<{
+async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
+  const { ascents } = await fetchJson<{
     ascents: KilterBoard.Ascent[];
-    bids: KilterBoard.Bid[];
   }>("https://kilterboardapp.com/sync", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Cookie: `token=${token}`,
     },
-    body: "ascents=1970-01-01+00%3A00%3A00.000000&bids=1970-01-01+00%3A00%3A00.000000",
+    body: "ascents=1970-01-01+00%3A00%3A00.000000",
   });
 
   for (const ascent of ascents) {
@@ -51,6 +47,19 @@ async function* fetchSertBidsAndAscents(
   }
 
   yield { ascents };
+}
+async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
+  const { bids } = await fetchJson<{ bids: KilterBoard.Bid[] }>(
+    "https://kilterboardapp.com/sync",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Cookie: `token=${token}`,
+      },
+      body: "bids=1970-01-01+00%3A00%3A00.000000",
+    },
+  );
 
   for (const bid of bids) {
     const updateResult = await KilterBoardBids.updateOne(
@@ -193,7 +202,8 @@ async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
 }
 
 const fetchers = [
-  fetchSertBidsAndAscents,
+  fetchSertAscents,
+  fetchSertBids,
   fetchSertClimbs,
   fetchSertClimbStats,
 ];
