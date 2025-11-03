@@ -13,6 +13,7 @@ import {
   intervalToDuration,
   isAfter,
   isBefore,
+  isFuture,
   isPast,
   max,
   min,
@@ -22,6 +23,7 @@ import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Fragment } from "react";
+import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
 import type { MongoVEvent, MongoVTodo } from "../../lib";
 import { exercisesById } from "../../models/exercises";
@@ -67,8 +69,8 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), 0),
-    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 7),
+    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -10),
+    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 9),
   };
   const daysOfInterval = eachDayOfInterval(fetchingInterval, {
     in: tz(timeZone),
@@ -100,7 +102,9 @@ export async function DiaryAgendaDay({
   > = { [date]: [] };
 
   for (const date of daysOfInterval) {
-    const dueSets = nextSets.filter((nextSet) => isNextSetDue(date, nextSet));
+    const dueSets = nextSets.filter(
+      (nextSet) => isFuture(endOfDay(date)) && isNextSetDue(date, nextSet),
+    );
     const calName = dateToString(date);
 
     for (const dueSet of dueSets) {
@@ -173,6 +177,7 @@ export async function DiaryAgendaDay({
           continue;
         }
         if (
+          isPast(endOfDay(date)) ||
           Object.values(todosByDate)
             .flat()
             .some((e) => e.uid === event.uid)
@@ -297,6 +302,7 @@ export async function DiaryAgendaDay({
                         )}
                   {todayStr === dayName ? (
                     <>
+                      <ScrollToMe />
                       <Link
                         prefetch={false}
                         href={`/diary/${date}/workout`}
@@ -317,7 +323,27 @@ export async function DiaryAgendaDay({
                     </>
                   ) : (
                     <DiaryAgendaDayCreateExpander>
+                      {isPast(startOfDay(dayDate)) ? (
+                        <>
+                          <Link
+                            prefetch={false}
+                            href={`/diary/${date}/workout`}
+                            className={
+                              "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
+                            }
+                          >
+                            <span className="text-xs">➕</span> Workout
+                          </Link>
+                        </>
+                      ) : null}
                       <DiaryAgendaDayCreateTodo date={dayDate} />
+                      <span
+                        className={
+                          "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
+                        }
+                      >
+                        <span className="text-xs">➕</span> Event
+                      </span>
                     </DiaryAgendaDayCreateExpander>
                   )}
                 </div>
@@ -445,7 +471,7 @@ export async function DiaryAgendaDay({
                                   dayNo === 1 && intervalToDuration(event);
 
                                 return (
-                                  <li key={event.uid} className="flex gap-1.5">
+                                  <div key={event.uid} className="flex gap-1.5">
                                     <div className="text-center">
                                       <div className="leading-snug font-semibold tabular-nums">
                                         {event.datetype === "date-time" &&
@@ -501,7 +527,7 @@ export async function DiaryAgendaDay({
                                         {event.location}
                                       </div>
                                     </div>
-                                  </li>
+                                  </div>
                                 );
                               },
                             )
@@ -562,7 +588,7 @@ export async function DiaryAgendaDay({
                                   dayNo === 1 && intervalToDuration(event);
 
                                 return (
-                                  <li key={event.uid} className="flex gap-1.5">
+                                  <div key={event.uid} className="flex gap-1.5">
                                     <div className="text-center">
                                       <div className="leading-snug font-semibold tabular-nums">
                                         {event.datetype === "date-time" &&
@@ -618,7 +644,7 @@ export async function DiaryAgendaDay({
                                         {event.location}
                                       </div>
                                     </div>
-                                  </li>
+                                  </div>
                                 );
                               },
                             )
