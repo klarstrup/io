@@ -21,7 +21,7 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
     <div
       ref={ref}
       className={
-        "group relative flex break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/10 bg-white " +
+        "group relative inline-flex break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/10 bg-white " +
         (isActive ? "rounded-b-none" : "cursor-pointer") +
         (todo.completed ? " flex-col-reverse" : "")
       }

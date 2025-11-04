@@ -69,8 +69,8 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -10),
-    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 9),
+    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -2),
+    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 8),
   };
   const daysOfInterval = eachDayOfInterval(fetchingInterval, {
     in: tz(timeZone),
@@ -160,15 +160,8 @@ export async function DiaryAgendaDay({
       const calName = dateToString(date);
 
       if (
-        !(
-          ("end" in event
-            ? differenceInHours(event.end, event.start) <= 24
-            : "start" in event && event.start
-              ? isBefore(event.start, date)
-              : false) &&
-          Object.values(eventsByDate).some((events) =>
-            events.some((e) => e.uid === event.uid),
-          )
+        !Object.values(eventsByDate).some((events) =>
+          events.some((e) => e.uid === event.uid),
         )
       ) {
         if (event.type !== "VTODO") {
@@ -649,7 +642,7 @@ export async function DiaryAgendaDay({
                               },
                             )
                           : null}
-                        <div className="break-inside-avoid-column gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
+                        <div className="gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
                           {dayDones.map((todo) => (
                             <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                           ))}
