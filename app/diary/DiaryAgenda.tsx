@@ -4,7 +4,6 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
-import Popover from "../../components/Popover";
 import { DataSource } from "../../sources/utils";
 import {
   dateToString,
@@ -16,7 +15,6 @@ import {
 import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
-import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
 
 export function DiaryAgenda({
@@ -91,14 +89,7 @@ export function DiaryAgenda({
         fallback={
           <FieldSetY
             className="flex-1"
-            legend={
-              <div className="flex items-center gap-2">
-                <DiaryAgendaWorkoutsSettings />
-                <Popover control="📡">{null}</Popover>
-                <Popover control="📍">{null}</Popover>
-                Workouts
-              </div>
-            }
+            legend={<div className="flex items-center gap-2">Workouts</div>}
           />
         }
       >
@@ -109,12 +100,7 @@ export function DiaryAgenda({
           fallback={
             <FieldSetY
               className="min-w-[250px] flex-1"
-              legend={
-                <div className="flex items-center gap-2">
-                  <Popover control="📡">{null}</Popover>
-                  Events
-                </div>
-              }
+              legend={<div className="flex items-center gap-2">Events</div>}
             />
           }
         >
@@ -125,12 +111,7 @@ export function DiaryAgenda({
             fallback={
               <FieldSetY
                 className="min-w-[250px] flex-1"
-                legend={
-                  <div className="flex items-center gap-2">
-                    <Popover control="📡">{null}</Popover>
-                    Food
-                  </div>
-                }
+                legend={<div className="flex items-center gap-2">Food</div>}
               />
             }
           >
@@ -142,12 +123,7 @@ export function DiaryAgenda({
         fallback={
           <FieldSetY
             className="flex min-h-32 flex-none flex-col"
-            legend={
-              <div className="flex items-center gap-2">
-                <Popover control="📡">{null}</Popover>
-                Weather
-              </div>
-            }
+            legend={<div className="flex items-center gap-2">Weather</div>}
           />
         }
       >

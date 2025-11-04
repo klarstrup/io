@@ -13,13 +13,10 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { FieldSetX, FieldSetY } from "../../components/FieldSet";
-import Popover from "../../components/Popover";
-import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import type { MongoVEvent } from "../../lib";
 import { isNextSetDue } from "../../models/workout";
 import { getNextSets } from "../../models/workout.server";
 import { getUserIcalEventsBetween } from "../../sources/ical";
-import { dataSourceGroups } from "../../sources/utils";
 import {
   dateToString,
   DEFAULT_TIMEZONE,
@@ -129,19 +126,7 @@ export async function DiaryAgendaEvents({
   return (
     <FieldSetY
       className="min-w-[250px] flex-1"
-      legend={
-        <div className="flex items-center gap-2">
-          <Popover control="📡">
-            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
-              <UserStuffSourcesForm
-                user={user}
-                sourceOptions={dataSourceGroups.events}
-              />
-            </div>
-          </Popover>
-          Events
-        </div>
-      }
+      legend={<div className="flex items-center gap-2">Events</div>}
     >
       {Object.entries(eventsByDate)
         .sort(([a], [b]) => compareAsc(new Date(a), new Date(b)))
