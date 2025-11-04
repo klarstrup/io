@@ -5,6 +5,7 @@ import { addDays } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import PartySocket from "partysocket";
+import { v4 as uuid } from "uuid";
 import { auth } from "../../auth";
 import type { MongoVTodo } from "../../lib";
 import { LocationData } from "../../models/location";
@@ -146,11 +147,17 @@ export async function updateUserExerciseSchedules(
 
   await Users.updateOne(
     { _id: new ObjectId(user.id) },
-    { $set: { exerciseSchedules: schedules } },
+    {
+      $set: {
+        exerciseSchedules: schedules.map((s) =>
+          s.id ? s : { ...s, id: uuid() },
+        ),
+      },
+    },
   );
 
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!
-    .exerciseSchedules;
+    .exerciseSchedules!;
 }
 
 export async function updateUserDataSources(

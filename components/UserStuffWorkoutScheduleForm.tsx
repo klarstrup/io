@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
+import { v4 as uuid } from "uuid";
 import { updateUserExerciseSchedules } from "../app/diary/actions";
 import { exercises, exercisesById, InputType } from "../models/exercises";
 import { IWorkoutExercisesView } from "../models/workout.server";
@@ -313,6 +314,7 @@ export default function UserStuffWorkoutScheduleForm({
               if (!selected) return;
 
               append({
+                id: uuid(),
                 exerciseId: selected.value,
                 enabled: true,
                 frequency: { days: 5 },

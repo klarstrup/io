@@ -268,6 +268,7 @@ export namespace Fitocracy {
 export const theDayFitocracyDied = new Date(2024, 6, 15);
 
 export interface ExerciseSchedule {
+  id: string;
   exerciseId: number;
   enabled: boolean;
   frequency: Duration;
