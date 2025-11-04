@@ -70,7 +70,7 @@ export async function DiaryAgendaDay({
 
   const fetchingInterval = {
     start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -2),
-    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 8),
+    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 10),
   };
   const daysOfInterval = eachDayOfInterval(fetchingInterval, {
     in: tz(timeZone),
@@ -274,10 +274,10 @@ export async function DiaryAgendaDay({
             <FieldSetX
               key={dayI}
               legend={
-                <div className="-ml-3 flex items-center gap-1">
+                <div className="-ml-3 flex items-center gap-1 leading-normal">
                   <span
                     className={
-                      "font-mono text-xs [letter-spacing:-2px] text-gray-900/50 tabular-nums"
+                      "font-mono text-xs [letter-spacing:-2px] text-gray-900/50 tabular-nums text-shadow-md text-shadow-white"
                     }
                   >
                     {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
@@ -285,14 +285,18 @@ export async function DiaryAgendaDay({
                       day: "numeric",
                     })}
                   </span>
-                  {!isToday
-                    ? new TZDate(dayName, timeZone).toLocaleDateString("da-DK")
-                    : todayStr === dayName
-                      ? "Today"
-                      : new TZDate(dayName, timeZone).toLocaleDateString(
-                          "en-DK",
-                          { weekday: "long" },
-                        )}
+                  <b className="text-shadow-md text-shadow-white">
+                    {!isToday
+                      ? new TZDate(dayName, timeZone).toLocaleDateString(
+                          "da-DK",
+                        )
+                      : todayStr === dayName
+                        ? "Today"
+                        : new TZDate(dayName, timeZone).toLocaleDateString(
+                            "en-DK",
+                            { weekday: "long" },
+                          )}
+                  </b>
                   {todayStr === dayName ? (
                     <>
                       <ScrollToMe />
@@ -349,10 +353,10 @@ export async function DiaryAgendaDay({
                   dayTodos.length ||
                   upcomingOnDayEvents.length
                 )
-                  ? "bg-green-100/80 pt-1"
+                  ? "bg-green-100 pt-1"
                   : todayStr === dayName
-                    ? "bg-[#ff0]/20 pt-2"
-                    : "bg-gray-100/80 pt-1")
+                    ? "bg-yellow-100 pt-2"
+                    : "bg-slate-50 pt-1")
               }
             >
               <ul>

@@ -52,7 +52,7 @@ export function DiaryEntryItem({
         background: getSchemeCategory10Color(Number(date.split("-")[1])) + "50",
       }}
       className={
-        "diary-entry flex flex-1 flex-col border-b-[0.5px] border-l-[0.5px] border-white rounded-xs p-1"
+        "diary-entry flex flex-1 flex-col rounded-xs border-b-[0.5px] border-l-[0.5px] border-white p-1"
       }
     >
       <div className="flex cursor-pointer items-center">

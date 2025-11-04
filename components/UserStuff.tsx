@@ -59,6 +59,9 @@ export default async function UserStuff() {
           <Link prefetch={false} href="/events/">
             Events
           </Link>
+          <Link prefetch={false} href="/calendar">
+            Calendar
+          </Link>
         </div>
         {user ? (
           <div>
