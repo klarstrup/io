@@ -93,7 +93,7 @@ export const GET = () =>
             yield athlete;
 
             for (const lane of await fetchCA<Climbalong.Lane[]>(
-              `/v1/competitions/${competitionId}/lanes`,
+              `v1/competitions/${competitionId}/lanes`,
             )) {
               await ClimbAlongLanes.updateOne(
                 { laneId: lane.laneId },
@@ -104,7 +104,7 @@ export const GET = () =>
             }
 
             for (const hold of await fetchCA<Climbalong.Hold[]>(
-              `/v0/competitions/${competitionId}/holds`,
+              `v0/competitions/${competitionId}/holds`,
             )) {
               await ClimbAlongHolds.updateOne(
                 { holdId: hold.holdId },
@@ -115,7 +115,7 @@ export const GET = () =>
             }
 
             for (const round of await fetchCA<Climbalong.Round[]>(
-              `/v1/competitions/${competitionId}/rounds`,
+              `v1/competitions/${competitionId}/rounds`,
             )) {
               await ClimbAlongRounds.updateOne(
                 { roundId: round.roundId },
@@ -129,7 +129,7 @@ export const GET = () =>
               _lane,
               circuitChallengeNodes,
             ] of await fetchCA<Climbalong.CircuitChallengeNodesGroupedByLane>(
-              `/v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
+              `v1/competitions/${competitionId}/circuitchallengenodesgroupedbylane`,
             )) {
               for (const circuitChallengeNode of circuitChallengeNodes) {
                 const circuit = circuitChallengeNode.circuit;
@@ -160,7 +160,7 @@ export const GET = () =>
 
                 const circuitChallengeEdge =
                   await fetchCA<Climbalong.CircuitChallengeEdge>(
-                    `/v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
+                    `v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
                   );
                 await ClimbAlongEdges.updateOne(
                   { processedBy: circuitChallengeEdge.processedBy },
@@ -170,7 +170,7 @@ export const GET = () =>
                 yield circuitChallengeEdge;
 
                 for (const problem of await fetchCA<Climbalong.Problem[]>(
-                  `/v0/circuits/${circuit.circuitId}/problems`,
+                  `v0/circuits/${circuit.circuitId}/problems`,
                 )) {
                   await ClimbAlongProblems.updateOne(
                     { problemId: problem.problemId },
@@ -182,7 +182,7 @@ export const GET = () =>
 
                 for (const performance of await fetchCA<
                   Climbalong.Performance[]
-                >(`/v0/circuits/${circuit.circuitId}/performances`)) {
+                >(`v0/circuits/${circuit.circuitId}/performances`)) {
                   if (performance.athleteId !== athleteId) continue;
 
                   await ClimbAlongPerformances.updateOne(
