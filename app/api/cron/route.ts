@@ -14,18 +14,6 @@ export async function GET() {
   const dataSources = users
     .flatMap((user) => user.dataSources)
     .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
-    .flatMap((dataSource) => {
-      if (dataSource.source === DataSource.ClimbAlong) {
-        return [
-          dataSource,
-          dataSource,
-          dataSource,
-          dataSource,
-          dataSource,
-        ] as UserDataSource[];
-      }
-      return [dataSource] as UserDataSource[];
-    })
     .filter(
       (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
     )
