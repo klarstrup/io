@@ -5,7 +5,7 @@ import {
   startOfDay,
   type Duration,
 } from "date-fns";
-import { DEFAULT_TIMEZONE } from "../utils";
+import { DEFAULT_TIMEZONE, epoch } from "../utils";
 import {
   exercisesById,
   type AssistType,
@@ -112,7 +112,7 @@ export const isNextSetDue = (
       : true) &&
     isDurationGreaterOrEqual(
       intervalToDuration({
-        start: startOfDay(nextSet.workedOutAt || new Date(0), { in: inn }),
+        start: startOfDay(nextSet.workedOutAt || epoch, { in: inn }),
         end,
       }),
       nextSet.scheduleEntry.frequency,

@@ -56,6 +56,7 @@ import {
   colorNameToEmoji,
   dateToString,
   DEFAULT_TIMEZONE,
+  epoch,
   isNonEmptyArray,
 } from "../../utils";
 import {
@@ -547,8 +548,8 @@ export function WorkoutForm<R extends string>({
               }))
               .sort((a, b) =>
                 compareDesc(
-                  a.stats?.workedOutAt ?? new Date(0),
-                  b.stats?.workedOutAt ?? new Date(0),
+                  a.stats?.workedOutAt ?? epoch,
+                  b.stats?.workedOutAt ?? epoch,
                 ),
               )
               .filter(

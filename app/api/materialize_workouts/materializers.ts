@@ -19,6 +19,7 @@ import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { SportstimingFavorites } from "../../../sources/sportstiming.server";
 import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
+import { epoch } from "../../../utils";
 
 export async function* materializeToploggerWorkouts(
   user: Session["user"],
@@ -34,7 +35,7 @@ export async function* materializeToploggerWorkouts(
       $match: {
         __typename: "ClimbLog",
         userId: topLoggerGraphQLId,
-        climbedAtDate: { $gt: new Date(0) },
+        climbedAtDate: { $gt: epoch },
       },
     },
     // This sorting puts successful sends first, for the following group stage

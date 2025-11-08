@@ -17,6 +17,8 @@ export const dateToString = (date: Date): `${number}-${number}-${number}` =>
 
 export const DEFAULT_TIMEZONE = "Europe/Copenhagen";
 
+export const epoch = new Date(0);
+
 export class RelativeURL extends URL {
   constructor(url: string | URL) {
     super(url, "http://n");

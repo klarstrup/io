@@ -21,7 +21,7 @@ import {
   SCORING_SOURCE,
   SCORING_SYSTEM,
 } from "../lib";
-import { percentile } from "../utils";
+import { epoch, percentile } from "../utils";
 import { filterFromReference, type Reference } from "../utils/graphql";
 import { TopLoggerGraphQL } from "./toplogger.server";
 
@@ -178,7 +178,7 @@ export async function getIoTopLoggerCompEvent(
                 __typename: "ClimbLog",
                 userId: ioId,
                 climbId: { $in: roundClimbs.map(({ id }) => id) },
-                climbedAtDate: { $gt: new Date(0) },
+                climbedAtDate: { $gt: epoch },
               },
               { sort: { tickType: -1, climbedAtDate: 1 } },
             ).toArray();
