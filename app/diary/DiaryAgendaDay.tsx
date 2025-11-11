@@ -17,6 +17,7 @@ import {
   isPast,
   max,
   min,
+  roundToNearestMinutes,
   startOfDay,
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
@@ -455,7 +456,13 @@ export async function DiaryAgendaDay({
                                   ) + 1;
                                 const isLastDay = dayNo === days.length;
                                 const duration =
-                                  dayNo === 1 && intervalToDuration(event);
+                                  dayNo === 1 &&
+                                  intervalToDuration({
+                                    start: event.start,
+                                    end: roundToNearestMinutes(event.end, {
+                                      roundingMethod: "ceil",
+                                    }),
+                                  });
 
                                 return (
                                   <div key={event.uid} className="flex gap-1.5">
@@ -572,7 +579,13 @@ export async function DiaryAgendaDay({
                                   ) + 1;
                                 const isLastDay = dayNo === days.length;
                                 const duration =
-                                  dayNo === 1 && intervalToDuration(event);
+                                  dayNo === 1 &&
+                                  intervalToDuration({
+                                    start: event.start,
+                                    end: roundToNearestMinutes(event.end, {
+                                      roundingMethod: "ceil",
+                                    }),
+                                  });
 
                                 return (
                                   <div key={event.uid} className="flex gap-1.5">
@@ -611,14 +624,13 @@ export async function DiaryAgendaDay({
                                         ) : isLastDay ? (
                                           <>
                                             -
-                                            {event.end.toLocaleTimeString(
-                                              "en-DK",
-                                              {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                                timeZone,
-                                              },
-                                            )}
+                                            {roundToNearestMinutes(
+                                              event.end,
+                                            ).toLocaleTimeString("en-DK", {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                              timeZone,
+                                            })}
                                           </>
                                         ) : null}
                                       </div>

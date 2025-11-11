@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { isDate, subMilliseconds } from "date-fns";
 import { auth } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
 import { extractIcalCalendarAndEvents } from "../../../sources/ical";
@@ -52,6 +53,8 @@ export const GET = () =>
         const insertResult = await IcalEvents.insertMany(
           events.map((event) => ({
             ...event,
+            // iCal DTEND is exclusive, so we subtract 1ms to make it inclusive
+            end: isDate(event.end) ? subMilliseconds(event.end, 1) : event.end,
             recurrences: event.recurrences && Object.values(event.recurrences),
             calendar,
             _io_scrapedAt,
