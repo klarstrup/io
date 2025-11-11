@@ -111,11 +111,7 @@ export async function DiaryAgendaDay({
       if (
         Object.values(dueSetsByDate)
           .flat()
-          .some(
-            (e) =>
-              JSON.stringify(e.scheduleEntry) ===
-              JSON.stringify(dueSet.scheduleEntry),
-          )
+          .some((e) => e.scheduleEntry.id === dueSet.scheduleEntry.id)
       ) {
         continue;
       }
