@@ -9,6 +9,9 @@ import { wrapSources } from "../../../sources/utils.server";
 import { parseICS } from "../../../vendor/ical";
 import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
+// TODO: Oh my god i wish mongodb had timezones built in
+process.env.TZ = "Europe/Copenhagen";
+
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
