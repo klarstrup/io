@@ -155,27 +155,21 @@ export async function DiaryAgendaDay({
     ).sort((a, b) => a.getTime() - b.getTime())) {
       const calName = dateToString(date);
 
-      if (
-        !Object.values(eventsByDate).some((events) =>
-          events.some((e) => e.uid === event.uid),
-        )
-      ) {
-        if (event.type !== "VTODO") {
-          if (!eventsByDate[calName]) eventsByDate[calName] = [];
-          eventsByDate[calName].push(event);
-          continue;
-        }
-        if (
-          isPast(endOfDay(date)) ||
-          Object.values(todosByDate)
-            .flat()
-            .some((e) => e.uid === event.uid)
-        ) {
-          continue;
-        }
-        if (!todosByDate[calName]) todosByDate[calName] = [];
-        todosByDate[calName].push(event);
+      if (event.type !== "VTODO") {
+        if (!eventsByDate[calName]) eventsByDate[calName] = [];
+        eventsByDate[calName].push(event);
+        continue;
       }
+      if (
+        isPast(endOfDay(date)) ||
+        Object.values(todosByDate)
+          .flat()
+          .some((e) => e.uid === event.uid)
+      ) {
+        continue;
+      }
+      if (!todosByDate[calName]) todosByDate[calName] = [];
+      todosByDate[calName].push(event);
     }
   }
 
