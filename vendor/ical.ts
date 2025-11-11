@@ -393,6 +393,12 @@ const dateParameter =
     stack?: Record<string, CalendarComponent>[],
     _line?: string,
   ) => {
+    const calendar = stack?.find(
+      ({ type }) => type && typeof type === "string" && type === "VCALENDAR",
+    ) as VCalendar | undefined;
+
+    const calendarTimeZone = calendar?.["WR-TIMEZONE"];
+
     // The regex from main gets confused by extra :
     const pi = parameters.indexOf("TZID=tzone");
     if (pi >= 0) {
@@ -410,12 +416,13 @@ const dateParameter =
 
       const comps = /^(\d{4})(\d{2})(\d{2}).*$/.exec(value);
       if (comps !== null) {
-        // No TZ info - assume same timezone as this computer
         newDate = new Date(
           Number.parseInt(comps[1]!, 10),
           Number.parseInt(comps[2]!, 10) - 1,
           Number.parseInt(comps[3]!, 10),
         ) as DateWithTimeZone;
+
+        if (calendarTimeZone) newDate.tz = getTimeZone(calendarTimeZone);
 
         // Store as string - worst case scenario
         return storeValueParameter(name)(newDate, curr);
