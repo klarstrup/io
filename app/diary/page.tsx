@@ -1,4 +1,5 @@
 import { TZDate } from "@date-fns/tz";
+import { subHours } from "date-fns";
 import { Suspense } from "react";
 import { auth } from "../../auth";
 import UserStuff from "../../components/UserStuff";
@@ -50,7 +51,7 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
           <UserStuff />
         </Suspense>
         <div className="mx-auto max-h-[100vh] max-w-2xl self-stretch border-black/25 p-2">
-          <DiaryAgendaDay date={dateToString(now)} user={user} />
+          <DiaryAgendaDay date={dateToString(subHours(now, 5))} user={user} />
         </div>
       </div>
     </>

@@ -5,9 +5,9 @@ import { faCircleCheck } from "@fortawesome/free-regular-svg-icons/faCircleCheck
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addDays,
+  addHours,
   compareAsc,
   differenceInDays,
-  differenceInHours,
   eachDayOfInterval,
   endOfDay,
   intervalToDuration,
@@ -19,6 +19,7 @@ import {
   min,
   roundToNearestMinutes,
   startOfDay,
+  subHours,
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
@@ -56,6 +57,8 @@ import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { WorkoutEntryExercise } from "./WorkoutEntry";
 
+const dayStartHour = 5;
+
 export async function DiaryAgendaDay({
   date,
   user,
@@ -66,16 +69,13 @@ export async function DiaryAgendaDay({
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
   const now = TZDate.tz(timeZone);
-  const todayStr = dateToString(now);
+  const todayStr = dateToString(subHours(now, dayStartHour));
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addDays(startOfDay(tzDate, { in: tz(timeZone) }), -2),
-    end: addDays(endOfDay(tzDate, { in: tz(timeZone) }), 10),
+    start: addHours(addDays(startOfDay(tzDate), -20), dayStartHour),
+    end: addHours(addDays(endOfDay(tzDate), 20), dayStartHour),
   };
-  const daysOfInterval = eachDayOfInterval(fetchingInterval, {
-    in: tz(timeZone),
-  });
   const [calendarEvents = [], nextSets = [], workouts = []] = await Promise.all(
     [
       user && getUserIcalEventsBetween(user.id, fetchingInterval),
@@ -102,9 +102,13 @@ export async function DiaryAgendaDay({
     Awaited<ReturnType<typeof getNextSets>>
   > = { [date]: [] };
 
+  const daysOfInterval = eachDayOfInterval(fetchingInterval, {
+    in: tz(timeZone),
+  }).filter((date) => addHours(date, dayStartHour) <= fetchingInterval.end);
   for (const date of daysOfInterval) {
+    const dayEnd = addHours(endOfDay(date, { in: tz(timeZone) }), dayStartHour);
     const dueSets = nextSets.filter(
-      (nextSet) => isFuture(endOfDay(date)) && isNextSetDue(date, nextSet),
+      (nextSet) => isFuture(dayEnd) && isNextSetDue(date, nextSet),
     );
     const calName = dateToString(date);
 
@@ -126,43 +130,71 @@ export async function DiaryAgendaDay({
       {
         start: max(
           [
-            "datetype" in event && event.datetype === "date"
-              ? roundToNearestDay(event.start, {
-                  in: tz(event.start.tz || DEFAULT_TIMEZONE),
-                })
-              : null,
+            subHours(
+              max(
+                [
+                  "datetype" in event && event.datetype === "date"
+                    ? roundToNearestDay(event.start, {
+                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                      })
+                    : null,
 
-            "completed" in event ? event.completed : null,
-            "due" in event ? event.due : null,
-            "start" in event ? event.start : null,
+                  "completed" in event ? event.completed : null,
+                  "due" in event ? event.due : null,
+                  "start" in event ? event.start : null,
+                  fetchingInterval.start,
+                ].filter(Boolean),
+              ),
+              dayStartHour,
+            ),
             fetchingInterval.start,
           ].filter(Boolean),
         ),
         end: min(
           [
-            "datetype" in event && event.datetype === "date"
-              ? roundToNearestDay(event.end, {
-                  in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                })
-              : null,
-            "completed" in event ? event.completed : null,
-            "due" in event ? event.due : null,
-            "end" in event ? event.end : null,
+            subHours(
+              min(
+                [
+                  "datetype" in event && event.datetype === "date"
+                    ? roundToNearestDay(event.end, {
+                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                      })
+                    : null,
+                  "completed" in event ? event.completed : null,
+                  "due" in event ? event.due : null,
+                  "end" in event ? event.end : null,
+                  fetchingInterval.end,
+                ].filter(Boolean),
+              ),
+              dayStartHour,
+            ),
             fetchingInterval.end,
           ].filter(Boolean),
         ),
       },
       { in: tz(timeZone) },
-    ).sort((a, b) => a.getTime() - b.getTime())) {
-      const calName = dateToString(date);
+    )) {
+      const dayStart = addHours(startOfDay(date), dayStartHour);
+      const dayEnd = addHours(endOfDay(date), dayStartHour);
+
+      const calName = dateToString(addHours(date, dayStartHour));
 
       if (event.type !== "VTODO") {
+        if (event.datetype === "date") {
+          if (
+            isBefore(dayEnd, addHours(event.start, dayStartHour)) ||
+            isAfter(dayStart, addHours(event.end, dayStartHour))
+          ) {
+            continue;
+          }
+        }
+
         if (!eventsByDate[calName]) eventsByDate[calName] = [];
         eventsByDate[calName].push(event);
         continue;
       }
       if (
-        isPast(endOfDay(date)) ||
+        isPast(dayEnd) ||
         Object.values(todosByDate)
           .flat()
           .some((e) => e.uid === event.uid)
@@ -178,12 +210,20 @@ export async function DiaryAgendaDay({
     <div className="flex flex-col justify-start">
       {await Promise.all(
         daysOfInterval.map(async (dayDate, dayI) => {
-          const events = eventsByDate[dateToString(dayDate)] || [];
+          const dayStart = addHours(
+            startOfDay(dayDate, { in: tz(timeZone) }),
+            dayStartHour,
+          );
+          const dayEnd = addHours(
+            endOfDay(dayDate, { in: tz(timeZone) }),
+            dayStartHour,
+          );
+
+          const dayEvents = eventsByDate[dateToString(dayDate)] || [];
           const dayName = dateToString(dayDate);
-          const dayEvents = uniqueBy(events, (event) => event.uid);
           const dayWorkouts = workouts.filter(
             (workout) =>
-              dateToString(workout.workedOutAt) === dateToString(dayDate),
+              workout.workedOutAt >= dayStart && workout.workedOutAt <= dayEnd,
           );
           const dayLocations = await Locations.find({
             _id: {
@@ -238,13 +278,13 @@ export async function DiaryAgendaDay({
           );
           const allDayEvents = dayEvents.filter(
             (event) =>
-              differenceInDays(event.end, event.start) > 0 &&
+              differenceInDays(event.end, event.start) >= 0 &&
               event.datetype === "date",
           );
           const onDayEvents = dayEvents.filter(
             (event) =>
               !(
-                differenceInDays(event.end, event.start) > 0 &&
+                differenceInDays(event.end, event.start) >= 0 &&
                 event.datetype === "date"
               ),
           );
@@ -260,6 +300,61 @@ export async function DiaryAgendaDay({
             !dayWorkouts.length &&
             !dayDueSets.length &&
             !dayTodos.length;
+
+          function renderOnDayEvent(event: MongoVEvent) {
+            const duration = intervalToDuration({
+              start: event.start,
+              end: roundToNearestMinutes(event.end, {
+                roundingMethod: "ceil",
+              }),
+            });
+            const days = differenceInDays(event.end, event.start);
+            const dayNo = differenceInDays(dayStart, event.start) + 1;
+            const isLastDay = dayNo === days;
+
+            return (
+              <div key={event.uid} className="flex gap-1.5">
+                <div className="text-center">
+                  <div className="leading-snug font-semibold tabular-nums">
+                    {event.datetype === "date-time" && dayNo <= 1 ? (
+                      event.start.toLocaleTimeString("en-DK", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone,
+                      })
+                    ) : (
+                      <>Day {dayNo}</>
+                    )}{" "}
+                  </div>
+                  <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+                    {dayNo === 1 && duration ? (
+                      <>
+                        {duration.days ? `${duration.days}d` : null}
+                        {duration.hours ? `${duration.hours}h` : null}
+                        {duration.minutes ? `${duration.minutes}m` : null}
+                        {duration.seconds ? `${duration.seconds}s` : null}
+                      </>
+                    ) : isLastDay ? (
+                      <>
+                        -
+                        {event.end.toLocaleTimeString("en-DK", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone,
+                        })}
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="leading-snug">{event.summary}</div>
+                  <div className="text-[0.666rem] leading-tight italic">
+                    {event.location}
+                  </div>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <FieldSetX
@@ -311,7 +406,7 @@ export async function DiaryAgendaDay({
                     </>
                   ) : (
                     <DiaryAgendaDayCreateExpander>
-                      {isPast(startOfDay(dayDate)) ? (
+                      {isPast(dayStart) ? (
                         <>
                           <Link
                             prefetch={false}
@@ -338,7 +433,7 @@ export async function DiaryAgendaDay({
               }
               className={
                 "mb-1 w-full flex-0! pb-2 " +
-                (isPast(dayDate) &&
+                (isPast(dayStart) &&
                 !(
                   dayDueSets.length ||
                   dayTodos.length ||
@@ -353,7 +448,7 @@ export async function DiaryAgendaDay({
               <ul>
                 {allDayEvents.length ? (
                   <li
-                    className="grid gap-1.5"
+                    className="grid gap-1.5 pb-1.5"
                     style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                   >
                     <span className="-ml-0.5 pt-[4px] text-right font-mono text-xs text-gray-900/50">
@@ -394,7 +489,7 @@ export async function DiaryAgendaDay({
                                 </span>
                               </div>
                             ) : null}
-                            <div className="flex items-center gap-1 px-1.5">
+                            <div className="flex items-center gap-1 px-1.5 py-0.5">
                               {numDays > 1 ? (
                                 isFirstDay && event.datetype === "date-time" ? (
                                   <>
@@ -419,7 +514,9 @@ export async function DiaryAgendaDay({
                               ) : null}
                               <span>{event.summary}</span>
                               {event.location ? (
-                                <span>{event.location}</span>
+                                <span className="text-[0.666rem] leading-tight italic">
+                                  {event.location}
+                                </span>
                               ) : null}
                             </div>
                           </span>
@@ -442,89 +539,7 @@ export async function DiaryAgendaDay({
                       </span>
                       <div>
                         {upcomingOnDayEvents.length
-                          ? uniqueBy(upcomingOnDayEvents, ({ uid }) => uid).map(
-                              (event) => {
-                                const days = eachDayOfInterval(event, {
-                                  in: tz(timeZone),
-                                }).filter(
-                                  (date) =>
-                                    differenceInHours(event.end, date) > 2,
-                                );
-                                const dayNo =
-                                  days.findIndex(
-                                    (date) => dateToString(date) === dayName,
-                                  ) + 1;
-                                const isLastDay = dayNo === days.length;
-                                const duration =
-                                  dayNo === 1 &&
-                                  intervalToDuration({
-                                    start: event.start,
-                                    end: roundToNearestMinutes(event.end, {
-                                      roundingMethod: "ceil",
-                                    }),
-                                  });
-
-                                return (
-                                  <div key={event.uid} className="flex gap-1.5">
-                                    <div className="text-center">
-                                      <div className="leading-snug font-semibold tabular-nums">
-                                        {event.datetype === "date-time" &&
-                                        dayNo === 1 ? (
-                                          event.start.toLocaleTimeString(
-                                            "en-DK",
-                                            {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                              timeZone,
-                                            },
-                                          )
-                                        ) : (
-                                          <>Day {dayNo}</>
-                                        )}{" "}
-                                      </div>
-                                      <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                                        {dayNo === 1 && duration ? (
-                                          <>
-                                            {duration.days
-                                              ? `${duration.days}d`
-                                              : null}
-                                            {duration.hours
-                                              ? `${duration.hours}h`
-                                              : null}
-                                            {duration.minutes
-                                              ? `${duration.minutes}m`
-                                              : null}
-                                            {duration.seconds
-                                              ? `${duration.seconds}s`
-                                              : null}
-                                          </>
-                                        ) : isLastDay ? (
-                                          <>
-                                            -
-                                            {event.end.toLocaleTimeString(
-                                              "en-DK",
-                                              {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                                timeZone,
-                                              },
-                                            )}
-                                          </>
-                                        ) : null}
-                                      </div>
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="leading-snug">
-                                        {event.summary}
-                                      </div>
-                                      <div className="text-[0.666rem] leading-tight italic">
-                                        {event.location}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              },
-                            )
+                          ? upcomingOnDayEvents.map(renderOnDayEvent)
                           : null}
                         <div className="flex flex-wrap items-center gap-0.5">
                           {dayTodos.map((todo) => (
@@ -542,7 +557,8 @@ export async function DiaryAgendaDay({
                       </div>
                     </Fragment>
                   ) : null}
-                  {(dayTodos.length ||
+                  {(allDayEvents.length ||
+                    dayTodos.length ||
                     upcomingOnDayEvents.length ||
                     dayDueSets.length) &&
                   (dayWorkouts.length ||
@@ -555,7 +571,7 @@ export async function DiaryAgendaDay({
                       </span>
                     </>
                   ) : null}
-                  {isPast(dayDate) &&
+                  {isPast(dayStart) &&
                   (dayWorkouts.length ||
                     dayDones.length ||
                     passedOnDayEvents.length) ? (
@@ -565,88 +581,7 @@ export async function DiaryAgendaDay({
                       </span>
                       <div>
                         {passedOnDayEvents.length
-                          ? uniqueBy(passedOnDayEvents, ({ uid }) => uid).map(
-                              (event) => {
-                                const days = eachDayOfInterval(event, {
-                                  in: tz(timeZone),
-                                }).filter(
-                                  (date) =>
-                                    differenceInHours(event.end, date) > 2,
-                                );
-                                const dayNo =
-                                  days.findIndex(
-                                    (date) => dateToString(date) === dayName,
-                                  ) + 1;
-                                const isLastDay = dayNo === days.length;
-                                const duration =
-                                  dayNo === 1 &&
-                                  intervalToDuration({
-                                    start: event.start,
-                                    end: roundToNearestMinutes(event.end, {
-                                      roundingMethod: "ceil",
-                                    }),
-                                  });
-
-                                return (
-                                  <div key={event.uid} className="flex gap-1.5">
-                                    <div className="text-center">
-                                      <div className="leading-snug font-semibold tabular-nums">
-                                        {event.datetype === "date-time" &&
-                                        dayNo === 1 ? (
-                                          event.start.toLocaleTimeString(
-                                            "en-DK",
-                                            {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                              timeZone,
-                                            },
-                                          )
-                                        ) : (
-                                          <>Day {dayNo}</>
-                                        )}{" "}
-                                      </div>
-                                      <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                                        {dayNo === 1 && duration ? (
-                                          <>
-                                            {duration.days
-                                              ? `${duration.days}d`
-                                              : null}
-                                            {duration.hours
-                                              ? `${duration.hours}h`
-                                              : null}
-                                            {duration.minutes
-                                              ? `${duration.minutes}m`
-                                              : null}
-                                            {duration.seconds
-                                              ? `${duration.seconds}s`
-                                              : null}
-                                          </>
-                                        ) : isLastDay ? (
-                                          <>
-                                            -
-                                            {roundToNearestMinutes(
-                                              event.end,
-                                            ).toLocaleTimeString("en-DK", {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                              timeZone,
-                                            })}
-                                          </>
-                                        ) : null}
-                                      </div>
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="leading-snug">
-                                        {event.summary}
-                                      </div>
-                                      <div className="text-[0.666rem] leading-tight italic">
-                                        {event.location}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              },
-                            )
+                          ? passedOnDayEvents.map(renderOnDayEvent)
                           : null}
                         <div className="gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
                           {dayDones.map((todo) => (
