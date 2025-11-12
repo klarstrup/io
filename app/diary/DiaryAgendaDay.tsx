@@ -73,8 +73,8 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -20), dayStartHour),
-    end: addHours(addDays(endOfDay(tzDate), 20), dayStartHour),
+    start: addHours(addDays(startOfDay(tzDate), -2), dayStartHour),
+    end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
   const [calendarEvents = [], nextSets = [], workouts = []] = await Promise.all(
     [
