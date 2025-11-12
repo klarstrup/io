@@ -98,11 +98,11 @@ export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
   durationToMs(a) >= durationToMs(b);
 
 export const isNextSetDue = (
-  tzDate: TZDate,
+  tzDate: Date | TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) => {
   const end = startOfDay(tzDate);
-  const inn = tz(tzDate.timeZone || DEFAULT_TIMEZONE);
+  const inn = tz(("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE);
   return (
     (nextSet.scheduleEntry.snoozedUntil
       ? !isAfter(

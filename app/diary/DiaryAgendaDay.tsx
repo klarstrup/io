@@ -102,11 +102,11 @@ export async function DiaryAgendaDay({
     Awaited<ReturnType<typeof getNextSets>>
   > = { [date]: [] };
 
-  const daysOfInterval = eachDayOfInterval(fetchingInterval, {
-    in: tz(timeZone),
-  }).filter((date) => addHours(date, dayStartHour) <= fetchingInterval.end);
+  const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
+    (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
+  );
   for (const date of daysOfInterval) {
-    const dayEnd = addHours(endOfDay(date, { in: tz(timeZone) }), dayStartHour);
+    const dayEnd = addHours(endOfDay(date), dayStartHour);
     const dueSets = nextSets.filter(
       (nextSet) => isFuture(dayEnd) && isNextSetDue(date, nextSet),
     );
@@ -210,20 +210,17 @@ export async function DiaryAgendaDay({
     <div className="flex flex-col justify-start">
       {await Promise.all(
         daysOfInterval.map(async (dayDate, dayI) => {
-          const dayStart = addHours(
-            startOfDay(dayDate, { in: tz(timeZone) }),
-            dayStartHour,
-          );
-          const dayEnd = addHours(
-            endOfDay(dayDate, { in: tz(timeZone) }),
-            dayStartHour,
-          );
+          const dayStart = addHours(startOfDay(dayDate), dayStartHour);
+          const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
 
           const dayEvents = eventsByDate[dateToString(dayDate)] || [];
           const dayName = dateToString(dayDate);
-          const dayWorkouts = workouts.filter(
-            (workout) =>
-              workout.workedOutAt >= dayStart && workout.workedOutAt <= dayEnd,
+          const dayWorkouts = workouts.filter((workout) =>
+            workout.source === WorkoutSource.Self
+              ? workout.workedOutAt >= startOfDay(dayDate) &&
+                workout.workedOutAt <= endOfDay(dayDate)
+              : workout.workedOutAt >= dayStart &&
+                workout.workedOutAt <= dayEnd,
           );
           const dayLocations = await Locations.find({
             _id: {
