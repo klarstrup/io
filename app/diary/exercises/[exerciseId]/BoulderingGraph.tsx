@@ -85,12 +85,42 @@ export default async function BoulderingGraph({
   return (
     <DiaryExerciseGraph
       data={[
-        { id: "Top 10 Send Grade", data: top10sendGradeData },
-        { id: "Top 10 Send Grade Trend", data: top10sendGradeTrend },
-        { id: "Top 10 Flash Grade", data: top10flashGradeData },
-        { id: "Top 10 Flash Grade Trend", data: top10flashGradeTrend },
-        { id: "Top 10 Attempt Grade", data: top10attemptGradeData },
-        { id: "Top 10 Attempt Grade Trend", data: top10attemptGradeTrend },
+        {
+          id: "Top 10 Send Grade",
+          data: top10sendGradeData,
+          color: "rgba(255, 128, 0, 1)",
+          trend: false,
+        },
+        {
+          id: "Top 10 Send Grade Trend",
+          data: top10sendGradeTrend,
+          color: "rgba(255, 128, 0, 0.5)",
+          trend: true,
+        },
+        {
+          id: "Top 10 Flash Grade",
+          data: top10flashGradeData,
+          color: "rgba(255, 255, 0, 1)",
+          trend: false,
+        },
+        {
+          id: "Top 10 Flash Grade Trend",
+          data: top10flashGradeTrend,
+          color: "rgba(255, 255, 0, 0.5)",
+          trend: true,
+        },
+        {
+          id: "Top 10 Attempt Grade",
+          data: top10attemptGradeData,
+          color: "rgba(128, 64, 255, 1)",
+          trend: false,
+        },
+        {
+          id: "Top 10 Attempt Grade Trend",
+          data: top10attemptGradeTrend,
+          color: "rgba(128, 64, 255, 0.5)",
+          trend: true,
+        },
       ]}
     />
   );
