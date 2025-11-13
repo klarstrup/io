@@ -12,6 +12,8 @@ import {
 } from "date-fns";
 import type { DateInterval } from "./lib";
 
+export const dayStartHour = 5;
+
 export const dateToString = (date: Date): `${number}-${number}-${number}` =>
   `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 

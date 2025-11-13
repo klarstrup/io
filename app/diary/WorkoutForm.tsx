@@ -586,8 +586,8 @@ export function WorkoutForm<R extends string>({
               user={user}
               date={date}
               nextSets={dueSets}
-              onAddExercise={handleAddExercise}
-              onSnoozeDueSet={handleSnoozeDueSet}
+              onAddExerciseAction={handleAddExercise}
+              onSnoozeDueSetAction={handleSnoozeDueSet}
             />
           </div>
         ) : null}
@@ -599,7 +599,7 @@ export function WorkoutForm<R extends string>({
                 user={user}
                 date={date}
                 nextSets={futureSets}
-                onAddExercise={handleAddExercise}
+                onAddExerciseAction={handleAddExercise}
                 showDueDate
               />
             </small>

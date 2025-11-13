@@ -1,9 +1,13 @@
 "use client";
-import { addDays } from "date-fns";
+import { addDays, subHours } from "date-fns";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useClickOutside } from "../../hooks";
 import { exercisesById } from "../../models/exercises";
+import { LocationData } from "../../models/location";
+import { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
+import { dateToString, dayStartHour } from "../../utils";
 import { snoozeUserExerciseSchedule } from "./actions";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
@@ -11,16 +15,21 @@ export function DiaryAgendaDayDueSet({
   userId,
   dueSet,
   date,
+  workouts,
+  locations,
 }: {
   userId: string;
   dueSet: Awaited<ReturnType<typeof getNextSets>>[number];
   date: Date;
+  workouts?: (WorkoutData & { materializedAt?: Date })[];
+  locations?: (LocationData & { id: string })[];
 }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const onClickOutside = () => setIsActive(false);
   useClickOutside(ref, onClickOutside);
   const exercise = exercisesById[dueSet.exerciseId]!;
+  const router = useRouter();
 
   return (
     <div
@@ -31,7 +40,7 @@ export function DiaryAgendaDayDueSet({
       }
       onClick={() => setIsActive(true)}
     >
-      <div className="h-full self-stretch text-center px-1.5 py-0.5">
+      <div className="h-full self-stretch px-1.5 py-0.5 text-center">
         {
           [exercise.name, ...exercise.aliases]
             .filter((name) => name.length >= 4)
@@ -72,6 +81,54 @@ export function DiaryAgendaDayDueSet({
           >
             Snooze
           </button>
+          {exercise.is_hidden ? null : (
+            <button
+              type="button"
+              onClick={(e) => {
+                console.log({ e });
+                e.preventDefault();
+                const select = e.currentTarget.querySelector(
+                  "select",
+                ) as HTMLSelectElement;
+                const selectedExistingWorkout = select.value || null;
+
+                const dateStr = dateToString(
+                  subHours(new Date(), dayStartHour),
+                );
+                const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
+                router.push(
+                  selectedExistingWorkout
+                    ? `/diary/${dateStr}/workout/${selectedExistingWorkout}?${searchStr}`
+                    : `/diary/${dateStr}/workout?${searchStr}`,
+                );
+              }}
+              className={
+                "text-md cursor-pointer rounded-xl bg-green-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+              }
+            >
+              Do now{" "}
+              <select
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                className="ml-1 rounded-md border border-black/10 bg-white px-1 py-0.5 text-black"
+              >
+                <option value="">in new workout</option>
+                {workouts?.map((workout) => {
+                  const location = locations?.find(
+                    (loc) => loc.id === workout.locationId,
+                  );
+
+                  return (
+                    <option value={workout.id} key={workout.id}>
+                      at {location ? location.name : "Unknown location"}
+                    </option>
+                  );
+                })}
+              </select>
+            </button>
+          )}
         </div>
       )}
     </div>

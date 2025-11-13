@@ -45,6 +45,7 @@ import {
 import { getUserIcalEventsBetween } from "../../sources/ical";
 import {
   dateToString,
+  dayStartHour,
   DEFAULT_TIMEZONE,
   rangeToQuery,
   roundToNearestDay,
@@ -56,8 +57,6 @@ import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { WorkoutEntryExercise } from "./WorkoutEntry";
-
-const dayStartHour = 5;
 
 export async function DiaryAgendaDay({
   date,
@@ -548,6 +547,16 @@ export async function DiaryAgendaDay({
                               userId={user!.id}
                               dueSet={dueSet}
                               date={dayDate}
+                              workouts={dayWorkouts
+                                .filter((w) => w.source === WorkoutSource.Self)
+                                .map((d) => ({
+                                  ...d,
+                                  _id: d._id.toString(),
+                                }))}
+                              locations={dayLocations.map(({ _id, ...d }) => ({
+                                ...d,
+                                id: _id.toString(),
+                              }))}
                             />
                           ))}
                         </div>
