@@ -434,7 +434,7 @@ export async function DiaryAgendaDay({
                         prefetch={false}
                         href={`/diary/${date}/workout`}
                         className={
-                          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
+                          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold shadow-sm"
                         }
                       >
                         <span className="text-xs">➕</span> Workout
@@ -442,7 +442,7 @@ export async function DiaryAgendaDay({
                       <DiaryAgendaDayCreateTodo date={dayDate} />
                       <span
                         className={
-                          "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
+                          "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold text-black/25 shadow-sm"
                         }
                       >
                         <span className="text-xs">➕</span> Event
@@ -456,17 +456,18 @@ export async function DiaryAgendaDay({
                             prefetch={false}
                             href={`/diary/${date}/workout`}
                             className={
-                              "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
+                              "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold shadow-sm"
                             }
                           >
-                            <span className="text-xs">➕</span> Workout
+                            <span className="text-xs opacity-25">➕</span>{" "}
+                            Workout
                           </Link>
                         </>
                       ) : null}
                       <DiaryAgendaDayCreateTodo date={dayDate} />
                       <span
                         className={
-                          "cursor-pointer rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold"
+                          "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold text-black/25 shadow-sm"
                         }
                       >
                         <span className="text-xs">➕</span> Event
@@ -637,17 +638,15 @@ export async function DiaryAgendaDay({
                         {passedOnDayEvents.length
                           ? passedOnDayEvents.map(renderOnDayEvent)
                           : null}
-                        <div className="gap-0.5 [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:md:[column-width:300px]">
+                        <div className="gap-[0.25%] [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:sm:[column-width:300px]">
                           {dayDones.map((todo) => (
                             <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                           ))}
                           {dayExerciseSets.map(
                             ([exercise, setsWithLocation], exerciseIndex) => {
                               const workouts = uniqueBy(
-                                setsWithLocation.map(
-                                  ([, , workout]) => workout,
-                                ),
-                                (workout) => workout.id,
+                                setsWithLocation.map(([, , w]) => w),
+                                ({ id }) => id,
                               );
                               const mostRecentWorkout =
                                 workouts.length === 1 ? workouts[0]! : null;
@@ -662,7 +661,7 @@ export async function DiaryAgendaDay({
                                     "inline-flex h-auto flex-col justify-center rounded-md border border-black/10 bg-white " +
                                     (isClimbingExercise(exercise.id)
                                       ? "mr-0 w-full"
-                                      : "mr-0.5 w-auto last:mr-0")
+                                      : "mr-[0.5%] w-[49.5%] last:mr-0")
                                   }
                                 >
                                   <div

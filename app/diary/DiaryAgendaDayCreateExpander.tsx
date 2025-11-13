@@ -17,7 +17,7 @@ export function DiaryAgendaDayCreateExpander({
     >
       <button
         className={
-          "cursor-pointer rounded-md px-1 py-0.5 pr-1 text-xs font-semibold " +
+          "cursor-pointer rounded-md px-1 py-0.5 pr-1 text-xs font-semibold shadow-sm " +
           (isActive ? "bg-gray-200" : "bg-[#ff0]")
         }
         onClick={() => setIsActive(!isActive)}
