@@ -42,7 +42,10 @@ import {
   getNextSets,
   MaterializedWorkoutsView,
 } from "../../models/workout.server";
-import { getUserIcalEventsBetween } from "../../sources/ical";
+import {
+  getUserIcalEventsBetween,
+  getUserIcalTodosBetween,
+} from "../../sources/ical";
 import {
   dateToString,
   dayStartHour,
@@ -75,24 +78,28 @@ export async function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -2), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const [calendarEvents = [], nextSets = [], workouts = []] = await Promise.all(
-    [
-      user && getUserIcalEventsBetween(user.id, fetchingInterval),
-      user && getNextSets({ user, to: fetchingInterval.end }),
-      user &&
-        MaterializedWorkoutsView.find(
-          {
-            userId: user.id,
-            workedOutAt: rangeToQuery(
-              fetchingInterval.start,
-              fetchingInterval.end,
-            ),
-            deletedAt: { $exists: false },
-          },
-          { sort: { workedOutAt: -1 } },
-        ).toArray(),
-    ],
-  );
+  const [
+    calendarEvents = [],
+    calendarTodos = [],
+    nextSets = [],
+    workouts = [],
+  ] = await Promise.all([
+    user && getUserIcalEventsBetween(user.id, fetchingInterval),
+    user && getUserIcalTodosBetween(user.id, fetchingInterval),
+    user && getNextSets({ user, to: fetchingInterval.end }),
+    user &&
+      MaterializedWorkoutsView.find(
+        {
+          userId: user.id,
+          workedOutAt: rangeToQuery(
+            fetchingInterval.start,
+            fetchingInterval.end,
+          ),
+          deletedAt: { $exists: false },
+        },
+        { sort: { workedOutAt: -1 } },
+      ).toArray(),
+  ]);
 
   const eventsByDate: Record<string, MongoVEvent[]> = {};
   const todosByDate: Record<string, MongoVTodo[]> = {};
@@ -178,30 +185,72 @@ export async function DiaryAgendaDay({
 
       const calName = dateToString(addHours(date, dayStartHour));
 
-      if (event.type !== "VTODO") {
-        if (event.datetype === "date") {
-          if (
-            isBefore(dayEnd, addHours(event.start, dayStartHour)) ||
-            isAfter(dayStart, addHours(event.end, dayStartHour))
-          ) {
-            continue;
-          }
+      if (event.datetype === "date") {
+        if (
+          isBefore(dayEnd, addHours(event.start, dayStartHour)) ||
+          isAfter(dayStart, addHours(event.end, dayStartHour))
+        ) {
+          continue;
         }
-
-        if (!eventsByDate[calName]) eventsByDate[calName] = [];
-        eventsByDate[calName].push(event);
-        continue;
       }
+
+      if (!eventsByDate[calName]) eventsByDate[calName] = [];
+      eventsByDate[calName].push(event);
+    }
+  }
+
+  console.log({ calendarTodos });
+  for (const todo of calendarTodos) {
+    for (const date of eachDayOfInterval(
+      {
+        start: max(
+          [
+            subHours(
+              max(
+                [
+                  "completed" in todo ? todo.completed : null,
+                  "due" in todo ? todo.due : null,
+                  "start" in todo ? todo.start : null,
+                  fetchingInterval.start,
+                ].filter(Boolean),
+              ),
+              dayStartHour,
+            ),
+            fetchingInterval.start,
+          ].filter(Boolean),
+        ),
+        end: min(
+          [
+            subHours(
+              min(
+                [
+                  "completed" in todo ? todo.completed : null,
+                  "due" in todo ? todo.due : null,
+                  fetchingInterval.end,
+                ].filter(Boolean),
+              ),
+              dayStartHour,
+            ),
+            fetchingInterval.end,
+          ].filter(Boolean),
+        ),
+      },
+      { in: tz(timeZone) },
+    )) {
+      const dayEnd = addHours(endOfDay(date), dayStartHour);
+
+      const calName = dateToString(addHours(date, dayStartHour));
+
       if (
         isPast(dayEnd) ||
         Object.values(todosByDate)
           .flat()
-          .some((e) => e.uid === event.uid)
+          .some((e) => e.uid === todo.uid)
       ) {
         continue;
       }
       if (!todosByDate[calName]) todosByDate[calName] = [];
-      todosByDate[calName].push(event);
+      todosByDate[calName].push(todo);
     }
   }
 
