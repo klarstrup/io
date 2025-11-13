@@ -199,7 +199,6 @@ export async function DiaryAgendaDay({
     }
   }
 
-  console.log({ calendarTodos });
   for (const todo of calendarTodos) {
     for (const date of eachDayOfInterval(
       {
