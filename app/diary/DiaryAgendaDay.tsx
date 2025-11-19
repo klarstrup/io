@@ -75,7 +75,7 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -2), dayStartHour),
+    start: addHours(addDays(startOfDay(tzDate), -3), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
   const [
@@ -91,10 +91,20 @@ export async function DiaryAgendaDay({
       MaterializedWorkoutsView.find(
         {
           userId: user.id,
-          workedOutAt: rangeToQuery(
-            fetchingInterval.start,
-            fetchingInterval.end,
-          ),
+          $or: [
+            {
+              workedOutAt: rangeToQuery(
+                fetchingInterval.start,
+                fetchingInterval.end,
+              ),
+            },
+            {
+              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+              workedOutAt: startOfDay(fetchingInterval.start, {
+                in: tz("UTC"),
+              }),
+            },
+          ],
           deletedAt: { $exists: false },
         },
         { sort: { workedOutAt: -1 } },
