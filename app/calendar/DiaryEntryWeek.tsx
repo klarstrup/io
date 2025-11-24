@@ -57,12 +57,9 @@ export async function DiaryEntryWeek({
   return (
     <div
       key={`${getISOWeekYear(weekDate)}-${getISOWeek(weekDate)}`}
-      className="grid flex-1 grid-cols-8 bg-white"
+      className="grid flex-1 grid-cols-8"
     >
-      <div
-        className="flex flex-1 flex-col flex-wrap items-center justify-center border-r-[0.5px] border-b-[0.5px] border-black/10 border-r-white"
-        style={{ background: "#edab00" }}
-      >
+      <div className="flex flex-1 flex-col flex-wrap items-center justify-center border-r-[0.5px] border-b-[0.5px] border-black/10 border-r-black bg-white p-[5%]">
         <span>{getISOWeek(weekDate)}</span>
         <span className="text-xs font-bold">
           {getISOWeekYear(weekDate) !== getISOWeekYear(subWeeks(weekDate, 1))

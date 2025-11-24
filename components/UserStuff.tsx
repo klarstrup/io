@@ -55,9 +55,19 @@ export default async function UserStuff() {
 
   return (
     <>
-      <div className="fixed top-1 right-1 z-20 flex gap-2 pl-1">
+      <div className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-2xl bg-white/30 px-2 py-1 text-2xl shadow-md backdrop-blur-sm pointer-coarse:bottom-2 pointer-fine:top-4">
+        <Link prefetch={false} href="/diary">
+          📔
+        </Link>
+        <Link prefetch={false} href="/calendar">
+          🗓️
+        </Link>
+        <Link prefetch={false} href="/events/">
+          🏅
+        </Link>
+        <span className="text-gray-400">❘</span>
         <DiaryAgendaWorkoutsSettings />
-        <Popover control="📡">
+        <Popover control="📡" showBackdrop={false}>
           <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
             <UserStuffSourcesForm
               user={user}
@@ -70,7 +80,7 @@ export default async function UserStuff() {
             />
           </div>
         </Popover>
-        <Popover control="📍">
+        <Popover control="📍" showBackdrop={false}>
           <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-164 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
             <UserStuffLocationsForm
               user={user}
@@ -81,19 +91,8 @@ export default async function UserStuff() {
             />
           </div>
         </Popover>
-        <Popover control="🌞">
+        <Popover control="🌞" showBackdrop={false}>
           <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
-            <div className="mb-2 flex gap-2">
-              <Link prefetch={false} href="/diary">
-                Diary
-              </Link>
-              <Link prefetch={false} href="/events/">
-                Events
-              </Link>
-              <Link prefetch={false} href="/calendar">
-                Calendar
-              </Link>
-            </div>
             {user ? (
               <div>
                 <span>

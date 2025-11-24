@@ -67,7 +67,6 @@ export default async function CalendarLayout(_props: PageProps<"/calendar">) {
 
   return (
     <>
-      <style>{`body { background-color: white; }`}</style>
       {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
       <div className="max-h-[100vh] min-h-[100vh]">
         <Suspense
