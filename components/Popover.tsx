@@ -15,7 +15,7 @@ export default function Popover({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className={className || "relative"}>
+    <div className={className}>
       <button
         className="z-40 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
@@ -27,8 +27,8 @@ export default function Popover({
           {children}
           <button
             className={
-              "fixed inset-0 z-10 backdrop-blur-xs " +
-              (showBackdrop ? "bg-black/50" : "")
+              "fixed inset-0 z-10 " +
+              (showBackdrop ? "bg-black/50 backdrop-blur-xs" : "")
             }
             onClick={() => setIsOpen(false)}
           />

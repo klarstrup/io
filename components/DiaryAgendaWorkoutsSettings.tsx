@@ -12,7 +12,7 @@ export default async function DiaryAgendaWorkoutsSettings() {
       control={<span className="text-2xl">⚙️</span>}
       showBackdrop={false}
     >
-      <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+      <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
         {user ? (
           <div className="flex flex-col gap-2">
             <FieldSetX legend="Workout Schedule" className="w-full">

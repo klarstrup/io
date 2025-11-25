@@ -55,7 +55,7 @@ export default async function UserStuff() {
 
   return (
     <>
-      <div className="fixed left-1/2 z-50 flex -translate-x-1/2 shadow-black/25 transform items-center gap-2 rounded-2xl bg-white/30 px-2 py-1 shadow-md backdrop-blur-sm pointer-coarse:bottom-2 pointer-fine:top-4">
+      <div className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-2xl bg-white/30 px-2 py-1 shadow-md shadow-black/25 backdrop-blur-sm pointer-coarse:bottom-2 pointer-fine:top-4">
         <Link prefetch={false} href="/diary" className="text-2xl">
           📔
         </Link>
@@ -71,7 +71,7 @@ export default async function UserStuff() {
           control={<span className="text-2xl">📡</span>}
           showBackdrop={false}
         >
-          <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+          <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
             <UserStuffSourcesForm
               user={user}
               sourceOptions={[
@@ -86,9 +86,9 @@ export default async function UserStuff() {
         <Popover
           control={<span className="text-2xl">📍</span>}
           showBackdrop={false}
-          className="relative -mx-1"
+          className="-mx-1"
         >
-          <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-164 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+          <div className="absolute left-1/2 z-30 max-h-[66vh] w-140 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
             <UserStuffLocationsForm
               user={user}
               locations={locations?.map((document) => ({
@@ -102,7 +102,7 @@ export default async function UserStuff() {
           control={<span className="text-2xl">🌞</span>}
           showBackdrop={false}
         >
-          <div className="absolute top-4 right-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
+          <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
             {user ? (
               <div>
                 <span>
