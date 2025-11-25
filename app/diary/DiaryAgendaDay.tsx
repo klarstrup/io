@@ -493,7 +493,10 @@ export async function DiaryAgendaDay({
                   dayDueSets.length ||
                   dayTodos.length ||
                   upcomingOnDayEvents.length
-                )
+                ) &&
+                (dayDones.length ||
+                  dayWorkouts.length ||
+                  passedOnDayEvents.length)
                   ? "bg-green-100 pt-1"
                   : todayStr === dayName
                     ? "bg-yellow-100 pt-2"
