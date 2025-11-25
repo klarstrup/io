@@ -11,5 +11,5 @@ export function ScrollToMe() {
     });
   }, []);
 
-  return <div ref={ref} className="relative -top-4" />;
+  return <div ref={ref} className="relative -top-18" />;
 }
