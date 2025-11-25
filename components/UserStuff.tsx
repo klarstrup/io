@@ -56,7 +56,7 @@ export default async function UserStuff() {
   return (
     <>
       <div className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-2xl bg-white/30 px-2 py-1 shadow-md shadow-black/25 backdrop-blur-sm pointer-coarse:bottom-2 pointer-fine:top-4">
-        <Link prefetch={false} href="/diary" className="text-3xl">
+        <Link prefetch={false} href="/diary" className="text-3xl xl:text-4xl">
           📔
         </Link>
         <Link
