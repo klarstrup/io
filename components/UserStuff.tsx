@@ -56,19 +56,19 @@ export default async function UserStuff() {
   return (
     <>
       <div className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-2xl bg-white/30 px-2 py-1 shadow-md shadow-black/25 backdrop-blur-sm pointer-coarse:bottom-2 pointer-fine:top-4">
-        <Link prefetch={false} href="/diary" className="text-2xl">
+        <Link prefetch={false} href="/diary" className="text-3xl">
           📔
         </Link>
-        <Link prefetch={false} href="/calendar" className="text-2xl">
+        <Link prefetch={false} href="/calendar" className="text-3xl">
           🗓️
         </Link>
-        <Link prefetch={false} href="/events/" className="text-2xl">
+        <Link prefetch={false} href="/events/" className="text-3xl">
           🏅
         </Link>
         <span className="text-gray-400">❘</span>
         <DiaryAgendaWorkoutsSettings />
         <Popover
-          control={<span className="text-2xl">📡</span>}
+          control={<span className="text-3xl">📡</span>}
           showBackdrop={false}
         >
           <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
@@ -84,7 +84,7 @@ export default async function UserStuff() {
           </div>
         </Popover>
         <Popover
-          control={<span className="text-2xl">📍</span>}
+          control={<span className="text-3xl">📍</span>}
           showBackdrop={false}
           className="-mx-1"
         >
@@ -99,7 +99,7 @@ export default async function UserStuff() {
           </div>
         </Popover>
         <Popover
-          control={<span className="text-2xl">🌞</span>}
+          control={<span className="text-3xl">🌞</span>}
           showBackdrop={false}
         >
           <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">

@@ -9,7 +9,7 @@ export default async function DiaryAgendaWorkoutsSettings() {
 
   return (
     <Popover
-      control={<span className="text-2xl">⚙️</span>}
+      control={<span className="text-3xl">⚙️</span>}
       showBackdrop={false}
     >
       <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
