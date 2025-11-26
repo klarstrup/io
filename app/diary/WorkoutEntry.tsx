@@ -179,6 +179,7 @@ export default async function WorkoutEntry({
                   {" "}
                   -{" "}
                   <Link
+                    prefetch={false}
                     href={`/diary/locations/${location?._id.toString()}`}
                     className="font-bold"
                     style={{ color: "#edab00" }}
@@ -192,6 +193,7 @@ export default async function WorkoutEntry({
             <div>
               <small>
                 <Link
+                  prefetch={false}
                   href={`/diary/locations/${location?._id.toString()}`}
                   className="font-bold"
                   style={{ color: "#edab00" }}
