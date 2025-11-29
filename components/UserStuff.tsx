@@ -59,7 +59,7 @@ export default async function UserStuff() {
         className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-2xl border border-[yellow]/25 bg-white/10 px-2 py-1 backdrop-blur-md pointer-coarse:bottom-2 pointer-fine:top-4"
         style={{
           boxShadow:
-            "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 1)",
+            "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
         }}
       >
         <Link prefetch={false} href="/diary" className="text-3xl xl:text-4xl">
