@@ -1,12 +1,12 @@
 import { ObjectId } from "mongodb";
-import { revalidateTag } from "next/cache";
+import { refresh } from "next/cache";
 import Link from "next/link";
-import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { auth } from "../auth";
 import { Locations } from "../models/location.server";
 import { Users } from "../models/user.server";
 import { dataSourceGroups } from "../sources/utils";
 import { omit } from "../utils";
+import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import Popover from "./Popover";
 import UserStuffLocationsForm from "./UserStuffLocationsForm";
@@ -36,13 +36,7 @@ async function updateUser(formData: FormData) {
 
   await Users.updateOne({ _id: new ObjectId(user.id) }, { $set: newUser });
 
-  // Doesn't need an actual tag name(since the new data will be in mongo not via fetch)
-  // calling it at all will make the page rerender with the new data.
-  try {
-    revalidateTag("");
-  } catch (e) {
-    console.error(e);
-  }
+  refresh();
 }
 
 export default async function UserStuff() {
