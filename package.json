@@ -43,6 +43,7 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.67.0",
     "react-select": "^5.10.2",
+    "rrule": "^2.8.1",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.17",
     "uuid": "^13.0.0"
