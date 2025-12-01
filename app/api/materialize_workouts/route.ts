@@ -18,14 +18,9 @@ export const GET = async () => {
   return jsonStreamResponse(async function* () {
     await MaterializedWorkoutsView.createIndexes([
       { key: { id: 1 }, unique: true },
-      { key: { userId: 1 } },
       { key: { userId: -1 } },
       { key: { workedOutAt: 1 } },
-      { key: { workedOutAt: -1 } },
-      { key: { location: 1 } },
-      { key: { location: -1 } },
       { key: { "exercises.exerciseId": 1 } },
-      { key: { "exercises.exerciseId": -1 } },
     ]);
 
     yield {

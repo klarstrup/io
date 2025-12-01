@@ -65,6 +65,21 @@ export async function getUserIcalEventsBetween(
   await IcalEvents.createIndexes([
     { key: { _io_userId: 1, type: 1, start: 1 } },
     { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
+    {
+      key: {
+        _io_userId: 1,
+        type: 1,
+        "rrule.options.dtstart": 1,
+        "rrule.options.until": 1,
+      },
+    },
+    {
+      key: { _io_userId: 1, type: 1, completed: 1 },
+    },
+    { key: { _io_userId: 1, type: 1, end: 1, start: 1 } },
+    {
+      key: { _io_userId: 1, type: 1, due: 1 },
+    },
   ]);
   for await (const event of IcalEvents.find<WithId<MongoVEvent>>({
     _io_userId: userId,

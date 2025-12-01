@@ -60,8 +60,6 @@ export const GET = () =>
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     await TomorrowIntervals.createIndexes([
-      { key: { _io_geohash: 1 } },
-      { key: { startTime: 1 } },
       { key: { _io_geohash: 1, startTime: 1 } },
     ]);
 
