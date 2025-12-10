@@ -417,7 +417,7 @@ export async function DiaryAgendaDay({
                 <div className="-ml-3 flex items-center gap-1 leading-normal">
                   <span
                     className={
-                      "font-mono text-xs [letter-spacing:-2px] text-gray-900/50 tabular-nums text-shadow-md text-shadow-white"
+                      "font-mono text-xs tracking-[-2px] text-gray-900/50 tabular-nums text-shadow-md text-shadow-white"
                     }
                   >
                     {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
@@ -509,7 +509,7 @@ export async function DiaryAgendaDay({
                     className="grid gap-1.5 pb-1.5"
                     style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
                   >
-                    <span className="-ml-0.5 pt-[4px] text-right font-mono text-xs text-gray-900/50">
+                    <span className="-ml-0.5 pt-1 text-right font-mono text-xs text-gray-900/50">
                       <FontAwesomeIcon icon={faCalendar} />
                     </span>
                     <div className="flex flex-wrap items-stretch gap-0.5">
@@ -592,7 +592,7 @@ export async function DiaryAgendaDay({
                   dayTodos.length ||
                   upcomingOnDayEvents.length ? (
                     <Fragment>
-                      <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
+                      <span className="-ml-0.5 pt-1 text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircle} />
                       </span>
                       <div>
@@ -644,7 +644,7 @@ export async function DiaryAgendaDay({
                     dayDones.length ||
                     passedOnDayEvents.length) ? (
                     <>
-                      <span className="-ml-0.5 pt-[4px] text-right font-mono text-xl text-gray-900/50">
+                      <span className="-ml-0.5 pt-1 text-right font-mono text-xl text-gray-900/50">
                         <FontAwesomeIcon icon={faCircleCheck} />
                       </span>
                       <div>

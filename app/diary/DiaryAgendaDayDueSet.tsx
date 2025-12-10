@@ -35,7 +35,7 @@ export function DiaryAgendaDayDueSet({
     <div
       ref={ref}
       className={
-        "group relative inline-flex flex-col items-stretch justify-center rounded-md border border-black/10 bg-white " +
+        "group relative inline-flex flex-col items-stretch justify-center rounded-md border border-black/5 bg-white " +
         (isActive ? "rounded-b-none" : "cursor-pointer")
       }
       onClick={() => setIsActive(true)}
@@ -65,7 +65,7 @@ export function DiaryAgendaDayDueSet({
         )}
       </div>
       {isActive && (
-        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/10 bg-white p-1">
+        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/5 bg-white p-1">
           <button
             type="button"
             onClick={() =>
@@ -112,7 +112,7 @@ export function DiaryAgendaDayDueSet({
                   e.stopPropagation();
                   e.preventDefault();
                 }}
-                className="ml-1 rounded-md border border-black/10 bg-white px-1 py-0.5 text-black"
+                className="ml-1 rounded-md border border-black/5 bg-white px-1 py-0.5 text-black"
               >
                 <option value="">in new workout</option>
                 {workouts?.map((workout) => {

@@ -33,7 +33,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
         <span className="text-xs">➕</span> Todo
       </button>
       {isActive && (
-        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/10 bg-white p-1">
+        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/5 bg-white p-1">
           <form
             ref={formRef}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
