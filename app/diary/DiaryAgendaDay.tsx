@@ -733,7 +733,7 @@ export async function DiaryAgendaDay({
                 </li>
                 {isDayEmpty ? (
                   <li className="text-gray-400/50 italic">
-                    No events, workouts or todos
+                    {isPast(dayEnd) ? "Nothing logged" : "Nothing scheduled"}
                   </li>
                 ) : null}
               </ul>
