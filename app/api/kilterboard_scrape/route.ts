@@ -99,10 +99,7 @@ async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
 }
 
 async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
-  await KilterBoardClimbs.createIndexes([
-    { key: { created_at: -1 } },
-    { key: { frames: -1 } },
-  ]);
+  await KilterBoardClimbs.createIndexes([{ key: { created_at: -1 } }]);
   const newestClimbInDatabase = await KilterBoardClimbs.findOne(
     {},
     { sort: { created_at: -1 } },
