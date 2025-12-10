@@ -488,15 +488,16 @@ export async function DiaryAgendaDay({
               }
               className={
                 "mb-1 w-full flex-0! pb-2 " +
-                (isPast(dayStart) &&
-                !(
-                  dayDueSets.length ||
-                  dayTodos.length ||
-                  upcomingOnDayEvents.length
-                ) &&
-                (dayDones.length ||
-                  dayWorkouts.length ||
-                  passedOnDayEvents.length)
+                ((isPast(dayStart) &&
+                  !(
+                    dayDueSets.length ||
+                    dayTodos.length ||
+                    upcomingOnDayEvents.length
+                  ) &&
+                  (dayDones.length ||
+                    dayWorkouts.length ||
+                    passedOnDayEvents.length)) ||
+                isPast(dayEnd)
                   ? "bg-green-100 pt-1"
                   : todayStr === dayName
                     ? "bg-yellow-100 pt-2"
