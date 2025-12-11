@@ -264,7 +264,7 @@ export async function DiaryAgendaDay({
   }
 
   return (
-    <div className="flex flex-col justify-start">
+    <div className="flex flex-col justify-start items-center">
       {await Promise.all(
         daysOfInterval.map(async (dayDate, dayI) => {
           const dayStart = addHours(startOfDay(dayDate), dayStartHour);
@@ -487,7 +487,7 @@ export async function DiaryAgendaDay({
                 </div>
               }
               className={
-                "mb-1 w-full flex-0! pb-2 " +
+                "mb-1 w-auto flex-0! pb-2 " +
                 ((isPast(dayStart) &&
                   !(
                     dayDueSets.length ||
