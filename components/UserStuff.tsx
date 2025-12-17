@@ -4,13 +4,14 @@ import Link from "next/link";
 import { auth } from "../auth";
 import { Locations } from "../models/location.server";
 import { Users } from "../models/user.server";
+import { getAllWorkoutExercises } from "../models/workout.server";
 import { dataSourceGroups } from "../sources/utils";
 import { omit } from "../utils";
-import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import Popover from "./Popover";
 import UserStuffLocationsForm from "./UserStuffLocationsForm";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
+import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
 
 async function updateUser(formData: FormData) {
   "use server";
@@ -70,42 +71,52 @@ export default async function UserStuff() {
           🏅
         </Link>
         <span className="text-3xl text-gray-400/25 xl:text-4xl">❘</span>
-        <DiaryAgendaWorkoutsSettings />
-        <Popover
-          control={<span className="text-3xl xl:text-4xl">📡</span>}
-          showBackdrop={false}
-        >
-          <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
-            <UserStuffSourcesForm
-              user={user}
-              sourceOptions={[
-                ...dataSourceGroups.workouts,
-                ...dataSourceGroups.events,
-                ...dataSourceGroups.food,
-                ...dataSourceGroups.weather,
-              ]}
-            />
-          </div>
-        </Popover>
-        <Popover
-          control={<span className="text-3xl xl:text-4xl">📍</span>}
-          showBackdrop={false}
-          className="-mx-1"
-        >
-          <div className="absolute left-1/2 z-30 max-h-[66vh] w-140 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
-            <UserStuffLocationsForm
-              user={user}
-              locations={locations?.map((document) => ({
-                ...omit(document, "_id"),
-                id: document._id.toString(),
-              }))}
-            />
-          </div>
-        </Popover>
-        <Popover
-          control={<span className="text-3xl xl:text-4xl">🌞</span>}
-          showBackdrop={false}
-        >
+        {user ? (
+          <>
+            <Popover control={<span className="text-3xl xl:text-4xl">⚙️</span>}>
+              <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+                {user ? (
+                  <div className="flex flex-col gap-2">
+                    <FieldSetX legend="Workout Schedule" className="w-full">
+                      <UserStuffWorkoutScheduleForm
+                        exercisesStats={await getAllWorkoutExercises(user)}
+                        user={user}
+                      />
+                    </FieldSetX>
+                  </div>
+                ) : null}
+              </div>
+            </Popover>
+            <Popover control={<span className="text-3xl xl:text-4xl">📡</span>}>
+              <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+                <UserStuffSourcesForm
+                  user={user}
+                  sourceOptions={[
+                    ...dataSourceGroups.workouts,
+                    ...dataSourceGroups.events,
+                    ...dataSourceGroups.food,
+                    ...dataSourceGroups.weather,
+                  ]}
+                />
+              </div>
+            </Popover>
+            <Popover
+              control={<span className="text-3xl xl:text-4xl">📍</span>}
+              className="-mx-1"
+            >
+              <div className="absolute left-1/2 z-30 max-h-[66vh] w-140 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+                <UserStuffLocationsForm
+                  user={user}
+                  locations={locations?.map((document) => ({
+                    ...omit(document, "_id"),
+                    id: document._id.toString(),
+                  }))}
+                />
+              </div>
+            </Popover>
+          </>
+        ) : null}
+        <Popover control={<span className="text-3xl xl:text-4xl">🌞</span>}>
           <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
             {user ? (
               <div>
