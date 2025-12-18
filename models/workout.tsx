@@ -179,8 +179,8 @@ export function getSetGrade(
   const boulderingCircuit =
     typeof set.meta?.boulderCircuitId === "string" &&
     location.boulderCircuits?.find((c) => c.id === set.meta?.boulderCircuitId);
-  if (boulderingCircuit && boulderingCircuit.gradeEstimate) {
-    return boulderingCircuit.gradeEstimate;
+  if (boulderingCircuit) {
+    return boulderingCircuit.gradeEstimate || null;
   }
 
   const colorOptions = exercise.inputs[1]?.options;
