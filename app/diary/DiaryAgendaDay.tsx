@@ -320,6 +320,7 @@ export async function DiaryAgendaDay({
                         ] as const,
                     ),
                   ),
+                  exerciseWorkouts.map(([_, workout]) => workout),
                 ] as const,
             )
             .sort(([, a], [, b]) => b.length - a.length);
@@ -660,11 +661,10 @@ export async function DiaryAgendaDay({
                             <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
                           ))}
                           {dayExerciseSets.map(
-                            ([exercise, setsWithLocation], exerciseIndex) => {
-                              const workouts = uniqueBy(
-                                setsWithLocation.map(([, , w]) => w),
-                                ({ id }) => id,
-                              );
+                            (
+                              [exercise, setsWithLocation, workouts],
+                              exerciseIndex,
+                            ) => {
                               const mostRecentWorkout =
                                 workouts.length === 1 ? workouts[0]! : null;
                               const workoutDateStr =
@@ -683,7 +683,10 @@ export async function DiaryAgendaDay({
                                 >
                                   <div
                                     className={
-                                      "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40"
+                                      "flex items-center justify-center self-stretch rounded-t-md bg-black/60 px-1.5 text-white opacity-40 " +
+                                      (!setsWithLocation.length
+                                        ? "rounded-b-md"
+                                        : "")
                                     }
                                   >
                                     <div className="flex flex-wrap items-center gap-1 px-0.5 py-0.5 text-sm leading-none">
@@ -718,13 +721,15 @@ export async function DiaryAgendaDay({
                                       ) : null}
                                     </div>
                                   </div>
-                                  <div className="flex justify-center px-1 py-0.5 pb-1 text-xs">
-                                    <WorkoutEntryExercise
-                                      exercise={exercise}
-                                      setsWithLocations={setsWithLocation}
-                                      exerciseIndex={exerciseIndex}
-                                    />
-                                  </div>
+                                  {setsWithLocation.length > 0 ? (
+                                    <div className="flex justify-center px-1 py-0.5 pb-1 text-xs">
+                                      <WorkoutEntryExercise
+                                        exercise={exercise}
+                                        setsWithLocations={setsWithLocation}
+                                        exerciseIndex={exerciseIndex}
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               );
                             },
