@@ -362,8 +362,10 @@ export async function DiaryAgendaDay({
                 roundingMethod: "ceil",
               }),
             });
-            const days = differenceInDays(event.end, event.start);
-            const dayNo = differenceInDays(dayStart, event.start) + 1;
+            const startDay = startOfDay(addHours(event.start, dayStartHour));
+            const endDay = startOfDay(addHours(event.end, dayStartHour));
+            const days = differenceInDays(endDay, startDay) + 1;
+            const dayNo = differenceInDays(dayStart, startDay) + 1;
             const isLastDay = dayNo === days;
 
             return (
