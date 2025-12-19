@@ -213,6 +213,8 @@ export async function upsertTodo(
   const user = (await auth())?.user;
   if (!user) throw new Error("Unauthorized");
 
+  if ("date" in todo && todo.start) todo.start = new Date(todo.start);
+
   const upsertResult = await IcalEvents.updateOne(
     {
       ...("_id" in todo && todo._id
@@ -234,8 +236,6 @@ export async function upsertTodo(
       $setOnInsert: {
         created: new Date(),
         dtstamp: new Date(),
-        // Dates do not get deserialized properly in server actions
-        start: todo.start ? new Date(todo.start) : todo.start,
       },
     },
     { upsert: true },
