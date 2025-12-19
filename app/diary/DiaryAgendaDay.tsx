@@ -1,7 +1,7 @@
 import { tz, TZDate } from "@date-fns/tz";
+import { faCalendarCheck } from "@fortawesome/free-regular-svg-icons";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons/faCalendar";
-import { faCircle } from "@fortawesome/free-regular-svg-icons/faCircle";
-import { faCircleCheck } from "@fortawesome/free-regular-svg-icons/faCircleCheck";
+import { faCalendarWeek, faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addDays,
@@ -10,7 +10,6 @@ import {
   differenceInDays,
   eachDayOfInterval,
   endOfDay,
-  getDay,
   intervalToDuration,
   isAfter,
   isBefore,
@@ -54,7 +53,6 @@ import {
   rangeToQuery,
   roundToNearestDay,
   unique,
-  uniqueBy,
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
@@ -210,39 +208,29 @@ export async function DiaryAgendaDay({
     }
   }
 
+  console.log({ calendarTodos });
   for (const todo of calendarTodos) {
     for (const date of eachDayOfInterval(
       {
-        start: max(
-          [
-            subHours(
-              max(
-                [
-                  "completed" in todo ? todo.completed : null,
-                  "due" in todo ? todo.due : null,
-                  "start" in todo ? todo.start : null,
-                  fetchingInterval.start,
-                ].filter(Boolean),
-              ),
-              dayStartHour,
-            ),
-            fetchingInterval.start,
-          ].filter(Boolean),
+        start: subHours(
+          max(
+            [
+              todo.completed || todo.due,
+              todo.completed || todo.start,
+              fetchingInterval.start,
+            ].filter(Boolean),
+          ),
+          dayStartHour,
         ),
-        end: min(
-          [
-            subHours(
-              min(
-                [
-                  "completed" in todo ? todo.completed : null,
-                  "due" in todo ? todo.due : null,
-                  fetchingInterval.end,
-                ].filter(Boolean),
-              ),
-              dayStartHour,
-            ),
-            fetchingInterval.end,
-          ].filter(Boolean),
+        end: subHours(
+          min(
+            [
+              todo.completed || todo.due,
+              todo.completed || todo.start,
+              fetchingInterval.end,
+            ].filter(Boolean),
+          ),
+          dayStartHour,
         ),
       },
       { in: tz(timeZone) },
@@ -250,7 +238,9 @@ export async function DiaryAgendaDay({
       const dayEnd = addHours(endOfDay(date), dayStartHour);
 
       const calName = dateToString(addHours(date, dayStartHour));
-
+      if (todo.summary === "testos") {
+        console.log({ todo, dayEnd });
+      }
       if (
         isPast(dayEnd) ||
         Object.values(todosByDate)
@@ -418,10 +408,10 @@ export async function DiaryAgendaDay({
             <FieldSetX
               key={dayI}
               legend={
-                <div className="-ml-3 flex items-center gap-1 leading-normal">
+                <div className="-ml-1 flex items-center gap-1 leading-normal">
                   <span
                     className={
-                      "font-mono text-xs tracking-[-2px] text-gray-900/50 tabular-nums text-shadow-md text-shadow-white"
+                      "font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums text-shadow-md text-shadow-white"
                     }
                   >
                     {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
@@ -453,7 +443,7 @@ export async function DiaryAgendaDay({
                       >
                         <span className="text-xs">➕</span> Workout
                       </Link>
-                      <DiaryAgendaDayCreateTodo date={dayDate} />
+                      <DiaryAgendaDayCreateTodo date={dayStart} />
                       <span
                         className={
                           "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold text-black/25 shadow-sm"
@@ -478,7 +468,7 @@ export async function DiaryAgendaDay({
                           </Link>
                         </>
                       ) : null}
-                      <DiaryAgendaDayCreateTodo date={dayDate} />
+                      <DiaryAgendaDayCreateTodo date={dayStart} />
                       <span
                         className={
                           "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-xs font-semibold text-black/25 shadow-sm"
@@ -491,7 +481,7 @@ export async function DiaryAgendaDay({
                 </div>
               }
               className={
-                "mb-1 flex-0! pb-2 " +
+                "mb-1 flex-0! px-1 pb-2 " +
                 ((isPast(dayStart) &&
                   !(
                     dayDueSets.length ||
@@ -502,9 +492,9 @@ export async function DiaryAgendaDay({
                     dayWorkouts.length ||
                     passedOnDayEvents.length)) ||
                 isPast(dayEnd)
-                  ? "bg-green-100 pt-1"
+                  ? "bg-green-50 pt-1"
                   : todayStr === dayName
-                    ? "bg-yellow-100 pt-2"
+                    ? "bg-yellow-50 pt-1"
                     : "bg-slate-50 pt-1")
               }
             >
@@ -512,10 +502,10 @@ export async function DiaryAgendaDay({
                 {allDayEvents.length ? (
                   <li
                     className="grid gap-1.5 pb-1.5"
-                    style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
+                    style={{ gridTemplateColumns: "1.25rem minmax(0, 1fr)" }}
                   >
-                    <span className="-ml-0.5 pt-1 text-right font-mono text-xs text-gray-900/50">
-                      <FontAwesomeIcon icon={faCalendar} />
+                    <span className="flex justify-center pt-1 text-xl text-black/50">
+                      <FontAwesomeIcon icon={faCalendarWeek} />
                     </span>
                     <div className="flex flex-wrap items-stretch gap-0.5">
                       {allDayEvents.map(({ start, end, ...event }) => {
@@ -591,23 +581,27 @@ export async function DiaryAgendaDay({
 
                 <li
                   className="grid gap-1.5"
-                  style={{ gridTemplateColumns: "1rem minmax(0, 1fr)" }}
+                  style={{ gridTemplateColumns: "1.25rem minmax(0, 1fr)" }}
                 >
-                  {dayDueSets.length ||
-                  dayTodos.length ||
-                  upcomingOnDayEvents.length ? (
+                  {upcomingOnDayEvents.length ? (
                     <Fragment>
-                      <span className="-ml-0.5 pt-1 text-right font-mono text-xl text-gray-900/50">
-                        <FontAwesomeIcon icon={faCircle} />
+                      <span className="flex justify-center pt-1 text-xl text-gray-900/50">
+                        <FontAwesomeIcon icon={faCalendar} />
                       </span>
                       <div>
                         {upcomingOnDayEvents.length
                           ? upcomingOnDayEvents.map(renderOnDayEvent)
                           : null}
+                      </div>
+                    </Fragment>
+                  ) : null}
+                  {dayDueSets.length ? (
+                    <Fragment>
+                      <span className="text-md flex justify-center pt-1.5 text-gray-900/50">
+                        <FontAwesomeIcon icon={faDumbbell} />
+                      </span>
+                      <div>
                         <div className="flex flex-wrap items-center gap-0.5">
-                          {dayTodos.map((todo) => (
-                            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
-                          ))}
                           {dayDueSets.map((dueSet) => (
                             <DiaryAgendaDayDueSet
                               key={JSON.stringify(dueSet.scheduleEntry)}
@@ -630,6 +624,9 @@ export async function DiaryAgendaDay({
                       </div>
                     </Fragment>
                   ) : null}
+                  {dayTodos.map((todo) => (
+                    <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+                  ))}
                   {(allDayEvents.length ||
                     dayTodos.length ||
                     upcomingOnDayEvents.length ||
@@ -644,22 +641,25 @@ export async function DiaryAgendaDay({
                       </span>
                     </>
                   ) : null}
-                  {isPast(dayStart) &&
-                  (dayWorkouts.length ||
-                    dayDones.length ||
-                    passedOnDayEvents.length) ? (
+                  {passedOnDayEvents.length ? (
                     <>
-                      <span className="-ml-0.5 pt-1 text-right font-mono text-xl text-gray-900/50">
-                        <FontAwesomeIcon icon={faCircleCheck} />
+                      <span className="flex justify-center pt-1 text-xl text-green-400">
+                        <FontAwesomeIcon icon={faCalendarCheck} />
                       </span>
                       <div>
                         {passedOnDayEvents.length
                           ? passedOnDayEvents.map(renderOnDayEvent)
                           : null}
+                      </div>
+                    </>
+                  ) : null}
+                  {dayWorkouts.length ? (
+                    <>
+                      <span className="text-md flex justify-center pt-1 text-green-400">
+                        <FontAwesomeIcon icon={faDumbbell} />
+                      </span>
+                      <div>
                         <div className="gap-[0.25%] [column-fill:balance-all] [column-width:200px] [orphans:1] [widows:1] portrait:sm:[column-width:300px]">
-                          {dayDones.map((todo) => (
-                            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
-                          ))}
                           {dayExerciseSets.map(
                             (
                               [exercise, setsWithLocation, workouts],
@@ -738,6 +738,9 @@ export async function DiaryAgendaDay({
                       </div>
                     </>
                   ) : null}
+                  {dayDones.map((todo) => (
+                    <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+                  ))}
                 </li>
                 {isDayEmpty ? (
                   <li className="text-gray-400/50 italic">

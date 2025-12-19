@@ -224,17 +224,22 @@ export async function upsertTodo(
     {
       $set: {
         type: "VTODO",
-        created: new Date(),
         lastmodified: new Date(),
-        dtstamp: new Date(),
         params: [],
         _io_source: WorkoutSource.Self,
         _io_userId: user.id,
         uid: todo.uid ?? new ObjectId().toString(),
-        ...todo,
+        ...(omit(todo, "start") as Omit<
+          MongoVTodo,
+          "type" | "params" | "_io_userId" | "_io_source" | "uid"
+        >),
+      } satisfies Omit<MongoVTodo, "created" | "dtstamp" | "start">,
+      $setOnInsert: {
+        created: new Date(),
+        dtstamp: new Date(),
         // Dates do not get deserialized properly in server actions
         start: todo.start ? new Date(todo.start) : todo.start,
-      } satisfies MongoVTodo,
+      },
     },
     { upsert: true },
   );

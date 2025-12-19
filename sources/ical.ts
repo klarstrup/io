@@ -207,7 +207,9 @@ export async function getUserIcalTodosBetween(
       { due: { $gte: start, $lte: end } },
       { completed: { $gte: start, $lte: end } },
       { completed: { $exists: false } },
+      { completed: undefined },
       { start: { $exists: false } },
+      { start: undefined },
     ],
   } satisfies FilterOperators<Omit<VTodo, "recurrences">>;
 
@@ -233,7 +235,12 @@ export async function getUserIcalTodosBetween(
     }
   }
 
-  return eventsThatFallWithinRange.sort((a, b) =>
-    compareAsc(a.start!, b.start!),
-  );
+  return eventsThatFallWithinRange.sort((a, b) => {
+    if (a.completed && !b.completed) return 1;
+    if (!a.completed && b.completed) return -1;
+    return compareAsc(
+      a.completed || a.start || a.created!,
+      b.completed || b.start || b.created!,
+    );
+  });
 }

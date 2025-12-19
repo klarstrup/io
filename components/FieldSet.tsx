@@ -1,4 +1,5 @@
 import type { HTMLProps } from "react";
+import { twMerge } from "tailwind-merge";
 
 export const FieldSetY = ({
   children,
@@ -33,10 +34,10 @@ export const FieldSetX = ({
   return (
     <fieldset
       {...props}
-      className={
-        "flex-1 rounded-lg border-x-3 border-y-0 border-gray-900/20 px-2 py-1 " +
-        className
-      }
+      className={twMerge(
+        "flex-1 rounded-lg border-x-3 border-y-0 border-gray-900/20 px-2 py-1",
+        className,
+      )}
     >
       <legend className="ml-2">{legend}</legend>
       {children}
