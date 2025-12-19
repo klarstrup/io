@@ -208,7 +208,6 @@ export async function DiaryAgendaDay({
     }
   }
 
-  console.log({ calendarTodos });
   for (const todo of calendarTodos) {
     for (const date of eachDayOfInterval(
       {
@@ -238,9 +237,6 @@ export async function DiaryAgendaDay({
       const dayEnd = addHours(endOfDay(date), dayStartHour);
 
       const calName = dateToString(addHours(date, dayStartHour));
-      if (todo.summary === "testos") {
-        console.log({ todo, dayEnd });
-      }
       if (
         isPast(dayEnd) ||
         Object.values(todosByDate)
