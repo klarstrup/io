@@ -229,10 +229,7 @@ export async function upsertTodo(
         _io_source: WorkoutSource.Self,
         _io_userId: user.id,
         uid: todo.uid ?? new ObjectId().toString(),
-        ...(omit(todo, "start") as Omit<
-          MongoVTodo,
-          "type" | "params" | "_io_userId" | "_io_source" | "uid"
-        >),
+        ...todo,
       } satisfies Omit<MongoVTodo, "created" | "dtstamp" | "start">,
       $setOnInsert: {
         created: new Date(),
