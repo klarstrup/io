@@ -1,7 +1,7 @@
 "use server";
 
 import { waitUntil } from "@vercel/functions";
-import { addDays } from "date-fns";
+import { addDays, max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import PartySocket from "partysocket";
@@ -274,7 +274,7 @@ export async function snoozeTodo(todoUid: string) {
   if (!todo) throw new Error("Todo not found");
 
   const now = new Date();
-  const tomorrow = addDays(todo.start ?? now, 1);
+  const tomorrow = addDays(max([todo.start ?? now, now]), 1);
 
   return upsertTodo({ uid: todoUid, start: tomorrow, type: "VTODO" });
 }
