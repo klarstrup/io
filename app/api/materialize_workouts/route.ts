@@ -20,7 +20,6 @@ export const GET = async () => {
       { key: { id: 1 }, unique: true },
       { key: { userId: -1 } },
       { key: { workedOutAt: 1 } },
-      { key: { "exercises.exerciseId": 1 } },
     ]);
 
     yield {
