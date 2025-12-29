@@ -59,15 +59,16 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
               }}
             >
               {isActive ? (
-                <input
+                <textarea
                   autoFocus
-                  type="text"
                   name="summary"
                   defaultValue={todo.summary}
-                  className="-mt-px -mb-px w-full bg-transparent text-center"
+                  className="-mt-px -mb-px w-full bg-transparent"
                 />
               ) : (
-                todo.summary
+                <div className="whitespace-pre-wrap">
+                  {todo.summary}
+                </div>
               )}
               <button type="submit" className="hidden" />
             </form>
