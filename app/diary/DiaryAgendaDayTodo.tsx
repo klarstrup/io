@@ -64,6 +64,14 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                   name="summary"
                   defaultValue={todo.summary}
                   className="-mt-px -mb-px w-full bg-transparent"
+                  onBlur={(e) => {
+                    if (
+                      e.currentTarget.value.trim().length > 0 &&
+                      e.currentTarget.value !== todo.summary
+                    ) {
+                      formRef.current?.requestSubmit();
+                    }
+                  }}
                 />
               ) : (
                 <div className="whitespace-pre-wrap">

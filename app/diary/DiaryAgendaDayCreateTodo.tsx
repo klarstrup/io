@@ -54,6 +54,11 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
               name="summary"
               defaultValue=""
               className="-mt-px -mb-px w-full min-w-50"
+              onBlur={(e) => {
+                if (e.currentTarget.value.trim().length > 0) {
+                  formRef.current?.requestSubmit();
+                }
+              }}
             />
             <button type="submit" className="hidden" />
           </form>
