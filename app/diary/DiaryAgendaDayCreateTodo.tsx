@@ -53,7 +53,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
               placeholder="Todo summary"
               name="summary"
               defaultValue=""
-              className="-mt-px -mb-px w-full min-w-50 bg-transparent"
+              className="-mt-px -mb-px w-full min-w-50"
             />
             <button type="submit" className="hidden" />
           </form>
