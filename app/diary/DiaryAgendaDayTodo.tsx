@@ -16,7 +16,19 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const onClickOutside = () => setIsActive(false);
+  const onClickOutside = () => {
+    const summaryInput = formRef.current?.elements.namedItem("summary");
+    if (
+      summaryInput &&
+      "value" in summaryInput &&
+      summaryInput.value.trim().length > 0 &&
+      summaryInput.value !== todo.summary
+    ) {
+      formRef.current?.requestSubmit();
+    } else {
+      setIsActive(false);
+    }
+  };
   useClickOutside(ref, onClickOutside);
 
   return (
@@ -64,14 +76,6 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                   name="summary"
                   defaultValue={todo.summary}
                   className="-mt-px -mb-px w-full bg-transparent"
-                  onBlur={(e) => {
-                    if (
-                      e.currentTarget.value.trim().length > 0 &&
-                      e.currentTarget.value !== todo.summary
-                    ) {
-                      formRef.current?.requestSubmit();
-                    }
-                  }}
                 />
               ) : (
                 <div className="whitespace-pre-wrap">

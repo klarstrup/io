@@ -7,7 +7,18 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const onClickOutside = () => setIsActive(false);
+  const onClickOutside = () => {
+    const summaryInput = formRef.current?.elements.namedItem("summary");
+    if (
+      summaryInput &&
+      "value" in summaryInput &&
+      summaryInput.value.trim().length > 0
+    ) {
+      formRef.current?.requestSubmit();
+    } else {
+      setIsActive(false);
+    }
+  };
   useClickOutside(ref, onClickOutside);
 
   return (
@@ -54,11 +65,6 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
               name="summary"
               defaultValue=""
               className="-mt-px -mb-px w-full min-w-50"
-              onBlur={(e) => {
-                if (e.currentTarget.value.trim().length > 0) {
-                  formRef.current?.requestSubmit();
-                }
-              }}
             />
             <button type="submit" className="hidden" />
           </form>
