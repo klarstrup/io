@@ -232,7 +232,8 @@ export async function upsertTodo(
         _io_userId: user.id,
         uid: todo.uid ?? new ObjectId().toString(),
         ...todo,
-      } satisfies Omit<MongoVTodo, "created" | "dtstamp" | "start">,
+        start: todo.start ? new Date(todo.start) : todo.start,
+      } satisfies Omit<MongoVTodo, "created" | "dtstamp">,
       $setOnInsert: {
         created: new Date(),
         dtstamp: new Date(),
