@@ -47,14 +47,13 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
               }
             }}
           >
-            <input
+            <textarea
               autoFocus
-              type="text"
               required
               placeholder="Todo summary"
               name="summary"
               defaultValue=""
-              className="-mt-px -mb-px w-full min-w-50 bg-transparent text-center"
+              className="-mt-px -mb-px w-full min-w-50 bg-transparent"
             />
             <button type="submit" className="hidden" />
           </form>
