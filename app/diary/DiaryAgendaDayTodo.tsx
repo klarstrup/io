@@ -17,14 +17,10 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const onClickOutside = () => {
-    const summaryInput = formRef.current?.elements.namedItem("summary");
-    if (
-      summaryInput &&
-      "value" in summaryInput &&
-      summaryInput.value.trim().length > 0 &&
-      summaryInput.value !== todo.summary
-    ) {
-      formRef.current?.requestSubmit();
+    const formData = formRef.current && new FormData(formRef.current);
+    const summary = formData?.get("summary");
+    if (summary && typeof summary === "string" && summary.trim().length > 0) {
+      formRef.current?.submit();
     } else {
       setIsActive(false);
     }
