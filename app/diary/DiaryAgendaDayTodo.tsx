@@ -67,7 +67,14 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                 />
               ) : (
                 <div className="whitespace-pre-wrap">
-                  {todo.summary}
+                  {todo.summary?.split("\n").map((line, idx) => (
+                    <Fragment key={idx}>
+                      {line}
+                      {idx < (todo.summary?.split("\n").length ?? 0) - 1 && (
+                        <br />
+                      )}
+                    </Fragment>
+                  ))}
                 </div>
               )}
               <button type="submit" className="hidden" />
