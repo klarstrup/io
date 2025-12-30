@@ -59,6 +59,7 @@ export const GET = () =>
             // iCal DTEND is exclusive, so we subtract 1ms to make it inclusive
             end: isDate(event.end) ? subMilliseconds(event.end, 1) : event.end,
             recurrences: event.recurrences && Object.values(event.recurrences),
+            exdate: event.exdate && Object.values(event.exdate),
             calendar,
             _io_scrapedAt,
             ...ioIcalMeta,

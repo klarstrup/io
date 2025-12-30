@@ -99,7 +99,7 @@ export interface VEvent extends BaseComponent {
 
   // I am not entirely sure about these, leave them as any for now..
   organizer: Organizer;
-  exdate: Record<string, DateWithTimeZone>;
+  exdate?: DateWithTimeZone[];
   geo?: { lat: number; lon: number };
   recurrenceid?: Date;
 
