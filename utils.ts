@@ -12,10 +12,14 @@ import {
 } from "date-fns";
 import type { DateInterval } from "./lib";
 
+export const dayStartHour = 5;
+
 export const dateToString = (date: Date): `${number}-${number}-${number}` =>
   `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
 export const DEFAULT_TIMEZONE = "Europe/Copenhagen";
+
+export const epoch = new Date(0);
 
 export class RelativeURL extends URL {
   constructor(url: string | URL) {
@@ -656,6 +660,14 @@ export function createTrend(data: Array<{ x: number | Date; y: number }>): {
 
   return { slope, yStart, calcY: (x: number) => yStart + slope * x };
 }
+export const getTrendLine = (
+  data: Array<{ x: number | Date; y: number }>,
+  limit: [min: number, max: number] = getLimits(
+    data.map((d) => (isDate(d.x) ? d.x.valueOf() : d.x)),
+  ),
+  trend: ReturnType<typeof createTrend> = createTrend(data),
+): { x: Date; y: number }[] =>
+  limit.map((x) => ({ x: new Date(x), y: trend.calcY(x) }));
 
 export const partition = <T>(a: T[], fn: (v: T) => boolean) =>
   a.reduce<[T[], T[]]>((m, v) => (m[fn(v) ? 0 : 1].push(v), m), [[], []]);

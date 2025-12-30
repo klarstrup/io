@@ -1,25 +1,59 @@
 "use client";
+import { LineCustomSvgLayer, LineSeries, ResponsiveLine } from "@nivo/line";
+import { differenceInMonths, getWeek, max, min } from "date-fns";
 import Grade, { frenchRounded } from "../../../../grades";
-import { ResponsiveLine } from "@nivo/line";
+import { getSchemeCategory10Color } from "../../../../utils";
+
+const DashedSolidLine: LineCustomSvgLayer<LineSeries & { trend?: boolean }> = ({
+  series,
+  lineGenerator,
+  xScale,
+  yScale,
+}) =>
+  series.map(({ id, data, color, trend }) => (
+    <path
+      key={id}
+      d={
+        lineGenerator(
+          data.map((d) => ({ x: xScale(d.data.x), y: yScale(d.data.y) })),
+        )!
+      }
+      fill="none"
+      stroke={color}
+      style={
+        trend ? { strokeDasharray: "3, 3", strokeWidth: 1 } : { strokeWidth: 1 }
+      }
+    />
+  ));
 
 export default function DiaryExerciseGraph({
   data,
 }: {
-  data: { id: string; data: { x: Date; y: number | null }[] }[];
+  data: {
+    id: string;
+    data: { x: Date; y: number | null }[];
+    color: string;
+    trend?: boolean;
+  }[];
 }) {
-  const min = data.reduce(
+  const minY = data.reduce(
     (min, serie) =>
       Math.min(min, ...serie.data.map((d) => d.y).filter(Boolean)),
     Infinity,
   );
-  const max = data.reduce(
+  const maxY = data.reduce(
     (max, serie) =>
       Math.max(max, ...serie.data.map((d) => d.y).filter(Boolean)),
     -Infinity,
   );
   const yValues = frenchRounded.data
     .map((v) => v.value)
-    .filter((v) => v >= min && v <= max);
+    .filter((v) => v >= minY && v <= maxY);
+
+  const spanInMonths = differenceInMonths(
+    max(data.flatMap((serie) => serie.data.map((d) => d.x))),
+    min(data.flatMap((serie) => serie.data.map((d) => d.x))),
+  );
 
   return (
     <div className="aspect-video w-full">
@@ -27,47 +61,61 @@ export default function DiaryExerciseGraph({
         data={data}
         margin={{ top: 50, right: 50, bottom: 50, left: 25 }}
         xScale={{ type: "time", max: new Date() }}
-        yScale={{ type: "linear", min }}
+        axisBottom={
+          spanInMonths >= 6
+            ? {
+                format: (v: Date) =>
+                  v.toLocaleDateString(undefined, {
+                    month: "short",
+                  }),
+                tickValues: "every 1 month",
+              }
+            : {
+                format: (v: Date) => "W" + getWeek(v).toString(),
+                tickValues: "every 1 week",
+              }
+        }
+        yScale={{ type: "linear", min: minY }}
         gridYValues={yValues}
-        colors={{ scheme: "set1" }}
-        axisBottom={{ format: "%b" }}
+        colors={data.map((d, i) => d.color || getSchemeCategory10Color(i))}
         axisLeft={null}
         axisRight={{
           legend: "Grade",
           legendOffset: 40,
+          tickSize: 0,
           format: (v) => new Grade(Number(v)).name,
           tickValues: yValues,
         }}
         enableGridY
         animate
         enableArea
-        areaBlendMode="multiply"
-        areaBaselineValue={min}
+        areaBlendMode="normal"
+        areaBaselineValue={minY}
+        areaOpacity={0.6}
         curve="catmullRom"
+        layers={[
+          "grid",
+          "markers",
+          "areas",
+          "slices",
+          "points",
+          "axes",
+          "legends",
+          DashedSolidLine,
+        ]}
         legends={[
           {
+            data: data
+              .map((d) => ({ ...d, label: d.id }))
+              .filter((d) => !d.trend),
             anchor: "top",
             direction: "row",
-            translateY: -25,
             itemWidth: 140,
             itemHeight: 22,
           },
         ]}
         pointSize={4}
-        defs={[
-          linearGradientDef("gradientA", [
-            { offset: 0, color: "inherit" },
-            { offset: 100, color: "inherit", opacity: 0 },
-          ]),
-        ]}
-        fill={[{ match: "*", id: "gradientA" }]}
       />
     </div>
   );
 }
-
-const linearGradientDef = (
-  id: string,
-  colors: { offset: number; color: string; opacity?: number }[],
-  options: React.SVGProps<SVGLinearGradientElement> = {},
-) => ({ id, type: "linearGradient", colors, ...options });

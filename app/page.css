@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@config '../tailwind.config.js';
+@config "../tailwind.config.js";
 
 * {
   box-sizing: border-box;
@@ -31,6 +31,13 @@ body {
     noto,
     arial,
     sans-serif;
+  margin-top: 64px;
+}
+@media (pointer: coarse) {
+  body {
+    margin-top: 0;
+    margin-bottom: 64px;
+  }
 }
 [title] {
   cursor: help;
@@ -64,8 +71,8 @@ body {
   content: " ";
   position: absolute;
 
-  top: 0;
-  bottom: 0px;
+  top: -10%;
+  bottom: -10%;
   left: 50%;
 
   width: 6px;

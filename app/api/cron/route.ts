@@ -2,6 +2,7 @@ import { compareAsc } from "date-fns";
 import { redirect } from "next/navigation";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
+import { epoch } from "../../../utils";
 
 export async function GET() {
   if (!process.env.VERCEL) {
@@ -18,10 +19,7 @@ export async function GET() {
       (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
     )
     .sort((a, b) =>
-      compareAsc(
-        a.lastAttemptedAt ?? new Date(0),
-        b.lastAttemptedAt ?? new Date(0),
-      ),
+      compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
     );
 
   const leastRecentlyAttempted = dataSources[0];

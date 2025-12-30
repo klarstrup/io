@@ -5,7 +5,7 @@ import {
   startOfDay,
   type Duration,
 } from "date-fns";
-import { DEFAULT_TIMEZONE } from "../utils";
+import { DEFAULT_TIMEZONE, epoch } from "../utils";
 import {
   exercisesById,
   type AssistType,
@@ -98,11 +98,11 @@ export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
   durationToMs(a) >= durationToMs(b);
 
 export const isNextSetDue = (
-  tzDate: TZDate,
+  tzDate: Date | TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) => {
   const end = startOfDay(tzDate);
-  const inn = tz(tzDate.timeZone || DEFAULT_TIMEZONE);
+  const inn = tz(("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE);
   return (
     (nextSet.scheduleEntry.snoozedUntil
       ? !isAfter(
@@ -112,7 +112,7 @@ export const isNextSetDue = (
       : true) &&
     isDurationGreaterOrEqual(
       intervalToDuration({
-        start: startOfDay(nextSet.workedOutAt || new Date(0), { in: inn }),
+        start: startOfDay(nextSet.workedOutAt || epoch, { in: inn }),
         end,
       }),
       nextSet.scheduleEntry.frequency,
@@ -179,8 +179,8 @@ export function getSetGrade(
   const boulderingCircuit =
     typeof set.meta?.boulderCircuitId === "string" &&
     location.boulderCircuits?.find((c) => c.id === set.meta?.boulderCircuitId);
-  if (boulderingCircuit && boulderingCircuit.gradeEstimate) {
-    return boulderingCircuit.gradeEstimate;
+  if (boulderingCircuit) {
+    return boulderingCircuit.gradeEstimate || null;
   }
 
   const colorOptions = exercise.inputs[1]?.options;

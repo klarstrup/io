@@ -3,11 +3,9 @@ import { addHours, isWithinInterval } from "date-fns";
 import type { Session } from "next-auth";
 import Image from "next/image";
 import { FieldSetY } from "../../components/FieldSet";
-import Popover from "../../components/Popover";
-import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { getTomorrowForecasts } from "../../sources/tomorrow";
-import { DataSource, dataSourceGroups } from "../../sources/utils";
+import { DataSource } from "../../sources/utils";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -52,19 +50,7 @@ export async function DiaryAgendaWeather({
   return (
     <FieldSetY
       className="flex min-h-32 flex-none flex-col"
-      legend={
-        <div className="flex items-center gap-2">
-          <Popover control="📡">
-            <div className="absolute top-4 left-4 z-30 max-h-[66vh] w-96 max-w-[80vw] overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px]">
-              <UserStuffSourcesForm
-                user={user}
-                sourceOptions={dataSourceGroups.weather}
-              />
-            </div>
-          </Popover>
-          Weather
-        </div>
-      }
+      legend={<div className="flex items-center gap-2">Weather</div>}
     >
       <ul className="flex justify-around overflow-x-hidden">
         {weatherIntervals

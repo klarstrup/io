@@ -56,6 +56,7 @@ import {
   colorNameToEmoji,
   dateToString,
   DEFAULT_TIMEZONE,
+  epoch,
   isNonEmptyArray,
 } from "../../utils";
 import {
@@ -547,8 +548,8 @@ export function WorkoutForm<R extends string>({
               }))
               .sort((a, b) =>
                 compareDesc(
-                  a.stats?.workedOutAt ?? new Date(0),
-                  b.stats?.workedOutAt ?? new Date(0),
+                  a.stats?.workedOutAt ?? epoch,
+                  b.stats?.workedOutAt ?? epoch,
                 ),
               )
               .filter(
@@ -585,8 +586,8 @@ export function WorkoutForm<R extends string>({
               user={user}
               date={date}
               nextSets={dueSets}
-              onAddExercise={handleAddExercise}
-              onSnoozeDueSet={handleSnoozeDueSet}
+              onAddExerciseAction={handleAddExercise}
+              onSnoozeDueSetAction={handleSnoozeDueSet}
             />
           </div>
         ) : null}
@@ -598,7 +599,7 @@ export function WorkoutForm<R extends string>({
                 user={user}
                 date={date}
                 nextSets={futureSets}
-                onAddExercise={handleAddExercise}
+                onAddExerciseAction={handleAddExercise}
                 showDueDate
               />
             </small>
@@ -800,7 +801,11 @@ function SetsForm({
                 Math.random() > 1 ? (
                   <ProblemByProblem
                     problemByProblem={exerciseSetsToProblemByProblem([
-                      [watchedSets[index] as WorkoutExerciseSet, location],
+                      [
+                        watchedSets[index] as WorkoutExerciseSet,
+                        location,
+                        undefined,
+                      ],
                     ] as const)}
                   />
                 ) : (

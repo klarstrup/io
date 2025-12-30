@@ -22,23 +22,17 @@ export async function DiaryAgendaWorkoutsWrapper({
 
   const tzDate = new TZDate(date, timeZone);
 
-  await Locations.createIndexes([
-    { key: { userId: 1 } },
-    { key: { name: 1 } },
-  ]);
-  const [workouts, locations] = user
-    ? await Promise.all([
-        MaterializedWorkoutsView.find(
-          {
-            userId: user.id,
-            workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
-            deletedAt: { $exists: false },
-          },
-          { sort: { workedOutAt: -1 } },
-        ).toArray(),
-        Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray(),
-      ])
-    : [];
+  await Locations.createIndexes([{ key: { userId: 1 } }, { key: { name: 1 } }]);
+  const workouts = user
+    ? await MaterializedWorkoutsView.find(
+        {
+          userId: user.id,
+          workedOutAt: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
+          deletedAt: { $exists: false },
+        },
+        { sort: { workedOutAt: -1 } },
+      ).toArray()
+    : undefined;
 
   const workoutsExerciseSetPRs =
     user &&
@@ -74,7 +68,6 @@ export async function DiaryAgendaWorkoutsWrapper({
       date={date}
       workoutsExerciseSetPRs={workoutsExerciseSetPRs}
       workouts={workouts}
-      locations={locations}
       user={user}
     />
   );

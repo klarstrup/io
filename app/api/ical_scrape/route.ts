@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { isDate, subMilliseconds } from "date-fns";
 import { auth } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
 import { extractIcalCalendarAndEvents } from "../../../sources/ical";
@@ -7,6 +8,9 @@ import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { parseICS } from "../../../vendor/ical";
 import { fetchText, jsonStreamResponse } from "../scraper-utils";
+
+// TODO: Oh my god i wish mongodb had timezones built in
+process.env.TZ = "Europe/Copenhagen";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -52,6 +56,8 @@ export const GET = () =>
         const insertResult = await IcalEvents.insertMany(
           events.map((event) => ({
             ...event,
+            // iCal DTEND is exclusive, so we subtract 1ms to make it inclusive
+            end: isDate(event.end) ? subMilliseconds(event.end, 1) : event.end,
             recurrences: event.recurrences && Object.values(event.recurrences),
             calendar,
             _io_scrapedAt,

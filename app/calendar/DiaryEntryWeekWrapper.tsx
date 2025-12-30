@@ -1,8 +1,8 @@
 import { endOfISOWeek, startOfISOWeek } from "date-fns";
 import type { Session } from "next-auth";
 import type { LocationData } from "../../models/location";
-import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { getDiaryEntriesShallow } from "./getDiaryEntries";
+import { DiaryEntryWeek } from "./DiaryEntryWeek";
 
 export async function DiaryEntryWeekWrapper({
   user,

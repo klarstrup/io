@@ -7,7 +7,7 @@ import {
   subMinutes,
   type Interval,
 } from "date-fns";
-import type { FilterOperators } from "mongodb";
+import type { FilterOperators, WithId } from "mongodb";
 import { RRule } from "rrule";
 import { auth } from "../auth";
 import type { MongoVEvent, MongoVTodo } from "../lib";
@@ -47,7 +47,7 @@ export async function getUserIcalEventsBetween(
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
-  const eventsThatFallWithinRange: (MongoVEvent | MongoVTodo)[] = [];
+  const eventsThatFallWithinRange: MongoVEvent[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
     $or: [
@@ -60,15 +60,30 @@ export async function getUserIcalEventsBetween(
       { completed: { $gte: start, $lte: end } },
       { start: { $exists: false } },
     ],
-  } satisfies FilterOperators<Omit<VEvent | VTodo, "recurrences">>;
+  } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
 
   await IcalEvents.createIndexes([
     { key: { _io_userId: 1, type: 1, start: 1 } },
     { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
+    {
+      key: {
+        _io_userId: 1,
+        type: 1,
+        "rrule.options.dtstart": 1,
+        "rrule.options.until": 1,
+      },
+    },
+    {
+      key: { _io_userId: 1, type: 1, completed: 1 },
+    },
+    { key: { _io_userId: 1, type: 1, end: 1, start: 1 } },
+    {
+      key: { _io_userId: 1, type: 1, due: 1 },
+    },
   ]);
-  for await (const event of IcalEvents.find({
+  for await (const event of IcalEvents.find<WithId<MongoVEvent>>({
     _io_userId: userId,
-    type: { $in: ["VTODO", "VEVENT"] },
+    type: "VEVENT",
     $or: [
       dateSelector,
       { recurrences: { $elemMatch: dateSelector } },
@@ -123,41 +138,31 @@ export async function getUserIcalEventsBetween(
       }
     }
     if (
-      "datetype" in event
-        ? areIntervalsOverlapping(
-            {
-              start:
-                event && event.datetype === "date"
-                  ? roundToNearestDay(event.start, {
-                      in: tz(event.start.tz || DEFAULT_TIMEZONE),
-                    })
-                  : event.start,
-              end:
-                event.datetype === "date"
-                  ? roundToNearestDay(event.end, {
-                      in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                    })
-                  : event.end,
-            },
-            { start, end },
-          )
-        : event.start
-          ? event.start >= start && event.start <= end
-          : event.due
-            ? event.due >= start && event.due <= end
-            : event.completed
-              ? event.completed >= start && event.completed <= end
-              : !event.start
+      areIntervalsOverlapping(
+        {
+          start:
+            event && event.datetype === "date"
+              ? roundToNearestDay(event.start, {
+                  in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                })
+              : event.start,
+          end:
+            event.datetype === "date"
+              ? roundToNearestDay(event.end, {
+                  in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                })
+              : event.end,
+        },
+        { start, end },
+      )
     ) {
-      eventsThatFallWithinRange.push(
-        "datetype" in event ? omit(event, "_id") : omit(event, "_id"),
-      );
+      eventsThatFallWithinRange.push(omit(event, "_id"));
     }
     if (rruleDates) {
       for (const rruleDate of rruleDates) {
         if (
           event.recurrences?.some(
-            (recurrence: Omit<VEvent | VTodo, "recurrences">) =>
+            (recurrence: Omit<VEvent, "recurrences">) =>
               // These should be the same date, but timezones get fucked for whatever reason
               recurrence.recurrenceid?.toLocaleDateString() ===
               rruleDate.toLocaleDateString(),
@@ -165,32 +170,77 @@ export async function getUserIcalEventsBetween(
         ) {
           continue;
         }
-        eventsThatFallWithinRange.push(
-          "end" in event
-            ? {
-                ...omit(event, "_id"),
-                // RRule date is not in the correct timezone.
-                // This is partially because RRule only deals in UTC dates.
-                // But also because we are not accounting for timezone when scraping the iCal feed.
-                start: rruleDate,
-                end: addSeconds(
-                  rruleDate,
-                  differenceInSeconds(event.end, event.start),
-                ),
-              }
-            : {
-                ...omit(event, "_id"),
-                // RRule date is not in the correct timezone.
-                // This is partially because RRule only deals in UTC dates.
-                // But also because we are not accounting for timezone when scraping the iCal feed.
-                start: rruleDate,
-              },
-        );
+        eventsThatFallWithinRange.push({
+          ...omit(event, "_id"),
+          // RRule date is not in the correct timezone.
+          // This is partially because RRule only deals in UTC dates.
+          // But also because we are not accounting for timezone when scraping the iCal feed.
+          start: rruleDate,
+          end: addSeconds(
+            rruleDate,
+            differenceInSeconds(event.end, event.start),
+          ),
+        });
       }
     }
   }
 
-  return eventsThatFallWithinRange.sort((a, b) =>
-    compareAsc(a.start!, b.start!),
-  );
+  return eventsThatFallWithinRange.sort((a, b) => compareAsc(a.start, b.start));
+}
+
+export async function getUserIcalTodosBetween(
+  userId: string,
+  { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>,
+) {
+  const user = (await auth())?.user;
+  if (!user || userId !== user.id) throw new Error("Unauthorized");
+
+  const eventsThatFallWithinRange: MongoVTodo[] = [];
+  // Sadly we can't select the date range from the database because of recurrence logic
+  const dateSelector = {
+    $or: [
+      { start: { $gte: start, $lte: end } },
+      { end: { $gte: start, $lte: end } },
+      { start: { $lte: start }, end: { $gte: end } },
+      // VTODOs may not have an end date or a start date or a due date
+      { start: { $gte: start, $lte: end } },
+      { due: { $gte: start, $lte: end } },
+      { completed: { $gte: start, $lte: end } },
+      { completed: { $exists: false } },
+      { completed: undefined },
+      { start: { $exists: false } },
+      { start: undefined },
+    ],
+  } satisfies FilterOperators<Omit<VTodo, "recurrences">>;
+
+  await IcalEvents.createIndexes([
+    { key: { _io_userId: 1, type: 1, start: 1 } },
+    { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
+  ]);
+  for await (const todo of IcalEvents.find<WithId<MongoVTodo>>({
+    _io_userId: userId,
+    type: "VTODO",
+    ...dateSelector,
+  })) {
+    if (
+      todo.start
+        ? todo.start <= end
+        : todo.due
+          ? todo.due <= end
+          : todo.completed
+            ? todo.completed >= start && todo.completed <= end
+            : true
+    ) {
+      eventsThatFallWithinRange.push(omit(todo, "_id") as MongoVTodo);
+    }
+  }
+
+  return eventsThatFallWithinRange.sort((a, b) => {
+    if (a.completed && !b.completed) return 1;
+    if (!a.completed && b.completed) return -1;
+    return compareAsc(
+      a.completed || a.start || a.created!,
+      b.completed || b.start || b.created!,
+    );
+  });
 }

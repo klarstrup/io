@@ -1,7 +1,7 @@
 "use client";
 import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
-import { ReactElement, useEffect, useId, useMemo } from "react";
+import { ReactElement, useEffect, useId, useMemo, useState } from "react";
 import {
   useFieldArray,
   UseFieldArrayUpdate,
@@ -21,6 +21,37 @@ import {
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
+
+function SourceStatus({ source }: { source: UserDataSource }) {
+  return source.lastAttemptedAt &&
+    (!source.lastSuccessfulAt ||
+      source.lastAttemptedAt > source.lastSuccessfulAt) &&
+    (!source.lastFailedAt || source.lastAttemptedAt > source.lastFailedAt) ? (
+    <>
+      Started <DistanceToNowStrict date={source.lastAttemptedAt} />{" "}
+      <div className="inline-block animate-spin">↻</div>
+    </>
+  ) : source.lastSuccessfulAt &&
+    (!source.lastFailedAt || source.lastSuccessfulAt > source.lastFailedAt) ? (
+    <>
+      Last successful fetch{" "}
+      <DistanceToNowStrict date={source.lastSuccessfulAt} />{" "}
+      {source.lastSuccessfulRuntime ? (
+        <>in {(source.lastSuccessfulRuntime / 1000)?.toFixed(2)}s</>
+      ) : null}
+    </>
+  ) : source.lastFailedAt ? (
+    <>
+      Last failed fetch <DistanceToNowStrict date={source.lastFailedAt} />{" "}
+      {source.lastFailedRuntime ? (
+        <>in {(source.lastFailedRuntime / 1000)?.toFixed(2)}s</>
+      ) : null}
+      <div className="text-red-600">{source.lastError ?? "Unknown error"}</div>
+    </>
+  ) : (
+    "Never fetched"
+  );
+}
 
 function UserStuffSourceForm({
   sourceOptions,
@@ -388,40 +419,7 @@ function UserStuffSourceForm({
       {formElements}
       {source.source !== DataSource.Fitocracy ? ( // Fitocracy is read-only
         <div className="text-xs">
-          {source.lastAttemptedAt &&
-          (!source.lastSuccessfulAt ||
-            source.lastAttemptedAt > source.lastSuccessfulAt) &&
-          (!source.lastFailedAt ||
-            source.lastAttemptedAt > source.lastFailedAt) ? (
-            <>
-              Started <DistanceToNowStrict date={source.lastAttemptedAt} />{" "}
-              <div className="inline-block animate-spin">↻</div>
-            </>
-          ) : source.lastSuccessfulAt &&
-            (!source.lastFailedAt ||
-              source.lastSuccessfulAt > source.lastFailedAt) ? (
-            <>
-              Last successful fetch{" "}
-              <DistanceToNowStrict date={source.lastSuccessfulAt} />{" "}
-              {source.lastSuccessfulRuntime ? (
-                <>in {(source.lastSuccessfulRuntime / 1000)?.toFixed(2)}s</>
-              ) : null}
-            </>
-          ) : source.lastFailedAt ? (
-            <>
-              Last failed fetch{" "}
-              <DistanceToNowStrict date={source.lastFailedAt} />{" "}
-              {source.lastFailedRuntime ? (
-                <>in {(source.lastFailedRuntime / 1000)?.toFixed(2)}s</>
-              ) : null}
-              <div className="text-red-600">
-                {source.lastError ?? "Unknown error"}
-              </div>
-            </>
-          ) : (
-            "Never fetched"
-          )}{" "}
-          -{" "}
+          <SourceStatus source={source} /> -{" "}
           <button
             type="button"
             disabled={
@@ -451,6 +449,9 @@ export default function UserStuffSourcesForm({
   user?: Session["user"];
   sourceOptions: DataSource[];
 }) {
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+
   const defaultValues = useMemo(
     () => ({ dataSources: user?.dataSources ?? [] }),
     [user],
@@ -477,6 +478,118 @@ export default function UserStuffSourcesForm({
     keyName: "key",
   });
 
+  const instanceId = useId();
+
+  if (!isEditing) {
+    return (
+      <div className="flex flex-col items-stretch gap-2">
+        <button
+          type="button"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 hover:text-white"
+          onClick={() => setIsEditing(true)}
+        >
+          Edit Data Sources
+        </button>
+        {user?.dataSources && user.dataSources.length > 0 ? (
+          <FieldSetX legend="Data Sources" className="w-full">
+            <div className="flex flex-col">
+              {user.dataSources.map((source) => {
+                const wasFetchedRecently = Boolean(
+                  source.lastAttemptedAt &&
+                    source.lastAttemptedAt >
+                      new Date(Date.now() - 1000 * 60 * 5),
+                );
+
+                return (
+                  <div
+                    key={source.id}
+                    className="flex gap-1 border border-t-0 border-gray-300 bg-white/75 p-1 first:rounded-t-md first:border-t last:rounded-b-md"
+                  >
+                    <div className="flex flex-1 gap-1">
+                      <small>{source.source}</small>
+                      <div className="text-sm font-semibold">{source.name}</div>
+                    </div>
+
+                    {source.source !== DataSource.Fitocracy ? (
+                      <div className="text-md">
+                        {source.lastAttemptedAt &&
+                        (!source.lastSuccessfulAt ||
+                          source.lastAttemptedAt > source.lastSuccessfulAt) &&
+                        (!source.lastFailedAt ||
+                          source.lastAttemptedAt > source.lastFailedAt) ? (
+                          <>
+                            <small>
+                              <DistanceToNowStrict
+                                date={source.lastAttemptedAt}
+                              />
+                            </small>{" "}
+                            <div className="inline-block animate-spin text-lg leading-0">
+                              ↻
+                            </div>
+                          </>
+                        ) : source.lastSuccessfulAt &&
+                          (!source.lastFailedAt ||
+                            source.lastSuccessfulAt > source.lastFailedAt) ? (
+                          <>
+                            <small>
+                              <DistanceToNowStrict
+                                date={source.lastSuccessfulAt}
+                              />
+                            </small>{" "}
+                            ✅
+                          </>
+                        ) : source.lastFailedAt ? (
+                          <>
+                            <small>
+                              <DistanceToNowStrict date={source.lastFailedAt} />
+                            </small>{" "}
+                            <span title={source.lastError || "Unknown error"}>
+                              ⚠️
+                            </span>
+                          </>
+                        ) : (
+                          "☑️"
+                        )}{" "}
+                        <button
+                          type="button"
+                          disabled={
+                            Boolean(
+                              source.lastAttemptedAt &&
+                                (!source.lastSuccessfulAt ||
+                                  source.lastAttemptedAt >
+                                    source.lastSuccessfulAt) &&
+                                (!source.lastFailedAt ||
+                                  source.lastAttemptedAt > source.lastFailedAt),
+                            ) || wasFetchedRecently
+                          }
+                          className="cursor-pointer text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                          onClick={async () => {
+                            const promise = fetch(
+                              `/api/${source.source}_scrape`,
+                            );
+                            await new Promise((resolve) =>
+                              setTimeout(resolve, 1000),
+                            );
+                            router.refresh();
+                            await promise;
+                            router.refresh();
+                          }}
+                        >
+                          🔄
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </FieldSetX>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <FieldSetX legend="Data Sources" className="w-full">
       <div className="flex flex-wrap gap-1">
@@ -498,6 +611,8 @@ export default function UserStuffSourcesForm({
                 ? { dataSources: newSources }
                 : { dataSources: user.dataSources },
             );
+            setIsEditing(false);
+            router.refresh();
           })}
           className="flex min-w-[50%] flex-1 flex-col gap-1"
         >
@@ -540,7 +655,7 @@ export default function UserStuffSourcesForm({
                   />
                 ),
               }}
-              instanceId={useId()}
+              instanceId={instanceId}
               isDisabled={isSubmitting}
               placeholder="Add data source..."
               options={sourceOptions.map((source) => ({

@@ -7,7 +7,15 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const onClickOutside = () => setIsActive(false);
+  const onClickOutside = () => {
+    const formData = formRef.current && new FormData(formRef.current);
+    const summary = formData?.get("summary");
+    if (summary && typeof summary === "string" && summary.trim().length > 0) {
+      formRef.current?.submit();
+    } else {
+      setIsActive(false);
+    }
+  };
   useClickOutside(ref, onClickOutside);
 
   return (
@@ -20,20 +28,20 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
     >
       <button
         className={
-          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold"
+          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold shadow-sm"
         }
         onClick={() => {
           if (!isActive) {
             setIsActive(true);
           } else if (isActive && formRef.current) {
-            formRef.current?.requestSubmit();
+            formRef.current?.submit();
           }
         }}
       >
         <span className="text-xs">➕</span> Todo
       </button>
       {isActive && (
-        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/10 bg-white p-1">
+        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/5 bg-white p-1">
           <form
             ref={formRef}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -47,14 +55,13 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
               }
             }}
           >
-            <input
+            <textarea
               autoFocus
-              type="text"
               required
               placeholder="Todo summary"
               name="summary"
               defaultValue=""
-              className="-mt-px -mb-px w-full min-w-[200px] bg-transparent text-center"
+              className="-mt-px -mb-px w-full min-w-50"
             />
             <button type="submit" className="hidden" />
           </form>

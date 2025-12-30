@@ -56,6 +56,7 @@ export function WorkoutEntryExercise({
   setsWithLocations: (readonly [
     WorkoutExerciseSet,
     LocationData | undefined,
+    workout: WorkoutData | undefined,
   ])[];
   exerciseIndex: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
@@ -178,6 +179,7 @@ export default async function WorkoutEntry({
                   {" "}
                   -{" "}
                   <Link
+                    prefetch={false}
                     href={`/diary/locations/${location?._id.toString()}`}
                     className="font-bold"
                     style={{ color: "#edab00" }}
@@ -191,6 +193,7 @@ export default async function WorkoutEntry({
             <div>
               <small>
                 <Link
+                  prefetch={false}
                   href={`/diary/locations/${location?._id.toString()}`}
                   className="font-bold"
                   style={{ color: "#edab00" }}
@@ -302,6 +305,7 @@ export default async function WorkoutEntry({
                       workoutExercise.sets.map((set) => [
                         set,
                         location ?? undefined,
+                        workout,
                       ]),
                     )
                   : null}
@@ -316,6 +320,7 @@ export default async function WorkoutEntry({
                 setsWithLocations={workoutExercise.sets.map((set) => [
                   set,
                   location ?? undefined,
+                  workout,
                 ])}
                 exerciseIndex={exerciseIndex}
                 exerciseSetPRs={exerciseSetPRs}

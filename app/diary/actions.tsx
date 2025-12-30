@@ -1,10 +1,11 @@
 "use server";
 
 import { waitUntil } from "@vercel/functions";
-import { addDays } from "date-fns";
+import { addDays, max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import PartySocket from "partysocket";
+import { v4 as uuid } from "uuid";
 import { auth } from "../../auth";
 import type { MongoVTodo } from "../../lib";
 import { LocationData } from "../../models/location";
@@ -146,11 +147,17 @@ export async function updateUserExerciseSchedules(
 
   await Users.updateOne(
     { _id: new ObjectId(user.id) },
-    { $set: { exerciseSchedules: schedules } },
+    {
+      $set: {
+        exerciseSchedules: schedules.map((s) =>
+          s.id ? s : { ...s, id: uuid() },
+        ),
+      },
+    },
   );
 
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!
-    .exerciseSchedules;
+    .exerciseSchedules!;
 }
 
 export async function updateUserDataSources(
@@ -206,6 +213,8 @@ export async function upsertTodo(
   const user = (await auth())?.user;
   if (!user) throw new Error("Unauthorized");
 
+  if ("date" in todo && todo.start) todo.start = new Date(todo.start);
+
   const upsertResult = await IcalEvents.updateOne(
     {
       ...("_id" in todo && todo._id
@@ -217,17 +226,18 @@ export async function upsertTodo(
     {
       $set: {
         type: "VTODO",
-        created: new Date(),
         lastmodified: new Date(),
-        dtstamp: new Date(),
         params: [],
         _io_source: WorkoutSource.Self,
         _io_userId: user.id,
         uid: todo.uid ?? new ObjectId().toString(),
         ...todo,
-        // Dates do not get deserialized properly in server actions
         start: todo.start ? new Date(todo.start) : todo.start,
-      } satisfies MongoVTodo,
+      } satisfies Omit<MongoVTodo, "created" | "dtstamp">,
+      $setOnInsert: {
+        created: new Date(),
+        dtstamp: new Date(),
+      },
     },
     { upsert: true },
   );
@@ -262,7 +272,7 @@ export async function snoozeTodo(todoUid: string) {
   if (!todo) throw new Error("Todo not found");
 
   const now = new Date();
-  const tomorrow = addDays(todo.start ?? now, 1);
+  const tomorrow = addDays(max([todo.start ?? now, now]), 1);
 
   return upsertTodo({ uid: todoUid, start: tomorrow, type: "VTODO" });
 }

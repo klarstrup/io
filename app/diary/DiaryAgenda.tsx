@@ -1,10 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, subDays } from "date-fns";
+import { addDays, isFuture, subDays } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
-import Popover from "../../components/Popover";
 import { DataSource } from "../../sources/utils";
 import {
   dateToString,
@@ -16,7 +15,6 @@ import {
 import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
-import DiaryAgendaWorkoutsSettings from "./DiaryAgendaWorkoutsSettings";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
 
 export function DiaryAgenda({
@@ -29,6 +27,7 @@ export function DiaryAgenda({
   isModal?: boolean;
 }) {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const tzDate = new TZDate(date, timeZone);
 
   const userGeohash = user?.dataSources?.find(
     (source) => source.source === DataSource.Tomorrow,
@@ -37,12 +36,12 @@ export function DiaryAgenda({
   const sunrise = getSunrise(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    new TZDate(date, timeZone),
+    tzDate,
   );
   const sunset = getSunset(
     userLocation?.latitude ?? 55.658693,
     userLocation?.longitude ?? 12.489322,
-    new TZDate(date, timeZone),
+    tzDate,
   );
 
   const isToday = date === dateToString(TZDate.tz(timeZone));
@@ -72,33 +71,28 @@ export function DiaryAgenda({
         <span className="whitespace-nowrap">
           <Link
             prefetch={false}
-            href={`/diary/${dateToString(subDays(new Date(date), 1))}`}
+            href={`/diary/${dateToString(subDays(tzDate, 1))}`}
           >
             ⬅️
           </Link>
           <Link prefetch={false} href={`/diary`}>
             🗓️
           </Link>
-          <Link
-            prefetch={false}
-            href={`/diary/${dateToString(addDays(new Date(date), 1))}`}
-          >
-            ➡️
-          </Link>
+          {isToday || isFuture(tzDate) ? (
+            <Link
+              prefetch={false}
+              href={`/diary/${dateToString(addDays(tzDate, 1))}`}
+            >
+              ➡️
+            </Link>
+          ) : null}
         </span>
       </div>
       <Suspense
         fallback={
           <FieldSetY
             className="flex-1"
-            legend={
-              <div className="flex items-center gap-2">
-                <DiaryAgendaWorkoutsSettings />
-                <Popover control="📡">{null}</Popover>
-                <Popover control="📍">{null}</Popover>
-                Workouts
-              </div>
-            }
+            legend={<div className="flex items-center gap-2">Workouts</div>}
           />
         }
       >
@@ -109,12 +103,7 @@ export function DiaryAgenda({
           fallback={
             <FieldSetY
               className="min-w-[250px] flex-1"
-              legend={
-                <div className="flex items-center gap-2">
-                  <Popover control="📡">{null}</Popover>
-                  Events
-                </div>
-              }
+              legend={<div className="flex items-center gap-2">Events</div>}
             />
           }
         >
@@ -125,12 +114,7 @@ export function DiaryAgenda({
             fallback={
               <FieldSetY
                 className="min-w-[250px] flex-1"
-                legend={
-                  <div className="flex items-center gap-2">
-                    <Popover control="📡">{null}</Popover>
-                    Food
-                  </div>
-                }
+                legend={<div className="flex items-center gap-2">Food</div>}
               />
             }
           >
@@ -142,12 +126,7 @@ export function DiaryAgenda({
         fallback={
           <FieldSetY
             className="flex min-h-32 flex-none flex-col"
-            legend={
-              <div className="flex items-center gap-2">
-                <Popover control="📡">{null}</Popover>
-                Weather
-              </div>
-            }
+            legend={<div className="flex items-center gap-2">Weather</div>}
           />
         }
       >

@@ -1,17 +1,17 @@
-import { endOfDay, min } from "date-fns";
+import { endOfDay, endOfWeek, min } from "date-fns";
 import { ObjectId } from "mongodb";
+import { Locations } from "../../../../models/location.server";
 import { WorkoutExercise, WorkoutSource } from "../../../../models/workout";
 import {
   calculate60dayTop10AverageAttemptGrade,
   calculate60dayTop10AverageFlashGrade,
   calculate60dayTop10AverageSendGrade,
+  MaterializedWorkoutsView,
 } from "../../../../models/workout.server";
-import { createTrend, getLimits } from "../../../../utils";
+import { getTrendLine, uniqueBy } from "../../../../utils";
 import DiaryExerciseGraph from "./DiaryExerciseGraph";
 
-const filterNullData = <T,>(data: { x: Date; y: T | null }[]) =>
-  data.filter((d): d is { x: Date; y: T } => d.y !== null);
-
+const roundDataToWeeks = false;
 export default async function BoulderingGraph({
   userId,
   allWorkoutsOfExercise,
@@ -32,65 +32,95 @@ export default async function BoulderingGraph({
     _id: ObjectId;
   }[];
 }) {
-  const [top10sendGradeData, top10flashGradeData, top10attemptGradeData] =
-    await Promise.all([
-      Promise.all(
-        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
-          const x = min([endOfDay(workedOutAt), new Date()]);
-          return {
-            x,
-            y: await calculate60dayTop10AverageSendGrade(userId, x),
-          };
-        }),
-      ).then(filterNullData),
-      Promise.all(
-        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
-          const x = min([endOfDay(workedOutAt), new Date()]);
-          return {
-            x,
-            y: await calculate60dayTop10AverageFlashGrade(userId, x),
-          };
-        }),
-      ).then(filterNullData),
-      Promise.all(
-        allWorkoutsOfExercise.map(async ({ workedOutAt }) => {
-          const x = min([endOfDay(workedOutAt), new Date()]);
-          return {
-            x,
-            y: await calculate60dayTop10AverageAttemptGrade(userId, x),
-          };
-        }),
-      ).then(filterNullData),
-    ]);
+  const uniqueWorkedOutAts = uniqueBy(
+    allWorkoutsOfExercise.map((w) =>
+      roundDataToWeeks
+        ? min([endOfWeek(w.workedOutAt), new Date()])
+        : w.workedOutAt,
+    ),
+    (workedOutAt) => workedOutAt.toISOString(),
+  );
 
-  const top10sendGradeDataTrend = (() => {
-    const trend = createTrend(top10sendGradeData);
-    return getLimits(top10sendGradeData.map((data) => data.x.valueOf())).map(
-      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+  const [locations, workouts] = await Promise.all([
+    Locations.find({ userId }).toArray(),
+    MaterializedWorkoutsView.find({
+      userId,
+      "exercises.exerciseId": 2001,
+      deletedAt: { $exists: false },
+    }).toArray(),
+  ]);
+
+  const top10sendGradeData: { x: Date; y: number }[] = [];
+  const top10flashGradeData: { x: Date; y: number }[] = [];
+  const top10attemptGradeData: { x: Date; y: number }[] = [];
+  for (const workedOutAt of uniqueWorkedOutAts) {
+    const x = endOfDay(workedOutAt);
+
+    const sendGrade = calculate60dayTop10AverageSendGrade(
+      workouts,
+      locations,
+      x,
     );
-  })();
-  const top10flashGradeDataTrend = (() => {
-    const trend = createTrend(top10flashGradeData);
-    return getLimits(top10flashGradeData.map((data) => data.x.valueOf())).map(
-      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    if (sendGrade) top10sendGradeData.push({ x, y: sendGrade });
+
+    const flashGrade = calculate60dayTop10AverageFlashGrade(
+      workouts,
+      locations,
+      x,
     );
-  })();
-  const top10attemptGradeDataTrend = (() => {
-    const trend = createTrend(top10attemptGradeData);
-    return getLimits(top10attemptGradeData.map((data) => data.x.valueOf())).map(
-      (x) => ({ x: new Date(x), y: trend.calcY(x) }),
+    if (flashGrade) top10flashGradeData.push({ x, y: flashGrade });
+
+    const attemptGrade = calculate60dayTop10AverageAttemptGrade(
+      workouts,
+      locations,
+      x,
     );
-  })();
+    if (attemptGrade) top10attemptGradeData.push({ x, y: attemptGrade });
+  }
+
+  const top10sendGradeTrend = getTrendLine(top10sendGradeData);
+  const top10flashGradeTrend = getTrendLine(top10flashGradeData);
+  const top10attemptGradeTrend = getTrendLine(top10attemptGradeData);
 
   return (
     <DiaryExerciseGraph
       data={[
-        { id: "Top 10 Send Grade", data: top10sendGradeData },
-        { id: "Top 10 Send Grade Trend", data: top10sendGradeDataTrend },
-        { id: "Top 10 Flash Grade", data: top10flashGradeData },
-        { id: "Top 10 Flash Grade Trend", data: top10flashGradeDataTrend },
-        { id: "Top 10 Attempt Grade", data: top10attemptGradeData },
-        { id: "Top 10 Attempt Grade Trend", data: top10attemptGradeDataTrend },
+        {
+          id: "Top 10 Send Grade",
+          data: top10sendGradeData,
+          color: "rgba(255, 128, 0, 1)",
+          trend: false,
+        },
+        {
+          id: "Top 10 Send Grade Trend",
+          data: top10sendGradeTrend,
+          color: "rgba(255, 128, 0, 0.5)",
+          trend: true,
+        },
+        {
+          id: "Top 10 Flash Grade",
+          data: top10flashGradeData,
+          color: "rgba(255, 255, 0, 1)",
+          trend: false,
+        },
+        {
+          id: "Top 10 Flash Grade Trend",
+          data: top10flashGradeTrend,
+          color: "rgba(255, 255, 0, 0.5)",
+          trend: true,
+        },
+        {
+          id: "Top 10 Attempt Grade",
+          data: top10attemptGradeData,
+          color: "rgba(128, 64, 255, 1)",
+          trend: false,
+        },
+        {
+          id: "Top 10 Attempt Grade Trend",
+          data: top10attemptGradeTrend,
+          color: "rgba(128, 64, 255, 0.5)",
+          trend: true,
+        },
       ]}
     />
   );

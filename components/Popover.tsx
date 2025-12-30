@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useClickOutside } from "../hooks";
 
 export default function Popover({
   children,
@@ -10,22 +11,19 @@ export default function Popover({
   control: React.ReactNode | React.ReactNode[];
   className?: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  useClickOutside(ref, () => setIsOpen(false));
 
   return (
-    <div className={className || "relative"}>
-      <button className="z-40" onClick={() => setIsOpen(!isOpen)}>
+    <div className={className} ref={ref}>
+      <button
+        className="z-40 cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         {control}
       </button>
-      {isOpen ? (
-        <>
-          {children}
-          <button
-            className="fixed inset-0 z-10 bg-black/50 backdrop-blur-xs"
-            onClick={() => setIsOpen(false)}
-          />
-        </>
-      ) : null}
+      {isOpen ? children : null}
     </div>
   );
 }

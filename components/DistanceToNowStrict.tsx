@@ -1,8 +1,8 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, formatDistanceToNowStrict } from "date-fns";
+import { useEffect, useState } from "react";
 import useInterval from "../hooks/useInterval";
-import { useState } from "react";
 
 export function DistanceToNowStrict({ date }: { date: Date }) {
   const [state, setState] = useState<Record<string, never> | undefined>();
@@ -10,10 +10,25 @@ export function DistanceToNowStrict({ date }: { date: Date }) {
   useInterval(() => {
     setState({});
   }, 1000);
+  useEffect(() => {
+    setState({});
+  }, []);
 
-  if (!date) {
-    return null;
-  }
+  if (!date) return null;
+
+  return state
+    ? formatDistanceToNowStrict(date, { addSuffix: true })
+    : date.toISOString();
+}
+
+export function DistanceToNow({ date }: { date: Date }) {
+  const [state, setState] = useState<Record<string, never> | undefined>();
+
+  useInterval(() => {
+    setState({});
+  }, 1000);
+
+  if (!date) return null;
 
   return state
     ? formatDistanceToNow(date, { addSuffix: true })

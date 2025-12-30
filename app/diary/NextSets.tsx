@@ -1,7 +1,9 @@
+"use client";
 import { tz, TZDate } from "@date-fns/tz";
 import { addMilliseconds, formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
+import { useEffect } from "react";
 import { StealthButton } from "../../components/StealthButton";
 import { exercisesById } from "../../models/exercises";
 import { durationToMs } from "../../models/workout";
@@ -13,24 +15,44 @@ export function NextSets({
   user,
   date,
   nextSets,
-  onAddExercise,
-  onSnoozeDueSet,
+  onAddExerciseAction,
+  onSnoozeDueSetAction,
   showDetails = true,
   showDueDate = false,
 }: {
   user?: Session["user"];
   date: `${number}-${number}-${number}`;
   nextSets: Awaited<ReturnType<typeof getNextSets>>;
-  onAddExercise?: (
+  onAddExerciseAction?: (
     dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
   ) => void;
-  onSnoozeDueSet?: (
+  onSnoozeDueSetAction?: (
     dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
   ) => void;
   showDetails?: boolean;
   showDueDate?: boolean;
 }) {
   const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
+
+  useEffect(() => {
+    const queryScheduleEntryId = new URLSearchParams(
+      window.location.search,
+    ).get("scheduleEntryId");
+    if (queryScheduleEntryId) {
+      const dueSet = nextSets.find(
+        (ds) => ds.scheduleEntry.id === queryScheduleEntryId,
+      );
+      if (dueSet && onAddExerciseAction) {
+        onAddExerciseAction(dueSet);
+
+        // Remove the query param from the URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete("scheduleEntryId");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, [nextSets, onAddExerciseAction]);
+
   return (
     <ol
       className={
@@ -49,15 +71,18 @@ export function NextSets({
         const exercise = exercisesById[exerciseId]!;
 
         return (
-          <li key={JSON.stringify(scheduleEntry)} className="flex gap-2 items-start">
+          <li
+            key={JSON.stringify(scheduleEntry)}
+            className="flex items-start gap-2"
+          >
             <div className="flex flex-col leading-tight">
-              {onAddExercise ? (
-                <StealthButton onClick={() => onAddExercise(dueSet)}>
+              {onAddExerciseAction ? (
+                <StealthButton onClick={() => onAddExerciseAction(dueSet)}>
                   ➕
                 </StealthButton>
               ) : null}
-              {onSnoozeDueSet ? (
-                <StealthButton onClick={() => onSnoozeDueSet(dueSet)}>
+              {onSnoozeDueSetAction ? (
+                <StealthButton onClick={() => onSnoozeDueSetAction(dueSet)}>
                   💤
                 </StealthButton>
               ) : null}

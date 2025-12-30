@@ -3,7 +3,11 @@ import Grade from "../grades";
 import { PP } from "../lib";
 import { exercises, SendType } from "../models/exercises";
 import type { LocationData } from "../models/location";
-import { getSetGrade, WorkoutExerciseSet } from "../models/workout";
+import {
+  getSetGrade,
+  WorkoutData,
+  WorkoutExerciseSet,
+} from "../models/workout";
 import { colorNameToHTMLColor, countBy } from "../utils";
 
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
@@ -50,15 +54,19 @@ const GradeText = ({ grade }: { grade: string }) => (
 );
 const CircuitText = ({ circuitName }: { circuitName: string }) => (
   <text
-    y={circuitName.length > 2 ? "44" : "38"}
+    y={circuitName.length >= 3 ? "44" : circuitName.length >= 2 ? "41" : "38"}
     x="6"
     dominantBaseline="central"
     textAnchor="start"
     fill="#fff"
-    fontSize={circuitName.length > 2 ? "17px" : "34px"}
+    fontSize={
+      circuitName.length >= 3 ? "17px" : circuitName.length >= 2 ? "25px" : "34px"
+    }
     stroke="#000"
     paintOrder="stroke"
-    strokeWidth={circuitName.length > 2 ? "3px" : "4px"}
+    strokeWidth={
+      circuitName.length >= 3 ? "3px" : circuitName.length >= 2 ? "3px" : "4px"
+    }
   >
     {circuitName}
   </text>
@@ -360,6 +368,7 @@ export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet,
     LocationData | undefined,
+    workout: WorkoutData | undefined,
   ])[],
 ): PP[] =>
   setsWithLocations.map(([set, location], i) => {

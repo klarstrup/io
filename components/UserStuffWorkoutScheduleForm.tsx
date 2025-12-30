@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useId } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
+import { v4 as uuid } from "uuid";
 import { updateUserExerciseSchedules } from "../app/diary/actions";
 import { exercises, exercisesById, InputType } from "../models/exercises";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
+import { epoch } from "../utils";
 import { FieldSetY } from "./FieldSet";
 
 /**
@@ -290,8 +292,8 @@ export default function UserStuffWorkoutScheduleForm({
               }))
               .sort((a, b) =>
                 compareDesc(
-                  a.stats?.workedOutAt ?? new Date(0),
-                  b.stats?.workedOutAt ?? new Date(0),
+                  a.stats?.workedOutAt ?? epoch,
+                  b.stats?.workedOutAt ?? epoch,
                 ),
               )
               .map(({ id, name, aliases, stats }) => ({
@@ -313,6 +315,7 @@ export default function UserStuffWorkoutScheduleForm({
               if (!selected) return;
 
               append({
+                id: uuid(),
                 exerciseId: selected.value,
                 enabled: true,
                 frequency: { days: 5 },

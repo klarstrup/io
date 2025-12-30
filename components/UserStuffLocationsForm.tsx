@@ -81,6 +81,7 @@ function UserStuffLocationForm({
           ) : (
             <>
               <Link
+                prefetch={false}
                 href={`/diary/locations/${location.id}`}
                 className="font-bold"
                 style={{ color: "#edab00" }}
