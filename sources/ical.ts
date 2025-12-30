@@ -153,19 +153,6 @@ export async function getUserIcalEventsBetween(
 
       rruleSet.rrule(rrule);
 
-      const adjustedExdates = Array.isArray(event.exdate)
-        ? event.exdate.map((date) => {
-            const ogOffset = moment.tz(dtstart!, tzid!).utcOffset();
-            const rOffset = moment.tz(date, tzid!).utcOffset();
-
-            const adjustedDate = moment(date)
-              .add(rOffset - ogOffset, "minutes")
-              .toDate();
-
-            return adjustedDate;
-          })
-        : [];
-
       const rruleDates = rruleSet.between(start, end, true).map((date) => {
         const ogOffset = new TZDate(dtstart!, tzid!).getTimezoneOffset();
         const rOffset = new TZDate(date, tzid!).getTimezoneOffset();
