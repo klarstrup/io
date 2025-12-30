@@ -4,11 +4,12 @@ import {
   areIntervalsOverlapping,
   compareAsc,
   differenceInSeconds,
-  subMinutes,
+  setMinutes,
   type Interval,
 } from "date-fns";
+import moment from "moment-timezone";
 import type { FilterOperators, WithId } from "mongodb";
-import { RRule } from "rrule";
+import { RRule, RRuleSet } from "rrule";
 import { auth } from "../auth";
 import type { MongoVEvent, MongoVTodo } from "../lib";
 import { DEFAULT_TIMEZONE, omit, roundToNearestDay } from "../utils";
@@ -97,23 +98,6 @@ export async function getUserIcalEventsBetween(
       },
     ],
   })) {
-    const rrule = event.rrule?.origOptions
-      ? new RRule({
-          ...event.rrule.origOptions,
-          dtstart:
-            event.rrule.origOptions.dtstart &&
-            subMinutes(
-              event.rrule.origOptions.dtstart,
-              new TZDate(
-                event.rrule.origOptions.dtstart,
-                event.rrule.options.tzid ?? DEFAULT_TIMEZONE,
-              ).getTimezoneOffset() -
-                event.rrule.origOptions.dtstart.getTimezoneOffset(),
-            ),
-        })
-      : undefined;
-    const rruleDates = rrule?.between(start, end, true);
-
     if (event.recurrences) {
       for (const recurrence of event.recurrences) {
         if (
@@ -158,29 +142,59 @@ export async function getUserIcalEventsBetween(
     ) {
       eventsThatFallWithinRange.push(omit(event, "_id"));
     }
-    if (rruleDates) {
-      for (const rruleDate of rruleDates) {
-        if (
-          event.recurrences?.some(
-            (recurrence: Omit<VEvent, "recurrences">) =>
-              // These should be the same date, but timezones get fucked for whatever reason
-              recurrence.recurrenceid?.toLocaleDateString() ===
-              rruleDate.toLocaleDateString(),
-          )
-        ) {
-          continue;
+    const rrule = event.rrule?.origOptions
+      ? new RRule(event.rrule.origOptions)
+      : undefined;
+
+    if (rrule) {
+      const dtstart = rrule.origOptions.dtstart;
+      const tzid = rrule.origOptions.tzid;
+      const rruleSet = new RRuleSet();
+
+      rruleSet.rrule(rrule);
+
+      const adjustedExdates = Array.isArray(event.exdate)
+        ? event.exdate.map((date) => {
+            const ogOffset = moment.tz(dtstart!, tzid!).utcOffset();
+            const rOffset = moment.tz(date, tzid!).utcOffset();
+
+            const adjustedDate = moment(date)
+              .add(rOffset - ogOffset, "minutes")
+              .toDate();
+
+            return adjustedDate;
+          })
+        : [];
+
+      const rruleDates = rruleSet.between(start, end, true).map((date) => {
+        const ogOffset = new TZDate(dtstart!, tzid!).getTimezoneOffset();
+        const rOffset = new TZDate(date, tzid!).getTimezoneOffset();
+
+        const adjustedDate = setMinutes(new TZDate(date), rOffset - ogOffset);
+
+        return adjustedDate;
+      });
+      if (rruleDates?.length) {
+        for (const rruleDate of rruleDates) {
+          if (
+            event.recurrences?.some(
+              (recurrence: Omit<VEvent, "recurrences">) =>
+                // These should be the same date, but timezones get fucked for whatever reason
+                recurrence.recurrenceid?.toLocaleDateString() ===
+                rruleDate.toLocaleDateString(),
+            )
+          ) {
+            continue;
+          }
+          eventsThatFallWithinRange.push({
+            ...omit(event, "_id"),
+            start: rruleDate,
+            end: addSeconds(
+              rruleDate,
+              differenceInSeconds(event.end, event.start),
+            ),
+          });
         }
-        eventsThatFallWithinRange.push({
-          ...omit(event, "_id"),
-          // RRule date is not in the correct timezone.
-          // This is partially because RRule only deals in UTC dates.
-          // But also because we are not accounting for timezone when scraping the iCal feed.
-          start: rruleDate,
-          end: addSeconds(
-            rruleDate,
-            differenceInSeconds(event.end, event.start),
-          ),
-        });
       }
     }
   }

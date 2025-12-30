@@ -300,6 +300,14 @@ const addTZ = (dt: DateWithTimeZone, parameters: string[]) => {
     dt.tz = p.TZID.toString().replace(/^"(.*)"$/, "$1");
   }
 
+  // Bake the timezone into the date instead of relying on the tz property
+  if (dt.tz) {
+    const tz = dt.tz;
+    const m = moment(dt).tz("UTC", true);
+    dt = new Date(m.valueOf()) as DateWithTimeZone;
+    dt.tz = tz;
+  }
+
   return dt;
 };
 
@@ -408,6 +416,26 @@ const dateParameter =
       value = value.split(":")[1]!;
     }
 
+    // Get the time zone from the stack
+    const stackItemWithTimeZone = stack?.find((item) =>
+      Object.values(item).find(
+        (subItem): subItem is VTimeZone => subItem.type === "VTIMEZONE",
+      ),
+    );
+    const vTimezone =
+      stackItemWithTimeZone &&
+      Object.values(stackItemWithTimeZone).find(
+        (c): c is VTimeZone => c.type === "VTIMEZONE",
+      );
+
+    // If the VTIMEZONE contains multiple TZIDs (against RFC), use last one
+    const normalizedTzId =
+      vTimezone && "tzid" in vTimezone
+        ? Array.isArray(vTimezone.tzid)
+          ? vTimezone.tzid.slice(-1)[0]
+          : vTimezone.tzid
+        : null;
+
     let newDate: string | DateWithTimeZone = text(value);
 
     // Process 'VALUE=DATE' and EXDATE
@@ -416,15 +444,22 @@ const dateParameter =
 
       const comps = /^(\d{4})(\d{2})(\d{2}).*$/.exec(value);
       if (comps !== null) {
-        newDate = new Date(
-          Number.parseInt(comps[1]!, 10),
-          Number.parseInt(comps[2]!, 10) - 1,
-          Number.parseInt(comps[3]!, 10),
-        ) as DateWithTimeZone;
+        const tz = normalizedTzId || calendarTimeZone;
 
-        if (calendarTimeZone) newDate.tz = getTimeZone(calendarTimeZone);
+        const m = moment.tz(
+          [
+            Number.parseInt(comps[1]!, 10),
+            Number.parseInt(comps[2]!, 10) - 1,
+            Number.parseInt(comps[3]!, 10),
+          ],
+          "UTC",
+        );
 
-        // Store as string - worst case scenario
+        if (tz) m.tz(tz, true);
+
+        newDate = m.toDate() as DateWithTimeZone;
+        newDate.tz = tz;
+
         return storeValueParameter(name)(newDate, curr);
       }
     }
@@ -460,7 +495,7 @@ const dateParameter =
         newDate = new Date(Date.UTC(...compsNumbers)) as DateWithTimeZone;
         newDate.tz = "Etc/UTC";
       } else if (
-        parameters?.[0]?.includes("TZID=") &&
+        parameters[0]?.includes("TZID=") &&
         parameters[0].split("=")[1]
       ) {
         // Get the timezone from the parameters TZID value
@@ -513,30 +548,8 @@ const dateParameter =
         newDate = found
           ? moment.tz(value, "YYYYMMDDTHHmmss" + offset, tz!).toDate()
           : (new Date(...compsNumbers) as DateWithTimeZone);
-
-        // Make sure to correct the parameters if the TZID= is changed
-        newDate = addTZ(newDate, parameters);
+        if (found) newDate.tz = tz!;
       } else {
-        // Get the time zone from the stack
-        const stackItemWithTimeZone = stack?.find((item) =>
-          Object.values(item).find(
-            (subItem): subItem is VTimeZone => subItem.type === "VTIMEZONE",
-          ),
-        );
-        const vTimezone =
-          stackItemWithTimeZone &&
-          Object.values(stackItemWithTimeZone).find(
-            (c): c is VTimeZone => c.type === "VTIMEZONE",
-          );
-
-        // If the VTIMEZONE contains multiple TZIDs (against RFC), use last one
-        const normalizedTzId =
-          vTimezone && "tzid" in vTimezone
-            ? Array.isArray(vTimezone.tzid)
-              ? vTimezone.tzid.slice(-1)[0]
-              : vTimezone.tzid
-            : null;
-
         newDate =
           normalizedTzId && moment.tz.zone(normalizedTzId)
             ? moment.tz(value, "YYYYMMDDTHHmmss", normalizedTzId).toDate()
@@ -545,7 +558,10 @@ const dateParameter =
     }
 
     // Store as string - worst case scenario
-    return storeValueParameter(name)(newDate, curr);
+    return storeValueParameter(name)(
+      addTZ(newDate as DateWithTimeZone, parameters),
+      curr,
+    );
   };
 
 const geoParameter =
@@ -850,48 +866,25 @@ const objectHandlers = {
       // If no rule start date
       if (rule.includes("DTSTART") === false) {
         // Get date/time into a specific format for comapare
-        let x = moment(curr.start).format("MMMM/Do/YYYY, h:mm:ss a");
-        // If the local time value is midnight
-        // This a whole day event
-        if (x.slice(-11) === "12:00:00 am") {
-          // Get the timezone offset
-          // The internal date is stored in UTC format
-          const offset = curr.start.getTimezoneOffset();
-          // Only east of gmt is a problem
-          if (offset < 0) {
-            // Calculate the new startdate with the offset applied, bypass RRULE/Luxon confusion
-            // Make the internally stored DATE the actual date (not UTC offseted)
-            // Luxon expects local time, not utc, so gets start date wrong if not adjusted
-            curr.start = new Date(
-              curr.start.getTime() + Math.abs(offset) * 60000,
-            );
-          } else {
-            // Get rid of any time (shouldn't be any, but be sure)
-            x = moment(curr.start).format("MMMM/Do/YYYY");
-            const comps = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(x);
-            if (comps) {
-              curr.start = new Date(
-                Number(comps[3]!),
-                Number(comps[1]!) - 1,
-                Number(comps[2]!),
-              );
-            }
-          }
-        }
-
         // If the date has an toISOString function
         if (curr.start && typeof curr.start.toISOString === "function") {
           try {
-            const timeString = curr.start.toISOString().replace(/[-:]/g, "");
+            let timeString = curr.start.toISOString().replace(/[-:]/g, "");
             // If the original date has a TZID, add it
             if (curr.start.tz) {
-              const tz = getTimeZone(curr.start.tz);
+              const tz = getTimeZone(curr.start.tz!)!;
+              const tzDate = new Date(
+                moment(curr.start, "UTC").tz(tz, true).valueOf(),
+              );
+              timeString = tzDate.toISOString().replace(/[-:]/g, "");
+
               rule += `;DTSTART;TZID=${tz}:${timeString}`;
             } else {
               rule += `;DTSTART=${timeString}`;
             }
 
             rule = rule.replace(/\.\d{3}/, "");
+            rule = rule.replace(/Z$/, "");
           } catch (error) {
             // This should not happen, issue #56
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -904,6 +897,22 @@ const objectHandlers = {
       }
 
       curr.rrule = RRule.fromString(rule);
+
+      if (curr.summary.includes("Sunni strength")) {
+        console.log(curr.rrule.origOptions);
+        console.log(curr.rrule.origOptions.bymonthday);
+        console.log(curr.rrule.origOptions.dtstart?.getUTCDate());
+      }
+      if (
+        curr.rrule.origOptions.bymonthday &&
+        curr.rrule.origOptions.dtstart?.getUTCDate() !==
+          curr.rrule.origOptions.bymonthday
+      ) {
+        curr.rrule.origOptions.bymonthday =
+          curr.rrule.origOptions.dtstart?.getUTCDate()!;
+
+        curr.rrule = new RRule(curr.rrule.origOptions);
+      }
     }
 
     return originalEnd(value, parameters, curr, stack);
