@@ -1,12 +1,12 @@
-import { tz, TZDate } from "@date-fns/tz";
+import { tz, TZDate, tzOffset } from "@date-fns/tz";
 import {
+  addMinutes,
   addSeconds,
   areIntervalsOverlapping,
   compareAsc,
   differenceInSeconds,
   type Interval,
 } from "date-fns";
-import moment from "moment-timezone";
 import type { FilterOperators, WithId } from "mongodb";
 import { RRule, RRuleSet } from "rrule";
 import { auth } from "../auth";
@@ -146,27 +146,23 @@ export async function getUserIcalEventsBetween(
       : undefined;
 
     if (rrule) {
-      const dtstart = event.rrule!.origOptions.dtstart;
-      const tzid = event.rrule!.origOptions.tzid;
+      const dtstart = event.rrule!.origOptions.dtstart!;
+      const tzid = event.rrule!.origOptions.tzid!;
       const rruleSet = new RRuleSet();
 
       rruleSet.rrule(rrule);
 
-      const ogOffset = moment.tz(dtstart!, tzid!).utcOffset();
+      const ogOffset = tzOffset(tzid, dtstart);
       const adjustedExdates = Array.isArray(event.exdate)
         ? event.exdate.map((date) =>
-            moment(date)
-              .add(moment.tz(date, tzid!).utcOffset() - ogOffset, "minutes")
-              .toDate(),
+            addMinutes(date, tzOffset(tzid, date) - ogOffset),
           )
         : [];
       for (const exdate of adjustedExdates) rruleSet.exdate(exdate);
 
-      const rruleDates = rruleSet.between(start, end, true).map((date) =>
-        moment(date)
-          .add(ogOffset - moment.tz(date, tzid!).utcOffset(), "minutes")
-          .toDate(),
-      );
+      const rruleDates = rruleSet
+        .between(start, end, true)
+        .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
       if (rruleDates?.length) {
         for (const rruleDate of rruleDates) {
           if (
