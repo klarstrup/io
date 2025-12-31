@@ -4,9 +4,9 @@ import {
   areIntervalsOverlapping,
   compareAsc,
   differenceInSeconds,
-  setMinutes,
   type Interval,
 } from "date-fns";
+import moment from "moment-timezone";
 import type { FilterOperators, WithId } from "mongodb";
 import { RRule, RRuleSet } from "rrule";
 import { auth } from "../auth";
@@ -142,24 +142,31 @@ export async function getUserIcalEventsBetween(
       eventsThatFallWithinRange.push(omit(event, "_id"));
     }
     const rrule = event.rrule?.origOptions
-      ? new RRule(event.rrule.origOptions)
+      ? new RRule({ ...event.rrule.origOptions, tzid: "UTC" })
       : undefined;
 
     if (rrule) {
-      const dtstart = rrule.origOptions.dtstart;
-      const tzid = rrule.origOptions.tzid;
+      const dtstart = event.rrule!.origOptions.dtstart;
+      const tzid = event.rrule!.origOptions.tzid;
       const rruleSet = new RRuleSet();
 
       rruleSet.rrule(rrule);
 
-      const rruleDates = rruleSet.between(start, end, true).map((date) => {
-        const ogOffset = new TZDate(dtstart!, tzid!).getTimezoneOffset();
-        const rOffset = new TZDate(date, tzid!).getTimezoneOffset();
+      const ogOffset = moment.tz(dtstart!, tzid!).utcOffset();
+      const adjustedExdates = Array.isArray(event.exdate)
+        ? event.exdate.map((date) =>
+            moment(date)
+              .add(moment.tz(date, tzid!).utcOffset() - ogOffset, "minutes")
+              .toDate(),
+          )
+        : [];
+      for (const exdate of adjustedExdates) rruleSet.exdate(exdate);
 
-        const adjustedDate = setMinutes(new TZDate(date), rOffset - ogOffset);
-
-        return adjustedDate;
-      });
+      const rruleDates = rruleSet.between(start, end, true).map((date) =>
+        moment(date)
+          .add(ogOffset - moment.tz(date, tzid!).utcOffset(), "minutes")
+          .toDate(),
+      );
       if (rruleDates?.length) {
         for (const rruleDate of rruleDates) {
           if (
