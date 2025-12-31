@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { TZDate, tzOffset } from "@date-fns/tz";
-import { addDays, addMinutes } from "date-fns";
-import moment from "moment-timezone";
+import { add, addDays, addMinutes, parse } from "date-fns";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
 import { isNonEmptyArray } from "../utils";
@@ -304,8 +303,7 @@ const addTZ = (dt: DateWithTimeZone, parameters: string[]) => {
   // Bake the timezone into the date instead of relying on the tz property
   if (dt.tz) {
     const tz = dt.tz;
-    const m = moment(dt).tz("UTC", true);
-    dt = new Date(m.valueOf()) as DateWithTimeZone;
+    dt = addMinutes(dt, -tzOffset(tz, dt));
     dt.tz = tz;
   }
 
@@ -365,7 +363,8 @@ const getTimeZone = (value: string) => {
   }
 
   // Timezone not confirmed yet
-  if (found === "") found = moment.tz.names().find((zone) => zone === tz);
+  if (found === "")
+    found = !Number.isNaN(tzOffset(tz!, new Date())) ? tz! : null;
 
   return found === "" ? tz : found;
 };
@@ -455,7 +454,7 @@ const dateParameter =
         );
 
         // Apply offset
-        if (tz) newDate = addMinutes(newDate, tzOffset(tz, newDate));
+        if (tz) newDate = addMinutes(newDate, -tzOffset(tz, newDate));
 
         newDate = newDate as DateWithTimeZone;
         newDate.tz = tz;
@@ -491,7 +490,7 @@ const dateParameter =
         number,
       ];
       if (comps[7] === "Z") {
-        // GMT
+        // UTC
         newDate = new Date(Date.UTC(...compsNumbers)) as DateWithTimeZone;
         newDate.tz = "Etc/UTC";
       } else if (
@@ -511,7 +510,7 @@ const dateParameter =
           tz.startsWith("tzone://Microsoft/")
         ) {
           // Set it to the local timezone, because we can't tell
-          tz = moment.tz.guess();
+          tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
           parameters[0] = "TZID=" + tz;
         }
 
@@ -542,18 +541,20 @@ const dateParameter =
         }
 
         // Timezone not confirmed yet
-        if (!found) found = moment.tz.names().some((zone) => zone === tz);
+        if (!found) found = !Number.isNaN(tzOffset(tz!, new Date()));
 
         // Timezone confirmed or forced to offset
-        newDate = found
-          ? moment.tz(value, "YYYYMMDDTHHmmss" + offset, tz!).toDate()
-          : (new Date(...compsNumbers) as DateWithTimeZone);
-        if (found) newDate.tz = tz!;
+        newDate =
+          found && tz
+            ? parse(value, "yyyyMMdd'T'HHmmss" + offset, TZDate.tz(tz))
+            : (new Date(...compsNumbers) as DateWithTimeZone);
+        if (found && tz) newDate.tz = tz;
       } else {
         newDate =
-          normalizedTzId && moment.tz.zone(normalizedTzId)
-            ? moment.tz(value, "YYYYMMDDTHHmmss", normalizedTzId).toDate()
-            : new Date(...compsNumbers);
+          normalizedTzId && !Number.isNaN(tzOffset(normalizedTzId, new Date()))
+            ? parse(value, "yyyyMMdd'T'HHmmss", TZDate.tz(normalizedTzId))
+            : (new Date(...compsNumbers) as DateWithTimeZone);
+        if (normalizedTzId) newDate.tz = normalizedTzId;
       }
     }
 
@@ -726,15 +727,14 @@ const objectHandlers = {
           const r = String(curr.duration.match(/-?\d{1,10}[YMWDHS]/g));
 
           // Use the duration to create the end value, from the start
-          let newend = moment.utc(curr.start);
           // Is the 1st character a negative sign?
           const indicator = curr.duration.startsWith("-") ? -1 : 1;
-          newend = newend.add(
-            Number.parseInt(r, 10) * indicator,
-            durationUnits[r.toString().slice(-1) as keyof typeof durationUnits],
-          );
-          // End is a Date type, not moment
-          curr.end = newend.toDate();
+          curr.end = add(curr.start, {
+            [durationUnits[
+              r.toString().slice(-1) as keyof typeof durationUnits
+            ]]: Number.parseInt(r, 10) * indicator,
+          });
+          console.log("Duration applied, new end:", curr.end);
         }
       }
 
@@ -873,9 +873,7 @@ const objectHandlers = {
             // If the original date has a TZID, add it
             if (curr.start.tz) {
               const tz = getTimeZone(curr.start.tz!)!;
-              const tzDate = new Date(
-                moment(curr.start, tz).tz("UTC", true).valueOf(),
-              );
+              const tzDate = new Date(curr.start);
               timeString = tzDate.toISOString().replace(/[-:]/g, "");
 
               rule += `;DTSTART;TZID=${tz}:${timeString}`;
@@ -883,6 +881,7 @@ const objectHandlers = {
               rule += `;DTSTART=${timeString}`;
             }
 
+            // TODO: Format the date right from the start
             rule = rule.replace(/\.\d{3}/, "");
             rule = rule.replace(/Z$/, "");
           } catch (error) {
