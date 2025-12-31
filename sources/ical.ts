@@ -7,7 +7,6 @@ import {
   setMinutes,
   type Interval,
 } from "date-fns";
-import moment from "moment-timezone";
 import type { FilterOperators, WithId } from "mongodb";
 import { RRule, RRuleSet } from "rrule";
 import { auth } from "../auth";
