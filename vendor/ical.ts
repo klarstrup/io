@@ -460,7 +460,7 @@ const dateParameter =
         newDate = m.toDate() as DateWithTimeZone;
         newDate.tz = tz;
 
-        return storeValueParameter(name)(newDate, curr);
+        return storeValueParameter(name)(addTZ(newDate, parameters), curr);
       }
     }
 
@@ -570,8 +570,8 @@ const geoParameter =
     value: string,
     _parameters: string[],
     curr: VEvent,
-    _stack: CalendarComponent[],
-    _line: string,
+    _stack?: CalendarComponent[],
+    _line?: string,
   ) => {
     const parts = value.split(";");
     curr.geo = { lat: Number(parts[0]), lon: Number(parts[1]) };
@@ -621,14 +621,14 @@ const exdateParameter =
     value: string,
     parameters: string[],
     curr: VEvent,
-    _stack?: Record<string, CalendarComponent>[],
+    stack?: Record<string, CalendarComponent>[],
     _line?: string,
   ) => {
     curr.exdate = curr.exdate || [];
     const dates = value ? value.split(",").map((s) => s.trim()) : [];
     for (const entry of dates) {
       const exdate = {};
-      dateParameter(name)(entry, parameters, exdate);
+      dateParameter(name)(entry, parameters, exdate, stack);
 
       const exdateDate = exdate[name] as DateWithTimeZone | undefined;
       if (exdateDate) {
@@ -874,7 +874,7 @@ const objectHandlers = {
             if (curr.start.tz) {
               const tz = getTimeZone(curr.start.tz!)!;
               const tzDate = new Date(
-                moment(curr.start, "UTC").tz(tz, true).valueOf(),
+                moment(curr.start, tz).tz("UTC", true).valueOf(),
               );
               timeString = tzDate.toISOString().replace(/[-:]/g, "");
 
@@ -898,11 +898,8 @@ const objectHandlers = {
 
       curr.rrule = RRule.fromString(rule);
 
-      if (curr.summary.includes("Sunni strength")) {
-        console.log(curr.rrule.origOptions);
-        console.log(curr.rrule.origOptions.bymonthday);
-        console.log(curr.rrule.origOptions.dtstart?.getUTCDate());
-      }
+      // Hack to fix BYMONTHDAY if it doesn't match the start date because
+      // the dtstart was shifted to be in UTC time
       if (
         curr.rrule.origOptions.bymonthday &&
         curr.rrule.origOptions.dtstart?.getUTCDate() !==
