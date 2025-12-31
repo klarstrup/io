@@ -74,7 +74,7 @@ export async function DiaryAgendaDay({
   const isToday = date === todayStr;
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -3), dayStartHour),
+    start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
   const [
