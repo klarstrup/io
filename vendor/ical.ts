@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
-import { addDays } from "date-fns";
+import { TZDate, tzOffset } from "@date-fns/tz";
+import { addDays, addMinutes } from "date-fns";
 import moment from "moment-timezone";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
@@ -446,18 +447,17 @@ const dateParameter =
       if (comps !== null) {
         const tz = normalizedTzId || calendarTimeZone;
 
-        const m = moment.tz(
-          [
-            Number.parseInt(comps[1]!, 10),
-            Number.parseInt(comps[2]!, 10) - 1,
-            Number.parseInt(comps[3]!, 10),
-          ],
+        newDate = new TZDate(
+          Number.parseInt(comps[1]!, 10),
+          Number.parseInt(comps[2]!, 10) - 1,
+          Number.parseInt(comps[3]!, 10),
           "UTC",
         );
 
-        if (tz) m.tz(tz, true);
+        // Apply offset
+        if (tz) newDate = addMinutes(newDate, tzOffset(tz, newDate));
 
-        newDate = m.toDate() as DateWithTimeZone;
+        newDate = newDate as DateWithTimeZone;
         newDate.tz = tz;
 
         return storeValueParameter(name)(addTZ(newDate, parameters), curr);
