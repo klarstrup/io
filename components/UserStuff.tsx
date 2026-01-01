@@ -1,6 +1,5 @@
 import { ObjectId } from "mongodb";
 import { refresh } from "next/cache";
-import Link from "next/link";
 import { auth } from "../auth";
 import { Locations } from "../models/location.server";
 import { Users } from "../models/user.server";
@@ -9,6 +8,7 @@ import { dataSourceGroups } from "../sources/utils";
 import { omit } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import Popover from "./Popover";
+import UserStuffLink from "./UserStuffLink";
 import UserStuffLocationsForm from "./UserStuffLocationsForm";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
 import UserStuffWorkoutScheduleForm from "./UserStuffWorkoutScheduleForm";
@@ -42,10 +42,8 @@ async function updateUser(formData: FormData) {
 
 export default async function UserStuff() {
   const user = (await auth())?.user;
-  const [locations] = user
-    ? await Promise.all([
-        Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray(),
-      ])
+  const locations = user
+    ? await Locations.find({ userId: user.id }, { sort: { name: 1 } }).toArray()
     : [];
 
   return (
@@ -57,19 +55,14 @@ export default async function UserStuff() {
             "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
         }}
       >
-        <Link prefetch={false} href="/diary" className="text-3xl xl:text-4xl">
-          📔
-        </Link>
-        <Link
-          prefetch={false}
-          href="/calendar"
-          className="text-3xl xl:text-4xl"
+        <UserStuffLink href="/diary">📔</UserStuffLink>
+        <UserStuffLink href="/lists">✅</UserStuffLink>
+        <UserStuffLink href="/calendar">🗓️</UserStuffLink>
+        <UserStuffLink
+          href={"/events" as __next_route_internal_types__.RouteImpl<"/events">}
         >
-          🗓️
-        </Link>
-        <Link prefetch={false} href="/events/" className="text-3xl xl:text-4xl">
           🏅
-        </Link>
+        </UserStuffLink>
         <span className="text-3xl text-gray-400/25 xl:text-4xl">❘</span>
         {user ? (
           <>
