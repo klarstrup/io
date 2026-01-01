@@ -12,7 +12,6 @@ import {
   getSunrise,
   getSunset,
 } from "../../utils";
-import { DiaryAgendaEvents } from "./DiaryAgendaEvents";
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
@@ -99,21 +98,11 @@ export function DiaryAgenda({
         <DiaryAgendaWorkoutsWrapper date={date} user={user} />
       </Suspense>
       <div className="flex flex-1 flex-wrap gap-2">
-        <Suspense
-          fallback={
-            <FieldSetY
-              className="min-w-[250px] flex-1"
-              legend={<div className="flex items-center gap-2">Events</div>}
-            />
-          }
-        >
-          <DiaryAgendaEvents user={user} date={date} onlyGivenDay={isModal} />
-        </Suspense>
         <div className="flex flex-1 flex-col">
           <Suspense
             fallback={
               <FieldSetY
-                className="min-w-[250px] flex-1"
+                className="flex-1"
                 legend={<div className="flex items-center gap-2">Food</div>}
               />
             }
