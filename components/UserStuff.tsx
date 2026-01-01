@@ -67,7 +67,7 @@ export default async function UserStuff() {
         {user ? (
           <>
             <Popover control={<span className="text-3xl xl:text-4xl">⚙️</span>}>
-              <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+              <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
                 {user ? (
                   <div className="flex flex-col gap-2">
                     <FieldSetX legend="Workout Schedule" className="w-full">
@@ -81,7 +81,7 @@ export default async function UserStuff() {
               </div>
             </Popover>
             <Popover control={<span className="text-3xl xl:text-4xl">📡</span>}>
-              <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+              <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
                 <UserStuffSourcesForm
                   user={user}
                   sourceOptions={[
@@ -97,7 +97,7 @@ export default async function UserStuff() {
               control={<span className="text-3xl xl:text-4xl">📍</span>}
               className="-mx-1"
             >
-              <div className="absolute left-1/2 z-30 max-h-[66vh] w-140 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+              <div className="absolute left-1/2 z-30 max-h-[66vh] w-140 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
                 <UserStuffLocationsForm
                   user={user}
                   locations={locations?.map((document) => ({
@@ -110,7 +110,7 @@ export default async function UserStuff() {
           </>
         ) : null}
         <Popover control={<span className="text-3xl xl:text-4xl">🌞</span>}>
-          <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[yellow_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
+          <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
             {user ? (
               <div>
                 <span>
