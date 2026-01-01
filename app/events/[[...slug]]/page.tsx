@@ -19,7 +19,6 @@ import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource } from "../../../sources/utils";
 import { isNonEmptyArray } from "../../../utils";
 import { CompUserScalars } from "../../api/toplogger_scrape/fragments";
-import "../../page.css";
 import { TimelineEventsList } from "./TimelineEventsList";
 
 const monthsPerPage = 3;
@@ -45,7 +44,6 @@ export default async function Home(props: {
 
   return (
     <div>
-      <UserStuff />
       <section id="timeline">
         <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
           <TimelineEventsList

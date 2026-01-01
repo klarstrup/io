@@ -1,5 +1,7 @@
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata, Viewport } from "next";
+import UserStuff from "../components/UserStuff";
+import "./page.css";
 
 export const metadata: Metadata = {
   title: "io input/output",
@@ -15,6 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
+        <UserStuff />
         {children}
         <Analytics />
       </body>

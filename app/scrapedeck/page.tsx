@@ -1,12 +1,9 @@
-import UserStuff from "../../components/UserStuff";
 import { unique } from "../../utils";
 import { scraperEndpoints } from "../api/scraper-utils";
-import "../page.css";
 
 export default function Page() {
   return (
     <center style={{ display: "flex", width: "100%", height: "100%" }}>
-      <UserStuff />
       {unique(scraperEndpoints)
         .filter((scraperEndpoint) => scraperEndpoint !== "/fitocracy_scrape")
         .map((scraperEndpoint) => (

@@ -3,13 +3,11 @@ import { eachWeekOfInterval, endOfISOWeek, isAfter, subWeeks } from "date-fns";
 import { Suspense } from "react";
 import { auth } from "../../auth";
 import LoadMore from "../../components/LoadMore";
-import UserStuff from "../../components/UserStuff";
 import { Locations } from "../../models/location.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
+import { DiaryPoller } from "../diary/DiaryPoller";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
-import { DiaryPoller } from "../diary/DiaryPoller";
-import "../page.css";
 
 export const maxDuration = 60;
 export const revalidate = 3600; // 1 hour
@@ -68,36 +66,7 @@ export default async function CalendarLayout(_props: PageProps<"/calendar">) {
   return (
     <>
       {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
-      <div className="max-h-[100vh] min-h-[100vh]">
-        <Suspense
-          fallback={
-            <div
-              style={{
-                position: "fixed",
-                top: "4px",
-                right: "4px",
-                paddingLeft: "4px",
-                zIndex: 1337,
-              }}
-            >
-              <label
-                htmlFor="toggle"
-                style={{
-                  position: "absolute",
-                  top: "4px",
-                  right: "4px",
-                  zIndex: 1337,
-                  cursor: "pointer",
-                  userSelect: "none",
-                }}
-              >
-                🌞
-              </label>
-            </div>
-          }
-        >
-          <UserStuff />
-        </Suspense>
+      <div className="max-h-screen min-h-screen">
         <div className="mx-auto flex max-w-6xl flex-1 flex-col items-stretch">
           <LoadMore
             initialCursor={{

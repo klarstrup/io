@@ -1,10 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { subHours } from "date-fns";
-import { Suspense } from "react";
 import { auth } from "../../auth";
-import UserStuff from "../../components/UserStuff";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
-import "../page.css";
 import { DiaryAgendaDay } from "./DiaryAgendaDay";
 import { DiaryPoller } from "./DiaryPoller";
 
@@ -20,37 +17,8 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
   return (
     <>
       {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
-      <div className="max-h-[100vh] min-h-[100vh]">
-        <Suspense
-          fallback={
-            <div
-              style={{
-                position: "fixed",
-                top: "4px",
-                right: "4px",
-                paddingLeft: "4px",
-                zIndex: 1337,
-              }}
-            >
-              <label
-                htmlFor="toggle"
-                style={{
-                  position: "absolute",
-                  top: "4px",
-                  right: "4px",
-                  zIndex: 1337,
-                  cursor: "pointer",
-                  userSelect: "none",
-                }}
-              >
-                🌞
-              </label>
-            </div>
-          }
-        >
-          <UserStuff />
-        </Suspense>
-        <div className="mx-auto max-h-[100vh] max-w-2xl self-stretch border-black/25 p-2">
+      <div className="max-h-screen min-h-screen">
+        <div className="mx-auto max-h-screen max-w-2xl self-stretch border-black/25 px-2">
           <DiaryAgendaDay date={dateToString(subHours(now, 5))} user={user} />
         </div>
       </div>

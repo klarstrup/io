@@ -31,12 +31,12 @@ body {
     noto,
     arial,
     sans-serif;
-  margin-top: 64px;
+  margin-top: 80px;
 }
 @media (pointer: coarse) {
   body {
     margin-top: 0;
-    margin-bottom: 64px;
+    margin-bottom: 80px;
   }
 }
 [title] {
