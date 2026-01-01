@@ -145,10 +145,8 @@ async function DiaryExerciseList({
         exercises: workout.exercises.filter((e) => e.exerciseId === exerciseId),
       }))
     : [];
-  const [locations] = userId
-    ? await Promise.all([
-        Locations.find({ userId }, { sort: { name: 1 } }).toArray(),
-      ])
+  const locations = userId
+    ? await Locations.find({ userId }, { sort: { name: 1 } }).toArray()
     : [];
 
   if (userId && mergeWorkouts) {
