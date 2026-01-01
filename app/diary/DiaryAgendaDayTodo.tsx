@@ -20,7 +20,11 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
   const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
     const formData = new FormData(formElement);
     const summary = formData.get("summary");
-    if (typeof summary === "string" && summary.trim().length > 0) {
+    if (
+      typeof summary === "string" &&
+      summary.trim().length > 0 &&
+      summary.trim() !== todo.summary?.trim()
+    ) {
       await upsertTodo({ ...todo, summary: summary.trim() });
     }
     setIsActive(false);
