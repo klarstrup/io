@@ -1,17 +1,27 @@
 "use client";
 import { useRef, useState } from "react";
-import { useClickOutside } from "../../hooks";
+import { useClickOutside, useEvent } from "../../hooks";
 import { upsertTodo } from "./actions";
 
 export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
+    const formData = new FormData(formElement);
+    const summary = formData.get("summary");
+    if (typeof summary === "string" && summary.trim().length > 0) {
+      await upsertTodo({ summary: summary.trim(), start: date });
+      setIsActive(false);
+    }
+  });
+
   const onClickOutside = () => {
     const formData = formRef.current && new FormData(formRef.current);
     const summary = formData?.get("summary");
     if (summary && typeof summary === "string" && summary.trim().length > 0) {
-      formRef.current?.submit();
+      formRef.current && handleFormSubmit(formRef.current);
     } else {
       setIsActive(false);
     }
@@ -41,29 +51,26 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
         <span className="text-xs">➕</span> Todo
       </button>
       {isActive && (
-        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/5 bg-white p-1">
+        <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1">
           <form
             ref={formRef}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onSubmit={async (e) => {
               e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const summary = formData.get("summary");
-              if (typeof summary === "string" && summary.trim().length > 0) {
-                await upsertTodo({ summary: summary.trim(), start: date });
-                setIsActive(false);
-              }
+              formRef.current && handleFormSubmit(formRef.current);
             }}
           >
-            <textarea
-              autoFocus
-              required
-              placeholder="Todo summary"
-              name="summary"
-              defaultValue=""
-              className="-mt-px -mb-px w-full min-w-50"
-            />
-            <button type="submit" className="hidden" />
+            <div className="flex min-w-50 flex-col items-stretch rounded-b-md border border-t-0 border-black/5 bg-white p-1">
+              <textarea
+                autoFocus
+                required
+                placeholder="Todo summary"
+                name="summary"
+                defaultValue=""
+                className="-mt-px -mb-px w-full"
+              />
+              <button type="submit" className="hidden" />
+            </div>
           </form>
         </div>
       )}

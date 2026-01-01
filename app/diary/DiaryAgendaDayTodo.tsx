@@ -2,7 +2,7 @@
 import { faCircleCheck } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Fragment, useRef, useState } from "react";
-import { useClickOutside } from "../../hooks";
+import { useClickOutside, useEvent } from "../../hooks";
 import type { MongoVTodo } from "../../lib";
 import {
   deleteTodo,
@@ -16,11 +16,21 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
+    const formData = new FormData(formElement);
+    const summary = formData.get("summary");
+    if (typeof summary === "string" && summary.trim().length > 0) {
+      await upsertTodo({ ...todo, summary: summary.trim() });
+    }
+    setIsActive(false);
+  });
+
   const onClickOutside = () => {
     const formData = formRef.current && new FormData(formRef.current);
     const summary = formData?.get("summary");
     if (summary && typeof summary === "string" && summary.trim().length > 0) {
-      formRef.current?.submit();
+      formRef.current && handleFormSubmit(formRef.current);
     } else {
       setIsActive(false);
     }
@@ -56,14 +66,9 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
             <form
               ref={formRef}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onSubmit={async (e) => {
+              onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const summary = formData.get("summary");
-                if (typeof summary === "string" && summary.trim().length > 0) {
-                  await upsertTodo({ ...todo, summary: summary.trim() });
-                }
-                setIsActive(false);
+                formRef.current && handleFormSubmit(formRef.current);
               }}
             >
               {isActive ? (

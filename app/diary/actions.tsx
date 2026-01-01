@@ -215,6 +215,8 @@ export async function upsertTodo(
 
   if ("date" in todo && todo.start) todo.start = new Date(todo.start);
 
+  console.log({ todo });
+
   const upsertResult = await IcalEvents.updateOne(
     {
       ...("_id" in todo && todo._id
@@ -231,7 +233,10 @@ export async function upsertTodo(
         _io_source: WorkoutSource.Self,
         _io_userId: user.id,
         uid: todo.uid ?? new ObjectId().toString(),
-        ...todo,
+        ...(omit(todo, "created", "dtstamp") as Omit<
+          typeof todo,
+          "created" | "dtstamp"
+        >),
         start: todo.start ? new Date(todo.start) : todo.start,
       } satisfies Omit<MongoVTodo, "created" | "dtstamp">,
       $setOnInsert: {
