@@ -9,11 +9,6 @@ export default function UserStuffLink(props: {
 }) {
   const pathname = usePathname();
 
-  console.log({
-    pathname,
-    href: props.href,
-  });
-
   return (
     <Link
       prefetch={false}
