@@ -78,7 +78,7 @@ export function DiaryAgenda({
           <Link prefetch={false} href={`/diary`}>
             🗓️
           </Link>
-          {isToday || isFuture(tzDate) ? (
+          {!(isToday || isFuture(tzDate)) ? (
             <Link
               prefetch={false}
               href={`/diary/${dateToString(addDays(tzDate, 1))}`}
