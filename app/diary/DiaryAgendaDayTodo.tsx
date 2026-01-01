@@ -80,7 +80,12 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                   autoFocus
                   name="summary"
                   defaultValue={todo.summary}
-                  className="-mt-px -mb-px w-full bg-transparent"
+                  className="-mt-px -mb-px w-full bg-transparent p-0.5"
+                  ref={(el) => {
+                    if (!el) return;
+                    const length = el.value.length;
+                    el.setSelectionRange(length, length);
+                  }}
                 />
               ) : (
                 <div className="whitespace-pre-wrap">
