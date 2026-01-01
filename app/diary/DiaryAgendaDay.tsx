@@ -221,16 +221,7 @@ export async function DiaryAgendaDay({
           ),
           dayStartHour,
         ),
-        end: subHours(
-          min(
-            [
-              todo.completed || todo.due,
-              todo.completed || todo.start,
-              fetchingInterval.end,
-            ].filter(Boolean),
-          ),
-          dayStartHour,
-        ),
+        end: subHours(fetchingInterval.end, dayStartHour),
       },
       { in: tz(timeZone) },
     )) {
@@ -238,7 +229,7 @@ export async function DiaryAgendaDay({
 
       const calName = dateToString(addHours(date, dayStartHour));
       if (
-        isPast(dayEnd) ||
+        (isPast(dayEnd) && !todo.completed) ||
         Object.values(todosByDate)
           .flat()
           .some((e) => e.uid === todo.uid)
