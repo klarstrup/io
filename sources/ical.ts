@@ -193,8 +193,9 @@ export async function getUserIcalEventsBetween(
 
 export async function getUserIcalTodosBetween(
   userId: string,
-  { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>,
+  interval?: Interval<Date, Date> | Interval<TZDate, TZDate>,
 ) {
+  const { start, end } = interval || {};
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
@@ -226,11 +227,11 @@ export async function getUserIcalTodosBetween(
     ...dateSelector,
   })) {
     if (
-      todo.start
+      todo.start && end
         ? todo.start <= end
-        : todo.due
+        : todo.due && end
           ? todo.due <= end
-          : todo.completed
+          : todo.completed && start && end
             ? todo.completed >= start && todo.completed <= end
             : true
     ) {
