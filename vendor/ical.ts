@@ -112,7 +112,7 @@ export interface VTodo extends BaseComponent {
   alarms?: VAlarm[];
   dtstamp: DateWithTimeZone;
   class?: Class;
-  completed?: DateWithTimeZone;
+  completed?: DateWithTimeZone | null;
   created?: DateWithTimeZone;
   description?: string;
   start?: DateWithTimeZone;

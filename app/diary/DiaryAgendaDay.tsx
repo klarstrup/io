@@ -42,6 +42,7 @@ import {
   unique,
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
+import { TodoDroppable } from "./TodoDroppable";
 
 export async function DiaryAgendaDay({
   date,
@@ -288,18 +289,19 @@ export async function DiaryAgendaDay({
           const dayTodos = todosByDate[dayName] || [];
 
           return (
-            <DiaryAgendaDayDay
-              key={dayI}
-              date={dayName}
-              dayDate={dayDate}
-              user={user}
-              dayLocations={dayLocations}
-              dayEvents={dayEvents}
-              dayWorkouts={dayWorkouts}
-              dayDueSets={dayDueSets}
-              dayTodos={dayTodos}
-              dayExerciseSets={dayExerciseSets}
-            />
+            <TodoDroppable key={dayI} date={dayDate}>
+              <DiaryAgendaDayDay
+                date={dayName}
+                dayDate={dayDate}
+                user={user}
+                dayLocations={dayLocations}
+                dayEvents={dayEvents}
+                dayWorkouts={dayWorkouts}
+                dayDueSets={dayDueSets}
+                dayTodos={dayTodos}
+                dayExerciseSets={dayExerciseSets}
+              />
+            </TodoDroppable>
           );
         }),
       )}
