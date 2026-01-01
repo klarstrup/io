@@ -286,7 +286,7 @@ export const getNextSets = async ({
   user: Session["user"];
   to: Date;
 }) => {
-  console.time(`getNextSets for user ${user.id} to ${to.toISOString()}`);
+  // console.time(`getNextSets for user ${user.id} to ${to.toISOString()}`);
   try {
     return (
       await Promise.all(
@@ -301,7 +301,7 @@ export const getNextSets = async ({
         (a.workedOutAt?.getTime() || 0) - (b.workedOutAt?.getTime() || 0),
     );
   } finally {
-    console.timeEnd(`getNextSets for user ${user.id} to ${to.toISOString()}`);
+    // console.timeEnd(`getNextSets for user ${user.id} to ${to.toISOString()}`);
   }
 };
 
