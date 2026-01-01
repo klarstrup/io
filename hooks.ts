@@ -386,7 +386,13 @@ export const useClickOutside = (
   callback: () => void,
 ) => {
   const handleClick = useEvent((event: MouseEvent) => {
-    if (ref.current && !ref.current.contains(event.target as HTMLElement)) {
+    if (
+      ref.current &&
+      !ref.current.contains(event.target as HTMLElement) &&
+      // The event target is still in the document, so the element wasn't removed
+      // (e.g. by the time the click happened, the element was removed from the DOM)
+      document.body.contains(event.target as HTMLElement)
+    ) {
       callback();
     }
   });
