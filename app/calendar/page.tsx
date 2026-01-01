@@ -48,7 +48,6 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 export default async function CalendarLayout(_props: PageProps<"/calendar">) {
   const user = (await auth())?.user;
 
-  await Locations.createIndexes([{ key: { userId: 1 } }, { key: { name: 1 } }]);
   const locations =
     user &&
     (await Locations.find({ userId: user.id }).toArray()).map(

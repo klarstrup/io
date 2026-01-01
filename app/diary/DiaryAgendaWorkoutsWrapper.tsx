@@ -1,7 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
-import { Locations } from "../../models/location.server";
 import { isClimbingExercise } from "../../models/workout";
 import {
   getIsSetPR,
@@ -22,7 +21,6 @@ export async function DiaryAgendaWorkoutsWrapper({
 
   const tzDate = new TZDate(date, timeZone);
 
-  await Locations.createIndexes([{ key: { userId: 1 } }, { key: { name: 1 } }]);
   const workouts = user
     ? await MaterializedWorkoutsView.find(
         {
