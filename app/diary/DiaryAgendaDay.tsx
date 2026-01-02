@@ -240,13 +240,14 @@ export async function DiaryAgendaDay({
               : workout.workedOutAt >= dayStart &&
                 workout.workedOutAt <= dayEnd,
           );
-          const dayLocations = await Locations.find({
-            _id: {
-              $in: unique(dayWorkouts.map((workout) => workout.locationId)).map(
-                (id) => new ObjectId(id),
-              ),
-            },
-          }).toArray();
+          const dayWorkoutLocationObjectIds = unique(
+            dayWorkouts.map((workout) => workout.locationId),
+          ).map((id) => new ObjectId(id));
+          const dayLocations = dayWorkoutLocationObjectIds.length
+            ? await Locations.find({
+                _id: { $in: dayWorkoutLocationObjectIds },
+              }).toArray()
+            : [];
           const dayExercisesById = dayWorkouts
             .flatMap((workout) =>
               workout.exercises.map((exercise) => [exercise, workout] as const),
