@@ -76,7 +76,7 @@ export const GET = () =>
                     user_id: userId,
                     datetime: {
                       $gte: startOfMonth(monthDate, { in: tz("UTC") }),
-                      $lt: endOfMonth(monthDate, { in: tz("UTC") }),
+                      $lte: endOfMonth(monthDate, { in: tz("UTC") }),
                     },
                   },
                   {
@@ -119,12 +119,20 @@ export const GET = () =>
               yield reportEntry.date;
             }
 
-            const foodEntryIdsToBeDeleted = (
-              await MyFitnessPalFoodEntries.find({
+            const [foodEntryIdsToBeDeletedR] = await Promise.all([
+              MyFitnessPalFoodEntries.find({
                 user_id: userId,
                 date: { $regex: new RegExp(`^${year}-${month}-`) },
-              }).toArray()
-            )
+              }).toArray(),
+              MyFitnessPalFoodEntries.find({
+                user_id: userId,
+                datetime: {
+                  $gte: startOfMonth(monthDate, { in: tz("UTC") }),
+                  $lte: endOfMonth(monthDate, { in: tz("UTC") }),
+                },
+              }).toArray(),
+            ]);
+            const foodEntryIdsToBeDeleted = foodEntryIdsToBeDeletedR
               .filter(
                 (entry) =>
                   !reportEntries
