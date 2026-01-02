@@ -61,17 +61,29 @@ export const GET = () =>
 
             if (differenceInMonths(now, monthDate) > 1) {
               const [entriesForMonth] = await Promise.all([
-                MyFitnessPalFoodEntries.countDocuments({
-                  user_id: userId,
-                  date: { $regex: new RegExp(`^${year}-${month}-`) },
-                }),
-                MyFitnessPalFoodEntries.countDocuments({
-                  user_id: userId,
-                  datetime: {
-                    $gte: startOfMonth(monthDate, { in: tz("UTC") }),
-                    $lt: endOfMonth(monthDate, { in: tz("UTC") }),
+                MyFitnessPalFoodEntries.countDocuments(
+                  {
+                    user_id: userId,
+                    date: { $regex: new RegExp(`^${year}-${month}-`) },
                   },
-                }),
+                  {
+                    comment:
+                      "Checking for existing entries to skip month w/ $regex",
+                  },
+                ),
+                MyFitnessPalFoodEntries.countDocuments(
+                  {
+                    user_id: userId,
+                    datetime: {
+                      $gte: startOfMonth(monthDate, { in: tz("UTC") }),
+                      $lt: endOfMonth(monthDate, { in: tz("UTC") }),
+                    },
+                  },
+                  {
+                    comment:
+                      "Checking for existing entries to skip month w/ datetime $gte & $lt",
+                  },
+                ),
               ]);
 
               if (entriesForMonth > 0) continue;
