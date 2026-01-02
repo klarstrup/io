@@ -1,4 +1,10 @@
-import { differenceInMonths, isFuture } from "date-fns";
+import { tz, TZDate } from "@date-fns/tz";
+import {
+  differenceInMonths,
+  endOfMonth,
+  isFuture,
+  startOfMonth,
+} from "date-fns";
 import { DateTime } from "luxon";
 import { auth } from "../../../auth";
 import {
@@ -42,19 +48,31 @@ export const GET = () =>
       async function* ({ config: { token, userName, userId } }, setUpdated) {
         setUpdated(false);
 
+        await MyFitnessPalFoodEntries.createIndexes([
+          { key: { user_id: 1, date: 1 } },
+          { key: { user_id: 1, datetime: 1 } },
+        ]);
+
         const now = new Date();
         yearLoop: for (const year of years) {
           for (const month of months) {
-            if (isFuture(new Date(year, Number(month) - 1))) break yearLoop;
+            const monthDate = new TZDate(year, Number(month) - 1, "Etc/UTC");
+            if (isFuture(monthDate)) break yearLoop;
 
-            if (
-              differenceInMonths(now, new Date(year, Number(month) - 1)) > 1
-            ) {
-              const entriesForMonth =
-                await MyFitnessPalFoodEntries.countDocuments({
+            if (differenceInMonths(now, monthDate) > 1) {
+              const [entriesForMonth] = await Promise.all([
+                MyFitnessPalFoodEntries.countDocuments({
                   user_id: userId,
                   date: { $regex: new RegExp(`^${year}-${month}-`) },
-                });
+                }),
+                MyFitnessPalFoodEntries.countDocuments({
+                  user_id: userId,
+                  datetime: {
+                    $gte: startOfMonth(monthDate, { in: tz("UTC") }),
+                    $lt: endOfMonth(monthDate, { in: tz("UTC") }),
+                  },
+                }),
+              ]);
 
               if (entriesForMonth > 0) continue;
             }
