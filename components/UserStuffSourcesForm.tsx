@@ -73,7 +73,7 @@ function UserStuffSourceForm({
 
   const wasFetchedRecently = Boolean(
     source.lastAttemptedAt &&
-      source.lastAttemptedAt > new Date(Date.now() - 1000 * 60 * 5),
+    source.lastAttemptedAt > new Date(Date.now() - 1000 * 60 * 5),
   );
 
   const fetchSource = async () => {
@@ -397,6 +397,22 @@ function UserStuffSourceForm({
         </label>
       );
       break;
+    case DataSource.Songkick:
+      formElements = (
+        <label className="flex gap-1">
+          Artist ID:
+          <input
+            type="number"
+            {...register(`dataSources.${index}.config.artistId`, {
+              required: true,
+              valueAsNumber: true,
+            })}
+            placeholder="Artist ID"
+            className="flex-1"
+          />
+        </label>
+      );
+      break;
     default:
       return dataSource satisfies never;
   }
@@ -425,10 +441,10 @@ function UserStuffSourceForm({
             disabled={
               Boolean(
                 source.lastAttemptedAt &&
-                  (!source.lastSuccessfulAt ||
-                    source.lastAttemptedAt > source.lastSuccessfulAt) &&
-                  (!source.lastFailedAt ||
-                    source.lastAttemptedAt > source.lastFailedAt),
+                (!source.lastSuccessfulAt ||
+                  source.lastAttemptedAt > source.lastSuccessfulAt) &&
+                (!source.lastFailedAt ||
+                  source.lastAttemptedAt > source.lastFailedAt),
               ) || wasFetchedRecently
             }
             className="cursor-pointer text-xs underline disabled:cursor-not-allowed disabled:line-through"
@@ -496,8 +512,7 @@ export default function UserStuffSourcesForm({
               {user.dataSources.map((source) => {
                 const wasFetchedRecently = Boolean(
                   source.lastAttemptedAt &&
-                    source.lastAttemptedAt >
-                      new Date(Date.now() - 1000 * 60 * 5),
+                  source.lastAttemptedAt > new Date(Date.now() - 1000 * 60 * 5),
                 );
 
                 return (
@@ -555,11 +570,11 @@ export default function UserStuffSourcesForm({
                           disabled={
                             Boolean(
                               source.lastAttemptedAt &&
-                                (!source.lastSuccessfulAt ||
-                                  source.lastAttemptedAt >
-                                    source.lastSuccessfulAt) &&
-                                (!source.lastFailedAt ||
-                                  source.lastAttemptedAt > source.lastFailedAt),
+                              (!source.lastSuccessfulAt ||
+                                source.lastAttemptedAt >
+                                  source.lastSuccessfulAt) &&
+                              (!source.lastFailedAt ||
+                                source.lastAttemptedAt > source.lastFailedAt),
                             ) || wasFetchedRecently
                           }
                           className="cursor-pointer text-xs disabled:cursor-not-allowed disabled:opacity-50"
@@ -801,7 +816,13 @@ export default function UserStuffSourcesForm({
                       config: { name: "" },
                     });
                     break;
-
+                  case DataSource.Songkick:
+                    append({
+                      ...initialSourceMeta,
+                      source: DataSource.Songkick,
+                      config: { artistId: NaN },
+                    });
+                    break;
                   default:
                     return value satisfies never;
                 }

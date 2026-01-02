@@ -4,7 +4,7 @@ import { auth } from "../auth";
 import { Locations } from "../models/location.server";
 import { Users } from "../models/user.server";
 import { getAllWorkoutExercises } from "../models/workout.server";
-import { dataSourceGroups } from "../sources/utils";
+import { DataSource, dataSourceGroups } from "../sources/utils";
 import { omit } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import Popover from "./Popover";
@@ -89,6 +89,7 @@ export default async function UserStuff() {
                     ...dataSourceGroups.events,
                     ...dataSourceGroups.food,
                     ...dataSourceGroups.weather,
+                    DataSource.Songkick,
                   ]}
                 />
               </div>

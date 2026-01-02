@@ -1,7 +1,6 @@
 import { isAfter } from "date-fns";
-import { dbFetch } from "../fetch";
 import { type EventDetails, EventSource } from "../lib";
-import { DAY_IN_SECONDS } from "../utils";
+import { SongkickEvents } from "./songkick.server";
 
 export namespace Songkick {
   export interface Event {
@@ -21,11 +20,17 @@ export namespace Songkick {
     series?: Series;
   }
 
-  export interface End {
-    date: Date;
-    time: null | string;
-    datetime: null | string;
-  }
+  export type End =
+    | {
+        date: `${string}-${string}-${string}`;
+        time: null;
+        datetime: null;
+      }
+    | {
+        date: `${string}-${string}-${string}`;
+        time: `${string}:${string}:${string}`;
+        datetime: string;
+      };
 
   export interface Location {
     city: string;
@@ -82,66 +87,30 @@ export namespace Songkick {
   }
 }
 
-const fetchSongKick = async <T>(
-  input: string | URL,
-  init?: RequestInit,
-  dbFetchOptions?: Parameters<typeof dbFetch>[2],
-) => {
-  const url = new URL(`https://api.songkick.com/api/3.0${String(input)}`);
-  if (process.env.SONGKICK_APIKEY) {
-    url.searchParams.set("apikey", process.env.SONGKICK_APIKEY);
-  }
-  return dbFetch<T>(url, init, dbFetchOptions);
-};
-const getFutureEvents = (artistId: number) =>
-  fetchSongKick<{
-    resultsPage: {
-      status: string;
-      results: {
-        event: Songkick.Event[];
-      };
-      perPage: number;
-      page: number;
-      totalEntries: number;
-    };
-  }>(`/artists/${artistId}/calendar.json`, undefined, {
-    maxAge: DAY_IN_SECONDS,
-  }).then((response) =>
-    response.resultsPage.totalEntries ? response.resultsPage.results.event : [],
-  );
+export const getFutureEvents = (artistId: number) =>
+  SongkickEvents.find({
+    "performance.artist.id": artistId,
+    startDate: { $gte: new Date() },
+  }).toArray();
 
-const getPastEvents = (artistId: number) =>
-  fetchSongKick<{
-    resultsPage: {
-      status: string;
-      results: {
-        event: Songkick.Event[];
-      };
-      perPage: number;
-      page: number;
-      totalEntries: number;
-    };
-  }>(`/artists/${artistId}/gigography.json`, undefined, {
-    maxAge: DAY_IN_SECONDS,
-  }).then((response) =>
-    response.resultsPage.totalEntries ? response.resultsPage.results.event : [],
-  );
+export const getPastEvents = (artistId: number) =>
+  SongkickEvents.find({
+    "performance.artist.id": artistId,
+    startDate: { $lt: new Date() },
+  }).toArray();
 
 const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
 
 export async function getSongkickEvents(): Promise<EventDetails[]> {
-  if (!process.env.SONGKICK_APIKEY) {
-    console.error("Missing SONGKICK_APIKEY");
-
-    return [];
-  }
-
   const events = [
     ...(await getPastEvents(EXELERATE_ID)),
     ...(await getFutureEvents(EXELERATE_ID)),
     ...(await getPastEvents(ETHEREAL_KINGDOMS_ID)).filter((event) =>
-      isAfter(new Date(event.start.date), new Date(2021, 0)),
+      isAfter(
+        new Date(event.start.datetime || event.start.date),
+        new Date(2021, 0),
+      ),
     ),
     ...(await getFutureEvents(ETHEREAL_KINGDOMS_ID)),
   ];

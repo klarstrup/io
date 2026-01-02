@@ -57,6 +57,10 @@ type UserDataSourceConfig =
   | {
       source: DataSource.Sportstiming;
       config: { name: string };
+    }
+  | {
+      source: DataSource.Songkick;
+      config: { artistId: number };
     };
 
 export interface UserDataSourceMeta {
@@ -89,9 +93,7 @@ export enum DataSource {
   ClimbAlong = "climbalong",
   Onsight = "onsight",
   Sportstiming = "sportstiming",
-  /* These are special and not configurable to the user for various reasons
   Songkick = "songkick",
-  */
 }
 
 export const dataSourceGroups = {
