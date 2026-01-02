@@ -60,31 +60,14 @@ export const GET = () =>
             if (isFuture(monthDate)) break yearLoop;
 
             if (differenceInMonths(now, monthDate) > 1) {
-              const [entriesForMonth] = await Promise.all([
-                MyFitnessPalFoodEntries.countDocuments(
-                  {
-                    user_id: userId,
-                    date: { $regex: new RegExp(`^${year}-${month}-`) },
+              const entriesForMonth =
+                await MyFitnessPalFoodEntries.countDocuments({
+                  user_id: userId,
+                  datetime: {
+                    $gte: startOfMonth(monthDate, { in: tz("UTC") }),
+                    $lte: endOfMonth(monthDate, { in: tz("UTC") }),
                   },
-                  {
-                    comment:
-                      "Checking for existing entries to skip month w/ $regex",
-                  },
-                ),
-                MyFitnessPalFoodEntries.countDocuments(
-                  {
-                    user_id: userId,
-                    datetime: {
-                      $gte: startOfMonth(monthDate, { in: tz("UTC") }),
-                      $lte: endOfMonth(monthDate, { in: tz("UTC") }),
-                    },
-                  },
-                  {
-                    comment:
-                      "Checking for existing entries to skip month w/ datetime $gte & $lt",
-                  },
-                ),
-              ]);
+                });
 
               if (entriesForMonth > 0) continue;
             }
@@ -119,20 +102,15 @@ export const GET = () =>
               yield reportEntry.date;
             }
 
-            const [foodEntryIdsToBeDeletedR] = await Promise.all([
-              MyFitnessPalFoodEntries.find({
-                user_id: userId,
-                date: { $regex: new RegExp(`^${year}-${month}-`) },
-              }).toArray(),
-              MyFitnessPalFoodEntries.find({
+            const foodEntryIdsToBeDeleted = (
+              await MyFitnessPalFoodEntries.find({
                 user_id: userId,
                 datetime: {
                   $gte: startOfMonth(monthDate, { in: tz("UTC") }),
                   $lte: endOfMonth(monthDate, { in: tz("UTC") }),
                 },
-              }).toArray(),
-            ]);
-            const foodEntryIdsToBeDeleted = foodEntryIdsToBeDeletedR
+              }).toArray()
+            )
               .filter(
                 (entry) =>
                   !reportEntries
