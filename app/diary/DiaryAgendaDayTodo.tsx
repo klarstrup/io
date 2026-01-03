@@ -63,8 +63,10 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
         <TodoDraggable todo={todo} ref={ref}>
           <div
             className={
-              (isActive ? "rounded-b-none" : "cursor-pointer") +
-              " group relative inline-flex break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/5 bg-white " +
+              (isActive
+                ? "flex rounded-b-none"
+                : "inline-flex cursor-pointer") +
+              " group relative break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/5 bg-white " +
               (todo.completed ? " flex-col-reverse" : "")
             }
             onClick={() => setIsActive(true)}
@@ -83,7 +85,7 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                     autoFocus
                     name="summary"
                     defaultValue={todo.summary}
-                    className="-mt-px -mb-px w-full bg-transparent p-0.5"
+                    className="-mt-px -mb-px w-full bg-transparent p-0.5 font-mono text-sm"
                     innerRef={(el) => {
                       if (!el) return;
                       const length = el.value.length;

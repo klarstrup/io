@@ -68,7 +68,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
                 placeholder="Todo summary"
                 name="summary"
                 defaultValue=""
-                className="-mt-px -mb-px w-full p-0.5"
+                className="-mt-px -mb-px w-full p-0.5 font-mono text-sm"
                 innerRef={(el) => {
                   if (!el) return;
                   const length = el.value.length;
