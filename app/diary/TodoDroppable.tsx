@@ -108,7 +108,11 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
   );
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      id="TodoDragDropContainer"
+      sensors={sensors}
+      onDragEnd={handleDragEnd}
+    >
       {props.children}
     </DndContext>
   );
