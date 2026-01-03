@@ -12,6 +12,7 @@ import {
   undoTodo,
   upsertTodo,
 } from "./actions";
+import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { TodoDraggable } from "./TodoDroppable";
 
 export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
@@ -90,16 +91,7 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                     }}
                   />
                 ) : (
-                  <div className="whitespace-pre-wrap">
-                    {todo.summary?.split("\n").map((line, idx) => (
-                      <Fragment key={idx}>
-                        {line}
-                        {idx < (todo.summary?.split("\n").length ?? 0) - 1 && (
-                          <br />
-                        )}
-                      </Fragment>
-                    ))}
-                  </div>
+                  <DiaryAgendaDayTodoMarkdown todo={todo} />
                 )}
                 <button type="submit" className="hidden" />
               </form>

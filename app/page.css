@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @config "../tailwind.config.js";
+@plugin "@tailwindcss/typography";
 
 * {
   box-sizing: border-box;
