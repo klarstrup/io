@@ -87,33 +87,28 @@ export namespace Songkick {
   }
 }
 
-export const getFutureEvents = (artistId: number) =>
+export const getEvents = (artistId: number) =>
   SongkickEvents.find({
     "performance.artist.id": artistId,
-    startDate: { $gte: new Date() },
-  }).toArray();
-
-export const getPastEvents = (artistId: number) =>
-  SongkickEvents.find({
-    "performance.artist.id": artistId,
-    startDate: { $lt: new Date() },
   }).toArray();
 
 const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
 
 export async function getSongkickEvents(): Promise<EventDetails[]> {
-  const events = [
-    ...(await getPastEvents(EXELERATE_ID)),
-    ...(await getFutureEvents(EXELERATE_ID)),
-    ...(await getPastEvents(ETHEREAL_KINGDOMS_ID)).filter((event) =>
-      isAfter(
-        new Date(event.start.datetime || event.start.date),
-        new Date(2021, 0),
+  const events = (
+    await Promise.all([
+      getEvents(EXELERATE_ID),
+      getEvents(ETHEREAL_KINGDOMS_ID).then((evts) =>
+        evts.filter((event) =>
+          isAfter(
+            new Date(event.start.datetime || event.start.date),
+            new Date(2021, 0),
+          ),
+        ),
       ),
-    ),
-    ...(await getFutureEvents(ETHEREAL_KINGDOMS_ID)),
-  ];
+    ])
+  ).flat();
 
   return events.map(
     (event): EventDetails =>
