@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import { useClickOutside, useEvent } from "../../hooks";
 import { upsertTodo } from "./actions";
 
@@ -61,14 +62,14 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
             }}
           >
             <div className="flex min-w-50 flex-col items-stretch rounded-b-md border border-t-0 border-black/5 bg-white p-1">
-              <textarea
+              <TextAreaThatGrows
                 autoFocus
                 required
                 placeholder="Todo summary"
                 name="summary"
                 defaultValue=""
                 className="-mt-px -mb-px w-full p-0.5"
-                ref={(el) => {
+                innerRef={(el) => {
                   if (!el) return;
                   const length = el.value.length;
                   el.setSelectionRange(length, length);

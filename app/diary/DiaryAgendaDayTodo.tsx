@@ -2,6 +2,7 @@
 import { faCircleCheck } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Fragment, useRef, useState } from "react";
+import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import { useClickOutside, useEvent } from "../../hooks";
 import type { MongoVTodo } from "../../lib";
 import {
@@ -77,12 +78,12 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
                 }}
               >
                 {isActive ? (
-                  <textarea
+                  <TextAreaThatGrows
                     autoFocus
                     name="summary"
                     defaultValue={todo.summary}
                     className="-mt-px -mb-px w-full bg-transparent p-0.5"
-                    ref={(el) => {
+                    innerRef={(el) => {
                       if (!el) return;
                       const length = el.value.length;
                       el.setSelectionRange(length, length);
