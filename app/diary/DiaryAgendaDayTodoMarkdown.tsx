@@ -34,37 +34,33 @@ export function DiaryAgendaDayTodoMarkdown({ todo }: { todo: MongoVTodo }) {
                     const thisCheckboxIndex = Array.from(
                       checkboxes || [],
                     ).indexOf(e.currentTarget);
-                    console.log({ markdownContainer, thisCheckboxIndex });
+
                     // find the nth checkbox in the todo summary and toggle it
                     let checkBoxInSummaryIterator = -1;
-                    const newSummary =
-                      todo.summary &&
-                      todo.summary
-                        .split("\n")
-                        .map((line) => {
-                          if (line.match(/^\s*[-*+]\s+\[.\]/)) {
-                            checkBoxInSummaryIterator += 1;
-                            if (
-                              checkBoxInSummaryIterator === thisCheckboxIndex
-                            ) {
-                              // toggle this line
-                              if (checked) {
-                                return line.replace(
-                                  /^\s*([-*+]\s+)\[ \]/,
-                                  "$1[x]",
-                                );
-                              } else {
-                                return line.replace(
-                                  /^\s*([-*+]\s+)\[x\]/,
-                                  "$1[ ]",
-                                );
-                              }
+                    const newSummary = todo.summary
+                      ?.split("\n")
+                      .map((line) => {
+                        if (line.match(/^\s*[-*+]\s+\[.\]/)) {
+                          checkBoxInSummaryIterator += 1;
+                          if (checkBoxInSummaryIterator === thisCheckboxIndex) {
+                            // toggle this line
+                            if (checked) {
+                              return line.replace(
+                                /^\s*([-*+]\s+)\[ \]/,
+                                "$1[x]",
+                              );
+                            } else {
+                              return line.replace(
+                                /^\s*([-*+]\s+)\[x\]/,
+                                "$1[ ]",
+                              );
                             }
                           }
+                        }
 
-                          return line;
-                        })
-                        .join("\n");
+                        return line;
+                      })
+                      .join("\n");
 
                     const allChecked =
                       checkboxes &&
