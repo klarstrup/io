@@ -5,11 +5,6 @@ import { DataSource, UserDataSource } from "../../../sources/utils";
 import { epoch } from "../../../utils";
 
 export async function GET() {
-  if (!process.env.VERCEL) {
-    console.log("Skipping /cron scrape because we are not on Vercel");
-    return Response.json({});
-  }
-
   const users = await Users.find({}).toArray();
 
   const dataSources = users
@@ -25,6 +20,13 @@ export async function GET() {
   const leastRecentlyAttempted = dataSources[0];
 
   if (!leastRecentlyAttempted) return Response.json({});
+
+  if (!process.env.VERCEL) {
+    console.log(
+      `Skipping /cron /${leastRecentlyAttempted.source}_scrape scrape because we are not on Vercel`,
+    );
+    return Response.json({});
+  }
 
   redirect(`/api/${leastRecentlyAttempted.source}_scrape`);
 }
