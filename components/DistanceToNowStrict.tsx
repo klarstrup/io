@@ -30,7 +30,11 @@ export function DistanceToNow({ date }: { date: Date }) {
 
   if (!date) return null;
 
-  return state
-    ? formatDistanceToNow(date, { addSuffix: true })
-    : date.toISOString();
+  return (
+    <time dateTime={date.toISOString()} title={date.toISOString()}>
+      {state
+        ? formatDistanceToNow(date, { addSuffix: true })
+        : date.toISOString()}
+    </time>
+  );
 }
