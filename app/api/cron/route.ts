@@ -18,8 +18,25 @@ export async function GET() {
     );
 
   const leastRecentlyAttempted = dataSources[0];
+  const mostRecentlyAttempted = dataSources[dataSources.length - 1];
 
-  if (!leastRecentlyAttempted) return Response.json({});
+  if (!leastRecentlyAttempted || !mostRecentlyAttempted) {
+    return Response.json({});
+  }
+
+  const now = new Date();
+  const mostRecentlyAttemptedAt =
+    mostRecentlyAttempted.lastAttemptedAt ?? epoch;
+  const timeSinceMostRecentlyAttempted =
+    now.getTime() - mostRecentlyAttemptedAt.getTime();
+
+  // If the most recently attempted scrape was less than 15 minutes ago, skip.
+  if (timeSinceMostRecentlyAttempted < 15 * 60 * 1000) {
+    console.log(
+      `Skipping /cron /${leastRecentlyAttempted.source}_scrape scrape because another scrape was attempted less than 15 minutes ago.`,
+    );
+    return Response.json({});
+  }
 
   if (!process.env.VERCEL) {
     console.log(
