@@ -12,7 +12,7 @@ export function Modal<R extends string>({
   dismissTo?: Route<R>;
 }) {
   return (
-    <div className="max-h-vh fixed inset-0 z-20 flex items-center justify-center backdrop-blur-xs">
+    <div className="max-h-vh fixed inset-0 z-60 flex items-center justify-center backdrop-blur-xs">
       <div
         className={
           "z-10 flex max-h-[90vh] max-w-[90vw] flex-col " + (className || "")
