@@ -1,11 +1,14 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
-  intervalToDuration,
+  addHours,
+  addMilliseconds,
+  endOfDay,
   isAfter,
+  isSameHour,
   startOfDay,
   type Duration,
 } from "date-fns";
-import { DEFAULT_TIMEZONE, epoch } from "../utils";
+import { dayStartHour, DEFAULT_TIMEZONE, epoch } from "../utils";
 import {
   exercisesById,
   type AssistType,
@@ -101,22 +104,23 @@ export const isNextSetDue = (
   tzDate: Date | TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) => {
-  const end = startOfDay(tzDate);
   const inn = tz(("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE);
+  const dayStart = addHours(startOfDay(tzDate, { in: inn }), dayStartHour);
+  const dayEnd = addHours(endOfDay(tzDate, { in: inn }), dayStartHour);
+
+  const dueOn = addMilliseconds(
+    startOfDay(nextSet.workedOutAt || epoch, { in: inn }),
+    durationToMs(nextSet.scheduleEntry.frequency),
+  );
+  const effectiveDueDate =
+    nextSet.scheduleEntry.snoozedUntil &&
+    !isAfter(endOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }), dayEnd)
+      ? nextSet.scheduleEntry.snoozedUntil
+      : dueOn;
+
   return (
-    (nextSet.scheduleEntry.snoozedUntil
-      ? !isAfter(
-          startOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }),
-          end,
-        )
-      : true) &&
-    isDurationGreaterOrEqual(
-      intervalToDuration({
-        start: startOfDay(nextSet.workedOutAt || epoch, { in: inn }),
-        end,
-      }),
-      nextSet.scheduleEntry.frequency,
-    )
+    isAfter(dayStart, effectiveDueDate) ||
+    isSameHour(dayStart, effectiveDueDate)
   );
 };
 

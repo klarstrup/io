@@ -20,7 +20,7 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
       {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
       <div className="max-h-screen min-h-screen">
         <div className="mx-auto max-h-screen max-w-2xl self-stretch border-black/25 px-2">
-          <TodoDragDropContainer>
+          <TodoDragDropContainer userId={user?.id}>
             <DiaryAgendaDay date={dateToString(subHours(now, 5))} user={user} />
           </TodoDragDropContainer>
         </div>
