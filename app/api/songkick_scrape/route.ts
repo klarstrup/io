@@ -7,7 +7,7 @@ import { wrapSources } from "../../../sources/utils.server";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 const fetchSongKick = async <T>(input: string | URL, init?: RequestInit) => {
   const url = new URL(input, "https://api.songkick.com/api/3.0/");

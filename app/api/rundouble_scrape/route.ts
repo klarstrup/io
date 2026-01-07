@@ -6,7 +6,7 @@ import { wrapSources } from "../../../sources/utils.server";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 async function* getRuns(userId: string) {
   let cursor: string | undefined = undefined;

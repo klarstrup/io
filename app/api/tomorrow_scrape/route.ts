@@ -9,7 +9,7 @@ import { decodeGeohash, DEFAULT_TIMEZONE } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 async function fetchTomorrowTimelineIntervals({
   geohash,

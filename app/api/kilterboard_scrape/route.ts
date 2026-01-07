@@ -15,7 +15,7 @@ import { shuffle } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
   const newestAscentInDatabase = await KilterBoardAscents.findOne(

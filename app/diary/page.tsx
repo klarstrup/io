@@ -6,7 +6,7 @@ import { DiaryAgendaDay } from "./DiaryAgendaDay";
 import { DiaryPoller } from "./DiaryPoller";
 import { TodoDragDropContainer } from "./TodoDroppable";
 
-export const maxDuration = 60;
+export const maxDuration = 45;
 export const revalidate = 3600; // 1 hour
 
 export default async function DiaryLayout(_props: PageProps<"/diary">) {

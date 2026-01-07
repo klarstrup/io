@@ -11,7 +11,7 @@ import { roundToNearestDay } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 export const GET = () =>
   // eslint-disable-next-line require-yield

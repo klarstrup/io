@@ -11,7 +11,7 @@ import { uniqueBy } from "../../../utils";
 import { fetchJson, fetchText, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 const sportstimingHeaders: HeadersInit = {
   "x-requested-with": "XMLHttpRequest",

@@ -42,7 +42,7 @@ import {
 } from "./queries";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 100;
+export const maxDuration = 45;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {

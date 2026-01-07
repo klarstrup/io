@@ -19,7 +19,7 @@ import { partition, randomSliceOfSize } from "../../../utils";
 import { deadlineLoop, fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 45;
 
 const fetchCA = <T>(path: string, init?: RequestInit) =>
   fetchJson<T>(new URL(path, `https://comp.climbalong.com/api/`), init);
