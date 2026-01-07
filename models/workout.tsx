@@ -114,7 +114,7 @@ export const isNextSetDue = (
   );
   const effectiveDueDate =
     nextSet.scheduleEntry.snoozedUntil &&
-    !isAfter(endOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }), dayEnd)
+    !isAfter(dayEnd, endOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }))
       ? nextSet.scheduleEntry.snoozedUntil
       : dueOn;
 
