@@ -9,7 +9,7 @@ export function DiaryAgendaDayTodoMarkdown({ todo }: { todo: MongoVTodo }) {
   return (
     <div
       data-markdown-wrapper
-      className="prose prose-sm prose-ul:m-0 prose-p:m-0 prose-li:m-0 max-w-full wrap-break-word [&_.contains-task-list]:list-none [&_.contains-task-list]:p-0"
+      className="prose prose-sm prose-ul:m-0 text-black prose-p:m-0 prose-li:m-0 max-w-full wrap-break-word [&_.contains-task-list]:list-none [&_.contains-task-list]:p-0"
     >
       <Markdown
         remarkPlugins={[remarkGfm]}

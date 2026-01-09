@@ -39,7 +39,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
     >
       <button
         className={
-          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-xs font-semibold shadow-sm"
+          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/50"
         }
         onClick={() => {
           if (!isActive) {

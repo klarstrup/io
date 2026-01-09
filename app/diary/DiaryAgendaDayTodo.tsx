@@ -66,7 +66,7 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
               (isActive
                 ? "flex rounded-b-none"
                 : "inline-flex cursor-pointer") +
-              " group relative break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/5 bg-white " +
+              " group relative break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/20 bg-white " +
               (todo.completed ? " flex-col-reverse" : "")
             }
             onClick={() => setIsActive(true)}

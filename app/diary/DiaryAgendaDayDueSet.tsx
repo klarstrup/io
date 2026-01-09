@@ -36,7 +36,7 @@ export function DiaryAgendaDayDueSet({
     <NextSetDraggable nextSet={dueSet} ref={ref}>
       <div
         className={
-          "group relative inline-flex flex-col items-stretch justify-center rounded-md border border-black/5 bg-white " +
+          "group relative inline-flex flex-col items-stretch justify-center rounded-md border border-black/20 bg-white " +
           (isActive ? "rounded-b-none" : "cursor-pointer")
         }
         onClick={() => setIsActive(true)}
