@@ -188,9 +188,7 @@ export function DiaryAgendaDayDay({
                   weekday: "long",
                 })}
           </b>
-          {todayStr === dayName ? (
-            <ScrollToMe />
-          ) : (
+          {todayStr === dayName ? null : (
             <DiaryAgendaDayCreateExpander
               inactiveButtonClassName={
                 isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"
@@ -475,6 +473,7 @@ export function DiaryAgendaDayDay({
         <>
           <div />
           <div className="mt-1 flex items-center gap-1 leading-normal">
+            <ScrollToMe />
             <Link
               prefetch={false}
               href={`/diary/${date}/workout`}
