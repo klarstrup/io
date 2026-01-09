@@ -20,7 +20,9 @@ import type { MongoVEvent, MongoVTodo } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { Locations } from "../../models/location.server";
 import {
+  ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
   isNextSetDue,
+  WorkoutExerciseSetInput,
   WorkoutSource,
   type WorkoutData,
   type WorkoutExercise,
@@ -29,6 +31,7 @@ import {
   getNextSets,
   MaterializedWorkoutsView,
 } from "../../models/workout.server";
+import { ExerciseSchedule } from "../../sources/fitocracy";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
@@ -43,6 +46,35 @@ import {
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { TodoDroppable } from "./TodoDroppable";
+
+export type JournalEntry =
+  | MongoVEvent
+  | MongoVTodo
+  | {
+      workedOutAt: Date | null;
+      exerciseId: number;
+      successful: boolean | null;
+      nextWorkingSetInputs: WorkoutExerciseSetInput[] | null;
+      nextWorkingSets: number;
+      scheduleEntry: ExerciseSchedule;
+    }
+  | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
+
+export const getJournalEntryPrincipalDate = (
+  entry: JournalEntry,
+): Date | null => {
+  if ("completed" in entry && entry.completed) return entry.completed;
+  if ("due" in entry && entry.due) return entry.due;
+  if ("start" in entry && entry.start) return entry.start;
+  if ("scheduleEntry" in entry && entry.scheduleEntry) return entry.workedOutAt;
+  if (Array.isArray(entry) && entry.length === 3 && "id" in entry[0]) {
+    const exerciseSet =
+      entry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
+    return exerciseSet[2][exerciseSet[2].length - 1]?.workedOutAt || null;
+  }
+
+  return null;
+};
 
 export async function DiaryAgendaDay({
   date,
@@ -264,27 +296,29 @@ export async function DiaryAgendaDay({
               {},
             );
 
-          const dayExerciseSets = Object.entries(dayExercisesById)
-            .map(
-              ([exerciseId, exerciseWorkouts]) =>
-                [
-                  exercisesById[parseInt(exerciseId)]!,
-                  exerciseWorkouts.flatMap(([{ sets }, workout]) =>
-                    sets.map(
-                      (set) =>
-                        [
-                          set,
-                          dayLocations.find(
-                            (loc) => loc._id.toString() === workout.locationId,
-                          ),
-                          workout,
-                        ] as const,
+          const dayExerciseSets: ExerciseSetWithExerciseDataAndLocationsAndWorkouts[] =
+            Object.entries(dayExercisesById)
+              .map(
+                ([exerciseId, exerciseWorkouts]) =>
+                  [
+                    exercisesById[parseInt(exerciseId)]!,
+                    exerciseWorkouts.flatMap(([{ sets }, workout]) =>
+                      sets.map(
+                        (set) =>
+                          [
+                            set,
+                            dayLocations.find(
+                              (loc) =>
+                                loc._id.toString() === workout.locationId,
+                            ),
+                            workout,
+                          ] as const,
+                      ),
                     ),
-                  ),
-                  exerciseWorkouts.map(([_, workout]) => workout),
-                ] as const,
-            )
-            .sort(([, a], [, b]) => b.length - a.length);
+                    exerciseWorkouts.map(([_, workout]) => workout),
+                  ] as const,
+              )
+              .sort(([, a], [, b]) => b.length - a.length);
 
           const dayDueSets = dueSetsByDate[dayName] || [];
           const dayTodos = todosByDate[dayName] || [];
@@ -296,10 +330,21 @@ export async function DiaryAgendaDay({
                 dayDate={dayDate}
                 user={user}
                 dayLocations={dayLocations}
-                dayEvents={dayEvents} 
-                dayDueSets={dayDueSets}
-                dayTodos={dayTodos}
-                dayExerciseSets={dayExerciseSets}
+                dayJournalEntries={[
+                  ...dayEvents,
+                  ...dayDueSets,
+                  ...dayTodos,
+                  ...dayExerciseSets,
+                ].sort((a, b) =>
+                  compareAsc(
+                    "type" in a && a.type === "VEVENT" && a.datetype === "date"
+                      ? 1
+                      : getJournalEntryPrincipalDate(a) || new Date(0),
+                    "type" in b && b.type === "VEVENT" && b.datetype === "date"
+                      ? 1
+                      : getJournalEntryPrincipalDate(b) || new Date(0),
+                  ),
+                )}
               />
             </TodoDroppable>
           );

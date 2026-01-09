@@ -17,6 +17,7 @@ import {
 } from "./exercises";
 import type { LocationData } from "./location";
 import type { getNextSets } from "./workout.server";
+import { WithId } from "mongodb";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -70,6 +71,16 @@ export interface WorkoutExerciseSetInput {
   value: number;
   assistType?: AssistType;
 }
+
+export type ExerciseSetWithExerciseDataAndLocationsAndWorkouts = readonly [
+  ExerciseData,
+  (readonly [
+    WorkoutExerciseSet,
+    WithId<LocationData> | undefined,
+    WithId<WorkoutData>,
+  ])[],
+  WithId<WorkoutData>[],
+];
 
 // This is a helper function to determine if an exercise is a climbing exercise,
 // meaning that its set inputs are a specific shape and can be presented in a

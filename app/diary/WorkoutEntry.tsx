@@ -58,7 +58,7 @@ export function WorkoutEntryExercise({
     LocationData | undefined,
     workout: WorkoutData | undefined,
   ])[];
-  exerciseIndex: number;
+  exerciseIndex?: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
@@ -112,6 +112,7 @@ export function WorkoutEntryExercise({
 
           // PRs are only reported for the first set of a repeated set
           const setPR =
+            typeof exerciseIndex === "number" &&
             exerciseSetPRs?.[exerciseIndex]?.[
               setIndex - (repeatCount ? repeatCount - 1 : 0)
             ];
@@ -123,7 +124,7 @@ export function WorkoutEntryExercise({
               set={set}
               repeatCount={repeatCount}
               exercise={exercise}
-              setPR={setPR}
+              setPR={setPR || undefined}
             />,
           );
 

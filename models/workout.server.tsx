@@ -769,14 +769,24 @@ export async function calculateClimbingStats(
 
   return (
     <small className="text-[10px]">
-      {problemCount ? <span>PC: {problemCount}</span> : null}
-      {gradeSum ? <span>, GS: {gradeSum.toFixed(0)}</span> : null}
+      {problemCount ? (
+        <span className="whitespace-nowrap">PC: {problemCount}</span>
+      ) : null}
+      {gradeSum ? (
+        <span>
+          , <span className="whitespace-nowrap">GS: {gradeSum.toFixed(0)}</span>
+        </span>
+      ) : null}
       {gradeTop5Average ? (
         <span>
-          , T5A: {new Grade(gradeTop5Average).nameFloor}
-          {new Grade(gradeTop5Average).subGradePercent ? (
-            <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
-          ) : null}
+          ,{" "}
+          <span className="whitespace-nowrap">
+            T5A:
+            {new Grade(gradeTop5Average).nameFloor}
+            {new Grade(gradeTop5Average).subGradePercent ? (
+              <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
+            ) : null}
+          </span>
         </span>
       ) : null}
       {flashGrade ? <span>, 1MFG: {new Grade(flashGrade).name}</span> : null}
