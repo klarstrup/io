@@ -457,8 +457,7 @@ export function DiaryAgendaDayDay({
         </div>
       }
       className={
-        (todayStr === dayName ? "mt-1 mb-5 pb-3" : "mb-1 pb-1") +
-        " grid flex-0! gap-1.5 px-1 " +
+        "mb-1 grid flex-0! gap-1.5 px-1 pb-1 " +
         ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
           ? "bg-green-50 pt-1"
           : todayStr === dayName
