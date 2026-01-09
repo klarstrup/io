@@ -310,37 +310,31 @@ export function DiaryAgendaDayDay({
 
       const shouldPutNowDivider = currentIsPassed !== nextIsPassed;
 
-      if (shouldPutNowDivider) {
+      if (shouldPutNowDivider && isToday) {
         dayJournalEntryElements.push(
           <Fragment key={`divider-${i}`}>
             <span className="flex items-center text-[10px] font-bold text-[#EDAB00]">
-              {isToday ? "NOW" : ""}
+              NOW
             </span>
             <span className="flex items-center gap-1 leading-normal">
-              {isToday ? (
-                <>
-                  <ScrollToMe />
-                  <Link
-                    prefetch={false}
-                    href={`/diary/${date}/workout`}
-                    className={
-                      "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-                    }
-                  >
-                    <span className="text-xs">➕</span> Workout
-                  </Link>
-                  <DiaryAgendaDayCreateTodo date={dayStart} />
-                  <span
-                    className={
-                      "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-                    }
-                  >
-                    <span className="text-xs">➕</span> Event
-                  </span>
-                </>
-              ) : (
-                <hr className="flex-1 border-black/20" />
-              )}
+              <ScrollToMe />
+              <Link
+                prefetch={false}
+                href={`/diary/${date}/workout`}
+                className={
+                  "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+                }
+              >
+                <span className="text-xs">➕</span> Workout
+              </Link>
+              <DiaryAgendaDayCreateTodo date={dayStart} />
+              <span
+                className={
+                  "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+                }
+              >
+                <span className="text-xs">➕</span> Event
+              </span>
             </span>
           </Fragment>,
         );
