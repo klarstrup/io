@@ -67,6 +67,7 @@ export function DiaryAgendaDayDay({
   const dayJournalEntryElements: ReactElement[] = [];
 
   let i = 0;
+  let hasPutNowDivider = false;
   const getIsJournalEntryPassed = (
     journalEntry: (typeof dayJournalEntries)[number],
   ) => {
@@ -305,40 +306,42 @@ export function DiaryAgendaDayDay({
     }
 
     const currentIsPassed = getIsJournalEntryPassed(journalEntry);
-    if (i > 0 && nextJournalEntry) {
-      const nextIsPassed = getIsJournalEntryPassed(nextJournalEntry);
+    const nextIsPassed =
+      nextJournalEntry && getIsJournalEntryPassed(nextJournalEntry);
 
-      const shouldPutNowDivider = currentIsPassed !== nextIsPassed;
+    const shouldPutNowDivider =
+      (journalEntry && nextJournalEntry && currentIsPassed !== nextIsPassed) ||
+      (i === dayJournalEntries.length - 1 && !hasPutNowDivider);
 
-      if (shouldPutNowDivider && isToday) {
-        dayJournalEntryElements.push(
-          <Fragment key={`divider-${i}`}>
-            <div className="flex items-center text-[10px] font-bold text-[#EDAB00]">
-              NOW
-            </div>
-            <div className="flex items-center gap-1 leading-normal">
-              <Link
-                prefetch={false}
-                href={`/diary/${date}/workout`}
-                className={
-                  "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-                }
-              >
-                <span className="text-xs">➕</span> Workout
-              </Link>
-              <DiaryAgendaDayCreateTodo date={dayStart} />
-              <span
-                className={
-                  "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-                }
-              >
-                <span className="text-xs">➕</span> Event
-              </span>
-              <ScrollToMe />
-            </div>
-          </Fragment>,
-        );
-      }
+    if (shouldPutNowDivider && isToday) {
+      dayJournalEntryElements.push(
+        <Fragment key={`divider-${i}`}>
+          <div className="flex items-center text-[10px] font-bold text-[#EDAB00]">
+            NOW
+          </div>
+          <div className="flex items-center gap-1 leading-normal">
+            <Link
+              prefetch={false}
+              href={`/diary/${date}/workout`}
+              className={
+                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+              }
+            >
+              <span className="text-xs">➕</span> Workout
+            </Link>
+            <DiaryAgendaDayCreateTodo date={dayStart} />
+            <span
+              className={
+                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+              }
+            >
+              <span className="text-xs">➕</span> Event
+            </span>
+            <ScrollToMe />
+          </div>
+        </Fragment>,
+      );
+      hasPutNowDivider = true;
     }
 
     i++;
@@ -457,7 +460,7 @@ export function DiaryAgendaDayDay({
         </div>
       }
       className={
-        "mb-1 grid flex-0! gap-1.5 px-1 pb-1 " +
+        "mb-1 grid flex-0! gap-1.5 px-1 pb-2 " +
         ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
           ? "bg-green-50 pt-1"
           : todayStr === dayName
