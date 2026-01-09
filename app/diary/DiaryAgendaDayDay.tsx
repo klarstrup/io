@@ -313,9 +313,34 @@ export function DiaryAgendaDayDay({
       if (shouldPutNowDivider) {
         dayJournalEntryElements.push(
           <Fragment key={`divider-${i}`}>
-            <span></span>
-            <span>
-              <hr className="border-black/20" />
+            <span className="flex items-center text-[10px] font-bold text-[#EDAB00]">
+              {isToday ? "NOW" : ""}
+            </span>
+            <span className="flex items-center gap-1 leading-normal">
+              {isToday ? (
+                <>
+                  <ScrollToMe />
+                  <Link
+                    prefetch={false}
+                    href={`/diary/${date}/workout`}
+                    className={
+                      "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+                    }
+                  >
+                    <span className="text-xs">➕</span> Workout
+                  </Link>
+                  <DiaryAgendaDayCreateTodo date={dayStart} />
+                  <span
+                    className={
+                      "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+                    }
+                  >
+                    <span className="text-xs">➕</span> Event
+                  </span>
+                </>
+              ) : (
+                <hr className="flex-1 border-black/20" />
+              )}
             </span>
           </Fragment>,
         );
@@ -458,31 +483,6 @@ export function DiaryAgendaDayDay({
           </div>
         </>
       )}
-      {todayStr === dayName ? (
-        <>
-          <div />
-          <div className="mt-1 flex items-center gap-1 leading-normal">
-            <ScrollToMe />
-            <Link
-              prefetch={false}
-              href={`/diary/${date}/workout`}
-              className={
-                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Workout
-            </Link>
-            <DiaryAgendaDayCreateTodo date={dayStart} />
-            <span
-              className={
-                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Event
-            </span>
-          </div>
-        </>
-      ) : null}
     </FieldSetX>
   );
 }
