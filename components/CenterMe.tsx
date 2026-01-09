@@ -7,9 +7,9 @@ export function ScrollToMe() {
   useEffect(() => {
     ref.current?.scrollIntoView({
       behavior: "auto",
-      block: "start",
+      block: "center",
     });
   }, []);
 
-  return <div ref={ref} className="relative -top-18" />;
+  return <div ref={ref} className="relative " />;
 }
