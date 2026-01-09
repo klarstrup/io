@@ -313,11 +313,10 @@ export function DiaryAgendaDayDay({
       if (shouldPutNowDivider && isToday) {
         dayJournalEntryElements.push(
           <Fragment key={`divider-${i}`}>
-            <span className="flex items-center text-[10px] font-bold text-[#EDAB00]">
+            <div className="flex items-center text-[10px] font-bold text-[#EDAB00]">
               NOW
-            </span>
-            <span className="flex items-center gap-1 leading-normal">
-              <ScrollToMe />
+            </div>
+            <div className="flex items-center gap-1 leading-normal">
               <Link
                 prefetch={false}
                 href={`/diary/${date}/workout`}
@@ -335,7 +334,8 @@ export function DiaryAgendaDayDay({
               >
                 <span className="text-xs">➕</span> Event
               </span>
-            </span>
+              <ScrollToMe />
+            </div>
           </Fragment>,
         );
       }
