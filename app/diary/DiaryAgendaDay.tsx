@@ -296,8 +296,7 @@ export async function DiaryAgendaDay({
                 dayDate={dayDate}
                 user={user}
                 dayLocations={dayLocations}
-                dayEvents={dayEvents}
-                dayWorkouts={dayWorkouts}
+                dayEvents={dayEvents} 
                 dayDueSets={dayDueSets}
                 dayTodos={dayTodos}
                 dayExerciseSets={dayExerciseSets}
