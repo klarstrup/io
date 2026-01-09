@@ -48,7 +48,12 @@ export function DiaryAgendaDayDueSet({
               .sort((a, b) => a.length - b.length)[0]!
           }
         </div>
-        <div className="flex items-center justify-center self-stretch rounded-b-md bg-black/60 px-1.5 text-xs text-white opacity-40">
+        <div
+          className={
+            "flex items-center justify-center self-stretch bg-black/60 px-1.5 text-xs text-white opacity-40 " +
+            (isActive ? "rounded-b-none" : "rounded-b-[5px]")
+          }
+        >
           {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
             <table className="w-auto max-w-0">
               <tbody>
@@ -66,7 +71,7 @@ export function DiaryAgendaDayDueSet({
           )}
         </div>
         {isActive && (
-          <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/5 bg-white p-1">
+          <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-[5px] border border-t-0 border-black/20 bg-white p-1">
             <button
               type="button"
               onClick={() =>

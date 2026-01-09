@@ -254,8 +254,8 @@ export function DiaryAgendaDayDay({
                   >
                     <div
                       className={
-                        "flex w-30 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-md bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
-                        (!setsWithLocation.length ? "rounded-r-md" : "")
+                        "flex w-30 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
+                        (!setsWithLocation.length ? "rounded-r-[5px]" : "")
                       }
                     >
                       <div className="flex justify-between">
