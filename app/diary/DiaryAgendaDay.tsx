@@ -2,6 +2,7 @@ import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
   addHours,
+  addMilliseconds,
   compareAsc,
   eachDayOfInterval,
   endOfDay,
@@ -20,7 +21,9 @@ import type { MongoVEvent, MongoVTodo } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { Locations } from "../../models/location.server";
 import {
+  durationToMs,
   ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
+  getNextSetEffectiveDueDate,
   isNextSetDue,
   WorkoutExerciseSetInput,
   WorkoutSource,
@@ -40,6 +43,7 @@ import {
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
+  epoch,
   rangeToQuery,
   roundToNearestDay,
   unique,
@@ -66,7 +70,23 @@ export const getJournalEntryPrincipalDate = (
   if ("completed" in entry && entry.completed) return entry.completed;
   if ("due" in entry && entry.due) return entry.due;
   if ("start" in entry && entry.start) return entry.start;
-  if ("scheduleEntry" in entry && entry.scheduleEntry) return entry.workedOutAt;
+  if ("scheduleEntry" in entry && entry.scheduleEntry) {
+    const nextSet = entry;
+    const dueOn = addMilliseconds(
+      startOfDay(nextSet.workedOutAt || epoch),
+      durationToMs(nextSet.scheduleEntry.frequency),
+    );
+    const effectiveDueDate =
+      nextSet.scheduleEntry.snoozedUntil &&
+      nextSet.workedOutAt &&
+      isAfter(nextSet.workedOutAt, nextSet.scheduleEntry.snoozedUntil)
+        ? nextSet.scheduleEntry.snoozedUntil
+        : dueOn;
+
+    console.log("effectiveDueDate", effectiveDueDate);
+
+    return max([effectiveDueDate, new Date()]);
+  }
   if (Array.isArray(entry) && entry.length === 3 && "id" in entry[0]) {
     const exerciseSet =
       entry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
