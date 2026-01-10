@@ -23,7 +23,6 @@ import { Locations } from "../../models/location.server";
 import {
   durationToMs,
   ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
-  getNextSetEffectiveDueDate,
   isNextSetDue,
   WorkoutExerciseSetInput,
   WorkoutSource,
