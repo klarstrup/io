@@ -2,7 +2,6 @@ import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
   addHours,
-  addMilliseconds,
   compareAsc,
   eachDayOfInterval,
   endOfDay,
@@ -21,10 +20,8 @@ import type { MongoVEvent, MongoVTodo } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { Locations } from "../../models/location.server";
 import {
-  durationToMs,
   ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
   isNextSetDue,
-  WorkoutExerciseSetInput,
   WorkoutSource,
   type WorkoutData,
   type WorkoutExercise,
@@ -33,7 +30,6 @@ import {
   getNextSets,
   MaterializedWorkoutsView,
 } from "../../models/workout.server";
-import { ExerciseSchedule } from "../../sources/fitocracy";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
@@ -42,7 +38,6 @@ import {
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
-  epoch,
   rangeToQuery,
   roundToNearestDay,
   unique,
@@ -53,36 +48,25 @@ import { TodoDroppable } from "./TodoDroppable";
 export type JournalEntry =
   | MongoVEvent
   | MongoVTodo
-  | {
-      workedOutAt: Date | null;
-      exerciseId: number;
-      successful: boolean | null;
-      nextWorkingSetInputs: WorkoutExerciseSetInput[] | null;
-      nextWorkingSets: number;
-      scheduleEntry: ExerciseSchedule;
-    }
+  | Awaited<ReturnType<typeof getNextSets>>[number]
   | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Date | null => {
-  if ("completed" in entry && entry.completed) return entry.completed;
-  if ("due" in entry && entry.due) return entry.due;
+  if ("type" in entry && entry.type === "VTODO") {
+    if ("completed" in entry && entry.completed) return entry.completed;
+    if ("due" in entry && entry.due) return max([entry.due, new Date()]);
+    if ("start" in entry && entry.start) return max([entry.start, new Date()]);
+    return new Date();
+  }
   if ("start" in entry && entry.start) return entry.start;
   if ("scheduleEntry" in entry && entry.scheduleEntry) {
     const nextSet = entry;
-    const dueOn = addMilliseconds(
-      startOfDay(nextSet.workedOutAt || epoch),
-      durationToMs(nextSet.scheduleEntry.frequency),
-    );
-    const effectiveDueDate =
-      nextSet.scheduleEntry.snoozedUntil &&
-      nextSet.workedOutAt &&
-      isAfter(nextSet.workedOutAt, nextSet.scheduleEntry.snoozedUntil)
-        ? nextSet.scheduleEntry.snoozedUntil
-        : dueOn;
 
-    console.log("effectiveDueDate", effectiveDueDate);
+    const effectiveDueDate = nextSet.scheduleEntry.snoozedUntil
+      ? max([nextSet.scheduleEntry.snoozedUntil, nextSet.dueOn])
+      : nextSet.dueOn;
 
     return max([effectiveDueDate, new Date()]);
   }

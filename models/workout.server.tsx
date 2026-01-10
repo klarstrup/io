@@ -1,5 +1,6 @@
 /* eslint-disable no-unexpected-multiline */
 import {
+  addMilliseconds,
   eachMonthOfInterval,
   endOfMonth,
   startOfMonth,
@@ -12,6 +13,7 @@ import type { Session } from "next-auth";
 import Grade from "../grades";
 import type { PRType } from "../lib";
 import { ExerciseSchedule } from "../sources/fitocracy";
+import { epoch } from "../utils";
 import { proxyCollection } from "../utils.server";
 import {
   AssistType,
@@ -24,6 +26,7 @@ import {
 import type { LocationData } from "./location";
 import { Locations } from "./location.server";
 import {
+  durationToMs,
   getSetGrade,
   isClimbingExercise,
   type WorkoutData,
@@ -80,6 +83,11 @@ const getNextSet = async ({
     },
   ]).toArray();
 
+  const dueOn = addMilliseconds(
+    workout?.workedOutAt || epoch,
+    durationToMs(scheduleEntry.frequency),
+  );
+
   if (isClimbingExercise(scheduleEntry.exerciseId)) {
     if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {
       const workouts = MaterializedWorkoutsView.aggregate<{
@@ -127,6 +135,7 @@ const getNextSet = async ({
         if (successful) {
           return {
             workedOutAt,
+            dueOn,
             exerciseId: scheduleEntry.exerciseId,
             successful: true,
             nextWorkingSets: scheduleEntry.workingSets ?? NaN,
@@ -139,6 +148,7 @@ const getNextSet = async ({
 
     return {
       workedOutAt: workout?.workedOutAt || null,
+      dueOn,
       exerciseId: scheduleEntry.exerciseId,
       successful: true,
       nextWorkingSets: scheduleEntry.workingSets ?? NaN,
@@ -271,6 +281,7 @@ const getNextSet = async ({
 
   return {
     workedOutAt: workout?.workedOutAt || null,
+    dueOn,
     exerciseId: scheduleEntry.exerciseId,
     successful,
     nextWorkingSetInputs,

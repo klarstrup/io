@@ -1,14 +1,14 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addHours,
-  addMilliseconds,
   endOfDay,
   isAfter,
   isSameHour,
   startOfDay,
   type Duration,
 } from "date-fns";
-import { dayStartHour, DEFAULT_TIMEZONE, epoch } from "../utils";
+import type { WithId } from "mongodb";
+import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
 import {
   exercisesById,
   type AssistType,
@@ -17,7 +17,6 @@ import {
 } from "./exercises";
 import type { LocationData } from "./location";
 import type { getNextSets } from "./workout.server";
-import { WithId } from "mongodb";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -119,15 +118,11 @@ export const isNextSetDue = (
   const dayStart = addHours(startOfDay(tzDate, { in: inn }), dayStartHour);
   const dayEnd = addHours(endOfDay(tzDate, { in: inn }), dayStartHour);
 
-  const dueOn = addMilliseconds(
-    startOfDay(nextSet.workedOutAt || epoch, { in: inn }),
-    durationToMs(nextSet.scheduleEntry.frequency),
-  );
   const effectiveDueDate =
     nextSet.scheduleEntry.snoozedUntil &&
     !isAfter(dayEnd, endOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }))
       ? nextSet.scheduleEntry.snoozedUntil
-      : dueOn;
+      : nextSet.dueOn;
 
   return (
     isAfter(dayStart, effectiveDueDate) ||
