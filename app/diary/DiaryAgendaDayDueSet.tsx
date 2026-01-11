@@ -36,21 +36,25 @@ export function DiaryAgendaDayDueSet({
     <NextSetDraggable nextSet={dueSet} ref={ref}>
       <div
         className={
-          "group relative inline-flex flex-col items-stretch justify-center rounded-md border border-black/20 bg-white " +
+          "group relative flex items-stretch justify-center rounded-md border border-black/20 bg-white " +
           (isActive ? "rounded-b-none" : "cursor-pointer")
         }
         onClick={() => setIsActive(true)}
       >
-        <div className="h-full self-stretch px-1.5 py-0.5 text-center">
-          {
-            [exercise.name, ...exercise.aliases]
-              .filter((name) => name.length >= 4)
-              .sort((a, b) => a.length - b.length)[0]!
+        <div
+          className={
+            "h-full w-32 self-stretch bg-black/20 px-1.5 py-0.5 text-left text-xs text-white " +
+            (isActive ? "rounded-l-[5px] rounded-b-none" : "rounded-l-[5px]")
           }
+        >
+          {[exercise.name, ...exercise.aliases]
+            .filter((name) => name.length >= 4)
+            .sort((a, b) => a.length - b.length)[0]!
+            .replace("Barbell", "")}
         </div>
         <div
           className={
-            "flex items-center justify-center self-stretch bg-black/60 px-1.5 text-xs text-white opacity-40 " +
+            "flex items-center justify-center self-stretch px-1.5 text-xs " +
             (isActive ? "rounded-b-none" : "rounded-b-[5px]")
           }
         >

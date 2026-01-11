@@ -75,6 +75,38 @@ export function DiaryAgendaDayDay({
     if (!principalDate) return false;
     return isBefore(principalDate, now);
   };
+  const putNowDivider = () => {
+    if (isToday && !hasPutNowDivider) {
+      dayJournalEntryElements.push(
+        <Fragment key={`divider-${i}`}>
+          <div className="flex items-center text-[10px] font-bold text-[#EDAB00]">
+            NOW
+          </div>
+          <div className="flex items-center gap-1 leading-normal">
+            <Link
+              prefetch={false}
+              href={`/diary/${date}/workout`}
+              className={
+                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+              }
+            >
+              <span className="text-xs">➕</span> Workout
+            </Link>
+            <DiaryAgendaDayCreateTodo date={dayStart} />
+            <span
+              className={
+                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+              }
+            >
+              <span className="text-xs">➕</span> Event
+            </span>
+            <ScrollToMe />
+          </div>
+        </Fragment>,
+      );
+      hasPutNowDivider = true;
+    }
+  };
   for (const journalEntry of dayJournalEntries) {
     const nextJournalEntry =
       i < dayJournalEntries.length - 1 ? dayJournalEntries[i + 1] : undefined;
@@ -255,7 +287,7 @@ export function DiaryAgendaDayDay({
                   >
                     <div
                       className={
-                        "flex w-30 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
+                        "flex w-32 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
                         (!setsWithLocation.length ? "rounded-r-[5px]" : "")
                       }
                     >
@@ -310,42 +342,18 @@ export function DiaryAgendaDayDay({
       nextJournalEntry && getIsJournalEntryPassed(nextJournalEntry);
 
     const shouldPutNowDivider =
-      (journalEntry && nextJournalEntry && currentIsPassed !== nextIsPassed) ||
+      (journalEntry &&
+        nextJournalEntry &&
+        currentIsPassed !== nextIsPassed &&
+        !hasPutNowDivider) ||
       (i === dayJournalEntries.length - 1 && !hasPutNowDivider);
 
-    if (shouldPutNowDivider && isToday) {
-      dayJournalEntryElements.push(
-        <Fragment key={`divider-${i}`}>
-          <div className="flex items-center text-[10px] font-bold text-[#EDAB00]">
-            NOW
-          </div>
-          <div className="flex items-center gap-1 leading-normal">
-            <Link
-              prefetch={false}
-              href={`/diary/${date}/workout`}
-              className={
-                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Workout
-            </Link>
-            <DiaryAgendaDayCreateTodo date={dayStart} />
-            <span
-              className={
-                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Event
-            </span>
-            <ScrollToMe />
-          </div>
-        </Fragment>,
-      );
-      hasPutNowDivider = true;
-    }
+    if (shouldPutNowDivider && isToday) putNowDivider();
 
     i++;
   }
+  if (!hasPutNowDivider) putNowDivider();
+
   const allCompleted = dayJournalEntries.every((je) =>
     getIsJournalEntryPassed(je),
   );
