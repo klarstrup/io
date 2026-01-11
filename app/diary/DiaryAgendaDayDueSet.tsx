@@ -44,7 +44,12 @@ export function DiaryAgendaDayDueSet({
         <div
           className={
             "h-full w-32 self-stretch bg-black/20 px-1.5 py-0.5 text-left text-xs text-white " +
-            (isActive ? "rounded-l-[5px] rounded-b-none" : "rounded-l-[5px]")
+            (isActive
+              ? "rounded-l-[5px] rounded-b-none "
+              : "rounded-l-[5px] ") +
+            (dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets
+              ? ""
+              : " rounded-r-[5px]")
           }
         >
           {[exercise.name, ...exercise.aliases]
@@ -52,13 +57,13 @@ export function DiaryAgendaDayDueSet({
             .sort((a, b) => a.length - b.length)[0]!
             .replace("Barbell", "")}
         </div>
-        <div
-          className={
-            "flex items-center justify-center self-stretch px-1.5 text-xs " +
-            (isActive ? "rounded-b-none" : "rounded-b-[5px]")
-          }
-        >
-          {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
+        {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
+          <div
+            className={
+              "flex items-center justify-center self-stretch px-1.5 text-xs " +
+              (isActive ? "rounded-b-none" : "rounded-b-[5px]")
+            }
+          >
             <table className="w-auto max-w-0">
               <tbody>
                 <WorkoutEntryExerciseSetRow
@@ -70,10 +75,8 @@ export function DiaryAgendaDayDueSet({
                 />
               </tbody>
             </table>
-          ) : (
-            "Exercise"
-          )}
-        </div>
+          </div>
+        ) : null}
         {isActive && (
           <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-[5px] border border-t-0 border-black/20 bg-white p-1">
             <button
