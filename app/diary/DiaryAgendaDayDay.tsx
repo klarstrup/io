@@ -121,7 +121,7 @@ export function DiaryAgendaDayDay({
       if (isAllDayEvent) {
         dayJournalEntryElements.push(
           <Fragment key={event.uid}>
-            <span className="flex justify-center pt-1 text-xl text-black/50">
+            <span className="flex justify-center text-xl text-black/50">
               <FontAwesomeIcon icon={faCalendarWeek} />
             </span>
             <div className="flex flex-wrap items-stretch gap-0.5">
@@ -192,7 +192,7 @@ export function DiaryAgendaDayDay({
           <Fragment key={event.uid}>
             <span
               className={
-                "flex justify-center pt-1 text-xl " +
+                "flex justify-center text-xl " +
                 (isPassed ? "text-green-400" : "text-gray-900/50")
               }
             >
@@ -266,7 +266,7 @@ export function DiaryAgendaDayDay({
 
       dayJournalEntryElements.push(
         <Fragment key={exerciseSetEntry[0].id}>
-          <span className="text-md flex justify-center pt-1 text-green-400">
+          <span className="text-md flex justify-center text-green-400">
             <FontAwesomeIcon icon={faDumbbell} />
           </span>
           <div>
