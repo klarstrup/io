@@ -48,7 +48,7 @@ export function DiaryAgendaDayTodo({ todo }: { todo: MongoVTodo }) {
     <Fragment>
       <button
         className={
-          "flex cursor-pointer justify-center pt-1 text-xl " +
+          "flex cursor-pointer justify-center text-xl " +
           (todo.completed ? "text-green-400" : "text-gray-400/50")
         }
         onClick={
