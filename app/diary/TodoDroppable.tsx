@@ -56,10 +56,15 @@ export function TodoDragDropContainer(props: {
 
     console.log("Drag ended", { active, over });
 
-    const newOrder =
-      (over.data.current.nextSet?.scheduleEntry?.order ??
-        over.data.current.todo?.order ??
-        0) - 1;
+    const activeOrder =
+      active.data.current.nextSet?.scheduleEntry?.order ??
+      active.data.current.todo?.order ??
+      0;
+    const overOrder =
+      over.data.current.nextSet?.scheduleEntry?.order ??
+      over.data.current.todo?.order ??
+      0;
+    const newOrder = overOrder > activeOrder ? overOrder + 1 : overOrder - 1;
 
     if (props.userId && active.data.current.nextSet) {
       const nextSet: Awaited<ReturnType<typeof getNextSets>>[number] =
