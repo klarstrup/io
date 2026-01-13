@@ -44,40 +44,7 @@ import {
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { TodoDroppable } from "./TodoDroppable";
-
-export type JournalEntry =
-  | MongoVEvent
-  | MongoVTodo
-  | Awaited<ReturnType<typeof getNextSets>>[number]
-  | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
-
-export const getJournalEntryPrincipalDate = (
-  entry: JournalEntry,
-): Date | null => {
-  if ("type" in entry && entry.type === "VTODO") {
-    if ("completed" in entry && entry.completed) return entry.completed;
-    if ("due" in entry && entry.due) return max([entry.due, new Date()]);
-    if ("start" in entry && entry.start) return max([entry.start, new Date()]);
-    return new Date();
-  }
-  if ("start" in entry && entry.start) return entry.start;
-  if ("scheduleEntry" in entry && entry.scheduleEntry) {
-    const nextSet = entry;
-
-    const effectiveDueDate = nextSet.scheduleEntry.snoozedUntil
-      ? max([nextSet.scheduleEntry.snoozedUntil, nextSet.dueOn])
-      : nextSet.dueOn;
-
-    return max([effectiveDueDate, new Date()]);
-  }
-  if (Array.isArray(entry) && entry.length === 3 && "id" in entry[0]) {
-    const exerciseSet =
-      entry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
-    return exerciseSet[2][exerciseSet[2].length - 1]?.workedOutAt || null;
-  }
-
-  return null;
-};
+import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export async function DiaryAgendaDay({
   date,
@@ -338,16 +305,36 @@ export async function DiaryAgendaDay({
                   ...dayDueSets,
                   ...dayTodos,
                   ...dayExerciseSets,
-                ].sort((a, b) =>
-                  compareAsc(
-                    "type" in a && a.type === "VEVENT" && a.datetype === "date"
-                      ? 1
-                      : getJournalEntryPrincipalDate(a) || new Date(0),
-                    "type" in b && b.type === "VEVENT" && b.datetype === "date"
-                      ? 1
-                      : getJournalEntryPrincipalDate(b) || new Date(0),
-                  ),
-                )}
+                ]
+                  .sort((a, b) => {
+                    const aOrder =
+                      "scheduleEntry" in a
+                        ? (a.scheduleEntry.order ?? 0)
+                        : "order" in a
+                          ? (a.order ?? 0)
+                          : 0;
+                    const bOrder =
+                      "scheduleEntry" in b
+                        ? (b.scheduleEntry.order ?? 0)
+                        : "order" in b
+                          ? (b.order ?? 0)
+                          : 0;
+                    return aOrder - bOrder;
+                  })
+                  .sort((a, b) =>
+                    compareAsc(
+                      "type" in a &&
+                        a.type === "VEVENT" &&
+                        a.datetype === "date"
+                        ? 1
+                        : getJournalEntryPrincipalDate(a) || new Date(0),
+                      "type" in b &&
+                        b.type === "VEVENT" &&
+                        b.datetype === "date"
+                        ? 1
+                        : getJournalEntryPrincipalDate(b) || new Date(0),
+                    ),
+                  )}
               />
             </TodoDroppable>
           );

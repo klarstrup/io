@@ -141,8 +141,10 @@ export namespace Fitocracy {
     routine_id?: number;
   }
 
-  export interface MongoWorkout
-    extends Omit<WorkoutData, "updated_timestamp" | "workout_timestamp"> {
+  export interface MongoWorkout extends Omit<
+    WorkoutData,
+    "updated_timestamp" | "workout_timestamp"
+  > {
     user_id: number;
     updated_timestamp: Date;
     workout_timestamp: Date;
@@ -278,4 +280,8 @@ export interface ExerciseSchedule {
   deloadFactor?: number;
   baseWeight?: number;
   snoozedUntil?: Date;
+
+  // if multiple exercises are due at the same time, display in this order
+  // lower number = higher priority
+  order?: number;
 }

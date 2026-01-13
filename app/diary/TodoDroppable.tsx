@@ -4,17 +4,28 @@ import {
   DragEndEvent,
   MouseSensor,
   TouchSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { addHours, isBefore, isSameHour, setHours, startOfDay } from "date-fns";
-import { cloneElement, type ReactNode } from "react";
+import {
+  SortableContext,
+  type SortableContextProps,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  addHours,
+  isBefore,
+  isSameHour,
+  max,
+  setHours,
+  startOfDay,
+  subMinutes,
+} from "date-fns";
+import type { ReactNode } from "react";
 import type { MongoVTodo } from "../../lib";
 import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
-import mergeRefs from "../../utils/merge-refs";
 import { snoozeUserExerciseSchedule, upsertTodo } from "./actions";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
@@ -35,61 +46,6 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   );
 }
 
-export function TodoDraggable(props: {
-  children: ReactNode;
-  todo: MongoVTodo;
-  ref?: React.Ref<HTMLElement>;
-}) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: "draggable-todo-" + props.todo.uid,
-    data: { todo: props.todo },
-  });
-
-  return cloneElement(props.children as any, {
-    ref: props.ref ? mergeRefs(props.ref, setNodeRef) : setNodeRef,
-    style: {
-      boxShadow: "none",
-      transition: "box-shadow 0.2s ease",
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
-            zIndex: 100,
-          }
-        : undefined),
-    },
-    ...listeners,
-    ...attributes,
-  });
-}
-export function NextSetDraggable(props: {
-  children: ReactNode;
-  nextSet: Awaited<ReturnType<typeof getNextSets>>[number];
-  ref?: React.Ref<HTMLElement>;
-}) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: "draggable-next-set-" + props.nextSet.scheduleEntry.id,
-    data: { nextSet: props.nextSet },
-  });
-
-  return cloneElement(props.children as any, {
-    ref: props.ref ? mergeRefs(props.ref, setNodeRef) : setNodeRef,
-    style: {
-      boxShadow: "none",
-      transition: "box-shadow 0.2s ease",
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
-            zIndex: 100,
-          }
-        : undefined),
-    },
-    ...listeners,
-    ...attributes,
-  });
-}
-
 export function TodoDragDropContainer(props: {
   children: ReactNode;
   userId?: string;
@@ -100,31 +56,43 @@ export function TodoDragDropContainer(props: {
 
     console.log("Drag ended", { active, over });
 
+    const newOrder =
+      (over.data.current.nextSet?.scheduleEntry?.order ??
+        over.data.current.todo?.order ??
+        0) - 1;
+
     if (props.userId && active.data.current.nextSet) {
       const nextSet: Awaited<ReturnType<typeof getNextSets>>[number] =
         active.data.current.nextSet;
 
-      const targetDate = setHours(
-        new Date(over.data.current.date),
-        dayStartHour,
-      );
-      console.log("Snoozing next set to", targetDate);
+      const overStart = new Date(over.data.current.date);
+      const startOfDay = setHours(overStart, dayStartHour);
+      const justBeforeTheThing = subMinutes(overStart, 1);
+
+      const targetDate = max([startOfDay, justBeforeTheThing]);
+
+      console.log("Snoozing next set to", targetDate, "with order", newOrder);
       snoozeUserExerciseSchedule(
         props.userId,
         nextSet.scheduleEntry.exerciseId,
         targetDate,
+        newOrder,
       );
       return;
-    } else if (
-      active.data.current.todo &&
-      active.data.current.todo.dueDate !==
-        new Date(over.data.current.date).toISOString()
-    ) {
+    } else if (active.data.current.todo) {
       const todo: MongoVTodo = active.data.current.todo;
       const targetDate = setHours(
         new Date(over.data.current.date),
         dayStartHour,
       );
+
+      console.log(
+        "Updating todo due date to",
+        targetDate,
+        "with order",
+        newOrder,
+      );
+
       if (
         isBefore(addHours(startOfDay(new Date()), dayStartHour), targetDate) ||
         isSameHour(addHours(startOfDay(new Date()), dayStartHour), targetDate)
@@ -133,6 +101,7 @@ export function TodoDragDropContainer(props: {
           uid: todo.uid,
           start: targetDate,
           completed: null,
+          order: newOrder,
         };
 
         upsertTodo(updatedTodo);
@@ -140,6 +109,7 @@ export function TodoDragDropContainer(props: {
         const updatedTodo = {
           uid: todo.uid,
           completed: targetDate,
+          order: newOrder,
         };
 
         upsertTodo(updatedTodo);
@@ -162,5 +132,13 @@ export function TodoDragDropContainer(props: {
     >
       {props.children}
     </DndContext>
+  );
+}
+
+export function TodoSortableContext(props: SortableContextProps) {
+  return (
+    <SortableContext strategy={verticalListSortingStrategy} {...props}>
+      {props.children}
+    </SortableContext>
   );
 }

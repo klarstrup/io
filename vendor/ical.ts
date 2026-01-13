@@ -104,6 +104,12 @@ export interface VEvent extends BaseComponent {
   recurrenceid?: Date;
 
   alarms?: VAlarm[];
+
+  // Custom io properties
+
+  // Given multiple events at the same time, which order to show them in
+  // lower number = higher priority
+  order?: number | null;
 }
 
 export interface VTodo extends BaseComponent {

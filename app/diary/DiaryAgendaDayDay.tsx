@@ -17,11 +17,11 @@ import {
 import { type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
-import { Fragment, type ReactElement } from "react";
+import type { ReactElement } from "react";
 import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
 import type { MongoVEvent } from "../../lib";
-import { LocationData } from "../../models/location";
+import type { LocationData } from "../../models/location";
 import {
   ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
   isClimbingExercise,
@@ -35,12 +35,13 @@ import {
   roundToNearestDay,
   uniqueBy,
 } from "../../utils";
-import { getJournalEntryPrincipalDate, JournalEntry } from "./DiaryAgendaDay";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
+import { TodoSortableContext } from "./TodoDroppable";
 import { WorkoutEntryExercise } from "./WorkoutEntry";
+import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
 
 export function DiaryAgendaDayDay({
   date,
@@ -64,7 +65,7 @@ export function DiaryAgendaDayDay({
   const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
   const dayName = dateToString(dayDate);
 
-  const dayJournalEntryElements: ReactElement[] = [];
+  const dayJournalEntryElements: { id: string; element: ReactElement }[] = [];
 
   let i = 0;
   let hasPutNowDivider = false;
@@ -77,33 +78,36 @@ export function DiaryAgendaDayDay({
   };
   const putNowDivider = () => {
     if (isToday && !hasPutNowDivider) {
-      dayJournalEntryElements.push(
-        <Fragment key={`divider-${i}`}>
-          <div className="flex items-center text-[10px] font-bold text-[#EDAB00]">
-            NOW
+      dayJournalEntryElements.push({
+        id: `divider-${i}`,
+        element: (
+          <div key={`divider-${i}`} className="flex">
+            <div className="flex w-8 items-center justify-center text-[10px] font-bold text-[#EDAB00]">
+              NOW
+            </div>
+            <div className="flex items-center gap-1 leading-normal">
+              <Link
+                prefetch={false}
+                href={`/diary/${date}/workout`}
+                className={
+                  "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+                }
+              >
+                <span className="text-xs">➕</span> Workout
+              </Link>
+              <DiaryAgendaDayCreateTodo date={dayStart} />
+              <span
+                className={
+                  "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+                }
+              >
+                <span className="text-xs">➕</span> Event
+              </span>
+              <ScrollToMe />
+            </div>
           </div>
-          <div className="flex items-center gap-1 leading-normal">
-            <Link
-              prefetch={false}
-              href={`/diary/${date}/workout`}
-              className={
-                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Workout
-            </Link>
-            <DiaryAgendaDayCreateTodo date={dayStart} />
-            <span
-              className={
-                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Event
-            </span>
-            <ScrollToMe />
-          </div>
-        </Fragment>,
-      );
+        ),
+      });
       hasPutNowDivider = true;
     }
   };
@@ -119,143 +123,151 @@ export function DiaryAgendaDayDay({
         event.datetype === "date";
 
       if (isAllDayEvent) {
-        dayJournalEntryElements.push(
-          <Fragment key={event.uid}>
-            <span className="flex justify-center text-xl text-black/50">
-              <FontAwesomeIcon icon={faCalendarWeek} />
-            </span>
-            <div className="flex flex-wrap items-stretch gap-0.5">
-              {(() => {
-                const eventStart =
-                  event.datetype === "date"
-                    ? roundToNearestDay(event.start, {
-                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
-                      })
-                    : event.start;
-                const eventEnd =
-                  event.datetype === "date"
-                    ? roundToNearestDay(event.end, {
-                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                      })
-                    : event.end;
+        dayJournalEntryElements.push({
+          id: event.uid,
+          element: (
+            <div key={event.uid} className="flex">
+              <div className="flex w-8 items-center justify-center text-xl text-black/50">
+                <FontAwesomeIcon icon={faCalendarWeek} />
+              </div>
+              <div className="flex flex-wrap items-stretch gap-0.5">
+                {(() => {
+                  const eventStart =
+                    event.datetype === "date"
+                      ? roundToNearestDay(event.start, {
+                          in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                        })
+                      : event.start;
+                  const eventEnd =
+                    event.datetype === "date"
+                      ? roundToNearestDay(event.end, {
+                          in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                        })
+                      : event.end;
 
-                const dayNo = differenceInDays(dayDate, eventStart) + 1;
-                const numDays = differenceInDays(eventEnd, eventStart);
-                const isFirstDay = dayNo === 1;
-                const isLastDay = dayNo === numDays;
-                return (
-                  <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white">
-                    {numDays > 1 ? (
-                      <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
-                        <span className="px-px text-white">{dayNo}</span>
-                        <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
-                        <span className="px-px text-white">{numDays}</span>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center gap-1 px-1.5 py-0.5">
+                  const dayNo = differenceInDays(dayDate, eventStart) + 1;
+                  const numDays = differenceInDays(eventEnd, eventStart);
+                  const isFirstDay = dayNo === 1;
+                  const isLastDay = dayNo === numDays;
+                  return (
+                    <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white">
                       {numDays > 1 ? (
-                        isFirstDay && event.datetype === "date-time" ? (
-                          <>
-                            {eventStart.toLocaleTimeString("en-DK", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              timeZone,
-                            })}
-                            -
-                          </>
-                        ) : isLastDay && event.datetype === "date-time" ? (
-                          <>
-                            -
-                            {eventEnd.toLocaleTimeString("en-DK", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              timeZone,
-                            })}
-                          </>
-                        ) : null
+                        <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
+                          <span className="px-px text-white">{dayNo}</span>
+                          <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
+                          <span className="px-px text-white">{numDays}</span>
+                        </div>
                       ) : null}
-                      <span>{event.summary}</span>
-                      {event.location ? (
-                        <span className="text-[0.666rem] leading-tight italic">
-                          {event.location}
-                        </span>
-                      ) : null}
-                    </div>
-                  </span>
-                );
-              })()}
+                      <div className="flex items-center gap-1 px-1.5 py-0.5">
+                        {numDays > 1 ? (
+                          isFirstDay && event.datetype === "date-time" ? (
+                            <>
+                              {eventStart.toLocaleTimeString("en-DK", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone,
+                              })}
+                              -
+                            </>
+                          ) : isLastDay && event.datetype === "date-time" ? (
+                            <>
+                              -
+                              {eventEnd.toLocaleTimeString("en-DK", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone,
+                              })}
+                            </>
+                          ) : null
+                        ) : null}
+                        <span>{event.summary}</span>
+                        {event.location ? (
+                          <span className="text-[0.666rem] leading-tight italic">
+                            {event.location}
+                          </span>
+                        ) : null}
+                      </div>
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
-          </Fragment>,
-        );
+          ),
+        });
       } else {
-        dayJournalEntryElements.push(
-          <Fragment key={event.uid}>
-            <span
-              className={
-                "flex justify-center text-xl " +
-                (isPassed ? "text-green-400" : "text-gray-900/50")
-              }
-            >
-              <FontAwesomeIcon
-                icon={
-                  isAllDayEvent
-                    ? faCalendarWeek
-                    : isPassed
-                      ? faCalendarCheck
-                      : faCalendar
+        dayJournalEntryElements.push({
+          id: event.uid,
+          element: (
+            <div key={event.uid} className="flex">
+              <div
+                className={
+                  "flex w-8 items-center justify-center text-xl " +
+                  (isPassed ? "text-green-400" : "text-gray-900/50")
                 }
-              />
-            </span>
-            <div>{renderOnDayEvent(event)}</div>
-          </Fragment>,
-        );
+              >
+                <FontAwesomeIcon
+                  icon={
+                    isAllDayEvent
+                      ? faCalendarWeek
+                      : isPassed
+                        ? faCalendarCheck
+                        : faCalendar
+                  }
+                />
+              </div>
+              <div>{renderOnDayEvent(event)}</div>
+            </div>
+          ),
+        });
       }
     } else if ("type" in journalEntry && journalEntry.type === "VTODO") {
       const todo = journalEntry;
-      dayJournalEntryElements.push(
-        <DiaryAgendaDayTodo todo={todo} key={todo.uid} />,
-      );
+      dayJournalEntryElements.push({
+        id: todo.uid,
+        element: (
+          <DiaryAgendaDayTodo
+            todo={todo}
+            key={todo.uid}
+            sortableId={todo.uid}
+          />
+        ),
+      });
     } else if ("scheduleEntry" in journalEntry) {
       const dueSet = journalEntry;
 
-      dayJournalEntryElements.push(
-        <Fragment key={JSON.stringify(dueSet.scheduleEntry)}>
-          <span className="text-md flex justify-center pt-1.5 text-gray-900/50">
-            <FontAwesomeIcon icon={faDumbbell} />
-          </span>
-          <div>
-            <div className="flex flex-wrap items-center gap-0.5">
-              <DiaryAgendaDayDueSet
-                key={JSON.stringify(dueSet.scheduleEntry)}
-                userId={user!.id}
-                dueSet={dueSet}
-                date={dayDate}
-                workouts={uniqueBy(
-                  dayJournalEntries
-                    .filter(
-                      (
-                        jE,
-                      ): jE is ExerciseSetWithExerciseDataAndLocationsAndWorkouts =>
-                        Array.isArray(jE) && jE.length === 3 && "id" in jE[0],
-                    )
-                    ?.map(([_, __, workouts]) => workouts)
-                    .flat() || [],
-                  (w) => w._id.toString(),
+      dayJournalEntryElements.push({
+        id: dueSet.scheduleEntry.id,
+        element: (
+          <DiaryAgendaDayDueSet
+            key={dueSet.scheduleEntry.id}
+            sortableId={dueSet.scheduleEntry.id}
+            userId={user!.id}
+            dueSet={dueSet}
+            date={dayDate}
+            workouts={uniqueBy(
+              dayJournalEntries
+                .filter(
+                  (
+                    jE,
+                  ): jE is ExerciseSetWithExerciseDataAndLocationsAndWorkouts =>
+                    Array.isArray(jE) && jE.length === 3 && "id" in jE[0],
                 )
-                  .filter((w) => w.source === WorkoutSource.Self)
-                  .map((d) => ({
-                    ...d,
-                    _id: d._id.toString(),
-                  }))}
-                locations={dayLocations.map(({ _id, ...d }) => ({
-                  ...d,
-                  id: _id.toString(),
-                }))}
-              />
-            </div>
-          </div>
-        </Fragment>,
-      );
+                ?.map(([_, __, workouts]) => workouts)
+                .flat() || [],
+              (w) => w._id.toString(),
+            )
+              .filter((w) => w.source === WorkoutSource.Self)
+              .map((d) => ({
+                ...d,
+                _id: d._id.toString(),
+              }))}
+            locations={dayLocations.map(({ _id, ...d }) => ({
+              ...d,
+              id: _id.toString(),
+            }))}
+          />
+        ),
+      });
     } else if (
       Array.isArray(journalEntry) &&
       journalEntry.length === 3 &&
@@ -264,12 +276,13 @@ export function DiaryAgendaDayDay({
       const exerciseSetEntry =
         journalEntry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
 
-      dayJournalEntryElements.push(
-        <Fragment key={exerciseSetEntry[0].id}>
-          <span className="text-md flex justify-center text-green-400">
-            <FontAwesomeIcon icon={faDumbbell} />
-          </span>
-          <div>
+      dayJournalEntryElements.push({
+        id: String(exerciseSetEntry[0].id),
+        element: (
+          <div key={String(exerciseSetEntry[0].id)} className="flex">
+            <span className="text-md flex w-8 items-center justify-center text-green-400">
+              <FontAwesomeIcon icon={faDumbbell} />
+            </span>
             <div>
               {(([exercise, setsWithLocation, workouts]) => {
                 const mostRecentWorkout =
@@ -333,8 +346,8 @@ export function DiaryAgendaDayDay({
               })(exerciseSetEntry)}
             </div>
           </div>
-        </Fragment>,
-      );
+        ),
+      });
     }
 
     const currentIsPassed = getIsJournalEntryPassed(journalEntry);
@@ -468,24 +481,25 @@ export function DiaryAgendaDayDay({
         </div>
       }
       className={
-        "mb-1 grid flex-0! gap-1.5 px-1 pb-2 " +
+        "mb-1 flex flex-0! flex-col items-start gap-1.5 px-1 pb-2 " +
         ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
           ? "bg-green-50 pt-1"
           : todayStr === dayName
             ? "bg-yellow-50 pt-1"
             : "bg-slate-50 pt-1")
       }
-      style={{ gridTemplateColumns: "1.5rem minmax(0, 1fr)" }}
     >
       {dayJournalEntryElements.length ? (
-        dayJournalEntryElements
+        <TodoSortableContext items={dayJournalEntryElements}>
+          {dayJournalEntryElements.map(({ element }) => element)}
+        </TodoSortableContext>
       ) : (
-        <>
-          <div />
+        <div className="flex">
+          <div className="w-8" />
           <div className="text-gray-400/50 italic">
             {isPast(dayEnd) ? "Nothing logged" : "Nothing scheduled"}
           </div>
-        </>
+        </div>
       )}
     </FieldSetX>
   );
