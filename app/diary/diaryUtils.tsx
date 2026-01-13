@@ -12,11 +12,14 @@ export type JournalEntry =
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Date | null => {
+  const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if ("type" in entry && entry.type === "VTODO") {
     if ("completed" in entry && entry.completed) return entry.completed;
-    if ("due" in entry && entry.due) return max([entry.due, new Date()]);
-    if ("start" in entry && entry.start) return max([entry.start, new Date()]);
-    return new Date();
+    if ("due" in entry && entry.due)
+      return max([entry.due, slightlyIntoTheFuture]);
+    if ("start" in entry && entry.start)
+      return max([entry.start, slightlyIntoTheFuture]);
+    return slightlyIntoTheFuture;
   }
   if ("start" in entry && entry.start) return entry.start;
   if ("scheduleEntry" in entry && entry.scheduleEntry) {
@@ -26,7 +29,7 @@ export const getJournalEntryPrincipalDate = (
       ? max([nextSet.scheduleEntry.snoozedUntil, nextSet.dueOn])
       : nextSet.dueOn;
 
-    return max([effectiveDueDate, new Date()]);
+    return max([effectiveDueDate, slightlyIntoTheFuture]);
   }
   if (Array.isArray(entry) && entry.length === 3 && "id" in entry[0]) {
     const exerciseSet =

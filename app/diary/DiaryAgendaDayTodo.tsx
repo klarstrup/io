@@ -1,7 +1,6 @@
 "use client";
 import { useSortable } from "@dnd-kit/sortable";
-import { faCircleCheck } from "@fortawesome/free-regular-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { forwardRef, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import { useClickOutside, useEvent } from "../../hooks";
@@ -13,6 +12,7 @@ import {
   undoTodo,
   upsertTodo,
 } from "./actions";
+import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
@@ -96,25 +96,18 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     useClickOutside(ref2, onClickOutside);
 
     return (
-      <div
+      <DiaryAgendaDayEntry
         ref={ref}
         {...props}
-        test-id={"diary-agenda-day-todo-" + todo.uid}
-        className="flex"
+        icon={faCircleCheck}
+        onIconClick={
+          todo.completed
+            ? () => void undoTodo(todo.uid)
+            : () => void doTodo(todo.uid)
+        }
+        // this should cope with todos with deadlines when that is implemented
+        cotemporality={todo.completed ? "past" : "future"}
       >
-        <button
-          className={
-            "flex w-8 cursor-pointer items-center justify-center text-xl " +
-            (todo.completed ? "text-green-400" : "text-gray-400/50")
-          }
-          onClick={
-            todo.completed
-              ? () => void undoTodo(todo.uid)
-              : () => void doTodo(todo.uid)
-          }
-        >
-          <FontAwesomeIcon icon={faCircleCheck} />
-        </button>
         <div
           ref={ref2}
           style={
@@ -200,7 +193,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
             </div>
           )}
         </div>
-      </div>
+      </DiaryAgendaDayEntry>
     );
   },
 );

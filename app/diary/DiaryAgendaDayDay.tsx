@@ -1,8 +1,10 @@
 import { tz, TZDate } from "@date-fns/tz";
-import { faCalendarCheck } from "@fortawesome/free-regular-svg-icons";
-import { faCalendar } from "@fortawesome/free-regular-svg-icons/faCalendar";
-import { faCalendarWeek, faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCalendar,
+  faCalendarWeek,
+  faCalendarCheck,
+  faDumbbell,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
@@ -10,6 +12,8 @@ import {
   intervalToDuration,
   isBefore,
   isPast,
+  max,
+  min,
   roundToNearestMinutes,
   startOfDay,
   subHours,
@@ -29,6 +33,7 @@ import {
 } from "../../models/workout";
 import { calculateClimbingStats } from "../../models/workout.server";
 import {
+  cotemporality,
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
@@ -38,6 +43,7 @@ import {
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
+import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { TodoSortableContext } from "./TodoDroppable";
 import { WorkoutEntryExercise } from "./WorkoutEntry";
@@ -81,31 +87,33 @@ export function DiaryAgendaDayDay({
       dayJournalEntryElements.push({
         id: `divider-${i}`,
         element: (
-          <div key={`divider-${i}`} className="flex">
-            <div className="flex w-8 items-center justify-center text-[10px] font-bold text-[#EDAB00]">
-              NOW
-            </div>
-            <div className="flex items-center gap-1 leading-normal">
-              <Link
-                prefetch={false}
-                href={`/diary/${date}/workout`}
-                className={
-                  "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-                }
-              >
-                <span className="text-xs">➕</span> Workout
-              </Link>
-              <DiaryAgendaDayCreateTodo date={dayStart} />
-              <span
-                className={
-                  "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-                }
-              >
-                <span className="text-xs">➕</span> Event
-              </span>
-              <ScrollToMe />
-            </div>
-          </div>
+          <DiaryAgendaDayEntry
+            key={`divider-${i}`}
+            iconTxt={
+              <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
+            }
+            cotemporality="current"
+            className="mt-0.5 mb-2 gap-1.5"
+          >
+            <Link
+              prefetch={false}
+              href={`/diary/${date}/workout`}
+              className={
+                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+              }
+            >
+              <span className="text-xs">➕</span> Workout
+            </Link>
+            <DiaryAgendaDayCreateTodo date={dayStart} />
+            <span
+              className={
+                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+              }
+            >
+              <span className="text-xs">➕</span> Event
+            </span>
+            <ScrollToMe />
+          </DiaryAgendaDayEntry>
         ),
       });
       hasPutNowDivider = true;
@@ -114,6 +122,13 @@ export function DiaryAgendaDayDay({
   for (const journalEntry of dayJournalEntries) {
     const nextJournalEntry =
       i < dayJournalEntries.length - 1 ? dayJournalEntries[i + 1] : undefined;
+
+    const currentIsPassed = getIsJournalEntryPassed(journalEntry);
+    const nextIsPassed =
+      nextJournalEntry && getIsJournalEntryPassed(nextJournalEntry);
+    const shouldPutNowDivider = !currentIsPassed;
+
+    if (shouldPutNowDivider && isToday) putNowDivider();
 
     if ("type" in journalEntry && journalEntry.type === "VEVENT") {
       const event = journalEntry;
@@ -126,97 +141,96 @@ export function DiaryAgendaDayDay({
         dayJournalEntryElements.push({
           id: event.uid,
           element: (
-            <div key={event.uid} className="flex">
-              <div className="flex w-8 items-center justify-center text-xl text-black/50">
-                <FontAwesomeIcon icon={faCalendarWeek} />
-              </div>
-              <div className="flex flex-wrap items-stretch gap-0.5">
-                {(() => {
-                  const eventStart =
-                    event.datetype === "date"
-                      ? roundToNearestDay(event.start, {
-                          in: tz(event.start.tz || DEFAULT_TIMEZONE),
-                        })
-                      : event.start;
-                  const eventEnd =
-                    event.datetype === "date"
-                      ? roundToNearestDay(event.end, {
-                          in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                        })
-                      : event.end;
+            <DiaryAgendaDayEntry
+              icon={faCalendarWeek}
+              cotemporality={cotemporality({
+                start: event.start,
+                end: event.end,
+              })}
+              key={event.uid}
+            >
+              {(() => {
+                const eventStart =
+                  event.datetype === "date"
+                    ? roundToNearestDay(event.start, {
+                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                      })
+                    : event.start;
+                const eventEnd =
+                  event.datetype === "date"
+                    ? roundToNearestDay(event.end, {
+                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                      })
+                    : event.end;
 
-                  const dayNo = differenceInDays(dayDate, eventStart) + 1;
-                  const numDays = differenceInDays(eventEnd, eventStart);
-                  const isFirstDay = dayNo === 1;
-                  const isLastDay = dayNo === numDays;
-                  return (
-                    <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white">
-                      {numDays > 1 ? (
-                        <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
-                          <span className="px-px text-white">{dayNo}</span>
-                          <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
-                          <span className="px-px text-white">{numDays}</span>
-                        </div>
-                      ) : null}
-                      <div className="flex items-center gap-1 px-1.5 py-0.5">
-                        {numDays > 1 ? (
-                          isFirstDay && event.datetype === "date-time" ? (
-                            <>
-                              {eventStart.toLocaleTimeString("en-DK", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                timeZone,
-                              })}
-                              -
-                            </>
-                          ) : isLastDay && event.datetype === "date-time" ? (
-                            <>
-                              -
-                              {eventEnd.toLocaleTimeString("en-DK", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                timeZone,
-                              })}
-                            </>
-                          ) : null
-                        ) : null}
-                        <span>{event.summary}</span>
-                        {event.location ? (
-                          <span className="text-[0.666rem] leading-tight italic">
-                            {event.location}
-                          </span>
-                        ) : null}
+                const dayNo = differenceInDays(dayDate, eventStart) + 1;
+                const numDays = differenceInDays(eventEnd, eventStart);
+                const isFirstDay = dayNo === 1;
+                const isLastDay = dayNo === numDays;
+                return (
+                  <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white">
+                    {numDays > 1 ? (
+                      <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
+                        <span className="px-px text-white">{dayNo}</span>
+                        <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
+                        <span className="px-px text-white">{numDays}</span>
                       </div>
-                    </span>
-                  );
-                })()}
-              </div>
-            </div>
+                    ) : null}
+                    <div className="flex items-center gap-1 px-1.5 py-0.5">
+                      {numDays > 1 ? (
+                        isFirstDay && event.datetype === "date-time" ? (
+                          <>
+                            {eventStart.toLocaleTimeString("en-DK", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone,
+                            })}
+                            -
+                          </>
+                        ) : isLastDay && event.datetype === "date-time" ? (
+                          <>
+                            -
+                            {eventEnd.toLocaleTimeString("en-DK", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone,
+                            })}
+                          </>
+                        ) : null
+                      ) : null}
+                      <span>{event.summary}</span>
+                      {event.location ? (
+                        <span className="text-[0.666rem] leading-tight italic">
+                          {event.location}
+                        </span>
+                      ) : null}
+                    </div>
+                  </span>
+                );
+              })()}
+            </DiaryAgendaDayEntry>
           ),
         });
       } else {
         dayJournalEntryElements.push({
           id: event.uid,
           element: (
-            <div key={event.uid} className="flex">
-              <div
-                className={
-                  "flex w-8 items-center justify-center text-xl " +
-                  (isPassed ? "text-green-400" : "text-gray-900/50")
-                }
-              >
-                <FontAwesomeIcon
-                  icon={
-                    isAllDayEvent
-                      ? faCalendarWeek
-                      : isPassed
-                        ? faCalendarCheck
-                        : faCalendar
-                  }
-                />
-              </div>
-              <div>{renderOnDayEvent(event)}</div>
-            </div>
+            <DiaryAgendaDayEntry
+              key={event.uid}
+              icon={
+                isAllDayEvent
+                  ? faCalendarWeek
+                  : isPassed
+                    ? faCalendarCheck
+                    : faCalendar
+              }
+              cotemporality={cotemporality({
+                start: event.start,
+                end: event.end,
+              })}
+            >
+              {renderOnDayEvent(event)}
+            </DiaryAgendaDayEntry>
           ),
         });
       }
@@ -276,92 +290,85 @@ export function DiaryAgendaDayDay({
       const exerciseSetEntry =
         journalEntry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
 
-      dayJournalEntryElements.push({
-        id: String(exerciseSetEntry[0].id),
-        element: (
-          <div key={String(exerciseSetEntry[0].id)} className="flex">
-            <span className="text-md flex w-8 items-center justify-center text-green-400">
-              <FontAwesomeIcon icon={faDumbbell} />
-            </span>
-            <div>
-              {(([exercise, setsWithLocation, workouts]) => {
-                const mostRecentWorkout =
-                  workouts.length === 1 ? workouts[0]! : null;
-                const workoutDateStr =
-                  mostRecentWorkout &&
-                  dateToString(mostRecentWorkout.workedOutAt);
+      const [exercise, setsWithLocation, workouts] = exerciseSetEntry;
+      const mostRecentWorkout = workouts.length === 1 ? workouts[0]! : null;
+      const workoutDateStr =
+        mostRecentWorkout && dateToString(mostRecentWorkout.workedOutAt);
 
-                return (
-                  <div
-                    className={
-                      "inline-flex h-auto flex-row justify-center rounded-md border border-black/20 bg-white" +
-                      (isClimbingExercise(exercise.id) ? " w-full" : "")
-                    }
+      dayJournalEntryElements.push({
+        id: String(exercise.id),
+        element: (
+          <DiaryAgendaDayEntry
+            key={exercise.id}
+            icon={faDumbbell}
+            cotemporality={cotemporality({
+              start: min(workouts.map((w) => w.workedOutAt)) || new Date(),
+              end: max(workouts.map((w) => w.workedOutAt)) || new Date(),
+            })}
+          >
+            <div
+              className={
+                "inline-flex h-auto flex-row justify-center rounded-md border border-black/20 bg-white" +
+                (isClimbingExercise(exercise.id) ? " w-full" : "")
+              }
+            >
+              <div
+                className={
+                  "flex w-32 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
+                  (!setsWithLocation.length ? "rounded-r-[5px]" : "")
+                }
+              >
+                <div className="flex justify-between">
+                  <Link
+                    prefetch={false}
+                    href={`/diary/exercises/${exercise.id}`}
                   >
-                    <div
-                      className={
-                        "flex w-32 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
-                        (!setsWithLocation.length ? "rounded-r-[5px]" : "")
-                      }
+                    {[exercise.name, ...exercise.aliases]
+                      .filter((name) => name.length >= 4)
+                      .sort((a, b) => a.length - b.length)[0]!
+                      .replace("Barbell", "")}
+                  </Link>
+                  {mostRecentWorkout &&
+                  (mostRecentWorkout.source === WorkoutSource.Self ||
+                    !mostRecentWorkout.source) ? (
+                    <Link
+                      prefetch={false}
+                      href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
+                      style={{ color: "#edab00" }}
+                      className="text-sm font-semibold"
                     >
-                      <div className="flex justify-between">
-                        <Link
-                          prefetch={false}
-                          href={`/diary/exercises/${exercise.id}`}
-                        >
-                          {[exercise.name, ...exercise.aliases]
-                            .filter((name) => name.length >= 4)
-                            .sort((a, b) => a.length - b.length)[0]!
-                            .replace("Barbell", "")}
-                        </Link>
-                        {mostRecentWorkout &&
-                        (mostRecentWorkout.source === WorkoutSource.Self ||
-                          !mostRecentWorkout.source) ? (
-                          <Link
-                            prefetch={false}
-                            href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
-                            style={{ color: "#edab00" }}
-                            className="text-sm font-semibold"
-                          >
-                            ⏎
-                          </Link>
-                        ) : null}
-                      </div>
-                      <div className="leading-none">
-                        {isClimbingExercise(exercise.id)
-                          ? calculateClimbingStats(setsWithLocation)
-                          : null}
-                      </div>
-                    </div>
-                    {setsWithLocation.length > 0 ? (
-                      <div className="flex flex-1 items-center px-1.5 py-0.5 pb-1 text-xs">
-                        <WorkoutEntryExercise
-                          exercise={exercise}
-                          setsWithLocations={setsWithLocation}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })(exerciseSetEntry)}
+                      ⏎
+                    </Link>
+                  ) : null}
+                </div>
+                <div className="leading-none">
+                  {isClimbingExercise(exercise.id)
+                    ? calculateClimbingStats(setsWithLocation)
+                    : null}
+                </div>
+              </div>
+              {setsWithLocation.length > 0 ? (
+                <div className="flex flex-1 items-center px-1.5 py-0.5 pb-1 text-xs">
+                  <WorkoutEntryExercise
+                    exercise={exercise}
+                    setsWithLocations={setsWithLocation}
+                  />
+                </div>
+              ) : null}
             </div>
-          </div>
+          </DiaryAgendaDayEntry>
         ),
       });
     }
 
-    const currentIsPassed = getIsJournalEntryPassed(journalEntry);
-    const nextIsPassed =
-      nextJournalEntry && getIsJournalEntryPassed(nextJournalEntry);
-
-    const shouldPutNowDivider =
+    const shouldPutNowDivider2 =
       (journalEntry &&
         nextJournalEntry &&
         currentIsPassed !== nextIsPassed &&
         !hasPutNowDivider) ||
       (i === dayJournalEntries.length - 1 && !hasPutNowDivider);
 
-    if (shouldPutNowDivider && isToday) putNowDivider();
+    if (shouldPutNowDivider2 && isToday) putNowDivider();
 
     i++;
   }
@@ -481,7 +488,7 @@ export function DiaryAgendaDayDay({
         </div>
       }
       className={
-        "mb-1 flex flex-0! flex-col items-start gap-1.5 px-1 pb-2 " +
+        "mb-1 flex flex-0! flex-col items-stretch gap-1.5 px-1 pb-2 " +
         ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
           ? "bg-green-50 pt-1"
           : todayStr === dayName
@@ -494,12 +501,9 @@ export function DiaryAgendaDayDay({
           {dayJournalEntryElements.map(({ element }) => element)}
         </TodoSortableContext>
       ) : (
-        <div className="flex">
-          <div className="w-8" />
-          <div className="text-gray-400/50 italic">
-            {isPast(dayEnd) ? "Nothing logged" : "Nothing scheduled"}
-          </div>
-        </div>
+        <DiaryAgendaDayEntry className="text-gray-400/50 italic">
+          {isPast(dayEnd) ? "Nothing logged" : "Nothing scheduled"}
+        </DiaryAgendaDayEntry>
       )}
     </FieldSetX>
   );

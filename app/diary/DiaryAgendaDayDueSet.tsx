@@ -1,7 +1,6 @@
 "use client";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { addDays, subHours } from "date-fns";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
@@ -12,8 +11,9 @@ import { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { dateToString, dayStartHour } from "../../utils";
 import { snoozeUserExerciseSchedule } from "./actions";
-import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
+import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 export function DiaryAgendaDayDueSet({
   sortableId,
@@ -87,17 +87,25 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     const router = useRouter();
 
     return (
-      <div ref={ref2} className="flex" {...props}>
-        <div className="text-md flex w-8 items-center justify-center text-gray-900/50">
-          <FontAwesomeIcon icon={faDumbbell} />
-        </div>
+      <DiaryAgendaDayEntry
+        ref={ref2}
+        {...props}
+        icon={faDumbbell}
+        onIconClick={(e) => {
+          e.preventDefault();
+
+          const dateStr = dateToString(subHours(new Date(), dayStartHour));
+          const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
+          router.push(`/diary/${dateStr}/workout?${searchStr}`);
+        }}
+      >
         <div
           ref={ref}
           style={
             isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}
           }
           className={
-            "group relative flex items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +
+            "relative flex items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +
             (isActive ? "rounded-b-none" : "cursor-pointer")
           }
           onClick={() => setIsActive(true)}
@@ -206,7 +214,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
             </div>
           )}
         </div>
-      </div>
+      </DiaryAgendaDayEntry>
     );
   },
 );
