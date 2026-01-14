@@ -47,7 +47,7 @@ async function* fetchSertAscents(
   for (const ascent of ascents) {
     const ogOffset = tzOffset(
       user.timeZone ?? "Europe/Copenhagen",
-      new Date(ascent.climbed_at),
+      new TZDate(ascent.climbed_at, "UTC"),
     );
     const updateResult = await KilterBoardAscents.updateOne(
       { uuid: ascent.uuid },
@@ -100,7 +100,7 @@ async function* fetchSertBids(
   for (const bid of bids) {
     const ogOffset = tzOffset(
       user.timeZone ?? "Europe/Copenhagen",
-      new Date(bid.climbed_at),
+      new TZDate(bid.climbed_at, "UTC"),
     );
     const updateResult = await KilterBoardBids.updateOne(
       { uuid: bid.uuid },
