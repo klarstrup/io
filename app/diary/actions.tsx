@@ -23,6 +23,18 @@ import type { UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable, omit } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
 
+const emitIoUpdate = (userId: string) => {
+  try {
+    new PartySocket({
+      id: process.env.VERCEL_DEPLOYMENT_ID,
+      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+      room: userId,
+    }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 export async function upsertWorkout(
   workout:
     | (Omit<WorkoutData, "id"> & { _id: string })
@@ -80,15 +92,7 @@ export async function upsertWorkout(
 
   console.timeEnd("upsertWorkout");
 
-  try {
-    new PartySocket({
-      id: process.env.VERCEL_DEPLOYMENT_ID,
-      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
-      room: user.id,
-    }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
-  } catch (error) {
-    console.error(error);
-  }
+  emitIoUpdate(user.id);
 
   return String(_id);
 }
@@ -108,6 +112,8 @@ export async function deleteWorkout(workoutId: string) {
   await arrayFromAsyncIterable(materializeIoWorkouts(user));
 
   revalidatePath("/diary");
+
+  emitIoUpdate(user.id);
 
   return result.modifiedCount;
 }
@@ -136,6 +142,8 @@ export async function snoozeUserExerciseSchedule(
 
   revalidatePath("/diary");
 
+  emitIoUpdate(user.id);
+
   return (await Users.findOne({
     _id: new ObjectId(user.id),
   }))!.exerciseSchedules!.find((s) => s.exerciseId === exerciseId);
@@ -159,6 +167,8 @@ export async function updateUserExerciseSchedules(
     },
   );
 
+  emitIoUpdate(user.id);
+
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!
     .exerciseSchedules!;
 }
@@ -174,6 +184,8 @@ export async function updateUserDataSources(
     { _id: new ObjectId(user.id) },
     { $set: { dataSources } },
   );
+
+  emitIoUpdate(user.id);
 
   return (await Users.findOne({ _id: new ObjectId(user.id) }))!.dataSources;
 }
@@ -206,6 +218,8 @@ export async function updateLocation(
   }
 
   await updateLocationCounts(userId);
+
+  emitIoUpdate(user.id);
 
   return { ...omit(newLocation, "_id"), id: newLocation._id.toString() };
 }
@@ -256,6 +270,8 @@ export async function upsertTodo(
 
   revalidatePath("/diary");
 
+  emitIoUpdate(user.id);
+
   return String(upsertResult.matchedCount);
 }
 
@@ -300,6 +316,8 @@ export async function deleteTodo(todoUid: string) {
   }
 
   revalidatePath("/diary");
+
+  emitIoUpdate(user.id);
 
   return result.deletedCount;
 }
