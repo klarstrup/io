@@ -1,4 +1,4 @@
-import { tzOffset } from "@date-fns/tz";
+import { TZDate, tzOffset } from "@date-fns/tz";
 import { addMinutes } from "date-fns";
 import { auth } from "../../../auth";
 import {
@@ -56,7 +56,10 @@ async function* fetchSertAscents(
           ...ascent,
           grade: difficultyToGradeMap[ascent.difficulty] as number,
           // Climbed at from the API is in local time, it needs to be converted to UTC
-          climbed_at: addMinutes(new Date(ascent.climbed_at), ogOffset),
+          climbed_at: addMinutes(
+            new TZDate(ascent.climbed_at, "UTC"),
+            -ogOffset,
+          ),
           created_at: new Date(ascent.created_at),
           updated_at: new Date(ascent.updated_at),
         },
@@ -105,7 +108,7 @@ async function* fetchSertBids(
         $set: {
           ...bid,
           // Climbed at from the API is in local time, it needs to be converted to UTC
-          climbed_at: addMinutes(new Date(bid.climbed_at), ogOffset),
+          climbed_at: addMinutes(new TZDate(bid.climbed_at, "UTC"), -ogOffset),
           created_at: new Date(bid.created_at),
           updated_at: new Date(bid.updated_at),
         },
