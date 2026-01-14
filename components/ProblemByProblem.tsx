@@ -492,7 +492,7 @@ export default function ProblemByProblem({
 
   return (
     <div
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(30px, 1fr))" }}
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(24px, 1fr))" }}
       className={"mt-0.5 grid w-full gap-0.5 " + (className ? className : "")}
     >
       {sortedProblems.map((problem, i) => (
