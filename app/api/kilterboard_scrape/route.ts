@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import { auth } from "../../../auth";
 import {
   difficultyToGradeMap,
@@ -17,7 +18,11 @@ import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
-async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
+async function* fetchSertAscents(
+  token: string,
+  setUpdated: SetUpdatedFn,
+  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
+) {
   const newestAscentInDatabase = await KilterBoardAscents.findOne(
     {},
     { sort: { created_at: -1 } },
@@ -45,7 +50,12 @@ async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
         $set: {
           ...ascent,
           grade: difficultyToGradeMap[ascent.difficulty] as number,
-          climbed_at: new Date(ascent.climbed_at),
+          // Climbed at from the API is in local time, it needs to be converted to UTC
+          climbed_at: new TZDate(
+            ascent.climbed_at,
+            // Assume that the board is in the user's time zone
+            user.timeZone ?? "Europe/Copenhagen",
+          ),
           created_at: new Date(ascent.created_at),
           updated_at: new Date(ascent.updated_at),
         },
@@ -57,7 +67,11 @@ async function* fetchSertAscents(token: string, setUpdated: SetUpdatedFn) {
 
   yield { ascents };
 }
-async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
+async function* fetchSertBids(
+  token: string,
+  setUpdated: SetUpdatedFn,
+  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
+) {
   const newestBidInDatabase = await KilterBoardBids.findOne(
     {},
     { sort: { created_at: -1 } },
@@ -85,7 +99,12 @@ async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
       {
         $set: {
           ...bid,
-          climbed_at: new Date(bid.climbed_at),
+          // Climbed at from the API is in local time, it needs to be converted to UTC
+          climbed_at: new TZDate(
+            bid.climbed_at,
+            // Assume that the board is in the user's time zone
+            user.timeZone ?? "Europe/Copenhagen",
+          ),
           created_at: new Date(bid.created_at),
           updated_at: new Date(bid.updated_at),
         },
@@ -98,7 +117,11 @@ async function* fetchSertBids(token: string, setUpdated: SetUpdatedFn) {
   yield { bids };
 }
 
-async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
+async function* fetchSertClimbs(
+  token: string,
+  setUpdated: SetUpdatedFn,
+  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
+) {
   await KilterBoardClimbs.createIndexes([{ key: { created_at: -1 } }]);
   const newestClimbInDatabase = await KilterBoardClimbs.findOne(
     {},
@@ -148,7 +171,11 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
   }
 }
 
-async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
+async function* fetchSertClimbStats(
+  token: string,
+  setUpdated: SetUpdatedFn,
+  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
+) {
   await KilterBoardClimbStats.createIndexes([
     { key: { climb_uuid: 1, angle: 1 }, unique: true },
     { key: { created_at: -1 } },
@@ -236,7 +263,7 @@ export const GET = () =>
         setUpdated(false);
 
         for (const fetcher of shuffle(fetchers)) {
-          yield* fetcher(token, setUpdated);
+          yield* fetcher(token, setUpdated, user);
         }
       },
     );
