@@ -1,4 +1,5 @@
-import { TZDate } from "@date-fns/tz";
+import { tzOffset } from "@date-fns/tz";
+import { addMinutes } from "date-fns";
 import { auth } from "../../../auth";
 import {
   difficultyToGradeMap,
@@ -44,6 +45,10 @@ async function* fetchSertAscents(
   });
 
   for (const ascent of ascents) {
+    const ogOffset = tzOffset(
+      user.timeZone ?? "Europe/Copenhagen",
+      new Date(ascent.climbed_at),
+    );
     const updateResult = await KilterBoardAscents.updateOne(
       { uuid: ascent.uuid },
       {
@@ -51,11 +56,7 @@ async function* fetchSertAscents(
           ...ascent,
           grade: difficultyToGradeMap[ascent.difficulty] as number,
           // Climbed at from the API is in local time, it needs to be converted to UTC
-          climbed_at: new TZDate(
-            ascent.climbed_at,
-            // Assume that the board is in the user's time zone
-            user.timeZone ?? "Europe/Copenhagen",
-          ),
+          climbed_at: addMinutes(new Date(ascent.climbed_at), ogOffset),
           created_at: new Date(ascent.created_at),
           updated_at: new Date(ascent.updated_at),
         },
@@ -94,17 +95,17 @@ async function* fetchSertBids(
   );
 
   for (const bid of bids) {
+    const ogOffset = tzOffset(
+      user.timeZone ?? "Europe/Copenhagen",
+      new Date(bid.climbed_at),
+    );
     const updateResult = await KilterBoardBids.updateOne(
       { uuid: bid.uuid },
       {
         $set: {
           ...bid,
           // Climbed at from the API is in local time, it needs to be converted to UTC
-          climbed_at: new TZDate(
-            bid.climbed_at,
-            // Assume that the board is in the user's time zone
-            user.timeZone ?? "Europe/Copenhagen",
-          ),
+          climbed_at: addMinutes(new Date(bid.climbed_at), ogOffset),
           created_at: new Date(bid.created_at),
           updated_at: new Date(bid.updated_at),
         },
