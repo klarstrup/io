@@ -149,7 +149,7 @@ export default function UserStuffWorkoutScheduleForm({
                           }
                         />
                       </label>
-                      <label className="[grid-column:span_2] flex gap-1">
+                      <label className="col-[span_2] flex gap-1">
                         Frequency:
                         <select
                           {...register(
@@ -158,7 +158,10 @@ export default function UserStuffWorkoutScheduleForm({
                           )}
                           className="w-full"
                         >
+                          <option value={7 / 12}>Unciweekly</option>
+                          <option value={7 / 8}>Octantweekly</option>
                           <option value={1}>Daily</option>
+                          <option value={7 / 6}>Sextantweekly</option>
                           <option value={7 / 4}>Quadrantweekly</option>
                           <option value={7 / 3}>Trientweekly</option>
                           <option value={7 / 2}>Semiweekly</option>
