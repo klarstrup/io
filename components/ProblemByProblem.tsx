@@ -60,7 +60,11 @@ const CircuitText = ({ circuitName }: { circuitName: string }) => (
     textAnchor="start"
     fill="#fff"
     fontSize={
-      circuitName.length >= 3 ? "17px" : circuitName.length >= 2 ? "25px" : "34px"
+      circuitName.length >= 3
+        ? "17px"
+        : circuitName.length >= 2
+          ? "25px"
+          : "34px"
     }
     stroke="#000"
     paintOrder="stroke"
@@ -398,12 +402,10 @@ export const exerciseSetsToProblemByProblem = (
 
 export default function ProblemByProblem({
   problemByProblem,
-  className,
   groupByGradeAndFlash,
   groupByColorAndFlash,
 }: {
   problemByProblem: PP[];
-  className?: string;
   groupByGradeAndFlash?: boolean;
   groupByColorAndFlash?: boolean;
 }) {
@@ -463,10 +465,7 @@ export default function ProblemByProblem({
     return (
       <div
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))" }}
-        className={
-          "mt-0.5 grid w-full content-between justify-between gap-0.5 " +
-          (className ? className : "")
-        }
+        className={"mt-0.5 grid w-full content-between justify-between gap-0.5"}
       >
         {Array.from(grouped)
           .sort((a, b) => Number(b[1][0].grade) - Number(a[1][0].grade))
@@ -492,8 +491,9 @@ export default function ProblemByProblem({
 
   return (
     <div
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(24px, 1fr))" }}
-      className={"mt-0.5 grid w-full gap-0.5 " + (className ? className : "")}
+      className={
+        "mt-0.5 grid w-full grid-cols-[repeat(auto-fill,minmax(24px,1fr))] gap-0.5 md:grid-cols-[repeat(auto-fill,minmax(28px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(32px,1fr))]"
+      }
     >
       {sortedProblems.map((problem, i) => (
         <ProblemBadge key={i} {...problem} />
