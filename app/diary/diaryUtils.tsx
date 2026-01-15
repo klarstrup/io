@@ -1,4 +1,12 @@
-import { addHours, endOfDay, max, min } from "date-fns";
+import {
+  addHours,
+  endOfDay,
+  Interval,
+  isWithinInterval,
+  max,
+  min,
+  startOfDay,
+} from "date-fns";
 import { MongoVEvent, MongoVTodo } from "../../lib";
 import {
   ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
@@ -14,13 +22,17 @@ export type JournalEntry =
   | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
 
 const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
+  const dayInterval: Interval = {
+    start: addHours(startOfDay(workout.workedOutAt), dayStartHour),
+    end: addHours(endOfDay(workout.workedOutAt), dayStartHour),
+  };
   return max([
     workout.workedOutAt,
     min([
       ...workout.exercises
         .flatMap((e) => e.sets.map((s) => s.updatedAt))
-        .filter(Boolean),
-      addHours(endOfDay(workout.workedOutAt), dayStartHour),
+        .filter(Boolean)
+        .filter((date) => isWithinInterval(date, dayInterval)),
     ]),
   ]);
 };
