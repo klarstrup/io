@@ -106,6 +106,7 @@ export function DiaryAgendaDayDay({
             </Link>
             <DiaryAgendaDayCreateTodo date={dayStart} />
             <span
+              hidden
               className={
                 "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
               }
@@ -477,6 +478,7 @@ export function DiaryAgendaDayDay({
               ) : null}
               <DiaryAgendaDayCreateTodo date={dayStart} />
               <span
+                hidden
                 className={
                   "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
                 }
