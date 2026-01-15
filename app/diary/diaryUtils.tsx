@@ -4,7 +4,6 @@ import {
   Interval,
   isWithinInterval,
   max,
-  min,
   startOfDay,
 } from "date-fns";
 import { MongoVEvent, MongoVTodo } from "../../lib";
@@ -26,14 +25,14 @@ const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
     start: addHours(startOfDay(workout.workedOutAt), dayStartHour),
     end: addHours(endOfDay(workout.workedOutAt), dayStartHour),
   };
+
   return max([
     dayInterval.start,
-    min([
-      ...workout.exercises
-        .flatMap((e) => e.sets.map((s) => s.updatedAt))
-        .filter(Boolean)
-        .filter((date) => isWithinInterval(date, dayInterval)),
-    ]),
+    workout.createdAt,
+    ...workout.exercises
+      .flatMap((e) => e.sets.map((s) => s.updatedAt))
+      .filter(Boolean)
+      .filter((date) => isWithinInterval(date, dayInterval)),
   ]);
 };
 
