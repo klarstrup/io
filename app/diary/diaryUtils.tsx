@@ -14,7 +14,7 @@ export type JournalEntry =
   | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
 
 const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
-  return min([
+  return max([
     workout.workedOutAt,
     min([
       ...workout.exercises
@@ -51,7 +51,8 @@ export const getJournalEntryPrincipalDate = (
     const exerciseSet =
       entry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
     return (
-      getWorkoutPrincipalDate(exerciseSet[2][exerciseSet[2].length - 1]!) || null
+      getWorkoutPrincipalDate(exerciseSet[2][exerciseSet[2].length - 1]!) ||
+      null
     );
   }
 
