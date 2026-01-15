@@ -314,7 +314,7 @@ export function DiaryAgendaDayDay({
             >
               <div
                 className={
-                  "flex w-32 flex-col flex-wrap items-stretch justify-center gap-1 self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
+                  "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
                   (!setsWithLocation.length ? "rounded-r-[5px]" : "")
                 }
               >
@@ -335,7 +335,7 @@ export function DiaryAgendaDayDay({
                       prefetch={false}
                       href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
                       style={{ color: "#edab00" }}
-                      className="text-sm font-semibold"
+                      className="text-sm leading-none font-semibold"
                     >
                       ⏎
                     </Link>
