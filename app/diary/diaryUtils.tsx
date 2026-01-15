@@ -27,7 +27,7 @@ const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
     end: addHours(endOfDay(workout.workedOutAt), dayStartHour),
   };
   return max([
-    workout.workedOutAt,
+    dayInterval.start,
     min([
       ...workout.exercises
         .flatMap((e) => e.sets.map((s) => s.updatedAt))
