@@ -1,13 +1,29 @@
-import { max } from "date-fns";
+import { addHours, endOfDay, max, min } from "date-fns";
 import { MongoVEvent, MongoVTodo } from "../../lib";
-import { ExerciseSetWithExerciseDataAndLocationsAndWorkouts } from "../../models/workout";
+import {
+  ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
+  WorkoutData,
+} from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
+import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
   | MongoVEvent
   | MongoVTodo
   | Awaited<ReturnType<typeof getNextSets>>[number]
   | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
+
+const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
+  return min([
+    workout.workedOutAt,
+    min([
+      ...workout.exercises
+        .flatMap((e) => e.sets.map((s) => s.updatedAt))
+        .filter(Boolean),
+      addHours(endOfDay(workout.workedOutAt), dayStartHour),
+    ]),
+  ]);
+};
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
@@ -34,7 +50,9 @@ export const getJournalEntryPrincipalDate = (
   if (Array.isArray(entry) && entry.length === 3 && "id" in entry[0]) {
     const exerciseSet =
       entry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
-    return exerciseSet[2][exerciseSet[2].length - 1]?.workedOutAt || null;
+    return (
+      getWorkoutPrincipalDate(exerciseSet[2][exerciseSet[2].length - 1]!) || null
+    );
   }
 
   return null;
