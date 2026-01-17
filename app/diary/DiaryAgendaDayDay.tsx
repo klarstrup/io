@@ -504,7 +504,7 @@ export function DiaryAgendaDayDay({
         </TodoSortableContext>
       ) : (
         <DiaryAgendaDayEntry className="text-gray-400/50 italic">
-          {isPast(dayEnd) ? "Nothing logged" : "Nothing scheduled"}
+          {isPast(dayEnd) ? "Nothing logged" : "Nothing planned"}
         </DiaryAgendaDayEntry>
       )}
     </FieldSetX>
