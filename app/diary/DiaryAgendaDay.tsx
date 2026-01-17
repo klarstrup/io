@@ -14,18 +14,11 @@ import {
   startOfDay,
   subHours,
 } from "date-fns";
-import { ObjectId, type WithId } from "mongodb";
+import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import type { MongoVEvent, MongoVTodo } from "../../lib";
-import { exercisesById } from "../../models/exercises";
 import { Locations } from "../../models/location.server";
-import {
-  ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
-  isNextSetDue,
-  WorkoutSource,
-  type WorkoutData,
-  type WorkoutExercise,
-} from "../../models/workout";
+import { isNextSetDue, WorkoutSource } from "../../models/workout";
 import {
   getNextSets,
   MaterializedWorkoutsView,
@@ -250,45 +243,6 @@ export async function DiaryAgendaDay({
                 _id: { $in: dayWorkoutLocationObjectIds },
               }).toArray()
             : [];
-          const dayExercisesById = dayWorkouts
-            .flatMap((workout) =>
-              workout.exercises.map((exercise) => [exercise, workout] as const),
-            )
-            .sort(([, a], [, b]) => compareAsc(a.workedOutAt, b.workedOutAt))
-            // Group by exerciseId to merge multiple workouts of the same exercise on the same day
-            .reduce<Record<string, [WorkoutExercise, WithId<WorkoutData>][]>>(
-              (acc, [exercise, workout]) => {
-                const key = exercise.exerciseId;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push([exercise, workout]);
-                return acc;
-              },
-              {},
-            );
-
-          const dayExerciseSets: ExerciseSetWithExerciseDataAndLocationsAndWorkouts[] =
-            Object.entries(dayExercisesById)
-              .map(
-                ([exerciseId, exerciseWorkouts]) =>
-                  [
-                    exercisesById[parseInt(exerciseId)]!,
-                    exerciseWorkouts.flatMap(([{ sets }, workout]) =>
-                      sets.map(
-                        (set) =>
-                          [
-                            set,
-                            dayLocations.find(
-                              (loc) =>
-                                loc._id.toString() === workout.locationId,
-                            ),
-                            workout,
-                          ] as const,
-                      ),
-                    ),
-                    exerciseWorkouts.map(([_, workout]) => workout),
-                  ] as const,
-              )
-              .sort(([, a], [, b]) => b.length - a.length);
 
           const dayDueSets = dueSetsByDate[dayName] || [];
           const dayTodos = todosByDate[dayName] || [];
@@ -304,7 +258,7 @@ export async function DiaryAgendaDay({
                   ...dayEvents,
                   ...dayDueSets,
                   ...dayTodos,
-                  ...dayExerciseSets,
+                  ...dayWorkouts,
                 ]
                   .sort((a, b) => {
                     const aOrder =

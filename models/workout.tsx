@@ -4,7 +4,6 @@ import {
   endOfDay,
   isAfter,
   isSameDay,
-  startOfDay,
   type Duration,
 } from "date-fns";
 import type { WithId } from "mongodb";
@@ -71,13 +70,15 @@ export interface WorkoutExerciseSetInput {
   assistType?: AssistType;
 }
 
+export type SetAndLocationAndWorkout = readonly [
+  WorkoutExerciseSet,
+  WithId<LocationData> | undefined,
+  WithId<WorkoutData>,
+];
+
 export type ExerciseSetWithExerciseDataAndLocationsAndWorkouts = readonly [
   ExerciseData,
-  (readonly [
-    WorkoutExerciseSet,
-    WithId<LocationData> | undefined,
-    WithId<WorkoutData>,
-  ])[],
+  SetAndLocationAndWorkout[],
   WithId<WorkoutData>[],
 ];
 

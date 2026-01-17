@@ -1,8 +1,8 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
   faCalendar,
-  faCalendarWeek,
   faCalendarCheck,
+  faCalendarWeek,
   faDumbbell,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -25,10 +25,11 @@ import type { ReactElement } from "react";
 import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
 import type { MongoVEvent } from "../../lib";
+import { exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import {
-  ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
   isClimbingExercise,
+  WorkoutData,
   WorkoutSource,
 } from "../../models/workout";
 import { calculateClimbingStats } from "../../models/workout.server";
@@ -38,7 +39,6 @@ import {
   dayStartHour,
   DEFAULT_TIMEZONE,
   roundToNearestDay,
-  uniqueBy,
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
@@ -259,23 +259,10 @@ export function DiaryAgendaDayDay({
             userId={user!.id}
             dueSet={dueSet}
             date={dayDate}
-            workouts={uniqueBy(
-              dayJournalEntries
-                .filter(
-                  (
-                    jE,
-                  ): jE is ExerciseSetWithExerciseDataAndLocationsAndWorkouts =>
-                    Array.isArray(jE) && jE.length === 3 && "id" in jE[0],
-                )
-                ?.map(([_, __, workouts]) => workouts)
-                .flat() || [],
-              (w) => w._id.toString(),
-            )
+            workouts={dayJournalEntries
+              .filter((jE): jE is WithId<WorkoutData> => "exercises" in jE)
               .filter((w) => w.source === WorkoutSource.Self)
-              .map((d) => ({
-                ...d,
-                _id: d._id.toString(),
-              }))}
+              .map((d) => ({ ...d, _id: d._id.toString() }))}
             locations={dayLocations.map(({ _id, ...d }) => ({
               ...d,
               id: _id.toString(),
@@ -283,83 +270,106 @@ export function DiaryAgendaDayDay({
           />
         ),
       });
-    } else if (
-      Array.isArray(journalEntry) &&
-      journalEntry.length === 3 &&
-      "id" in journalEntry[0]
-    ) {
-      const exerciseSetEntry =
-        journalEntry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
+    } else if ("exercises" in journalEntry) {
+      const workout = journalEntry as WithId<
+        WorkoutData & { materializedAt?: Date }
+      >;
 
-      const [exercise, setsWithLocation, workouts] = exerciseSetEntry;
-      const mostRecentWorkout = workouts.length === 1 ? workouts[0]! : null;
+      const mostRecentWorkout = workout;
       const workoutDateStr =
         mostRecentWorkout && dateToString(mostRecentWorkout.workedOutAt);
 
-      dayJournalEntryElements.push({
-        id: String(exercise.id),
-        element: (
-          <DiaryAgendaDayEntry
-            key={exercise.id}
-            icon={faDumbbell}
-            cotemporality={cotemporality({
-              start: min(workouts.map((w) => w.workedOutAt)) || new Date(),
-              end: max(workouts.map((w) => w.workedOutAt)) || new Date(),
-            })}
-          >
-            <div
-              className={
-                "inline-flex h-auto flex-row justify-center rounded-md border border-black/20 bg-white" +
-                (isClimbingExercise(exercise.id) ? " w-full" : "")
+      for (const workoutExercise of workout.exercises) {
+        const exercise = exercisesById[workoutExercise.exerciseId];
+        if (!exercise) continue;
+
+        const setsWithLocation = workoutExercise.sets.map((set) => {
+          const setLocationId = workout.locationId;
+          const location = dayLocations.find(
+            (loc) => String(loc._id) === setLocationId,
+          );
+          return [set, location, workout] as const;
+        });
+
+        dayJournalEntryElements.push({
+          id: String(workout._id) + "-" + String(workoutExercise.exerciseId),
+          element: (
+            <DiaryAgendaDayEntry
+              key={
+                String(workout._id) + "-" + String(workoutExercise.exerciseId)
               }
+              icon={faDumbbell}
+              cotemporality={cotemporality({
+                start: min([
+                  workout.workedOutAt,
+                  ...workoutExercise.sets
+                    .map((s) => s.createdAt)
+                    .filter(Boolean),
+                ]),
+                end: max([
+                  workout.workedOutAt,
+                  ...workoutExercise.sets
+                    .map((s) => s.updatedAt)
+                    .filter(Boolean),
+                ]),
+              })}
             >
               <div
                 className={
-                  "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
-                  (!setsWithLocation.length ? "rounded-r-[5px]" : "")
+                  "inline-flex h-auto flex-row justify-center rounded-md border border-black/20 bg-white" +
+                  (isClimbingExercise(workoutExercise.exerciseId)
+                    ? " w-full"
+                    : "")
                 }
               >
-                <div className="flex justify-between">
-                  <Link
-                    prefetch={false}
-                    href={`/diary/exercises/${exercise.id}`}
-                  >
-                    {[exercise.name, ...exercise.aliases]
-                      .filter((name) => name.length >= 4)
-                      .sort((a, b) => a.length - b.length)[0]!
-                      .replace("Barbell", "")}
-                  </Link>
-                  {mostRecentWorkout &&
-                  (mostRecentWorkout.source === WorkoutSource.Self ||
-                    !mostRecentWorkout.source) ? (
+                <div
+                  className={
+                    "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
+                    (!workoutExercise.sets.length ? "rounded-r-[5px]" : "")
+                  }
+                >
+                  <div className="flex justify-between">
                     <Link
                       prefetch={false}
-                      href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
-                      style={{ color: "#edab00" }}
-                      className="text-sm leading-none font-semibold"
+                      href={`/diary/exercises/${exercise.id}`}
                     >
-                      ⏎
+                      {[exercise.name, ...exercise.aliases]
+                        .filter((name) => name.length >= 4)
+                        .sort((a, b) => a.length - b.length)[0]!
+                        .replace("Barbell", "")}
                     </Link>
-                  ) : null}
+                    {mostRecentWorkout &&
+                    (mostRecentWorkout.source === WorkoutSource.Self ||
+                      !mostRecentWorkout.source) ? (
+                      <Link
+                        prefetch={false}
+                        href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
+                        style={{ color: "#edab00" }}
+                        className="text-sm leading-none font-semibold"
+                      >
+                        ⏎
+                      </Link>
+                    ) : null}
+                  </div>
+                  <div className="leading-none">
+                    {isClimbingExercise(exercise.id)
+                      ? calculateClimbingStats(setsWithLocation)
+                      : null}
+                  </div>
                 </div>
-                <div className="leading-none">
-                  {isClimbingExercise(exercise.id)
-                    ? calculateClimbingStats(setsWithLocation)
-                    : null}
-                </div>
+                {setsWithLocation.length > 0 ? (
+                  <div className="flex flex-1 items-center px-1.5 py-0.5 pb-1 text-xs">
+                    <WorkoutEntryExercise
+                      exercise={exercise}
+                      setsWithLocations={setsWithLocation}
+                    />
+                  </div>
+                ) : null}
               </div>
-              {setsWithLocation.length > 0 ? (
-                <div className="flex flex-1 items-center px-1.5 py-0.5 pb-1 text-xs">
-                  <WorkoutEntryExercise
-                    exercise={exercise}
-                    setsWithLocations={setsWithLocation}
-                  />
-                </div>
-              ) : null}
-            </div>
-          </DiaryAgendaDayEntry>
-        ),
-      });
+            </DiaryAgendaDayEntry>
+          ),
+        });
+      }
     }
 
     const shouldPutNowDivider2 =

@@ -6,11 +6,9 @@ import {
   max,
   startOfDay,
 } from "date-fns";
+import type { WithId } from "mongodb";
 import { MongoVEvent, MongoVTodo } from "../../lib";
-import {
-  ExerciseSetWithExerciseDataAndLocationsAndWorkouts,
-  WorkoutData,
-} from "../../models/workout";
+import { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
 
@@ -18,7 +16,7 @@ export type JournalEntry =
   | MongoVEvent
   | MongoVTodo
   | Awaited<ReturnType<typeof getNextSets>>[number]
-  | ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
+  | WithId<WorkoutData & { materializedAt?: Date }>;
 
 const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
   const dayInterval: Interval = {
@@ -58,13 +56,9 @@ export const getJournalEntryPrincipalDate = (
 
     return max([effectiveDueDate, slightlyIntoTheFuture]);
   }
-  if (Array.isArray(entry) && entry.length === 3 && "id" in entry[0]) {
-    const exerciseSet =
-      entry as ExerciseSetWithExerciseDataAndLocationsAndWorkouts;
-    return (
-      getWorkoutPrincipalDate(exerciseSet[2][exerciseSet[2].length - 1]!) ||
-      null
-    );
+  if ("exercises" in entry) {
+    const workout = entry;
+    return getWorkoutPrincipalDate(workout);
   }
 
   return null;
