@@ -123,7 +123,7 @@ export const isNextSetDue = (
       ? nextSet.scheduleEntry.snoozedUntil
       : nextSet.dueOn;
 
-  return isSameDay(effectiveDueDate, tzDate);
+  return isSameDay(effectiveDueDate, tzDate, { in: inn });
 };
 
 export const getCircuitByLocationAndSetColor = (
