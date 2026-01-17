@@ -158,6 +158,7 @@ export default function UserStuffWorkoutScheduleForm({
                           )}
                           className="w-full"
                         >
+                          <option value={7 / 14}>Biseptantweekly</option>
                           <option value={7 / 12}>Unciweekly</option>
                           <option value={7 / 8}>Octantweekly</option>
                           <option value={7 / 7}>Septantweekly</option>
