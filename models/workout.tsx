@@ -3,7 +3,7 @@ import {
   addHours,
   endOfDay,
   isAfter,
-  isSameHour,
+  isSameDay,
   startOfDay,
   type Duration,
 } from "date-fns";
@@ -115,7 +115,6 @@ export const isNextSetDue = (
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) => {
   const inn = tz(("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE);
-  const dayStart = addHours(startOfDay(tzDate, { in: inn }), dayStartHour);
   const dayEnd = addHours(endOfDay(tzDate, { in: inn }), dayStartHour);
 
   const effectiveDueDate =
@@ -124,10 +123,7 @@ export const isNextSetDue = (
       ? nextSet.scheduleEntry.snoozedUntil
       : nextSet.dueOn;
 
-  return (
-    isAfter(dayStart, effectiveDueDate) ||
-    isSameHour(dayStart, effectiveDueDate)
-  );
+  return isSameDay(effectiveDueDate, tzDate);
 };
 
 export const getCircuitByLocationAndSetColor = (
