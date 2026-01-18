@@ -59,7 +59,7 @@ export default async function DiaryExercise({
             name="timeframe"
             defaultValue={timeframe || ""}
           >
-            <option value="">All time</option>
+            <option value="all-time">All time</option>
             <option value="this-year">This year</option>
             <option value="past-year">Past year</option>
             <option value="past-3-months">Past 3 months</option>
