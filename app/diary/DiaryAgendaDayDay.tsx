@@ -449,10 +449,10 @@ export function DiaryAgendaDayDay({
   return (
     <FieldSetX
       legend={
-        <div className="-ml-3 flex items-center gap-1 leading-normal">
+        <div className="-ml-1 flex items-center gap-1 leading-normal">
           <span
             className={
-              "w-7.5 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums text-shadow-md text-shadow-white"
+              "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums text-shadow-md text-shadow-white"
             }
           >
             {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
