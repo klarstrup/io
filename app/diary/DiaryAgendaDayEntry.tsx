@@ -34,7 +34,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     <div ref={ref} className="flex" {...props}>
       <IconContainer
         className={
-          "text-md flex w-8 items-center justify-center " +
+          "text-md flex w-10 items-center justify-center " +
           (cotemporality
             ? cotemporality === "past"
               ? " text-green-400"
