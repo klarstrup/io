@@ -4,6 +4,7 @@ import {
   endOfDay,
   isAfter,
   isSameDay,
+  max,
   type Duration,
 } from "date-fns";
 import type { WithId } from "mongodb";
@@ -124,7 +125,7 @@ export const isNextSetDue = (
       ? nextSet.scheduleEntry.snoozedUntil
       : nextSet.dueOn;
 
-  return isSameDay(effectiveDueDate, tzDate, { in: inn });
+  return isSameDay(max([effectiveDueDate, new Date()]), tzDate, { in: inn });
 };
 
 export const getCircuitByLocationAndSetColor = (
