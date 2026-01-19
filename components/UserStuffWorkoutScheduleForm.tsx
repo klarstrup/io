@@ -163,6 +163,7 @@ export default function UserStuffWorkoutScheduleForm({
                           <option value={7 / 8}>Octantweekly</option>
                           <option value={7 / 7}>Septantweekly</option>
                           <option value={7 / 6}>Sextantweekly</option>
+                          <option value={7 / 5}>Quinqueweekly</option>
                           <option value={7 / 4}>Quadrantweekly</option>
                           <option value={7 / 3}>Trientweekly</option>
                           <option value={7 / 2}>Semiweekly</option>
