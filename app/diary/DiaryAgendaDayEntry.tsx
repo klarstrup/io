@@ -46,7 +46,14 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         }
         onClick={onIconClick}
       >
-        {icon ? <FontAwesomeIcon icon={icon} /> : iconTxt ? iconTxt : null}
+        {icon ? (
+          <FontAwesomeIcon
+            icon={icon}
+            className={onIconClick ? "cursor-pointer" : ""}
+          />
+        ) : iconTxt ? (
+          iconTxt
+        ) : null}
       </IconContainer>
       <div
         className={
