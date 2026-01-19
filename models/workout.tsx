@@ -1,10 +1,11 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addHours,
+  addMilliseconds,
   endOfDay,
   isAfter,
-  isSameDay,
-  max,
+  isBefore,
+  startOfDay,
   type Duration,
 } from "date-fns";
 import type { WithId } from "mongodb";
@@ -116,7 +117,10 @@ export const isNextSetDue = (
   tzDate: Date | TZDate,
   nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
 ) => {
-  const inn = tz(("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE);
+  const timeZone =
+    ("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE;
+  const inn = tz(timeZone);
+  const dayStart = addHours(startOfDay(tzDate, { in: inn }), dayStartHour);
   const dayEnd = addHours(endOfDay(tzDate, { in: inn }), dayStartHour);
 
   const effectiveDueDate =
@@ -125,7 +129,10 @@ export const isNextSetDue = (
       ? nextSet.scheduleEntry.snoozedUntil
       : nextSet.dueOn;
 
-  return isSameDay(max([effectiveDueDate, new Date()]), tzDate, { in: inn });
+  return (
+    isBefore(effectiveDueDate, addMilliseconds(dayEnd, 1)) &&
+    isAfter(addMilliseconds(dayStart, -1), effectiveDueDate)
+  );
 };
 
 export const getCircuitByLocationAndSetColor = (
