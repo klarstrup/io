@@ -1,5 +1,6 @@
 import { auth } from "../../auth";
 import { getUserIcalTodosBetween } from "../../sources/ical";
+import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 
 export default async function ListPage() {
@@ -12,20 +13,14 @@ export default async function ListPage() {
   return (
     <div className="max-h-screen min-h-screen">
       <div className="mx-auto max-h-screen max-w-2xl self-stretch border-black/25 px-2">
-        <div
-          className="grid gap-1.5 pb-1.5"
-          style={{ gridTemplateColumns: "1.25rem minmax(0, 1fr)" }}
-        >
+        <div>
           {todos.map((todo) => (
             <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
           ))}
           {todos.length && todones.length ? (
-            <>
-              <span></span>
-              <span>
-                <hr className="border-gray-200" />
-              </span>
-            </>
+            <DiaryAgendaDayEntry className="my-2">
+              <hr className="border-gray-200 flex-1" />
+            </DiaryAgendaDayEntry>
           ) : null}
           {todones.map((todo) => (
             <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
