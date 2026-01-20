@@ -19,9 +19,16 @@ export type JournalEntry =
   | WithId<WorkoutData & { materializedAt?: Date }>;
 
 const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
+  // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
-    start: addHours(startOfDay(workout.workedOutAt), dayStartHour),
-    end: addHours(endOfDay(workout.workedOutAt), dayStartHour),
+    start: addHours(
+      startOfDay(addHours(workout.workedOutAt, -dayStartHour)),
+      dayStartHour,
+    ),
+    end: addHours(
+      endOfDay(addHours(workout.workedOutAt, -dayStartHour)),
+      dayStartHour,
+    ),
   };
 
   return max([
