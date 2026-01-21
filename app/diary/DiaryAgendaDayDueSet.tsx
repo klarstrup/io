@@ -95,6 +95,9 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         onIconClick={(e) => {
           e.preventDefault();
 
+          // Hidden exercises cannot be manually logged
+          if (exercise.is_hidden) return;
+
           const dateStr = dateToString(subHours(new Date(), dayStartHour));
           const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
           router.push(`/diary/${dateStr}/workout?${searchStr}`);
