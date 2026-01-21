@@ -2,6 +2,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { addDays, subHours } from "date-fns";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
 import { useClickOutside } from "../../hooks";
@@ -121,10 +122,12 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 : " rounded-r-[5px]")
             }
           >
-            {[exercise.name, ...exercise.aliases]
-              .filter((name) => name.length >= 4)
-              .sort((a, b) => a.length - b.length)[0]!
-              .replace("Barbell", "")}
+            <Link prefetch={false} href={`/diary/exercises/${exercise.id}`}>
+              {[exercise.name, ...exercise.aliases]
+                .filter((name) => name.length >= 4)
+                .sort((a, b) => a.length - b.length)[0]!
+                .replace("Barbell", "")}
+            </Link>
           </div>
           {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
             <div
