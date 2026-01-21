@@ -6,6 +6,8 @@ import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import { useClickOutside, useEvent } from "../../hooks";
 import type { MongoVTodo } from "../../lib";
 import {
+  agendaTodo,
+  backlogTodo,
   deleteTodo,
   doTodo,
   snoozeTodo,
@@ -106,7 +108,13 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
             : () => void doTodo(todo.uid)
         }
         // this should cope with todos with deadlines when that is implemented
-        cotemporality={todo.completed ? "past" : "future"}
+        cotemporality={
+          !todo.completed && !todo.start && !todo.due
+            ? "backlog"
+            : todo.completed
+              ? "past"
+              : "future"
+        }
       >
         <div
           ref={ref2}
@@ -159,7 +167,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                 >
                   Undo
                 </button>
-              ) : (
+              ) : todo.start ? (
                 <>
                   <button
                     type="button"
@@ -179,7 +187,26 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   >
                     Snooze
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => void backlogTodo(todo.uid)}
+                    className={
+                      "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                    }
+                  >
+                    Put in Backlog
+                  </button>
                 </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void agendaTodo(todo.uid)}
+                  className={
+                    "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                  }
+                >
+                  Put on Agenda
+                </button>
               )}
               <button
                 type="button"

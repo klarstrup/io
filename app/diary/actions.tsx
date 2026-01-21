@@ -301,6 +301,43 @@ export async function snoozeTodo(todoUid: string) {
   return upsertTodo({ uid: todoUid, start: tomorrow, type: "VTODO" });
 }
 
+export async function backlogTodo(todoUid: string) {
+  const user = (await auth())?.user;
+  if (!user) throw new Error("Unauthorized");
+
+  const todo = await IcalEvents.findOne<MongoVTodo>({
+    uid: todoUid,
+    _io_userId: user.id,
+    type: "VTODO",
+  });
+
+  if (!todo) throw new Error("Todo not found");
+
+  return upsertTodo({
+    uid: todoUid,
+    start: undefined,
+    due: undefined,
+    completed: undefined,
+  });
+}
+
+export async function agendaTodo(todoUid: string) {
+  const user = (await auth())?.user;
+  if (!user) throw new Error("Unauthorized");
+
+  const todo = await IcalEvents.findOne<MongoVTodo>({
+    uid: todoUid,
+    _io_userId: user.id,
+    type: "VTODO",
+  });
+
+  if (!todo) throw new Error("Todo not found");
+
+  const now = new Date();
+
+  return upsertTodo({ uid: todoUid, start: now });
+}
+
 export async function deleteTodo(todoUid: string) {
   const user = (await auth())?.user;
   if (!user) throw new Error("Unauthorized");

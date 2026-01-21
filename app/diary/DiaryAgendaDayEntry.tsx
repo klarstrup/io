@@ -24,7 +24,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     onIconClick?: (
       e: React.MouseEvent<HTMLButtonElement | HTMLDivElement, MouseEvent>,
     ) => void;
-    cotemporality?: "past" | "current" | "future";
+    cotemporality?: "past" | "current" | "future" | "backlog";
   } & React.HTMLAttributes<HTMLDivElement>,
   ref: React.Ref<HTMLDivElement>,
 ) {
@@ -40,7 +40,9 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
               ? " text-green-400"
               : cotemporality === "current"
                 ? " text-orange-400"
-                : " text-gray-900/50"
+                : cotemporality === "backlog"
+                  ? " text-blue-400"
+                  : " text-gray-900/50"
             : "text-gray-900/50") +
           (onIconClick ? " cursor-pointer" : "")
         }

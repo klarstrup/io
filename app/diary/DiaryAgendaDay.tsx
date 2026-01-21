@@ -206,6 +206,11 @@ export async function DiaryAgendaDay({
       const dayEnd = addHours(endOfDay(date), dayStartHour);
 
       const calName = dateToString(addHours(date, dayStartHour));
+      if (!todo.start && !todo.due && !todo.completed) {
+        // If not done and no start or due date, this is a backlog item
+        // we don't show in the diary
+        continue;
+      }
       if (
         (isPast(dayEnd) && !todo.completed) ||
         Object.values(todosByDate)
