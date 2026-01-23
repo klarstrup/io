@@ -1,6 +1,9 @@
 import { Analytics } from "@vercel/analytics/react";
-import { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
+import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
+import { GraphQLTestRSC } from "./GraphQLTestRSC";
+import { GraphQLTestSSR } from "./GraphQLTestSSR";
 import "./page.css";
 
 export const metadata: Metadata = {
@@ -15,12 +18,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en">
-      <body>
-        <UserStuff />
-        {children}
-        <Analytics />
-      </body>
-    </html>
+    <ApolloWrapper>
+      <html lang="en">
+        <body>
+          <GraphQLTestRSC />
+          <GraphQLTestSSR />
+          <UserStuff />
+          {children}
+          <Analytics />
+        </body>
+      </html>
+    </ApolloWrapper>
   );
 }
