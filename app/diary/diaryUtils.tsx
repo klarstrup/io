@@ -41,17 +41,22 @@ const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
   ]);
 };
 
+export const getVTodoPrincipalDate = (
+  todo: Partial<Pick<MongoVTodo, "completed" | "due" | "start">>,
+): Date | null => {
+  const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
+  if (todo.completed) return todo.completed;
+  if (todo.due) return max([todo.due, slightlyIntoTheFuture]);
+  if (todo.start) return max([todo.start, slightlyIntoTheFuture]);
+  return slightlyIntoTheFuture;
+};
+
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Date | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if ("type" in entry && entry.type === "VTODO") {
-    if ("completed" in entry && entry.completed) return entry.completed;
-    if ("due" in entry && entry.due)
-      return max([entry.due, slightlyIntoTheFuture]);
-    if ("start" in entry && entry.start)
-      return max([entry.start, slightlyIntoTheFuture]);
-    return slightlyIntoTheFuture;
+    return getVTodoPrincipalDate(entry);
   }
   if ("start" in entry && entry.start) return entry.start;
   if ("scheduleEntry" in entry && entry.scheduleEntry) {

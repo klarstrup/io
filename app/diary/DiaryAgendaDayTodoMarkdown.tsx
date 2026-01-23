@@ -2,10 +2,14 @@
 
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MongoVTodo } from "../../lib";
+import type { DiaryAgendaDayTodoFragment } from "../../graphql.generated";
 import { upsertTodo } from "./actions";
 
-export function DiaryAgendaDayTodoMarkdown({ todo }: { todo: MongoVTodo }) {
+export function DiaryAgendaDayTodoMarkdown({
+  todo,
+}: {
+  todo: DiaryAgendaDayTodoFragment;
+}) {
   return (
     <div
       data-markdown-wrapper

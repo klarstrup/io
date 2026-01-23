@@ -1,10 +1,15 @@
 "use client";
+import { useApolloClient, useSuspenseFragment } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import gql from "graphql-tag";
 import { forwardRef, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
+import {
+  type DiaryAgendaDayTodoFragment,
+  DiaryAgendaDayTodoFragmentDoc,
+} from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
-import type { MongoVTodo } from "../../lib";
 import {
   agendaTodo,
   backlogTodo,
@@ -16,15 +21,36 @@ import {
 } from "./actions";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
-import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import { getVTodoPrincipalDate } from "./diaryUtils";
+
+gql`
+  fragment DiaryAgendaDayTodo on Todo {
+    id
+    start
+    due
+    completed
+    summary
+  }
+`;
 
 export function DiaryAgendaDayTodo({
-  todo,
+  todo: todoo,
   sortableId,
 }: {
-  todo: MongoVTodo;
+  todo: DiaryAgendaDayTodoFragment;
   sortableId?: string;
 }) {
+  const client = useApolloClient();
+  client.writeFragment({
+    id: client.cache.identify(todoo),
+    fragment: DiaryAgendaDayTodoFragmentDoc,
+    data: todoo,
+  });
+  const { data: todo } = useSuspenseFragment({
+    fragment: DiaryAgendaDayTodoFragmentDoc,
+    from: todoo,
+  });
+
   const {
     isDragging,
     attributes,
@@ -33,8 +59,8 @@ export function DiaryAgendaDayTodo({
     transform,
     transition,
   } = useSortable({
-    id: sortableId ?? todo.uid,
-    data: { todo, date: getJournalEntryPrincipalDate(todo) },
+    id: sortableId ?? todo.id,
+    data: { todo, date: getVTodoPrincipalDate(todo) },
   });
 
   return (
@@ -64,7 +90,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
       isDragging,
       ...props
     }: {
-      todo: MongoVTodo;
+      todo: DiaryAgendaDayTodoFragment;
       isDragging: boolean;
     } & React.HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<HTMLDivElement>,
@@ -104,8 +130,8 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         icon={faCircleCheck}
         onIconClick={
           todo.completed
-            ? () => void undoTodo(todo.uid)
-            : () => void doTodo(todo.uid)
+            ? () => void undoTodo(todo.id)
+            : () => void doTodo(todo.id)
         }
         // this should cope with todos with deadlines when that is implemented
         cotemporality={
@@ -141,7 +167,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                 <TextAreaThatGrows
                   autoFocus
                   name="summary"
-                  defaultValue={todo.summary}
+                  defaultValue={todo.summary ?? ""}
                   className="-mt-px -mb-px w-full bg-transparent p-0.5 font-mono text-sm"
                   innerRef={(el) => {
                     if (!el) return;
@@ -160,7 +186,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               {todo.completed ? (
                 <button
                   type="button"
-                  onClick={() => void undoTodo(todo.uid)}
+                  onClick={() => void undoTodo(todo.id)}
                   className={
                     "text-md cursor-pointer rounded-xl bg-teal-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                   }
@@ -171,7 +197,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                 <>
                   <button
                     type="button"
-                    onClick={() => void doTodo(todo.uid)}
+                    onClick={() => void doTodo(todo.id)}
                     className={
                       "text-md cursor-pointer rounded-xl bg-green-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -180,7 +206,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   </button>
                   <button
                     type="button"
-                    onClick={() => void snoozeTodo(todo.uid)}
+                    onClick={() => void snoozeTodo(todo.id)}
                     className={
                       "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -189,7 +215,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   </button>
                   <button
                     type="button"
-                    onClick={() => void backlogTodo(todo.uid)}
+                    onClick={() => void backlogTodo(todo.id)}
                     className={
                       "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -200,7 +226,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               ) : (
                 <button
                   type="button"
-                  onClick={() => void agendaTodo(todo.uid)}
+                  onClick={() => void agendaTodo(todo.id)}
                   className={
                     "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                   }
@@ -210,7 +236,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               )}
               <button
                 type="button"
-                onClick={() => void deleteTodo(todo.uid)}
+                onClick={() => void deleteTodo(todo.id)}
                 className={
                   "text-md cursor-pointer rounded-xl bg-red-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                 }

@@ -241,7 +241,14 @@ export function DiaryAgendaDayDay({
         id: todo.uid,
         element: (
           <DiaryAgendaDayTodo
-            todo={todo}
+            todo={{
+              __typename: "Todo",
+              id: todo.uid,
+              due: todo.due ?? null,
+              start: todo.start ?? null,
+              completed: todo.completed ?? null,
+              summary: todo.summary ?? "",
+            }}
             key={todo.uid}
             sortableId={todo.uid}
           />

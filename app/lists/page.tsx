@@ -1,12 +1,30 @@
-import { auth } from "../../auth";
+"use client";
+import { gql } from "@apollo/client";
+import { useSuspenseQuery } from "@apollo/client/react";
 import { FieldSetY } from "../../components/FieldSet";
-import { getUserIcalTodosBetween } from "../../sources/ical";
+import { ListPageUserDocument } from "../../graphql.generated";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 
-export default async function ListPage() {
-  const user = (await auth())?.user;
+gql`
+  query ListPageUser {
+    user {
+      id
+      todos {
+        id
+        start
+        due
+        completed
+        summary
+        description
+      }
+    }
+  }
+`;
 
-  const calendarTodos = user ? await getUserIcalTodosBetween(user.id) : [];
+export default function ListPage() {
+  const { data } = useSuspenseQuery(ListPageUserDocument);
+
+  const calendarTodos = data.user?.todos || [];
   const todos = calendarTodos.filter(
     (todo) => !todo.completed && (todo.start || todo.due),
   );
@@ -23,7 +41,7 @@ export default async function ListPage() {
           legend="Todos"
         >
           {todos.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
           ))}
         </FieldSetY>
         <FieldSetY
@@ -31,7 +49,7 @@ export default async function ListPage() {
           legend="Backlog"
         >
           {backlogTodos.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
           ))}
         </FieldSetY>
         <FieldSetY
@@ -39,7 +57,7 @@ export default async function ListPage() {
           legend="Completed"
         >
           {todones.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.uid} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
           ))}
         </FieldSetY>
       </div>

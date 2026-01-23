@@ -225,7 +225,7 @@ export async function updateLocation(
 }
 
 export async function upsertTodo(
-  todo: Partial<MongoVTodo> & { _id?: string; uid?: string },
+  todo: Partial<MongoVTodo> & { _id?: string; uid?: string; id?: string },
 ) {
   const user = (await auth())?.user;
   if (!user) throw new Error("Unauthorized");
@@ -238,7 +238,7 @@ export async function upsertTodo(
     {
       ...("_id" in todo && todo._id
         ? { _id: new ObjectId(todo._id) }
-        : { uid: todo.uid }),
+        : { uid: todo.uid ?? todo.id }),
       _io_userId: user.id,
       type: "VTODO",
     },

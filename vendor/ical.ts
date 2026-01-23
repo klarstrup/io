@@ -121,7 +121,7 @@ export interface VTodo extends BaseComponent {
   completed?: DateWithTimeZone | null;
   created?: DateWithTimeZone;
   description?: string;
-  start?: DateWithTimeZone;
+  start?: DateWithTimeZone | null;
   geo?: { lat: number; lon: number };
   lastmodified?: DateWithTimeZone;
   organizer?: Organizer;
@@ -133,7 +133,7 @@ export interface VTodo extends BaseComponent {
   summary?: string;
   url?: string;
   rrule?: RRule;
-  due?: DateWithTimeZone;
+  due?: DateWithTimeZone | null;
   duration?: string; // dur-value
 }
 

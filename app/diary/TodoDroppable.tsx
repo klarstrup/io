@@ -103,7 +103,8 @@ export function TodoDragDropContainer(props: {
         isSameHour(addHours(startOfDay(new Date()), dayStartHour), targetDate)
       ) {
         const updatedTodo = {
-          uid: todo.uid,
+          // hack for graphql transition
+          uid: (todo as { id?: string }).id,
           start: targetDate,
           completed: null,
           order: newOrder,
@@ -112,7 +113,7 @@ export function TodoDragDropContainer(props: {
         upsertTodo(updatedTodo);
       } else {
         const updatedTodo = {
-          uid: todo.uid,
+          uid: (todo as { id?: string }).id,
           completed: targetDate,
           order: newOrder,
         };

@@ -1,9 +1,8 @@
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
-import { GraphQLTestRSC } from "./GraphQLTestRSC";
-import { GraphQLTestSSR } from "./GraphQLTestSSR";
 import "./page.css";
 
 export const metadata: Metadata = {
@@ -16,13 +15,11 @@ export const viewport: Viewport = {
   minimumScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <ApolloWrapper>
+    <ApolloWrapper headers={await headers()}>
       <html lang="en">
         <body>
-          <GraphQLTestRSC />
-          <GraphQLTestSSR />
           <UserStuff />
           {children}
           <Analytics />
