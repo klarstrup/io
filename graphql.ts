@@ -1,3 +1,4 @@
+import { makeExecutableSchema } from "@graphql-tools/schema";
 import { GraphQLScalarType, Kind } from "graphql";
 import gql from "graphql-tag";
 import { auth } from "./auth";
@@ -84,3 +85,5 @@ export const typeDefs = gql`
     completed: Date
   }
 `;
+
+export const schema = makeExecutableSchema({ typeDefs, resolvers });

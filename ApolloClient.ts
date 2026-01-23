@@ -4,11 +4,8 @@ import {
   registerApolloClient,
 } from "@apollo/client-integration-nextjs";
 import { SchemaLink } from "@apollo/client/link/schema";
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { resolvers, typeDefs } from "./graphql";
+import { schema } from "./graphql";
 import { typePolicies } from "./graphql.typePolicies";
-
-const schema = makeExecutableSchema({ typeDefs, resolvers });
 
 const makeApolloClient = () =>
   new ApolloClient({
