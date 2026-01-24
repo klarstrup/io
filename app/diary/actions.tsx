@@ -230,9 +230,10 @@ export async function upsertTodo(
   const user = (await auth())?.user;
   if (!user) throw new Error("Unauthorized");
 
-  if ("date" in todo && todo.start) todo.start = new Date(todo.start);
-
-  console.log({ todo });
+  if ("start" in todo && todo.start) todo.start = new Date(todo.start);
+  if ("due" in todo && todo.due) todo.due = new Date(todo.due);
+  if ("completed" in todo && todo.completed)
+    todo.completed = new Date(todo.completed);
 
   const upsertResult = await IcalEvents.updateOne(
     {
