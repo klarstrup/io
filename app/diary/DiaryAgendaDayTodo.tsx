@@ -11,8 +11,11 @@ import gql from "graphql-tag";
 import { forwardRef, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
+  type DeleteTodoMutation,
   type DiaryAgendaDayTodoFragment,
   DiaryAgendaDayTodoFragmentDoc,
+  ListPageUserDocument,
+  type UpdateTodoMutation,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -91,7 +94,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     } & React.HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<HTMLDivElement>,
   ) {
-    const [updateTodo, { loading: isUpdating }] = useMutation(gql`
+    const [updateTodo] = useMutation<UpdateTodoMutation>(gql`
       mutation UpdateTodo($input: UpdateTodoInput!) {
         updateTodo(input: $input) {
           todo {
@@ -104,12 +107,11 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         }
       }
     `);
-    const [deleteTodo, { loading: isDeleting }] = useMutation(gql`
+    const [deleteTodo] = useMutation<DeleteTodoMutation>(gql`
       mutation DeleteTodo($id: String!) {
         deleteTodo(id: $id)
       }
     `);
-    const isMutating = isUpdating || isDeleting;
 
     const [isActive, setIsActive] = useState(false);
     const ref2 = useRef<HTMLDivElement>(null);
@@ -118,14 +120,25 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
       const formData = new FormData(formElement);
       const summary = formData.get("summary");
+      setIsActive(false);
       if (
         typeof summary === "string" &&
         summary.trim().length > 0 &&
         summary.trim() !== todo.summary?.trim()
       ) {
-        await updateTodo({
+        updateTodo({
           variables: {
             input: { id: todo.id, data: { summary: summary.trim() } },
+          },
+          optimisticResponse: {
+            updateTodo: {
+              __typename: "UpdateTodoPayload",
+              todo: { ...todo, summary: summary.trim() },
+            },
+          },
+          onError: (error) => {
+            console.error("Failed to update todo summary:", error);
+            setIsActive(true);
           },
         });
       }
@@ -148,7 +161,6 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         ref={ref}
         {...props}
         icon={faCircleCheck}
-        iconDisabled={isMutating}
         onIconClick={
           todo.completed
             ? () =>
@@ -156,11 +168,23 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   variables: {
                     input: { id: todo.id, data: { completed: null } },
                   },
+                  optimisticResponse: {
+                    updateTodo: {
+                      __typename: "UpdateTodoPayload",
+                      todo: { ...todo, completed: null },
+                    },
+                  },
                 })
             : () =>
                 void updateTodo({
                   variables: {
                     input: { id: todo.id, data: { completed: new Date() } },
+                  },
+                  optimisticResponse: {
+                    updateTodo: {
+                      __typename: "UpdateTodoPayload",
+                      todo: { ...todo, completed: new Date() },
+                    },
                   },
                 })
         }
@@ -196,7 +220,6 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
             >
               {isActive ? (
                 <TextAreaThatGrows
-                  disabled={isMutating}
                   autoFocus
                   name="summary"
                   defaultValue={todo.summary ?? ""}
@@ -210,7 +233,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               ) : (
                 <DiaryAgendaDayTodoMarkdown todo={todo} />
               )}
-              <button type="submit" disabled={isMutating} className="hidden" />
+              <button type="submit" className="hidden" />
             </form>
           </div>
           {isActive && (
@@ -218,11 +241,16 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               {todo.completed ? (
                 <button
                   type="button"
-                  disabled={isMutating}
                   onClick={() =>
                     void updateTodo({
                       variables: {
                         input: { id: todo.id, data: { completed: null } },
+                      },
+                      optimisticResponse: {
+                        updateTodo: {
+                          __typename: "UpdateTodoPayload",
+                          todo: { ...todo, completed: null },
+                        },
                       },
                     })
                   }
@@ -236,13 +264,18 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                 <>
                   <button
                     type="button"
-                    disabled={isMutating}
                     onClick={() =>
                       void updateTodo({
                         variables: {
                           input: {
                             id: todo.id,
                             data: { completed: new Date() },
+                          },
+                        },
+                        optimisticResponse: {
+                          updateTodo: {
+                            __typename: "UpdateTodoPayload",
+                            todo: { ...todo, completed: new Date() },
                           },
                         },
                       })
@@ -255,19 +288,24 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   </button>
                   <button
                     type="button"
-                    disabled={isMutating}
-                    onClick={() =>
+                    onClick={() => {
+                      const snoozedStart = addDays(todo.start ?? new Date(), 1);
+
                       void updateTodo({
                         variables: {
                           input: {
                             id: todo.id,
-                            data: {
-                              start: addDays(todo.start ?? new Date(), 1),
-                            },
+                            data: { start: snoozedStart },
                           },
                         },
-                      })
-                    }
+                        optimisticResponse: {
+                          updateTodo: {
+                            __typename: "UpdateTodoPayload",
+                            todo: { ...todo, start: snoozedStart },
+                          },
+                        },
+                      });
+                    }}
                     className={
                       "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -276,11 +314,16 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   </button>
                   <button
                     type="button"
-                    disabled={isMutating}
                     onClick={() =>
                       void updateTodo({
                         variables: {
                           input: { id: todo.id, data: { start: null } },
+                        },
+                        optimisticResponse: {
+                          updateTodo: {
+                            __typename: "UpdateTodoPayload",
+                            todo: { ...todo, start: null },
+                          },
                         },
                       })
                     }
@@ -294,11 +337,16 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               ) : (
                 <button
                   type="button"
-                  disabled={isMutating}
                   onClick={() =>
                     void updateTodo({
                       variables: {
                         input: { id: todo.id, data: { start: new Date() } },
+                      },
+                      optimisticResponse: {
+                        updateTodo: {
+                          __typename: "UpdateTodoPayload",
+                          todo: { ...todo, start: new Date() },
+                        },
                       },
                     })
                   }
@@ -311,8 +359,32 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               )}
               <button
                 type="button"
-                disabled={isMutating}
-                onClick={() => void deleteTodo({ variables: { id: todo.id } })}
+                onClick={() =>
+                  void deleteTodo({
+                    variables: { id: todo.id },
+                    optimisticResponse: { deleteTodo: todo.id },
+                    refetchQueries: [ListPageUserDocument],
+                    update(cache, { data }) {
+                      if (!data?.deleteTodo) return;
+
+                      const oldResults = cache.readQuery({
+                        query: ListPageUserDocument,
+                      });
+                      if (!oldResults?.user) return;
+                      cache.writeQuery({
+                        query: ListPageUserDocument,
+                        data: {
+                          user: {
+                            ...oldResults.user,
+                            todos: oldResults.user.todos?.filter(
+                              (t) => t.id !== data.deleteTodo,
+                            ),
+                          },
+                        },
+                      });
+                    },
+                  })
+                }
                 className={
                   "text-md cursor-pointer rounded-xl bg-red-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                 }
