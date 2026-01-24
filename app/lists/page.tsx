@@ -2,6 +2,7 @@
 import { gql } from "@apollo/client";
 import { useApolloClient, useSuspenseQuery } from "@apollo/client/react";
 import usePartySocket from "partysocket/react";
+import { useEffect, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ListPageUserDocument } from "../../graphql.generated";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
@@ -58,7 +59,13 @@ function ListsPoller({ userId, loadedAt }: { userId: string; loadedAt: Date }) {
 }
 
 export default function ListPage() {
+  const [now, setNow] = useState(new Date());
+
   const { data } = useSuspenseQuery(ListPageUserDocument);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, [data]);
 
   const calendarTodos = data.user?.todos || [];
   const todos = calendarTodos.filter(
@@ -73,8 +80,6 @@ export default function ListPage() {
   const backlogTodos = calendarTodos.filter(
     (todo) => !todo.start && !todo.due && !todo.completed,
   );
-
-  const now = new Date();
 
   return (
     <div className="mx-auto max-w-2xl self-stretch border-black/25 px-2">
