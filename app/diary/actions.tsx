@@ -254,7 +254,6 @@ export async function upsertTodo(
           typeof todo,
           "created" | "dtstamp"
         >),
-        start: todo.start ? new Date(todo.start) : todo.start,
       } satisfies Omit<MongoVTodo, "created" | "dtstamp">,
       $setOnInsert: {
         created: new Date(),
@@ -280,7 +279,7 @@ export async function doTodo(todoUid: string) {
 }
 
 export async function undoTodo(todoUid: string) {
-  return upsertTodo({ uid: todoUid, completed: undefined, type: "VTODO" });
+  return upsertTodo({ uid: todoUid, completed: null, type: "VTODO" });
 }
 
 export async function snoozeTodo(todoUid: string) {
