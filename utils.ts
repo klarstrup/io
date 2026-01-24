@@ -182,9 +182,12 @@ export const omit: OmitF = (obj, ...keys) => {
   return ret;
 };
 
-export function pick<T, K extends keyof T>(obj: T, ...keys: K[]): Pick<T, K> {
+export function pick<T extends object, K extends keyof T>(
+  obj: T,
+  ...keys: K[]
+): Pick<T, K> {
   const ret: Partial<Pick<T, K>> = {};
-  for (const key of keys) ret[key] = obj[key];
+  for (const key of keys) if (key in obj) ret[key] = obj[key];
 
   return ret as Pick<T, K>;
 }
@@ -438,8 +441,7 @@ const getRoundingMethod =
   };
 
 export interface RoundToNearestDaysOptions<DateType extends Date = Date>
-  extends RoundingOptions,
-    ContextOptions<DateType> {}
+  extends RoundingOptions, ContextOptions<DateType> {}
 export function roundToNearestDay<
   DateType extends Date,
   ResultDate extends Date = DateType,
