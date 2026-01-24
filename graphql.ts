@@ -2,12 +2,25 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { isValid } from "date-fns";
 import { GraphQLScalarType, Kind } from "graphql";
 import gql from "graphql-tag";
+import PartySocket from "partysocket";
 import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { getUserIcalTodosBetween } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { pick } from "./utils";
+
+const emitIoUpdate = (userId: string) => {
+  try {
+    new PartySocket({
+      id: process.env.VERCEL_DEPLOYMENT_ID,
+      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+      room: userId,
+    }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const dateScalar = new GraphQLScalarType({
   name: "Date",
@@ -100,6 +113,8 @@ export const resolvers: Resolvers = {
         throw new Error("Todo not found after update");
       }
 
+      emitIoUpdate(user.id);
+
       return {
         __typename: "UpdateTodoPayload",
         todo: {
@@ -119,6 +134,8 @@ export const resolvers: Resolvers = {
       });
 
       if (result.deletedCount === 0) throw new Error("Failed to delete todo");
+
+      emitIoUpdate(user.id);
 
       return args.id;
     },
