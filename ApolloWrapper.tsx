@@ -6,15 +6,15 @@ import {
   ApolloNextAppProvider,
   InMemoryCache,
 } from "@apollo/client-integration-nextjs";
-import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
+import { SchemaLink } from "@apollo/client/link/schema";
 import type { PropsWithChildren } from "react";
 import { typePolicies } from "./graphql.typePolicies";
-import { SchemaLink } from "@apollo/client/link/schema";
 
 // you need to create a component to wrap your app in
 export function ApolloWrapper({ children }: PropsWithChildren) {
   const makeApolloClient = () =>
     new ApolloClient({
+      devtools: { enabled: true },
       cache: new InMemoryCache({ typePolicies }),
       link:
         typeof window === "undefined"
