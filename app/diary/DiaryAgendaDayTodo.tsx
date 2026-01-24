@@ -1,7 +1,12 @@
 "use client";
-import { useApolloClient, useSuspenseFragment } from "@apollo/client/react";
+import {
+  useApolloClient,
+  useMutation,
+  useSuspenseFragment,
+} from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import { addDays } from "date-fns";
 import gql from "graphql-tag";
 import { forwardRef, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
@@ -10,15 +15,6 @@ import {
   DiaryAgendaDayTodoFragmentDoc,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
-import {
-  agendaTodo,
-  backlogTodo,
-  deleteTodo,
-  doTodo,
-  snoozeTodo,
-  undoTodo,
-  upsertTodo,
-} from "./actions";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getVTodoPrincipalDate } from "./diaryUtils";
@@ -95,6 +91,26 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     } & React.HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<HTMLDivElement>,
   ) {
+    const [updateTodo, { loading: isUpdating }] = useMutation(gql`
+      mutation UpdateTodo($input: UpdateTodoInput!) {
+        updateTodo(input: $input) {
+          todo {
+            id
+            start
+            due
+            completed
+            summary
+          }
+        }
+      }
+    `);
+    const [deleteTodo, { loading: isDeleting }] = useMutation(gql`
+      mutation DeleteTodo($id: String!) {
+        deleteTodo(id: $id)
+      }
+    `);
+    const isMutating = isUpdating || isDeleting;
+
     const [isActive, setIsActive] = useState(false);
     const ref2 = useRef<HTMLDivElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
@@ -107,7 +123,11 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         summary.trim().length > 0 &&
         summary.trim() !== todo.summary?.trim()
       ) {
-        await upsertTodo({ ...todo, summary: summary.trim() });
+        await updateTodo({
+          variables: {
+            input: { id: todo.id, data: { summary: summary.trim() } },
+          },
+        });
       }
       setIsActive(false);
     });
@@ -128,10 +148,21 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         ref={ref}
         {...props}
         icon={faCircleCheck}
+        iconDisabled={isMutating}
         onIconClick={
           todo.completed
-            ? () => void undoTodo(todo.id)
-            : () => void doTodo(todo.id)
+            ? () =>
+                void updateTodo({
+                  variables: {
+                    input: { id: todo.id, data: { completed: null } },
+                  },
+                })
+            : () =>
+                void updateTodo({
+                  variables: {
+                    input: { id: todo.id, data: { completed: new Date() } },
+                  },
+                })
         }
         // this should cope with todos with deadlines when that is implemented
         cotemporality={
@@ -165,6 +196,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
             >
               {isActive ? (
                 <TextAreaThatGrows
+                  disabled={isMutating}
                   autoFocus
                   name="summary"
                   defaultValue={todo.summary ?? ""}
@@ -178,7 +210,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               ) : (
                 <DiaryAgendaDayTodoMarkdown todo={todo} />
               )}
-              <button type="submit" className="hidden" />
+              <button type="submit" disabled={isMutating} className="hidden" />
             </form>
           </div>
           {isActive && (
@@ -186,7 +218,14 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               {todo.completed ? (
                 <button
                   type="button"
-                  onClick={() => void undoTodo(todo.id)}
+                  disabled={isMutating}
+                  onClick={() =>
+                    void updateTodo({
+                      variables: {
+                        input: { id: todo.id, data: { completed: null } },
+                      },
+                    })
+                  }
                   className={
                     "text-md cursor-pointer rounded-xl bg-teal-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                   }
@@ -197,7 +236,17 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                 <>
                   <button
                     type="button"
-                    onClick={() => void doTodo(todo.id)}
+                    disabled={isMutating}
+                    onClick={() =>
+                      void updateTodo({
+                        variables: {
+                          input: {
+                            id: todo.id,
+                            data: { completed: new Date() },
+                          },
+                        },
+                      })
+                    }
                     className={
                       "text-md cursor-pointer rounded-xl bg-green-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -206,7 +255,19 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   </button>
                   <button
                     type="button"
-                    onClick={() => void snoozeTodo(todo.id)}
+                    disabled={isMutating}
+                    onClick={() =>
+                      void updateTodo({
+                        variables: {
+                          input: {
+                            id: todo.id,
+                            data: {
+                              start: addDays(todo.start ?? new Date(), 1),
+                            },
+                          },
+                        },
+                      })
+                    }
                     className={
                       "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -215,7 +276,14 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   </button>
                   <button
                     type="button"
-                    onClick={() => void backlogTodo(todo.id)}
+                    disabled={isMutating}
+                    onClick={() =>
+                      void updateTodo({
+                        variables: {
+                          input: { id: todo.id, data: { start: null } },
+                        },
+                      })
+                    }
                     className={
                       "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                     }
@@ -226,7 +294,14 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               ) : (
                 <button
                   type="button"
-                  onClick={() => void agendaTodo(todo.id)}
+                  disabled={isMutating}
+                  onClick={() =>
+                    void updateTodo({
+                      variables: {
+                        input: { id: todo.id, data: { start: new Date() } },
+                      },
+                    })
+                  }
                   className={
                     "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                   }
@@ -236,7 +311,8 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               )}
               <button
                 type="button"
-                onClick={() => void deleteTodo(todo.id)}
+                disabled={isMutating}
+                onClick={() => void deleteTodo({ variables: { id: todo.id } })}
                 className={
                   "text-md cursor-pointer rounded-xl bg-red-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                 }

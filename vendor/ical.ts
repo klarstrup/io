@@ -130,7 +130,7 @@ export interface VTodo extends BaseComponent {
   sequence?: string;
   recurrences?: Record<string, Omit<VTodo, "recurrences">>;
   status?: "NEEDS-ACTION" | "COMPLETED" | "IN-PROCESS" | "CANCELLED";
-  summary?: string;
+  summary?: string | null;
   url?: string;
   rrule?: RRule;
   due?: DateWithTimeZone | null;

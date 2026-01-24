@@ -231,6 +231,7 @@ select {
 input[type="text"]:disabled,
 input[type="date"]:disabled,
 input[type="number"]:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   opacity: 0.5;
 }

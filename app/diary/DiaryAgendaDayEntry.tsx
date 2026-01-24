@@ -6,6 +6,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   {
     icon,
     iconTxt,
+    iconDisabled,
     children,
     isActive,
     isDragging,
@@ -17,6 +18,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   }: {
     icon?: IconDefinition;
     iconTxt?: string | ReactElement;
+    iconDisabled?: boolean;
     children: React.ReactNode;
     isActive?: boolean;
     isDragging?: boolean;
@@ -33,6 +35,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   return (
     <div ref={ref} className="flex" {...props}>
       <IconContainer
+        disabled={iconDisabled}
         className={
           "text-md flex w-10 items-center justify-center " +
           (cotemporality
