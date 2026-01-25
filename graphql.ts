@@ -138,12 +138,14 @@ export const resolvers: Resolvers = {
         },
       } as const;
 
-      emitGraphQLUpdate(user.id, {
-        operation: info.operation,
-        data: { updateTodo: result },
-      });
-
-      return result;
+      try {
+        return result;
+      } finally {
+        emitGraphQLUpdate(user.id, {
+          operation: info.operation,
+          data: { updateTodo: result },
+        });
+      }
     },
     deleteTodo: async (_parent, args, context, info) => {
       const user = (await auth())?.user;
@@ -156,12 +158,14 @@ export const resolvers: Resolvers = {
 
       if (result.deletedCount === 0) throw new Error("Failed to delete todo");
 
-      emitGraphQLUpdate(user.id, {
-        operation: info.operation,
-        data: { deleteTodo: args.id },
-      });
-
-      return args.id;
+      try {
+        return args.id;
+      } finally {
+        emitGraphQLUpdate(user.id, {
+          operation: info.operation,
+          data: { deleteTodo: args.id },
+        });
+      }
     },
   },
 };
