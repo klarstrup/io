@@ -367,21 +367,21 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                     update(cache, { data }) {
                       if (!data?.deleteTodo) return;
 
-                      const oldResults = cache.readQuery({
-                        query: ListPageUserDocument,
-                      });
-                      if (!oldResults?.user) return;
-                      cache.writeQuery({
-                        query: ListPageUserDocument,
-                        data: {
-                          user: {
-                            ...oldResults.user,
-                            todos: oldResults.user.todos?.filter(
-                              (t) => t.id !== data.deleteTodo,
-                            ),
-                          },
+                      cache.updateQuery(
+                        { query: ListPageUserDocument },
+                        (existing) => {
+                          if (!existing?.user?.todos) return existing;
+                          return {
+                            ...existing,
+                            user: {
+                              ...existing.user,
+                              todos: existing.user.todos.filter(
+                                (t) => t.id !== data.deleteTodo,
+                              ),
+                            },
+                          };
                         },
-                      });
+                      );
                     },
                   })
                 }
