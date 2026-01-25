@@ -17,7 +17,7 @@ export default class Server implements Party.Server {
     // let's log the message
     console.log(`connection ${sender.id} sent message: ${message}`);
     // as well as broadcast it to all the other connections in the room...
-    this.room.broadcast(message, [sender.id]);
+    this.room.broadcast(message);
   }
 }
 
