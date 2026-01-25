@@ -133,18 +133,20 @@ export const resolvers: Resolvers = {
       try {
         return result;
       } finally {
-        emitGraphQLUpdate(user.id, {
-          fragment: gql`
-            fragment UpdatedTodo on Todo {
-              id
-              summary
-              start
-              due
-              completed
-            }
-          `,
-          data: result.todo,
-        });
+        for (let i = 0; i < editableTodoFields.length; i++) {
+          emitGraphQLUpdate(user.id, {
+            fragment: gql`
+              fragment UpdatedTodo on Todo {
+                id
+                summary
+                start
+                due
+                completed
+              }
+            `,
+            data: result.todo,
+          });
+        }
       }
     },
     deleteTodo: async (_parent, args, context, info) => {
