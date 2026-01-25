@@ -15,16 +15,18 @@ const emitGraphQLUpdate = (
   graphQlResponse: { fragment: DocumentNode; data: unknown },
 ) => {
   try {
+    const message = JSON.stringify({
+      fragment: print(graphQlResponse.fragment),
+      data: graphQlResponse.data,
+    });
+
+    console.log("Emitting GraphQL update via PartySocket:", message);
+
     new PartySocket({
       // id: process.env.VERCEL_DEPLOYMENT_ID,
       host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
       room: "GraphQL:" + userId,
-    }).send(
-      JSON.stringify({
-        fragment: print(graphQlResponse.fragment),
-        data: graphQlResponse.data,
-      }),
-    );
+    }).send(message);
   } catch (error) {
     console.error(error);
   }
