@@ -7,9 +7,16 @@ import usePartySocket from "partysocket/react";
 export function GraphQLListener({ userId }: { userId: string }) {
   const client = useApolloClient();
 
-  usePartySocket({
+  const socket = usePartySocket({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
     room: "GraphQL:" + userId,
+    onOpen() {
+      socket.send(
+        JSON.stringify(
+          `Hi partykit server im GraphQLListener client ${userId} at ${new Date().toISOString()}`,
+        ),
+      );
+    },
     onMessage(event) {
       console.log(event);
       try {

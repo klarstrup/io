@@ -13,7 +13,9 @@ export default class Server implements Party.Server {
     );
 
     conn.send(
-      `Welcome to the party room ${this.room.id}, connection ${conn.id}!`,
+      JSON.stringify(
+        `Welcome to the party room ${this.room.id}, connection ${conn.id}!`,
+      ),
     );
   }
 
