@@ -1,6 +1,11 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { isValid } from "date-fns";
-import { GraphQLScalarType, Kind } from "graphql";
+import {
+  GraphQLScalarType,
+  Kind,
+  type OperationDefinitionNode,
+  print,
+} from "graphql";
 import gql from "graphql-tag";
 import PartySocket from "partysocket";
 import { auth } from "./auth";
@@ -10,13 +15,24 @@ import { getUserIcalTodosBetween } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { pick } from "./utils";
 
-const emitIoUpdate = (userId: string) => {
+const emitGraphQLUpdate = (
+  userId: string,
+  graphQlResponse: { operation: OperationDefinitionNode; data: unknown },
+) => {
   try {
     new PartySocket({
       id: process.env.VERCEL_DEPLOYMENT_ID,
       host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
-      room: userId,
-    }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
+      room: "GraphQL:" + userId,
+    }).send(
+      JSON.stringify({
+        query: print({
+          kind: Kind.DOCUMENT,
+          definitions: [graphQlResponse.operation],
+        }),
+        data: graphQlResponse.data,
+      }),
+    );
   } catch (error) {
     console.error(error);
   }
@@ -84,7 +100,7 @@ export const resolvers: Resolvers = {
     },
   },
   Mutation: {
-    updateTodo: async (_parent, args) => {
+    updateTodo: async (_parent, args, context, info) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -113,18 +129,23 @@ export const resolvers: Resolvers = {
         throw new Error("Todo not found after update");
       }
 
-      emitIoUpdate(user.id);
-
-      return {
+      const result = {
         __typename: "UpdateTodoPayload",
         todo: {
           __typename: "Todo",
           id: updatedTodo.uid,
           ...updatedTodo,
         },
-      };
+      } as const;
+
+      emitGraphQLUpdate(user.id, {
+        operation: info.operation,
+        data: { updateTodo: result },
+      });
+
+      return result;
     },
-    deleteTodo: async (_parent, args) => {
+    deleteTodo: async (_parent, args, context, info) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -135,7 +156,10 @@ export const resolvers: Resolvers = {
 
       if (result.deletedCount === 0) throw new Error("Failed to delete todo");
 
-      emitIoUpdate(user.id);
+      emitGraphQLUpdate(user.id, {
+        operation: info.operation,
+        data: { deleteTodo: args.id },
+      });
 
       return args.id;
     },

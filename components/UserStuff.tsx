@@ -7,6 +7,7 @@ import { getAllWorkoutExercises } from "../models/workout.server";
 import { DataSource, dataSourceGroups } from "../sources/utils";
 import { omit } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
+import { GraphQLListener } from "./GraphQLListener";
 import Popover from "./Popover";
 import UserStuffLink from "./UserStuffLink";
 import UserStuffLocationsForm from "./UserStuffLocationsForm";
@@ -48,8 +49,9 @@ export default async function UserStuff() {
 
   return (
     <>
+      {user ? <GraphQLListener userId={user.id} /> : null} 
       <div
-        className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-1 sm:gap-2 rounded-2xl border border-[yellow]/25 bg-white/10 px-2 py-1 backdrop-blur-md pointer-coarse:bottom-2 pointer-fine:top-4"
+        className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-1 rounded-2xl border border-[yellow]/25 bg-white/10 px-2 py-1 backdrop-blur-md sm:gap-2 pointer-coarse:bottom-2 pointer-fine:top-4"
         style={{
           boxShadow:
             "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
