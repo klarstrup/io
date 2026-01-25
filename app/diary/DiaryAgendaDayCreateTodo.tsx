@@ -13,7 +13,14 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
     const formData = new FormData(formElement);
     const summary = formData.get("summary");
     if (typeof summary === "string" && summary.trim().length > 0) {
-      await upsertTodo({ summary: summary.trim(), start: date });
+      await upsertTodo({
+        summary: summary
+          .trim()
+          .split("\n")
+          .map((line) => (line.startsWith("▢") ? line.replace(/^(▢)/, "- [ ]") : line))
+          .join("\n"),
+        start: date,
+      });
       setIsActive(false);
     }
   });
