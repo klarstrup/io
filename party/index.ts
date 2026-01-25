@@ -11,6 +11,10 @@ export default class Server implements Party.Server {
   room: ${this.room.id}
   url: ${new URL(ctx.request.url).pathname}`,
     );
+
+    conn.send(
+      `Welcome to the party room ${this.room.id}, connection ${conn.id}!`,
+    );
   }
 
   onMessage(message: string, sender: Party.Connection) {
