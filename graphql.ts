@@ -92,7 +92,7 @@ export const resolvers: Resolvers = {
     },
   },
   Mutation: {
-    updateTodo: async (_parent, args, context, info) => {
+    updateTodo: async (_parent, args) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -133,23 +133,21 @@ export const resolvers: Resolvers = {
       try {
         return result;
       } finally {
-        for (let i = 0; i < editableTodoFields.length; i++) {
-          emitGraphQLUpdate(user.id, {
-            fragment: gql`
-              fragment UpdatedTodo on Todo {
-                id
-                summary
-                start
-                due
-                completed
-              }
-            `,
-            data: result.todo,
-          });
-        }
+        emitGraphQLUpdate(user.id, {
+          fragment: gql`
+            fragment UpdatedTodo on Todo {
+              id
+              summary
+              start
+              due
+              completed
+            }
+          `,
+          data: result.todo,
+        });
       }
     },
-    deleteTodo: async (_parent, args, context, info) => {
+    deleteTodo: async (_parent, args) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
