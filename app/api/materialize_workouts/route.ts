@@ -68,7 +68,7 @@ export const GET = async () => {
 
     try {
       new PartySocket({
-        id: process.env.VERCEL_DEPLOYMENT_ID,
+        // id: process.env.VERCEL_DEPLOYMENT_ID,
         host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
         room: user.id,
       }).send(

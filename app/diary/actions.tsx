@@ -26,7 +26,7 @@ import { materializeIoWorkouts } from "../api/materialize_workouts/materializers
 const emitIoUpdate = (userId: string) => {
   try {
     new PartySocket({
-      id: process.env.VERCEL_DEPLOYMENT_ID,
+      // id: process.env.VERCEL_DEPLOYMENT_ID,
       host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
       room: userId,
     }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
