@@ -25,20 +25,27 @@ export function GraphQLListener({ userId }: { userId: string }) {
         if (
           typeof data === "object" &&
           data !== null &&
-          "query" in data &&
-          typeof data.query === "string" &&
+          "fragment" in data &&
+          typeof data.fragment === "string" &&
           "data" in data
         ) {
-          const data2 = data as { query: string; data: unknown };
+          const data2 = data as { fragment: string; data: unknown };
           // TODO: Decide if sending the AST from the server or parsing it here is better
-          client.cache.writeQuery({
-            query: parse(data2.query),
-            data: data2.data,
-          });
+          if (
+            data2.data &&
+            typeof data2.data === "object" &&
+            "__typename" in data2.data
+          ) {
+            client.writeFragment({
+              id: client.cache.identify(data2.data as any),
+              fragment: parse(data2.fragment),
+              data: data2.data,
+            });
+          }
 
           if (
+            data2.data &&
             typeof data2.data === "object" &&
-            data2.data !== null &&
             "deleteTodo" in data2.data &&
             typeof data2.data.deleteTodo === "string"
           ) {

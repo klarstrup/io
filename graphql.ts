@@ -1,11 +1,6 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { isValid } from "date-fns";
-import {
-  GraphQLScalarType,
-  Kind,
-  type OperationDefinitionNode,
-  print,
-} from "graphql";
+import { DocumentNode, GraphQLScalarType, Kind, print } from "graphql";
 import gql from "graphql-tag";
 import PartySocket from "partysocket";
 import { auth } from "./auth";
@@ -17,7 +12,7 @@ import { pick } from "./utils";
 
 const emitGraphQLUpdate = (
   userId: string,
-  graphQlResponse: { operation: OperationDefinitionNode; data: unknown },
+  graphQlResponse: { fragment: DocumentNode; data: unknown },
 ) => {
   try {
     new PartySocket({
@@ -26,10 +21,7 @@ const emitGraphQLUpdate = (
       room: "GraphQL:" + userId,
     }).send(
       JSON.stringify({
-        query: print({
-          kind: Kind.DOCUMENT,
-          definitions: [graphQlResponse.operation],
-        }),
+        fragment: print(graphQlResponse.fragment),
         data: graphQlResponse.data,
       }),
     );
@@ -142,8 +134,16 @@ export const resolvers: Resolvers = {
         return result;
       } finally {
         emitGraphQLUpdate(user.id, {
-          operation: info.operation,
-          data: { updateTodo: result },
+          fragment: gql`
+            fragment UpdatedTodo on Todo {
+              id
+              summary
+              start
+              due
+              completed
+            }
+          `,
+          data: result.todo,
         });
       }
     },
@@ -162,7 +162,11 @@ export const resolvers: Resolvers = {
         return args.id;
       } finally {
         emitGraphQLUpdate(user.id, {
-          operation: info.operation,
+          fragment: gql`
+            fragment DeletedTodo on Todo {
+              id
+            }
+          `,
           data: { deleteTodo: args.id },
         });
       }

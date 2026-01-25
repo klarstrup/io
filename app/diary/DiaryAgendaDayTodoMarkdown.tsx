@@ -1,14 +1,16 @@
-"use client";
-
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { DiaryAgendaDayTodoFragment } from "../../graphql.generated";
-import { upsertTodo } from "./actions";
+import { useEffect } from "react";
 
 export function DiaryAgendaDayTodoMarkdown({
   todo,
+  onUpdateTodo,
 }: {
   todo: DiaryAgendaDayTodoFragment;
+  onUpdateTodo?: (
+    updatedTodo: Omit<DiaryAgendaDayTodoFragment, "id" | "__typename">,
+  ) => Promise<void> | void;
 }) {
   return (
     <div
@@ -74,8 +76,7 @@ export function DiaryAgendaDayTodoMarkdown({
                           (idx !== thisCheckboxIndex && cb.checked),
                       );
 
-                    upsertTodo({
-                      ...todo,
+                    onUpdateTodo?.({
                       completed: allChecked ? new Date() : null,
                       summary: newSummary,
                     });

@@ -231,7 +231,32 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   }}
                 />
               ) : (
-                <DiaryAgendaDayTodoMarkdown todo={todo} />
+                <DiaryAgendaDayTodoMarkdown
+                  todo={todo}
+                  onUpdateTodo={(updatedTodo) =>
+                    void updateTodo({
+                      variables: {
+                        input: {
+                          id: todo.id,
+                          data: {
+                            summary: updatedTodo.summary,
+                            completed: updatedTodo.completed,
+                          },
+                        },
+                      },
+                      optimisticResponse: {
+                        updateTodo: {
+                          __typename: "UpdateTodoPayload",
+                          todo: {
+                            ...todo,
+                            summary: updatedTodo.summary,
+                            completed: updatedTodo.completed,
+                          },
+                        },
+                      },
+                    })
+                  }
+                />
               )}
               <button type="submit" className="hidden" />
             </form>
