@@ -67,16 +67,18 @@ export const GET = async () => {
     yield `updateLocationCounts: done in ${Date.now() - t3}ms`;
 
     try {
-      new PartySocket({
+      const socket = new PartySocket({
         // id: process.env.VERCEL_DEPLOYMENT_ID,
         host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
         room: user.id,
-      }).send(
+      });
+      socket.send(
         JSON.stringify({
           source: "materialize_workouts",
           scrapedAt: new Date().valueOf(),
         }),
       );
+      socket.close();
     } catch (error) {
       console.error(error);
     }

@@ -25,11 +25,16 @@ import { materializeIoWorkouts } from "../api/materialize_workouts/materializers
 
 const emitIoUpdate = (userId: string) => {
   try {
-    new PartySocket({
+    const socket = new PartySocket({
       // id: process.env.VERCEL_DEPLOYMENT_ID,
       host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
       room: userId,
-    }).send(JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }));
+    });
+
+    socket.send(
+      JSON.stringify({ source: "io", scrapedAt: new Date().valueOf() }),
+    );
+    socket.close();
   } catch (error) {
     console.error(error);
   }
