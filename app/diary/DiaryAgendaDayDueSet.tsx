@@ -5,10 +5,9 @@ import { addDays, subHours } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
-import { Workout } from "../../graphql.generated";
+import { Location, Workout } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { exercisesById } from "../../models/exercises";
-import { LocationData } from "../../models/location";
 import type { getNextSets } from "../../models/workout.server";
 import { dateToString, dayStartHour } from "../../utils";
 import { snoozeUserExerciseSchedule } from "./actions";
@@ -75,7 +74,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
       dueSet: Awaited<ReturnType<typeof getNextSets>>[number];
       date: Date;
       workouts?: Workout[];
-      locations?: (LocationData & { id: string })[];
+      locations?: Location[];
       isDragging: boolean;
     } & React.HTMLAttributes<HTMLDivElement>,
     ref2: React.Ref<HTMLDivElement>,

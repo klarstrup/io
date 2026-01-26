@@ -3,7 +3,7 @@ import { addMilliseconds, subDays, subMonths, subYears } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Grade from "../grades";
-import { Workout, WorkoutSet } from "../graphql.generated";
+import { Location, Workout, WorkoutSet } from "../graphql.generated";
 import type { PRType } from "../lib";
 import { ExerciseSchedule } from "../sources/fitocracy";
 import { epoch } from "../utils";
@@ -17,7 +17,6 @@ import {
   Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
-import { Locations } from "./location.server";
 import {
   durationToMs,
   getSetGrade,
@@ -646,11 +645,9 @@ export const calculate60dayTop10AverageAttemptGrade = (
 export async function calculateClimbingStats(
   setAndLocationPairs: (readonly [
     set: WorkoutExerciseSet | WorkoutSet,
-    location: LocationData | undefined,
+    location: LocationData | Location | undefined,
     workout: WorkoutData | Workout | undefined,
   ])[],
-  userId?: string,
-  on?: Date,
 ) {
   const successfulSetAndLocationPairs = setAndLocationPairs.filter(
     ([set]) =>

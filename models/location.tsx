@@ -8,15 +8,15 @@ export interface LocationData {
   boulderCircuits?: {
     id: string;
     name: string;
-    description?: string;
-    hasZones?: boolean;
+    description?: string | null;
+    hasZones?: boolean | null;
     // Internal estimate by io
-    gradeEstimate?: number;
+    gradeEstimate?: number | null;
     // Stated corresponding grade
-    gradeRange?: [number, number];
-    labelColor?: string;
-    holdColor?: string;
-    holdColorSecondary?: string;
+    gradeRange?: [number, number] | [number] | null;
+    labelColor?: string | null;
+    holdColor?: string | null;
+    holdColorSecondary?: string | null;
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date;

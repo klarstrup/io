@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
-import { Workout, WorkoutSet } from "../graphql.generated";
+import { Location, Workout, WorkoutSet } from "../graphql.generated";
 import { PP } from "../lib";
 import { exercises, SendType } from "../models/exercises";
 import type { LocationData } from "../models/location";
@@ -372,7 +372,7 @@ const colorOptions = boulderingExercise.inputs[1]!.options!;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,
-    LocationData | undefined,
+    Location | LocationData | undefined,
     workout: WorkoutData | Workout | undefined,
   ])[],
 ): PP[] =>
@@ -388,7 +388,13 @@ export const exerciseSetsToProblemByProblem = (
 
     return {
       grade: set.inputs[0]!.value || undefined,
-      circuit,
+      circuit: circuit && {
+        ...circuit,
+        gradeRange:
+          circuit?.gradeRange?.length == 2
+            ? ([circuit.gradeRange[0], circuit.gradeRange[1]] as const)
+            : undefined,
+      },
       estGrade: getSetGrade(set, location),
       // hold color
       color: colorOptions?.[set.inputs[1]!.value!]?.value ?? "",

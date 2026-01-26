@@ -15,7 +15,6 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
-import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import { query } from "../../ApolloClient";
 import {
@@ -23,7 +22,6 @@ import {
   Event,
   type Todo,
 } from "../../graphql.generated";
-import { Locations } from "../../models/location.server";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
 import { getNextSets } from "../../models/workout.server";
 import {
@@ -31,7 +29,7 @@ import {
   dayStartHour,
   DEFAULT_TIMEZONE,
   roundToNearestDay,
-  unique,
+  uniqueBy,
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { TodoDroppable } from "./TodoDroppable";
@@ -84,6 +82,25 @@ export async function DiaryAgendaDay({
                   workedOutAt
                   materializedAt
                   locationId
+                  location {
+                    id
+                    createdAt
+                    updatedAt
+                    name
+                    userId
+                    boulderCircuits {
+                      id
+                      holdColor
+                      gradeEstimate
+                      gradeRange
+                      name
+                      labelColor
+                      hasZones
+                      description
+                      createdAt
+                      updatedAt
+                    }
+                  }
                   source
                   exercises {
                     exerciseId
@@ -278,17 +295,10 @@ export async function DiaryAgendaDay({
                 workout.workedOutAt <= dayEnd,
           );
 
-          const dayWorkoutLocationObjectIds = unique(
-            dayWorkouts.map((workout) => workout.locationId),
-          )
-            .map((id) => id && new ObjectId(id))
-            .filter(Boolean);
-          const dayLocations = dayWorkoutLocationObjectIds.length
-            ? await Locations.find({
-                _id: { $in: dayWorkoutLocationObjectIds },
-              }).toArray()
-            : [];
-
+          const dayLocations = uniqueBy(
+            dayWorkouts.map((workout) => workout.location).filter(Boolean),
+            (location) => location.id,
+          );
           const dayDueSets = dueSetsByDate[dayName] || [];
           const dayTodos = todosByDate[dayName] || [];
 

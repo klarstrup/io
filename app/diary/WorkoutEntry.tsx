@@ -6,7 +6,7 @@ import ProblemByProblem, {
   exerciseSetsToProblemByProblem,
 } from "../../components/ProblemByProblem";
 import Grade from "../../grades";
-import { Workout, WorkoutSet } from "../../graphql.generated";
+import { Location, Workout, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { type ExerciseData, exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
@@ -56,7 +56,7 @@ export function WorkoutEntryExercise({
   exercise: ExerciseData;
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,
-    LocationData | undefined,
+    Location | LocationData | undefined,
     workout: WorkoutData | Workout | undefined,
   ])[];
   exerciseIndex?: number;

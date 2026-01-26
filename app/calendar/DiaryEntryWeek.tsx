@@ -81,11 +81,7 @@ export async function DiaryEntryWeek({
               : null}
         </span>
         {isNonEmptyArray(weekClimbingSets) &&
-          (await calculateClimbingStats(
-            weekClimbingSets,
-            user?.id,
-            weekInterval.end,
-          ))}
+          (await calculateClimbingStats(weekClimbingSets))}
       </div>
       {eachDayOfInterval(weekInterval).map((dayte) => {
         const dateStr = dateToString(dayte);

@@ -14,6 +14,7 @@ import gql from "graphql-tag";
 import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
+import { Locations } from "./models/location.server";
 import { WorkoutSource } from "./models/workout";
 import { MaterializedWorkoutsView } from "./models/workout.server";
 import {
@@ -139,30 +140,50 @@ export const resolvers: Resolvers = {
           },
           { sort: { workedOutAt: -1 } },
         ).toArray()
-      ).map((workout) => ({
-        ...workout,
-        exercises: workout.exercises.map((exercise) => ({
-          ...exercise,
-          __typename: "WorkoutExercise",
-          sets: exercise.sets.map((set) => ({
-            ...set,
-            __typename: "WorkoutSet",
-            inputs: set.inputs.map((input) => ({
-              ...input,
-              __typename: "WorkoutSetInput",
-            })),
-            meta:
-              set.meta &&
-              Object.entries(set.meta || {}).map(([key, value]) => ({
-                key,
-                value: String(value),
-                __typename: "WorkoutSetMeta",
+      ).map(async (workout) => {
+        const location = workout.locationId
+          ? await Locations.findOne({
+              _id: new ObjectId(workout.locationId),
+              userId: user.id,
+            })
+          : null;
+
+        return {
+          ...workout,
+          location: location
+            ? {
+                ...location,
+                boulderCircuits: location.boulderCircuits?.map((circuit) => ({
+                  ...circuit,
+                  __typename: "BoulderCircuit",
+                })),
+                __typename: "Location",
+                id: String(location._id),
+              }
+            : null,
+          exercises: workout.exercises.map((exercise) => ({
+            ...exercise,
+            __typename: "WorkoutExercise",
+            sets: exercise.sets.map((set) => ({
+              ...set,
+              __typename: "WorkoutSet",
+              inputs: set.inputs.map((input) => ({
+                ...input,
+                __typename: "WorkoutSetInput",
               })),
+              meta:
+                set.meta &&
+                Object.entries(set.meta || {}).map(([key, value]) => ({
+                  key,
+                  value: String(value),
+                  __typename: "WorkoutSetMeta",
+                })),
+            })),
           })),
-        })),
-        id: workout._id.toString(),
-        __typename: "Workout",
-      }));
+          id: workout._id.toString(),
+          __typename: "Workout",
+        };
+      });
     },
   },
   Mutation: {
@@ -299,6 +320,10 @@ export const resolvers: Resolvers = {
       }
     },
   },
+  BoulderCircuit: {
+    gradeRange: (parent) =>
+      parent.gradeRange?.filter((v) => isNaN(v) === false) || null,
+  },
 };
 
 export const typeDefs = gql`
@@ -380,6 +405,30 @@ export const typeDefs = gql`
     order: Int
   }
 
+  type Location {
+    id: ID!
+    userId: ID!
+    name: String!
+    createdAt: Date!
+    updatedAt: Date!
+    isFavorite: Boolean
+    boulderCircuits: [BoulderCircuit!]
+  }
+
+  type BoulderCircuit {
+    id: ID!
+    name: String!
+    createdAt: Date!
+    updatedAt: Date!
+    description: String
+    holdColor: String
+    holdColorSecondary: String
+    labelColor: String
+    gradeEstimate: Float
+    gradeRange: [Float!]
+    hasZones: Boolean
+  }
+
   type Workout {
     id: ID!
     workedOutAt: Date!
@@ -389,6 +438,7 @@ export const typeDefs = gql`
     locationId: String
     source: String
     exercises: [WorkoutExercise!]!
+    location: Location
   }
 
   type WorkoutExercise {

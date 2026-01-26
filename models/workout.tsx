@@ -9,7 +9,7 @@ import {
   type Duration,
 } from "date-fns";
 import type { WithId } from "mongodb";
-import type { WorkoutSet } from "../graphql.generated";
+import type { Location, WorkoutSet } from "../graphql.generated";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
 import {
   exercisesById,
@@ -168,22 +168,22 @@ export const getCircuitByLocationAndSetColor = (
   return boulderingCircuit;
 };
 
-export const getCircuitByLocationAndColor = (
+const getCircuitByLocationAndColor = (
   color: string,
-  location: LocationData,
+  location: LocationData | Location,
 ) =>
   location.boulderCircuits?.find(
     (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
   );
 
-export const getGradeOfColorByLocation = (
+const getGradeOfColorByLocation = (
   color: string,
-  location: LocationData,
+  location: LocationData | Location,
 ) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
 export function getSetGrade(
   set: WorkoutSet | WorkoutExerciseSet,
-  location: LocationData | undefined | null,
+  location: LocationData | Location | undefined | null,
 ) {
   const exercise = exercisesById[2001]!;
 

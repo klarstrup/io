@@ -31,4 +31,16 @@ export const typePolicies: TypePolicies = {
       updatedAt: { read: (d) => d && new Date(d) },
     },
   },
+  Location: {
+    fields: {
+      createdAt: { read: (d) => d && new Date(d) },
+      updatedAt: { read: (d) => d && new Date(d) },
+    },
+  },
+  BoulderCircuit: {
+    fields: {
+      createdAt: { read: (d) => d && new Date(d) },
+      updatedAt: { read: (d) => d && new Date(d) },
+    },
+  },
 };

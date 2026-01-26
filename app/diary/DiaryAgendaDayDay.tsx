@@ -18,15 +18,13 @@ import {
   startOfDay,
   subHours,
 } from "date-fns";
-import { type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
-import { Event, Workout, WorkoutSet } from "../../graphql.generated";
+import { Event, Location, Workout, WorkoutSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
-import type { LocationData } from "../../models/location";
 import { isClimbingExercise, WorkoutSource } from "../../models/workout";
 import { calculateClimbingStats } from "../../models/workout.server";
 import {
@@ -55,7 +53,7 @@ export function DiaryAgendaDayDay({
   date: `${number}-${number}-${number}`;
   dayDate: Date;
   user?: Session["user"];
-  dayLocations: WithId<LocationData>[];
+  dayLocations: Location[];
   dayJournalEntries: JournalEntry[];
 }) {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
@@ -259,10 +257,7 @@ export function DiaryAgendaDayDay({
               )
               .filter((w) => w.source === WorkoutSource.Self)
               .map((d) => ({ ...d, _id: d.id.toString() }))}
-            locations={dayLocations.map(({ _id, ...d }) => ({
-              ...d,
-              id: _id.toString(),
-            }))}
+            locations={dayLocations}
           />
         ),
       });
@@ -282,9 +277,7 @@ export function DiaryAgendaDayDay({
 
         const setsWithLocation = workoutExercise.sets.map((set) => {
           const setLocationId = workout.locationId;
-          const location = dayLocations.find(
-            (loc) => String(loc._id) === setLocationId,
-          );
+          const location = dayLocations.find((loc) => loc.id === setLocationId);
           return [
             {
               ...set,
