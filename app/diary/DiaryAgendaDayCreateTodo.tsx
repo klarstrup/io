@@ -1,27 +1,58 @@
 "use client";
+import { useMutation } from "@apollo/client/react";
+import gql from "graphql-tag";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
+import {
+  CreateTodoMutationVariables,
+  ListPageUserDocument,
+} from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
-import { upsertTodo } from "./actions";
 
 export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
+
+  const [createTodo] = useMutation<CreateTodoMutationVariables>(gql`
+    mutation CreateTodo($input: CreateTodoInput!) {
+      createTodo(input: $input) {
+        todo {
+          id
+          summary
+          start
+          due
+          completed
+        }
+      }
+    }
+  `);
 
   const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
     const formData = new FormData(formElement);
     const summary = formData.get("summary");
     if (typeof summary === "string" && summary.trim().length > 0) {
-      await upsertTodo({
-        summary: summary
-          .trim()
-          .split("\n")
-          .map((line) => (line.startsWith("▢") ? line.replace(/^(▢)/, "- [ ]") : line))
-          .join("\n"),
-        start: date,
+      await createTodo({
+        variables: {
+          input: {
+            data: {
+              summary: summary
+                .trim()
+                .split("\n")
+                .map((line) =>
+                  line.startsWith("▢") ? line.replace(/^(▢)/, "- [ ]") : line,
+                )
+                .join("\n"),
+              start: date,
+            },
+          },
+        },
+        refetchQueries: [ListPageUserDocument],
       });
       setIsActive(false);
+      router.refresh();
     }
   });
 

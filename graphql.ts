@@ -1,20 +1,33 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
+import { ObjectId } from "bson";
 import { isValid } from "date-fns";
-import { DocumentNode, GraphQLScalarType, Kind, print } from "graphql";
+import {
+  DocumentNode,
+  GraphQLScalarType,
+  Kind,
+  OperationDefinitionNode,
+  print,
+} from "graphql";
 import gql from "graphql-tag";
 import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
+import { WorkoutSource } from "./models/workout";
 import { getUserIcalTodosBetween } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { pick } from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
-  graphQlResponse: { fragment: DocumentNode; data: unknown },
+  graphQlResponse: {
+    query: OperationDefinitionNode;
+    fragment: DocumentNode;
+    data: unknown;
+  },
 ) => {
   const message = JSON.stringify({
+    query: print({ kind: Kind.DOCUMENT, definitions: [graphQlResponse.query] }),
     fragment: print(graphQlResponse.fragment),
     data: graphQlResponse.data,
   });
@@ -89,7 +102,56 @@ export const resolvers: Resolvers = {
     },
   },
   Mutation: {
-    updateTodo: async (_parent, args) => {
+    createTodo: async (_parent, args, _context, info) => {
+      const user = (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      const insertResult = await IcalEvents.insertOne({
+        uid: new ObjectId().toString(),
+        type: "VTODO",
+        created: new Date(),
+        dtstamp: new Date(),
+        lastmodified: new Date(),
+        params: [],
+        _io_source: WorkoutSource.Self,
+        _io_userId: user.id,
+        ...pick(args.input.data, ...editableTodoFields),
+      });
+
+      const newTodo = await IcalEvents.findOne<MongoVTodo>({
+        _id: insertResult.insertedId,
+      });
+
+      if (!newTodo) throw new Error("Failed to create todo");
+
+      const result = {
+        __typename: "CreateTodoPayload",
+        todo: {
+          __typename: "Todo",
+          id: newTodo.uid,
+          ...newTodo,
+        },
+      } as const;
+
+      try {
+        return result;
+      } finally {
+        await emitGraphQLUpdate(user.id, {
+          query: info.operation,
+          fragment: gql`
+            fragment NewTodo on Todo {
+              id
+              summary
+              start
+              due
+              completed
+            }
+          `,
+          data: result.todo,
+        });
+      }
+    },
+    updateTodo: async (_parent, args, _context, info) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -131,6 +193,7 @@ export const resolvers: Resolvers = {
         return result;
       } finally {
         await emitGraphQLUpdate(user.id, {
+          query: info.operation,
           fragment: gql`
             fragment UpdatedTodo on Todo {
               id
@@ -144,7 +207,7 @@ export const resolvers: Resolvers = {
         });
       }
     },
-    deleteTodo: async (_parent, args) => {
+    deleteTodo: async (_parent, args, _context, info) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -159,6 +222,7 @@ export const resolvers: Resolvers = {
         return args.id;
       } finally {
         await emitGraphQLUpdate(user.id, {
+          query: info.operation,
           fragment: gql`
             fragment DeletedTodo on Todo {
               id
@@ -186,6 +250,14 @@ export const typeDefs = gql`
     completed: Date
   }
 
+  input CreateTodoInput {
+    data: TodoInput!
+  }
+
+  type CreateTodoPayload {
+    todo: Todo
+  }
+
   input UpdateTodoInput {
     id: String!
     data: TodoInput!
@@ -196,6 +268,7 @@ export const typeDefs = gql`
   }
 
   type Mutation {
+    createTodo(input: CreateTodoInput!): CreateTodoPayload
     updateTodo(input: UpdateTodoInput!): UpdateTodoPayload
     deleteTodo(id: String!): String
   }
