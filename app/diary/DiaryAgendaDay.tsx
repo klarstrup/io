@@ -128,8 +128,6 @@ export async function DiaryAgendaDay({
     workouts = [],
   } = userData || {};
 
-  console.log({ workouts });
-
   const eventsByDate: Record<string, Event[]> = {};
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<
@@ -283,7 +281,7 @@ export async function DiaryAgendaDay({
               : workout.workedOutAt >= dayStart &&
                 workout.workedOutAt <= dayEnd,
           );
-          console.log({ dayName, dayWorkouts });
+
           const dayWorkoutLocationObjectIds = unique(
             dayWorkouts.map((workout) => workout.locationId),
           )
