@@ -33,7 +33,7 @@ export const MaterializedWorkoutsView = proxyCollection<
   WorkoutData & { materializedAt?: Date }
 >("materialized_workouts_view");
 
-const getNextSet = async ({
+export const getNextSet = async ({
   to,
   userId,
   scheduleEntry,
@@ -130,7 +130,7 @@ const getNextSet = async ({
             dueOn,
             exerciseId: scheduleEntry.exerciseId,
             successful: true,
-            nextWorkingSets: scheduleEntry.workingSets ?? NaN,
+            nextWorkingSets: scheduleEntry.workingSets ?? null,
             nextWorkingSetInputs: [],
             scheduleEntry,
           };
@@ -143,7 +143,7 @@ const getNextSet = async ({
       dueOn,
       exerciseId: scheduleEntry.exerciseId,
       successful: true,
-      nextWorkingSets: scheduleEntry.workingSets ?? NaN,
+      nextWorkingSets: scheduleEntry.workingSets ?? null,
       nextWorkingSetInputs: [],
       scheduleEntry,
     };
@@ -224,7 +224,7 @@ const getNextSet = async ({
     workingSets?.[workingSets.length - 1]?.inputs[repsInputIndex]?.value;
 
   const goalEffort = scheduleEntry.increment
-    ? heaviestSetEffort !== undefined
+    ? heaviestSetEffort !== undefined && heaviestSetEffort !== null
       ? successful
         ? finalWorkingSetReps &&
           scheduleEntry.workingReps &&
@@ -262,7 +262,7 @@ const getNextSet = async ({
             : { value: NaN },
     );
 
-  const nextWorkingSets = scheduleEntry.workingSets ?? NaN;
+  const nextWorkingSets = scheduleEntry.workingSets ?? null;
 
   if (
     nextWorkingSetInputs.every(({ value }) => Number.isNaN(value)) &&

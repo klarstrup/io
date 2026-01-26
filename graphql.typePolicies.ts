@@ -43,4 +43,9 @@ export const typePolicies: TypePolicies = {
       updatedAt: { read: (d) => d && new Date(d) },
     },
   },
+  ExerciseSchedule: {
+    fields: {
+      snoozedUntil: { read: (d) => (d ? new Date(d) : null) },
+    },
+  },
 };

@@ -20,10 +20,10 @@ import { query } from "../../ApolloClient";
 import {
   DiaryAgendaDayUserTodosQuery,
   Event,
+  NextSet,
   type Todo,
 } from "../../graphql.generated";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
-import { getNextSets } from "../../models/workout.server";
 import {
   dateToString,
   dayStartHour,
@@ -49,104 +49,164 @@ export async function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const [userData, nextSets = []] = user
-    ? await Promise.all([
-        query<DiaryAgendaDayUserTodosQuery>({
-          query: gql`
-            query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
-              user {
+  const userData = user
+    ? await query<DiaryAgendaDayUserTodosQuery>({
+        query: gql`
+          query DiaryAgendaDayUserTodos(
+            $interval: IntervalInput!
+            $intervalEnd: Date!
+          ) {
+            user {
+              id
+              exerciseSchedules {
                 id
-                todos(interval: $interval) {
-                  id
-                  created
-                  summary
-                  start
-                  due
-                  completed
-                  order
+                exerciseId
+                enabled
+                frequency {
+                  years
+                  months
+                  weeks
+                  days
+                  hours
+                  minutes
+                  seconds
                 }
-                events(interval: $interval) {
-                  id
-                  created
-                  summary
-                  start
-                  end
-                  datetype
-                  location
-                  order
+                increment
+                workingSets
+                workingReps
+                deloadFactor
+                baseWeight
+                snoozedUntil
+                order
+                nextSet(to: $intervalEnd) {
+                  workedOutAt
+                  dueOn
+                  exerciseId
+                  successful
+                  nextWorkingSets
+                  nextWorkingSetInputs {
+                    unit
+                    value
+                    assistType
+                  }
+                  scheduleEntry {
+                    id
+                    exerciseId
+                    enabled
+                    frequency {
+                      years
+                      months
+                      weeks
+                      days
+                      hours
+                      minutes
+                      seconds
+                    }
+                    increment
+                    workingSets
+                    workingReps
+                    deloadFactor
+                    baseWeight
+                    snoozedUntil
+                    order
+                  }
                 }
-                workouts(interval: $interval) {
+              }
+              todos(interval: $interval) {
+                id
+                created
+                summary
+                start
+                due
+                completed
+                order
+              }
+              events(interval: $interval) {
+                id
+                created
+                summary
+                start
+                end
+                datetype
+                location
+                order
+              }
+              workouts(interval: $interval) {
+                id
+                createdAt
+                updatedAt
+                workedOutAt
+                materializedAt
+                locationId
+                location {
                   id
                   createdAt
                   updatedAt
-                  workedOutAt
-                  materializedAt
-                  locationId
-                  location {
+                  name
+                  userId
+                  boulderCircuits {
                     id
+                    holdColor
+                    gradeEstimate
+                    gradeRange
+                    name
+                    labelColor
+                    hasZones
+                    description
                     createdAt
                     updatedAt
-                    name
-                    userId
-                    boulderCircuits {
-                      id
-                      holdColor
-                      gradeEstimate
-                      gradeRange
-                      name
-                      labelColor
-                      hasZones
-                      description
-                      createdAt
-                      updatedAt
-                    }
                   }
-                  source
-                  exercises {
-                    exerciseId
-                    displayName
+                }
+                source
+                exercises {
+                  exerciseId
+                  displayName
+                  comment
+                  sets {
                     comment
-                    sets {
-                      comment
-                      createdAt
-                      updatedAt
-                      inputs {
-                        unit
-                        value
-                        assistType
-                      }
-                      meta {
-                        key
-                        value
-                      }
+                    createdAt
+                    updatedAt
+                    inputs {
+                      unit
+                      value
+                      assistType
+                    }
+                    meta {
+                      key
+                      value
                     }
                   }
                 }
               }
             }
-          `,
-          variables: { interval: fetchingInterval },
-        }).then((res) => ({
-          calendarTodos: res.data?.user?.todos || [],
-          calendarEvents: res.data?.user?.events || [],
-          workouts: res.data?.user?.workouts || [],
-        })),
-        getNextSets({ user, to: fetchingInterval.end }),
-      ])
-    : [];
+          }
+        `,
+        variables: {
+          interval: fetchingInterval,
+          intervalEnd: fetchingInterval.end,
+        },
+      }).then((res) => ({
+        calendarTodos: res.data?.user?.todos || [],
+        calendarEvents: res.data?.user?.events || [],
+        workouts: res.data?.user?.workouts || [],
+        nextSets: res.data?.user?.exerciseSchedules
+          ? res.data.user.exerciseSchedules
+              .map((schedule) => schedule.nextSet)
+              .filter(Boolean)
+          : [],
+      }))
+    : null;
 
   const {
     calendarEvents = [],
     calendarTodos = [],
     workouts = [],
+    nextSets = [],
   } = userData || {};
 
   const eventsByDate: Record<string, Event[]> = {};
   const todosByDate: Record<string, Todo[]> = {};
-  const dueSetsByDate: Record<
-    string,
-    Awaited<ReturnType<typeof getNextSets>>
-  > = { [date]: [] };
+  const dueSetsByDate: Record<string, NextSet[]> = { [date]: [] };
 
   const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
     (date) => addHours(date, dayStartHour) <= fetchingInterval.end,

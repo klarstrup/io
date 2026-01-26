@@ -85,8 +85,10 @@ const getValueAs = (v: unknown) =>
 const getValueAsFont = (v: unknown) =>
   v === null || Number.isNaN(Number(v)) || v === 0 ? "" : Number(v);
 
-interface WorkoutDataFormData
-  extends Omit<WorkoutData, "exercises" | "locationId"> {
+interface WorkoutDataFormData extends Omit<
+  WorkoutData,
+  "exercises" | "locationId"
+> {
   _id?: string;
   locationId?: string;
   exercises: (Omit<WorkoutExercise, "sets"> & {
@@ -163,7 +165,26 @@ export function WorkoutForm<R extends string>({
   const dueSets = useMemo(
     () =>
       nextSets
-        ?.filter((nextSet) => isNextSetDue(tzDate, nextSet))
+        ?.filter((nextSet) =>
+          isNextSetDue(tzDate, {
+            ...nextSet,
+            __typename: "NextSet",
+            nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+              (input) => ({
+                ...input,
+                __typename: "WorkoutSetInput",
+              }),
+            ),
+            scheduleEntry: {
+              ...nextSet.scheduleEntry,
+              __typename: "ExerciseSchedule",
+              frequency: {
+                ...nextSet.scheduleEntry.frequency,
+                __typename: "Duration",
+              },
+            },
+          }),
+        )
         .filter(
           (nextSet) =>
             !watch("exercises")?.some(
@@ -177,7 +198,27 @@ export function WorkoutForm<R extends string>({
   const futureSets = useMemo(
     () =>
       nextSets
-        ?.filter((nextSet) => !isNextSetDue(tzDate, nextSet))
+        ?.filter(
+          (nextSet) =>
+            !isNextSetDue(tzDate, {
+              ...nextSet,
+              __typename: "NextSet",
+              nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+                (input) => ({
+                  ...input,
+                  __typename: "WorkoutSetInput",
+                }),
+              ),
+              scheduleEntry: {
+                ...nextSet.scheduleEntry,
+                __typename: "ExerciseSchedule",
+                frequency: {
+                  ...nextSet.scheduleEntry.frequency,
+                  __typename: "Duration",
+                },
+              },
+            }),
+        )
         .filter(
           (nextSet) =>
             !watch("exercises")?.some(

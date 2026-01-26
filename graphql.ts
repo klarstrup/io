@@ -16,7 +16,7 @@ import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { Locations } from "./models/location.server";
 import { WorkoutSource } from "./models/workout";
-import { MaterializedWorkoutsView } from "./models/workout.server";
+import { getNextSet, MaterializedWorkoutsView } from "./models/workout.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
@@ -93,7 +93,16 @@ export const resolvers: Resolvers = {
 
       if (!user) return null;
 
-      return { ...user, __typename: "User" };
+      return {
+        ...user,
+        __typename: "User",
+        exerciseSchedules:
+          user.exerciseSchedules?.map((schedule) => ({
+            ...schedule,
+            __typename: "ExerciseSchedule",
+            frequency: { ...schedule.frequency, __typename: "Duration" },
+          })) || null,
+      };
     },
   },
   User: {
@@ -324,6 +333,38 @@ export const resolvers: Resolvers = {
     gradeRange: (parent) =>
       parent.gradeRange?.filter((v) => isNaN(v) === false) || null,
   },
+  ExerciseSchedule: {
+    nextSet: async (parent, args, _context) => {
+      const user = (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      if (!parent.enabled) return null;
+
+      const nextSet = await getNextSet({
+        userId: user.id,
+        to: args.to,
+        scheduleEntry: parent,
+      });
+
+      return {
+        ...nextSet,
+        nextWorkingSetInputs:
+          nextSet.nextWorkingSetInputs?.map((input) => ({
+            ...input,
+            __typename: "WorkoutSetInput",
+          })) || null,
+        scheduleEntry: {
+          ...nextSet.scheduleEntry,
+          __typename: "ExerciseSchedule",
+          frequency: {
+            ...nextSet.scheduleEntry.frequency,
+            __typename: "Duration",
+          },
+        },
+        __typename: "NextSet",
+      };
+    },
+  },
 };
 
 export const typeDefs = gql`
@@ -379,8 +420,43 @@ export const typeDefs = gql`
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
-    # exerciseSchedules: [ExerciseSchedule!]
+    exerciseSchedules: [ExerciseSchedule!]
     # dataSources: [UserDataSource!]
+  }
+
+  type Duration {
+    years: Float
+    months: Float
+    weeks: Float
+    days: Float
+    hours: Float
+    minutes: Float
+    seconds: Float
+  }
+
+  type ExerciseSchedule {
+    id: ID!
+    exerciseId: Int!
+    enabled: Boolean!
+    frequency: Duration!
+    increment: Float
+    workingSets: Int
+    workingReps: Int
+    deloadFactor: Float
+    baseWeight: Float
+    snoozedUntil: Date
+    order: Int
+    nextSet(to: Date!): NextSet
+  }
+
+  type NextSet {
+    workedOutAt: Date
+    dueOn: Date!
+    exerciseId: Int!
+    successful: Boolean
+    nextWorkingSets: Int
+    nextWorkingSetInputs: [WorkoutSetInput!]
+    scheduleEntry: ExerciseSchedule!
   }
 
   type Todo {

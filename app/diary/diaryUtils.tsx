@@ -6,16 +6,11 @@ import {
   max,
   startOfDay,
 } from "date-fns";
-import type { Event, Todo, Workout } from "../../graphql.generated";
+import type { Event, NextSet, Todo, Workout } from "../../graphql.generated";
 import type { WorkoutData } from "../../models/workout";
-import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
 
-export type JournalEntry =
-  | Event
-  | Todo
-  | Awaited<ReturnType<typeof getNextSets>>[number]
-  | Workout;
+export type JournalEntry = Event | Todo | NextSet | Workout;
 
 const getWorkoutPrincipalDate = (
   workout: WorkoutData | Workout,

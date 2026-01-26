@@ -1,5 +1,3 @@
-import type { Duration } from "date-fns";
-
 export namespace Fitocracy {
   export interface Result<T> {
     data: T;
@@ -269,19 +267,36 @@ export namespace Fitocracy {
 
 export const theDayFitocracyDied = new Date(2024, 6, 15);
 
+export interface Duration {
+  /** The number of years in the duration */
+  years?: number | null;
+  /** The number of months in the duration */
+  months?: number | null;
+  /** The number of weeks in the duration */
+  weeks?: number | null;
+  /** The number of days in the duration */
+  days?: number | null;
+  /** The number of hours in the duration */
+  hours?: number | null;
+  /** The number of minutes in the duration */
+  minutes?: number | null;
+  /** The number of seconds in the duration */
+  seconds?: number | null;
+}
+
 export interface ExerciseSchedule {
   id: string;
   exerciseId: number;
   enabled: boolean;
   frequency: Duration;
-  increment?: number;
-  workingSets?: number;
-  workingReps?: number;
-  deloadFactor?: number;
-  baseWeight?: number;
-  snoozedUntil?: Date;
+  increment?: number | null;
+  workingSets?: number | null;
+  workingReps?: number | null;
+  deloadFactor?: number | null;
+  baseWeight?: number | null;
+  snoozedUntil?: Date | null;
 
   // if multiple exercises are due at the same time, display in this order
   // lower number = higher priority
-  order?: number;
+  order?: number | null;
 }

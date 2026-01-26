@@ -6,10 +6,10 @@ import {
   isAfter,
   isBefore,
   startOfDay,
-  type Duration,
 } from "date-fns";
 import type { WithId } from "mongodb";
-import type { Location, WorkoutSet } from "../graphql.generated";
+import type { Location, NextSet, WorkoutSet } from "../graphql.generated";
+import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
 import {
   exercisesById,
@@ -18,7 +18,6 @@ import {
   type Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
-import type { getNextSets } from "./workout.server";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -114,10 +113,7 @@ export const durationToMs = (duration: Duration) =>
 export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
   durationToMs(a) >= durationToMs(b);
 
-export const isNextSetDue = (
-  tzDate: Date | TZDate,
-  nextSet: Awaited<ReturnType<typeof getNextSets>>[number],
-) => {
+export const isNextSetDue = (tzDate: Date | TZDate, nextSet: NextSet) => {
   const timeZone =
     ("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE;
   const inn = tz(timeZone);

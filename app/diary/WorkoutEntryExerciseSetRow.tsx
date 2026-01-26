@@ -29,7 +29,7 @@ export function WorkoutEntryExerciseSetRow({
   setPR,
 }: {
   set: WorkoutExerciseSet | WorkoutSet;
-  repeatCount: number | null;
+  repeatCount?: number | null;
   exercise: ExerciseData;
   setPR?: Record<PRType, boolean>;
 }) {
