@@ -25,6 +25,7 @@ const emitGraphQLUpdate = (
     await realtimeClient.connection.once("connected");
     const channel = realtimeClient.channels.get("GraphQL:" + userId);
     await channel.publish({ data: message });
+    realtimeClient.close();
   })();
 };
 
