@@ -1,20 +1,21 @@
 import {
   addHours,
   endOfDay,
-  Interval,
+  type Interval,
   isWithinInterval,
   max,
   startOfDay,
 } from "date-fns";
 import type { WithId } from "mongodb";
-import { MongoVEvent, MongoVTodo } from "../../lib";
-import { WorkoutData } from "../../models/workout";
+import type { Todo } from "../../graphql.generated";
+import type { MongoVEvent, MongoVTodo } from "../../lib";
+import type { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
   | MongoVEvent
-  | MongoVTodo
+  | Todo
   | Awaited<ReturnType<typeof getNextSets>>[number]
   | WithId<WorkoutData & { materializedAt?: Date }>;
 
@@ -55,7 +56,7 @@ export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Date | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
-  if ("type" in entry && entry.type === "VTODO") {
+  if ("__typename" in entry && entry.__typename === "Todo") {
     return getVTodoPrincipalDate(entry);
   }
   if ("start" in entry && entry.start) return entry.start;

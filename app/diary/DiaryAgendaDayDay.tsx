@@ -29,7 +29,7 @@ import { exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import {
   isClimbingExercise,
-  WorkoutData,
+  type WorkoutData,
   WorkoutSource,
 } from "../../models/workout";
 import { calculateClimbingStats } from "../../models/workout.server";
@@ -235,23 +235,15 @@ export function DiaryAgendaDayDay({
           ),
         });
       }
-    } else if ("type" in journalEntry && journalEntry.type === "VTODO") {
+    } else if (
+      "__typename" in journalEntry &&
+      journalEntry.__typename === "Todo"
+    ) {
       const todo = journalEntry;
       dayJournalEntryElements.push({
-        id: todo.uid,
+        id: todo.id,
         element: (
-          <DiaryAgendaDayTodo
-            todo={{
-              __typename: "Todo",
-              id: todo.uid,
-              due: todo.due ?? null,
-              start: todo.start ?? null,
-              completed: todo.completed ?? null,
-              summary: todo.summary ?? "",
-            }}
-            key={todo.uid}
-            sortableId={todo.uid}
-          />
+          <DiaryAgendaDayTodo todo={todo} key={todo.id} sortableId={todo.id} />
         ),
       });
     } else if ("scheduleEntry" in journalEntry) {

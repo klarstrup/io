@@ -91,12 +91,14 @@ export const resolvers: Resolvers = {
     },
   },
   User: {
-    todos: async () => {
+    todos: async (_parent, args) => {
       const user = (await auth())?.user;
 
       if (!user) return [];
 
-      return (await getUserIcalTodosBetween(user.id)).map((todo) => ({
+      return (
+        await getUserIcalTodosBetween(user.id, args.interval ?? undefined)
+      ).map((todo) => ({
         ...todo,
         id: todo.uid,
         __typename: "Todo",
@@ -277,6 +279,11 @@ export const typeDefs = gql`
     deleteTodo(id: String!): String
   }
 
+  input IntervalInput {
+    start: Date!
+    end: Date!
+  }
+
   type User {
     id: ID!
     name: String!
@@ -284,7 +291,7 @@ export const typeDefs = gql`
     image: String!
     emailVerified: Boolean!
     timeZone: String
-    todos: [Todo!]
+    todos(interval: IntervalInput): [Todo!]
     # exerciseSchedules: [ExerciseSchedule!]
     # dataSources: [UserDataSource!]
   }

@@ -14,19 +14,22 @@ import {
   startOfDay,
   subHours,
 } from "date-fns";
+import { gql } from "graphql-tag";
 import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
-import type { MongoVEvent, MongoVTodo } from "../../lib";
+import { query } from "../../ApolloClient";
+import {
+  DiaryAgendaDayUserTodosQuery,
+  type Todo,
+} from "../../graphql.generated";
+import type { MongoVEvent } from "../../lib";
 import { Locations } from "../../models/location.server";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
 import {
   getNextSets,
   MaterializedWorkoutsView,
 } from "../../models/workout.server";
-import {
-  getUserIcalEventsBetween,
-  getUserIcalTodosBetween,
-} from "../../sources/ical";
+import { getUserIcalEventsBetween } from "../../sources/ical";
 import {
   dateToString,
   dayStartHour,
@@ -61,7 +64,24 @@ export async function DiaryAgendaDay({
   ] = user
     ? await Promise.all([
         getUserIcalEventsBetween(user.id, fetchingInterval),
-        getUserIcalTodosBetween(user.id, fetchingInterval),
+        query<DiaryAgendaDayUserTodosQuery>({
+          query: gql`
+            query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
+              user {
+                id
+                todos(interval: $interval) {
+                  id
+                  created
+                  summary
+                  start
+                  due
+                  completed
+                }
+              }
+            }
+          `,
+          variables: { interval: fetchingInterval },
+        }).then((res) => res.data?.user?.todos || []),
         getNextSets({ user, to: fetchingInterval.end }),
 
         MaterializedWorkoutsView.find(
@@ -88,8 +108,10 @@ export async function DiaryAgendaDay({
       ])
     : [];
 
+  console.log({ calendarTodos });
+
   const eventsByDate: Record<string, MongoVEvent[]> = {};
-  const todosByDate: Record<string, MongoVTodo[]> = {};
+  const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<
     string,
     Awaited<ReturnType<typeof getNextSets>>
@@ -215,7 +237,7 @@ export async function DiaryAgendaDay({
         (isPast(dayEnd) && !todo.completed) ||
         Object.values(todosByDate)
           .flat()
-          .some((e) => e.uid === todo.uid)
+          .some((e) => e.id === todo.id)
       ) {
         continue;
       }
