@@ -94,25 +94,31 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     } & React.HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<HTMLDivElement>,
   ) {
-    const [updateTodo] = useMutation<UpdateTodoMutation>(gql`
-      mutation UpdateTodo($input: UpdateTodoInput!) {
-        updateTodo(input: $input) {
-          todo {
-            id
-            created
-            start
-            due
-            completed
-            summary
+    const [updateTodo] = useMutation<UpdateTodoMutation>(
+      gql`
+        mutation UpdateTodo($input: UpdateTodoInput!) {
+          updateTodo(input: $input) {
+            todo {
+              id
+              created
+              start
+              due
+              completed
+              summary
+            }
           }
         }
-      }
-    `);
-    const [deleteTodo] = useMutation<DeleteTodoMutation>(gql`
-      mutation DeleteTodo($id: String!) {
-        deleteTodo(id: $id)
-      }
-    `);
+      `,
+      { refetchQueries: [ListPageUserDocument] },
+    );
+    const [deleteTodo] = useMutation<DeleteTodoMutation>(
+      gql`
+        mutation DeleteTodo($id: String!) {
+          deleteTodo(id: $id)
+        }
+      `,
+      { refetchQueries: [ListPageUserDocument] },
+    );
 
     const [isActive, setIsActive] = useState(false);
     const ref2 = useRef<HTMLDivElement>(null);
@@ -389,7 +395,6 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
                   void deleteTodo({
                     variables: { id: todo.id },
                     optimisticResponse: { deleteTodo: todo.id },
-                    refetchQueries: [ListPageUserDocument],
                     update(cache, { data }) {
                       if (!data?.deleteTodo) return;
 

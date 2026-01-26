@@ -16,20 +16,23 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
-  const [createTodo] = useMutation<CreateTodoMutationVariables>(gql`
-    mutation CreateTodo($input: CreateTodoInput!) {
-      createTodo(input: $input) {
-        todo {
-          id
-          created
-          summary
-          start
-          due
-          completed
+  const [createTodo] = useMutation<CreateTodoMutationVariables>(
+    gql`
+      mutation CreateTodo($input: CreateTodoInput!) {
+        createTodo(input: $input) {
+          todo {
+            id
+            created
+            summary
+            start
+            due
+            completed
+          }
         }
       }
-    }
-  `);
+    `,
+    { refetchQueries: [ListPageUserDocument] },
+  );
 
   const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
     const formData = new FormData(formElement);
@@ -50,7 +53,6 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
             },
           },
         },
-        refetchQueries: [ListPageUserDocument],
       });
       setIsActive(false);
       router.refresh();
