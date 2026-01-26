@@ -20,7 +20,7 @@ import {
 import { useClickOutside, useEvent } from "../../hooks";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
-import { getVTodoPrincipalDate } from "./diaryUtils";
+import { getTodoPrincipalDate } from "./diaryUtils";
 
 gql`
   fragment DiaryAgendaDayTodo on Todo {
@@ -59,7 +59,7 @@ export function DiaryAgendaDayTodo({
     transition,
   } = useSortable({
     id: sortableId ?? todo.id,
-    data: { todo, date: getVTodoPrincipalDate(todo) },
+    data: { todo, date: getTodoPrincipalDate(todo) },
   });
 
   return (

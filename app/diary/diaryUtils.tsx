@@ -7,14 +7,13 @@ import {
   startOfDay,
 } from "date-fns";
 import type { WithId } from "mongodb";
-import type { Todo } from "../../graphql.generated";
-import type { MongoVEvent, MongoVTodo } from "../../lib";
+import type { Event, Todo } from "../../graphql.generated";
 import type { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
-  | MongoVEvent
+  | Event
   | Todo
   | Awaited<ReturnType<typeof getNextSets>>[number]
   | WithId<WorkoutData & { materializedAt?: Date }>;
@@ -42,8 +41,8 @@ const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
   ]);
 };
 
-export const getVTodoPrincipalDate = (
-  todo: Partial<Pick<MongoVTodo, "completed" | "due" | "start">>,
+export const getTodoPrincipalDate = (
+  todo: Partial<Pick<Todo, "completed" | "due" | "start">>,
 ): Date | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (todo.completed) return todo.completed;
@@ -57,7 +56,7 @@ export const getJournalEntryPrincipalDate = (
 ): Date | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if ("__typename" in entry && entry.__typename === "Todo") {
-    return getVTodoPrincipalDate(entry);
+    return getTodoPrincipalDate(entry);
   }
   if ("start" in entry && entry.start) return entry.start;
   if ("scheduleEntry" in entry && entry.scheduleEntry) {

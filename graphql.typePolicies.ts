@@ -3,21 +3,18 @@ import { TypePolicies } from "@apollo/client";
 export const typePolicies: TypePolicies = {
   Todo: {
     fields: {
-      start: {
-        read(start) {
-          return start ? new Date(start) : null;
-        },
-      },
-      due: {
-        read(due) {
-          return due ? new Date(due) : null;
-        },
-      },
-      completed: {
-        read(completed) {
-          return completed ? new Date(completed) : null;
-        },
-      },
+      created: { read: (d) => d && new Date(d) },
+      start: { read: (d) => (d ? new Date(d) : null) },
+      due: { read: (d) => (d ? new Date(d) : null) },
+      completed: { read: (d) => (d ? new Date(d) : null) },
+    },
+  },
+  Event: {
+    fields: {
+      created: { read: (d) => d && new Date(d) },
+      start: { read: (d) => (d ? new Date(d) : null) },
+      end: { read: (d) => (d ? new Date(d) : null) },
+      due: { read: (d) => (d ? new Date(d) : null) },
     },
   },
 };

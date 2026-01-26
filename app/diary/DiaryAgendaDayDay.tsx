@@ -24,7 +24,7 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
-import type { MongoVEvent } from "../../lib";
+import { Event } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
 import {
@@ -131,7 +131,7 @@ export function DiaryAgendaDayDay({
 
     if (shouldPutNowDivider && isToday) putNowDivider();
 
-    if ("type" in journalEntry && journalEntry.type === "VEVENT") {
+    if ("__typename" in journalEntry && journalEntry.__typename === "Event") {
       const event = journalEntry;
       const isPassed = isBefore(event.end, now);
       const isAllDayEvent =
@@ -140,7 +140,7 @@ export function DiaryAgendaDayDay({
 
       if (isAllDayEvent) {
         dayJournalEntryElements.push({
-          id: event.uid,
+          id: event.id,
           element: (
             <DiaryAgendaDayEntry
               icon={faCalendarWeek}
@@ -148,20 +148,18 @@ export function DiaryAgendaDayDay({
                 start: event.start,
                 end: event.end,
               })}
-              key={event.uid}
+              key={event.id}
             >
               {(() => {
                 const eventStart =
                   event.datetype === "date"
                     ? roundToNearestDay(event.start, {
-                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                        in: tz(DEFAULT_TIMEZONE),
                       })
                     : event.start;
                 const eventEnd =
                   event.datetype === "date"
-                    ? roundToNearestDay(event.end, {
-                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                      })
+                    ? roundToNearestDay(event.end, { in: tz(DEFAULT_TIMEZONE) })
                     : event.end;
 
                 const dayNo = differenceInDays(dayDate, eventStart) + 1;
@@ -214,10 +212,10 @@ export function DiaryAgendaDayDay({
         });
       } else {
         dayJournalEntryElements.push({
-          id: event.uid,
+          id: event.id,
           element: (
             <DiaryAgendaDayEntry
-              key={event.uid}
+              key={event.id}
               icon={
                 isAllDayEvent
                   ? faCalendarWeek
@@ -388,7 +386,7 @@ export function DiaryAgendaDayDay({
     getIsJournalEntryPassed(je),
   );
 
-  function renderOnDayEvent(event: MongoVEvent) {
+  function renderOnDayEvent(event: Event) {
     const duration = intervalToDuration({
       start: event.start,
       end: roundToNearestMinutes(event.end, {
@@ -402,7 +400,7 @@ export function DiaryAgendaDayDay({
     const isLastDay = dayNo === days;
 
     return (
-      <div key={event.uid} className="flex gap-1.5">
+      <div key={event.id} className="flex gap-1.5">
         <div className="text-center">
           <div className="leading-snug font-semibold tabular-nums">
             {event.datetype === "date-time" && dayNo <= 1 ? (

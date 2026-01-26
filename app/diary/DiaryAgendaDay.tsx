@@ -20,16 +20,15 @@ import type { Session } from "next-auth";
 import { query } from "../../ApolloClient";
 import {
   DiaryAgendaDayUserTodosQuery,
+  Event,
   type Todo,
 } from "../../graphql.generated";
-import type { MongoVEvent } from "../../lib";
 import { Locations } from "../../models/location.server";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
 import {
   getNextSets,
   MaterializedWorkoutsView,
 } from "../../models/workout.server";
-import { getUserIcalEventsBetween } from "../../sources/ical";
 import {
   dateToString,
   dayStartHour,
@@ -56,14 +55,8 @@ export async function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const [
-    calendarEvents = [],
-    calendarTodos = [],
-    nextSets = [],
-    workouts = [],
-  ] = user
+  const [userData, nextSets = [], workouts = []] = user
     ? await Promise.all([
-        getUserIcalEventsBetween(user.id, fetchingInterval),
         query<DiaryAgendaDayUserTodosQuery>({
           query: gql`
             query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
@@ -76,12 +69,26 @@ export async function DiaryAgendaDay({
                   start
                   due
                   completed
+                  order
+                }
+                events(interval: $interval) {
+                  id
+                  created
+                  summary
+                  start
+                  end
+                  datetype
+                  location
+                  order
                 }
               }
             }
           `,
           variables: { interval: fetchingInterval },
-        }).then((res) => res.data?.user?.todos || []),
+        }).then((res) => ({
+          calendarTodos: res.data?.user?.todos || [],
+          calendarEvents: res.data?.user?.events || [],
+        })),
         getNextSets({ user, to: fetchingInterval.end }),
 
         MaterializedWorkoutsView.find(
@@ -108,9 +115,9 @@ export async function DiaryAgendaDay({
       ])
     : [];
 
-  console.log({ calendarTodos });
+  const { calendarEvents = [], calendarTodos = [] } = userData || {};
 
-  const eventsByDate: Record<string, MongoVEvent[]> = {};
+  const eventsByDate: Record<string, Event[]> = {};
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<
     string,
@@ -150,7 +157,7 @@ export async function DiaryAgendaDay({
                 [
                   "datetype" in event && event.datetype === "date"
                     ? roundToNearestDay(event.start, {
-                        in: tz(event.start.tz || DEFAULT_TIMEZONE),
+                        in: tz(DEFAULT_TIMEZONE),
                       })
                     : null,
 
@@ -172,7 +179,7 @@ export async function DiaryAgendaDay({
                 [
                   "datetype" in event && event.datetype === "date"
                     ? roundToNearestDay(event.end, {
-                        in: tz(event.end.tz || DEFAULT_TIMEZONE),
+                        in: tz(DEFAULT_TIMEZONE),
                       })
                     : null,
                   "completed" in event ? event.completed : null,
@@ -204,6 +211,7 @@ export async function DiaryAgendaDay({
       }
 
       if (!eventsByDate[calName]) eventsByDate[calName] = [];
+      if (eventsByDate[calName].includes(event)) continue;
       eventsByDate[calName].push(event);
     }
   }
@@ -304,13 +312,13 @@ export async function DiaryAgendaDay({
                   })
                   .sort((a, b) =>
                     compareAsc(
-                      "type" in a &&
-                        a.type === "VEVENT" &&
+                      "__typename" in a &&
+                        a.__typename === "Event" &&
                         a.datetype === "date"
                         ? 1
                         : getJournalEntryPrincipalDate(a) || new Date(0),
-                      "type" in b &&
-                        b.type === "VEVENT" &&
+                      "__typename" in b &&
+                        b.__typename === "Event" &&
                         b.datetype === "date"
                         ? 1
                         : getJournalEntryPrincipalDate(b) || new Date(0),

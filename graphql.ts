@@ -14,7 +14,10 @@ import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { WorkoutSource } from "./models/workout";
-import { getUserIcalTodosBetween } from "./sources/ical";
+import {
+  getUserIcalEventsBetween,
+  getUserIcalTodosBetween,
+} from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { pick } from "./utils";
 
@@ -98,11 +101,16 @@ export const resolvers: Resolvers = {
 
       return (
         await getUserIcalTodosBetween(user.id, args.interval ?? undefined)
-      ).map((todo) => ({
-        ...todo,
-        id: todo.uid,
-        __typename: "Todo",
-      }));
+      ).map((todo) => ({ ...todo, id: todo.uid, __typename: "Todo" }));
+    },
+    events: async (_parent, args) => {
+      const user = (await auth())?.user;
+
+      if (!user) return [];
+
+      return (await getUserIcalEventsBetween(user.id, args.interval)).map(
+        (event) => ({ ...event, id: event.uid, __typename: "Event" }),
+      );
     },
   },
   Mutation: {
@@ -292,6 +300,7 @@ export const typeDefs = gql`
     emailVerified: Boolean!
     timeZone: String
     todos(interval: IntervalInput): [Todo!]
+    events(interval: IntervalInput!): [Event!]
     # exerciseSchedules: [ExerciseSchedule!]
     # dataSources: [UserDataSource!]
   }
@@ -303,6 +312,19 @@ export const typeDefs = gql`
     start: Date
     due: Date
     completed: Date
+    order: Int
+  }
+
+  type Event {
+    id: ID!
+    created: Date
+    summary: String
+    start: Date!
+    end: Date!
+    due: Date
+    datetype: String!
+    location: String
+    order: Int
   }
 `;
 
