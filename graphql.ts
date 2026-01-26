@@ -1,8 +1,8 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import * as Ably from "ably";
 import { isValid } from "date-fns";
 import { DocumentNode, GraphQLScalarType, Kind, print } from "graphql";
 import gql from "graphql-tag";
+import PartySocket from "partysocket";
 import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
@@ -19,12 +19,18 @@ const emitGraphQLUpdate = async (
     data: graphQlResponse.data,
   });
 
-  const realtimeClient = new Ably.Realtime({ key: process.env.ABLY_API_KEY });
-
-  await realtimeClient.connection.once("connected");
-  const channel = realtimeClient.channels.get("GraphQL:" + userId);
-  await channel.publish({ data: message });
-  realtimeClient.close();
+  new Promise((y, n) => {
+    const socket = new PartySocket({
+      host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+      room: "GraphQL:" + userId,
+    });
+    socket.onopen = () => {
+      socket.send(message);
+      socket.close();
+      y(undefined);
+    };
+    socket.onerror = (err) => n(err);
+  });
 };
 
 const dateScalar = new GraphQLScalarType({
