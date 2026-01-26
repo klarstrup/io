@@ -10,7 +10,7 @@ import { getUserIcalTodosBetween } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { pick } from "./utils";
 
-const emitGraphQLUpdate = (
+const emitGraphQLUpdate = async (
   userId: string,
   graphQlResponse: { fragment: DocumentNode; data: unknown },
 ) => {
@@ -19,14 +19,12 @@ const emitGraphQLUpdate = (
     data: graphQlResponse.data,
   });
 
-  (async () => {
-    const realtimeClient = new Ably.Realtime({ key: process.env.ABLY_API_KEY });
+  const realtimeClient = new Ably.Realtime({ key: process.env.ABLY_API_KEY });
 
-    await realtimeClient.connection.once("connected");
-    const channel = realtimeClient.channels.get("GraphQL:" + userId);
-    await channel.publish({ data: message });
-    realtimeClient.close();
-  })();
+  await realtimeClient.connection.once("connected");
+  const channel = realtimeClient.channels.get("GraphQL:" + userId);
+  await channel.publish({ data: message });
+  realtimeClient.close();
 };
 
 const dateScalar = new GraphQLScalarType({
@@ -132,7 +130,7 @@ export const resolvers: Resolvers = {
       try {
         return result;
       } finally {
-        emitGraphQLUpdate(user.id, {
+        await emitGraphQLUpdate(user.id, {
           fragment: gql`
             fragment UpdatedTodo on Todo {
               id
@@ -160,7 +158,7 @@ export const resolvers: Resolvers = {
       try {
         return args.id;
       } finally {
-        emitGraphQLUpdate(user.id, {
+        await emitGraphQLUpdate(user.id, {
           fragment: gql`
             fragment DeletedTodo on Todo {
               id
