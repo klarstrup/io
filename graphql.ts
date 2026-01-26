@@ -2,6 +2,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { isValid } from "date-fns";
 import { DocumentNode, GraphQLScalarType, Kind, print } from "graphql";
 import gql from "graphql-tag";
+import PartySocket from "partysocket";
 import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
@@ -13,16 +14,15 @@ const emitGraphQLUpdate = (
   userId: string,
   graphQlResponse: { fragment: DocumentNode; data: unknown },
 ) => {
-  fetch(
-    `https://${process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999"}/parties/main/${"GraphQL:" + userId}`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        fragment: print(graphQlResponse.fragment),
-        data: graphQlResponse.data,
-      }),
-      headers: { "Content-Type": "application/json" },
-    },
+  new PartySocket({
+    // id: process.env.VERCEL_DEPLOYMENT_ID,
+    host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+    room: "GraphQL:" + userId,
+  }).send(
+    JSON.stringify({
+      fragment: print(graphQlResponse.fragment),
+      data: graphQlResponse.data,
+    }),
   );
 };
 
