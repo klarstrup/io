@@ -21,6 +21,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
       createTodo(input: $input) {
         todo {
           id
+          created
           summary
           start
           due

@@ -141,6 +141,7 @@ export const resolvers: Resolvers = {
           fragment: gql`
             fragment NewTodo on Todo {
               id
+              created
               summary
               start
               due
@@ -197,6 +198,7 @@ export const resolvers: Resolvers = {
           fragment: gql`
             fragment UpdatedTodo on Todo {
               id
+              created
               summary
               start
               due
@@ -287,6 +289,7 @@ export const typeDefs = gql`
 
   type Todo {
     id: ID!
+    created: Date
     summary: String
     start: Date
     due: Date

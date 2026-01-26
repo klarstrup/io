@@ -99,6 +99,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         updateTodo(input: $input) {
           todo {
             id
+            created
             start
             due
             completed
