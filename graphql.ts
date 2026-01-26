@@ -1,7 +1,8 @@
+import { tz } from "@date-fns/tz";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
 import { ObjectId } from "bson";
-import { isValid } from "date-fns";
+import { isValid, startOfDay } from "date-fns";
 import {
   DocumentNode,
   GraphQLScalarType,
@@ -14,12 +15,13 @@ import { auth } from "./auth";
 import type { Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { WorkoutSource } from "./models/workout";
+import { MaterializedWorkoutsView } from "./models/workout.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
 } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
-import { pick } from "./utils";
+import { pick, rangeToQuery } from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -111,6 +113,56 @@ export const resolvers: Resolvers = {
       return (await getUserIcalEventsBetween(user.id, args.interval)).map(
         (event) => ({ ...event, id: event.uid, __typename: "Event" }),
       );
+    },
+    workouts: async (_parent, args) => {
+      const user = (await auth())?.user;
+
+      if (!user) return [];
+
+      return (
+        await MaterializedWorkoutsView.find(
+          {
+            userId: user.id,
+            $or: [
+              {
+                workedOutAt: rangeToQuery(
+                  args.interval.start,
+                  args.interval.end,
+                ),
+              },
+              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+              {
+                workedOutAt: startOfDay(args.interval.start, { in: tz("UTC") }),
+              },
+            ],
+            deletedAt: { $exists: false },
+          },
+          { sort: { workedOutAt: -1 } },
+        ).toArray()
+      ).map((workout) => ({
+        ...workout,
+        exercises: workout.exercises.map((exercise) => ({
+          ...exercise,
+          __typename: "WorkoutExercise",
+          sets: exercise.sets.map((set) => ({
+            ...set,
+            __typename: "WorkoutSet",
+            inputs: set.inputs.map((input) => ({
+              ...input,
+              __typename: "WorkoutSetInput",
+            })),
+            meta:
+              set.meta &&
+              Object.entries(set.meta || {}).map(([key, value]) => ({
+                key,
+                value: String(value),
+                __typename: "WorkoutSetMeta",
+              })),
+          })),
+        })),
+        id: workout._id.toString(),
+        __typename: "Workout",
+      }));
     },
   },
   Mutation: {
@@ -301,6 +353,7 @@ export const typeDefs = gql`
     timeZone: String
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
+    workouts(interval: IntervalInput!): [Workout!]
     # exerciseSchedules: [ExerciseSchedule!]
     # dataSources: [UserDataSource!]
   }
@@ -325,6 +378,44 @@ export const typeDefs = gql`
     datetype: String!
     location: String
     order: Int
+  }
+
+  type Workout {
+    id: ID!
+    workedOutAt: Date!
+    materializedAt: Date
+    createdAt: Date!
+    updatedAt: Date!
+    locationId: String
+    source: String
+    exercises: [WorkoutExercise!]!
+  }
+
+  type WorkoutExercise {
+    exerciseId: Int!
+    sets: [WorkoutSet!]!
+    displayName: String
+    comment: String
+  }
+
+  type WorkoutSet {
+    createdAt: Date
+    updatedAt: Date
+    inputs: [WorkoutSetInput!]!
+    meta: [WorkoutSetMeta!]
+    comment: String
+  }
+
+  type WorkoutSetMeta {
+    key: String!
+    value: String!
+  }
+
+  type WorkoutSetInput {
+    unit: String
+    value: Float
+    # "weighted" or "assisted"
+    assistType: String
   }
 `;
 

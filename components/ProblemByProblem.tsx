@@ -1,5 +1,6 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
+import { Workout, WorkoutSet } from "../graphql.generated";
 import { PP } from "../lib";
 import { exercises, SendType } from "../models/exercises";
 import type { LocationData } from "../models/location";
@@ -13,7 +14,7 @@ import { colorNameToHTMLColor, countBy } from "../utils";
 interface ProblemBadgeProps extends SVGProps<SVGSVGElement> {
   title?: string;
   grade?: string;
-  angle?: number;
+  angle?: number | null;
   circuitName?: string;
   attemptCount?: number | null;
 }
@@ -76,7 +77,7 @@ const CircuitText = ({ circuitName }: { circuitName: string }) => (
   </text>
 );
 
-const AngleText = ({ angle }: { angle: number }) => (
+const AngleText = ({ angle }: { angle: number | null }) => (
   <text
     y="25"
     x="24"
@@ -88,7 +89,7 @@ const AngleText = ({ angle }: { angle: number }) => (
     paintOrder="stroke"
     strokeWidth="3px"
   >
-    {angle}°
+    {angle !== null ? `${angle}°` : ""}
   </text>
 );
 
@@ -122,7 +123,7 @@ const FlashBadge = ({
       ⚡️
     </text>
     <AttemptBlibs attemptCount={attemptCount} />
-    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {typeof angle === "number" ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <CircuitText circuitName={circuitName} />
     ) : grade ? (
@@ -150,7 +151,7 @@ const TopBadge = ({
       strokeWidth="8"
     ></rect>
     <AttemptBlibs attemptCount={attemptCount} />
-    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {typeof angle === "number" ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <CircuitText circuitName={circuitName} />
     ) : grade ? (
@@ -184,7 +185,7 @@ const ZoneBadge = ({
       height="60"
     ></rect>
     <AttemptBlibs attemptCount={attemptCount} />
-    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {typeof angle === "number" ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <CircuitText circuitName={circuitName} />
     ) : grade ? (
@@ -212,7 +213,7 @@ const AttemptBadge = ({
       strokeWidth="8"
     ></rect>
     <AttemptBlibs attemptCount={attemptCount} />
-    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {typeof angle === "number" ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <CircuitText circuitName={circuitName} />
     ) : grade ? (
@@ -251,7 +252,7 @@ const RepeatBadge = ({
     >
       🔁
     </text>
-    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {typeof angle === "number" ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <CircuitText circuitName={circuitName} />
     ) : grade ? (
@@ -280,7 +281,7 @@ const NoAttemptBadge = ({
       strokeWidth="8"
     ></rect>
     <AttemptBlibs attemptCount={attemptCount} />
-    {angle !== undefined ? <AngleText angle={angle} /> : null}
+    {typeof angle === "number" ? <AngleText angle={angle} /> : null}
     {circuitName ? (
       <CircuitText circuitName={circuitName} />
     ) : grade ? (
@@ -370,16 +371,19 @@ const boulderingExercise = exercises.find(({ id }) => id === 2001)!;
 const colorOptions = boulderingExercise.inputs[1]!.options!;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
-    WorkoutExerciseSet,
+    WorkoutExerciseSet | WorkoutSet,
     LocationData | undefined,
-    workout: WorkoutData | undefined,
+    workout: WorkoutData | Workout | undefined,
   ])[],
 ): PP[] =>
   setsWithLocations.map(([set, location], i) => {
     const sendType = Number(set.inputs[2]!.value) as SendType;
 
     const circuit = location?.boulderCircuits?.find(
-      (c) => c.id === set.meta?.boulderCircuitId,
+      (c) =>
+        set.meta &&
+        "boulderCircuitId" in set.meta &&
+        c.id === set.meta.boulderCircuitId,
     );
 
     return {
@@ -387,15 +391,21 @@ export const exerciseSetsToProblemByProblem = (
       circuit,
       estGrade: getSetGrade(set, location),
       // hold color
-      color: colorOptions?.[set.inputs[1]!.value]?.value ?? "",
+      color: colorOptions?.[set.inputs[1]!.value!]?.value ?? "",
       flash: sendType === SendType.Flash,
       top: sendType === SendType.Top,
       zone: sendType === SendType.Zone,
       attempt: sendType === SendType.Attempt,
-      attemptCount: set.meta?.attemptCount as number | undefined,
+      attemptCount:
+        set.meta && "attemptCount" in set.meta
+          ? (set.meta.attemptCount as number | undefined)
+          : undefined,
       repeat: sendType === SendType.Repeat,
       number: String(i + 1),
-      name: set.meta?.boulderName as string | undefined,
+      name:
+        set.meta && "boulderName" in set.meta
+          ? (set.meta.boulderName as string | undefined)
+          : undefined,
       angle: set.inputs[3]?.value,
     };
   });

@@ -6,6 +6,7 @@ import ProblemByProblem, {
   exerciseSetsToProblemByProblem,
 } from "../../components/ProblemByProblem";
 import Grade from "../../grades";
+import { Workout, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { type ExerciseData, exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
@@ -54,9 +55,9 @@ export function WorkoutEntryExercise({
 }: {
   exercise: ExerciseData;
   setsWithLocations: (readonly [
-    WorkoutExerciseSet,
+    WorkoutExerciseSet | WorkoutSet,
     LocationData | undefined,
-    workout: WorkoutData | undefined,
+    workout: WorkoutData | Workout | undefined,
   ])[];
   exerciseIndex?: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
@@ -66,7 +67,7 @@ export function WorkoutEntryExercise({
 
   if (isClimbingExercise(exercise.id)) {
     if (averageGrade) {
-      const values = sets.map((set) => set.inputs[0]!.value);
+      const values = sets.map((set) => set.inputs[0]!.value).filter(Boolean);
       if (values.filter((value) => value).length) {
         return new Grade(
           average(desc(values).slice(0, Math.floor(values.length / 5) + 1)) ||
@@ -81,7 +82,9 @@ export function WorkoutEntryExercise({
         groupByGradeAndFlash={setsWithLocations.every(([set, location]) =>
           getSetGrade(set, location),
         )}
-        groupByColorAndFlash={sets.every((set) => set.inputs[1]!.value > -1)}
+        groupByColorAndFlash={sets.every(
+          (set) => set.inputs[1]!.value && set.inputs[1]!.value > -1,
+        )}
         problemByProblem={exerciseSetsToProblemByProblem(setsWithLocations)}
       />
     );
@@ -335,8 +338,8 @@ export default async function WorkoutEntry({
   );
 }
 const isEquivalentSet = (
-  setA: WorkoutExerciseSet,
-  setB: WorkoutExerciseSet,
+  setA: WorkoutExerciseSet | WorkoutSet,
+  setB: WorkoutExerciseSet | WorkoutSet,
 ) => {
   for (const [index, aInput] of Object.entries(setA.inputs)) {
     const bInput = setB.inputs[index] as WorkoutExerciseSetInput;

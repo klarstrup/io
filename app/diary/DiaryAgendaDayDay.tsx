@@ -24,14 +24,10 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
-import { Event } from "../../graphql.generated";
+import { Event, Workout, WorkoutSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
-import {
-  isClimbingExercise,
-  type WorkoutData,
-  WorkoutSource,
-} from "../../models/workout";
+import { isClimbingExercise, WorkoutSource } from "../../models/workout";
 import { calculateClimbingStats } from "../../models/workout.server";
 import {
   cotemporality,
@@ -257,9 +253,12 @@ export function DiaryAgendaDayDay({
             dueSet={dueSet}
             date={dayDate}
             workouts={dayJournalEntries
-              .filter((jE): jE is WithId<WorkoutData> => "exercises" in jE)
+              .filter(
+                (jE): jE is Workout =>
+                  "__typename" in jE && jE.__typename === "Workout",
+              )
               .filter((w) => w.source === WorkoutSource.Self)
-              .map((d) => ({ ...d, _id: d._id.toString() }))}
+              .map((d) => ({ ...d, _id: d.id.toString() }))}
             locations={dayLocations.map(({ _id, ...d }) => ({
               ...d,
               id: _id.toString(),
@@ -267,10 +266,11 @@ export function DiaryAgendaDayDay({
           />
         ),
       });
-    } else if ("exercises" in journalEntry) {
-      const workout = journalEntry as WithId<
-        WorkoutData & { materializedAt?: Date }
-      >;
+    } else if (
+      "__typename" in journalEntry &&
+      journalEntry.__typename === "Workout"
+    ) {
+      const workout = journalEntry;
 
       const mostRecentWorkout = workout;
       const workoutDateStr =
@@ -285,16 +285,24 @@ export function DiaryAgendaDayDay({
           const location = dayLocations.find(
             (loc) => String(loc._id) === setLocationId,
           );
-          return [set, location, workout] as const;
+          return [
+            {
+              ...set,
+              meta: (set.meta?.reduce((acc, curr) => {
+                acc[curr.key] = curr.value;
+                return acc;
+              }, {}) || {}) as WorkoutSet["meta"],
+            },
+            location,
+            workout,
+          ] as const;
         });
 
         dayJournalEntryElements.push({
-          id: String(workout._id) + "-" + String(workoutExercise.exerciseId),
+          id: workout.id + "-" + String(workoutExercise.exerciseId),
           element: (
             <DiaryAgendaDayEntry
-              key={
-                String(workout._id) + "-" + String(workoutExercise.exerciseId)
-              }
+              key={workout.id + "-" + String(workoutExercise.exerciseId)}
               icon={faDumbbell}
               cotemporality={cotemporality({
                 start: min([

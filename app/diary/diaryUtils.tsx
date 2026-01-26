@@ -6,8 +6,7 @@ import {
   max,
   startOfDay,
 } from "date-fns";
-import type { WithId } from "mongodb";
-import type { Event, Todo } from "../../graphql.generated";
+import type { Event, Todo, Workout } from "../../graphql.generated";
 import type { WorkoutData } from "../../models/workout";
 import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
@@ -16,9 +15,11 @@ export type JournalEntry =
   | Event
   | Todo
   | Awaited<ReturnType<typeof getNextSets>>[number]
-  | WithId<WorkoutData & { materializedAt?: Date }>;
+  | Workout;
 
-const getWorkoutPrincipalDate = (workout: WorkoutData): Date | null => {
+const getWorkoutPrincipalDate = (
+  workout: WorkoutData | Workout,
+): Date | null => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
     start: addHours(

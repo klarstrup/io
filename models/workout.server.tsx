@@ -1,16 +1,9 @@
 /* eslint-disable no-unexpected-multiline */
-import {
-  addMilliseconds,
-  eachMonthOfInterval,
-  endOfMonth,
-  startOfMonth,
-  subDays,
-  subMonths,
-  subYears,
-} from "date-fns";
+import { addMilliseconds, subDays, subMonths, subYears } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Grade from "../grades";
+import { Workout, WorkoutSet } from "../graphql.generated";
 import type { PRType } from "../lib";
 import { ExerciseSchedule } from "../sources/fitocracy";
 import { epoch } from "../utils";
@@ -487,102 +480,6 @@ export const getAllWorkoutExercises = async (user: Session["user"]) => {
   );
 };
 
-export async function calculateFlashRateByMonth(userId: string, now: Date) {
-  const months = eachMonthOfInterval({
-    start: startOfMonth(subYears(now, 2)),
-    end: endOfMonth(now),
-  });
-
-  const flashRateByMonth: unknown[] = [];
-  for (const month of months) {
-    const monthKey = month.toISOString().slice(0, 7); // YYYY-MM
-
-    await MaterializedWorkoutsView.createIndexes([
-      { key: { "exercises.exerciseId": 1, userId: 1, workedOutAt: -1 } },
-    ]);
-    const workout = await MaterializedWorkoutsView.aggregate<{
-      workedOutAt: Date;
-      exercise: WorkoutExercise;
-      location: LocationData;
-    }>([
-      {
-        $match: {
-          userId,
-          "exercises.exerciseId": 2001,
-          workedOutAt: { $gte: startOfMonth(month), $lt: endOfMonth(month) },
-          deletedAt: { $exists: false },
-        },
-      },
-      { $sort: { workedOutAt: -1 } },
-      { $addFields: { locationId: { $toObjectId: "$locationId" } } },
-      {
-        $lookup: {
-          from: "locations",
-          localField: "locationId",
-          foreignField: "_id",
-          as: "location",
-        },
-      },
-      { $set: { location: { $first: "$location" } } },
-      {
-        $project: {
-          _id: 0,
-          location: 1,
-          workedOutAt: 1,
-          exercise: {
-            $first: {
-              $filter: {
-                input: "$exercises",
-                as: "exercise",
-                cond: { $eq: ["$$exercise.exerciseId", 2001] },
-              },
-            },
-          },
-        },
-      },
-    ]).toArray();
-
-    const gradePredicate = (
-      set: WorkoutExerciseSet & { location: LocationData },
-    ) => {
-      const inputGrade = getSetGrade(set, set.location);
-      if (inputGrade) return inputGrade >= 6.67;
-    };
-
-    const sets = workout
-      .flatMap((w) =>
-        (w.exercise.sets || []).map((set) => ({
-          ...set,
-          location: w.location,
-        })),
-      )
-      .filter(gradePredicate);
-
-    const sendSets = sets.filter(
-      (set) =>
-        set.inputs[2]?.value === SendType.Flash ||
-        set.inputs[2]?.value === SendType.Top,
-    );
-    const flashSets = sendSets.filter(
-      (set) => set.inputs[2]?.value === SendType.Flash,
-    );
-
-    flashRateByMonth.push({
-      month: monthKey,
-      totalSets: sets.length,
-      sendSets: sendSets.length,
-      flashSets: flashSets.length,
-      flashRate: (flashSets.length / sendSets.length).toLocaleString("en-US", {
-        style: "percent",
-      }),
-    });
-  }
-
-  console.table(flashRateByMonth);
-}
-
-//  void calculateFlashRateByMonth("65a85e2c9a437530d3de2e35", new Date());
-
 const flashGradeRateThreshold = 0.8;
 export const calculateFlashGradeOn = async (
   locations: WithId<LocationData>[],
@@ -748,9 +645,9 @@ export const calculate60dayTop10AverageAttemptGrade = (
 
 export async function calculateClimbingStats(
   setAndLocationPairs: (readonly [
-    set: WorkoutExerciseSet,
+    set: WorkoutExerciseSet | WorkoutSet,
     location: LocationData | undefined,
-    workout: WorkoutData | undefined,
+    workout: WorkoutData | Workout | undefined,
   ])[],
   userId?: string,
   on?: Date,
@@ -774,10 +671,6 @@ export async function calculateClimbingStats(
       .reduce((sum, grade) => sum + grade, 0) /
     Math.min(5, successfulSetAndLocationPairs.length);
 
-  const locations = await Locations.find({ userId }).toArray();
-  const flashGrade =
-    userId && on ? await calculateFlashGradeOn(locations, userId, on) : null;
-
   return (
     <small className="text-[10px]">
       {problemCount ? (
@@ -800,7 +693,6 @@ export async function calculateClimbingStats(
           </span>
         </span>
       ) : null}
-      {flashGrade ? <span>, 1MFG: {new Grade(flashGrade).name}</span> : null}
     </small>
   );
 }

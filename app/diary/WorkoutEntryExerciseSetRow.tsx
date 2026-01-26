@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import Grade from "../../grades";
+import { WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import {
   AssistType,
@@ -27,7 +28,7 @@ export function WorkoutEntryExerciseSetRow({
   exercise,
   setPR,
 }: {
-  set: WorkoutExerciseSet;
+  set: WorkoutExerciseSet | WorkoutSet;
   repeatCount: number | null;
   exercise: ExerciseData;
   setPR?: Record<PRType, boolean>;

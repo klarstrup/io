@@ -9,6 +9,7 @@ import {
   type Duration,
 } from "date-fns";
 import type { WithId } from "mongodb";
+import type { WorkoutSet } from "../graphql.generated";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
 import {
   exercisesById,
@@ -181,7 +182,7 @@ export const getGradeOfColorByLocation = (
 ) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
 export function getSetGrade(
-  set: WorkoutExerciseSet,
+  set: WorkoutSet | WorkoutExerciseSet,
   location: LocationData | undefined | null,
 ) {
   const exercise = exercisesById[2001]!;
@@ -191,9 +192,15 @@ export function getSetGrade(
 
   if (!location) return null;
 
-  const boulderingCircuit =
+  const boulderCircuitId =
+    set.meta &&
+    "boulderCircuitId" in set.meta &&
     typeof set.meta?.boulderCircuitId === "string" &&
-    location.boulderCircuits?.find((c) => c.id === set.meta?.boulderCircuitId);
+    set.meta?.boulderCircuitId;
+
+  const boulderingCircuit =
+    boulderCircuitId &&
+    location.boulderCircuits?.find((c) => c.id === boulderCircuitId);
   if (boulderingCircuit) {
     return boulderingCircuit.gradeEstimate || null;
   }
@@ -201,7 +208,7 @@ export function getSetGrade(
   const colorOptions = exercise.inputs[1]?.options;
   if (!colorOptions) return null;
 
-  const color = colorOptions?.[set.inputs[1]!.value]?.value;
+  const color = colorOptions?.[set.inputs[1]!.value!]?.value;
   if (!color) return null;
 
   const colorGrade = getGradeOfColorByLocation(color, location);

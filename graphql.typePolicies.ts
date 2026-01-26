@@ -17,4 +17,18 @@ export const typePolicies: TypePolicies = {
       due: { read: (d) => (d ? new Date(d) : null) },
     },
   },
+  Workout: {
+    fields: {
+      workedOutAt: { read: (d) => d && new Date(d) },
+      createdAt: { read: (d) => d && new Date(d) },
+      updatedAt: { read: (d) => d && new Date(d) },
+      materializedAt: { read: (d) => d && new Date(d) },
+    },
+  },
+  WorkoutSet: {
+    fields: {
+      createdAt: { read: (d) => d && new Date(d) },
+      updatedAt: { read: (d) => d && new Date(d) },
+    },
+  },
 };

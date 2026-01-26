@@ -55,7 +55,7 @@ export async function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const [userData, nextSets = [], workouts = []] = user
+  const [userData, nextSets = []] = user
     ? await Promise.all([
         query<DiaryAgendaDayUserTodosQuery>({
           query: gql`
@@ -81,6 +81,34 @@ export async function DiaryAgendaDay({
                   location
                   order
                 }
+                workouts(interval: $interval) {
+                  id
+                  createdAt
+                  updatedAt
+                  workedOutAt
+                  materializedAt
+                  locationId
+                  source
+                  exercises {
+                    exerciseId
+                    displayName
+                    comment
+                    sets {
+                      comment
+                      createdAt
+                      updatedAt
+                      inputs {
+                        unit
+                        value
+                        assistType
+                      }
+                      meta {
+                        key
+                        value
+                      }
+                    }
+                  }
+                }
               }
             }
           `,
@@ -88,34 +116,19 @@ export async function DiaryAgendaDay({
         }).then((res) => ({
           calendarTodos: res.data?.user?.todos || [],
           calendarEvents: res.data?.user?.events || [],
+          workouts: res.data?.user?.workouts || [],
         })),
         getNextSets({ user, to: fetchingInterval.end }),
-
-        MaterializedWorkoutsView.find(
-          {
-            userId: user.id,
-            $or: [
-              {
-                workedOutAt: rangeToQuery(
-                  fetchingInterval.start,
-                  fetchingInterval.end,
-                ),
-              },
-              {
-                // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-                workedOutAt: startOfDay(fetchingInterval.start, {
-                  in: tz("UTC"),
-                }),
-              },
-            ],
-            deletedAt: { $exists: false },
-          },
-          { sort: { workedOutAt: -1 } },
-        ).toArray(),
       ])
     : [];
 
-  const { calendarEvents = [], calendarTodos = [] } = userData || {};
+  const {
+    calendarEvents = [],
+    calendarTodos = [],
+    workouts = [],
+  } = userData || {};
+
+  console.log({ workouts });
 
   const eventsByDate: Record<string, Event[]> = {};
   const todosByDate: Record<string, Todo[]> = {};
@@ -270,9 +283,12 @@ export async function DiaryAgendaDay({
               : workout.workedOutAt >= dayStart &&
                 workout.workedOutAt <= dayEnd,
           );
+          console.log({ dayName, dayWorkouts });
           const dayWorkoutLocationObjectIds = unique(
             dayWorkouts.map((workout) => workout.locationId),
-          ).map((id) => new ObjectId(id));
+          )
+            .map((id) => id && new ObjectId(id))
+            .filter(Boolean);
           const dayLocations = dayWorkoutLocationObjectIds.length
             ? await Locations.find({
                 _id: { $in: dayWorkoutLocationObjectIds },

@@ -108,7 +108,7 @@ export interface PP {
   flash: boolean;
   repeat: boolean;
   name?: string;
-  angle?: number;
+  angle?: number | null;
   circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
   attemptCount?: number | null;
   estGrade?: number | null;
@@ -134,21 +134,15 @@ export interface IcalIoMeta {
   _io_source: DataSource.ICal | WorkoutSource.Self;
 }
 export interface MongoVEventWithVCalendar
-  extends Omit<VEventWithVCalendar, "recurrences">,
-    ScrapedAt,
-    IcalIoMeta {
+  extends Omit<VEventWithVCalendar, "recurrences">, ScrapedAt, IcalIoMeta {
   recurrences?: Omit<VEvent, "recurrences">[];
 }
 export interface MongoVEvent
-  extends Omit<VEvent, "recurrences">,
-    ScrapedAt,
-    IcalIoMeta {
+  extends Omit<VEvent, "recurrences">, ScrapedAt, IcalIoMeta {
   recurrences?: Omit<VEvent, "recurrences">[];
 }
 export interface MongoVTodo
-  extends Omit<VTodo, "recurrences">,
-    ScrapedAt,
-    IcalIoMeta {
+  extends Omit<VTodo, "recurrences">, ScrapedAt, IcalIoMeta {
   recurrences?: Omit<VTodo, "recurrences">[];
 }
 
@@ -167,33 +161,33 @@ export interface TopLoggerAuthTokens {
 export const isAuthTokens = (obj: unknown): obj is TopLoggerAuthTokens =>
   Boolean(
     obj &&
-      typeof obj === "object" &&
-      "access" in obj &&
-      typeof obj.access === "object" &&
-      obj.access &&
-      "token" in obj.access &&
-      typeof obj.access.token === "string" &&
-      "expiresAt" in obj.access &&
-      typeof obj.access.expiresAt === "string" &&
-      "refresh" in obj &&
-      typeof obj.refresh === "object" &&
-      obj.refresh &&
-      "token" in obj.refresh &&
-      typeof obj.refresh.token === "string" &&
-      "expiresAt" in obj.refresh &&
-      typeof obj.refresh.expiresAt === "string",
+    typeof obj === "object" &&
+    "access" in obj &&
+    typeof obj.access === "object" &&
+    obj.access &&
+    "token" in obj.access &&
+    typeof obj.access.token === "string" &&
+    "expiresAt" in obj.access &&
+    typeof obj.access.expiresAt === "string" &&
+    "refresh" in obj &&
+    typeof obj.refresh === "object" &&
+    obj.refresh &&
+    "token" in obj.refresh &&
+    typeof obj.refresh.token === "string" &&
+    "expiresAt" in obj.refresh &&
+    typeof obj.refresh.expiresAt === "string",
   );
 
 export const isGrippyAuthTokens = (obj: unknown): obj is Grippy.AuthTokens =>
   Boolean(
     obj &&
-      typeof obj === "object" &&
-      "access_token" in obj &&
-      typeof obj.access_token === "string" &&
-      "expires_in" in obj &&
-      typeof obj.expires_in === "number" &&
-      "refresh_token" in obj &&
-      typeof obj.refresh_token === "string",
+    typeof obj === "object" &&
+    "access_token" in obj &&
+    typeof obj.access_token === "string" &&
+    "expires_in" in obj &&
+    typeof obj.expires_in === "number" &&
+    "refresh_token" in obj &&
+    typeof obj.refresh_token === "string",
   );
 
 export enum PRType {
