@@ -95,18 +95,26 @@ export async function* wrapSources<
 
       if (updatedDatabase !== false) {
         try {
-          const socket = new PartySocket({
-            // id: process.env.VERCEL_DEPLOYMENT_ID,
-            host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
-            room: user.id,
+          await new Promise((y, n) => {
+            const socket = new PartySocket({
+              // id: process.env.VERCEL_DEPLOYMENT_ID,
+              host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
+              room: user.id,
+            });
+            socket.onopen = () => {
+              socket.send(
+                JSON.stringify({
+                  source: dataSource.source,
+                  scrapedAt: new Date().valueOf(),
+                }),
+              );
+              socket.close();
+              y(undefined);
+            };
+            socket.onerror = (err) => {
+              n(err);
+            };
           });
-          socket.send(
-            JSON.stringify({
-              source: dataSource.source,
-              scrapedAt: new Date().valueOf(),
-            }),
-          );
-          socket.close();
         } catch (error) {
           console.error(error);
         }
