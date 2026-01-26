@@ -14,7 +14,7 @@ const emitGraphQLUpdate = (
   graphQlResponse: { fragment: DocumentNode; data: unknown },
 ) => {
   fetch(
-    `${process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999"}/party/${"GraphQL:" + userId}`,
+    `https://${process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999"}/party/${"GraphQL:" + userId}`,
     {
       method: "POST",
       body: JSON.stringify({
