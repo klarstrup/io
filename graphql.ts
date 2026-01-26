@@ -54,6 +54,8 @@ const dateScalar = new GraphQLScalarType({
     let date: Date | null = null;
     if (typeof value === "number") date = new Date(value);
     if (typeof value === "string") date = new Date(value);
+    // SchemaLink can pass in a Date object directly
+    if (value instanceof Date) date = value;
 
     if (date && isValid(date)) return date;
 
