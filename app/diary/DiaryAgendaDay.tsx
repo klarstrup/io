@@ -25,15 +25,11 @@ import {
 } from "../../graphql.generated";
 import { Locations } from "../../models/location.server";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
-import {
-  getNextSets,
-  MaterializedWorkoutsView,
-} from "../../models/workout.server";
+import { getNextSets } from "../../models/workout.server";
 import {
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
-  rangeToQuery,
   roundToNearestDay,
   unique,
 } from "../../utils";
