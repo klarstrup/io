@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
 import "./page.css";
+import AblyWrapper from "../AblyWrapper";
 
 export const metadata: Metadata = {
   title: "io input/output",
@@ -17,13 +18,15 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <ApolloWrapper>
-      <html lang="en">
-        <body>
-          <UserStuff />
-          {children}
-          <Analytics />
-        </body>
-      </html>
+      <AblyWrapper>
+        <html lang="en">
+          <body>
+            <UserStuff />
+            {children}
+            <Analytics />
+          </body>
+        </html>
+      </AblyWrapper>
     </ApolloWrapper>
   );
 }
