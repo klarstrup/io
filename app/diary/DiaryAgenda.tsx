@@ -19,11 +19,9 @@ import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
 export function DiaryAgenda({
   date,
   user,
-  isModal,
 }: {
   date: `${number}-${number}-${number}`;
   user?: Session["user"];
-  isModal?: boolean;
 }) {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
