@@ -3,11 +3,11 @@ import Grade from "../grades";
 import { Location, Workout, WorkoutSet } from "../graphql.generated";
 import { PP } from "../lib";
 import { exercises, SendType } from "../models/exercises";
-import type { LocationData } from "../models/location";
 import {
   getSetGrade,
-  WorkoutData,
-  WorkoutExerciseSet,
+  getSetMeta,
+  type WorkoutData,
+  type WorkoutExerciseSet,
 } from "../models/workout";
 import { colorNameToHTMLColor, countBy } from "../utils";
 
@@ -372,18 +372,16 @@ const colorOptions = boulderingExercise.inputs[1]!.options!;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,
-    Location | LocationData | undefined,
+    Location | undefined,
     workout: WorkoutData | Workout | undefined,
   ])[],
 ): PP[] =>
   setsWithLocations.map(([set, location], i) => {
     const sendType = Number(set.inputs[2]!.value) as SendType;
 
+    const boulderCircuitId = getSetMeta(set, "boulderCircuitId");
     const circuit = location?.boulderCircuits?.find(
-      (c) =>
-        set.meta &&
-        "boulderCircuitId" in set.meta &&
-        c.id === set.meta.boulderCircuitId,
+      (c) => c.id === boulderCircuitId,
     );
 
     return {
@@ -392,8 +390,10 @@ export const exerciseSetsToProblemByProblem = (
         ...circuit,
         gradeRange:
           circuit?.gradeRange?.length == 2
-            ? ([circuit.gradeRange[0], circuit.gradeRange[1]] as const)
-            : undefined,
+            ? ([circuit.gradeRange[0]!, circuit.gradeRange[1]!] as const)
+            : circuit?.gradeRange?.length == 1
+              ? ([circuit.gradeRange[0]!, NaN] as const)
+              : undefined,
       },
       estGrade: getSetGrade(set, location),
       // hold color
@@ -403,15 +403,12 @@ export const exerciseSetsToProblemByProblem = (
       zone: sendType === SendType.Zone,
       attempt: sendType === SendType.Attempt,
       attemptCount:
-        set.meta && "attemptCount" in set.meta
-          ? (set.meta.attemptCount as number | undefined)
+        getSetMeta(set, "attemptCount") !== undefined
+          ? Number(getSetMeta(set, "attemptCount"))
           : undefined,
       repeat: sendType === SendType.Repeat,
       number: String(i + 1),
-      name:
-        set.meta && "boulderName" in set.meta
-          ? (set.meta.boulderName as string | undefined)
-          : undefined,
+      name: getSetMeta(set, "boulderName"),
       angle: set.inputs[3]?.value,
     };
   });

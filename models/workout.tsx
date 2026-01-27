@@ -8,11 +8,13 @@ import {
   startOfDay,
 } from "date-fns";
 import type { WithId } from "mongodb";
+import Grade from "../grades";
 import type {
   Location,
   NextSet,
   Workout,
   WorkoutSet,
+  WorkoutSetMeta,
 } from "../graphql.generated";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
@@ -24,7 +26,6 @@ import {
   type Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
-import Grade from "../grades";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -184,9 +185,28 @@ const getGradeOfColorByLocation = (
   location: LocationData | Location,
 ) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
+// Utility to paint over difference in DB and GraphQL representation of set meta
+export const getSetMeta = (
+  set: WorkoutSet | WorkoutExerciseSet,
+  key: string,
+): string | undefined => {
+  if (!set.meta) return undefined;
+
+  if (Array.isArray(set.meta)) {
+    const metaItem = (set.meta as WorkoutSetMeta[]).find((m) => m.key === key);
+    return metaItem?.value as string | undefined;
+  } else {
+    if (key in set.meta) {
+      return set.meta[key] as string;
+    }
+  }
+
+  return undefined;
+};
+
 export function getSetGrade(
   set: WorkoutSet | WorkoutExerciseSet,
-  location: LocationData | Location | undefined | null,
+  location: Location | undefined | null,
 ) {
   const exercise = exercisesById[2001]!;
 
@@ -195,11 +215,7 @@ export function getSetGrade(
 
   if (!location) return null;
 
-  const boulderCircuitId =
-    set.meta &&
-    "boulderCircuitId" in set.meta &&
-    typeof set.meta?.boulderCircuitId === "string" &&
-    set.meta?.boulderCircuitId;
+  const boulderCircuitId = getSetMeta(set, "boulderCircuitId");
 
   const boulderingCircuit =
     boulderCircuitId &&
@@ -225,7 +241,7 @@ export function ClimbingStats({
 }: {
   setAndLocationPairs: (readonly [
     set: WorkoutExerciseSet | WorkoutSet,
-    location: LocationData | Location | undefined,
+    location: Location | undefined,
     workout: WorkoutData | Workout | undefined,
   ])[];
 }) {

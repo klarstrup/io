@@ -20,9 +20,6 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
-import ProblemByProblem, {
-  exerciseSetsToProblemByProblem,
-} from "../../components/ProblemByProblem";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import { useEvent } from "../../hooks";
@@ -371,7 +368,7 @@ export function WorkoutForm<R extends string>({
         })}
         className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
-        <div className="inset-x sticky -top-4 z-20 -mt-2 flex items-center justify-evenly border-b-[1px] bg-white pt-2 pb-2">
+        <div className="inset-x sticky -top-4 z-20 -mt-2 flex items-center justify-evenly border-b bg-white pt-2 pb-2">
           <button type="button" onClick={() => router.push(dismissTo)}>
             ❌
           </button>
@@ -838,20 +835,8 @@ function SetsForm({
             <tr className={index % 2 ? "bg-gray-100" : "bg-gray-300"}>
               <td width="1%">
                 {isClimbingExercise(exercise.id) &&
-                watchedSets[index] &&
-                Math.random() > 1 ? (
-                  <ProblemByProblem
-                    problemByProblem={exerciseSetsToProblemByProblem([
-                      [
-                        watchedSets[index] as WorkoutExerciseSet,
-                        location,
-                        undefined,
-                      ],
-                    ] as const)}
-                  />
-                ) : (
-                  `${index + 1}.`
-                )}
+                  watchedSets[index] &&
+                  `${index + 1}.`}
               </td>
               {boulderCircuits?.length ? (
                 <td width="20%">

@@ -11,47 +11,22 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
-import type { LocationData } from "../../models/location";
-import { ClimbingStats, isClimbingExercise } from "../../models/workout";
-import { dateToString, isNonEmptyArray } from "../../utils";
+import { dateToString } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 
 export async function DiaryEntryWeek({
   user,
   weekDate,
   diaryEntries,
-  locations,
 }: {
   user?: Session["user"];
   weekDate: Date;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
-  locations?: (LocationData & { id: string })[];
 }) {
   const weekInterval = {
     start: startOfISOWeek(weekDate),
     end: endOfISOWeek(weekDate),
   };
-
-  const weekClimbingSets =
-    (locations &&
-      diaryEntries?.flatMap(
-        ([, diaryEntry]) =>
-          diaryEntry?.workouts?.flatMap((w) =>
-            w.exercises
-              .filter((e) => isClimbingExercise(e.exerciseId))
-              .flatMap((e) =>
-                e.sets.map(
-                  (set) =>
-                    [
-                      set,
-                      locations.find((l) => l.id === w.locationId),
-                      w,
-                    ] as const,
-                ),
-              ),
-          ) || [],
-      )) ||
-    [];
 
   return (
     <div
@@ -79,9 +54,6 @@ export async function DiaryEntryWeek({
                 })
               : null}
         </span>
-        {isNonEmptyArray(weekClimbingSets) && (
-          <ClimbingStats setAndLocationPairs={weekClimbingSets} />
-        )}
       </div>
       {eachDayOfInterval(weekInterval).map((dayte) => {
         const dateStr = dateToString(dayte);

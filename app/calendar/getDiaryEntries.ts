@@ -51,14 +51,41 @@ export async function getDiaryEntriesShallow({
             createdAt
             updatedAt
             workedOutAt
-            locationId
+            location {
+              id
+              createdAt
+              updatedAt
+              name
+              userId
+              boulderCircuits {
+                id
+                holdColor
+                gradeEstimate
+                gradeRange
+                name
+                labelColor
+                hasZones
+                description
+                createdAt
+                updatedAt
+              }
+            }
             exercises {
               exerciseId
+              displayName
+              comment
               sets {
+                comment
+                createdAt
+                updatedAt
                 inputs {
-                  value
                   unit
+                  value
                   assistType
+                }
+                meta {
+                  key
+                  value
                 }
               }
             }

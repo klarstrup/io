@@ -378,12 +378,21 @@ export const resolvers: Resolvers = {
     },
   },
   BoulderCircuit: {
+    gradeEstimate: (parent) =>
+      typeof parent.gradeEstimate === "number" &&
+      !Number.isNaN(parent.gradeEstimate)
+        ? parent.gradeEstimate
+        : null,
     gradeRange: (parent) =>
-      parent.gradeRange?.filter((v) => isNaN(v) === false) || null,
+      parent.gradeRange?.map((v) =>
+        typeof v === "number" && !Number.isNaN(v) ? v : null,
+      ) || null,
   },
   WorkoutSetInput: {
     value: (parent) =>
-      isNaN(parent.value as number) ? null : (parent.value ?? null),
+      typeof parent.value === "number" && !Number.isNaN(parent.value)
+        ? parent.value
+        : null,
   },
   ExerciseSchedule: {
     nextSet: async (parent, args, _context) => {
@@ -587,7 +596,7 @@ export const typeDefs = gql`
     holdColorSecondary: String
     labelColor: String
     gradeEstimate: Float
-    gradeRange: [Float!]
+    gradeRange: [Float]
     hasZones: Boolean
   }
 

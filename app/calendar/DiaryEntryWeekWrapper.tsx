@@ -7,11 +7,9 @@ import { DiaryEntryWeek } from "./DiaryEntryWeek";
 export async function DiaryEntryWeekWrapper({
   user,
   weekDate,
-  locations,
 }: {
   user?: Session["user"];
   weekDate: Date;
-  locations?: (LocationData & { id: string })[];
 }) {
   const diaryEntries =
     user &&
@@ -24,7 +22,6 @@ export async function DiaryEntryWeekWrapper({
       user={user}
       weekDate={weekDate}
       diaryEntries={diaryEntries}
-      locations={locations}
     />
   );
 }

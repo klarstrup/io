@@ -2,8 +2,7 @@
 import { addMilliseconds, subDays, subMonths, subYears } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
-import Grade from "../grades";
-import { Location, Workout, WorkoutSet } from "../graphql.generated";
+import type { Location } from "../graphql.generated";
 import type { PRType } from "../lib";
 import { ExerciseSchedule } from "../sources/fitocracy";
 import { epoch } from "../utils";
@@ -479,80 +478,6 @@ export const getAllWorkoutExercises = async (user: Session["user"]) => {
   );
 };
 
-const flashGradeRateThreshold = 0.8;
-export const calculateFlashGradeOn = async (
-  locations: WithId<LocationData>[],
-  userId: string,
-  date: Date,
-) => {
-  const workouts = await MaterializedWorkoutsView.find({
-    userId,
-    "exercises.exerciseId": 2001,
-    workedOutAt: { $lte: date, $gt: subDays(date, 60) },
-    deletedAt: { $exists: false },
-  }).toArray();
-
-  const climbingSets = workouts.flatMap((w) =>
-    w.exercises
-      .filter((e) => isClimbingExercise(e.exerciseId))
-      .flatMap((e) =>
-        e.sets
-          .filter((s) => (s.inputs[2]?.value as SendType) !== SendType.Repeat)
-          .map(
-            (set) =>
-              [
-                set,
-                locations.find((l) => l._id.toString() === w.locationId),
-              ] as const,
-          ),
-      ),
-  );
-
-  if (!climbingSets.length) return null;
-
-  const grades = climbingSets
-    .map(([set, location]) => [set, getSetGrade(set, location)!] as const)
-    .filter(([, grade]) => typeof grade === "number" && grade > 0);
-
-  if (!grades.length) return null;
-
-  const distinctGrades = Array.from(
-    new Set(grades.map(([, grade]) => grade)),
-  ).sort((a, b) => a - b);
-
-  let flashGrade: number | null = null;
-  for (const distinctGrade of distinctGrades) {
-    const lowerGrade =
-      distinctGrades[distinctGrades.indexOf(distinctGrade) - 1] || 0;
-    const upperGrade =
-      distinctGrades[distinctGrades.indexOf(distinctGrade) + 1] || Infinity;
-    const sentSetsInGrade = grades
-      .filter(([, grade]) => grade > lowerGrade && grade < upperGrade)
-      .filter(
-        ([s]) =>
-          (s.inputs[2]?.value as SendType) === SendType.Top ||
-          (s.inputs[2]?.value as SendType) === SendType.Flash,
-      );
-
-    if (!sentSetsInGrade.length) continue;
-    if (sentSetsInGrade.length < 3) continue;
-
-    const flashRate =
-      sentSetsInGrade.filter(
-        ([set]) => (set.inputs[2]?.value as SendType) === SendType.Flash,
-      ).length / sentSetsInGrade.length;
-
-    if (
-      flashRate >= flashGradeRateThreshold &&
-      (!flashGrade || distinctGrade > flashGrade)
-    ) {
-      flashGrade = distinctGrade;
-    }
-  }
-
-  return flashGrade;
-};
-
 export const calculate60dayTop10AverageSendGrade = (
   allBoulderingWorkouts: WithId<WorkoutData>[],
   locations: WithId<LocationData>[],
@@ -573,7 +498,7 @@ export const calculate60dayTop10AverageSendGrade = (
                 (s.inputs[2]?.value as SendType) === SendType.Top ||
                 (s.inputs[2]?.value as SendType) === SendType.Flash,
             )
-            .map((set) => getSetGrade(set, location)),
+            .map((set) => getSetGrade(set, location as unknown as Location)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -601,7 +526,7 @@ export const calculate60dayTop10AverageFlashGrade = (
         .flatMap((e) =>
           e.sets
             .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Flash)
-            .map((set) => getSetGrade(set, location)),
+            .map((set) => getSetGrade(set, location as unknown as Location)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -631,7 +556,7 @@ export const calculate60dayTop10AverageAttemptGrade = (
             .filter(
               (s) => (s.inputs[2]?.value as SendType) === SendType.Attempt,
             )
-            .map((set) => getSetGrade(set, location)),
+            .map((set) => getSetGrade(set, location as unknown as Location)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -669,7 +594,9 @@ export function mergeWorkoutsOfExercise(
               index === 0
                 ? {
                     ...input,
-                    value: input.value ?? getSetGrade(set, location),
+                    value:
+                      input.value ??
+                      getSetGrade(set, location as unknown as Location),
                   }
                 : input,
             ),

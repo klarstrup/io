@@ -3,7 +3,6 @@ import { eachWeekOfInterval, endOfISOWeek, isAfter, subWeeks } from "date-fns";
 import { Suspense } from "react";
 import { auth } from "../../auth";
 import LoadMore from "../../components/LoadMore";
-import { Locations } from "../../models/location.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryPoller } from "../diary/DiaryPoller";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
@@ -26,17 +25,10 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 
   if (isAtLimit) return [null, null] as const;
 
-  const locations =
-    user &&
-    (await Locations.find({ userId: user.id }).toArray()).map(
-      ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
-    );
-
   return [
     eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map((weekDate) => (
       <DiaryEntryWeekWrapper
         user={user}
-        locations={locations}
         key={String(weekDate)}
         weekDate={weekDate}
       />
@@ -47,12 +39,6 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 
 export default async function CalendarLayout(_props: PageProps<"/calendar">) {
   const user = (await auth())?.user;
-
-  const locations =
-    user &&
-    (await Locations.find({ userId: user.id }).toArray()).map(
-      ({ _id, ...location }) => ({ ...location, id: _id.toString() }),
-    );
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
@@ -77,7 +63,6 @@ export default async function CalendarLayout(_props: PageProps<"/calendar">) {
             <Suspense
               fallback={weeks.map((weekDate) => (
                 <DiaryEntryWeek
-                  locations={locations}
                   key={String(weekDate)}
                   user={user}
                   weekDate={weekDate}
@@ -86,7 +71,6 @@ export default async function CalendarLayout(_props: PageProps<"/calendar">) {
             >
               {weeks.map((weekDate) => (
                 <DiaryEntryWeekWrapper
-                  locations={locations}
                   key={String(weekDate)}
                   user={user}
                   weekDate={weekDate}

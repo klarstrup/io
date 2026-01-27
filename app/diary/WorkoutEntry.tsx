@@ -54,7 +54,7 @@ export function WorkoutEntryExercise({
   exercise: ExerciseData;
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,
-    Location | LocationData | undefined,
+    Location | undefined,
     workout: WorkoutData | Workout | undefined,
   ])[];
   exerciseIndex?: number;

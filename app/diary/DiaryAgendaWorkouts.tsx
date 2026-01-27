@@ -1,6 +1,6 @@
 import { tz, TZDate } from "@date-fns/tz";
 import { compareAsc, formatDistance, startOfDay, subMonths } from "date-fns";
-import { type WithId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -15,7 +15,7 @@ import {
 import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import WorkoutEntry from "./WorkoutEntry";
 
-export function DiaryAgendaWorkouts({
+export async function DiaryAgendaWorkouts({
   date,
   workouts,
   workoutsExerciseSetPRs,
@@ -48,38 +48,60 @@ export function DiaryAgendaWorkouts({
       {isNonEmptyArray(workouts) ? (
         Array.from(workouts)
           .sort((a, b) => compareAsc(a.workedOutAt, b.workedOutAt))
-          ?.map((workout) => (
-            <WorkoutEntry
-              exerciseSetPRs={
-                workoutsExerciseSetPRs?.[workouts.indexOf(workout)]
-              }
-              key={workout._id.toString()}
-              workout={{
-                ...workout,
-                __typename: "Workout",
-                location: undefined,
-                exercises: workout.exercises.map((e) => ({
-                  ...e,
-                  __typename: "WorkoutExercise",
-                  sets: e.sets.map((s) => ({
-                    ...s,
-                    __typename: "WorkoutSet",
-                    meta: s.meta as
-                      | {
-                          __typename: "WorkoutSetMeta";
-                          key: string;
-                          value: string;
-                        }[]
-                      | undefined,
-                    inputs: s.inputs.map((i) => ({
-                      ...i,
-                      __typename: "WorkoutSetInput",
+          ?.map(async (workout) => {
+            const location =
+              (workout.locationId &&
+                (await Locations.findOne({
+                  _id: new ObjectId(workout.locationId),
+                  userId: user?.id,
+                }))) ??
+              undefined;
+
+            return (
+              <WorkoutEntry
+                exerciseSetPRs={
+                  workoutsExerciseSetPRs?.[workouts.indexOf(workout)]
+                }
+                key={workout._id.toString()}
+                workout={{
+                  ...workout,
+                  __typename: "Workout",
+                  location: location
+                    ? {
+                        ...location,
+                        id: String(location._id),
+                        __typename: "Location",
+                        boulderCircuits: location.boulderCircuits?.map(
+                          (circuit) => ({
+                            ...circuit,
+                            __typename: "BoulderCircuit",
+                          }),
+                        ),
+                      }
+                    : undefined,
+                  exercises: workout.exercises.map((e) => ({
+                    ...e,
+                    __typename: "WorkoutExercise",
+                    sets: e.sets.map((s) => ({
+                      ...s,
+                      __typename: "WorkoutSet",
+                      meta: s.meta as
+                        | {
+                            __typename: "WorkoutSetMeta";
+                            key: string;
+                            value: string;
+                          }[]
+                        | undefined,
+                      inputs: s.inputs.map((i) => ({
+                        ...i,
+                        __typename: "WorkoutSetInput",
+                      })),
                     })),
                   })),
-                })),
-              }}
-            />
-          ))
+                }}
+              />
+            );
+          })
       ) : (
         <div className="flex h-full flex-wrap items-center justify-around gap-4">
           <div className="flex flex-col items-center justify-center">

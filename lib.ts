@@ -1,5 +1,4 @@
-import { FoodEntry, Workout } from "./graphql.generated";
-import type { LocationData } from "./models/location";
+import type { BoulderCircuit, FoodEntry, Workout } from "./graphql.generated";
 import type { WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
 import type { DataSource } from "./sources/utils";
@@ -109,7 +108,7 @@ export interface PP {
   repeat: boolean;
   name?: string;
   angle?: number | null;
-  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
+  circuit?: BoulderCircuit;
   attemptCount?: number | null;
   estGrade?: number | null;
 }
