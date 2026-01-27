@@ -189,7 +189,8 @@ export const resolvers: Resolvers = {
                 })),
             })),
           })),
-          id: workout._id.toString(),
+          // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
+          id: workout.id || workout._id.toString(),
           __typename: "Workout",
         };
       });
