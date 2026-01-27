@@ -54,7 +54,30 @@ export function DiaryAgendaWorkouts({
                 workoutsExerciseSetPRs?.[workouts.indexOf(workout)]
               }
               key={workout._id.toString()}
-              workout={workout}
+              workout={{
+                ...workout,
+                __typename: "Workout",
+                location: undefined,
+                exercises: workout.exercises.map((e) => ({
+                  ...e,
+                  __typename: "WorkoutExercise",
+                  sets: e.sets.map((s) => ({
+                    ...s,
+                    __typename: "WorkoutSet",
+                    meta: s.meta as
+                      | {
+                          __typename: "WorkoutSetMeta";
+                          key: string;
+                          value: string;
+                        }[]
+                      | undefined,
+                    inputs: s.inputs.map((i) => ({
+                      ...i,
+                      __typename: "WorkoutSetInput",
+                    })),
+                  })),
+                })),
+              }}
             />
           ))
       ) : (

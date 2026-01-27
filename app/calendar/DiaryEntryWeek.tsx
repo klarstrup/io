@@ -12,8 +12,7 @@ import {
 import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
 import type { LocationData } from "../../models/location";
-import { isClimbingExercise } from "../../models/workout";
-import { calculateClimbingStats } from "../../models/workout.server";
+import { ClimbingStats, isClimbingExercise } from "../../models/workout";
 import { dateToString, isNonEmptyArray } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 
@@ -80,8 +79,9 @@ export async function DiaryEntryWeek({
                 })
               : null}
         </span>
-        {isNonEmptyArray(weekClimbingSets) &&
-          (await calculateClimbingStats(weekClimbingSets))}
+        {isNonEmptyArray(weekClimbingSets) && (
+          <ClimbingStats setAndLocationPairs={weekClimbingSets} />
+        )}
       </div>
       {eachDayOfInterval(weekInterval).map((dayte) => {
         const dateStr = dateToString(dayte);

@@ -1,9 +1,10 @@
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
+import AblyWrapper from "../AblyWrapper";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
 import "./page.css";
-import AblyWrapper from "../AblyWrapper";
 
 export const metadata: Metadata = {
   title: "io input/output",

@@ -2,15 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { WorkoutData } from "../../models/workout";
-import { dateToString } from "../../utils";
-import { upsertWorkout } from "./actions";
+import { Workout } from "../../graphql.generated";
 
-export function WorkoutEntryDuplicateButton({
-  workout,
-}: {
-  workout: WorkoutData;
-}) {
+export function WorkoutEntryDuplicateButton({ workout }: { workout: Workout }) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -18,7 +12,7 @@ export function WorkoutEntryDuplicateButton({
     <button
       style={{ color: "#edab00" }}
       className="cursor-pointer text-xs font-semibold"
-      disabled={isUpdating}
+      disabled={isUpdating || Math.random() < 0} // Disable button for now because the upserting below needs to be fixed
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={async () => {
         try {
@@ -55,10 +49,14 @@ export function WorkoutEntryDuplicateButton({
           // @ts-expect-error - intentionally voiding this here
           delete newWorkout.id;
 
+          // Replace upsertWorkout with specific duplicateWorkout mutation later
+          return;
+          /*
           const newWorkoutId = await upsertWorkout(newWorkout);
 
           const dateStr = dateToString(now);
           router.push(`/diary/${dateStr}/workout/${newWorkoutId}`);
+          */
         } catch (error) {
           console.error("Error duplicating workout:", error);
         } finally {

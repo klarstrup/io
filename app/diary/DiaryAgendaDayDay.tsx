@@ -25,8 +25,11 @@ import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
 import { Event, Location, Workout, WorkoutSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
-import { isClimbingExercise, WorkoutSource } from "../../models/workout";
-import { calculateClimbingStats } from "../../models/workout.server";
+import {
+  ClimbingStats,
+  isClimbingExercise,
+  WorkoutSource,
+} from "../../models/workout";
 import {
   cotemporality,
   dateToString,
@@ -350,9 +353,9 @@ export function DiaryAgendaDayDay({
                     ) : null}
                   </div>
                   <div className="leading-none">
-                    {isClimbingExercise(exercise.id)
-                      ? calculateClimbingStats(setsWithLocation)
-                      : null}
+                    {isClimbingExercise(exercise.id) ? (
+                      <ClimbingStats setAndLocationPairs={setsWithLocation} />
+                    ) : null}
                   </div>
                 </div>
                 {setsWithLocation.length > 0 ? (

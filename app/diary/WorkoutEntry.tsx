@@ -1,4 +1,3 @@
-import { ObjectId } from "mongodb";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FieldSetX } from "../../components/FieldSet";
@@ -10,8 +9,8 @@ import { Location, Workout, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { type ExerciseData, exercisesById } from "../../models/exercises";
 import type { LocationData } from "../../models/location";
-import { Locations } from "../../models/location.server";
 import {
+  ClimbingStats,
   getSetGrade,
   isClimbingExercise,
   type WorkoutData,
@@ -19,8 +18,7 @@ import {
   type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
-import { calculateClimbingStats } from "../../models/workout.server";
-import { dateToString, omit } from "../../utils";
+import { dateToString } from "../../utils";
 import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
@@ -138,7 +136,7 @@ export function WorkoutEntryExercise({
   );
 }
 
-export default async function WorkoutEntry({
+export default function WorkoutEntry({
   showDate,
   showExerciseName = true,
   showLocation = true,
@@ -151,17 +149,15 @@ export default async function WorkoutEntry({
   showExerciseName?: boolean;
   showLocation?: boolean;
   showSource?: boolean;
-  workout: WorkoutData;
+  workout: Workout;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
   const workoutDateStr = dateToString(workout.workedOutAt);
 
-  const location = workout.locationId
-    ? await Locations.findOne({ _id: new ObjectId(workout.locationId) })
-    : null;
+  const location = workout.location;
 
-  const locationName = location?.name ?? workout.location ?? null;
+  const locationName = location?.name ?? workout.location?.name ?? null;
 
   return (
     <FieldSetX
@@ -184,7 +180,7 @@ export default async function WorkoutEntry({
                   -{" "}
                   <Link
                     prefetch={false}
-                    href={`/diary/locations/${location?._id.toString()}`}
+                    href={`/diary/locations/${location?.id}`}
                     className="font-bold"
                     style={{ color: "#edab00" }}
                   >
@@ -198,7 +194,7 @@ export default async function WorkoutEntry({
               <small>
                 <Link
                   prefetch={false}
-                  href={`/diary/locations/${location?._id.toString()}`}
+                  href={`/diary/locations/${location?.id}`}
                   className="font-bold"
                   style={{ color: "#edab00" }}
                 >
@@ -223,16 +219,13 @@ export default async function WorkoutEntry({
                     >
                       Edit
                     </Link>
-                    {workoutDateStr !== dateToString(new Date()) ? (
+                    {workoutDateStr !== dateToString(new Date()) &&
+                    // disable for now until fixed
+                    Math.random() > 1 ? (
                       <>
                         {" "}
                         <small>-</small>{" "}
-                        <WorkoutEntryDuplicateButton
-                          workout={omit(
-                            workout as WorkoutData & { _id: ObjectId },
-                            "_id",
-                          )}
-                        />
+                        <WorkoutEntryDuplicateButton workout={workout} />
                       </>
                     ) : null}
                   </>
@@ -304,15 +297,15 @@ export default async function WorkoutEntry({
                         .replace("Barbell", "")}
                   </Link>
                 ) : null}
-                {isClimbingExercise(exercise.id)
-                  ? calculateClimbingStats(
-                      workoutExercise.sets.map((set) => [
-                        set,
-                        location ?? undefined,
-                        workout,
-                      ]),
-                    )
-                  : null}
+                {isClimbingExercise(exercise.id) ? (
+                  <ClimbingStats
+                    setAndLocationPairs={workoutExercise.sets.map((set) => [
+                      set,
+                      location ?? undefined,
+                      workout,
+                    ])}
+                  />
+                ) : null}
               </div>
               {workoutExercise.comment ? (
                 <div className="pb-1 text-xs whitespace-nowrap italic">

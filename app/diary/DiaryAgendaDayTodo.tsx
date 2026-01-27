@@ -1,9 +1,5 @@
 "use client";
-import {
-  useApolloClient,
-  useMutation,
-  useSuspenseFragment,
-} from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { addDays } from "date-fns";
@@ -13,7 +9,6 @@ import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   type DeleteTodoMutation,
   type DiaryAgendaDayTodoFragment,
-  DiaryAgendaDayTodoFragmentDoc,
   ListPageUserDocument,
   type UpdateTodoMutation,
 } from "../../graphql.generated";
@@ -33,23 +28,12 @@ gql`
 `;
 
 export function DiaryAgendaDayTodo({
-  todo: todoo,
+  todo,
   sortableId,
 }: {
   todo: DiaryAgendaDayTodoFragment;
   sortableId?: string;
 }) {
-  const client = useApolloClient();
-  client.writeFragment({
-    id: client.cache.identify(todoo),
-    fragment: DiaryAgendaDayTodoFragmentDoc,
-    data: todoo,
-  });
-  const { data: todo } = useSuspenseFragment({
-    fragment: DiaryAgendaDayTodoFragmentDoc,
-    from: todoo,
-  });
-
   const {
     isDragging,
     attributes,

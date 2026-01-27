@@ -8,16 +8,23 @@ import {
   startOfDay,
 } from "date-fns";
 import type { WithId } from "mongodb";
-import type { Location, NextSet, WorkoutSet } from "../graphql.generated";
+import type {
+  Location,
+  NextSet,
+  Workout,
+  WorkoutSet,
+} from "../graphql.generated";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
 import {
   exercisesById,
+  SendType,
   type AssistType,
   type ExerciseData,
   type Unit,
 } from "./exercises";
 import type { LocationData } from "./location";
+import Grade from "../grades";
 
 export enum WorkoutSource {
   Fitocracy = "fitocracy",
@@ -211,4 +218,58 @@ export function getSetGrade(
   if (colorGrade) return colorGrade;
 
   return null;
+}
+
+export function ClimbingStats({
+  setAndLocationPairs,
+}: {
+  setAndLocationPairs: (readonly [
+    set: WorkoutExerciseSet | WorkoutSet,
+    location: LocationData | Location | undefined,
+    workout: WorkoutData | Workout | undefined,
+  ])[];
+}) {
+  const successfulSetAndLocationPairs = setAndLocationPairs.filter(
+    ([set]) =>
+      (set.inputs[2]!.value as SendType) !== SendType.Attempt &&
+      (set.inputs[2]!.value as SendType) !== SendType.Zone,
+  );
+  const problemCount = successfulSetAndLocationPairs.length;
+  const gradeSum = successfulSetAndLocationPairs.reduce(
+    (sum, [set, location]) => sum + (getSetGrade(set, location) || 0),
+    0,
+  );
+  const gradeTop5Average =
+    successfulSetAndLocationPairs
+      .map(([set, location]) => getSetGrade(set, location) ?? 0)
+      .filter((grade) => grade > 0)
+      .sort((a, b) => b - a)
+      .slice(0, Math.min(5, successfulSetAndLocationPairs.length))
+      .reduce((sum, grade) => sum + grade, 0) /
+    Math.min(5, successfulSetAndLocationPairs.length);
+
+  return (
+    <small className="text-[10px]">
+      {problemCount ? (
+        <span className="whitespace-nowrap">PC: {problemCount}</span>
+      ) : null}
+      {gradeSum ? (
+        <span>
+          , <span className="whitespace-nowrap">GS: {gradeSum.toFixed(0)}</span>
+        </span>
+      ) : null}
+      {gradeTop5Average ? (
+        <span>
+          ,{" "}
+          <span className="whitespace-nowrap">
+            T5A:
+            {new Grade(gradeTop5Average).nameFloor}
+            {new Grade(gradeTop5Average).subGradePercent ? (
+              <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
+            ) : null}
+          </span>
+        </span>
+      ) : null}
+    </small>
+  );
 }

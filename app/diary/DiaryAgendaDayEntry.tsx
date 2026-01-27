@@ -54,6 +54,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         {icon ? (
           <FontAwesomeIcon
             icon={icon}
+            size="lg"
             className={onIconClick ? "cursor-pointer" : ""}
           />
         ) : iconTxt ? (

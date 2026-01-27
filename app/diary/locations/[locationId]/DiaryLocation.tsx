@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { auth } from "../../../../auth";
+import { Workout } from "../../../../graphql.generated";
 import { Locations } from "../../../../models/location.server";
 import { MaterializedWorkoutsView } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
@@ -46,7 +47,11 @@ export default async function DiaryExercise({
       >
         {allWorkoutsOfLocation.map((workout) => (
           <li key={workout.id} className="min-h-full">
-            <WorkoutEntry showDate showLocation={false} workout={workout} />
+            <WorkoutEntry
+              showDate
+              showLocation={false}
+              workout={workout as unknown as Workout}
+            />
           </li>
         ))}
       </ul>

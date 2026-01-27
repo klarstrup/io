@@ -642,58 +642,6 @@ export const calculate60dayTop10AverageAttemptGrade = (
   return grades.slice(0, 10).reduce((sum, grade) => sum + grade, 0) / 10;
 };
 
-export async function calculateClimbingStats(
-  setAndLocationPairs: (readonly [
-    set: WorkoutExerciseSet | WorkoutSet,
-    location: LocationData | Location | undefined,
-    workout: WorkoutData | Workout | undefined,
-  ])[],
-) {
-  const successfulSetAndLocationPairs = setAndLocationPairs.filter(
-    ([set]) =>
-      (set.inputs[2]!.value as SendType) !== SendType.Attempt &&
-      (set.inputs[2]!.value as SendType) !== SendType.Zone,
-  );
-  const problemCount = successfulSetAndLocationPairs.length;
-  const gradeSum = successfulSetAndLocationPairs.reduce(
-    (sum, [set, location]) => sum + (getSetGrade(set, location) || 0),
-    0,
-  );
-  const gradeTop5Average =
-    successfulSetAndLocationPairs
-      .map(([set, location]) => getSetGrade(set, location) ?? 0)
-      .filter((grade) => grade > 0)
-      .sort((a, b) => b - a)
-      .slice(0, Math.min(5, successfulSetAndLocationPairs.length))
-      .reduce((sum, grade) => sum + grade, 0) /
-    Math.min(5, successfulSetAndLocationPairs.length);
-
-  return (
-    <small className="text-[10px]">
-      {problemCount ? (
-        <span className="whitespace-nowrap">PC: {problemCount}</span>
-      ) : null}
-      {gradeSum ? (
-        <span>
-          , <span className="whitespace-nowrap">GS: {gradeSum.toFixed(0)}</span>
-        </span>
-      ) : null}
-      {gradeTop5Average ? (
-        <span>
-          ,{" "}
-          <span className="whitespace-nowrap">
-            T5A:
-            {new Grade(gradeTop5Average).nameFloor}
-            {new Grade(gradeTop5Average).subGradePercent ? (
-              <small>+{new Grade(gradeTop5Average).subGradePercent}%</small>
-            ) : null}
-          </span>
-        </span>
-      ) : null}
-    </small>
-  );
-}
-
 export function mergeWorkoutsOfExercise(
   workouts: WithId<WorkoutData>[],
   userId: string,

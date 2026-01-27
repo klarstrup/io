@@ -1,3 +1,5 @@
+"use client";
+import { skipToken, useSuspenseQuery } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
@@ -16,12 +18,11 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import type { Session } from "next-auth";
-import { query } from "../../ApolloClient";
-import {
+import type {
   DiaryAgendaDayUserTodosQuery,
   Event,
   NextSet,
-  type Todo,
+  Todo,
 } from "../../graphql.generated";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
 import {
@@ -35,7 +36,7 @@ import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
-export async function DiaryAgendaDay({
+export function DiaryAgendaDay({
   date,
   user,
 }: {
@@ -49,16 +50,46 @@ export async function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const userData = user
-    ? await query<DiaryAgendaDayUserTodosQuery>({
-        query: gql`
-          query DiaryAgendaDayUserTodos(
-            $interval: IntervalInput!
-            $intervalEnd: Date!
-          ) {
-            user {
-              id
-              exerciseSchedules {
+  const { data } = useSuspenseQuery<DiaryAgendaDayUserTodosQuery>(
+    gql`
+      query DiaryAgendaDayUserTodos(
+        $interval: IntervalInput!
+        $intervalEnd: Date!
+      ) {
+        user {
+          id
+          exerciseSchedules {
+            id
+            exerciseId
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            order
+            nextSet(to: $intervalEnd) {
+              workedOutAt
+              dueOn
+              exerciseId
+              successful
+              nextWorkingSets
+              nextWorkingSetInputs {
+                unit
+                value
+                assistType
+              }
+              scheduleEntry {
                 id
                 exerciseId
                 enabled
@@ -78,124 +109,98 @@ export async function DiaryAgendaDay({
                 baseWeight
                 snoozedUntil
                 order
-                nextSet(to: $intervalEnd) {
-                  workedOutAt
-                  dueOn
-                  exerciseId
-                  successful
-                  nextWorkingSets
-                  nextWorkingSetInputs {
-                    unit
-                    value
-                    assistType
-                  }
-                  scheduleEntry {
-                    id
-                    exerciseId
-                    enabled
-                    frequency {
-                      years
-                      months
-                      weeks
-                      days
-                      hours
-                      minutes
-                      seconds
-                    }
-                    increment
-                    workingSets
-                    workingReps
-                    deloadFactor
-                    baseWeight
-                    snoozedUntil
-                    order
-                  }
-                }
               }
-              todos(interval: $interval) {
+            }
+          }
+          todos(interval: $interval) {
+            id
+            created
+            summary
+            start
+            due
+            completed
+            order
+          }
+          events(interval: $interval) {
+            id
+            created
+            summary
+            start
+            end
+            datetype
+            location
+            order
+          }
+          workouts(interval: $interval) {
+            id
+            createdAt
+            updatedAt
+            workedOutAt
+            materializedAt
+            locationId
+            location {
+              id
+              createdAt
+              updatedAt
+              name
+              userId
+              boulderCircuits {
                 id
-                created
-                summary
-                start
-                due
-                completed
-                order
-              }
-              events(interval: $interval) {
-                id
-                created
-                summary
-                start
-                end
-                datetype
-                location
-                order
-              }
-              workouts(interval: $interval) {
-                id
+                holdColor
+                gradeEstimate
+                gradeRange
+                name
+                labelColor
+                hasZones
+                description
                 createdAt
                 updatedAt
-                workedOutAt
-                materializedAt
-                locationId
-                location {
-                  id
-                  createdAt
-                  updatedAt
-                  name
-                  userId
-                  boulderCircuits {
-                    id
-                    holdColor
-                    gradeEstimate
-                    gradeRange
-                    name
-                    labelColor
-                    hasZones
-                    description
-                    createdAt
-                    updatedAt
-                  }
+              }
+            }
+            source
+            exercises {
+              exerciseId
+              displayName
+              comment
+              sets {
+                comment
+                createdAt
+                updatedAt
+                inputs {
+                  unit
+                  value
+                  assistType
                 }
-                source
-                exercises {
-                  exerciseId
-                  displayName
-                  comment
-                  sets {
-                    comment
-                    createdAt
-                    updatedAt
-                    inputs {
-                      unit
-                      value
-                      assistType
-                    }
-                    meta {
-                      key
-                      value
-                    }
-                  }
+                meta {
+                  key
+                  value
                 }
               }
             }
           }
-        `,
-        variables: {
-          interval: fetchingInterval,
-          intervalEnd: fetchingInterval.end,
-        },
-      }).then((res) => ({
-        calendarTodos: res.data?.user?.todos || [],
-        calendarEvents: res.data?.user?.events || [],
-        workouts: res.data?.user?.workouts || [],
-        nextSets: res.data?.user?.exerciseSchedules
-          ? res.data.user.exerciseSchedules
-              .map((schedule) => schedule.nextSet)
-              .filter(Boolean)
-          : [],
-      }))
-    : null;
+        }
+      }
+    `,
+    user
+      ? {
+          variables: {
+            interval: fetchingInterval,
+            intervalEnd: fetchingInterval.end,
+          },
+        }
+      : skipToken,
+  );
+
+  const userData = {
+    calendarTodos: data?.user?.todos || [],
+    calendarEvents: data?.user?.events || [],
+    workouts: data?.user?.workouts || [],
+    nextSets: data?.user?.exerciseSchedules
+      ? data.user.exerciseSchedules
+          .map((schedule) => schedule.nextSet)
+          .filter(Boolean)
+      : [],
+  };
 
   const {
     calendarEvents = [],
@@ -340,75 +345,72 @@ export async function DiaryAgendaDay({
 
   return (
     <div className="flex flex-col items-stretch justify-start">
-      {await Promise.all(
-        daysOfInterval.map(async (dayDate, dayI) => {
-          const dayStart = addHours(startOfDay(dayDate), dayStartHour);
-          const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
+      {daysOfInterval.map((dayDate, dayI) => {
+        const dayStart = addHours(startOfDay(dayDate), dayStartHour);
+        const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
 
-          const dayEvents = eventsByDate[dateToString(dayDate)] || [];
-          const dayName = dateToString(dayDate);
-          const dayWorkouts = workouts.filter((workout) =>
-            workout.source === WorkoutSource.Self
-              ? workout.workedOutAt >= startOfDay(dayDate) &&
-                workout.workedOutAt <= endOfDay(dayDate)
-              : workout.workedOutAt >= dayStart &&
-                workout.workedOutAt <= dayEnd,
-          );
+        const dayEvents = eventsByDate[dateToString(dayDate)] || [];
+        const dayName = dateToString(dayDate);
+        const dayWorkouts = workouts.filter((workout) =>
+          workout.source === WorkoutSource.Self
+            ? workout.workedOutAt >= startOfDay(dayDate) &&
+              workout.workedOutAt <= endOfDay(dayDate)
+            : workout.workedOutAt >= dayStart && workout.workedOutAt <= dayEnd,
+        );
 
-          const dayLocations = uniqueBy(
-            dayWorkouts.map((workout) => workout.location).filter(Boolean),
-            (location) => location.id,
-          );
-          const dayDueSets = dueSetsByDate[dayName] || [];
-          const dayTodos = todosByDate[dayName] || [];
+        const dayLocations = uniqueBy(
+          dayWorkouts.map((workout) => workout.location).filter(Boolean),
+          (location) => location.id,
+        );
+        const dayDueSets = dueSetsByDate[dayName] || [];
+        const dayTodos = todosByDate[dayName] || [];
 
-          return (
-            <TodoDroppable key={dayI} date={dayDate}>
-              <DiaryAgendaDayDay
-                date={dayName}
-                dayDate={dayDate}
-                user={user}
-                dayLocations={dayLocations}
-                dayJournalEntries={[
-                  ...dayEvents,
-                  ...dayDueSets,
-                  ...dayTodos,
-                  ...dayWorkouts,
-                ]
-                  .sort((a, b) => {
-                    const aOrder =
-                      "scheduleEntry" in a
-                        ? (a.scheduleEntry.order ?? 0)
-                        : "order" in a
-                          ? (a.order ?? 0)
-                          : 0;
-                    const bOrder =
-                      "scheduleEntry" in b
-                        ? (b.scheduleEntry.order ?? 0)
-                        : "order" in b
-                          ? (b.order ?? 0)
-                          : 0;
-                    return aOrder - bOrder;
-                  })
-                  .sort((a, b) =>
-                    compareAsc(
-                      "__typename" in a &&
-                        a.__typename === "Event" &&
-                        a.datetype === "date"
-                        ? 1
-                        : getJournalEntryPrincipalDate(a) || new Date(0),
-                      "__typename" in b &&
-                        b.__typename === "Event" &&
-                        b.datetype === "date"
-                        ? 1
-                        : getJournalEntryPrincipalDate(b) || new Date(0),
-                    ),
-                  )}
-              />
-            </TodoDroppable>
-          );
-        }),
-      )}
+        return (
+          <TodoDroppable key={dayI} date={dayDate}>
+            <DiaryAgendaDayDay
+              date={dayName}
+              dayDate={dayDate}
+              user={user}
+              dayLocations={dayLocations}
+              dayJournalEntries={[
+                ...dayEvents,
+                ...dayDueSets,
+                ...dayTodos,
+                ...dayWorkouts,
+              ]
+                .sort((a, b) => {
+                  const aOrder =
+                    "scheduleEntry" in a
+                      ? (a.scheduleEntry.order ?? 0)
+                      : "order" in a
+                        ? (a.order ?? 0)
+                        : 0;
+                  const bOrder =
+                    "scheduleEntry" in b
+                      ? (b.scheduleEntry.order ?? 0)
+                      : "order" in b
+                        ? (b.order ?? 0)
+                        : 0;
+                  return aOrder - bOrder;
+                })
+                .sort((a, b) =>
+                  compareAsc(
+                    "__typename" in a &&
+                      a.__typename === "Event" &&
+                      a.datetype === "date"
+                      ? 1
+                      : getJournalEntryPrincipalDate(a) || new Date(0),
+                    "__typename" in b &&
+                      b.__typename === "Event" &&
+                      b.datetype === "date"
+                      ? 1
+                      : getJournalEntryPrincipalDate(b) || new Date(0),
+                  ),
+                )}
+            />
+          </TodoDroppable>
+        );
+      })}
     </div>
   );
 }
