@@ -9,6 +9,7 @@ import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   type DeleteTodoMutation,
   type DiaryAgendaDayTodoFragment,
+  DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
   type UpdateTodoMutation,
 } from "../../graphql.generated";
@@ -93,7 +94,9 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
           }
         }
       `,
-      { refetchQueries: [ListPageUserDocument] },
+      {
+        refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
+      },
     );
     const [deleteTodo] = useMutation<DeleteTodoMutation>(
       gql`
@@ -101,7 +104,9 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
           deleteTodo(id: $id)
         }
       `,
-      { refetchQueries: [ListPageUserDocument] },
+      {
+        refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
+      },
     );
 
     const [isActive, setIsActive] = useState(false);

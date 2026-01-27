@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  CreateTodoMutationVariables,
+  type CreateTodoMutationVariables,
+  DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
@@ -31,7 +32,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
         }
       }
     `,
-    { refetchQueries: [ListPageUserDocument] },
+    { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
   );
 
   const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
