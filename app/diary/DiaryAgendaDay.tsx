@@ -18,11 +18,12 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import type { Session } from "next-auth";
-import type {
-  DiaryAgendaDayUserTodosQuery,
-  Event,
-  NextSet,
-  Todo,
+import {
+  DiaryAgendaDayUserTodosDocument,
+  type DiaryAgendaDayUserTodosQuery,
+  type Event,
+  type NextSet,
+  type Todo,
 } from "../../graphql.generated";
 import { isNextSetDue, WorkoutSource } from "../../models/workout";
 import {
@@ -36,29 +37,45 @@ import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
-export function DiaryAgendaDay({
-  date,
-  user,
-}: {
-  date: `${number}-${number}-${number}`;
-  user?: Session["user"];
-}) {
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const tzDate = new TZDate(date, timeZone);
-
-  const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
-    end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
-  };
-  const { data } = useSuspenseQuery<DiaryAgendaDayUserTodosQuery>(
-    gql`
-      query DiaryAgendaDayUserTodos(
-        $interval: IntervalInput!
-        $intervalEnd: Date!
-      ) {
-        user {
-          id
-          exerciseSchedules {
+gql`
+  query DiaryAgendaDayUserTodos(
+    $interval: IntervalInput!
+    $intervalEnd: Date!
+  ) {
+    user {
+      id
+      exerciseSchedules {
+        id
+        exerciseId
+        enabled
+        frequency {
+          years
+          months
+          weeks
+          days
+          hours
+          minutes
+          seconds
+        }
+        increment
+        workingSets
+        workingReps
+        deloadFactor
+        baseWeight
+        snoozedUntil
+        order
+        nextSet(to: $intervalEnd) {
+          workedOutAt
+          dueOn
+          exerciseId
+          successful
+          nextWorkingSets
+          nextWorkingSetInputs {
+            unit
+            value
+            assistType
+          }
+          scheduleEntry {
             id
             exerciseId
             enabled
@@ -78,109 +95,95 @@ export function DiaryAgendaDay({
             baseWeight
             snoozedUntil
             order
-            nextSet(to: $intervalEnd) {
-              workedOutAt
-              dueOn
-              exerciseId
-              successful
-              nextWorkingSets
-              nextWorkingSetInputs {
-                unit
-                value
-                assistType
-              }
-              scheduleEntry {
-                id
-                exerciseId
-                enabled
-                frequency {
-                  years
-                  months
-                  weeks
-                  days
-                  hours
-                  minutes
-                  seconds
-                }
-                increment
-                workingSets
-                workingReps
-                deloadFactor
-                baseWeight
-                snoozedUntil
-                order
-              }
-            }
           }
-          todos(interval: $interval) {
+        }
+      }
+      todos(interval: $interval) {
+        id
+        created
+        summary
+        start
+        due
+        completed
+        order
+      }
+      events(interval: $interval) {
+        id
+        created
+        summary
+        start
+        end
+        datetype
+        location
+        order
+      }
+      workouts(interval: $interval) {
+        id
+        createdAt
+        updatedAt
+        workedOutAt
+        materializedAt
+        locationId
+        location {
+          id
+          createdAt
+          updatedAt
+          name
+          userId
+          boulderCircuits {
             id
-            created
-            summary
-            start
-            due
-            completed
-            order
-          }
-          events(interval: $interval) {
-            id
-            created
-            summary
-            start
-            end
-            datetype
-            location
-            order
-          }
-          workouts(interval: $interval) {
-            id
+            holdColor
+            gradeEstimate
+            gradeRange
+            name
+            labelColor
+            hasZones
+            description
             createdAt
             updatedAt
-            workedOutAt
-            materializedAt
-            locationId
-            location {
-              id
-              createdAt
-              updatedAt
-              name
-              userId
-              boulderCircuits {
-                id
-                holdColor
-                gradeEstimate
-                gradeRange
-                name
-                labelColor
-                hasZones
-                description
-                createdAt
-                updatedAt
-              }
+          }
+        }
+        source
+        exercises {
+          exerciseId
+          displayName
+          comment
+          sets {
+            comment
+            createdAt
+            updatedAt
+            inputs {
+              unit
+              value
+              assistType
             }
-            source
-            exercises {
-              exerciseId
-              displayName
-              comment
-              sets {
-                comment
-                createdAt
-                updatedAt
-                inputs {
-                  unit
-                  value
-                  assistType
-                }
-                meta {
-                  key
-                  value
-                }
-              }
+            meta {
+              key
+              value
             }
           }
         }
       }
-    `,
+    }
+  }
+`;
+
+export function DiaryAgendaDay({
+  date,
+  user,
+}: {
+  date: `${number}-${number}-${number}`;
+  user?: Session["user"];
+}) {
+  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const tzDate = new TZDate(date, timeZone);
+
+  const fetchingInterval = {
+    start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
+    end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
+  };
+  const { data } = useSuspenseQuery<DiaryAgendaDayUserTodosQuery>(
+    DiaryAgendaDayUserTodosDocument,
     user
       ? {
           variables: {

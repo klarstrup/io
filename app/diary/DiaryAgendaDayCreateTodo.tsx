@@ -1,11 +1,10 @@
 "use client";
 import { useMutation } from "@apollo/client/react";
 import gql from "graphql-tag";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  type CreateTodoMutationVariables,
+  CreateTodoMutation,
   DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
 } from "../../graphql.generated";
@@ -15,9 +14,8 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const router = useRouter();
 
-  const [createTodo] = useMutation<CreateTodoMutationVariables>(
+  const [createTodo, { loading }] = useMutation<CreateTodoMutation>(
     gql`
       mutation CreateTodo($input: CreateTodoInput!) {
         createTodo(input: $input) {
@@ -56,7 +54,6 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
         },
       });
       setIsActive(false);
-      router.refresh();
     }
   });
 
@@ -80,6 +77,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
       }
     >
       <button
+        type="button"
         className={
           "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
         }
@@ -111,6 +109,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
                 name="summary"
                 defaultValue=""
                 className="-mt-px -mb-px w-full p-0.5 font-mono text-sm"
+                disabled={loading}
                 innerRef={(el) => {
                   if (!el) return;
                   const length = el.value.length;
