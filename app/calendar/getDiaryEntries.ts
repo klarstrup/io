@@ -1,15 +1,10 @@
 import { TZDate } from "@date-fns/tz";
+import { gql } from "graphql-tag";
+import { query } from "../../ApolloClient";
 import { auth } from "../../auth";
+import { CalendarUserWorkoutsQuery } from "../../graphql.generated";
 import type { DiaryEntry } from "../../lib";
-import { MaterializedWorkoutsView } from "../../models/workout.server";
-import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
-import { DataSource } from "../../sources/utils";
-import {
-  allPromises,
-  dateToString,
-  DEFAULT_TIMEZONE,
-  rangeToQuery,
-} from "../../utils";
+import { allPromises, dateToString, DEFAULT_TIMEZONE } from "../../utils";
 
 type DayStr = `${number}-${number}-${number}`;
 
@@ -46,31 +41,71 @@ export async function getDiaryEntriesShallow({
     diary[dayStr] = day;
   }
 
+  const queryResult = await query<CalendarUserWorkoutsQuery>({
+    query: gql`
+      query CalendarUserWorkouts($interval: IntervalInput!) {
+        user {
+          id
+          workouts(interval: $interval) {
+            id
+            createdAt
+            updatedAt
+            workedOutAt
+            locationId
+            exercises {
+              exerciseId
+              sets {
+                inputs {
+                  value
+                  unit
+                  assistType
+                }
+              }
+            }
+          }
+          foodEntries(interval: $interval) {
+            id
+            datetime
+            type
+            food {
+              id
+              description
+              servingSizes {
+                value
+                unit
+                nutritionMultiplier
+              }
+            }
+            mealName
+            servings
+            servingSize {
+              value
+              unit
+              nutritionMultiplier
+            }
+            nutritionalContents {
+              energy {
+                value
+                unit
+              }
+              protein
+            }
+          }
+        }
+      }
+    `,
+    variables: { interval: { start: from, end: to } },
+  });
+
   await allPromises(
     async () => {
-      for (const dataSource of user.dataSources || []) {
-        if (dataSource.source !== DataSource.MyFitnessPal) continue;
-        for await (const foodEntry of MyFitnessPalFoodEntries.find({
-          user_id: dataSource.config.userId,
-          datetime: rangeToQuery(from, to),
-        })) {
-          addDiaryEntry(foodEntry.datetime, "food", {
-            ...foodEntry,
-            _id: foodEntry._id.toString(),
-          });
-        }
+      for (const foodEntry of queryResult.data?.user?.foodEntries || []) {
+        addDiaryEntry(foodEntry.datetime, "food", foodEntry);
       }
     },
     async () => {
-      for await (const workout of MaterializedWorkoutsView.find({
-        userId: user.id,
-        workedOutAt: rangeToQuery(from, to),
-        deletedAt: { $exists: false },
-      })) {
-        addDiaryEntry(workout.workedOutAt, "workouts", {
-          ...workout,
-          _id: workout._id.toString(),
-        });
+      for (const workout of queryResult.data?.user?.workouts || []) {
+        addDiaryEntry(workout.workedOutAt, "workouts", workout);
       }
     },
   );

@@ -12,7 +12,7 @@ import {
 } from "graphql";
 import gql from "graphql-tag";
 import { auth } from "./auth";
-import type { Resolvers } from "./graphql.generated";
+import type { FoodEntry, Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { Locations } from "./models/location.server";
 import { WorkoutSource } from "./models/workout";
@@ -22,6 +22,8 @@ import {
   getUserIcalTodosBetween,
 } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
+import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
+import { DataSource } from "./sources/utils";
 import { pick, rangeToQuery } from "./utils";
 
 const emitGraphQLUpdate = async (
@@ -123,6 +125,51 @@ export const resolvers: Resolvers = {
       return (await getUserIcalEventsBetween(user.id, args.interval)).map(
         (event) => ({ ...event, id: event.uid, __typename: "Event" }),
       );
+    },
+    foodEntries: async (_parent, args) => {
+      const user = (await auth())?.user;
+
+      let foodEntries: FoodEntry[] = [];
+
+      if (!user) return foodEntries;
+
+      for (const dataSource of user.dataSources || []) {
+        if (dataSource.source !== DataSource.MyFitnessPal) continue;
+        for await (const document of MyFitnessPalFoodEntries.find({
+          user_id: dataSource.config.userId,
+          datetime: rangeToQuery(args.interval.start, args.interval.end),
+        })) {
+          foodEntries.push({
+            ...document,
+            mealName: document.meal_name,
+            food: {
+              ...document.food,
+              __typename: "Food",
+              servingSizes: document.food.serving_sizes.map((servingSize) => ({
+                ...servingSize,
+                __typename: "ServingSize",
+                nutritionMultiplier: servingSize.nutrition_multiplier,
+              })),
+            },
+            servingSize: {
+              ...document.serving_size,
+              __typename: "ServingSize",
+              nutritionMultiplier: document.serving_size.nutrition_multiplier,
+            },
+            nutritionalContents: {
+              __typename: "NutritionalContents",
+              ...document.nutritional_contents,
+              energy: {
+                __typename: "CaloriesUnit",
+                ...document.nutritional_contents.energy,
+              },
+            },
+            __typename: "FoodEntry",
+          });
+        }
+      }
+
+      return foodEntries;
     },
     workouts: async (_parent, args) => {
       const user = (await auth())?.user;
@@ -334,6 +381,10 @@ export const resolvers: Resolvers = {
     gradeRange: (parent) =>
       parent.gradeRange?.filter((v) => isNaN(v) === false) || null,
   },
+  WorkoutSetInput: {
+    value: (parent) =>
+      isNaN(parent.value as number) ? null : (parent.value ?? null),
+  },
   ExerciseSchedule: {
     nextSet: async (parent, args, _context) => {
       const user = (await auth())?.user;
@@ -422,7 +473,41 @@ export const typeDefs = gql`
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
     exerciseSchedules: [ExerciseSchedule!]
+    foodEntries(interval: IntervalInput!): [FoodEntry!]
     # dataSources: [UserDataSource!]
+  }
+
+  type FoodEntry {
+    id: ID!
+    type: String!
+    datetime: Date!
+    nutritionalContents: NutritionalContents!
+    mealName: String!
+    food: Food!
+    servings: Float!
+    servingSize: ServingSize!
+  }
+
+  type Food {
+    id: ID!
+    description: String!
+    servingSizes: [ServingSize!]!
+  }
+
+  type ServingSize {
+    unit: String!
+    value: Float!
+    nutritionMultiplier: Float!
+  }
+
+  type NutritionalContents {
+    energy: CaloriesUnit!
+    protein: Float
+  }
+
+  type CaloriesUnit {
+    unit: String!
+    value: Float!
   }
 
   type Duration {

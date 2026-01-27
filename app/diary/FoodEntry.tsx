@@ -32,23 +32,21 @@ export function FoodEntry({
             MyFitnessPal.MealName.Snacks,
           ]
             .filter((mealName) =>
-              foodEntries?.some(
-                (foodEntry) => foodEntry.meal_name === mealName,
-              ),
+              foodEntries?.some((foodEntry) => foodEntry.mealName === mealName),
             )
             .map((mealName) => {
               const mealTotalEnergy = foodEntries
-                ?.filter((foodEntry) => foodEntry.meal_name === mealName)
+                ?.filter((foodEntry) => foodEntry.mealName === mealName)
                 .reduce(
                   (acc, foodEntry) =>
-                    acc + foodEntry.nutritional_contents.energy.value,
+                    acc + foodEntry.nutritionalContents.energy.value,
                   0,
                 );
               const mealTotalProtein = foodEntries
-                ?.filter((foodEntry) => foodEntry.meal_name === mealName)
+                ?.filter((foodEntry) => foodEntry.mealName === mealName)
                 .reduce(
                   (acc, foodEntry) =>
-                    acc + (foodEntry.nutritional_contents.protein || 0),
+                    acc + (foodEntry.nutritionalContents.protein || 0),
                   0,
                 );
 
@@ -67,10 +65,10 @@ export function FoodEntry({
                   </div>
                   <ul className="list-disc ps-4">
                     {foodEntries
-                      ?.filter((foodEntry) => foodEntry.meal_name === mealName)
+                      ?.filter((foodEntry) => foodEntry.mealName === mealName)
                       .map((foodEntry) => {
                         const unit =
-                          foodEntry.food.serving_sizes[0]!.unit.replace(
+                          foodEntry.food.servingSizes[0]!.unit.replace(
                             "grams",
                             "g",
                           ).replace("gram", "g");
@@ -80,8 +78,8 @@ export function FoodEntry({
                             {foodEntry.food.description.replace(/\s+/g, " ")}{" "}
                             <small className="whitespace-nowrap">
                               {foodEntry.servings *
-                                foodEntry.serving_size.nutrition_multiplier *
-                                foodEntry.food.serving_sizes[0]!.value}
+                                foodEntry.servingSize.nutritionMultiplier *
+                                foodEntry.food.servingSizes[0]!.value}
                               {unit.length <= 2 ? unit : <> {unit}</>}
                             </small>
                           </li>

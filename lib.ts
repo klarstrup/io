@@ -1,7 +1,7 @@
+import { FoodEntry, Workout } from "./graphql.generated";
 import type { LocationData } from "./models/location";
-import type { WorkoutData, WorkoutSource } from "./models/workout";
+import type { WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
-import type { MyFitnessPal } from "./sources/myfitnesspal";
 import type { DataSource } from "./sources/utils";
 import type { VCalendar, VEvent, VTodo } from "./vendor/ical";
 
@@ -115,8 +115,8 @@ export interface PP {
 }
 
 export interface DiaryEntry {
-  workouts?: (WorkoutData & { _id: string })[];
-  food?: (MyFitnessPal.FoodEntry & { _id: string })[];
+  workouts?: Workout[];
+  food?: FoodEntry[];
 }
 
 export interface ScrapedAt {

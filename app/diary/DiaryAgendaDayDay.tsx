@@ -30,11 +30,15 @@ import {
   isClimbingExercise,
   WorkoutSource,
 } from "../../models/workout";
+import { DataSource } from "../../sources/utils";
 import {
   cotemporality,
   dateToString,
   dayStartHour,
+  decodeGeohash,
   DEFAULT_TIMEZONE,
+  getSunrise,
+  getSunset,
   roundToNearestDay,
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
@@ -63,6 +67,23 @@ export function DiaryAgendaDayDay({
   const now = TZDate.tz(timeZone);
   const todayStr = dateToString(subHours(now, dayStartHour));
   const isToday = date === todayStr;
+
+  const tzDate = new TZDate(date, timeZone);
+
+  const userGeohash = user?.dataSources?.find(
+    (source) => source.source === DataSource.Tomorrow,
+  )?.config?.geohash;
+  const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
+  const sunrise = getSunrise(
+    userLocation?.latitude ?? 55.658693,
+    userLocation?.longitude ?? 12.489322,
+    tzDate,
+  );
+  const sunset = getSunset(
+    userLocation?.latitude ?? 55.658693,
+    userLocation?.longitude ?? 12.489322,
+    tzDate,
+  );
 
   const dayStart = addHours(startOfDay(dayDate), dayStartHour);
   const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
@@ -468,7 +489,23 @@ export function DiaryAgendaDayDay({
                   weekday: "long",
                 })}
           </b>
-          {todayStr === dayName ? null : (
+          {todayStr === dayName ? (
+            <span className="ml-2 whitespace-nowrap text-shadow-md text-shadow-black/60 text-white font-medium">
+              ☀️
+              <small>
+                {sunrise.toLocaleTimeString("en-DK", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+                -
+                {sunset.toLocaleTimeString("en-DK", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </small>
+              🌙
+            </span>
+          ) : (
             <DiaryAgendaDayCreateExpander
               inactiveButtonClassName={
                 isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"

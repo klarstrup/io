@@ -2,10 +2,11 @@
 import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
 import Link from "next/link";
-import { JSX } from "react";
+import type { JSX } from "react";
+import type { Workout } from "../../graphql.generated";
 import type { DiaryEntry } from "../../lib";
 import { exercisesById, TagType } from "../../models/exercises";
-import { isClimbingExercise, WorkoutData } from "../../models/workout";
+import { isClimbingExercise } from "../../models/workout";
 import {
   dateToString,
   DEFAULT_TIMEZONE,
@@ -26,11 +27,11 @@ export function DiaryEntryItem({
   const { food, workouts } = diaryEntry || {};
 
   const dayTotalEnergy = food?.reduce(
-    (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
+    (acc, foodEntry) => acc + foodEntry.nutritionalContents.energy.value,
     0,
   );
   const dayTotalProtein = food?.reduce(
-    (acc, foodEntry) => acc + (foodEntry.nutritional_contents.protein || 0),
+    (acc, foodEntry) => acc + (foodEntry.nutritionalContents.protein || 0),
     0,
   );
 
@@ -80,11 +81,7 @@ export function DiaryEntryItem({
   );
 }
 
-function WorkoutsSummary({
-  workouts,
-}: {
-  workouts: (WorkoutData & { _id: string })[];
-}) {
+function WorkoutsSummary({ workouts }: { workouts: Workout[] }) {
   const exercisesDone = new Set<number>();
 
   for (const workout of workouts) {

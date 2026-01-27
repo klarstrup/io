@@ -1,11 +1,11 @@
 import { TZDate } from "@date-fns/tz";
 import { endOfDay, startOfDay } from "date-fns";
+import { gql } from "graphql-tag";
 import type { Session } from "next-auth";
+import { query } from "../../ApolloClient";
 import { FieldSetY } from "../../components/FieldSet";
-import { MyFitnessPal } from "../../sources/myfitnesspal";
-import { MyFitnessPalFoodEntries } from "../../sources/myfitnesspal.server";
-import { DataSource } from "../../sources/utils";
-import { DEFAULT_TIMEZONE, isNonEmptyArray, rangeToQuery } from "../../utils";
+import { DiaryAgendaFoodQuery } from "../../graphql.generated";
+import { DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
 
 export async function DiaryAgendaFood({
@@ -17,33 +17,61 @@ export async function DiaryAgendaFood({
 }) {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = new TZDate(date, timeZone);
-  const food: (MyFitnessPal.MongoFoodEntry & { _id: string })[] = [];
-  for (const dataSource of user?.dataSources ?? []) {
-    if (dataSource.source !== DataSource.MyFitnessPal) continue;
-
-    for await (const foodEntry of MyFitnessPalFoodEntries.find({
-      user_id: dataSource.config.userId,
-      datetime: rangeToQuery(startOfDay(tzDate), endOfDay(tzDate)),
-    })) {
-      food.push({
-        ...foodEntry,
-        _id: foodEntry._id.toString(),
-      });
-    }
-  }
+  const food =
+    (
+      await query<DiaryAgendaFoodQuery>({
+        query: gql`
+          query DiaryAgendaFood($interval: IntervalInput!) {
+            user {
+              foodEntries(interval: $interval) {
+                id
+                datetime
+                mealName
+                nutritionalContents {
+                  energy {
+                    value
+                    unit
+                  }
+                  protein
+                }
+                type
+                food {
+                  id
+                  description
+                  servingSizes {
+                    unit
+                    value
+                    nutritionMultiplier
+                  }
+                }
+                servings
+                servingSize {
+                  unit
+                  value
+                  nutritionMultiplier
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          interval: { start: startOfDay(tzDate), end: endOfDay(tzDate) },
+        },
+      })
+    ).data?.user?.foodEntries || [];
 
   const dayTotalEnergy = food?.reduce(
-    (acc, foodEntry) => acc + foodEntry.nutritional_contents.energy.value,
+    (acc, foodEntry) => acc + foodEntry.nutritionalContents.energy.value,
     0,
   );
   const dayTotalProtein = food?.reduce(
-    (acc, foodEntry) => acc + (foodEntry.nutritional_contents.protein || 0),
+    (acc, foodEntry) => acc + (foodEntry.nutritionalContents.protein || 0),
     0,
   );
 
   return (
     <FieldSetY
-      className="min-w-[250px] flex-1"
+      className="min-w-62.5 flex-1"
       legend={
         <div className="flex items-baseline gap-2">
           Food{" "}
