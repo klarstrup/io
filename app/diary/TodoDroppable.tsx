@@ -1,4 +1,5 @@
 "use client";
+import { useMutation } from "@apollo/client/react";
 import {
   DndContext,
   DragEndEvent,
@@ -23,10 +24,10 @@ import {
   subMinutes,
 } from "date-fns";
 import type { ReactNode } from "react";
-import type { MongoVTodo } from "../../lib";
+import { Todo, UpdateTodoDocument } from "../../graphql.generated";
 import type { getNextSets } from "../../models/workout.server";
 import { dayStartHour } from "../../utils";
-import { snoozeUserExerciseSchedule, upsertTodo } from "./actions";
+import { snoozeUserExerciseSchedule } from "./actions";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -50,6 +51,8 @@ export function TodoDragDropContainer(props: {
   children: ReactNode;
   userId?: string;
 }) {
+  const [updateTodo] = useMutation(UpdateTodoDocument);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!active.data.current || !over?.data.current) return;
@@ -85,7 +88,7 @@ export function TodoDragDropContainer(props: {
       );
       return;
     } else if (active.data.current.todo) {
-      const todo: MongoVTodo = active.data.current.todo;
+      const todo: Todo = active.data.current.todo;
       const targetDate = setHours(
         new Date(over.data.current.date),
         dayStartHour,
@@ -103,22 +106,41 @@ export function TodoDragDropContainer(props: {
         isSameHour(addHours(startOfDay(new Date()), dayStartHour), targetDate)
       ) {
         const updatedTodo = {
-          // hack for graphql transition
-          uid: (todo as { id?: string }).id,
           start: targetDate,
           completed: null,
-          order: newOrder,
-        };
+          // Reimplement ordering later
+          // order: newOrder,
+        } as const;
 
-        upsertTodo(updatedTodo);
+        void updateTodo({
+          variables: {
+            input: { id: todo.id, data: updatedTodo },
+          },
+          optimisticResponse: {
+            updateTodo: {
+              __typename: "UpdateTodoPayload",
+              todo: { ...todo, ...updatedTodo },
+            },
+          },
+        });
       } else {
         const updatedTodo = {
-          uid: (todo as { id?: string }).id,
           completed: targetDate,
-          order: newOrder,
-        };
+          // Reimplement ordering later
+          // order: newOrder,
+        } as const;
 
-        upsertTodo(updatedTodo);
+        void updateTodo({
+          variables: {
+            input: { id: todo.id, data: updatedTodo },
+          },
+          optimisticResponse: {
+            updateTodo: {
+              __typename: "UpdateTodoPayload",
+              todo: { ...todo, ...updatedTodo },
+            },
+          },
+        });
       }
     }
   }
