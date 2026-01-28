@@ -1,24 +1,21 @@
 "use server";
 
 import { waitUntil } from "@vercel/functions";
-import { addDays, max } from "date-fns";
 import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import PartySocket from "partysocket";
 import { v4 as uuid } from "uuid";
 import { auth } from "../../auth";
-import type { MongoVTodo } from "../../lib";
 import { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import { Users } from "../../models/user.server";
-import { WorkoutSource, type WorkoutData } from "../../models/workout";
+import { type WorkoutData } from "../../models/workout";
 import {
   updateExerciseCounts,
   updateLocationCounts,
   Workouts,
 } from "../../models/workout.server";
 import type { ExerciseSchedule } from "../../sources/fitocracy";
-import { IcalEvents } from "../../sources/ical.server";
 import type { UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable, omit } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
@@ -227,139 +224,4 @@ export async function updateLocation(
   emitIoUpdate(user.id);
 
   return { ...omit(newLocation, "_id"), id: newLocation._id.toString() };
-}
-
-export async function upsertTodo(
-  todo: Partial<MongoVTodo> & { _id?: string; uid?: string; id?: string },
-) {
-  const user = (await auth())?.user;
-  if (!user) throw new Error("Unauthorized");
-
-  if ("start" in todo && todo.start) todo.start = new Date(todo.start);
-  if ("due" in todo && todo.due) todo.due = new Date(todo.due);
-  if ("completed" in todo && todo.completed)
-    todo.completed = new Date(todo.completed);
-
-  const upsertResult = await IcalEvents.updateOne(
-    {
-      ...("_id" in todo && todo._id
-        ? { _id: new ObjectId(todo._id) }
-        : { uid: todo.uid ?? todo.id }),
-      _io_userId: user.id,
-      type: "VTODO",
-    },
-    {
-      $set: {
-        type: "VTODO",
-        lastmodified: new Date(),
-        params: [],
-        _io_source: WorkoutSource.Self,
-        _io_userId: user.id,
-        uid: todo.uid ?? new ObjectId().toString(),
-        ...(omit(todo, "created", "dtstamp") as Omit<
-          typeof todo,
-          "created" | "dtstamp"
-        >),
-      } satisfies Omit<MongoVTodo, "created" | "dtstamp">,
-      $setOnInsert: {
-        created: new Date(),
-        dtstamp: new Date(),
-      },
-    },
-    { upsert: true },
-  );
-
-  if (!upsertResult.matchedCount && !upsertResult.upsertedId) {
-    throw new Error("Failed to upsert todo");
-  }
-
-  revalidatePath("/diary");
-
-  emitIoUpdate(user.id);
-
-  return String(upsertResult.matchedCount);
-}
-
-export async function doTodo(todoUid: string) {
-  return upsertTodo({ uid: todoUid, completed: new Date(), type: "VTODO" });
-}
-
-export async function undoTodo(todoUid: string) {
-  return upsertTodo({ uid: todoUid, completed: null, type: "VTODO" });
-}
-
-export async function snoozeTodo(todoUid: string) {
-  const user = (await auth())?.user;
-  if (!user) throw new Error("Unauthorized");
-
-  const todo = await IcalEvents.findOne<MongoVTodo>({
-    uid: todoUid,
-    _io_userId: user.id,
-    type: "VTODO",
-  });
-
-  if (!todo) throw new Error("Todo not found");
-
-  const now = new Date();
-  const tomorrow = addDays(max([todo.start ?? now, now]), 1);
-
-  return upsertTodo({ uid: todoUid, start: tomorrow, type: "VTODO" });
-}
-
-export async function backlogTodo(todoUid: string) {
-  const user = (await auth())?.user;
-  if (!user) throw new Error("Unauthorized");
-
-  const todo = await IcalEvents.findOne<MongoVTodo>({
-    uid: todoUid,
-    _io_userId: user.id,
-    type: "VTODO",
-  });
-
-  if (!todo) throw new Error("Todo not found");
-
-  return upsertTodo({
-    uid: todoUid,
-    start: undefined,
-    due: undefined,
-    completed: undefined,
-  });
-}
-
-export async function agendaTodo(todoUid: string) {
-  const user = (await auth())?.user;
-  if (!user) throw new Error("Unauthorized");
-
-  const todo = await IcalEvents.findOne<MongoVTodo>({
-    uid: todoUid,
-    _io_userId: user.id,
-    type: "VTODO",
-  });
-
-  if (!todo) throw new Error("Todo not found");
-
-  const now = new Date();
-
-  return upsertTodo({ uid: todoUid, start: now });
-}
-
-export async function deleteTodo(todoUid: string) {
-  const user = (await auth())?.user;
-  if (!user) throw new Error("Unauthorized");
-
-  const result = await IcalEvents.deleteMany({
-    uid: todoUid,
-    _io_userId: user.id,
-    type: "VTODO",
-  });
-
-  if (result.deletedCount === 0) {
-    throw new Error("Failed to delete todo");
-  }
-
-  revalidatePath("/diary");
-
-  emitIoUpdate(user.id);
-
-  return result.deletedCount;
 }
