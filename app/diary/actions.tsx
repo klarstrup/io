@@ -123,7 +123,7 @@ export async function deleteWorkout(workoutId: string) {
 export async function snoozeUserExerciseSchedule(
   userId: string,
   exerciseId: number,
-  snoozedUntil: Date,
+  snoozedUntil: Date | null,
   newOrder?: number,
 ) {
   const user = (await auth())?.user;

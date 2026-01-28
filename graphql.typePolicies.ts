@@ -48,4 +48,10 @@ export const typePolicies: TypePolicies = {
       snoozedUntil: { read: (d) => (d ? new Date(d) : null) },
     },
   },
+  NextSet: {
+    fields: {
+      workedOutAt: { read: (d) => d && new Date(d) },
+      dueOn: { read: (d) => d && new Date(d) },
+    },
+  },
 };

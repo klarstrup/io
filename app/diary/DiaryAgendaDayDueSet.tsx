@@ -1,7 +1,7 @@
 "use client";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { addDays, subHours } from "date-fns";
+import { addDays, isFuture, subHours } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
@@ -168,6 +168,31 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
               >
                 Snooze
               </button>
+              {dueSet.scheduleEntry.snoozedUntil &&
+                isFuture(dueSet.scheduleEntry.snoozedUntil) && (
+                  <div className="w-full text-center text-sm text-black/60">
+                    <small>
+                      Snoozed until{" "}
+                      {dueSet.scheduleEntry.snoozedUntil.toLocaleDateString(
+                        undefined,
+                        { month: "short", day: "numeric" },
+                      )}
+                    </small>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void snoozeUserExerciseSchedule(
+                          userId,
+                          dueSet.exerciseId,
+                          null,
+                        )
+                      }
+                      className="ml-2 rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"
+                    >
+                      Unsnooze
+                    </button>
+                  </div>
+                )}
               {exercise.is_hidden ? null : (
                 <button
                   type="button"

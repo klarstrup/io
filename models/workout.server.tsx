@@ -1,11 +1,20 @@
 /* eslint-disable no-unexpected-multiline */
-import { addMilliseconds, subDays, subMonths, subYears } from "date-fns";
+import { tz } from "@date-fns/tz";
+import {
+  addHours,
+  addMilliseconds,
+  isEqual,
+  startOfDay,
+  subDays,
+  subMonths,
+  subYears,
+} from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import type { Location } from "../graphql.generated";
 import type { PRType } from "../lib";
 import { ExerciseSchedule } from "../sources/fitocracy";
-import { epoch } from "../utils";
+import { dayStartHour, epoch } from "../utils";
 import { proxyCollection } from "../utils.server";
 import {
   AssistType,
@@ -74,10 +83,26 @@ export const getNextSet = async ({
     },
   ]).toArray();
 
-  const dueOn = addMilliseconds(
-    workout?.workedOutAt || epoch,
+  const adjustedWorkedOutAt =
+    workout?.workedOutAt &&
+    isEqual(
+      workout.workedOutAt,
+      startOfDay(workout.workedOutAt, { in: tz("UTC") }),
+    )
+      ? addHours(workout.workedOutAt, dayStartHour)
+      : workout?.workedOutAt;
+
+  let dueOn = addMilliseconds(
+    adjustedWorkedOutAt || epoch,
     durationToMs(scheduleEntry.frequency),
   );
+
+  if (
+    scheduleEntry.snoozedUntil &&
+    (!adjustedWorkedOutAt || adjustedWorkedOutAt < scheduleEntry.snoozedUntil)
+  ) {
+    dueOn = scheduleEntry.snoozedUntil;
+  }
 
   if (isClimbingExercise(scheduleEntry.exerciseId)) {
     if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {

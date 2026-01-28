@@ -9,7 +9,6 @@ import {
   endOfDay,
   isAfter,
   isBefore,
-  isFuture,
   isPast,
   max,
   min,
@@ -25,7 +24,7 @@ import {
   type NextSet,
   type Todo,
 } from "../../graphql.generated";
-import { isNextSetDue, WorkoutSource } from "../../models/workout";
+import { WorkoutSource } from "../../models/workout";
 import {
   dateToString,
   dayStartHour,
@@ -179,7 +178,7 @@ export function DiaryAgendaDay({
   const tzDate = new TZDate(date, timeZone);
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -4), dayStartHour),
+    start: addHours(addDays(startOfDay(tzDate), -7), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
   const { data } = useSuspenseQuery<DiaryAgendaDayUserTodosQuery>(
@@ -214,29 +213,15 @@ export function DiaryAgendaDay({
 
   const eventsByDate: Record<string, Event[]> = {};
   const todosByDate: Record<string, Todo[]> = {};
-  const dueSetsByDate: Record<string, NextSet[]> = { [date]: [] };
+  const dueSetsByDate: Record<string, NextSet[]> = {};
 
   const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
     (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
   );
-  for (const date of daysOfInterval) {
-    const dayEnd = addHours(endOfDay(date), dayStartHour);
-    const dueSets = nextSets.filter(
-      (nextSet) => isFuture(dayEnd) && isNextSetDue(date, nextSet),
-    );
-    const calName = dateToString(date);
-
-    for (const dueSet of dueSets) {
-      if (
-        Object.values(dueSetsByDate)
-          .flat()
-          .some((e) => e.scheduleEntry.id === dueSet.scheduleEntry.id)
-      ) {
-        continue;
-      }
-      if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
-      dueSetsByDate[calName].push(dueSet);
-    }
+  for (const dueSet of nextSets) {
+    const calName = dateToString(dueSet.dueOn);
+    if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
+    dueSetsByDate[calName].push(dueSet);
   }
 
   for (const event of calendarEvents) {
