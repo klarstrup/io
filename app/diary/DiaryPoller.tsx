@@ -2,6 +2,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import usePartySocket from "partysocket/react";
+import { useId } from "react";
 import useInterval from "../../hooks/useInterval";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
@@ -12,7 +13,28 @@ export function DiaryPoller({
   userId: string;
   loadedAt: Date;
 }) {
+  const id = useId();
   const client = useApolloClient();
+
+  if (process.env.NODE_ENV === "development") {
+    usePartySocket({
+      host: "ws://localhost:3000/_next/webpack-hmr?id=" + id,
+      room: "diary-poller-" + id,
+      onMessage(event) {
+        const data = JSON.parse(event.data as string);
+
+        if ("type" in data && data.type === "built") {
+          // A webpack rebuild happened, likely due to code changes
+          // TODO: Make this smarter to avoid unnecessary refreshes
+          console.log(
+            "[DiaryPoller] Webpack rebuild detected, refetching queries",
+          );
+          client.refetchObservableQueries();
+        }
+      },
+    });
+  }
+
   usePartySocket({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
     room: userId,
