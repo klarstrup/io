@@ -303,7 +303,6 @@ export function DiaryAgendaDay({
       }
 
       if (!eventsByDate[calName]) eventsByDate[calName] = [];
-      if (eventsByDate[calName].includes(event)) continue;
       eventsByDate[calName].push(event);
     }
   }

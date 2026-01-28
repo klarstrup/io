@@ -146,6 +146,9 @@ export async function getUserIcalEventsBetween(
         : [];
       for (const exdate of adjustedExdates) rruleSet.exdate(exdate);
 
+      // Avoid adding reccurences of the original event instance
+      rruleSet.exdate(dtstart);
+
       const rruleDates = rruleSet
         .between(start, end, true)
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
@@ -163,6 +166,7 @@ export async function getUserIcalEventsBetween(
           }
           eventsThatFallWithinRange.push({
             ...omit(event, "_id"),
+            uid: `${rruleDate.toLocaleDateString()}-${event.uid}`,
             start: rruleDate,
             end: addSeconds(
               rruleDate,
