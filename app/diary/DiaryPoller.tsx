@@ -29,7 +29,9 @@ export function DiaryPoller({
           console.log(
             "[DiaryPoller] Webpack rebuild detected, refetching queries",
           );
-          client.refetchObservableQueries();
+          client.refetchObservableQueries().catch(() => {
+            // don't care
+          });
         }
       },
     });
