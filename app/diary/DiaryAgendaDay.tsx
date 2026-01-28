@@ -240,54 +240,53 @@ export function DiaryAgendaDay({
   }
 
   for (const event of calendarEvents) {
-    for (const date of eachDayOfInterval(
-      {
-        start: max(
-          [
-            subHours(
-              max(
-                [
-                  "datetype" in event && event.datetype === "date"
-                    ? roundToNearestDay(event.start, {
-                        in: tz(DEFAULT_TIMEZONE),
-                      })
-                    : null,
+    const eventInterval = {
+      start: max(
+        [
+          subHours(
+            max(
+              [
+                "datetype" in event && event.datetype === "date"
+                  ? roundToNearestDay(event.start, {
+                      in: tz(DEFAULT_TIMEZONE),
+                    })
+                  : null,
 
-                  "completed" in event ? event.completed : null,
-                  "due" in event ? event.due : null,
-                  "start" in event ? event.start : null,
-                  fetchingInterval.start,
-                ].filter(Boolean),
-              ),
-              dayStartHour,
+                "completed" in event ? event.completed : null,
+                "due" in event ? event.due : null,
+                "start" in event ? event.start : null,
+                fetchingInterval.start,
+              ].filter(Boolean),
             ),
-            fetchingInterval.start,
-          ].filter(Boolean),
-        ),
-        end: min(
-          [
-            subHours(
-              min(
-                [
-                  "datetype" in event && event.datetype === "date"
-                    ? roundToNearestDay(event.end, {
-                        in: tz(DEFAULT_TIMEZONE),
-                      })
-                    : null,
-                  "completed" in event ? event.completed : null,
-                  "due" in event ? event.due : null,
-                  "end" in event ? event.end : null,
-                  fetchingInterval.end,
-                ].filter(Boolean),
-              ),
-              dayStartHour,
+            dayStartHour,
+          ),
+          fetchingInterval.start,
+        ].filter(Boolean),
+      ),
+      end: min(
+        [
+          subHours(
+            min(
+              [
+                "datetype" in event && event.datetype === "date"
+                  ? roundToNearestDay(event.end, {
+                      in: tz(DEFAULT_TIMEZONE),
+                    })
+                  : null,
+                "completed" in event ? event.completed : null,
+                "due" in event ? event.due : null,
+                "end" in event ? event.end : null,
+                fetchingInterval.end,
+              ].filter(Boolean),
             ),
-            fetchingInterval.end,
-          ].filter(Boolean),
-        ),
-      },
-      { in: tz(timeZone) },
-    )) {
+            dayStartHour,
+          ),
+          fetchingInterval.end,
+        ].filter(Boolean),
+      ),
+    };
+
+    for (const date of eachDayOfInterval(eventInterval, { in: tz(timeZone) })) {
       const dayStart = addHours(startOfDay(date), dayStartHour);
       const dayEnd = addHours(endOfDay(date), dayStartHour);
 
