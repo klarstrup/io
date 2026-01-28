@@ -1,4 +1,5 @@
 "use client";
+import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import usePartySocket from "partysocket/react";
 import useInterval from "../../hooks/useInterval";
@@ -11,6 +12,7 @@ export function DiaryPoller({
   userId: string;
   loadedAt: Date;
 }) {
+  const client = useApolloClient();
   usePartySocket({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "localhost:1999",
     room: userId,
@@ -33,6 +35,7 @@ export function DiaryPoller({
             `Refreshing diary because scrapedAt ${new Date(data.scrapedAt).toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
           );
           router.refresh();
+          client.refetchObservableQueries();
         }
       } catch (error) {
         console.error(error);
