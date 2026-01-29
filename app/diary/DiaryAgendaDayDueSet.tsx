@@ -187,7 +187,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                           null,
                         )
                       }
-                      className="ml-2 rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"
+                      className="ml-2 cursor-pointer rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"
                     >
                       Unsnooze
                     </button>
