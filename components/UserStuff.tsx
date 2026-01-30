@@ -16,7 +16,9 @@ export default function UserStuff() {
           "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
       }}
     >
-      <GraphQLListenerButItHasUserAlready />
+      <Suspense>
+        <GraphQLListenerButItHasUserAlready />
+      </Suspense>
       <UserStuffLink href="/diary">📔</UserStuffLink>
       <UserStuffLink href="/lists">✅</UserStuffLink>
       <UserStuffLink href="/calendar">🗓️</UserStuffLink>
