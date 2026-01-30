@@ -14,8 +14,12 @@ import type { DateInterval } from "./lib";
 
 export const dayStartHour = 5;
 
-export const dateToString = (date: Date): `${number}-${number}-${number}` =>
-  `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+export const dateToString = (date: Date): `${number}-${number}-${number}` => {
+  // TODO: should be a date in the first place, something is wrong upstream
+  date = isDate(date) ? date : new Date(date);
+
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+};
 
 export const DEFAULT_TIMEZONE = "Europe/Copenhagen";
 
