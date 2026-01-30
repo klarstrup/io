@@ -4,6 +4,7 @@ import {
   addHours,
   addMilliseconds,
   isEqual,
+  max,
   startOfDay,
   subDays,
   subMonths,
@@ -103,6 +104,9 @@ export const getNextSet = async ({
   ) {
     dueOn = scheduleEntry.snoozedUntil;
   }
+
+  // Due date cannot be in the past
+  dueOn = max([dueOn, new Date()]);
 
   if (isClimbingExercise(scheduleEntry.exerciseId)) {
     if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {
