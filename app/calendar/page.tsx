@@ -24,14 +24,26 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 
   if (isAtLimit) return [null, null] as const;
 
+  const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+
   return [
-    eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map((weekDate) => (
-      <DiaryEntryWeekWrapper
-        user={user}
-        key={String(weekDate)}
-        weekDate={weekDate}
-      />
-    )),
+    <Suspense
+      fallback={weeks.map((weekDate) => (
+        <DiaryEntryWeek
+          key={String(weekDate)}
+          user={user}
+          weekDate={weekDate}
+        />
+      ))}
+    >
+      {weeks.map((weekDate) => (
+        <DiaryEntryWeekWrapper
+          key={String(weekDate)}
+          user={user}
+          weekDate={weekDate}
+        />
+      ))}
+    </Suspense>,
     { start: subWeeks(end, 1), end: subWeeks(end, 1 + WEEKS_PER_PAGE) },
   ] as const;
 }
