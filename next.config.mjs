@@ -8,10 +8,10 @@ const nextConfig = withSerwist({
   typedRoutes: true,
   staticPageGenerationTimeout: 600,
   rewrites: async () => {
-    return [
-      { source: "/cv", destination: "/cv.pdf" },
-      { source: "/", destination: "/diary" },
-    ];
+    return [{ source: "/cv", destination: "/cv.pdf" }];
+  },
+  redirects: async () => {
+    return [{ source: "/", destination: "/diary", permanent: false }];
   },
 });
 
