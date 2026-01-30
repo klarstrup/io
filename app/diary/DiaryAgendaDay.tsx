@@ -1,5 +1,5 @@
 "use client";
-import { skipToken, useQuery } from "@apollo/client/react";
+import { skipToken, useApolloClient, useQuery } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,

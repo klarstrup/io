@@ -7,6 +7,7 @@ import UserStuff from "../components/UserStuff";
 import "./page.css";
 import { SerwistProvider } from "./serwist";
 import { Suspense } from "react";
+import LoadingIndicator from "./LoadingIndicator";
 
 export const metadata: Metadata = {
   title: "io input/output",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
+        <LoadingIndicator />
         <SerwistProvider swUrl="/serwist/sw.js">
           <ApolloWrapper>
             <AblyWrapper>

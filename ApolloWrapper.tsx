@@ -13,6 +13,9 @@ import {
   LocalStorageWrapper,
   persistCacheSync,
 } from "./vendor/apollo-cache-persist";
+import { createNetworkStatusNotifier } from "react-apollo-network-status";
+
+export const { link, useApolloNetworkStatus } = createNetworkStatusNotifier();
 
 // you need to create a component to wrap your app in
 export function ApolloWrapper({ children }: PropsWithChildren) {
@@ -33,12 +36,14 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
       link:
         typeof window === "undefined"
           ? new SchemaLink({ schema: require("./graphql.ts").schema })
-          : new HttpLink({
-              uri:
-                process.env.NODE_ENV === "development"
-                  ? "http://localhost:3000/api/graphql"
-                  : "https://io.klarstrup.dk/api/graphql",
-            }),
+          : link.concat(
+              new HttpLink({
+                uri:
+                  process.env.NODE_ENV === "development"
+                    ? "http://localhost:3000/api/graphql"
+                    : "https://io.klarstrup.dk/api/graphql",
+              }),
+            ),
     });
   };
 
