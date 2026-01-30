@@ -9,13 +9,27 @@ import {
 import { SchemaLink } from "@apollo/client/link/schema";
 import type { PropsWithChildren } from "react";
 import { typePolicies } from "./graphql.typePolicies";
+import {
+  LocalStorageWrapper,
+  persistCacheSync,
+} from "./vendor/apollo-cache-persist";
 
 // you need to create a component to wrap your app in
 export function ApolloWrapper({ children }: PropsWithChildren) {
-  const makeApolloClient = () =>
-    new ApolloClient({
+  const makeApolloClient = () => {
+    const cache = new InMemoryCache({ typePolicies });
+
+    if (typeof window !== "undefined") {
+      // await before instantiating ApolloClient, else queries might run before the cache is persisted
+      persistCacheSync({
+        cache,
+        storage: new LocalStorageWrapper(window.localStorage),
+      });
+    }
+
+    return new ApolloClient({
       devtools: { enabled: true },
-      cache: new InMemoryCache({ typePolicies }),
+      cache,
       link:
         typeof window === "undefined"
           ? new SchemaLink({ schema: require("./graphql.ts").schema })
@@ -26,6 +40,7 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
                   : "https://io.klarstrup.dk/api/graphql",
             }),
     });
+  };
 
   return (
     <ApolloNextAppProvider makeClient={makeApolloClient}>
