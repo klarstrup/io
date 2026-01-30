@@ -25,9 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SerwistProvider swUrl="/serwist/sw.js">
           <ApolloWrapper>
             <AblyWrapper>
-              <Suspense>
-                <UserStuff />
-              </Suspense>
+              <UserStuff />
               <Suspense>{children}</Suspense>
               <Analytics />
             </AblyWrapper>
