@@ -5,8 +5,8 @@ import {
   isWithinInterval,
   subMonths,
 } from "date-fns";
+import { Suspense } from "react";
 import LoadMore from "../../../components/LoadMore";
-import UserStuff from "../../../components/UserStuff";
 import type { EventEntry } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { getIoClimbAlongCompetitionEventEntry } from "../../../sources/climbalong";
@@ -46,12 +46,14 @@ export default async function Home(props: {
     <div>
       <section id="timeline">
         <LoadMore loadMoreAction={loadMoreData} initialCursor={initialCursor}>
-          <TimelineEventsList
-            events={events}
-            disciplines={disciplines}
-            from={from}
-            to={to}
-          />
+          <Suspense>
+            <TimelineEventsList
+              events={events}
+              disciplines={disciplines}
+              from={from}
+              to={to}
+            />
+          </Suspense>
         </LoadMore>
       </section>
     </div>
@@ -74,13 +76,15 @@ async function loadMoreData(cursor: string) {
   const events = await getData(disciplines, { from, to });
 
   return [
-    <TimelineEventsList
-      from={from}
-      to={to}
-      disciplines={disciplines}
-      events={events}
-      key={JSON.stringify({ disciplines, from, to })}
-    />,
+    <Suspense>
+      <TimelineEventsList
+        from={from}
+        to={to}
+        disciplines={disciplines}
+        events={events}
+        key={JSON.stringify({ disciplines, from, to })}
+      />
+    </Suspense>,
     JSON.stringify({
       disciplines,
       from: subMonths(from!, monthsPerPage),
