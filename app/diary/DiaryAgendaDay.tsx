@@ -219,7 +219,7 @@ export function DiaryAgendaDay({
     (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
   );
   for (const dueSet of nextSets) {
-    const calName = dateToString(dueSet.dueOn);
+    const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
     if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
     dueSetsByDate[calName].push(dueSet);
   }
