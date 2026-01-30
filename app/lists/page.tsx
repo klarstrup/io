@@ -24,7 +24,9 @@ gql`
 `;
 
 export default function ListPage() {
-  const { data, dataState } = useQuery(ListPageUserDocument);
+  const { data, dataState } = useQuery(ListPageUserDocument, {
+    pollInterval: 30000,
+  });
 
   const calendarTodos = data?.user?.todos || [];
   const todos = calendarTodos

@@ -181,7 +181,7 @@ export function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -7), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const { data } = useQuery<DiaryAgendaDayUserTodosQuery>(
+  const { data } = useQuery(
     DiaryAgendaDayUserTodosDocument,
     user
       ? {
@@ -189,6 +189,7 @@ export function DiaryAgendaDay({
             interval: fetchingInterval,
             intervalEnd: fetchingInterval.end,
           },
+          pollInterval: 30000,
         }
       : skipToken,
   );
