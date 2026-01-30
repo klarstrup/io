@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client/react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ListPageUserDocument } from "../../graphql.generated";
 import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
+import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 
 gql`
@@ -23,7 +24,7 @@ gql`
 `;
 
 export default function ListPage() {
-  const { data } = useQuery(ListPageUserDocument);
+  const { data, dataState } = useQuery(ListPageUserDocument);
 
   const calendarTodos = data?.user?.todos || [];
   const todos = calendarTodos
@@ -78,34 +79,43 @@ export default function ListPage() {
         {todos.map((todo) => (
           <DiaryAgendaDayTodo todo={todo} key={todo.id} />
         ))}
+        {dataState !== "complete" ? (
+          <DiaryAgendaDayEntry iconTxt="⏳" className="min-h-8">
+            Loading...
+          </DiaryAgendaDayEntry>
+        ) : null}
       </FieldSetY>
-      <FieldSetY
-        className="mb-2 flex flex-col gap-2 bg-white pl-0"
-        legend={
-          <div className="flex items-center gap-2">
+      {backlogTodos.length > 0 && (
+        <FieldSetY
+          className="mb-2 flex flex-col gap-2 bg-white pl-0"
+          legend={
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-shadow-md text-shadow-white">
+                Backlog
+              </span>{" "}
+              <DiaryAgendaDayCreateTodo />
+            </div>
+          }
+        >
+          {backlogTodos.map((todo) => (
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
+          ))}
+        </FieldSetY>
+      )}
+      {todones.length > 0 && (
+        <FieldSetY
+          className="mb-2 flex flex-col gap-2 bg-white pl-0"
+          legend={
             <span className="font-bold text-shadow-md text-shadow-white">
-              Backlog
-            </span>{" "}
-            <DiaryAgendaDayCreateTodo />
-          </div>
-        }
-      >
-        {backlogTodos.map((todo) => (
-          <DiaryAgendaDayTodo todo={todo} key={todo.id} />
-        ))}
-      </FieldSetY>
-      <FieldSetY
-        className="mb-2 flex flex-col gap-2 bg-white pl-0"
-        legend={
-          <span className="font-bold text-shadow-md text-shadow-white">
-            Done
-          </span>
-        }
-      >
-        {todones.map((todo) => (
-          <DiaryAgendaDayTodo todo={todo} key={todo.id} />
-        ))}
-      </FieldSetY>
+              Done
+            </span>
+          }
+        >
+          {todones.map((todo) => (
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
+          ))}
+        </FieldSetY>
+      )}
     </div>
   );
 }
