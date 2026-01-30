@@ -1,6 +1,6 @@
 "use client";
 import { gql } from "@apollo/client";
-import { useSuspenseQuery } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ListPageUserDocument } from "../../graphql.generated";
 import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
@@ -23,9 +23,9 @@ gql`
 `;
 
 export default function ListPage() {
-  const { data } = useSuspenseQuery(ListPageUserDocument);
+  const { data } = useQuery(ListPageUserDocument);
 
-  const calendarTodos = data.user?.todos || [];
+  const calendarTodos = data?.user?.todos || [];
   const todos = calendarTodos
     .filter((todo) => !todo.completed && (todo.start || todo.due))
     .sort((a, b) => {

@@ -1,5 +1,5 @@
 "use client";
-import { skipToken, useSuspenseQuery } from "@apollo/client/react";
+import { skipToken, useQuery } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
@@ -181,7 +181,7 @@ export function DiaryAgendaDay({
     start: addHours(addDays(startOfDay(tzDate), -7), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const { data } = useSuspenseQuery<DiaryAgendaDayUserTodosQuery>(
+  const { data } = useQuery<DiaryAgendaDayUserTodosQuery>(
     DiaryAgendaDayUserTodosDocument,
     user
       ? {
