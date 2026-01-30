@@ -1,5 +1,8 @@
+import { withSerwist } from "@serwist/turbopack";
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig = withSerwist({
+  cacheComponents: true,
   logging: { fetches: { fullUrl: true } },
   reactStrictMode: true,
   typedRoutes: true,
@@ -10,6 +13,6 @@ const nextConfig = {
       { source: "/", destination: "/diary" },
     ];
   },
-};
+});
 
-module.exports = nextConfig;
+export default nextConfig;

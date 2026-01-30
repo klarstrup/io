@@ -18,7 +18,6 @@ import { wrapSources } from "../../../sources/utils.server";
 import { partition, randomSliceOfSize } from "../../../utils";
 import { deadlineLoop, fetchJson, jsonStreamResponse } from "../scraper-utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 const fetchCA = <T>(path: string, init?: RequestInit) =>

@@ -5,7 +5,7 @@ import {
   ICalEventBusyStatus,
 } from "ical-generator";
 import { DateTime } from "luxon";
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import type { EventEntry } from "../../lib";
 import { Users } from "../../models/user.server";
 import {
@@ -21,11 +21,11 @@ import { DataSource } from "../../sources/utils";
 import { MINUTE_IN_SECONDS } from "../../utils";
 import { CompUserScalars } from "../api/toplogger_scrape/fragments";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
-export const revalidate = 600; // 10 minutes
 
 export async function GET() {
+  await connection();
+
   const user = await Users.findOne();
 
   const eventsPromises: (Promise<EventEntry[]> | Promise<EventEntry>)[] = [];

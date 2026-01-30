@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { DataSource } from "../../sources/utils";
 
 export const scraperEndpoints = Object.values(DataSource).map(
@@ -9,7 +10,9 @@ export const fetchJson = async <T>(url: string | URL, init?: RequestInit) =>
 export const fetchText = async (url: string | URL, init?: RequestInit) =>
   fetch(url, init).then((res) => res.text());
 
-export function jsonStreamResponse(generator: () => AsyncGenerator) {
+export async function jsonStreamResponse(generator: () => AsyncGenerator) {
+  await connection();
+
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
   const encoder = new TextEncoder();

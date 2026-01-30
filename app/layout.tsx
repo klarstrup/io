@@ -5,6 +5,8 @@ import AblyWrapper from "../AblyWrapper";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
 import "./page.css";
+import { SerwistProvider } from "./serwist";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "io input/output",
@@ -16,18 +18,22 @@ export const viewport: Viewport = {
   minimumScale: 1,
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <ApolloWrapper>
-      <AblyWrapper>
-        <html lang="en">
-          <body>
-            <UserStuff />
-            {children}
-            <Analytics />
-          </body>
-        </html>
-      </AblyWrapper>
-    </ApolloWrapper>
+    <html lang="en">
+      <body>
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <ApolloWrapper>
+            <AblyWrapper>
+              <Suspense>
+                <UserStuff />
+              </Suspense>
+              <Suspense>{children}</Suspense>
+              <Analytics />
+            </AblyWrapper>
+          </ApolloWrapper>
+        </SerwistProvider>
+      </body>
+    </html>
   );
 }

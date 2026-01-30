@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { connection } from "next/server";
 import { auth } from "../../../auth";
 import { isGrippyAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -7,12 +8,13 @@ import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
 import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export const GET = () =>
   // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
+    await connection();
+
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 

@@ -34,7 +34,6 @@ const years = [
   2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026,
 ] as const;
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export const GET = () =>

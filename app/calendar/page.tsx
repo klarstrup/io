@@ -9,7 +9,6 @@ import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
 
 export const maxDuration = 45;
-export const revalidate = 3600; // 1 hour
 
 const WEEKS_PER_PAGE = 9;
 

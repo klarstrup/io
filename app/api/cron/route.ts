@@ -1,10 +1,13 @@
 import { compareAsc } from "date-fns";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
 import { epoch } from "../../../utils";
 
 export async function GET() {
+  await connection();
+
   const users = await Users.find({}).toArray();
 
   const dataSources = users

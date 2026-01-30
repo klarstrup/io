@@ -10,7 +10,6 @@ import { wrapSources } from "../../../sources/utils.server";
 import { uniqueBy } from "../../../utils";
 import { fetchJson, fetchText, jsonStreamResponse } from "../scraper-utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 const sportstimingHeaders: HeadersInit = {

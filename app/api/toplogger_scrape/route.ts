@@ -1,7 +1,7 @@
 import { addDays, isFuture, subDays } from "date-fns";
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
-import { NextRequest } from "next/server";
+import { connection, NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -41,7 +41,6 @@ import {
   type UserMeStoreResponse,
 } from "./queries";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export const GET = (request: NextRequest) =>

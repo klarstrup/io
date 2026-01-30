@@ -8,7 +8,6 @@ import {
 import { jsonStreamResponse } from "../scraper-utils";
 import { materializeIoWorkouts, sourceToMaterializer } from "./materializers";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export const GET = async () => {

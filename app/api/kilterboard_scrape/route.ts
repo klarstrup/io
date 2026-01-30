@@ -16,7 +16,6 @@ import { SetUpdatedFn, wrapSources } from "../../../sources/utils.server";
 import { shuffle } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 async function* fetchSertAscents(

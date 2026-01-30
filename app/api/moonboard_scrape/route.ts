@@ -10,7 +10,6 @@ import { wrapSources } from "../../../sources/utils.server";
 import { roundToNearestDay } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export const GET = () =>

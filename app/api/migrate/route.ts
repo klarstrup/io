@@ -7,7 +7,6 @@ import {
   Workouts,
 } from "../../../models/workout.server";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export async function GET() {

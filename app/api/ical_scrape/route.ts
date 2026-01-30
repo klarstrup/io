@@ -9,7 +9,6 @@ import { wrapSources } from "../../../sources/utils.server";
 import { parseICS } from "../../../vendor/ical";
 import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 export const GET = () =>
