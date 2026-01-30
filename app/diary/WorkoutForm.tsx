@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
+import { useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
   addDays,
@@ -10,7 +11,9 @@ import {
   formatDistanceToNowStrict,
   isPast,
   isValid,
+  startOfDay,
 } from "date-fns";
+import gql from "graphql-tag";
 import { Route } from "next";
 import type { Session } from "next-auth";
 import Link from "next/link";
@@ -22,6 +25,7 @@ import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
+import { NextSet, WorkoutFormNextSetsQuery } from "../../graphql.generated";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
 import {
@@ -45,7 +49,6 @@ import {
   type WorkoutExerciseSetInput,
 } from "../../models/workout";
 import type {
-  getNextSets,
   IWorkoutExercisesView,
   IWorkoutLocationsView,
 } from "../../models/workout.server";
@@ -105,7 +108,6 @@ export function WorkoutForm<R extends string>({
   dismissTo,
   locations,
   exercisesStats,
-  nextSets,
 }: {
   user?: Session["user"];
   workout?: WorkoutData & { _id?: string };
@@ -115,13 +117,81 @@ export function WorkoutForm<R extends string>({
     location: LocationData & { _id: string };
   })[];
   exercisesStats?: IWorkoutExercisesView[];
-  nextSets?: Awaited<ReturnType<typeof getNextSets>>;
 }) {
   const router = useRouter();
   const tzDate = useMemo(
     () => new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE),
     [date, user?.timeZone],
   );
+
+  const { data: nextSetsData } = useQuery<WorkoutFormNextSetsQuery>(
+    gql`
+      query WorkoutFormNextSets($intervalEnd: Date!) {
+        user {
+          id
+          exerciseSchedules {
+            id
+            exerciseId
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            order
+            nextSet(to: $intervalEnd) {
+              workedOutAt
+              dueOn
+              exerciseId
+              successful
+              nextWorkingSets
+              nextWorkingSetInputs {
+                unit
+                value
+                assistType
+              }
+              scheduleEntry {
+                id
+                exerciseId
+                enabled
+                frequency {
+                  years
+                  months
+                  weeks
+                  days
+                  hours
+                  minutes
+                  seconds
+                }
+                increment
+                workingSets
+                workingReps
+                deloadFactor
+                baseWeight
+                snoozedUntil
+                order
+              }
+            }
+          }
+        }
+      }
+    `,
+    { variables: { intervalEnd: startOfDay(tzDate) } },
+  );
+
+  const nextSets = nextSetsData?.user?.exerciseSchedules
+    ?.map((sched) => sched.nextSet)
+    .filter(Boolean);
 
   const {
     handleSubmit,
@@ -162,26 +232,7 @@ export function WorkoutForm<R extends string>({
   const dueSets = useMemo(
     () =>
       nextSets
-        ?.filter((nextSet) =>
-          isNextSetDue(tzDate, {
-            ...nextSet,
-            __typename: "NextSet",
-            nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
-              (input) => ({
-                ...input,
-                __typename: "WorkoutSetInput",
-              }),
-            ),
-            scheduleEntry: {
-              ...nextSet.scheduleEntry,
-              __typename: "ExerciseSchedule",
-              frequency: {
-                ...nextSet.scheduleEntry.frequency,
-                __typename: "Duration",
-              },
-            },
-          }),
-        )
+        ?.filter((nextSet) => isNextSetDue(tzDate, nextSet))
         .filter(
           (nextSet) =>
             !watch("exercises")?.some(
@@ -195,27 +246,7 @@ export function WorkoutForm<R extends string>({
   const futureSets = useMemo(
     () =>
       nextSets
-        ?.filter(
-          (nextSet) =>
-            !isNextSetDue(tzDate, {
-              ...nextSet,
-              __typename: "NextSet",
-              nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
-                (input) => ({
-                  ...input,
-                  __typename: "WorkoutSetInput",
-                }),
-              ),
-              scheduleEntry: {
-                ...nextSet.scheduleEntry,
-                __typename: "ExerciseSchedule",
-                frequency: {
-                  ...nextSet.scheduleEntry.frequency,
-                  __typename: "Duration",
-                },
-              },
-            }),
-        )
+        ?.filter((nextSet) => !isNextSetDue(tzDate, nextSet))
         .filter(
           (nextSet) =>
             !watch("exercises")?.some(
@@ -238,70 +269,64 @@ export function WorkoutForm<R extends string>({
     [nextSets, tzDate, watch],
   );
 
-  const handleAddExercise = useEvent(
-    (dueSet: Awaited<ReturnType<typeof getNextSets>>[number]) => {
-      const scheduleEntry = dueSet.scheduleEntry;
+  const handleAddExercise = useEvent((dueSet: NextSet) => {
+    const scheduleEntry = dueSet.scheduleEntry;
 
-      const exerciseDefinition = exercisesById[dueSet.exerciseId]!;
+    const exerciseDefinition = exercisesById[dueSet.exerciseId]!;
 
-      let effortInputIndex = exerciseDefinition.inputs.findIndex(
-        ({ type }) =>
-          type === InputType.Weight ||
-          type === InputType.Weightassist ||
-          type === InputType.Time,
+    let effortInputIndex = exerciseDefinition.inputs.findIndex(
+      ({ type }) =>
+        type === InputType.Weight ||
+        type === InputType.Weightassist ||
+        type === InputType.Time,
+    );
+    if (effortInputIndex === -1) {
+      effortInputIndex = exerciseDefinition.inputs.findIndex(
+        ({ type }) => type === InputType.Reps,
       );
-      if (effortInputIndex === -1) {
-        effortInputIndex = exerciseDefinition.inputs.findIndex(
-          ({ type }) => type === InputType.Reps,
-        );
+    }
+
+    const goalEffort = dueSet.nextWorkingSetInputs?.[effortInputIndex]?.value;
+    const warmupIncrement = ((goalEffort ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
+
+    const setEfforts: number[] = [goalEffort ?? NaN];
+
+    // Schedule entries without a working set goal don't get warmup sets
+    if (scheduleEntry.workingSets) {
+      while (setEfforts[setEfforts.length - 1]! > 20 + warmupIncrement) {
+        setEfforts.push(setEfforts[setEfforts.length - 1]! - warmupIncrement);
       }
+    }
 
-      const goalEffort = dueSet.nextWorkingSetInputs?.[effortInputIndex]?.value;
-      const warmupIncrement = ((goalEffort ?? NaN) - 20) / 10 >= 2 ? 20 : 10;
+    const sets = setEfforts.reverse().map(
+      (setEffort): WorkoutExerciseSet => ({
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        inputs: exerciseDefinition.inputs.map(
+          (input, i): WorkoutExerciseSetInput => ({
+            value:
+              i === effortInputIndex ? setEffort : (input.default_value ?? NaN),
+            unit: input.metric_unit,
+          }),
+        ),
+      }),
+    );
 
-      const setEfforts: number[] = [goalEffort ?? NaN];
+    append({ exerciseId: dueSet.exerciseId, sets });
+  });
 
-      // Schedule entries without a working set goal don't get warmup sets
-      if (scheduleEntry.workingSets) {
-        while (setEfforts[setEfforts.length - 1]! > 20 + warmupIncrement) {
-          setEfforts.push(setEfforts[setEfforts.length - 1]! - warmupIncrement);
-        }
-      }
+  const handleSnoozeDueSet = useEvent(async (dueSet: NextSet) => {
+    if (!user) return;
+    const newNextDueDate = addDays(tzDate, 1);
 
-      const sets = setEfforts.reverse().map(
-        (setEffort): WorkoutExerciseSet => ({
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          inputs: exerciseDefinition.inputs.map(
-            (input, i): WorkoutExerciseSetInput => ({
-              value:
-                i === effortInputIndex
-                  ? setEffort
-                  : (input.default_value ?? NaN),
-              unit: input.metric_unit,
-            }),
-          ),
-        }),
-      );
+    await snoozeUserExerciseSchedule(
+      user.id,
+      dueSet.exerciseId,
+      newNextDueDate,
+    );
 
-      append({ exerciseId: dueSet.exerciseId, sets });
-    },
-  );
-
-  const handleSnoozeDueSet = useEvent(
-    async (dueSet: Awaited<ReturnType<typeof getNextSets>>[number]) => {
-      if (!user) return;
-      const newNextDueDate = addDays(tzDate, 1);
-
-      await snoozeUserExerciseSchedule(
-        user.id,
-        dueSet.exerciseId,
-        newNextDueDate,
-      );
-
-      router.refresh();
-    },
-  );
+    router.refresh();
+  });
 
   const locationInstanceId = useId();
 
@@ -310,14 +335,7 @@ export function WorkoutForm<R extends string>({
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: "1em",
-      }}
-    >
+    <div className="flex w-full flex-1 flex-col gap-1">
       <form
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(async (data) => {
@@ -366,7 +384,7 @@ export function WorkoutForm<R extends string>({
               : { exercises: [] },
           );
         })}
-        className="flex min-w-[50%] flex-1 flex-col gap-1"
+        className="flex flex-col gap-1"
       >
         <div className="inset-x sticky -top-4 z-20 -mt-2 flex items-center justify-evenly border-b bg-white pt-2 pb-2">
           <button type="button" onClick={() => router.push(dismissTo)}>
@@ -519,6 +537,7 @@ export function WorkoutForm<R extends string>({
                           <WorkoutEntryExerciseSetRow
                             exercise={exercise}
                             set={{
+                              __typename: "WorkoutSet",
                               inputs:
                                 nextExerciseSet.nextWorkingSetInputs || [],
                             }}
@@ -578,6 +597,7 @@ export function WorkoutForm<R extends string>({
             placeholder="Add exercise..."
             className="text-2xl"
             options={exercises
+              .filter((exercise) => !exercise.is_hidden)
               .map((exercise) => ({
                 ...exercise,
                 stats: exercisesStats?.find(
@@ -616,7 +636,7 @@ export function WorkoutForm<R extends string>({
           />
         </div>
       </form>
-      <div className="min-w-[50%]">
+      <div>
         {isNonEmptyArray(dueSets) ? (
           <div>
             <b>Due Sets:</b>

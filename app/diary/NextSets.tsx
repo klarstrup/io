@@ -1,13 +1,12 @@
 "use client";
 import { tz, TZDate } from "@date-fns/tz";
-import { addMilliseconds, formatDistanceStrict, startOfDay } from "date-fns";
+import { formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { useEffect } from "react";
 import { StealthButton } from "../../components/StealthButton";
+import { NextSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
-import { durationToMs } from "../../models/workout";
-import type { getNextSets } from "../../models/workout.server";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
@@ -22,13 +21,9 @@ export function NextSets({
 }: {
   user?: Session["user"];
   date: `${number}-${number}-${number}`;
-  nextSets: Awaited<ReturnType<typeof getNextSets>>;
-  onAddExerciseAction?: (
-    dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
-  ) => void;
-  onSnoozeDueSetAction?: (
-    dueSet: Awaited<ReturnType<typeof getNextSets>>[number],
-  ) => void;
+  nextSets: NextSet[];
+  onAddExerciseAction?: (dueSet: NextSet) => void;
+  onSnoozeDueSetAction?: (dueSet: NextSet) => void;
   showDetails?: boolean;
   showDueDate?: boolean;
 }) {
@@ -76,15 +71,23 @@ export function NextSets({
             className="flex items-start gap-2"
           >
             <div className="flex flex-col leading-tight">
-              {onAddExerciseAction ? (
+              {onAddExerciseAction && !exercise.is_hidden ? (
                 <StealthButton onClick={() => onAddExerciseAction(dueSet)}>
                   ➕
                 </StealthButton>
               ) : null}
-              {onSnoozeDueSetAction ? (
+              {onSnoozeDueSetAction && !exercise.is_hidden ? (
                 <StealthButton onClick={() => onSnoozeDueSetAction(dueSet)}>
                   💤
                 </StealthButton>
+              ) : null}
+              {exercise.is_hidden ? (
+                <span
+                  title="This exercise is hidden and won't appear in suggestions."
+                  className="opacity-0 select-none"
+                >
+                  🙈
+                </span>
               ) : null}
             </div>
             <div className="leading-tight">
@@ -108,7 +111,10 @@ export function NextSets({
                     <tbody>
                       <WorkoutEntryExerciseSetRow
                         exercise={exercise}
-                        set={{ inputs: nextWorkingSetInputs ?? [] }}
+                        set={{
+                          __typename: "WorkoutSet",
+                          inputs: nextWorkingSetInputs ?? [],
+                        }}
                         repeatCount={nextWorkingSets}
                       />
                     </tbody>
@@ -122,7 +128,7 @@ export function NextSets({
                     {workedOutAt ? (
                       <Link
                         prefetch={false}
-                        href={`/diary/${workedOutAt.toISOString().slice(0, 10)}`}
+                        href={`/diary/${new Date(workedOutAt).toISOString().slice(0, 10)}`}
                         style={{ color: "#edab00" }}
                       >
                         {formatDistanceStrict(
@@ -141,18 +147,11 @@ export function NextSets({
                   {showDueDate && scheduleEntry?.frequency && workedOutAt ? (
                     <span className="text-xs">
                       , due{" "}
-                      {formatDistanceStrict(
-                        addMilliseconds(
-                          workedOutAt,
-                          durationToMs(scheduleEntry.frequency),
-                        ),
-                        date,
-                        {
-                          addSuffix: true,
-                          roundingMethod: "floor",
-                          unit: "day",
-                        },
-                      )}
+                      {formatDistanceStrict(dueSet.dueOn, date, {
+                        addSuffix: true,
+                        roundingMethod: "floor",
+                        unit: "day",
+                      })}
                     </span>
                   ) : null}
                 </div>

@@ -1,11 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { startOfDay } from "date-fns";
 import { ObjectId } from "mongodb";
 import { auth } from "../../../../../auth";
 import {
   getAllWorkoutExercises,
   getAllWorkoutLocations,
-  getNextSets,
   Workouts,
 } from "../../../../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../../utils";
@@ -17,19 +15,19 @@ export default async function DiaryWorkout(props: {
 }) {
   const { date, workoutId } = props;
   const user = (await auth())?.user;
-  const workout = await Workouts.findOne({ _id: new ObjectId(workoutId) });
 
-  if (!user || !workout) return null;
+  if (!user) return null;
 
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const isToday = date === dateToString(TZDate.tz(timeZone));
 
-  const tzDate = new TZDate(date, timeZone);
-  const [locations, exercisesStats, nextSets] = await Promise.all([
+  const [workout, locations, exercisesStats] = await Promise.all([
+    Workouts.findOne({ _id: new ObjectId(workoutId) }),
     getAllWorkoutLocations(user),
     getAllWorkoutExercises(user),
-    getNextSets({ user, to: startOfDay(tzDate) }),
   ]);
+
+  if (!workout) return null;
 
   const dismissTo = isToday ? "/diary" : (`/diary/${date}` as const);
 
@@ -46,7 +44,6 @@ export default async function DiaryWorkout(props: {
       locations={locations}
       exercisesStats={exercisesStats}
       dismissTo={dismissTo}
-      nextSets={nextSets}
     />
   );
 }

@@ -21,12 +21,10 @@ export default async function DiaryNewWorkoutModal(props: {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const isToday = date === dateToString(TZDate.tz(timeZone));
 
-  const tzDate = new TZDate(date, timeZone);
-  const [locations, exercisesStats, nextSets] = user
+  const [locations, exercisesStats] = user
     ? await Promise.all([
         getAllWorkoutLocations(user),
         getAllWorkoutExercises(user),
-        getNextSets({ user, to: startOfDay(tzDate) }),
       ])
     : [];
 
@@ -40,9 +38,14 @@ export default async function DiaryNewWorkoutModal(props: {
           user={user}
           locations={locations}
           exercisesStats={exercisesStats}
-          nextSets={nextSets}
           dismissTo={dismissTo}
         />
+        <div className="opacity-0 select-none">
+          afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh
+          afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh
+          afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh
+          afgaisdfuh afgaisdfuh
+        </div>
       </div>
     </Modal>
   );
