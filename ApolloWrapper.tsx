@@ -30,7 +30,7 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
       });
     }
 
-    return new ApolloClient({
+    const client = new ApolloClient({
       devtools: { enabled: true },
       cache,
       link:
@@ -45,6 +45,17 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
               }),
             ),
     });
+
+    // Refetch things after restoring from persisted cache
+    if (typeof window !== "undefined") {
+      console.log(Object.keys(cache.extract()));
+      // If there's anything in the cache this soon as the client is created,
+      if (Object.keys(cache.extract()).length > 0) {
+        client.refetchObservableQueries();
+      }
+    }
+
+    return client;
   };
 
   return (
