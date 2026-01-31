@@ -124,7 +124,7 @@ export function WorkoutForm<R extends string>({
     [date, user?.timeZone],
   );
 
-  const { data: nextSetsData } = useQuery<WorkoutFormNextSetsQuery>(
+  const { data: nextSetsData, client } = useQuery<WorkoutFormNextSetsQuery>(
     gql`
       query WorkoutFormNextSets($intervalEnd: Date!) {
         user {
@@ -326,6 +326,7 @@ export function WorkoutForm<R extends string>({
     );
 
     router.refresh();
+    client.refetchObservableQueries();
   });
 
   const locationInstanceId = useId();

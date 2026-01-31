@@ -1,4 +1,5 @@
 "use client";
+import { useApolloClient } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { addDays, isFuture, subHours } from "date-fns";
@@ -84,6 +85,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     useClickOutside(ref, onClickOutside);
     const exercise = exercisesById[dueSet.exerciseId]!;
     const router = useRouter();
+    const client = useApolloClient();
 
     return (
       <DiaryAgendaDayEntry
@@ -158,9 +160,11 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 onClick={() =>
                   void snoozeUserExerciseSchedule(
                     userId,
-                    dueSet.exerciseId,
+                    dueSet.scheduleEntry.id,
                     addDays(date, 1),
-                  )
+                  ).then(() => {
+                    client.refetchObservableQueries();
+                  })
                 }
                 className={
                   "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
@@ -183,9 +187,11 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                       onClick={() =>
                         void snoozeUserExerciseSchedule(
                           userId,
-                          dueSet.exerciseId,
+                          dueSet.scheduleEntry.id,
                           null,
-                        )
+                        ).then(() => {
+                          client.refetchObservableQueries();
+                        })
                       }
                       className="ml-2 cursor-pointer rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"
                     >
