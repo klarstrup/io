@@ -321,7 +321,7 @@ export function WorkoutForm<R extends string>({
 
     await snoozeUserExerciseSchedule(
       user.id,
-      dueSet.exerciseId,
+      dueSet.scheduleEntry.id,
       newNextDueDate,
     );
 

@@ -122,7 +122,7 @@ export async function deleteWorkout(workoutId: string) {
 
 export async function snoozeUserExerciseSchedule(
   userId: string,
-  exerciseId: number,
+  exerciseScheduleId: string,
   snoozedUntil: Date | null,
   newOrder?: number,
 ) {
@@ -134,7 +134,7 @@ export async function snoozeUserExerciseSchedule(
     {
       $set: {
         exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
-          s.exerciseId === exerciseId
+          s.id === exerciseScheduleId
             ? { ...s, snoozedUntil, order: newOrder }
             : s,
         ),
@@ -148,7 +148,7 @@ export async function snoozeUserExerciseSchedule(
 
   return (await Users.findOne({
     _id: new ObjectId(user.id),
-  }))!.exerciseSchedules!.find((s) => s.exerciseId === exerciseId);
+  }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
 }
 
 export async function updateUserExerciseSchedules(
