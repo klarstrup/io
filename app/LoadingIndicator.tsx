@@ -11,7 +11,7 @@ export default function LoadingIndicator() {
     return null;
   }
   return (
-    <div className="fixed top-4 left-4 flex items-center justify-center p-4">
+    <div className="fixed top-4 right-4 flex items-center justify-center p-4">
       <span className="animate-spin text-4xl">⏳</span>
     </div>
   );
