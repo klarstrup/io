@@ -1,5 +1,5 @@
 "use client";
-import { skipToken, useApolloClient, useQuery } from "@apollo/client/react";
+import { skipToken, useQuery } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
@@ -19,7 +19,6 @@ import { gql } from "graphql-tag";
 import type { Session } from "next-auth";
 import {
   DiaryAgendaDayUserTodosDocument,
-  type DiaryAgendaDayUserTodosQuery,
   type Event,
   type NextSet,
   type Todo,
@@ -189,7 +188,7 @@ export function DiaryAgendaDay({
             interval: fetchingInterval,
             intervalEnd: fetchingInterval.end,
           },
-          pollInterval: 30000,
+          pollInterval: 300000,
         }
       : skipToken,
   );
