@@ -1,5 +1,5 @@
 "use client";
-import { useMutation } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
 import {
   DndContext,
   DragEndEvent,
@@ -52,6 +52,7 @@ export function TodoDragDropContainer(props: {
   userId?: string;
 }) {
   const [updateTodo] = useMutation(UpdateTodoDocument);
+  const client = useApolloClient();
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -82,10 +83,12 @@ export function TodoDragDropContainer(props: {
       console.log("Snoozing next set to", targetDate, "with order", newOrder);
       snoozeUserExerciseSchedule(
         props.userId,
-        nextSet.scheduleEntry.exerciseId,
+        nextSet.scheduleEntry.id,
         targetDate,
         newOrder,
-      );
+      ).then(() => {
+        client.refetchObservableQueries();
+      });
       return;
     } else if (active.data.current.todo) {
       const todo: Todo = active.data.current.todo;
