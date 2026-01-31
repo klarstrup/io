@@ -7,14 +7,14 @@ import {
   InMemoryCache,
 } from "@apollo/client-integration-nextjs";
 import { SchemaLink } from "@apollo/client/link/schema";
-import { useEffect, type PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
+import { createNetworkStatusNotifier } from "react-apollo-network-status";
+import ApolloFucker from "./ApolloFucker";
 import { typePolicies } from "./graphql.typePolicies";
 import {
   LocalStorageWrapper,
   persistCacheSync,
 } from "./vendor/apollo-cache-persist";
-import { createNetworkStatusNotifier } from "react-apollo-network-status";
-import ApolloFucker from "./ApolloFucker";
 
 export const { link, useApolloNetworkStatus } = createNetworkStatusNotifier();
 
@@ -29,6 +29,10 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
         cache,
         storage: new LocalStorageWrapper(window.localStorage),
       });
+
+      if (Object.keys(cache.extract() as Record<string, unknown>).length > 0) {
+        cache._io_wasRestoredFromLocalStorage = true;
+      }
     }
 
     const client = new ApolloClient({

@@ -9,9 +9,13 @@ export default function ApolloFucker() {
     // Refetch things after restoring from persisted cache
     if (typeof window !== "undefined") {
       // If there's anything in the cache this soon as the client is created,
-      if (Object.keys(cache.extract() as Record<string, unknown>).length > 0) {
-        client.refetchObservableQueries().catch(() => {
-          // don't care
+      console.log(cache);
+      // @ts-expect-error - failed to monkey patch this in the types
+      if (cache._io_wasRestoredFromLocalStorage) {
+        requestIdleCallback(() => {
+          client.refetchObservableQueries().catch(() => {
+            // don't care
+          });
         });
       }
     }
