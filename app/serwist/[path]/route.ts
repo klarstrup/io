@@ -17,7 +17,10 @@ const revision =
 
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
   createSerwistRoute({
-    additionalPrecacheEntries: [{ url: "/~offline", revision }],
+    additionalPrecacheEntries: [
+      { url: "/~offline", revision },
+      { url: "/~shell", revision },
+    ],
     swSrc: "app/sw.ts",
     nextConfig,
     // If set to `false`, Serwist will attempt to use `esbuild-wasm`.
