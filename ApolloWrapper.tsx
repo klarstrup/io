@@ -7,13 +7,14 @@ import {
   InMemoryCache,
 } from "@apollo/client-integration-nextjs";
 import { SchemaLink } from "@apollo/client/link/schema";
-import type { PropsWithChildren } from "react";
+import { useEffect, type PropsWithChildren } from "react";
 import { typePolicies } from "./graphql.typePolicies";
 import {
   LocalStorageWrapper,
   persistCacheSync,
 } from "./vendor/apollo-cache-persist";
 import { createNetworkStatusNotifier } from "react-apollo-network-status";
+import ApolloFucker from "./ApolloFucker";
 
 export const { link, useApolloNetworkStatus } = createNetworkStatusNotifier();
 
@@ -46,21 +47,13 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
             ),
     });
 
-    // Refetch things after restoring from persisted cache
-    if (typeof window !== "undefined") {
-      console.log(Object.keys(cache.extract()));
-      // If there's anything in the cache this soon as the client is created,
-      if (Object.keys(cache.extract()).length > 0) {
-        client.refetchObservableQueries();
-      }
-    }
-
     return client;
   };
 
   return (
     <ApolloNextAppProvider makeClient={makeApolloClient}>
       {children}
+      <ApolloFucker />
     </ApolloNextAppProvider>
   );
 }
