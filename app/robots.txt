@@ -5,3 +5,7 @@ Disallow: /
 User-agent: AhrefsBot
 
 Disallow: /
+
+User-agent: Amazonbot
+
+Disallow: /
