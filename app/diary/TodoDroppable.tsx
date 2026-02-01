@@ -23,7 +23,6 @@ import {
   startOfDay,
   subMinutes,
 } from "date-fns";
-import { useSession } from "next-auth/react";
 import type { ReactNode } from "react";
 import { Todo, UpdateTodoDocument } from "../../graphql.generated";
 import type { getNextSets } from "../../models/workout.server";
@@ -48,9 +47,10 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   );
 }
 
-export function TodoDragDropContainer(props: { children: ReactNode }) {
-  const user = useSession().data?.user;
-  const userId = user?.id;
+export function TodoDragDropContainer(props: {
+  children: ReactNode;
+  userId?: string;
+}) {
   const [updateTodo] = useMutation(UpdateTodoDocument);
   const client = useApolloClient();
 
@@ -70,7 +70,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       0;
     const newOrder = overOrder > activeOrder ? overOrder + 1 : overOrder - 1;
 
-    if (userId && active.data.current.nextSet) {
+    if (props.userId && active.data.current.nextSet) {
       const nextSet: Awaited<ReturnType<typeof getNextSets>>[number] =
         active.data.current.nextSet;
 
@@ -82,7 +82,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
       console.log("Snoozing next set to", targetDate, "with order", newOrder);
       snoozeUserExerciseSchedule(
-        userId,
+        props.userId,
         nextSet.scheduleEntry.id,
         targetDate,
         newOrder,

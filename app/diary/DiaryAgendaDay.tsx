@@ -16,7 +16,7 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
-import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import {
   DiaryAgendaDayUserTodosDocument,
   type Event,
@@ -167,8 +167,7 @@ gql`
   }
 `;
 
-export function DiaryAgendaDay() {
-  const user = useSession().data?.user;
+export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
   const date = dateToString(subHours(now, 5));
