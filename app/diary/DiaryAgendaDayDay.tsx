@@ -56,14 +56,12 @@ export function DiaryAgendaDayDay({
   user,
   dayLocations,
   dayJournalEntries,
-  dueSetTo,
 }: {
   date: `${number}-${number}-${number}`;
   dayDate: Date;
   user?: Session["user"];
   dayLocations: Location[];
   dayJournalEntries: JournalEntry[];
-  dueSetTo: Date;
 }) {
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
@@ -271,7 +269,6 @@ export function DiaryAgendaDayDay({
         id: dueSet.scheduleEntry.id,
         element: (
           <DiaryAgendaDayDueSet
-            dueSetTo={dueSetTo}
             key={dueSet.scheduleEntry.id}
             sortableId={dueSet.scheduleEntry.id}
             userId={user!.id}

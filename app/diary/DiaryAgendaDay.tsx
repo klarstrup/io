@@ -347,7 +347,6 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
             <DiaryAgendaDayDay
               date={dayName}
               dayDate={dayDate}
-              dueSetTo={fetchingInterval.end}
               user={user}
               dayLocations={dayLocations}
               dayJournalEntries={[
