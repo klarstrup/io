@@ -1,9 +1,9 @@
 "use client";
 
 import { useApolloClient } from "@apollo/client/react";
-import { useChannel } from "ably/react";
 import { parse } from "graphql";
 import { ListPageUserDocument } from "../graphql.generated";
+import { useChannel } from "../hooks/useChannel";
 import { uniqueBy } from "../utils";
 
 function messageToGraphQLUpdate(

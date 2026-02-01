@@ -12,6 +12,10 @@ export default function AblyWrapper({
 }: {
   children: React.ReactNode;
 }) {
+  if (typeof window === "undefined") {
+    return <>{children}</>;
+  }
+
   return (
     <AblyProvider client={realtimeClient}>
       <ChannelProvider channelName="GraphQL:65a85e2c9a437530d3de2e35">
