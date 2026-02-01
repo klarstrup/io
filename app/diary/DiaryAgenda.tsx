@@ -15,6 +15,7 @@ import {
 import { DiaryAgendaFood } from "./DiaryAgendaFood";
 import { DiaryAgendaWeather } from "./DiaryAgendaWeather";
 import { DiaryAgendaWorkoutsWrapper } from "./DiaryAgendaWorkoutsWrapper";
+import { DiaryPoller } from "./DiaryPoller";
 
 export function DiaryAgenda({
   date,
@@ -119,6 +120,7 @@ export function DiaryAgenda({
       >
         <DiaryAgendaWeather date={date} user={user} />
       </Suspense>
+      {user ? <DiaryPoller userId={user.id} /> : null}
     </div>
   );
 }

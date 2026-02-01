@@ -1,13 +1,14 @@
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
+import { SessionProvider } from "next-auth/react";
+import { Suspense } from "react";
 import AblyWrapper from "../AblyWrapper";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
+import LoadingIndicator from "./LoadingIndicator";
 import "./page.css";
 import { SerwistProvider } from "./serwist";
-import { Suspense } from "react";
-import LoadingIndicator from "./LoadingIndicator";
 
 export const metadata: Metadata = {
   title: "io input/output",
@@ -24,15 +25,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en">
       <body>
         <LoadingIndicator />
-        <SerwistProvider swUrl="/serwist/sw.js">
-          <ApolloWrapper>
-            <AblyWrapper>
-              <UserStuff />
-              <Suspense>{children}</Suspense>
-              <Analytics />
-            </AblyWrapper>
-          </ApolloWrapper>
-        </SerwistProvider>
+        <SessionProvider>
+          <SerwistProvider swUrl="/serwist/sw.js">
+            <ApolloWrapper>
+              <AblyWrapper>
+                <UserStuff />
+                <Suspense>{children}</Suspense>
+                <Analytics />
+              </AblyWrapper>
+            </ApolloWrapper>
+          </SerwistProvider>
+        </SessionProvider>
       </body>
     </html>
   );

@@ -12,12 +12,8 @@ export default async function DiaryDayModal(props: {
   const { date } = await props.params;
   const user = (await auth())?.user;
 
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const now = TZDate.tz(timeZone);
-
   return (
     <Modal dismissTo={`/diary`}>
-      {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
       <KeyHandler date={date} />
       <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-2 shadow-xl shadow-black/50">
         <DiaryAgenda user={user} date={date} />

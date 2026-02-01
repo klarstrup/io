@@ -16,7 +16,7 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
-import type { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 import {
   DiaryAgendaDayUserTodosDocument,
   type Event,
@@ -32,6 +32,7 @@ import {
   uniqueBy,
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
+import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
@@ -166,14 +167,11 @@ gql`
   }
 `;
 
-export function DiaryAgendaDay({
-  date,
-  user,
-}: {
-  date: `${number}-${number}-${number}`;
-  user?: Session["user"];
-}) {
+export function DiaryAgendaDay() {
+  const user = useSession().data?.user;
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const now = TZDate.tz(timeZone);
+  const date = dateToString(subHours(now, 5));
   const tzDate = new TZDate(date, timeZone);
 
   const fetchingInterval = {
@@ -397,6 +395,7 @@ export function DiaryAgendaDay({
           </TodoDroppable>
         );
       })}
+      {user ? <DiaryPoller userId={user.id} /> : null}
     </div>
   );
 }

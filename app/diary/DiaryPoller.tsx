@@ -2,17 +2,12 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import usePartySocket from "partysocket/react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import useInterval from "../../hooks/useInterval";
 import { MINUTE_IN_SECONDS } from "../../utils";
 
-export function DiaryPoller({
-  userId,
-  loadedAt,
-}: {
-  userId: string;
-  loadedAt: Date;
-}) {
+export function DiaryPoller({ userId }: { userId: string }) {
+  const [loadedAt] = useState(new Date());
   const id = useId();
   const client = useApolloClient();
 

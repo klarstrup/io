@@ -60,37 +60,35 @@ export default async function CalendarLayout(_props: PageProps<"/calendar">) {
   const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
 
   return (
-    <>
-      {user ? <DiaryPoller loadedAt={now} userId={user.id} /> : null}
-      <div className="max-h-screen min-h-screen">
-        <div className="mx-auto flex max-w-6xl flex-1 flex-col items-stretch">
-          <LoadMore
-            initialCursor={{
-              start: subWeeks(end, 1),
-              end: subWeeks(end, 1 + WEEKS_PER_PAGE),
-            }}
-            loadMoreAction={loadMoreData}
+    <div className="max-h-screen min-h-screen">
+      <div className="mx-auto flex max-w-6xl flex-1 flex-col items-stretch">
+        <LoadMore
+          initialCursor={{
+            start: subWeeks(end, 1),
+            end: subWeeks(end, 1 + WEEKS_PER_PAGE),
+          }}
+          loadMoreAction={loadMoreData}
+        >
+          <Suspense
+            fallback={weeks.map((weekDate) => (
+              <DiaryEntryWeek
+                key={String(weekDate)}
+                user={user}
+                weekDate={weekDate}
+              />
+            ))}
           >
-            <Suspense
-              fallback={weeks.map((weekDate) => (
-                <DiaryEntryWeek
-                  key={String(weekDate)}
-                  user={user}
-                  weekDate={weekDate}
-                />
-              ))}
-            >
-              {weeks.map((weekDate) => (
-                <DiaryEntryWeekWrapper
-                  key={String(weekDate)}
-                  user={user}
-                  weekDate={weekDate}
-                />
-              ))}
-            </Suspense>
-          </LoadMore>
-        </div>
+            {weeks.map((weekDate) => (
+              <DiaryEntryWeekWrapper
+                key={String(weekDate)}
+                user={user}
+                weekDate={weekDate}
+              />
+            ))}
+          </Suspense>
+        </LoadMore>
       </div>
-    </>
+      {user ? <DiaryPoller userId={user.id} /> : null}
+    </div>
   );
 }
