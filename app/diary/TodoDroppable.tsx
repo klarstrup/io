@@ -1,5 +1,5 @@
 "use client";
-import { useApolloClient, useMutation } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import {
   DndContext,
   DragEndEvent,
@@ -24,10 +24,13 @@ import {
   subMinutes,
 } from "date-fns";
 import type { ReactNode } from "react";
-import { Todo, UpdateTodoDocument } from "../../graphql.generated";
-import type { getNextSets } from "../../models/workout.server";
+import {
+  type NextSet,
+  SnoozeExerciseScheduleDocument,
+  type Todo,
+  UpdateTodoDocument,
+} from "../../graphql.generated";
 import { dayStartHour } from "../../utils";
-import { snoozeUserExerciseSchedule } from "./actions";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -52,7 +55,7 @@ export function TodoDragDropContainer(props: {
   userId?: string;
 }) {
   const [updateTodo] = useMutation(UpdateTodoDocument);
-  const client = useApolloClient();
+  const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -71,8 +74,7 @@ export function TodoDragDropContainer(props: {
     const newOrder = overOrder > activeOrder ? overOrder + 1 : overOrder - 1;
 
     if (props.userId && active.data.current.nextSet) {
-      const nextSet: Awaited<ReturnType<typeof getNextSets>>[number] =
-        active.data.current.nextSet;
+      const nextSet: NextSet = active.data.current.nextSet;
 
       const overStart = new Date(over.data.current.date);
       const startOfDay = setHours(overStart, dayStartHour);
@@ -81,13 +83,23 @@ export function TodoDragDropContainer(props: {
       const targetDate = max([startOfDay, justBeforeTheThing]);
 
       console.log("Snoozing next set to", targetDate, "with order", newOrder);
-      snoozeUserExerciseSchedule(
-        props.userId,
-        nextSet.scheduleEntry.id,
-        targetDate,
-        newOrder,
-      ).then(() => {
-        client.refetchObservableQueries();
+      void snoozeExerciseSchedule({
+        variables: {
+          input: {
+            exerciseScheduleId: nextSet.scheduleEntry.id,
+            snoozedUntil: targetDate,
+          },
+        },
+        optimisticResponse: {
+          snoozeExerciseSchedule: {
+            __typename: "SnoozeExerciseSchedulePayload",
+            exerciseSchedule: {
+              ...nextSet.scheduleEntry,
+              snoozedUntil: targetDate,
+              nextSet: { ...nextSet, dueOn: targetDate },
+            },
+          },
+        },
       });
       return;
     } else if (active.data.current.todo) {

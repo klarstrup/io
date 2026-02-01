@@ -1,11 +1,9 @@
 import { TZDate } from "@date-fns/tz";
-import { startOfDay } from "date-fns";
 import { auth } from "../../../../auth";
 import { Modal } from "../../../../components/Modal";
 import {
   getAllWorkoutExercises,
   getAllWorkoutLocations,
-  getNextSets,
 } from "../../../../models/workout.server";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../utils";
 import { WorkoutForm } from "../../WorkoutForm";

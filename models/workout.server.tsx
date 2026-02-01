@@ -43,12 +43,10 @@ export const MaterializedWorkoutsView = proxyCollection<
 >("materialized_workouts_view");
 
 export const getNextSet = async ({
-  to,
   userId,
   scheduleEntry,
 }: {
   userId: Session["user"]["id"];
-  to: Date;
   scheduleEntry: ExerciseSchedule;
 }) => {
   const [workout] = await MaterializedWorkoutsView.aggregate<{
@@ -59,7 +57,6 @@ export const getNextSet = async ({
       $match: {
         userId,
         "exercises.exerciseId": scheduleEntry.exerciseId,
-        workedOutAt: { $lte: to },
         deletedAt: { $exists: false },
       },
     },
@@ -118,7 +115,6 @@ export const getNextSet = async ({
           $match: {
             userId,
             "exercises.exerciseId": scheduleEntry.exerciseId,
-            workedOutAt: { $lte: to },
             deletedAt: { $exists: false },
           },
         },
@@ -308,32 +304,6 @@ export const getNextSet = async ({
     nextWorkingSets,
     scheduleEntry,
   };
-};
-
-export const getNextSets = async ({
-  user,
-  to,
-}: {
-  user: Session["user"];
-  to: Date;
-}) => {
-  // console.time(`getNextSets for user ${user.id} to ${to.toISOString()}`);
-  try {
-    return (
-      await Promise.all(
-        (user.exerciseSchedules || [])
-          .filter(({ enabled }) => enabled)
-          .map((scheduleEntry) =>
-            getNextSet({ userId: user.id, to, scheduleEntry }),
-          ),
-      )
-    ).sort(
-      (a, b) =>
-        (a.workedOutAt?.getTime() || 0) - (b.workedOutAt?.getTime() || 0),
-    );
-  } finally {
-    // console.timeEnd(`getNextSets for user ${user.id} to ${to.toISOString()}`);
-  }
 };
 
 export const noPR = {

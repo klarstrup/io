@@ -15,6 +15,7 @@ import { auth } from "./auth";
 import type { FoodEntry, Resolvers } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { Locations } from "./models/location.server";
+import { Users } from "./models/user.server";
 import { WorkoutSource } from "./models/workout";
 import { getNextSet, MaterializedWorkoutsView } from "./models/workout.server";
 import {
@@ -376,6 +377,81 @@ export const resolvers: Resolvers = {
         });
       }
     },
+    snoozeExerciseSchedule: async (_parent, args, _context) => {
+      const user = (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      const exerciseScheduleId = args.input.exerciseScheduleId;
+      const snoozedUntil = args.input.snoozedUntil;
+
+      const updateResult = await Users.updateOne(
+        { _id: new ObjectId(user.id) },
+        {
+          $set: {
+            exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
+              s.id === exerciseScheduleId ? { ...s, snoozedUntil } : s,
+            ),
+          },
+        },
+      );
+
+      if (updateResult.matchedCount === 0) {
+        throw new Error("Failed to snooze exercise schedule");
+      }
+
+      const updatedExerciseSchedule = (await Users.findOne({
+        _id: new ObjectId(user.id),
+      }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
+
+      return {
+        __typename: "SnoozeExerciseSchedulePayload",
+        exerciseSchedule: {
+          ...updatedExerciseSchedule!,
+          __typename: "ExerciseSchedule",
+          frequency: {
+            ...updatedExerciseSchedule!.frequency,
+            __typename: "Duration",
+          },
+        },
+      };
+    },
+    unsnoozeExerciseSchedule: async (_parent, args, _context) => {
+      const user = (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      const exerciseScheduleId = args.input.exerciseScheduleId;
+
+      const updateResult = await Users.updateOne(
+        { _id: new ObjectId(user.id) },
+        {
+          $set: {
+            exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
+              s.id === exerciseScheduleId ? { ...s, snoozedUntil: null } : s,
+            ),
+          },
+        },
+      );
+
+      if (updateResult.matchedCount === 0) {
+        throw new Error("Failed to unsnooze exercise schedule");
+      }
+
+      const updatedExerciseSchedule = (await Users.findOne({
+        _id: new ObjectId(user.id),
+      }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
+
+      return {
+        __typename: "UnsnoozeExerciseSchedulePayload",
+        exerciseSchedule: {
+          ...updatedExerciseSchedule!,
+          __typename: "ExerciseSchedule",
+          frequency: {
+            ...updatedExerciseSchedule!.frequency,
+            __typename: "Duration",
+          },
+        },
+      };
+    },
   },
   BoulderCircuit: {
     gradeEstimate: (parent) =>
@@ -395,7 +471,7 @@ export const resolvers: Resolvers = {
         : null,
   },
   ExerciseSchedule: {
-    nextSet: async (parent, args, _context) => {
+    nextSet: async (parent, _args, _context) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -403,7 +479,6 @@ export const resolvers: Resolvers = {
 
       const nextSet = await getNextSet({
         userId: user.id,
-        to: args.to,
         scheduleEntry: parent,
       });
 
@@ -460,10 +535,30 @@ export const typeDefs = gql`
     todo: Todo
   }
 
+  input SnoozeExerciseScheduleInput {
+    exerciseScheduleId: ID!
+    snoozedUntil: Date
+  }
+  input UnsnoozeExerciseScheduleInput {
+    exerciseScheduleId: ID!
+  }
+  type SnoozeExerciseSchedulePayload {
+    exerciseSchedule: ExerciseSchedule
+  }
+  type UnsnoozeExerciseSchedulePayload {
+    exerciseSchedule: ExerciseSchedule
+  }
+
   type Mutation {
     createTodo(input: CreateTodoInput!): CreateTodoPayload
     updateTodo(input: UpdateTodoInput!): UpdateTodoPayload
     deleteTodo(id: String!): String
+    snoozeExerciseSchedule(
+      input: SnoozeExerciseScheduleInput!
+    ): SnoozeExerciseSchedulePayload
+    unsnoozeExerciseSchedule(
+      input: UnsnoozeExerciseScheduleInput!
+    ): UnsnoozeExerciseSchedulePayload
   }
 
   input IntervalInput {
@@ -541,7 +636,7 @@ export const typeDefs = gql`
     baseWeight: Float
     snoozedUntil: Date
     order: Int
-    nextSet(to: Date!): NextSet
+    nextSet: NextSet
   }
 
   type NextSet {

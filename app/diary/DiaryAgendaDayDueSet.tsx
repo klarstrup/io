@@ -1,16 +1,34 @@
 "use client";
-import { useApolloClient } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
+import { tz } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { addDays, isFuture, subHours } from "date-fns";
+import {
+  addDays,
+  addHours,
+  addMilliseconds,
+  isEqual,
+  isFuture,
+  startOfDay,
+  subHours,
+} from "date-fns";
+import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
-import { Location, NextSet, Workout } from "../../graphql.generated";
+import {
+  Location,
+  NextSet,
+  SnoozeExerciseScheduleMutation,
+  SnoozeExerciseScheduleMutationVariables,
+  UnsnoozeExerciseScheduleMutation,
+  UnsnoozeExerciseScheduleMutationVariables,
+  Workout,
+} from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { exercisesById } from "../../models/exercises";
-import { dateToString, dayStartHour } from "../../utils";
-import { snoozeUserExerciseSchedule } from "./actions";
+import { durationToMs } from "../../models/workout";
+import { dateToString, dayStartHour, epoch } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
@@ -85,8 +103,134 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     useClickOutside(ref, onClickOutside);
     const exercise = exercisesById[dueSet.exerciseId]!;
     const router = useRouter();
-    const client = useApolloClient();
 
+    const [snoozeExerciseSchedule, { loading: isSnoozingExerciseSchedule }] =
+      useMutation<SnoozeExerciseScheduleMutation>(gql`
+        mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
+          snoozeExerciseSchedule(input: $input) {
+            exerciseSchedule {
+              id
+              exerciseId
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
+              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+              order
+              nextSet {
+                workedOutAt
+                dueOn
+                exerciseId
+                successful
+                nextWorkingSets
+                nextWorkingSetInputs {
+                  unit
+                  value
+                  assistType
+                }
+                scheduleEntry {
+                  id
+                  exerciseId
+                  enabled
+                  frequency {
+                    years
+                    months
+                    weeks
+                    days
+                    hours
+                    minutes
+                    seconds
+                  }
+                  increment
+                  workingSets
+                  workingReps
+                  deloadFactor
+                  baseWeight
+                  snoozedUntil
+                  order
+                }
+              }
+            }
+          }
+        }
+      `);
+
+    const [
+      unsnoozeExerciseSchedule,
+      { loading: isUnsnoozingExerciseSchedule },
+    ] = useMutation<UnsnoozeExerciseScheduleMutation>(gql`
+      mutation UnsnoozeExerciseSchedule(
+        $input: UnsnoozeExerciseScheduleInput!
+      ) {
+        unsnoozeExerciseSchedule(input: $input) {
+          exerciseSchedule {
+            id
+            exerciseId
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            order
+            nextSet {
+              workedOutAt
+              dueOn
+              exerciseId
+              successful
+              nextWorkingSets
+              nextWorkingSetInputs {
+                unit
+                value
+                assistType
+              }
+              scheduleEntry {
+                id
+                exerciseId
+                enabled
+                frequency {
+                  years
+                  months
+                  weeks
+                  days
+                  hours
+                  minutes
+                  seconds
+                }
+                increment
+                workingSets
+                workingReps
+                deloadFactor
+                baseWeight
+                snoozedUntil
+                order
+              }
+            }
+          }
+        }
+      }
+    `);
     return (
       <DiaryAgendaDayEntry
         ref={ref2}
@@ -158,12 +302,26 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
               <button
                 type="button"
                 onClick={() =>
-                  void snoozeUserExerciseSchedule(
-                    userId,
-                    dueSet.scheduleEntry.id,
-                    addDays(date, 1),
-                  ).then(() => {
-                    client.refetchObservableQueries();
+                  void snoozeExerciseSchedule({
+                    variables: {
+                      input: {
+                        exerciseScheduleId: dueSet.scheduleEntry.id,
+                        snoozedUntil: addDays(dueSet.dueOn, 1),
+                      },
+                    } satisfies SnoozeExerciseScheduleMutationVariables,
+                    optimisticResponse: {
+                      snoozeExerciseSchedule: {
+                        __typename: "SnoozeExerciseSchedulePayload",
+                        exerciseSchedule: {
+                          ...dueSet.scheduleEntry,
+                          snoozedUntil: addDays(dueSet.dueOn, 1),
+                          nextSet: {
+                            ...dueSet,
+                            dueOn: addDays(dueSet.dueOn, 1),
+                          },
+                        },
+                      },
+                    },
                   })
                 }
                 className={
@@ -185,12 +343,41 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                     <button
                       type="button"
                       onClick={() =>
-                        void snoozeUserExerciseSchedule(
-                          userId,
-                          dueSet.scheduleEntry.id,
-                          null,
-                        ).then(() => {
-                          client.refetchObservableQueries();
+                        void unsnoozeExerciseSchedule({
+                          variables: {
+                            input: {
+                              exerciseScheduleId: dueSet.scheduleEntry.id,
+                            },
+                          } satisfies UnsnoozeExerciseScheduleMutationVariables,
+                          optimisticResponse: {
+                            unsnoozeExerciseSchedule: {
+                              __typename: "UnsnoozeExerciseSchedulePayload",
+                              exerciseSchedule: {
+                                ...dueSet.scheduleEntry,
+                                snoozedUntil: null,
+                                nextSet: {
+                                  ...dueSet,
+                                  dueOn: addMilliseconds(
+                                    (dueSet?.workedOutAt &&
+                                    isEqual(
+                                      dueSet.workedOutAt,
+                                      startOfDay(dueSet.workedOutAt, {
+                                        in: tz("UTC"),
+                                      }),
+                                    )
+                                      ? addHours(
+                                          dueSet.workedOutAt,
+                                          dayStartHour,
+                                        )
+                                      : dueSet.workedOutAt) || epoch,
+                                    durationToMs(
+                                      dueSet.scheduleEntry.frequency,
+                                    ),
+                                  ),
+                                },
+                              },
+                            },
+                          },
                         })
                       }
                       className="ml-2 cursor-pointer rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"

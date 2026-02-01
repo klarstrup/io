@@ -37,10 +37,7 @@ import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 gql`
-  query DiaryAgendaDayUserTodos(
-    $interval: IntervalInput!
-    $intervalEnd: Date!
-  ) {
+  query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
     user {
       id
       exerciseSchedules {
@@ -63,7 +60,7 @@ gql`
         baseWeight
         snoozedUntil
         order
-        nextSet(to: $intervalEnd) {
+        nextSet {
           workedOutAt
           dueOn
           exerciseId
@@ -181,10 +178,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     DiaryAgendaDayUserTodosDocument,
     user
       ? {
-          variables: {
-            interval: fetchingInterval,
-            intervalEnd: fetchingInterval.end,
-          },
+          variables: { interval: fetchingInterval },
           pollInterval: 300000,
         }
       : skipToken,
@@ -353,6 +347,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
             <DiaryAgendaDayDay
               date={dayName}
               dayDate={dayDate}
+              dueSetTo={fetchingInterval.end}
               user={user}
               dayLocations={dayLocations}
               dayJournalEntries={[

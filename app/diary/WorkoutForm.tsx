@@ -124,70 +124,67 @@ export function WorkoutForm<R extends string>({
     [date, user?.timeZone],
   );
 
-  const { data: nextSetsData, client } = useQuery<WorkoutFormNextSetsQuery>(
-    gql`
-      query WorkoutFormNextSets($intervalEnd: Date!) {
-        user {
+  const { data: nextSetsData, client } = useQuery<WorkoutFormNextSetsQuery>(gql`
+    query WorkoutFormNextSets {
+      user {
+        id
+        exerciseSchedules {
           id
-          exerciseSchedules {
-            id
+          exerciseId
+          enabled
+          frequency {
+            years
+            months
+            weeks
+            days
+            hours
+            minutes
+            seconds
+          }
+          increment
+          workingSets
+          workingReps
+          deloadFactor
+          baseWeight
+          snoozedUntil
+          order
+          nextSet {
+            workedOutAt
+            dueOn
             exerciseId
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
+            successful
+            nextWorkingSets
+            nextWorkingSetInputs {
+              unit
+              value
+              assistType
             }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            order
-            nextSet(to: $intervalEnd) {
-              workedOutAt
-              dueOn
+            scheduleEntry {
+              id
               exerciseId
-              successful
-              nextWorkingSets
-              nextWorkingSetInputs {
-                unit
-                value
-                assistType
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
               }
-              scheduleEntry {
-                id
-                exerciseId
-                enabled
-                frequency {
-                  years
-                  months
-                  weeks
-                  days
-                  hours
-                  minutes
-                  seconds
-                }
-                increment
-                workingSets
-                workingReps
-                deloadFactor
-                baseWeight
-                snoozedUntil
-                order
-              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+              order
             }
           }
         }
       }
-    `,
-    { variables: { intervalEnd: startOfDay(tzDate) } },
-  );
+    }
+  `);
 
   const nextSets = nextSetsData?.user?.exerciseSchedules
     ?.map((sched) => sched.nextSet)
