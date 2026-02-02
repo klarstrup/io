@@ -2,6 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import {
   addDays,
   type ContextOptions,
+  type DateArg,
   differenceInDays,
   type Interval,
   isDate,
@@ -19,6 +20,16 @@ export const dateToString = (date: Date): `${number}-${number}-${number}` => {
   date = isDate(date) ? date : new Date(date);
 
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+};
+
+export const dateMidpoint = <
+  StartType extends DateArg<Date> = DateArg<Date>,
+  EndType extends DateArg<Date> = DateArg<Date>,
+>(
+  date1: StartType,
+  date2: EndType,
+): Date => {
+  return new Date((new Date(date1).getTime() + new Date(date2).getTime()) / 2);
 };
 
 export const DEFAULT_TIMEZONE = "Europe/Copenhagen";

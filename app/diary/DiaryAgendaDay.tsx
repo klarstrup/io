@@ -12,6 +12,7 @@ import {
   isPast,
   max,
   min,
+  setHours,
   startOfDay,
   subHours,
 } from "date-fns";
@@ -343,7 +344,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
         const dayTodos = todosByDate[dayName] || [];
 
         return (
-          <TodoDroppable key={dayI} date={dayDate}>
+          <TodoDroppable key={dayI} date={setHours(dayDate, dayStartHour)}>
             <DiaryAgendaDayDay
               date={dayName}
               dayDate={dayDate}
@@ -354,36 +355,20 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
                 ...dayDueSets,
                 ...dayTodos,
                 ...dayWorkouts,
-              ]
-                .sort((a, b) => {
-                  const aOrder =
-                    "scheduleEntry" in a
-                      ? (a.scheduleEntry.order ?? 0)
-                      : "order" in a
-                        ? (a.order ?? 0)
-                        : 0;
-                  const bOrder =
-                    "scheduleEntry" in b
-                      ? (b.scheduleEntry.order ?? 0)
-                      : "order" in b
-                        ? (b.order ?? 0)
-                        : 0;
-                  return aOrder - bOrder;
-                })
-                .sort((a, b) =>
-                  compareAsc(
-                    "__typename" in a &&
-                      a.__typename === "Event" &&
-                      a.datetype === "date"
-                      ? 1
-                      : getJournalEntryPrincipalDate(a) || new Date(0),
-                    "__typename" in b &&
-                      b.__typename === "Event" &&
-                      b.datetype === "date"
-                      ? 1
-                      : getJournalEntryPrincipalDate(b) || new Date(0),
-                  ),
-                )}
+              ].sort((a, b) =>
+                compareAsc(
+                  "__typename" in a &&
+                    a.__typename === "Event" &&
+                    a.datetype === "date"
+                    ? 1
+                    : getJournalEntryPrincipalDate(a)?.start || new Date(0),
+                  "__typename" in b &&
+                    b.__typename === "Event" &&
+                    b.datetype === "date"
+                    ? 1
+                    : getJournalEntryPrincipalDate(b)?.start || new Date(0),
+                ),
+              )}
             />
           </TodoDroppable>
         );

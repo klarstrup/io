@@ -4,17 +4,22 @@ import {
   type Interval,
   isWithinInterval,
   max,
+  min,
   startOfDay,
 } from "date-fns";
-import type { Event, NextSet, Todo, Workout } from "../../graphql.generated";
+import type {
+  Event,
+  ExerciseSchedule,
+  NextSet,
+  Todo,
+  Workout,
+} from "../../graphql.generated";
 import type { WorkoutData } from "../../models/workout";
 import { dayStartHour } from "../../utils";
 
-export type JournalEntry = Event | Todo | NextSet | Workout;
+export type JournalEntry = Event | Todo | NextSet | Workout | ExerciseSchedule;
 
-const getWorkoutPrincipalDate = (
-  workout: WorkoutData | Workout,
-): Date | null => {
+const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
     start: addHours(
@@ -27,34 +32,59 @@ const getWorkoutPrincipalDate = (
     ),
   };
 
-  return max([
-    dayInterval.start,
-    workout.createdAt,
-    ...workout.exercises
-      .flatMap((e) => e.sets.map((s) => s.updatedAt))
-      .filter(Boolean)
-      .filter((date) => isWithinInterval(date, dayInterval)),
-  ]);
+  return {
+    start: max([
+      dayInterval.start,
+      workout.createdAt,
+      ...workout.exercises
+        .flatMap((e) => e.sets.map((s) => s.createdAt))
+        .filter(Boolean)
+        .filter((date) => isWithinInterval(date, dayInterval)),
+    ]),
+    end: min([
+      dayInterval.end,
+      workout.updatedAt,
+      ...workout.exercises
+        .flatMap((e) => e.sets.map((s) => s.updatedAt))
+        .filter(Boolean)
+        .filter((date) => isWithinInterval(date, dayInterval)),
+    ]),
+  };
 };
 
 export const getTodoPrincipalDate = (
   todo: Partial<Pick<Todo, "completed" | "due" | "start">>,
-): Date | null => {
+): Interval | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
-  if (todo.completed) return todo.completed;
-  if (todo.due) return max([todo.due, slightlyIntoTheFuture]);
-  if (todo.start) return max([todo.start, slightlyIntoTheFuture]);
-  return slightlyIntoTheFuture;
+  if (todo.completed)
+    return {
+      start: todo.start ? min([todo.start, todo.completed]) : todo.completed,
+      end: todo.completed,
+    };
+  if (todo.start)
+    return {
+      start: max([todo.start, slightlyIntoTheFuture]),
+      end: max([todo.start, slightlyIntoTheFuture]),
+    };
+  return { start: slightlyIntoTheFuture, end: slightlyIntoTheFuture };
 };
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
-): Date | null => {
+): Interval | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if ("__typename" in entry && entry.__typename === "Todo") {
     return getTodoPrincipalDate(entry);
   }
-  if ("start" in entry && entry.start) return entry.start;
+  if ("start" in entry && entry.start) {
+    return {
+      start: new Date(entry.start),
+      end:
+        "end" in entry && entry.end
+          ? new Date(entry.end)
+          : new Date(entry.start),
+    };
+  }
   if ("scheduleEntry" in entry && entry.scheduleEntry) {
     const nextSet = entry;
 
@@ -62,7 +92,23 @@ export const getJournalEntryPrincipalDate = (
       ? max([nextSet.scheduleEntry.snoozedUntil, nextSet.dueOn])
       : nextSet.dueOn;
 
-    return max([effectiveDueDate, slightlyIntoTheFuture]);
+    return {
+      start: max([effectiveDueDate, slightlyIntoTheFuture]),
+      end: max([effectiveDueDate, slightlyIntoTheFuture]),
+    };
+  }
+  if ("nextSet" in entry && entry.nextSet) {
+    const scheduleEntry = entry;
+    const nextSet = entry.nextSet;
+
+    const effectiveDueDate = scheduleEntry.snoozedUntil
+      ? max([scheduleEntry.snoozedUntil, nextSet.dueOn])
+      : nextSet.dueOn;
+
+    return {
+      start: max([effectiveDueDate, slightlyIntoTheFuture]),
+      end: max([effectiveDueDate, slightlyIntoTheFuture]),
+    };
   }
   if ("exercises" in entry) {
     const workout = entry;

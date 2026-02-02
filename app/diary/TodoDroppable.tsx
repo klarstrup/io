@@ -1,27 +1,28 @@
 "use client";
-import { useMutation } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
 import {
   DndContext,
   DragEndEvent,
   MouseSensor,
   TouchSensor,
+  type UniqueIdentifier,
   useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   type SortableContextProps,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import {
   addHours,
-  isBefore,
-  isSameHour,
+  addMilliseconds,
+  isFuture,
   max,
+  min,
   setHours,
-  startOfDay,
-  subMinutes,
 } from "date-fns";
 import type { ReactNode } from "react";
 import {
@@ -30,7 +31,8 @@ import {
   type Todo,
   UpdateTodoDocument,
 } from "../../graphql.generated";
-import { dayStartHour } from "../../utils";
+import { dateMidpoint, dayStartHour } from "../../utils";
+import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -50,10 +52,13 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   );
 }
 
+const NOW_SYMBOL = Symbol("now");
+
 export function TodoDragDropContainer(props: {
   children: ReactNode;
   userId?: string;
 }) {
+  const client = useApolloClient();
   const [updateTodo] = useMutation(UpdateTodoDocument);
   const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
 
@@ -63,26 +68,77 @@ export function TodoDragDropContainer(props: {
 
     console.log("Drag ended", { active, over });
 
-    const activeOrder =
-      active.data.current.nextSet?.scheduleEntry?.order ??
-      active.data.current.todo?.order ??
-      0;
-    const overOrder =
-      over.data.current.nextSet?.scheduleEntry?.order ??
-      over.data.current.todo?.order ??
-      0;
-    const newOrder = overOrder > activeOrder ? overOrder + 1 : overOrder - 1;
+    const sortableItems = over.data.current.sortable?.items as
+      | UniqueIdentifier[]
+      | undefined;
+    const sortableItemsFromCache = Object.entries(
+      client.cache.extract() as Record<string, Record<string, unknown>>,
+    ).filter(([key, item]) => sortableItems?.includes(key));
+
+    const oldIndex = sortableItems?.indexOf(active.id);
+    const newIndex = sortableItems?.indexOf(over.id);
+
+    const newSortableItems =
+      sortableItems &&
+      oldIndex != null &&
+      newIndex != null &&
+      oldIndex > -1 &&
+      newIndex > -1
+        ? arrayMove(sortableItems, oldIndex, newIndex)
+        : undefined;
+
+    const newSortableCacheItems = newSortableItems
+      ?.map((sortableId) =>
+        sortableId === "now-divider"
+          ? ["now-divider", NOW_SYMBOL]
+          : sortableItemsFromCache.find(([key, item]) => key === sortableId),
+      )
+      .filter(Boolean);
+
+    const activeItem = newSortableCacheItems?.find(
+      ([key, item]) => key === active.id,
+    );
+    const activeItemIndex =
+      activeItem && newSortableCacheItems?.indexOf(activeItem);
+
+    const precedingItem =
+      activeItemIndex != null && activeItemIndex > -1
+        ? newSortableCacheItems?.[activeItemIndex - 1]?.[1]
+        : undefined;
+    const followingItem =
+      activeItemIndex != null && activeItemIndex > -1
+        ? newSortableCacheItems?.[activeItemIndex + 1]?.[1]
+        : undefined;
+
+    const precedingDate =
+      precedingItem &&
+      (precedingItem === NOW_SYMBOL
+        ? new Date()
+        : getJournalEntryPrincipalDate(precedingItem as any)?.end);
+    const followingDate =
+      followingItem &&
+      (followingItem === NOW_SYMBOL
+        ? new Date()
+        : getJournalEntryPrincipalDate(followingItem as any)?.start);
+
+    const overStart =
+      over.data.current.date && new Date(over.data.current.date);
+    const dayStart = setHours(overStart, dayStartHour);
+    const dayEnd = addMilliseconds(
+      setHours(addHours(dayStart, 24), dayStartHour),
+      -1,
+    );
+    let targetDate = dateMidpoint(
+      precedingDate || dayStart,
+      followingDate || dayEnd,
+    );
+
+    // Ensure targetDate is within the day boundaries
+    targetDate = min([max([targetDate, dayStart]), dayEnd]);
 
     if (props.userId && active.data.current.nextSet) {
       const nextSet: NextSet = active.data.current.nextSet;
 
-      const overStart = new Date(over.data.current.date);
-      const startOfDay = setHours(overStart, dayStartHour);
-      const justBeforeTheThing = subMinutes(overStart, 1);
-
-      const targetDate = max([startOfDay, justBeforeTheThing]);
-
-      console.log("Snoozing next set to", targetDate, "with order", newOrder);
       void snoozeExerciseSchedule({
         variables: {
           input: {
@@ -104,27 +160,11 @@ export function TodoDragDropContainer(props: {
       return;
     } else if (active.data.current.todo) {
       const todo: Todo = active.data.current.todo;
-      const targetDate = setHours(
-        new Date(over.data.current.date),
-        dayStartHour,
-      );
 
-      console.log(
-        "Updating todo due date to",
-        targetDate,
-        "with order",
-        newOrder,
-      );
-
-      if (
-        isBefore(addHours(startOfDay(new Date()), dayStartHour), targetDate) ||
-        isSameHour(addHours(startOfDay(new Date()), dayStartHour), targetDate)
-      ) {
+      if (isFuture(targetDate)) {
         const updatedTodo = {
           start: targetDate,
           completed: null,
-          // Reimplement ordering later
-          // order: newOrder,
         } as const;
 
         void updateTodo({
@@ -141,8 +181,6 @@ export function TodoDragDropContainer(props: {
       } else {
         const updatedTodo = {
           completed: targetDate,
-          // Reimplement ordering later
-          // order: newOrder,
         } as const;
 
         void updateTodo({

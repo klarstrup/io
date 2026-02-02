@@ -1,5 +1,5 @@
 "use client";
-import { useMutation } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
 import { tz } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
@@ -20,9 +20,9 @@ import {
   Location,
   NextSet,
   SnoozeExerciseScheduleMutation,
-  SnoozeExerciseScheduleMutationVariables,
+  type SnoozeExerciseScheduleMutationVariables,
   UnsnoozeExerciseScheduleMutation,
-  UnsnoozeExerciseScheduleMutationVariables,
+  type UnsnoozeExerciseScheduleMutationVariables,
   Workout,
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
@@ -34,14 +34,12 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 export function DiaryAgendaDayDueSet({
-  sortableId,
   ...props
-}: {
-  sortableId: string;
-} & Omit<
+}: {} & Omit<
   ComponentProps<typeof DiaryAgendaDayDueSetButItsNotDraggable>,
   "isDragging"
 >) {
+  const client = useApolloClient();
   const {
     isDragging,
     attributes,
@@ -50,10 +48,13 @@ export function DiaryAgendaDayDueSet({
     transform,
     transition,
   } = useSortable({
-    id: sortableId,
+    id:
+      client.cache.identify(props.dueSet.scheduleEntry) ||
+      props.dueSet.scheduleEntry.id,
     data: {
       nextSet: props.dueSet,
-      date: getJournalEntryPrincipalDate(props.dueSet),
+      date:
+        getJournalEntryPrincipalDate(props.dueSet)?.start || props.dueSet.dueOn,
     },
   });
 
@@ -105,7 +106,10 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     const router = useRouter();
 
     const [snoozeExerciseSchedule, { loading: isSnoozingExerciseSchedule }] =
-      useMutation<SnoozeExerciseScheduleMutation>(gql`
+      useMutation<
+        SnoozeExerciseScheduleMutation,
+        SnoozeExerciseScheduleMutationVariables
+      >(gql`
         mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
           snoozeExerciseSchedule(input: $input) {
             exerciseSchedule {
@@ -169,7 +173,10 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     const [
       unsnoozeExerciseSchedule,
       { loading: isUnsnoozingExerciseSchedule },
-    ] = useMutation<UnsnoozeExerciseScheduleMutation>(gql`
+    ] = useMutation<
+      UnsnoozeExerciseScheduleMutation,
+      UnsnoozeExerciseScheduleMutationVariables
+    >(gql`
       mutation UnsnoozeExerciseSchedule(
         $input: UnsnoozeExerciseScheduleInput!
       ) {
@@ -308,7 +315,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                         exerciseScheduleId: dueSet.scheduleEntry.id,
                         snoozedUntil: addDays(dueSet.dueOn, 1),
                       },
-                    } satisfies SnoozeExerciseScheduleMutationVariables,
+                    },
                     optimisticResponse: {
                       snoozeExerciseSchedule: {
                         __typename: "SnoozeExerciseSchedulePayload",
@@ -348,7 +355,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                             input: {
                               exerciseScheduleId: dueSet.scheduleEntry.id,
                             },
-                          } satisfies UnsnoozeExerciseScheduleMutationVariables,
+                          },
                           optimisticResponse: {
                             unsnoozeExerciseSchedule: {
                               __typename: "UnsnoozeExerciseSchedulePayload",

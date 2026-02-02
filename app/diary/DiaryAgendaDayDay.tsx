@@ -1,29 +1,22 @@
+import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import {
-  faCalendar,
-  faCalendarCheck,
-  faCalendarWeek,
-  faDumbbell,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCalendarWeek, faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
   endOfDay,
-  intervalToDuration,
   isBefore,
   isPast,
   max,
   min,
-  roundToNearestMinutes,
   startOfDay,
   subHours,
 } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import type { ReactElement } from "react";
-import { ScrollToMe } from "../../components/CenterMe";
 import { FieldSetX } from "../../components/FieldSet";
-import { Event, Location, Workout, WorkoutSet } from "../../graphql.generated";
+import { Location, Workout, WorkoutSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
 import {
   ClimbingStats,
@@ -45,6 +38,8 @@ import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
+import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
+import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { TodoSortableContext } from "./TodoDroppable";
 import { WorkoutEntryExercise } from "./WorkoutEntry";
@@ -63,6 +58,7 @@ export function DiaryAgendaDayDay({
   dayLocations: Location[];
   dayJournalEntries: JournalEntry[];
 }) {
+  const client = useApolloClient();
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
   const todayStr = dateToString(subHours(now, dayStartHour));
@@ -98,42 +94,13 @@ export function DiaryAgendaDayDay({
   ) => {
     const principalDate = getJournalEntryPrincipalDate(journalEntry);
     if (!principalDate) return false;
-    return isBefore(principalDate, now);
+    return isBefore(principalDate.end, now);
   };
   const putNowDivider = () => {
     if (isToday && !hasPutNowDivider) {
       dayJournalEntryElements.push({
-        id: `divider-${i}`,
-        element: (
-          <DiaryAgendaDayEntry
-            key={`divider-${i}`}
-            iconTxt={
-              <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
-            }
-            cotemporality="current"
-            className="mt-0.5 mb-2 gap-1.5"
-          >
-            <Link
-              prefetch={false}
-              href={`/diary/${date}/workout`}
-              className={
-                "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Workout
-            </Link>
-            <DiaryAgendaDayCreateTodo date={dayStart} />
-            <span
-              hidden
-              className={
-                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-              }
-            >
-              <span className="text-xs">➕</span> Event
-            </span>
-            <ScrollToMe />
-          </DiaryAgendaDayEntry>
-        ),
+        id: "now-divider",
+        element: <DiaryAgendaDayNow key="now-divider" date={date} />,
       });
       hasPutNowDivider = true;
     }
@@ -151,14 +118,14 @@ export function DiaryAgendaDayDay({
 
     if ("__typename" in journalEntry && journalEntry.__typename === "Event") {
       const event = journalEntry;
-      const isPassed = isBefore(event.end, now);
+
       const isAllDayEvent =
         differenceInDays(event.end, event.start) >= 0 &&
         event.datetype === "date";
 
       if (isAllDayEvent) {
         dayJournalEntryElements.push({
-          id: event.id,
+          id: client.cache.identify(event) || event.id,
           element: (
             <DiaryAgendaDayEntry
               icon={faCalendarWeek}
@@ -230,24 +197,14 @@ export function DiaryAgendaDayDay({
         });
       } else {
         dayJournalEntryElements.push({
-          id: event.id,
+          id: client.cache.identify(event) || event.id,
           element: (
-            <DiaryAgendaDayEntry
+            <DiaryAgendaDayEvent
+              dayDate={dayDate}
+              user={user}
+              event={event}
               key={event.id}
-              icon={
-                isAllDayEvent
-                  ? faCalendarWeek
-                  : isPassed
-                    ? faCalendarCheck
-                    : faCalendar
-              }
-              cotemporality={cotemporality({
-                start: event.start,
-                end: event.end,
-              })}
-            >
-              {renderOnDayEvent(event)}
-            </DiaryAgendaDayEntry>
+            />
           ),
         });
       }
@@ -257,20 +214,19 @@ export function DiaryAgendaDayDay({
     ) {
       const todo = journalEntry;
       dayJournalEntryElements.push({
-        id: todo.id,
-        element: (
-          <DiaryAgendaDayTodo todo={todo} key={todo.id} sortableId={todo.id} />
-        ),
+        id: client.cache.identify(todo) || todo.id,
+        element: <DiaryAgendaDayTodo todo={todo} key={todo.id} />,
       });
     } else if ("scheduleEntry" in journalEntry) {
       const dueSet = journalEntry;
 
       dayJournalEntryElements.push({
-        id: dueSet.scheduleEntry.id,
+        id:
+          client.cache.identify(dueSet.scheduleEntry) ||
+          dueSet.scheduleEntry.id,
         element: (
           <DiaryAgendaDayDueSet
             key={dueSet.scheduleEntry.id}
-            sortableId={dueSet.scheduleEntry.id}
             userId={user!.id}
             dueSet={dueSet}
             date={dayDate}
@@ -316,7 +272,10 @@ export function DiaryAgendaDayDay({
         });
 
         dayJournalEntryElements.push({
-          id: workout.id + "-" + String(workoutExercise.exerciseId),
+          id:
+            (client.cache.identify(workout) || workout.id) +
+            "-" +
+            String(workoutExercise.exerciseId),
           element: (
             <DiaryAgendaDayEntry
               key={workout.id + "-" + String(workoutExercise.exerciseId)}
@@ -410,63 +369,6 @@ export function DiaryAgendaDayDay({
   const allCompleted = dayJournalEntries.every((je) =>
     getIsJournalEntryPassed(je),
   );
-
-  function renderOnDayEvent(event: Event) {
-    const duration = intervalToDuration({
-      start: event.start,
-      end: roundToNearestMinutes(event.end, {
-        roundingMethod: "ceil",
-      }),
-    });
-    const startDay = startOfDay(addHours(event.start, dayStartHour));
-    const endDay = startOfDay(addHours(event.end, dayStartHour));
-    const days = differenceInDays(endDay, startDay) + 1;
-    const dayNo = differenceInDays(dayStart, startDay) + 1;
-    const isLastDay = dayNo === days;
-
-    return (
-      <div key={event.id} className="flex gap-1.5">
-        <div className="text-center">
-          <div className="leading-snug font-semibold tabular-nums">
-            {event.datetype === "date-time" && dayNo <= 1 ? (
-              event.start.toLocaleTimeString("en-DK", {
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone,
-              })
-            ) : (
-              <>Day {dayNo}</>
-            )}{" "}
-          </div>
-          <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-            {dayNo === 1 && duration ? (
-              <>
-                {duration.days ? `${duration.days}d` : null}
-                {duration.hours ? `${duration.hours}h` : null}
-                {duration.minutes ? `${duration.minutes}m` : null}
-                {duration.seconds ? `${duration.seconds}s` : null}
-              </>
-            ) : isLastDay ? (
-              <>
-                -
-                {event.end.toLocaleTimeString("en-DK", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone,
-                })}
-              </>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex-1">
-          <div className="leading-snug">{event.summary}</div>
-          <div className="text-[0.666rem] leading-tight italic">
-            {event.location}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <FieldSetX

@@ -1,5 +1,5 @@
 "use client";
-import { useMutation } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { addDays } from "date-fns";
@@ -30,11 +30,10 @@ gql`
 
 export function DiaryAgendaDayTodo({
   todo,
-  sortableId,
 }: {
   todo: DiaryAgendaDayTodoFragment;
-  sortableId?: string;
 }) {
+  const client = useApolloClient();
   const {
     isDragging,
     attributes,
@@ -43,8 +42,8 @@ export function DiaryAgendaDayTodo({
     transform,
     transition,
   } = useSortable({
-    id: sortableId ?? todo.id,
-    data: { todo, date: getTodoPrincipalDate(todo) },
+    id: client.cache.identify(todo) || todo.id,
+    data: { todo, date: getTodoPrincipalDate(todo)?.start },
   });
 
   return (
