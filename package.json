@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm-run-all --parallel dev:*",
-    "dev:next": "TZ=Etc/UTC next dev",
+    "dev:next": "TZ=Etc/UTC next dev --port 1337",
     "dev:graphql": "bun run codegen -- --watch",
     "build": "npm run build:graphql && npm run build:next",
     "build:next": "next build",

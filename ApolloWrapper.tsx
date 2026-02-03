@@ -45,7 +45,7 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
               new HttpLink({
                 uri:
                   process.env.NODE_ENV === "development"
-                    ? "http://localhost:3000/api/graphql"
+                    ? "http://localhost:1337/api/graphql"
                     : "https://io.klarstrup.dk/api/graphql",
               }),
             ),

@@ -13,7 +13,7 @@ export function DiaryPoller({ userId }: { userId: string }) {
 
   if (process.env.NODE_ENV === "development") {
     usePartySocket({
-      host: "ws://localhost:3000/_next/webpack-hmr?id=" + id,
+      host: "ws://localhost:1337/_next/webpack-hmr?id=" + id,
       room: "diary-poller-" + id,
       onMessage(event) {
         const data = JSON.parse(event.data as string);
