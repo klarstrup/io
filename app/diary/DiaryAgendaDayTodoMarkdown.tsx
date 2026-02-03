@@ -1,7 +1,6 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { DiaryAgendaDayTodoFragment } from "../../graphql.generated";
-import { useEffect } from "react";
 
 export function DiaryAgendaDayTodoMarkdown({
   todo,
@@ -15,7 +14,7 @@ export function DiaryAgendaDayTodoMarkdown({
   return (
     <div
       data-markdown-wrapper
-      className="prose prose-sm prose-ul:m-0 prose-p:m-0 prose-li:m-0 max-w-full wrap-break-word text-black select-none [&_.contains-task-list]:list-none [&_.contains-task-list]:p-0"
+      className="prose prose-sm prose-ul:m-0 prose-p:m-0 prose-li:m-0 max-w-full wrap-break-word prose-headings:mb-0 text-black select-none [&_.contains-task-list]:list-none [&_.contains-task-list]:p-0"
     >
       <Markdown
         remarkPlugins={[remarkGfm]}
