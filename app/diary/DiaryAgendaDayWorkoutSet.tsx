@@ -1,3 +1,5 @@
+import { useApolloClient } from "@apollo/client/react";
+import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { isSameDay, max, min, subHours } from "date-fns";
 import Link from "next/link";
@@ -16,8 +18,6 @@ import {
 import { cotemporality, dayStartHour } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { WorkoutEntryExercise } from "./WorkoutEntry";
-import { useSortable } from "@dnd-kit/sortable";
-import { useApolloClient } from "@apollo/client/react";
 
 export function DiaryAgendaDayWorkoutSet({
   workout,
@@ -90,23 +90,32 @@ export function DiaryAgendaDayWorkoutSet({
     >
       <div
         className={
-          "inline-flex h-auto flex-row justify-center rounded-md border border-black/20 bg-white" +
-          (isClimbingExercise(workoutExercise.exerciseId) ? " w-full" : "")
+          "inline-flex h-auto justify-center rounded-md border border-black/20 bg-white" +
+          (isClimbingExercise(workoutExercise.exerciseId)
+            ? " w-full flex-col"
+            : " flex-row")
         }
       >
         <div
           className={
             "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
-            (!workoutExercise.sets.length ? "rounded-r-[5px]" : "")
+            (!workoutExercise.sets.length ||
+            isClimbingExercise(workoutExercise.exerciseId)
+              ? " rounded-r-[5px]"
+              : "") +
+            (isClimbingExercise(workoutExercise.exerciseId) ? " w-full" : " ")
           }
         >
-          <div className="flex justify-between">
+          <div className="flex items-center justify-between">
             <Link prefetch={false} href={`/diary/exercises/${exercise.id}`}>
               {[exercise.name, ...exercise.aliases]
                 .filter((name) => name.length >= 4)
                 .sort((a, b) => a.length - b.length)[0]!
                 .replace("Barbell", "")}
             </Link>
+            {isClimbingExercise(exercise.id) ? (
+              <ClimbingStats setAndLocationPairs={setsWithLocation} />
+            ) : null}
             {mostRecentWorkout &&
             (mostRecentWorkout.source === WorkoutSource.Self ||
               !mostRecentWorkout.source) ? (
@@ -120,14 +129,14 @@ export function DiaryAgendaDayWorkoutSet({
               </Link>
             ) : null}
           </div>
-          <div className="leading-none">
-            {isClimbingExercise(exercise.id) ? (
-              <ClimbingStats setAndLocationPairs={setsWithLocation} />
-            ) : null}
-          </div>
         </div>
         {setsWithLocation.length > 0 ? (
-          <div className="flex flex-1 items-center px-1.5 py-0.5 pb-1 text-xs">
+          <div
+            className={
+              "flex flex-1 items-center px-1 py-0.5 text-xs " +
+              (isClimbingExercise(exercise.id) ? " pb-1" : " ")
+            }
+          >
             <WorkoutEntryExercise
               exercise={exercise}
               setsWithLocations={setsWithLocation}
