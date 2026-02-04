@@ -370,6 +370,8 @@ export async function* materializeFitocracyWorkouts(
                   input: "$$child.exercise.sets",
                   as: "set",
                   in: {
+                    createdAt: "$updated_timestamp",
+                    updatedAt: "$updated_timestamp",
                     inputs: {
                       $map: {
                         input: "$$set.inputs",
@@ -428,6 +430,8 @@ export async function* materializeRunDoubleWorkouts(
             exerciseId: 518,
             sets: [
               {
+                createdAt: "$completedAt",
+                updatedAt: "$completedAt",
                 inputs: [
                   { unit: Unit.SEC, value: { $divide: ["$runTime", 1000] } },
                   { unit: Unit.M, value: "$runDistance" },
@@ -819,6 +823,8 @@ export async function* materializeGrippyWorkouts(
             exerciseId: 2006,
             sets: [
               {
+                createdAt: "$start_time",
+                updatedAt: "$start_time",
                 inputs: [
                   { unit: Unit.SEC, value: "$total_hang_time" },
                   {
@@ -884,6 +890,8 @@ export async function* materializeCrimpdWorkouts(
             displayName: "$workout.name",
             sets: [
               {
+                createdAt: "$dateCreated",
+                updatedAt: "$lastUpdated",
                 inputs: [
                   { unit: Unit.SEC, value: "$estimatedWorkDuration" },
                   {
@@ -939,6 +947,8 @@ export async function* materializeOnsightWorkouts(
                 input: "$Ascents",
                 as: "ascent",
                 in: {
+                  createdAt: "$_createdAt",
+                  updatedAt: "$_updatedAt",
                   meta: {
                     attemptCount: {
                       $toInt: {
@@ -1203,6 +1213,8 @@ export async function* materializeClimbalongWorkouts(
                 input: "$performances",
                 as: "performance",
                 in: {
+                  createdAt: "$registrationTime",
+                  updatedAt: "$registrationTime",
                   meta: {
                     attemptCount: "$$performance.numberOfAttempts",
                   },
@@ -1294,6 +1306,8 @@ export async function* materializeSportstimingWorkouts(
             displayName: "$DistanceName",
             sets: [
               {
+                createdAt: "$StartTime",
+                updatedAt: "$StartTime",
                 inputs: [
                   { unit: Unit.SEC, value: "$LastSplitTimeSeconds" },
                   { unit: Unit.M, value: "$_io_TotalDistance" },
