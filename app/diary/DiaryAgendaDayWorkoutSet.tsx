@@ -90,20 +90,29 @@ export function DiaryAgendaDayWorkoutSet({
     >
       <div
         className={
-          "inline-flex h-auto justify-center rounded-md border border-black/20 bg-white" +
-          (isClimbingExercise(workoutExercise.exerciseId)
+          "inline-flex h-auto justify-center rounded-md " +
+          (isClimbingExercise(workoutExercise.exerciseId) ||
+          workout.source !== WorkoutSource.Self
             ? " w-full flex-col"
-            : " flex-row")
+            : " flex-row") +
+          (workout.source === WorkoutSource.Self
+            ? " border border-black/20 bg-white"
+            : "")
         }
       >
         <div
           className={
-            "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] bg-black/60 px-1.5 text-sm leading-tight text-white opacity-40 " +
+            "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] leading-tight " +
             (!workoutExercise.sets.length ||
             isClimbingExercise(workoutExercise.exerciseId)
               ? " rounded-r-[5px]"
               : "") +
-            (isClimbingExercise(workoutExercise.exerciseId) ? " py-0.5 w-full" : " ")
+            (isClimbingExercise(workoutExercise.exerciseId)
+              ? " w-full py-0.5"
+              : " ") +
+            (workout.source === WorkoutSource.Self
+              ? " bg-black/20 px-1.5 text-sm text-white"
+              : "")
           }
         >
           <div className="flex items-center justify-between">
@@ -122,8 +131,7 @@ export function DiaryAgendaDayWorkoutSet({
               <Link
                 prefetch={false}
                 href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
-                style={{ color: "#edab00" }}
-                className="text-sm leading-none font-semibold"
+                className="text-sm leading-none font-semibold text-orange-200"
               >
                 ⏎
               </Link>
@@ -133,8 +141,9 @@ export function DiaryAgendaDayWorkoutSet({
         {setsWithLocation.length > 0 ? (
           <div
             className={
-              "flex flex-1 items-center px-1 py-0.5 text-xs " +
-              (isClimbingExercise(exercise.id) ? " pb-1" : " ")
+              "flex flex-1 items-center text-xs " +
+              (isClimbingExercise(exercise.id) ? " pb-1" : " ") +
+              (workout.source === WorkoutSource.Self ? " px-1 py-0.5" : "")
             }
           >
             <WorkoutEntryExercise
