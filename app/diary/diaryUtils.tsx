@@ -13,11 +13,18 @@ import type {
   NextSet,
   Todo,
   Workout,
+  WorkoutExercise,
 } from "../../graphql.generated";
 import type { WorkoutData } from "../../models/workout";
 import { dayStartHour } from "../../utils";
 
-export type JournalEntry = Event | Todo | NextSet | Workout | ExerciseSchedule;
+export type JournalEntry =
+  | Event
+  | Todo
+  | NextSet
+  | Workout
+  | ExerciseSchedule
+  | WorkoutExercise;
 
 const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
@@ -113,6 +120,25 @@ export const getJournalEntryPrincipalDate = (
   if ("exercises" in entry) {
     const workout = entry;
     return getWorkoutPrincipalDate(workout);
+  }
+  if ("sets" in entry) {
+    const workoutExercise = entry;
+
+    const sets = workoutExercise.sets;
+
+    if (sets.length === 0) return null;
+
+    const createdAts = sets
+      .map((s) => s.createdAt)
+      .filter((date): date is Date => Boolean(date));
+    const updatedAts = sets
+      .map((s) => s.updatedAt)
+      .filter((date): date is Date => Boolean(date));
+
+    return {
+      start: min([...createdAts, ...updatedAts]),
+      end: max([...createdAts, ...updatedAts]),
+    };
   }
 
   return null;

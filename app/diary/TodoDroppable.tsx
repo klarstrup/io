@@ -30,6 +30,7 @@ import {
   SnoozeExerciseScheduleDocument,
   type Todo,
   UpdateTodoDocument,
+  type Workout,
 } from "../../graphql.generated";
 import { dateMidpoint, dayStartHour } from "../../utils";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
@@ -71,9 +72,22 @@ export function TodoDragDropContainer(props: {
     const sortableItems = over.data.current.sortable?.items as
       | UniqueIdentifier[]
       | undefined;
-    const sortableItemsFromCache = Object.entries(
+    const cacheObjectEntries = Object.entries(
       client.cache.extract() as Record<string, Record<string, unknown>>,
-    ).filter(([key, item]) => sortableItems?.includes(key));
+    );
+
+    const sortableItemsFromCache = sortableItems
+      ?.map((sortableId) => {
+        const a = cacheObjectEntries.find(([key]) =>
+          sortableId === "now-divider"
+            ? key === "now-divider"
+            : String(sortableId).startsWith(key) || key === sortableId,
+        );
+        if (!a) return null;
+
+        return [sortableId, a[1] as Workout] as const;
+      })
+      .filter(Boolean);
 
     const oldIndex = sortableItems?.indexOf(active.id);
     const newIndex = sortableItems?.indexOf(over.id);
@@ -88,15 +102,34 @@ export function TodoDragDropContainer(props: {
         : undefined;
 
     const newSortableCacheItems = newSortableItems
-      ?.map((sortableId) =>
-        sortableId === "now-divider"
-          ? ["now-divider", NOW_SYMBOL]
-          : sortableItemsFromCache.find(([key, item]) => key === sortableId),
-      )
+      ?.map((sortableId) => {
+        if (sortableId === "now-divider") {
+          return ["now-divider", NOW_SYMBOL] as const;
+        }
+
+        const entry = sortableItemsFromCache?.find(
+          (pair) =>
+            String(sortableId).startsWith(pair[0].toString()) ||
+            pair[0] === sortableId,
+        );
+
+        if (!entry) return null;
+
+        return String(sortableId).startsWith("Workout:") &&
+          String(sortableId).split("-").length === 2
+          ? ([
+              sortableId,
+              entry[1].exercises.find(
+                (we) =>
+                  String(we.exerciseId) === String(sortableId).split("-")[1],
+              ),
+            ] as const)
+          : entry;
+      })
       .filter(Boolean);
 
     const activeItem = newSortableCacheItems?.find(
-      ([key, item]) => key === active.id,
+      ([key]) => key === active.id,
     );
     const activeItemIndex =
       activeItem && newSortableCacheItems?.indexOf(activeItem);
@@ -114,12 +147,12 @@ export function TodoDragDropContainer(props: {
       precedingItem &&
       (precedingItem === NOW_SYMBOL
         ? new Date()
-        : getJournalEntryPrincipalDate(precedingItem as any)?.end);
+        : getJournalEntryPrincipalDate(precedingItem)?.end);
     const followingDate =
       followingItem &&
       (followingItem === NOW_SYMBOL
         ? new Date()
-        : getJournalEntryPrincipalDate(followingItem as any)?.start);
+        : getJournalEntryPrincipalDate(followingItem)?.start);
 
     const overStart =
       over.data.current.date && new Date(over.data.current.date);
