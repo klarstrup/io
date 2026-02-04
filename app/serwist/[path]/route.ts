@@ -22,6 +22,5 @@ export const { dynamic, dynamicParams, revalidate, GET } = createSerwistRoute({
   ],
   swSrc: "app/sw.ts",
   nextConfig,
-  // If set to `false`, Serwist will attempt to use `esbuild-wasm`.
   useNativeEsbuild: true,
 });
