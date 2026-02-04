@@ -103,7 +103,7 @@ export function DiaryAgendaDayWorkoutSet({
             isClimbingExercise(workoutExercise.exerciseId)
               ? " rounded-r-[5px]"
               : "") +
-            (isClimbingExercise(workoutExercise.exerciseId) ? " w-full" : " ")
+            (isClimbingExercise(workoutExercise.exerciseId) ? " py-0.5 w-full" : " ")
           }
         >
           <div className="flex items-center justify-between">
