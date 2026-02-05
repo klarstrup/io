@@ -10,6 +10,7 @@ import {
   endOfDay,
   isBefore,
   isPast,
+  roundToNearestMinutes,
   startOfDay,
   subHours,
 } from "date-fns";
@@ -218,11 +219,10 @@ export function DiaryAgendaDayDay({
                 <div key={event.id} className="flex gap-1.5">
                   <div className="text-center">
                     <div className="leading-snug font-semibold tabular-nums">
-                      {event.end.toLocaleTimeString("en-DK", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone,
-                      })}
+                      {roundToNearestMinutes(event.end).toLocaleTimeString(
+                        "en-DK",
+                        { hour: "2-digit", minute: "2-digit", timeZone },
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-1 items-center gap-2">
