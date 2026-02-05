@@ -9,7 +9,7 @@ import {
   WorkoutExercise,
   WorkoutSet,
 } from "../../graphql.generated";
-import { exercisesById } from "../../models/exercises";
+import type { ExerciseData } from "../../models/exercises";
 import {
   ClimbingStats,
   isClimbingExercise,
@@ -29,7 +29,7 @@ export function DiaryAgendaDayWorkoutSet({
 }: {
   workout: Workout;
   workoutExercise: WorkoutExercise;
-  exercise: (typeof exercisesById)[number];
+  exercise: ExerciseData;
   setsWithLocation: (readonly [WorkoutSet, Location | undefined, Workout])[];
   mostRecentWorkout: Workout | null;
   workoutDateStr: string;

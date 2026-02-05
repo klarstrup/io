@@ -8,7 +8,6 @@ import Grade from "../../grades";
 import { Location, Workout, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { type ExerciseData, exercisesById } from "../../models/exercises";
-import type { LocationData } from "../../models/location";
 import {
   ClimbingStats,
   getSetGrade,
