@@ -81,7 +81,10 @@ export function TodoDragDropContainer(props: {
         const a = cacheObjectEntries.find(([key]) =>
           sortableId === "now-divider"
             ? key === "now-divider"
-            : String(sortableId).startsWith(key) || key === sortableId,
+            : String(sortableId).startsWith(key) ||
+              key === sortableId ||
+              (String(sortableId).startsWith("end-of-") &&
+                String(key) === String(sortableId).replace("end-of-", "")),
         );
         if (!a) return null;
 
@@ -101,10 +104,19 @@ export function TodoDragDropContainer(props: {
         ? arrayMove(sortableItems, oldIndex, newIndex)
         : undefined;
 
-    const newSortableCacheItems = newSortableItems
+    const newSortableCacheEntries = newSortableItems
       ?.map((sortableId) => {
         if (sortableId === "now-divider") {
           return ["now-divider", NOW_SYMBOL] as const;
+        }
+        if (String(sortableId).startsWith("end-of-Event:")) {
+          const entry = sortableItemsFromCache?.find(
+            (pair) => pair[0] === String(sortableId).replace("end-of-", ""),
+          );
+
+          if (!entry) return null;
+
+          return entry;
         }
 
         const entry = sortableItemsFromCache?.find(
@@ -115,32 +127,36 @@ export function TodoDragDropContainer(props: {
 
         if (!entry) return null;
 
-        return String(sortableId).startsWith("Workout:") &&
+        if (
+          String(sortableId).startsWith("Workout:") &&
           String(sortableId).split("-").length === 2
-          ? ([
-              sortableId,
-              entry[1].exercises.find(
-                (we) =>
-                  String(we.exerciseId) === String(sortableId).split("-")[1],
-              ),
-            ] as const)
-          : entry;
+        ) {
+          return [
+            sortableId,
+            entry[1].exercises.find(
+              (we) =>
+                String(we.exerciseId) === String(sortableId).split("-")[1],
+            ),
+          ] as const;
+        }
+
+        return entry;
       })
       .filter(Boolean);
 
-    const activeItem = newSortableCacheItems?.find(
+    const activeEntry = newSortableCacheEntries?.find(
       ([key]) => key === active.id,
     );
-    const activeItemIndex =
-      activeItem && newSortableCacheItems?.indexOf(activeItem);
+    const activeEntryIndex =
+      activeEntry && newSortableCacheEntries?.indexOf(activeEntry);
 
     const precedingItem =
-      activeItemIndex != null && activeItemIndex > -1
-        ? newSortableCacheItems?.[activeItemIndex - 1]?.[1]
+      activeEntryIndex != null && activeEntryIndex > -1
+        ? newSortableCacheEntries?.[activeEntryIndex - 1]?.[1]
         : undefined;
     const followingItem =
-      activeItemIndex != null && activeItemIndex > -1
-        ? newSortableCacheItems?.[activeItemIndex + 1]?.[1]
+      activeEntryIndex != null && activeEntryIndex > -1
+        ? newSortableCacheEntries?.[activeEntryIndex + 1]?.[1]
         : undefined;
 
     const precedingDate =

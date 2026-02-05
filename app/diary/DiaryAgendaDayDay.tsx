@@ -1,16 +1,12 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import {
-  faArrowsDownToLine,
-  faCalendarWeek,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCalendarWeek } from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
   endOfDay,
   isBefore,
   isPast,
-  roundToNearestMinutes,
   startOfDay,
   subHours,
 } from "date-fns";
@@ -37,6 +33,7 @@ import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
+import { DiaryAgendaDayEventEnd } from "./DiaryAgendaDayEventEnd";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkoutSet } from "./DiaryAgendaDayWorkoutSet";
@@ -207,30 +204,7 @@ export function DiaryAgendaDayDay({
         } else {
           dayJournalEntryElements.push({
             id: "end-of-" + (client.cache.identify(event) || event.id),
-            element: (
-              <DiaryAgendaDayEntry
-                icon={faArrowsDownToLine}
-                cotemporality={cotemporality({
-                  start: event.start,
-                  end: event.end,
-                })}
-                key={"end-of-" + event.id}
-              >
-                <div key={event.id} className="flex gap-1.5">
-                  <div className="text-center">
-                    <div className="leading-snug font-semibold tabular-nums">
-                      {roundToNearestMinutes(event.end).toLocaleTimeString(
-                        "en-DK",
-                        { hour: "2-digit", minute: "2-digit", timeZone },
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-1 items-center gap-2">
-                    <div className="leading-snug">{event.summary}</div>
-                  </div>
-                </div>
-              </DiaryAgendaDayEntry>
-            ),
+            element: <DiaryAgendaDayEventEnd user={user} event={event} />,
           });
         }
       } else {
