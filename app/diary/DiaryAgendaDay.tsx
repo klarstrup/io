@@ -172,7 +172,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
   const tzDate = new TZDate(date, timeZone);
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -7), dayStartHour),
+    start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
   const { data } = useQuery(
