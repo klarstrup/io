@@ -83,33 +83,15 @@ export function DiaryAgendaDayDay({
   const dayJournalEntryElements: { id: string; element: ReactElement }[] = [];
 
   let i = 0;
-  let hasPutNowDivider = false;
-  const getIsJournalEntryPassed = (
+  const getJournalEntryPassed = (
     journalEntry: (typeof dayJournalEntries)[number],
   ) => {
     const principalDate = getJournalEntryPrincipalDate(journalEntry);
     if (!principalDate) return false;
     return isBefore(principalDate.end, now);
   };
-  const putNowDivider = () => {
-    if (isToday && !hasPutNowDivider) {
-      dayJournalEntryElements.push({
-        id: "now-divider",
-        element: <DiaryAgendaDayNow key="now-divider" date={date} />,
-      });
-      hasPutNowDivider = true;
-    }
-  };
   for (const journalEntry of dayJournalEntries) {
-    const nextJournalEntry =
-      i < dayJournalEntries.length - 1 ? dayJournalEntries[i + 1] : undefined;
     const previousJournalEntry = i > 0 ? dayJournalEntries[i - 1] : undefined;
-    const currentIsPassed = getIsJournalEntryPassed(journalEntry);
-    const nextIsPassed =
-      nextJournalEntry && getIsJournalEntryPassed(nextJournalEntry);
-    const shouldPutNowDivider = !currentIsPassed;
-
-    if (shouldPutNowDivider && isToday) putNowDivider();
 
     if ("__typename" in journalEntry && journalEntry.__typename === "Event") {
       const event = journalEntry;
@@ -313,21 +295,40 @@ export function DiaryAgendaDayDay({
       }
     }
 
-    const shouldPutNowDivider2 =
-      (journalEntry &&
-        nextJournalEntry &&
-        currentIsPassed !== nextIsPassed &&
-        !hasPutNowDivider) ||
-      (i === dayJournalEntries.length - 1 && !hasPutNowDivider);
-
-    if (shouldPutNowDivider2 && isToday) putNowDivider();
-
     i++;
   }
-  if (!hasPutNowDivider) putNowDivider();
+
+  // Inject "now" divider if it is between any two entries, or if it is after the last entry of the day
+  const nowEntryElement = {
+    id: "now-divider",
+    element: <DiaryAgendaDayNow key="now-divider" date={date} />,
+  } as const;
+  if (isToday) {
+    let inserted = false;
+    for (let j = 0; j < dayJournalEntryElements.length; j++) {
+      const previousEntry = j > 0 ? dayJournalEntries[j - 1] : undefined;
+      const nextEntry =
+        j < dayJournalEntries.length - 1 ? dayJournalEntries[j + 1] : undefined;
+      const previousEntryHasPassed = previousEntry
+        ? getJournalEntryPassed(previousEntry)
+        : true;
+      const nextEntryHasPassed = nextEntry
+        ? getJournalEntryPassed(nextEntry)
+        : false;
+
+      if (previousEntryHasPassed && !nextEntryHasPassed) {
+        dayJournalEntryElements.splice(j, 0, nowEntryElement);
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted) {
+      dayJournalEntryElements.push(nowEntryElement);
+    }
+  }
 
   const allCompleted = dayJournalEntries.every((je) =>
-    getIsJournalEntryPassed(je),
+    getJournalEntryPassed(je),
   );
 
   return (
