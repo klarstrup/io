@@ -19,7 +19,6 @@ const config: CodegenConfig = {
         "typed-document-node",
       ],
       config: {
-        declarationKind: "interface",
         avoidOptionals: { field: false, inputValue: false },
         defaultScalarType: "unknown",
         // Apollo Client always includes `__typename` fields
