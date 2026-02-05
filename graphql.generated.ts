@@ -9,16 +9,16 @@ export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> =
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
-export type Scalars = {
+export interface Scalars {
   ID: { input: string; output: string; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   Date: { input: Date; output: Date; }
-};
+}
 
-export type BoulderCircuit = {
+export interface BoulderCircuit {
   __typename: 'BoulderCircuit';
   createdAt: Scalars['Date']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -31,24 +31,24 @@ export type BoulderCircuit = {
   labelColor?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   updatedAt: Scalars['Date']['output'];
-};
+}
 
-export type CaloriesUnit = {
+export interface CaloriesUnit {
   __typename: 'CaloriesUnit';
   unit: Scalars['String']['output'];
   value: Scalars['Float']['output'];
-};
+}
 
-export type CreateTodoInput = {
+export interface CreateTodoInput {
   data: TodoInput;
-};
+}
 
-export type CreateTodoPayload = {
+export interface CreateTodoPayload {
   __typename: 'CreateTodoPayload';
   todo?: Maybe<Todo>;
-};
+}
 
-export type Duration = {
+export interface Duration {
   __typename: 'Duration';
   days?: Maybe<Scalars['Float']['output']>;
   hours?: Maybe<Scalars['Float']['output']>;
@@ -57,9 +57,9 @@ export type Duration = {
   seconds?: Maybe<Scalars['Float']['output']>;
   weeks?: Maybe<Scalars['Float']['output']>;
   years?: Maybe<Scalars['Float']['output']>;
-};
+}
 
-export type Event = {
+export interface Event {
   __typename: 'Event';
   created?: Maybe<Scalars['Date']['output']>;
   datetype: Scalars['String']['output'];
@@ -70,9 +70,9 @@ export type Event = {
   order?: Maybe<Scalars['Int']['output']>;
   start: Scalars['Date']['output'];
   summary?: Maybe<Scalars['String']['output']>;
-};
+}
 
-export type ExerciseSchedule = {
+export interface ExerciseSchedule {
   __typename: 'ExerciseSchedule';
   baseWeight?: Maybe<Scalars['Float']['output']>;
   deloadFactor?: Maybe<Scalars['Float']['output']>;
@@ -86,16 +86,16 @@ export type ExerciseSchedule = {
   snoozedUntil?: Maybe<Scalars['Date']['output']>;
   workingReps?: Maybe<Scalars['Int']['output']>;
   workingSets?: Maybe<Scalars['Int']['output']>;
-};
+}
 
-export type Food = {
+export interface Food {
   __typename: 'Food';
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   servingSizes: Array<ServingSize>;
-};
+}
 
-export type FoodEntry = {
+export interface FoodEntry {
   __typename: 'FoodEntry';
   datetime: Scalars['Date']['output'];
   food: Food;
@@ -105,14 +105,14 @@ export type FoodEntry = {
   servingSize: ServingSize;
   servings: Scalars['Float']['output'];
   type: Scalars['String']['output'];
-};
+}
 
-export type IntervalInput = {
+export interface IntervalInput {
   end: Scalars['Date']['input'];
   start: Scalars['Date']['input'];
-};
+}
 
-export type Location = {
+export interface Location {
   __typename: 'Location';
   boulderCircuits?: Maybe<Array<BoulderCircuit>>;
   createdAt: Scalars['Date']['output'];
@@ -121,43 +121,43 @@ export type Location = {
   name: Scalars['String']['output'];
   updatedAt: Scalars['Date']['output'];
   userId: Scalars['ID']['output'];
-};
+}
 
-export type Mutation = {
+export interface Mutation {
   __typename: 'Mutation';
   createTodo?: Maybe<CreateTodoPayload>;
   deleteTodo?: Maybe<Scalars['String']['output']>;
   snoozeExerciseSchedule?: Maybe<SnoozeExerciseSchedulePayload>;
   unsnoozeExerciseSchedule?: Maybe<UnsnoozeExerciseSchedulePayload>;
   updateTodo?: Maybe<UpdateTodoPayload>;
-};
+}
 
 
-export type MutationCreateTodoArgs = {
+export interface MutationCreateTodoArgs {
   input: CreateTodoInput;
-};
+}
 
 
-export type MutationDeleteTodoArgs = {
+export interface MutationDeleteTodoArgs {
   id: Scalars['String']['input'];
-};
+}
 
 
-export type MutationSnoozeExerciseScheduleArgs = {
+export interface MutationSnoozeExerciseScheduleArgs {
   input: SnoozeExerciseScheduleInput;
-};
+}
 
 
-export type MutationUnsnoozeExerciseScheduleArgs = {
+export interface MutationUnsnoozeExerciseScheduleArgs {
   input: UnsnoozeExerciseScheduleInput;
-};
+}
 
 
-export type MutationUpdateTodoArgs = {
+export interface MutationUpdateTodoArgs {
   input: UpdateTodoInput;
-};
+}
 
-export type NextSet = {
+export interface NextSet {
   __typename: 'NextSet';
   dueOn: Scalars['Date']['output'];
   exerciseId: Scalars['Int']['output'];
@@ -166,38 +166,38 @@ export type NextSet = {
   scheduleEntry: ExerciseSchedule;
   successful?: Maybe<Scalars['Boolean']['output']>;
   workedOutAt?: Maybe<Scalars['Date']['output']>;
-};
+}
 
-export type NutritionalContents = {
+export interface NutritionalContents {
   __typename: 'NutritionalContents';
   energy: CaloriesUnit;
   protein?: Maybe<Scalars['Float']['output']>;
-};
+}
 
-export type Query = {
+export interface Query {
   __typename: 'Query';
   hello?: Maybe<Scalars['String']['output']>;
   user?: Maybe<User>;
-};
+}
 
-export type ServingSize = {
+export interface ServingSize {
   __typename: 'ServingSize';
   nutritionMultiplier: Scalars['Float']['output'];
   unit: Scalars['String']['output'];
   value: Scalars['Float']['output'];
-};
+}
 
-export type SnoozeExerciseScheduleInput = {
+export interface SnoozeExerciseScheduleInput {
   exerciseScheduleId: Scalars['ID']['input'];
   snoozedUntil?: InputMaybe<Scalars['Date']['input']>;
-};
+}
 
-export type SnoozeExerciseSchedulePayload = {
+export interface SnoozeExerciseSchedulePayload {
   __typename: 'SnoozeExerciseSchedulePayload';
   exerciseSchedule?: Maybe<ExerciseSchedule>;
-};
+}
 
-export type Todo = {
+export interface Todo {
   __typename: 'Todo';
   completed?: Maybe<Scalars['Date']['output']>;
   created?: Maybe<Scalars['Date']['output']>;
@@ -206,35 +206,35 @@ export type Todo = {
   order?: Maybe<Scalars['Int']['output']>;
   start?: Maybe<Scalars['Date']['output']>;
   summary?: Maybe<Scalars['String']['output']>;
-};
+}
 
-export type TodoInput = {
+export interface TodoInput {
   completed?: InputMaybe<Scalars['Date']['input']>;
   due?: InputMaybe<Scalars['Date']['input']>;
   start?: InputMaybe<Scalars['Date']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
-};
+}
 
-export type UnsnoozeExerciseScheduleInput = {
+export interface UnsnoozeExerciseScheduleInput {
   exerciseScheduleId: Scalars['ID']['input'];
-};
+}
 
-export type UnsnoozeExerciseSchedulePayload = {
+export interface UnsnoozeExerciseSchedulePayload {
   __typename: 'UnsnoozeExerciseSchedulePayload';
   exerciseSchedule?: Maybe<ExerciseSchedule>;
-};
+}
 
-export type UpdateTodoInput = {
+export interface UpdateTodoInput {
   data: TodoInput;
   id: Scalars['String']['input'];
-};
+}
 
-export type UpdateTodoPayload = {
+export interface UpdateTodoPayload {
   __typename: 'UpdateTodoPayload';
   todo?: Maybe<Todo>;
-};
+}
 
-export type User = {
+export interface User {
   __typename: 'User';
   email: Scalars['String']['output'];
   emailVerified: Scalars['Boolean']['output'];
@@ -247,29 +247,29 @@ export type User = {
   timeZone?: Maybe<Scalars['String']['output']>;
   todos?: Maybe<Array<Todo>>;
   workouts?: Maybe<Array<Workout>>;
-};
+}
 
 
-export type UserEventsArgs = {
+export interface UserEventsArgs {
   interval: IntervalInput;
-};
+}
 
 
-export type UserFoodEntriesArgs = {
+export interface UserFoodEntriesArgs {
   interval: IntervalInput;
-};
+}
 
 
-export type UserTodosArgs = {
+export interface UserTodosArgs {
   interval?: InputMaybe<IntervalInput>;
-};
+}
 
 
-export type UserWorkoutsArgs = {
+export interface UserWorkoutsArgs {
   interval: IntervalInput;
-};
+}
 
-export type Workout = {
+export interface Workout {
   __typename: 'Workout';
   createdAt: Scalars['Date']['output'];
   exercises: Array<WorkoutExercise>;
@@ -280,37 +280,37 @@ export type Workout = {
   source?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Date']['output'];
   workedOutAt: Scalars['Date']['output'];
-};
+}
 
-export type WorkoutExercise = {
+export interface WorkoutExercise {
   __typename: 'WorkoutExercise';
   comment?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   exerciseId: Scalars['Int']['output'];
   sets: Array<WorkoutSet>;
-};
+}
 
-export type WorkoutSet = {
+export interface WorkoutSet {
   __typename: 'WorkoutSet';
   comment?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['Date']['output']>;
   inputs: Array<WorkoutSetInput>;
   meta?: Maybe<Array<WorkoutSetMeta>>;
   updatedAt?: Maybe<Scalars['Date']['output']>;
-};
+}
 
-export type WorkoutSetInput = {
+export interface WorkoutSetInput {
   __typename: 'WorkoutSetInput';
   assistType?: Maybe<Scalars['String']['output']>;
   unit?: Maybe<Scalars['String']['output']>;
   value?: Maybe<Scalars['Float']['output']>;
-};
+}
 
-export type WorkoutSetMeta = {
+export interface WorkoutSetMeta {
   __typename: 'WorkoutSetMeta';
   key: Scalars['String']['output'];
   value: Scalars['String']['output'];
-};
+}
 
 export type CalendarUserWorkoutsQueryVariables = Exact<{
   interval: IntervalInput;
