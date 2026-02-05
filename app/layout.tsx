@@ -24,8 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
-        <LoadingIndicator />
-        <SessionProvider>
+        <LoadingIndicator /> 
           <SerwistProvider swUrl="/serwist/sw.js">
             <ApolloWrapper>
               <AblyWrapper>
@@ -34,8 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Analytics />
               </AblyWrapper>
             </ApolloWrapper>
-          </SerwistProvider>
-        </SessionProvider>
+          </SerwistProvider> 
       </body>
     </html>
   );
