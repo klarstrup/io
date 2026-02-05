@@ -203,7 +203,10 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     nextSets = [],
   } = userData || {};
 
-  const eventsByDate: Record<string, Event[]> = {};
+  const eventsByDate: Record<
+    string,
+    (Event | (Event & { _this_is_the_end_of_a_event: true }))[]
+  > = {};
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<string, NextSet[]> = {};
 
@@ -280,6 +283,10 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
 
       if (!eventsByDate[calName]) eventsByDate[calName] = [];
       eventsByDate[calName].push(event);
+      eventsByDate[calName].push({
+        ...event,
+        _this_is_the_end_of_a_event: true,
+      });
     }
   }
 

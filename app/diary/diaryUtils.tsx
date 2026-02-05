@@ -20,6 +20,7 @@ import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
   | Event
+  | (Event & { _this_is_the_end_of_a_event: true })
   | Todo
   | NextSet
   | Workout
@@ -82,6 +83,17 @@ export const getJournalEntryPrincipalDate = (
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if ("__typename" in entry && entry.__typename === "Todo") {
     return getTodoPrincipalDate(entry);
+  }
+  if (
+    "_this_is_the_end_of_a_event" in entry &&
+    entry._this_is_the_end_of_a_event
+  ) {
+    if ("end" in entry && entry.end) {
+      return {
+        start: new Date(entry.end),
+        end: new Date(entry.end),
+      };
+    }
   }
   if ("start" in entry && entry.start) {
     return {

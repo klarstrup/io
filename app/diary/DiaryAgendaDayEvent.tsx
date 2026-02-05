@@ -46,6 +46,18 @@ export function DiaryAgendaDayEvent({
 
   const isPassed = isBefore(event.end, now);
 
+  const duration = intervalToDuration({
+    start: event.start,
+    end: roundToNearestMinutes(event.end, {
+      roundingMethod: "ceil",
+    }),
+  });
+  const startDay = startOfDay(addHours(event.start, dayStartHour));
+  const endDay = startOfDay(addHours(event.end, dayStartHour));
+  const days = differenceInDays(endDay, startDay) + 1;
+  const dayNo = differenceInDays(dayStart, startDay) + 1;
+  const isLastDay = dayNo === days;
+
   return (
     <DiaryAgendaDayEntry
       ref={setNodeRef}
@@ -68,62 +80,53 @@ export function DiaryAgendaDayEvent({
         end: event.end,
       })}
     >
-      {(function renderOnDayEvent(event: Event) {
-        const duration = intervalToDuration({
-          start: event.start,
-          end: roundToNearestMinutes(event.end, {
-            roundingMethod: "ceil",
-          }),
-        });
-        const startDay = startOfDay(addHours(event.start, dayStartHour));
-        const endDay = startOfDay(addHours(event.end, dayStartHour));
-        const days = differenceInDays(endDay, startDay) + 1;
-        const dayNo = differenceInDays(dayStart, startDay) + 1;
-        const isLastDay = dayNo === days;
-
-        return (
-          <div key={event.id} className="flex gap-1.5">
-            <div className="text-center">
-              <div className="leading-snug font-semibold tabular-nums">
-                {event.datetype === "date-time" && dayNo <= 1 ? (
-                  event.start.toLocaleTimeString("en-DK", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone,
-                  })
-                ) : (
-                  <>Day {dayNo}</>
-                )}{" "}
-              </div>
-              <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                {dayNo === 1 && duration ? (
-                  <>
-                    {duration.days ? `${duration.days}d` : null}
-                    {duration.hours ? `${duration.hours}h` : null}
-                    {duration.minutes ? `${duration.minutes}m` : null}
-                    {duration.seconds ? `${duration.seconds}s` : null}
-                  </>
-                ) : isLastDay ? (
-                  <>
-                    -
-                    {event.end.toLocaleTimeString("en-DK", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone,
-                    })}
-                  </>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="leading-snug">{event.summary}</div>
-              <div className="text-[0.666rem] leading-tight italic">
-                {event.location}
-              </div>
-            </div>
+      <div key={event.id} className="flex gap-1.5">
+        <div className="text-center">
+          <div className="leading-snug font-semibold tabular-nums">
+            {event.datetype === "date-time" && dayNo <= 1 ? (
+              event.start.toLocaleTimeString("en-DK", {
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone,
+              })
+            ) : (
+              <>Day {dayNo}</>
+            )}{" "}
           </div>
-        );
-      })(event)}
+          <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+            {dayNo === 1 && duration ? (
+              <>
+                {duration.days ? `${duration.days}d` : null}
+                {duration.hours ? `${duration.hours}h` : null}
+                {duration.minutes ? `${duration.minutes}m` : null}
+                {duration.seconds ? `${duration.seconds}s` : null}
+              </>
+            ) : isLastDay ? (
+              <>
+                -
+                {event.end.toLocaleTimeString("en-DK", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone,
+                })}
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 leading-snug">
+            {event.summary}
+            {
+            // figure out how to know that the end has a separated end showing
+            /*<div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+              START
+            </div>*/}
+          </div>
+          <div className="text-[0.666rem] leading-tight italic">
+            {event.location}
+          </div>
+        </div>
+      </div>
     </DiaryAgendaDayEntry>
   );
 }

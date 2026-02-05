@@ -1,6 +1,9 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import { faCalendarWeek } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendarCheck,
+  faCalendarWeek,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
@@ -102,7 +105,7 @@ export function DiaryAgendaDayDay({
   for (const journalEntry of dayJournalEntries) {
     const nextJournalEntry =
       i < dayJournalEntries.length - 1 ? dayJournalEntries[i + 1] : undefined;
-
+    const previousJournalEntry = i > 0 ? dayJournalEntries[i - 1] : undefined;
     const currentIsPassed = getIsJournalEntryPassed(journalEntry);
     const nextIsPassed =
       nextJournalEntry && getIsJournalEntryPassed(nextJournalEntry);
@@ -189,6 +192,50 @@ export function DiaryAgendaDayDay({
             </DiaryAgendaDayEntry>
           ),
         });
+      } else if (
+        "_this_is_the_end_of_a_event" in event &&
+        event._this_is_the_end_of_a_event
+      ) {
+        if (
+          previousJournalEntry &&
+          "__typename" in previousJournalEntry &&
+          previousJournalEntry.__typename === "Event" &&
+          previousJournalEntry.id === event.id
+        ) {
+          // don't show the end of an event if it's immediately after the event itself, to avoid cluttering the UI with duplicate entries
+        } else {
+          dayJournalEntryElements.push({
+            id: "end-of-" + (client.cache.identify(event) || event.id),
+            element: (
+              <DiaryAgendaDayEntry
+                icon={faCalendarCheck}
+                cotemporality={cotemporality({
+                  start: event.start,
+                  end: event.end,
+                })}
+                key={"end-of-" + event.id}
+              >
+                <div key={event.id} className="flex gap-1.5">
+                  <div className="text-center">
+                    <div className="leading-snug font-semibold tabular-nums">
+                      {event.end.toLocaleTimeString("en-DK", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone,
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-1 items-center gap-2">
+                    <div className="leading-snug">{event.summary}</div>
+                    <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+                      END
+                    </div>
+                  </div>
+                </div>
+              </DiaryAgendaDayEntry>
+            ),
+          });
+        }
       } else {
         dayJournalEntryElements.push({
           id: client.cache.identify(event) || event.id,
