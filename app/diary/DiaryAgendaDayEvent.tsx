@@ -52,8 +52,8 @@ export function DiaryAgendaDayEvent({
       roundingMethod: "ceil",
     }),
   });
-  const startDay = startOfDay(addHours(event.start, dayStartHour));
-  const endDay = startOfDay(addHours(event.end, dayStartHour));
+  const startDay = startOfDay(addHours(event.start, -dayStartHour));
+  const endDay = startOfDay(addHours(event.end, -dayStartHour));
   const days = differenceInDays(endDay, startDay) + 1;
   const dayNo = differenceInDays(dayStart, startDay) + 1;
   const isLastDay = dayNo === days;
