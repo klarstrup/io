@@ -14,10 +14,11 @@ import {
   type SelectionSetNode,
   type ValueNode,
 } from "graphql";
-import { UpdateResult } from "mongodb";
+import type { UpdateResult } from "mongodb";
+import { fetchJson } from "../app/api/scraper-utils";
 import { TopLoggerGraphQL } from "../sources/toplogger.server";
 import { isNonEmptyArray, isNonNullObject } from "../utils";
-import { fetchJson } from "../app/api/scraper-utils";
+
 interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   errorMessage?: string;
@@ -118,14 +119,14 @@ export type Reference<TypeBeingReferenced = MutableDeep<unknown>> = Branded<
   TypeBeingReferenced
 >;
 
-export const makeReference = (__ref: RefString) => ({ __ref }) as Reference;
+const makeReference = (__ref: RefString) => ({ __ref }) as Reference;
 
-export const isReference = (obj: unknown): obj is Reference =>
+const isReference = (obj: unknown): obj is Reference =>
   Boolean(
     obj &&
-      typeof obj === "object" &&
-      "__ref" in obj &&
-      typeof obj.__ref === "string",
+    typeof obj === "object" &&
+    "__ref" in obj &&
+    typeof obj.__ref === "string",
   );
 
 export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
@@ -133,7 +134,7 @@ export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
   return isNonEmptyArray(errors);
 }
 
-export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>) {
+function getGraphQLErrorsFromResult<T>(result: FetchResult<T>) {
   const graphQLErrors = isNonEmptyArray(result.errors)
     ? result.errors.slice(0)
     : [];
@@ -168,39 +169,6 @@ export const fetchGraphQLQuery = async <TData = Record<string, unknown>>(
 
   return result;
 };
-export const fetchGraphQLQueries = async <
-  TData = Record<string, unknown>,
-  TVariables = Record<string, unknown>,
->(
-  requests: [DocumentNode, TVariables?, OperationName?][],
-  url: URL | string,
-  init?: RequestInit,
-  operationName?: string,
-): Promise<FetchResult<TData>[]> => {
-  const results = await fetchJson<FetchResult<TData>[]>(url, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    body: JSON.stringify(
-      requests.map(([query, variables]) => ({
-        operationName,
-        variables,
-        query: print(query),
-      })),
-    ),
-    method: "POST",
-    next: { revalidate: 0 },
-  });
-
-  for (const result of results) {
-    if (graphQLResultHasError(result)) {
-      throw new ApolloError({
-        graphQLErrors: getGraphQLErrorsFromResult(result),
-      });
-    }
-  }
-
-  return results;
-};
 
 export interface NormMap {
   readonly [key: string]: NormObj;
@@ -225,29 +193,7 @@ export interface NormObj {
   readonly [field: string]: null | NormFieldValue | Reference;
 }
 
-/**
- * An optimized function to merge two maps of normalized objects (as returned from normalize)
- * @param normMap The first normalized map
- * @param newNormMap The second normalized map
- */
-export function merge(normMap: NormMap, newNormMap: NormMap): NormMap {
-  const updatedNormMap = Object.keys(newNormMap).reduce(
-    (stateSoFar, current) => {
-      const newNormObj = {
-        ...(normMap[current] || {}),
-        ...newNormMap[current],
-      };
-      stateSoFar[current] = newNormObj;
-      return stateSoFar;
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    {} as { [key: string]: any },
-  );
-
-  return { ...normMap, ...updatedNormMap };
-}
-
-export function getDocumentDefinitions(
+function getDocumentDefinitions(
   definitions: ReadonlyArray<DefinitionNode>,
 ): DocumentDefinitionTuple {
   let operationDefinition: OperationDefinitionNode | undefined = undefined;
@@ -278,7 +224,7 @@ export function getDocumentDefinitions(
   return [fragmentMap, rootFieldNode] as const;
 }
 
-export function expandFragments(
+function expandFragments(
   obj: ResponseObject,
   selectionNodes: ReadonlyArray<SelectionNode>,
   fragmentMap: FragmentMap,
@@ -359,7 +305,7 @@ function resolveValueNode(
   }
 }
 
-export function fieldNameWithArguments(
+function fieldNameWithArguments(
   fieldNode: FieldNode,
   variables: Variables | undefined,
 ): string {
@@ -393,7 +339,7 @@ const resolveType: ResolveType = (object: {
  * Evaluates  @skip and @include directives on field
  * and returns true if the node should be included.
  */
-export function shouldIncludeField(
+function shouldIncludeField(
   directives: ReadonlyArray<DirectiveNode>,
   variables: Variables = {},
 ): boolean {
@@ -447,8 +393,7 @@ export type ResponseObjectFieldValue =
   | ResponseObjectArray;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ResponseObjectArray
-  extends ReadonlyArray<ResponseObjectFieldValue> {}
+export interface ResponseObjectArray extends ReadonlyArray<ResponseObjectFieldValue> {}
 
 export interface RootFields {
   readonly [rootField: string]: unknown;
@@ -504,7 +449,7 @@ type StackWorkItem = readonly [
  * @param getObjectId Function to get normalized map key from an object
  * @param resolveType Function get get typeName from an object
  */
-export function normalize(
+function normalize(
   query: DocumentNode,
   variables: Variables | undefined,
   data: RootFields,
@@ -636,15 +581,6 @@ export const filterFromReference = <R = unknown>(ref: Reference<R>) => {
   const [__typename, id] = ref.__ref.split(":") as [GraphQLID, GraphQLTypeName];
 
   return { __typename, id };
-};
-export const dereferenceReference = async <R = unknown>(
-  ref: Reference<R>,
-): Promise<R> => {
-  const doc = await TopLoggerGraphQL.findOne<R>(filterFromReference(ref));
-
-  if (!doc) throw new Error(`Failed to dereference ${ref.__ref}`);
-
-  return doc as R;
 };
 
 const parseDateFields = (doc: Record<string, unknown>) => {
