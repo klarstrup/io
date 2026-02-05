@@ -11,7 +11,6 @@ import {
   formatDistanceToNowStrict,
   isPast,
   isValid,
-  startOfDay,
 } from "date-fns";
 import gql from "graphql-tag";
 import { Route } from "next";
@@ -25,7 +24,11 @@ import Creatable from "react-select/creatable";
 import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
-import { NextSet, WorkoutFormNextSetsQuery } from "../../graphql.generated";
+import {
+  ListPageUserDocument,
+  type NextSet,
+  type WorkoutFormNextSetsQuery,
+} from "../../graphql.generated";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
 import {
@@ -366,7 +369,7 @@ export function WorkoutForm<R extends string>({
           };
           console.log({ workout, data, newWorkout });
           const newWorkoutId = await upsertWorkout(newWorkout);
-          client.refetchObservableQueries();
+          client.refetchQueries({ include: [ListPageUserDocument] });
 
           if (!workout) router.push(`/diary/${date}/workout/${newWorkoutId}`);
 
