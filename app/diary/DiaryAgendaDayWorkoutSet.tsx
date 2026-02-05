@@ -107,8 +107,10 @@ export function DiaryAgendaDayWorkoutSet({
             isClimbingExercise(workoutExercise.exerciseId)
               ? " rounded-r-[5px]"
               : "") +
-            (isClimbingExercise(workoutExercise.exerciseId)
-              ? " w-full py-0.5"
+            (isClimbingExercise(workoutExercise.exerciseId) ? " w-full" : " ") +
+            (isClimbingExercise(workoutExercise.exerciseId) &&
+            workout.source === WorkoutSource.Self
+              ? " py-0.5"
               : " ") +
             (workout.source === WorkoutSource.Self
               ? " bg-black/20 px-1.5 text-sm text-white"
@@ -116,15 +118,17 @@ export function DiaryAgendaDayWorkoutSet({
           }
         >
           <div className="flex items-center justify-between">
-            <Link prefetch={false} href={`/diary/exercises/${exercise.id}`}>
-              {[exercise.name, ...exercise.aliases]
-                .filter((name) => name.length >= 4)
-                .sort((a, b) => a.length - b.length)[0]!
-                .replace("Barbell", "")}
-            </Link>
-            {isClimbingExercise(exercise.id) ? (
-              <ClimbingStats setAndLocationPairs={setsWithLocation} />
-            ) : null}
+            <div className="flex items-baseline gap-2">
+              <Link prefetch={false} href={`/diary/exercises/${exercise.id}`}>
+                {[exercise.name, ...exercise.aliases]
+                  .filter((name) => name.length >= 4)
+                  .sort((a, b) => a.length - b.length)[0]!
+                  .replace("Barbell", "")}
+              </Link>
+              {isClimbingExercise(exercise.id) ? (
+                <ClimbingStats setAndLocationPairs={setsWithLocation} />
+              ) : null}
+            </div>
             {mostRecentWorkout &&
             (mostRecentWorkout.source === WorkoutSource.Self ||
               !mostRecentWorkout.source) ? (
