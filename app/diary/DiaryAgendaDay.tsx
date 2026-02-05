@@ -282,15 +282,12 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
       }
 
       if (!eventsByDate[calName]) eventsByDate[calName] = [];
-      // I think there's a bug in the rrule implementation
-      if (!eventsByDate[calName].some((e) => e.id === event.id)) {
-        eventsByDate[calName].push(event);
-        if (event.datetype !== "date") {
-          eventsByDate[calName].push({
-            ...event,
-            _this_is_the_end_of_a_event: true,
-          });
-        }
+      eventsByDate[calName].push(event);
+      if (event.datetype !== "date") {
+        eventsByDate[calName].push({
+          ...event,
+          _this_is_the_end_of_a_event: true,
+        });
       }
     }
   }

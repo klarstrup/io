@@ -211,15 +211,28 @@ function UserStuffSourceForm({
       break;
     case DataSource.ICal:
       formElements = (
-        <label className="flex gap-1">
-          iCal URL:{" "}
-          <input
-            type="text"
-            {...register(`dataSources.${index}.config.url`)}
-            placeholder="URL"
-            className="flex-1"
-          />
-        </label>
+        <>
+          <label className="flex gap-1">
+            iCal URL:{" "}
+            <input
+              type="text"
+              {...register(`dataSources.${index}.config.url`)}
+              placeholder="URL"
+              className="flex-1"
+            />
+          </label>
+          <label className="flex gap-1">
+            Start Date (optional):{" "}
+            <input
+              type="datetime-local"
+              {...register(`dataSources.${index}.config.startDate`, {
+                valueAsDate: true,
+              })}
+              placeholder="Start Date"
+              className="flex-1"
+            />
+          </label>
+        </>
       );
       break;
     case DataSource.KilterBoard:
@@ -749,7 +762,7 @@ export default function UserStuffSourcesForm({
                     append({
                       ...initialSourceMeta,
                       source: DataSource.ICal,
-                      config: { url: "" },
+                      config: { url: "", startDate: undefined },
                     });
                     break;
                   case DataSource.KilterBoard:

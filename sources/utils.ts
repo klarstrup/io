@@ -24,7 +24,7 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.ICal;
-      config: { url: string };
+      config: { url: string; startDate?: Date };
     }
   | {
       source: DataSource.KilterBoard;

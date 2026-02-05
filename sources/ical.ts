@@ -1,4 +1,5 @@
 import { tz, TZDate, tzOffset } from "@date-fns/tz";
+import { createHash } from "crypto";
 import {
   addMinutes,
   addSeconds,
@@ -19,6 +20,7 @@ import type {
   VTodo,
 } from "../vendor/ical";
 import { IcalEvents } from "./ical.server";
+import { DataSource, type UserDataSource } from "./utils";
 
 export function extractIcalCalendarAndEvents(data: CalendarResponse) {
   let calendar: VCalendar | undefined;
@@ -67,6 +69,23 @@ export async function getUserIcalEventsBetween(
     { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
     { key: { _io_userId: 1, type: 1, due: 1 } },
   ]);
+
+  const dataSourceByUrlHash = user.dataSources
+    ?.filter((s) => s.source === DataSource.ICal)
+    .reduce(
+      (acc, s) => {
+        const hash = createHash("sha256")
+          .update(s.config.url + user.id)
+          .digest("hex");
+        acc[hash] = s;
+        return acc;
+      },
+      {} as Record<
+        string,
+        Extract<UserDataSource, { source: DataSource.ICal }>
+      >,
+    );
+
   for await (const event of IcalEvents.find<WithId<MongoVEvent>>({
     _io_userId: userId,
     type: "VEVENT",
@@ -83,6 +102,10 @@ export async function getUserIcalEventsBetween(
       },
     ],
   })) {
+    const dataSource = dataSourceByUrlHash?.[event._io_icalUrlHash!];
+
+    const sourceStartDate = dataSource?.config.startDate;
+
     if (event.recurrences) {
       for (const recurrence of event.recurrences) {
         if (
@@ -96,8 +119,16 @@ export async function getUserIcalEventsBetween(
               ? recurrence.start >= start && recurrence.start <= end
               : false)
         ) {
+          if (
+            sourceStartDate &&
+            recurrence.end &&
+            recurrence.end < sourceStartDate
+          ) {
+            continue;
+          }
           eventsThatFallWithinRange.push({
             ...recurrence,
+            uid: `${recurrence.start.toLocaleDateString()}-${event.uid}`,
             _io_icalUrlHash: event._io_icalUrlHash,
             _io_userId: event._io_userId,
             _io_scrapedAt: event._io_scrapedAt,
@@ -125,6 +156,9 @@ export async function getUserIcalEventsBetween(
         { start, end },
       )
     ) {
+      if (sourceStartDate && event.end && event.end < sourceStartDate) {
+        continue;
+      }
       eventsThatFallWithinRange.push(omit(event, "_id"));
     }
     const rrule = event.rrule?.origOptions
@@ -164,14 +198,22 @@ export async function getUserIcalEventsBetween(
           ) {
             continue;
           }
+          const rruleDateEnd = addSeconds(
+            rruleDate,
+            differenceInSeconds(event.end, event.start),
+          );
+          if (
+            sourceStartDate &&
+            rruleDateEnd &&
+            rruleDateEnd < sourceStartDate
+          ) {
+            continue;
+          }
           eventsThatFallWithinRange.push({
             ...omit(event, "_id"),
             uid: `${rruleDate.toLocaleDateString()}-${event.uid}`,
             start: rruleDate,
-            end: addSeconds(
-              rruleDate,
-              differenceInSeconds(event.end, event.start),
-            ),
+            end: rruleDateEnd,
           });
         }
       }
