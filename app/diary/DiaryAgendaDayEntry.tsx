@@ -42,7 +42,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
             ? cotemporality === "past"
               ? " text-green-400"
               : cotemporality === "current"
-                ? " text-orange-400"
+                ? " text-[#EDAB00]"
                 : cotemporality === "backlog"
                   ? " text-blue-400"
                   : " text-gray-900/50"
