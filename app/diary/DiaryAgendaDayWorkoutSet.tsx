@@ -17,7 +17,7 @@ import {
 } from "../../models/workout";
 import { cotemporality, dayStartHour } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
-import { WorkoutEntryExercise } from "./WorkoutEntry";
+import { WorkoutEntryExercise } from "./WorkoutEntryExercise";
 
 export function DiaryAgendaDayWorkoutSet({
   workout,

@@ -1,31 +1,18 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import ProblemByProblem, {
-  exerciseSetsToProblemByProblem,
-} from "../../components/ProblemByProblem";
-import Grade from "../../grades";
-import {
-  ExerciseInfo,
-  Location,
-  Workout,
-  WorkoutSet,
-} from "../../graphql.generated";
+import { Workout, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { exercisesById } from "../../models/exercises";
-import { type ExerciseData } from "../../models/exercises.types";
 import {
   ClimbingStats,
-  getSetGrade,
   isClimbingExercise,
-  type WorkoutData,
   type WorkoutExerciseSet,
   type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
 import { dateToString } from "../../utils";
 import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
-import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
+import { WorkoutEntryExercise } from "./WorkoutEntryExercise";
 
 const average = (arr: number[]) => arr.reduce((a, b) => a + b) / arr.length;
 
@@ -46,100 +33,6 @@ const quantile = (arr: number[], q: number) => {
 
   return sorted[pos]!;
 };
-
-const averageGrade = false;
-
-export function WorkoutEntryExercise({
-  exercise,
-  setsWithLocations,
-  exerciseIndex,
-  exerciseSetPRs,
-  onlyPRs,
-}: {
-  exercise: ExerciseData | ExerciseInfo;
-  setsWithLocations: (readonly [
-    WorkoutExerciseSet | WorkoutSet,
-    Location | undefined,
-    workout: WorkoutData | Workout | undefined,
-  ])[];
-  exerciseIndex?: number;
-  exerciseSetPRs?: Record<PRType, boolean>[][];
-  onlyPRs?: PRType;
-}) {
-  const sets = setsWithLocations.map(([set]) => set);
-
-  if (isClimbingExercise(exercise.id)) {
-    if (averageGrade) {
-      const values = sets.map((set) => set.inputs[0]!.value).filter(Boolean);
-      if (values.filter((value) => value).length) {
-        return new Grade(
-          average(desc(values).slice(0, Math.floor(values.length / 5) + 1)) ||
-            quantile(values, 0.95),
-        ).name;
-      }
-      return null;
-    }
-
-    return (
-      <ProblemByProblem
-        groupByGradeAndFlash={setsWithLocations.every(([set, location]) =>
-          getSetGrade(set, location),
-        )}
-        groupByColorAndFlash={sets.every(
-          (set) => set.inputs[1]!.value && set.inputs[1]!.value > -1,
-        )}
-        problemByProblem={exerciseSetsToProblemByProblem(setsWithLocations)}
-      />
-    );
-  }
-
-  return (
-    <table className="inline-table w-auto max-w-0">
-      <tbody>
-        {sets.reduce((memo: ReactNode[], set, setIndex, setList) => {
-          const previousSet = setList[setIndex - 1];
-          const nextSet = setList[setIndex + 1];
-
-          if (nextSet && isEquivalentSet(set, nextSet)) {
-            return memo;
-          }
-          let repeatCount: number | null = null;
-          if (previousSet && isEquivalentSet(set, previousSet)) {
-            repeatCount = 1;
-
-            for (
-              let i = setIndex - 1;
-              i >= 0 && setList[i] && isEquivalentSet(set, setList[i]!);
-              i--
-            ) {
-              repeatCount++;
-            }
-          }
-
-          // PRs are only reported for the first set of a repeated set
-          const setPR =
-            typeof exerciseIndex === "number" &&
-            exerciseSetPRs?.[exerciseIndex]?.[
-              setIndex - (repeatCount ? repeatCount - 1 : 0)
-            ];
-          if (onlyPRs && !setPR?.[onlyPRs]) return memo;
-
-          memo.push(
-            <WorkoutEntryExerciseSetRow
-              key={setIndex}
-              set={set}
-              repeatCount={repeatCount}
-              exercise={exercise}
-              setPR={setPR || undefined}
-            />,
-          );
-
-          return memo;
-        }, [])}
-      </tbody>
-    </table>
-  );
-}
 
 export default function WorkoutEntry({
   showDate,
