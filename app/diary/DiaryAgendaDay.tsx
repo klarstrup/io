@@ -18,6 +18,7 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import type { Session } from "next-auth";
+import { FieldSetY } from "../../components/FieldSet";
 import {
   DiaryAgendaDayUserTodosDocument,
   type Event,
@@ -209,7 +210,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const { data } = useQuery(
+  const { data, dataState, loading } = useQuery(
     DiaryAgendaDayUserTodosDocument,
     user
       ? {
@@ -218,6 +219,17 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
         }
       : skipToken,
   );
+
+  if (dataState !== "complete") {
+    return (
+      <FieldSetY
+        legend={null}
+        className="mx-auto max-w-2xl self-stretch border-black/50 bg-gray-500/25 px-2"
+      >
+        <center className="text-white">Loading journal...</center>
+      </FieldSetY>
+    );
+  }
 
   const userData = {
     calendarTodos: data?.user?.todos || [],
