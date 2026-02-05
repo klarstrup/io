@@ -1,10 +1,6 @@
-import dynamic from "next/dynamic";
 import { auth } from "../auth";
 import { getAllWorkoutExercises } from "../models/workout.server";
-
-const UserStuffWorkoutScheduleForm = dynamic(
-  () => import("./UserStuffWorkoutScheduleForm"),
-);
+import { UserStuffWorkoutScheduleFormLoader } from "./UserStuffWorkoutScheduleFormLoader";
 
 export default async function UserStuffWorkoutSchedule() {
   const user = (await auth())?.user;
@@ -12,7 +8,7 @@ export default async function UserStuffWorkoutSchedule() {
   if (!user) return null;
 
   return (
-    <UserStuffWorkoutScheduleForm
+    <UserStuffWorkoutScheduleFormLoader
       exercisesStats={await getAllWorkoutExercises(user)}
       user={user}
     />
