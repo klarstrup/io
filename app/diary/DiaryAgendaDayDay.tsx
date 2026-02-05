@@ -1,7 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import {
-  faCalendarCheck,
+  faArrowsDownToLine,
   faCalendarWeek,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -208,7 +208,7 @@ export function DiaryAgendaDayDay({
             id: "end-of-" + (client.cache.identify(event) || event.id),
             element: (
               <DiaryAgendaDayEntry
-                icon={faCalendarCheck}
+                icon={faArrowsDownToLine}
                 cotemporality={cotemporality({
                   start: event.start,
                   end: event.end,
@@ -227,9 +227,6 @@ export function DiaryAgendaDayDay({
                   </div>
                   <div className="flex flex-1 items-center gap-2">
                     <div className="leading-snug">{event.summary}</div>
-                    <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-                      END
-                    </div>
                   </div>
                 </div>
               </DiaryAgendaDayEntry>
