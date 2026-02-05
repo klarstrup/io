@@ -370,23 +370,34 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
                 ...dayDueSets,
                 ...dayTodos,
                 ...dayWorkouts,
-              ].sort((a, b) => {
-                const aAllDay =
-                  a.__typename === "Event" && a.datetype === "date";
-                const bAllDay =
-                  b.__typename === "Event" && b.datetype === "date";
-                if (aAllDay && !bAllDay) return -1;
-                if (!aAllDay && bAllDay) return 1;
+              ]
+                .sort((a, b) =>
+                  compareAsc(
+                    getJournalEntryPrincipalDate(
+                      b.__typename === "Workout" ? b.exercises[0]! : b,
+                    )?.end || new Date(0),
+                    getJournalEntryPrincipalDate(
+                      a.__typename === "Workout" ? a.exercises[0]! : a,
+                    )?.end || new Date(0),
+                  ),
+                )
+                .sort((a, b) => {
+                  const aAllDay =
+                    a.__typename === "Event" && a.datetype === "date";
+                  const bAllDay =
+                    b.__typename === "Event" && b.datetype === "date";
+                  if (aAllDay && !bAllDay) return -1;
+                  if (!aAllDay && bAllDay) return 1;
 
-                return compareAsc(
-                  getJournalEntryPrincipalDate(
-                    a.__typename === "Workout" ? a.exercises[0]! : a,
-                  )?.start || new Date(0),
-                  getJournalEntryPrincipalDate(
-                    b.__typename === "Workout" ? b.exercises[0]! : b,
-                  )?.start || new Date(0),
-                );
-              })}
+                  return compareAsc(
+                    getJournalEntryPrincipalDate(
+                      a.__typename === "Workout" ? a.exercises[0]! : a,
+                    )?.start || new Date(0),
+                    getJournalEntryPrincipalDate(
+                      b.__typename === "Workout" ? b.exercises[0]! : b,
+                    )?.start || new Date(0),
+                  );
+                })}
             />
           </TodoDroppable>
         );
