@@ -204,7 +204,13 @@ export function DiaryAgendaDayDay({
         } else {
           dayJournalEntryElements.push({
             id: "end-of-" + (client.cache.identify(event) || event.id),
-            element: <DiaryAgendaDayEventEnd user={user} event={event} />,
+            element: (
+              <DiaryAgendaDayEventEnd
+                user={user}
+                event={event}
+                key={"end-of-" + (client.cache.identify(event) || event.id)}
+              />
+            ),
           });
         }
       } else {

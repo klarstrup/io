@@ -33,7 +33,7 @@ import {
   type Workout,
 } from "../../graphql.generated";
 import { dateMidpoint, dayStartHour } from "../../utils";
-import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -69,9 +69,9 @@ export function TodoDragDropContainer(props: {
 
     console.log("Drag ended", { active, over });
 
-    const sortableItems = over.data.current.sortable?.items as
-      | UniqueIdentifier[]
-      | undefined;
+    const sortableItems = (
+      over.data.current.sortable?.items as UniqueIdentifier[] | undefined
+    )?.map(String);
     const cacheObjectEntries = Object.entries(
       client.cache.extract() as Record<string, Record<string, unknown>>,
     );
@@ -81,19 +81,19 @@ export function TodoDragDropContainer(props: {
         const a = cacheObjectEntries.find(([key]) =>
           sortableId === "now-divider"
             ? key === "now-divider"
-            : String(sortableId).startsWith(key) ||
+            : sortableId.startsWith(key) ||
               key === sortableId ||
-              (String(sortableId).startsWith("end-of-") &&
-                String(key) === String(sortableId).replace("end-of-", "")),
-        );
+              (sortableId.startsWith("end-of-") &&
+                key === sortableId.replace("end-of-", "")),
+        ) as [string, JournalEntry] | undefined;
         if (!a) return null;
 
         return [sortableId, a[1] as Workout] as const;
       })
       .filter(Boolean);
 
-    const oldIndex = sortableItems?.indexOf(active.id);
-    const newIndex = sortableItems?.indexOf(over.id);
+    const oldIndex = sortableItems?.indexOf(active.id.toString());
+    const newIndex = sortableItems?.indexOf(over.id.toString());
 
     const newSortableItems =
       sortableItems &&
@@ -105,70 +105,73 @@ export function TodoDragDropContainer(props: {
         : undefined;
 
     const newSortableCacheEntries = newSortableItems
-      ?.map((sortableId) => {
-        if (sortableId === "now-divider") {
-          return ["now-divider", NOW_SYMBOL] as const;
-        }
-        if (String(sortableId).startsWith("end-of-Event:")) {
-          const entry = sortableItemsFromCache?.find(
-            (pair) => pair[0] === String(sortableId).replace("end-of-", ""),
-          );
+      ?.map(
+        (
+          sortableId,
+        ): readonly [string, JournalEntry | typeof NOW_SYMBOL] | null => {
+          let item: JournalEntry | typeof NOW_SYMBOL | undefined;
+          if (sortableId === "now-divider") item = NOW_SYMBOL;
 
-          if (!entry) return null;
+          if (sortableId.startsWith("end-of-Event:")) {
+            item = sortableItemsFromCache?.find(
+              ([key]) => key === sortableId.replace("end-of-", ""),
+            )?.[1];
+          }
 
-          return entry;
-        }
+          item = sortableItemsFromCache?.find(
+            ([key]) => sortableId.startsWith(key) || key === sortableId,
+          )?.[1];
 
-        const entry = sortableItemsFromCache?.find(
-          (pair) =>
-            String(sortableId).startsWith(pair[0].toString()) ||
-            pair[0] === sortableId,
-        );
+          if (
+            sortableId.startsWith("Workout:") &&
+            sortableId.split("-").length === 2
+          ) {
+            const workoutExercise = item?.exercises.find(
+              (we) => String(we.exerciseId) === sortableId.split("-")[1],
+            );
 
-        if (!entry) return null;
+            item = workoutExercise;
+          }
 
-        if (
-          String(sortableId).startsWith("Workout:") &&
-          String(sortableId).split("-").length === 2
-        ) {
-          return [
-            sortableId,
-            entry[1].exercises.find(
-              (we) =>
-                String(we.exerciseId) === String(sortableId).split("-")[1],
-            ),
-          ] as const;
-        }
+          if (!item) return null;
 
-        return entry;
-      })
+          return [sortableId, item] as const;
+        },
+      )
       .filter(Boolean);
 
+    console.log(newSortableCacheEntries);
+
     const activeEntry = newSortableCacheEntries?.find(
-      ([key]) => key === active.id,
+      ([key]) => key === active.id.toString(),
     );
     const activeEntryIndex =
       activeEntry && newSortableCacheEntries?.indexOf(activeEntry);
 
-    const precedingItem =
+    const precedingEntry =
       activeEntryIndex != null && activeEntryIndex > -1
-        ? newSortableCacheEntries?.[activeEntryIndex - 1]?.[1]
+        ? newSortableCacheEntries?.[activeEntryIndex - 1]
         : undefined;
-    const followingItem =
+    const followingEntry =
       activeEntryIndex != null && activeEntryIndex > -1
-        ? newSortableCacheEntries?.[activeEntryIndex + 1]?.[1]
+        ? newSortableCacheEntries?.[activeEntryIndex + 1]
         : undefined;
 
-    const precedingDate =
-      precedingItem &&
-      (precedingItem === NOW_SYMBOL
+    let precedingDate =
+      precedingEntry &&
+      (precedingEntry[1] === NOW_SYMBOL
         ? new Date()
-        : getJournalEntryPrincipalDate(precedingItem)?.end);
-    const followingDate =
-      followingItem &&
-      (followingItem === NOW_SYMBOL
+        : precedingEntry[0].startsWith("end-of-")
+          ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
+          : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
+
+    let followingDate =
+      followingEntry &&
+      (followingEntry[1] === NOW_SYMBOL
         ? new Date()
-        : getJournalEntryPrincipalDate(followingItem)?.start);
+        : followingEntry[0].startsWith("end-of-")
+          ? getJournalEntryPrincipalDate(followingEntry[1])?.end
+          : getJournalEntryPrincipalDate(followingEntry[1])?.start);
 
     const overStart =
       over.data.current.date && new Date(over.data.current.date);
@@ -184,6 +187,7 @@ export function TodoDragDropContainer(props: {
 
     // Ensure targetDate is within the day boundaries
     targetDate = min([max([targetDate, dayStart]), dayEnd]);
+    console.log({ targetDate });
 
     if (props.userId && active.data.current.nextSet) {
       const nextSet: NextSet = active.data.current.nextSet;
