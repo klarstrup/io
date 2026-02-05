@@ -52,9 +52,9 @@ export function DiaryAgendaDayEventEnd({
         end: event.end,
       })}
     >
-      <div key={event.id} className="flex gap-1.5">
+      <div key={event.id} className="flex gap-1.5 leading-snug">
         <div className="text-center">
-          <div className="leading-snug font-semibold tabular-nums">
+          <div className="font-semibold tabular-nums">
             {roundToNearestMinutes(event.end).toLocaleTimeString("en-DK", {
               hour: "2-digit",
               minute: "2-digit",
@@ -63,7 +63,7 @@ export function DiaryAgendaDayEventEnd({
           </div>
         </div>
         <div className="flex flex-1 items-center gap-2">
-          <div className="leading-snug">{event.summary}</div>
+          <div>{event.summary}</div>
         </div>
       </div>
     </DiaryAgendaDayEntry>

@@ -80,9 +80,9 @@ export function DiaryAgendaDayEvent({
         end: event.end,
       })}
     >
-      <div key={event.id} className="flex gap-1.5">
+      <div key={event.id} className="flex gap-1.5 leading-snug">
         <div className="text-center">
-          <div className="leading-snug font-semibold tabular-nums">
+          <div className="font-semibold tabular-nums">
             {event.datetype === "date-time" && dayNo <= 1 ? (
               event.start.toLocaleTimeString("en-DK", {
                 hour: "2-digit",
@@ -114,15 +114,16 @@ export function DiaryAgendaDayEvent({
           </div>
         </div>
         <div className="flex-1">
-          <div className="flex items-center gap-2 leading-snug">
+          <div className="flex items-center gap-2">
             {event.summary}
             {
-            // figure out how to know that the end has a separated end showing
-            /*<div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+              // figure out how to know that the end has a separated end showing
+              /*<div className="text-[0.666rem] whitespace-nowrap tabular-nums">
               START
-            </div>*/}
+            </div>*/
+            }
           </div>
-          <div className="text-[0.666rem] leading-tight italic">
+          <div className="text-[0.666rem] leading-snug italic">
             {event.location}
           </div>
         </div>

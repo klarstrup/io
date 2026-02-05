@@ -129,7 +129,7 @@ export function DiaryAgendaDayDay({
                 const isFirstDay = dayNo === 1;
                 const isLastDay = dayNo === numDays;
                 return (
-                  <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white">
+                  <span className="inline-flex items-stretch overflow-hidden leading-snug rounded-md border border-solid border-black/20 bg-white">
                     {numDays > 1 ? (
                       <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
                         <span className="px-px text-white">{dayNo}</span>
@@ -161,7 +161,7 @@ export function DiaryAgendaDayDay({
                       ) : null}
                       <span>{event.summary}</span>
                       {event.location ? (
-                        <span className="text-[0.666rem] leading-tight italic">
+                        <span className="text-[0.666rem] italic">
                           {event.location}
                         </span>
                       ) : null}
