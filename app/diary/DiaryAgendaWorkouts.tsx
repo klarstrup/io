@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import type { PRType } from "../../lib";
+import { exercisesById } from "../../models/exercises";
 import { Locations } from "../../models/location.server";
 import type { WorkoutData } from "../../models/workout";
 import {
@@ -57,6 +58,15 @@ export async function DiaryAgendaWorkouts({
                 }))) ??
               undefined;
 
+            const exerciseData =
+              exercisesById[workout.exercises[0]!.exerciseId!];
+
+            if (!exerciseData) {
+              throw new Error(
+                `Exercise with ID ${workout.exercises[0]!.exerciseId} not found`,
+              );
+            }
+
             return (
               <WorkoutEntry
                 exerciseSetPRs={
@@ -81,6 +91,25 @@ export async function DiaryAgendaWorkouts({
                     : undefined,
                   exercises: workout.exercises.map((e) => ({
                     ...e,
+                    exerciseInfo: {
+                      ...exerciseData,
+                      isHidden: exerciseData.is_hidden,
+                      tags: exerciseData.tags?.map((tag) => ({
+                        ...tag,
+                        __typename: "ExerciseInfoTag",
+                      })),
+                      instructions: exerciseData.instructions?.map(
+                        (instruction) => ({
+                          ...instruction,
+                          __typename: "ExerciseInfoInstruction",
+                        }),
+                      ),
+                      inputs: exerciseData.inputs.map((input) => ({
+                        ...input,
+                        __typename: "ExerciseInfoInput",
+                      })),
+                      __typename: "ExerciseInfo",
+                    },
                     __typename: "WorkoutExercise",
                     sets: e.sets.map((s) => ({
                       ...s,

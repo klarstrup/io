@@ -4,12 +4,12 @@ import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { isSameDay, max, min, subHours } from "date-fns";
 import Link from "next/link";
 import {
+  ExerciseInfo,
   Location,
   Workout,
   WorkoutExercise,
   WorkoutSet,
 } from "../../graphql.generated";
-import type { ExerciseData } from "../../models/exercises";
 import {
   ClimbingStats,
   isClimbingExercise,
@@ -22,14 +22,14 @@ import { WorkoutEntryExercise } from "./WorkoutEntry";
 export function DiaryAgendaDayWorkoutSet({
   workout,
   workoutExercise,
-  exercise,
+  exerciseInfo,
   setsWithLocation,
   mostRecentWorkout,
   workoutDateStr,
 }: {
   workout: Workout;
   workoutExercise: WorkoutExercise;
-  exercise: ExerciseData;
+  exerciseInfo: ExerciseInfo;
   setsWithLocation: (readonly [WorkoutSet, Location | undefined, Workout])[];
   mostRecentWorkout: Workout | null;
   workoutDateStr: string;
@@ -119,13 +119,16 @@ export function DiaryAgendaDayWorkoutSet({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-2">
-              <Link prefetch={false} href={`/diary/exercises/${exercise.id}`}>
-                {[exercise.name, ...exercise.aliases]
+              <Link
+                prefetch={false}
+                href={`/diary/exercises/${exerciseInfo.id}`}
+              >
+                {[exerciseInfo.name, ...exerciseInfo.aliases]
                   .filter((name) => name.length >= 4)
                   .sort((a, b) => a.length - b.length)[0]!
                   .replace("Barbell", "")}
               </Link>
-              {isClimbingExercise(exercise.id) ? (
+              {isClimbingExercise(exerciseInfo.id) ? (
                 <ClimbingStats setAndLocationPairs={setsWithLocation} />
               ) : null}
             </div>
@@ -146,12 +149,12 @@ export function DiaryAgendaDayWorkoutSet({
           <div
             className={
               "flex flex-1 items-center text-xs " +
-              (isClimbingExercise(exercise.id) ? " pb-1" : " ") +
+              (isClimbingExercise(exerciseInfo.id) ? " pb-1" : " ") +
               (workout.source === WorkoutSource.Self ? " px-1 py-0.5" : "")
             }
           >
             <WorkoutEntryExercise
-              exercise={exercise}
+              exercise={exerciseInfo}
               setsWithLocations={setsWithLocation}
             />
           </div>

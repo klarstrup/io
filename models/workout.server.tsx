@@ -18,13 +18,15 @@ import { ExerciseSchedule } from "../sources/fitocracy";
 import { dayStartHour, epoch } from "../utils";
 import { proxyCollection } from "../utils.server";
 import {
-  AssistType,
   exercisesById,
+} from "./exercises";
+import {
+  AssistType, 
   InputType,
   SendType,
   TagType,
   Unit,
-} from "./exercises";
+} from "./exercises.types";
 import type { LocationData } from "./location";
 import {
   durationToMs,

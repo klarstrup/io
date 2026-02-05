@@ -5,7 +5,8 @@ import Link from "next/link";
 import type { JSX } from "react";
 import type { Workout } from "../../graphql.generated";
 import type { DiaryEntry } from "../../lib";
-import { exercisesById, TagType } from "../../models/exercises";
+import { exercisesById } from "../../models/exercises";
+import { TagType } from "../../models/exercises.types";
 import { isClimbingExercise } from "../../models/workout";
 import {
   dateToString,

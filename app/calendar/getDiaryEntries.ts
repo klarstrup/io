@@ -72,6 +72,23 @@ export async function getDiaryEntriesShallow({
             }
             exercises {
               exerciseId
+              exerciseInfo {
+                id
+                aliases
+                name
+                isHidden
+                inputs {
+                  id
+                  type
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
+              }
               displayName
               comment
               sets {

@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
 import {
+  ExerciseInfo,
   Location,
   NextSet,
   SnoozeExerciseScheduleMutation,
@@ -26,7 +27,6 @@ import {
   Workout,
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
-import { exercisesById } from "../../models/exercises";
 import { durationToMs } from "../../models/workout";
 import { dateToString, dayStartHour, epoch } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -83,6 +83,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     {
       userId,
       dueSet,
+      exerciseInfo,
       date,
       workouts,
       locations,
@@ -91,6 +92,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     }: {
       userId: string;
       dueSet: NextSet;
+      exerciseInfo: ExerciseInfo;
       date: Date;
       workouts?: Workout[];
       locations?: Location[];
@@ -102,7 +104,6 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     const ref = useRef<HTMLDivElement>(null);
     const onClickOutside = () => setIsActive(false);
     useClickOutside(ref, onClickOutside);
-    const exercise = exercisesById[dueSet.exerciseId]!;
     const router = useRouter();
 
     const [snoozeExerciseSchedule, { loading: isSnoozingExerciseSchedule }] =
@@ -245,12 +246,10 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         icon={faDumbbell}
         onIconClick={
           // Hidden exercises cannot be manually logged
-          exercise.is_hidden
+          exerciseInfo.isHidden
             ? undefined
             : (e) => {
                 e.preventDefault();
-
-                if (exercise.is_hidden) return;
 
                 const dateStr = dateToString(
                   subHours(new Date(), dayStartHour),
@@ -282,8 +281,8 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 : " rounded-r-[5px]")
             }
           >
-            <Link prefetch={false} href={`/diary/exercises/${exercise.id}`}>
-              {[exercise.name, ...exercise.aliases]
+            <Link prefetch={false} href={`/diary/exercises/${exerciseInfo.id}`}>
+              {[exerciseInfo.name, ...exerciseInfo.aliases]
                 .filter((name) => name.length >= 4)
                 .sort((a, b) => a.length - b.length)[0]!
                 .replace("Barbell", "")}
@@ -299,7 +298,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
               <table className="w-auto max-w-0">
                 <tbody>
                   <WorkoutEntryExerciseSetRow
-                    exercise={exercise}
+                    exercise={exerciseInfo}
                     set={{
                       __typename: "WorkoutSet",
                       inputs: dueSet.nextWorkingSetInputs ?? [],
@@ -399,7 +398,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                     </button>
                   </div>
                 )}
-              {exercise.is_hidden ? null : (
+              {exerciseInfo.isHidden ? null : (
                 <button
                   type="button"
                   onClick={(e) => {

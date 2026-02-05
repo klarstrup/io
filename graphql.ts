@@ -12,8 +12,17 @@ import {
 } from "graphql";
 import gql from "graphql-tag";
 import { auth } from "./auth";
-import type { FoodEntry, Resolvers } from "./graphql.generated";
+import type {
+  ExerciseInfo,
+  ExerciseSchedule,
+  FoodEntry,
+  NextSet,
+  Resolvers,
+  SnoozeExerciseSchedulePayload,
+  UnsnoozeExerciseSchedulePayload,
+} from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
+import { exercisesById } from "./models/exercises";
 import { Locations } from "./models/location.server";
 import { Users } from "./models/user.server";
 import { WorkoutSource } from "./models/workout";
@@ -100,11 +109,14 @@ export const resolvers: Resolvers = {
         ...user,
         __typename: "User",
         exerciseSchedules:
-          user.exerciseSchedules?.map((schedule) => ({
-            ...schedule,
-            __typename: "ExerciseSchedule",
-            frequency: { ...schedule.frequency, __typename: "Duration" },
-          })) || null,
+          user.exerciseSchedules?.map(
+            (schedule) =>
+              ({
+                ...schedule,
+                __typename: "ExerciseSchedule",
+                frequency: { ...schedule.frequency, __typename: "Duration" },
+              }) as ExerciseSchedule,
+          ) || null,
       };
     },
   },
@@ -218,25 +230,46 @@ export const resolvers: Resolvers = {
                 id: String(location._id),
               }
             : null,
-          exercises: workout.exercises.map((exercise) => ({
-            ...exercise,
-            __typename: "WorkoutExercise",
-            sets: exercise.sets.map((set) => ({
-              ...set,
-              __typename: "WorkoutSet",
-              inputs: set.inputs.map((input) => ({
-                ...input,
-                __typename: "WorkoutSetInput",
-              })),
-              meta:
-                set.meta &&
-                Object.entries(set.meta || {}).map(([key, value]) => ({
-                  key,
-                  value: String(value),
-                  __typename: "WorkoutSetMeta",
+          exercises: workout.exercises.map((exercise) => {
+            const exerciseInfo = exercisesById[exercise.exerciseId]!;
+
+            return {
+              ...exercise,
+              exerciseInfo: {
+                ...exerciseInfo,
+                isHidden: exerciseInfo.is_hidden,
+                __typename: "ExerciseInfo",
+                inputs: exerciseInfo.inputs.map((input) => ({
+                  ...input,
+                  __typename: "ExerciseInfoInput",
                 })),
-            })),
-          })),
+                instructions: exerciseInfo.instructions.map((instruction) => ({
+                  ...instruction,
+                  __typename: "ExerciseInfoInstruction",
+                })),
+                tags: exerciseInfo.tags?.map((tag) => ({
+                  ...tag,
+                  __typename: "ExerciseInfoTag",
+                })),
+              },
+              __typename: "WorkoutExercise",
+              sets: exercise.sets.map((set) => ({
+                ...set,
+                __typename: "WorkoutSet",
+                inputs: set.inputs.map((input) => ({
+                  ...input,
+                  __typename: "WorkoutSetInput",
+                })),
+                meta:
+                  set.meta &&
+                  Object.entries(set.meta || {}).map(([key, value]) => ({
+                    key,
+                    value: String(value),
+                    __typename: "WorkoutSetMeta",
+                  })),
+              })),
+            };
+          }),
           // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
           id: workout.id || workout._id.toString(),
           __typename: "Workout",
@@ -413,7 +446,7 @@ export const resolvers: Resolvers = {
             __typename: "Duration",
           },
         },
-      };
+      } as SnoozeExerciseSchedulePayload;
     },
     unsnoozeExerciseSchedule: async (_parent, args, _context) => {
       const user = (await auth())?.user;
@@ -450,7 +483,7 @@ export const resolvers: Resolvers = {
             __typename: "Duration",
           },
         },
-      };
+      } as UnsnoozeExerciseSchedulePayload;
     },
   },
   BoulderCircuit: {
@@ -464,6 +497,35 @@ export const resolvers: Resolvers = {
         typeof v === "number" && !Number.isNaN(v) ? v : null,
       ) || null,
   },
+  WorkoutExercise: {
+    exerciseInfo: async (parent) => {
+      const exerciseInfo = exercisesById[parent.exerciseId];
+
+      if (!exerciseInfo) {
+        throw new Error(
+          `Exercise info not found for exercise ID ${parent.exerciseId}`,
+        );
+      }
+
+      return {
+        ...exerciseInfo,
+        isHidden: exerciseInfo.is_hidden,
+        __typename: "ExerciseInfo",
+        inputs: exerciseInfo.inputs.map((input) => ({
+          ...input,
+          __typename: "ExerciseInfoInput",
+        })),
+        instructions: exerciseInfo.instructions.map((instruction) => ({
+          ...instruction,
+          __typename: "ExerciseInfoInstruction",
+        })),
+        tags: exerciseInfo.tags?.map((tag) => ({
+          ...tag,
+          __typename: "ExerciseInfoTag",
+        })),
+      } satisfies ExerciseInfo;
+    },
+  },
   WorkoutSetInput: {
     value: (parent) =>
       typeof parent.value === "number" && !Number.isNaN(parent.value)
@@ -471,6 +533,33 @@ export const resolvers: Resolvers = {
         : null,
   },
   ExerciseSchedule: {
+    exerciseInfo: async (parent) => {
+      const exerciseInfo = exercisesById[parent.exerciseId];
+
+      if (!exerciseInfo) {
+        throw new Error(
+          `Exercise info not found for exercise ID ${parent.exerciseId}`,
+        );
+      }
+
+      return {
+        ...exerciseInfo,
+        isHidden: exerciseInfo.is_hidden,
+        __typename: "ExerciseInfo",
+        inputs: exerciseInfo.inputs.map((input) => ({
+          ...input,
+          __typename: "ExerciseInfoInput",
+        })),
+        instructions: exerciseInfo.instructions.map((instruction) => ({
+          ...instruction,
+          __typename: "ExerciseInfoInstruction",
+        })),
+        tags: exerciseInfo.tags?.map((tag) => ({
+          ...tag,
+          __typename: "ExerciseInfoTag",
+        })),
+      } satisfies ExerciseInfo;
+    },
     nextSet: async (parent, _args, _context) => {
       const user = (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
@@ -498,7 +587,7 @@ export const resolvers: Resolvers = {
           },
         },
         __typename: "NextSet",
-      };
+      } as NextSet;
     },
   },
 };
@@ -627,6 +716,7 @@ export const typeDefs = gql`
   type ExerciseSchedule {
     id: ID!
     exerciseId: Int!
+    exerciseInfo: ExerciseInfo!
     enabled: Boolean!
     frequency: Duration!
     increment: Float
@@ -709,9 +799,35 @@ export const typeDefs = gql`
 
   type WorkoutExercise {
     exerciseId: Int!
+    exerciseInfo: ExerciseInfo!
     sets: [WorkoutSet!]!
     displayName: String
     comment: String
+  }
+
+  type ExerciseInfo {
+    id: Int!
+    name: String!
+    aliases: [String!]!
+    inputs: [ExerciseInfoInput!]!
+    instructions: [ExerciseInfoInstruction!]!
+    isHidden: Boolean!
+    tags: [ExerciseInfoTag!]
+  }
+
+  type ExerciseInfoInput {
+    # populate this when migrating workoutform to use ExerciseInfo instead of ExerciseData
+    id: Int!
+    type: String!
+  }
+
+  type ExerciseInfoInstruction {
+    value: String!
+  }
+
+  type ExerciseInfoTag {
+    name: String!
+    type: String!
   }
 
   type WorkoutSet {

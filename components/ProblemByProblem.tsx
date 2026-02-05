@@ -2,7 +2,8 @@ import type { SVGProps } from "react";
 import Grade from "../grades";
 import { Location, Workout, WorkoutSet } from "../graphql.generated";
 import { PP } from "../lib";
-import { exercises, SendType } from "../models/exercises";
+import { exercises } from "../models/exercises";
+import { SendType } from "../models/exercises.types";
 import {
   getSetGrade,
   getSetMeta,

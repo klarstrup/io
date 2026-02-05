@@ -15,7 +15,6 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import { Location, Workout, WorkoutSet } from "../../graphql.generated";
-import { exercisesById } from "../../models/exercises";
 import { WorkoutSource } from "../../models/workout";
 import { DataSource } from "../../sources/utils";
 import {
@@ -129,7 +128,7 @@ export function DiaryAgendaDayDay({
                 const isFirstDay = dayNo === 1;
                 const isLastDay = dayNo === numDays;
                 return (
-                  <span className="inline-flex items-stretch overflow-hidden leading-snug rounded-md border border-solid border-black/20 bg-white">
+                  <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white leading-snug">
                     {numDays > 1 ? (
                       <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
                         <span className="px-px text-white">{dayNo}</span>
@@ -230,6 +229,7 @@ export function DiaryAgendaDayDay({
             userId={user!.id}
             dueSet={dueSet}
             date={dayDate}
+            exerciseInfo={dueSet.scheduleEntry.exerciseInfo}
             workouts={dayJournalEntries
               .filter(
                 (jE): jE is Workout =>
@@ -252,8 +252,7 @@ export function DiaryAgendaDayDay({
         mostRecentWorkout && dateToString(mostRecentWorkout.workedOutAt);
 
       for (const workoutExercise of workout.exercises) {
-        const exercise = exercisesById[workoutExercise.exerciseId];
-        if (!exercise) continue;
+        const { exerciseInfo } = workoutExercise;
 
         const setsWithLocation = workoutExercise.sets.map((set) => {
           const setLocationId = workout.locationId;
@@ -280,7 +279,7 @@ export function DiaryAgendaDayDay({
             <DiaryAgendaDayWorkoutSet
               workout={workout}
               workoutExercise={workoutExercise}
-              exercise={exercise}
+              exerciseInfo={exerciseInfo}
               setsWithLocation={setsWithLocation}
               mostRecentWorkout={mostRecentWorkout}
               workoutDateStr={workoutDateStr}

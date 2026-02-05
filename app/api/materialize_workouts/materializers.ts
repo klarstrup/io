@@ -1,5 +1,5 @@
 import type { Session } from "next-auth";
-import { SendType, Unit } from "../../../models/exercises";
+import { SendType, Unit } from "../../../models/exercises.types";
 import { WorkoutSource } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
 import {

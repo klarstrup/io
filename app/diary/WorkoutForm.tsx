@@ -31,14 +31,13 @@ import {
 } from "../../graphql.generated";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
+import { exercises, exercisesById } from "../../models/exercises";
 import {
-  exercises,
-  exercisesById,
   InputType,
   SendType,
   Unit,
   type ExerciseData,
-} from "../../models/exercises";
+} from "../../models/exercises.types";
 import type { LocationData } from "../../models/location";
 import {
   durationToMs,
@@ -165,6 +164,23 @@ export function WorkoutForm<R extends string>({
             scheduleEntry {
               id
               exerciseId
+              exerciseInfo {
+                id
+                aliases
+                name
+                isHidden
+                inputs {
+                  id
+                  type
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
+              }
               enabled
               frequency {
                 years

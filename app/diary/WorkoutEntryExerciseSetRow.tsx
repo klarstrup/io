@@ -1,13 +1,13 @@
 import { Fragment } from "react";
 import Grade from "../../grades";
-import { WorkoutSet } from "../../graphql.generated";
+import { ExerciseInfo, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import {
   AssistType,
-  ExerciseData,
+  type ExerciseData,
   InputType,
   Unit,
-} from "../../models/exercises";
+} from "../../models/exercises.types";
 import type { WorkoutExerciseSet } from "../../models/workout";
 import { HOUR_IN_SECONDS, MINUTE_IN_SECONDS, seconds2time } from "../../utils";
 
@@ -30,7 +30,7 @@ export function WorkoutEntryExerciseSetRow({
 }: {
   set: WorkoutExerciseSet | WorkoutSet;
   repeatCount?: number | null;
-  exercise: ExerciseData;
+  exercise: ExerciseData | ExerciseInfo;
   setPR?: Record<PRType, boolean>;
 }) {
   return (

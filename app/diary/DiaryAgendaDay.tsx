@@ -75,6 +75,23 @@ gql`
           scheduleEntry {
             id
             exerciseId
+            exerciseInfo {
+              id
+              aliases
+              name
+              isHidden
+              inputs {
+                id
+                type
+              }
+              instructions {
+                value
+              }
+              tags {
+                name
+                type
+              }
+            }
             enabled
             frequency {
               years
@@ -145,6 +162,23 @@ gql`
           exerciseId
           displayName
           comment
+          exerciseInfo {
+            id
+            aliases
+            name
+            isHidden
+            inputs {
+              id
+              type
+            }
+            instructions {
+              value
+            }
+            tags {
+              name
+              type
+            }
+          }
           sets {
             comment
             createdAt

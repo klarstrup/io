@@ -5,9 +5,15 @@ import ProblemByProblem, {
   exerciseSetsToProblemByProblem,
 } from "../../components/ProblemByProblem";
 import Grade from "../../grades";
-import { Location, Workout, WorkoutSet } from "../../graphql.generated";
+import {
+  ExerciseInfo,
+  Location,
+  Workout,
+  WorkoutSet,
+} from "../../graphql.generated";
 import { PRType } from "../../lib";
-import { type ExerciseData, exercisesById } from "../../models/exercises";
+import { exercisesById } from "../../models/exercises";
+import { type ExerciseData } from "../../models/exercises.types";
 import {
   ClimbingStats,
   getSetGrade,
@@ -50,7 +56,7 @@ export function WorkoutEntryExercise({
   exerciseSetPRs,
   onlyPRs,
 }: {
-  exercise: ExerciseData;
+  exercise: ExerciseData | ExerciseInfo;
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,
     Location | undefined,

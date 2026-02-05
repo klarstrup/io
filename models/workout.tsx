@@ -18,13 +18,13 @@ import type {
 } from "../graphql.generated";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
+import { exercisesById } from "./exercises";
 import {
-  exercisesById,
   SendType,
   type AssistType,
   type ExerciseData,
   type Unit,
-} from "./exercises";
+} from "./exercises.types";
 import type { LocationData } from "./location";
 
 export enum WorkoutSource {
