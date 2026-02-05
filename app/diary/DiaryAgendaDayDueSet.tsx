@@ -243,16 +243,22 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         ref={ref2}
         {...props}
         icon={faDumbbell}
-        onIconClick={(e) => {
-          e.preventDefault();
-
+        onIconClick={
           // Hidden exercises cannot be manually logged
-          if (exercise.is_hidden) return;
+          exercise.is_hidden
+            ? undefined
+            : (e) => {
+                e.preventDefault();
 
-          const dateStr = dateToString(subHours(new Date(), dayStartHour));
-          const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
-          router.push(`/diary/${dateStr}/workout?${searchStr}`);
-        }}
+                if (exercise.is_hidden) return;
+
+                const dateStr = dateToString(
+                  subHours(new Date(), dayStartHour),
+                );
+                const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
+                router.push(`/diary/${dateStr}/workout?${searchStr}`);
+              }
+        }
       >
         <div
           ref={ref}
