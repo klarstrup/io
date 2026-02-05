@@ -2,9 +2,9 @@ import type { SVGProps } from "react";
 import Grade from "../grades";
 import { Location, Workout, WorkoutSet } from "../graphql.generated";
 import { PP } from "../lib";
-import { exercises } from "../models/exercises";
 import { SendType } from "../models/exercises.types";
 import {
+  climbingExerciseInputs,
   getSetGrade,
   getSetMeta,
   type WorkoutData,
@@ -368,8 +368,7 @@ function ProblemBadge({
   );
 }
 
-const boulderingExercise = exercises.find(({ id }) => id === 2001)!;
-const colorOptions = boulderingExercise.inputs[1]!.options!;
+const colorOptions = climbingExerciseInputs[1]!.options!;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,

@@ -18,12 +18,12 @@ import type {
 } from "../graphql.generated";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
-import { exercisesById } from "./exercises";
 import {
+  InputType,
   SendType,
+  Unit,
   type AssistType,
   type ExerciseData,
-  type Unit,
 } from "./exercises.types";
 import type { LocationData } from "./location";
 
@@ -204,12 +204,61 @@ export const getSetMeta = (
   return undefined;
 };
 
+// Copy of the exercise 2001 inputs for climbing exercises, to avoid loading all exercises when we just need climbing inputs
+export const climbingExerciseInputs = [
+  {
+    allowed_units: [{ conversion_factor: 1.0, name: Unit.FrenchRounded }],
+    bounds: { minimum: 2, maximum: 9.5 },
+    display_name: "Grade",
+    hidden_by_default: true,
+    id: 0,
+    input_ordinal: 1,
+    imperial_unit: Unit.FrenchRounded,
+    metric_unit: Unit.FrenchRounded,
+    type: InputType.Grade,
+  },
+  {
+    display_name: "Hold Color",
+    hidden_by_default: true,
+    id: 1,
+    input_ordinal: 2,
+    options: [
+      // Don't mess with the order of these colors
+      { value: "mint" },
+      { value: "green" },
+      { value: "yellow" },
+      { value: "blue" },
+      { value: "orange" },
+      { value: "red" },
+      { value: "black" },
+      { value: "pink" },
+      { value: "white" },
+      { value: "purple" },
+    ],
+    type: InputType.Options,
+  },
+  {
+    display_name: "Send",
+    hidden_by_default: false,
+    id: 2,
+    input_ordinal: 3,
+    default_value: 1,
+    // Don't mess with the order of these options
+    options: [
+      { value: "flash" },
+      { value: "top" },
+      { value: "zone" },
+      { value: "attempt" },
+      { value: "repeat" },
+    ],
+    type: InputType.Options,
+  },
+] as const;
+
 export function getSetGrade(
   set: WorkoutSet | WorkoutExerciseSet,
   location: Location | undefined | null,
 ) {
-  const exercise = exercisesById[2001]!;
-
   const inputGrade = set.inputs[0]!.value;
   if (inputGrade) return inputGrade;
 
@@ -224,7 +273,7 @@ export function getSetGrade(
     return boulderingCircuit.gradeEstimate || null;
   }
 
-  const colorOptions = exercise.inputs[1]?.options;
+  const colorOptions = climbingExerciseInputs[1]?.options;
   if (!colorOptions) return null;
 
   const color = colorOptions?.[set.inputs[1]!.value!]?.value;
