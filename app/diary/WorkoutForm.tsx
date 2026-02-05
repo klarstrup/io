@@ -369,7 +369,7 @@ export function WorkoutForm<R extends string>({
           };
           console.log({ workout, data, newWorkout });
           const newWorkoutId = await upsertWorkout(newWorkout);
-          client.refetchQueries({ include: [ListPageUserDocument] });
+          await client.refetchQueries({ include: [ListPageUserDocument] });
 
           if (!workout) router.push(`/diary/${date}/workout/${newWorkoutId}`);
 
