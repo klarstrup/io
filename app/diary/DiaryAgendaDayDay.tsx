@@ -48,19 +48,19 @@ export function DiaryAgendaDayDay({
 }: {
   date: `${number}-${number}-${number}`;
   dayDate: Date;
-  user?: Session["user"];
+  user: Session["user"];
   dayLocations: Location[];
   dayJournalEntries: JournalEntry[];
 }) {
   const client = useApolloClient();
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = user.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
   const todayStr = dateToString(subHours(now, dayStartHour));
   const isToday = date === todayStr;
 
   const tzDate = new TZDate(date, timeZone);
 
-  const userGeohash = user?.dataSources?.find(
+  const userGeohash = user.dataSources?.find(
     (source) => source.source === DataSource.Tomorrow,
   )?.config?.geohash;
   const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
@@ -226,7 +226,7 @@ export function DiaryAgendaDayDay({
         element: (
           <DiaryAgendaDayDueSet
             key={dueSet.scheduleEntry.id}
-            userId={user!.id}
+            userId={user.id}
             dueSet={dueSet}
             date={dayDate}
             exerciseInfo={dueSet.scheduleEntry.exerciseInfo}

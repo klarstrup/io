@@ -210,7 +210,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const { data, dataState, loading } = useQuery(
+  const { data, dataState } = useQuery(
     DiaryAgendaDayUserTodosDocument,
     user
       ? {
@@ -219,6 +219,29 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
         }
       : skipToken,
   );
+
+  if (!user) {
+    return (
+      <FieldSetY
+        legend={null}
+        className="mx-auto max-w-2xl self-stretch border-black/50 bg-gray-500/25 px-2"
+      >
+        <center className="text-white">
+          Please{" "}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a
+            href="/api/auth/signin"
+            className={
+              "text-yellow-300 underline underline-offset-4 hover:text-yellow-400"
+            }
+          >
+            log in
+          </a>{" "}
+          to see your journal
+        </center>
+      </FieldSetY>
+    );
+  }
 
   if (dataState !== "complete") {
     return (
