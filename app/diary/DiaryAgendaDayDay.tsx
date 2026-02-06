@@ -99,7 +99,18 @@ export function DiaryAgendaDayDay({
   for (const journalEntry of dayJournalEntries) {
     const previousJournalEntry = i > 0 ? dayJournalEntries[i - 1] : undefined;
 
-    if ("__typename" in journalEntry && journalEntry.__typename === "Event") {
+    if (
+      "__typename" in journalEntry &&
+      journalEntry.__typename === "NowDivider"
+    ) {
+      dayJournalEntryElements.push({
+        id: "now-divider",
+        element: <DiaryAgendaDayNow key="now-divider" date={date} />,
+      });
+    } else if (
+      "__typename" in journalEntry &&
+      journalEntry.__typename === "Event"
+    ) {
       const event = journalEntry;
 
       const isAllDayEvent =
@@ -290,35 +301,6 @@ export function DiaryAgendaDayDay({
     }
 
     i++;
-  }
-
-  // Inject "now" divider if it is between any two entries, or if it is after the last entry of the day
-  const nowEntryElement = {
-    id: "now-divider",
-    element: <DiaryAgendaDayNow key="now-divider" date={date} />,
-  } as const;
-  if (isToday) {
-    let inserted = false;
-    for (let j = 0; j < dayJournalEntryElements.length; j++) {
-      const currentEntry = dayJournalEntries[j];
-      const nextEntry =
-        j < dayJournalEntries.length - 1 ? dayJournalEntries[j + 1] : undefined;
-      const currentEntryHasPassed = currentEntry
-        ? getJournalEntryBegun(currentEntry)
-        : true;
-      const nextEntryHasBegun = nextEntry
-        ? getJournalEntryBegun(nextEntry)
-        : false;
-
-      if (currentEntryHasPassed && !nextEntryHasBegun) {
-        dayJournalEntryElements.splice(j, 0, nowEntryElement);
-        inserted = true;
-        break;
-      }
-    }
-    if (!inserted) {
-      dayJournalEntryElements.push(nowEntryElement);
-    }
   }
 
   const allCompleted = dayJournalEntries.every((je) =>

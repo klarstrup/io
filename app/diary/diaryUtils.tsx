@@ -25,7 +25,8 @@ export type JournalEntry =
   | NextSet
   | Workout
   | ExerciseSchedule
-  | WorkoutExercise;
+  | WorkoutExercise
+  | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
 
 const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour

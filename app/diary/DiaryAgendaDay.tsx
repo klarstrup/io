@@ -21,10 +21,10 @@ import type { Session } from "next-auth";
 import { FieldSetY } from "../../components/FieldSet";
 import {
   DiaryAgendaDayUserTodosDocument,
-  type Event,
   type NextSet,
   type Todo,
 } from "../../graphql.generated";
+import { useVisibilityAwarePollInterval } from "../../hooks";
 import { WorkoutSource } from "../../models/workout";
 import {
   dateToString,
@@ -36,8 +36,7 @@ import {
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
-import { getJournalEntryPrincipalDate } from "./diaryUtils";
-import { useVisibilityAwarePollInterval } from "../../hooks";
+import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
 
 gql`
   query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
@@ -272,10 +271,11 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     nextSets = [],
   } = userData || {};
 
-  const eventsByDate: Record<
-    string,
-    (Event | (Event & { _this_is_the_end_of_a_event: true }))[]
-  > = {};
+  const eventsByDate: Record<string, JournalEntry[]> = {
+    [dateToString(addHours(startOfDay(tzDate), dayStartHour))]: [
+      { __typename: "NowDivider", id: "now-divider", start: now, end: now },
+    ],
+  };
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<string, NextSet[]> = {};
 
