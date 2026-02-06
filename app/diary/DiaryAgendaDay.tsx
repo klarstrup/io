@@ -473,6 +473,27 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
                       b.__typename === "Workout" ? b.exercises[0]! : b,
                     )?.start || new Date(0),
                   );
+                })
+                .filter((entry, i, entries) => {
+                  const isEventEndEntry =
+                    entry.__typename === "Event" &&
+                    "_this_is_the_end_of_a_event" in entry &&
+                    entry._this_is_the_end_of_a_event;
+
+                  if (isEventEndEntry) {
+                    const eventId = entry.id;
+                    const previousEntry = entries[i - 1];
+                    if (
+                      previousEntry &&
+                      previousEntry.__typename === "Event" &&
+                      previousEntry.id === eventId
+                    ) {
+                      // If the previous entry is the same event, we skip the end entry
+                      return false;
+                    }
+                  }
+
+                  return true;
                 })}
             />
           </TodoDroppable>

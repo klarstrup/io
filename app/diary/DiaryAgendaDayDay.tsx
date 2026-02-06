@@ -112,10 +112,7 @@ export function DiaryAgendaDayDay({
           element: (
             <DiaryAgendaDayEntry
               icon={faCalendarWeek}
-              cotemporality={cotemporality({
-                start: event.start,
-                end: event.end,
-              })}
+              cotemporality={cotemporality(event)}
               key={event.id}
             >
               {(() => {
@@ -182,25 +179,16 @@ export function DiaryAgendaDayDay({
         "_this_is_the_end_of_a_event" in event &&
         event._this_is_the_end_of_a_event
       ) {
-        if (
-          previousJournalEntry &&
-          "__typename" in previousJournalEntry &&
-          previousJournalEntry.__typename === "Event" &&
-          previousJournalEntry.id === event.id
-        ) {
-          // don't show the end of an event if it's immediately after the event itself, to avoid cluttering the UI with duplicate entries
-        } else {
-          dayJournalEntryElements.push({
-            id: "end-of-" + (client.cache.identify(event) || event.id),
-            element: (
-              <DiaryAgendaDayEventEnd
-                user={user}
-                event={event}
-                key={"end-of-" + (client.cache.identify(event) || event.id)}
-              />
-            ),
-          });
-        }
+        dayJournalEntryElements.push({
+          id: "end-of-" + (client.cache.identify(event) || event.id),
+          element: (
+            <DiaryAgendaDayEventEnd
+              user={user}
+              event={event}
+              key={"end-of-" + (client.cache.identify(event) || event.id)}
+            />
+          ),
+        });
       } else {
         dayJournalEntryElements.push({
           id: client.cache.identify(event) || event.id,
