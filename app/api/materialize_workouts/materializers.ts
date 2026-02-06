@@ -610,7 +610,7 @@ export async function* materializeKilterBoardWorkouts(
         },
         userId: { $literal: user.id },
         createdAt: { $first: "$ascents.created_at" },
-        updatedAt: { $first: "$ascents.updated_at" },
+        updatedAt: { $last: "$ascents.updated_at" },
         workedOutAt: { $first: "$ascents.climbed_at" },
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.KilterBoard },
@@ -622,6 +622,8 @@ export async function* materializeKilterBoardWorkouts(
                 input: "$ascents",
                 as: "ascent",
                 in: {
+                  createdAt: "$$ascent.created_at",
+                  updatedAt: "$$ascent.updated_at",
                   meta: {
                     attemptCount: { $size: "$$ascent.climb_bids" },
                     boulderName: "$$ascent.climb.name",
