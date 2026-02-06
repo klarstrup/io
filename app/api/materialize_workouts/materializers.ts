@@ -812,8 +812,9 @@ export async function* materializeGrippyWorkouts(
         _id: 0,
         id: { $toString: "$uuid" },
         userId: { $literal: user.id },
+        // This is in the wrong timezone, fix in ingest?
         createdAt: "$start_time",
-        updatedAt: "$start_time",
+        updatedAt: "$end_time",
         workedOutAt: "$start_time",
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.Grippy },
@@ -824,7 +825,7 @@ export async function* materializeGrippyWorkouts(
             sets: [
               {
                 createdAt: "$start_time",
-                updatedAt: "$start_time",
+                updatedAt: "$end_time",
                 inputs: [
                   { unit: Unit.SEC, value: "$total_hang_time" },
                   {
