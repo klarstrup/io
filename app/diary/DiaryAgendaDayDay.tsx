@@ -323,7 +323,7 @@ export function DiaryAgendaDayDay({
         : false;
 
       if (currentEntryHasPassed && !nextEntryHasBegun) {
-        dayJournalEntryElements.splice(j + 1, 0, nowEntryElement);
+        dayJournalEntryElements.splice(j, 0, nowEntryElement);
         inserted = true;
         break;
       }
