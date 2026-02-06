@@ -140,70 +140,6 @@ export const isNextSetDue = (tzDate: Date | TZDate, nextSet: NextSet) => {
   );
 };
 
-export const getCircuitByLocationAndSetColor = (
-  exercise: ExerciseData,
-  set: Omit<WorkoutExerciseSet, "inputs"> & {
-    meta?: Record<string, unknown>;
-    inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
-      value: number | string;
-    })[];
-  },
-  location: LocationData,
-) => {
-  let boulderingSetColor: string | undefined;
-  if (exercise.id === 2001) {
-    const colorOptions = exercise.inputs[1]?.options;
-    if (colorOptions) {
-      const colorInput = set?.inputs[1];
-      if (colorInput) {
-        const color = colorOptions[Number(colorInput.value)]?.value;
-        if (color) {
-          boulderingSetColor = color;
-        }
-      }
-    }
-  }
-
-  const boulderingCircuit =
-    boulderingSetColor && location
-      ? getCircuitByLocationAndColor(boulderingSetColor, location)
-      : undefined;
-
-  return boulderingCircuit;
-};
-
-const getCircuitByLocationAndColor = (
-  color: string,
-  location: LocationData | Location,
-) =>
-  location.boulderCircuits?.find(
-    (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
-  );
-
-const getGradeOfColorByLocation = (
-  color: string,
-  location: LocationData | Location,
-) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
-
-// Utility to paint over difference in DB and GraphQL representation of set meta
-export const getSetMeta = (
-  set: WorkoutSet | WorkoutExerciseSet,
-  key: string,
-): string | undefined => {
-  if (!set.meta) return undefined;
-
-  if (Array.isArray(set.meta)) {
-    const metaItem = (set.meta as WorkoutSetMeta[]).find((m) => m.key === key);
-    return metaItem?.value as string | undefined;
-  } else {
-    if (key in set.meta) {
-      return set.meta[key] as string;
-    }
-  }
-
-  return undefined;
-};
-
 // Copy of the exercise 2001 inputs for climbing exercises, to avoid loading all exercises when we just need climbing inputs
 export const climbingExerciseInputs = [
   {
@@ -255,6 +191,66 @@ export const climbingExerciseInputs = [
   },
 ] as const;
 
+const colorOptions = climbingExerciseInputs[1]!.options!;
+export const getCircuitByLocationAndSetColor = (
+  exercise: ExerciseData,
+  set: Omit<WorkoutExerciseSet, "inputs"> & {
+    meta?: Record<string, unknown>;
+    inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
+      value: number | string;
+    })[];
+  },
+  location: LocationData,
+) => {
+  let boulderingSetColor: string | undefined;
+  if (exercise.id === 2001) {
+    const colorInput = set?.inputs[1];
+    if (colorInput) {
+      const color = colorOptions[Number(colorInput.value)]?.value;
+      if (color) boulderingSetColor = color;
+    }
+  }
+
+  const boulderingCircuit =
+    boulderingSetColor && location
+      ? getCircuitByLocationAndColor(boulderingSetColor, location)
+      : undefined;
+
+  return boulderingCircuit;
+};
+
+const getCircuitByLocationAndColor = (
+  color: string,
+  location: LocationData | Location,
+) =>
+  location.boulderCircuits?.find(
+    (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
+  );
+
+const getGradeOfColorByLocation = (
+  color: string,
+  location: LocationData | Location,
+) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
+
+// Utility to paint over difference in DB and GraphQL representation of set meta
+export const getSetMeta = (
+  set: WorkoutSet | WorkoutExerciseSet,
+  key: string,
+): string | undefined => {
+  if (!set.meta) return undefined;
+
+  if (Array.isArray(set.meta)) {
+    const metaItem = (set.meta as WorkoutSetMeta[]).find((m) => m.key === key);
+    return metaItem?.value as string | undefined;
+  } else {
+    if (key in set.meta) {
+      return set.meta[key] as string;
+    }
+  }
+
+  return undefined;
+};
+
 export function getSetGrade(
   set: WorkoutSet | WorkoutExerciseSet,
   location: Location | undefined | null,
@@ -273,10 +269,7 @@ export function getSetGrade(
     return boulderingCircuit.gradeEstimate || null;
   }
 
-  const colorOptions = climbingExerciseInputs[1]?.options;
-  if (!colorOptions) return null;
-
-  const color = colorOptions?.[set.inputs[1]!.value!]?.value;
+  const color = colorOptions[set.inputs[1]!.value!]?.value;
   if (!color) return null;
 
   const colorGrade = getGradeOfColorByLocation(color, location);
