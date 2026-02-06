@@ -82,6 +82,13 @@ export function DiaryAgendaDayDay({
   const dayJournalEntryElements: { id: string; element: ReactElement }[] = [];
 
   let i = 0;
+  const getJournalEntryBegun = (
+    journalEntry: (typeof dayJournalEntries)[number],
+  ) => {
+    const principalDate = getJournalEntryPrincipalDate(journalEntry);
+    if (!principalDate) return false;
+    return isBefore(principalDate.start, now);
+  };
   const getJournalEntryPassed = (
     journalEntry: (typeof dayJournalEntries)[number],
   ) => {
@@ -305,18 +312,18 @@ export function DiaryAgendaDayDay({
   if (isToday) {
     let inserted = false;
     for (let j = 0; j < dayJournalEntryElements.length; j++) {
-      const previousEntry = j > 0 ? dayJournalEntries[j - 1] : undefined;
+      const currentEntry = dayJournalEntries[j];
       const nextEntry =
         j < dayJournalEntries.length - 1 ? dayJournalEntries[j + 1] : undefined;
-      const previousEntryHasPassed = previousEntry
-        ? getJournalEntryPassed(previousEntry)
+      const currentEntryHasPassed = currentEntry
+        ? getJournalEntryBegun(currentEntry)
         : true;
-      const nextEntryHasPassed = nextEntry
-        ? getJournalEntryPassed(nextEntry)
+      const nextEntryHasBegun = nextEntry
+        ? getJournalEntryBegun(nextEntry)
         : false;
 
-      if (previousEntryHasPassed && !nextEntryHasPassed) {
-        dayJournalEntryElements.splice(j, 0, nowEntryElement);
+      if (currentEntryHasPassed && !nextEntryHasBegun) {
+        dayJournalEntryElements.splice(j + 1, 0, nowEntryElement);
         inserted = true;
         break;
       }
