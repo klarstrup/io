@@ -1,5 +1,6 @@
 import { useApolloClient } from "@apollo/client/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePageVisibility } from "./hooks";
 
 export default function ApolloFucker() {
   const client = useApolloClient();
@@ -20,5 +21,26 @@ export default function ApolloFucker() {
       }, 1000);
     }
   }, [client]);
+
+  const isPageVisible = usePageVisibility();
+
+  const visibilityRef = useRef(isPageVisible);
+  const lastVisibilityFetchRef = useRef(
+    typeof window !== "undefined" ? Date.now() : 0,
+  );
+  useEffect(() => {
+    if (visibilityRef.current === false && isPageVisible === true) {
+      const now = Date.now();
+      // Don't refetch if we've done so in the last 5 minutes, to avoid refetching when the user is switching tabs quickly
+      if (now - lastVisibilityFetchRef.current < 300000) return;
+
+      lastVisibilityFetchRef.current = now;
+      console.log("Page became visible, refetching active queries");
+      client.refetchQueries({ include: "active" });
+    }
+
+    visibilityRef.current = isPageVisible;
+  }, [client, isPageVisible]);
+
   return null;
 }

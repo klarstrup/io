@@ -6,6 +6,7 @@ import { ListPageUserDocument } from "../../graphql.generated";
 import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
+import { useVisibilityAwarePollInterval } from "../../hooks";
 
 gql`
   query ListPageUser {
@@ -24,9 +25,8 @@ gql`
 `;
 
 export default function ListPage() {
-  const { data, dataState } = useQuery(ListPageUserDocument, {
-    pollInterval: 300000,
-  });
+  const pollInterval = useVisibilityAwarePollInterval(300000);
+  const { data, dataState } = useQuery(ListPageUserDocument, { pollInterval });
 
   const calendarTodos = data?.user?.todos || [];
   const todos = calendarTodos

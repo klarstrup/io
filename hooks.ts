@@ -403,3 +403,35 @@ export const useClickOutside = (
     return () => document.removeEventListener("click", handleClick);
   });
 };
+
+export function usePageVisibility() {
+  const [isPageVisible, setIsPageVisible] = useState(
+    typeof document !== "undefined"
+      ? document.visibilityState === "visible"
+      : true,
+  );
+
+  useEffect(() => {
+    setIsPageVisible(document.visibilityState === "visible");
+
+    function onVisibilityChange() {
+      setIsPageVisible(document.visibilityState === "visible");
+    }
+
+    window.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () =>
+      window.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
+
+  return isPageVisible;
+}
+
+/**
+ * Simple hook that returns undefined when the page isn't visible but otherwise returns the given number
+ */
+export const useVisibilityAwarePollInterval = (pollInterval: number) => {
+  const isPageVisible = usePageVisibility();
+
+  return isPageVisible ? pollInterval : undefined;
+};

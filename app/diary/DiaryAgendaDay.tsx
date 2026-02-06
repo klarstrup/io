@@ -37,6 +37,7 @@ import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import { useVisibilityAwarePollInterval } from "../../hooks";
 
 gql`
   query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
@@ -210,13 +211,12 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
     end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
+  const pollInterval = useVisibilityAwarePollInterval(300000);
+
   const { data, dataState } = useQuery(
     DiaryAgendaDayUserTodosDocument,
     user
-      ? {
-          variables: { interval: fetchingInterval },
-          pollInterval: 300000,
-        }
+      ? { variables: { interval: fetchingInterval }, pollInterval }
       : skipToken,
   );
 
