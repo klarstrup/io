@@ -352,7 +352,12 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
 
       if (!eventsByDate[calName]) eventsByDate[calName] = [];
       eventsByDate[calName].push(event);
-      if (event.datetype !== "date") {
+      if (
+        event.datetype !== "date" &&
+        "end" in event &&
+        event.end &&
+        isBefore(event.end, dayEnd)
+      ) {
         eventsByDate[calName].push({
           ...event,
           _this_is_the_end_of_a_event: true,
