@@ -28,7 +28,12 @@ import {
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { durationToMs } from "../../models/workout";
-import { dateToString, dayStartHour, epoch } from "../../utils";
+import {
+  type cotemporality,
+  dateToString,
+  dayStartHour,
+  epoch,
+} from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";

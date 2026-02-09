@@ -14,6 +14,7 @@ import {
   type UpdateTodoMutation,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
+import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getTodoPrincipalDate } from "./diaryUtils";
@@ -30,10 +31,10 @@ gql`
 
 export function DiaryAgendaDayTodo({
   todo,
-  isBetweenAnEventAndItsEnd,
+  cotemporalityOfSurroundingEvent,
 }: {
   todo: DiaryAgendaDayTodoFragment;
-  isBetweenAnEventAndItsEnd?: boolean;
+  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const client = useApolloClient();
   const {
@@ -64,7 +65,7 @@ export function DiaryAgendaDayTodo({
       {...attributes}
       todo={todo}
       isDragging={isDragging}
-      isBetweenAnEventAndItsEnd={isBetweenAnEventAndItsEnd}
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
     />
   );
 }
@@ -74,13 +75,12 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     {
       todo,
       isDragging,
-      isBetweenAnEventAndItsEnd,
+      cotemporalityOfSurroundingEvent,
       ...props
     }: {
       todo: DiaryAgendaDayTodoFragment;
       isDragging: boolean;
-      isBetweenAnEventAndItsEnd?: boolean;
-    } & React.HTMLAttributes<HTMLDivElement>,
+      cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;    } & React.HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<HTMLDivElement>,
   ) {
     const [updateTodo] = useMutation<UpdateTodoMutation>(
@@ -159,7 +159,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     return (
       <DiaryAgendaDayEntry
         ref={ref}
-        isBetweenAnEventAndItsEnd={isBetweenAnEventAndItsEnd}
+        cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
         {...props}
         icon={faCircleCheck}
         onIconClick={

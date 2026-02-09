@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import Link from "next/link";
 import { ScrollToMe } from "../../components/CenterMe";
+import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 
@@ -9,7 +10,7 @@ export function DiaryAgendaDayNow({
   cotemporalityOfSurroundingEvent,
 }: {
   date: `${number}-${number}-${number}`;
-  cotemporalityOfSurroundingEvent: boolean;
+  cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
 }) {
   const {
     isDragging,

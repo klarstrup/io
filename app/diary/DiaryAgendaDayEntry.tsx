@@ -31,12 +31,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
       e: React.MouseEvent<HTMLButtonElement | HTMLDivElement, MouseEvent>,
     ) => void;
     cotemporality?: "past" | "current" | "future" | "backlog";
-    cotemporalityOfSurroundingEvent?:
-      | "past"
-      | "current"
-      | "future"
-      | "backlog"
-      | null;
+    cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
     isEventWithSeparatedEnd?: boolean;
     isEventEnd?: boolean;
   } & React.HTMLAttributes<HTMLDivElement>,
@@ -80,31 +75,25 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         {cotemporalityOfSurroundingEvent ? (
           <div
             className={
-              "absolute -top-1 -bottom-1 left-0.5 w-2 border-l-2 border-[#EDAB00]" +
-              (cotemporalityOfSurroundingEvent
-                ? cotemporalityOfSurroundingEvent === "past"
-                  ? " border-green-400"
-                  : cotemporalityOfSurroundingEvent === "current"
-                    ? " border-[#EDAB00]"
-                    : cotemporalityOfSurroundingEvent === "backlog"
-                      ? " border-blue-400"
-                      : " border-gray-500"
-                : " border-gray-500")
+              "absolute -top-1 -bottom-1 left-0.5 w-2 border-l-2 " +
+              (cotemporalityOfSurroundingEvent === "past"
+                ? " border-green-400"
+                : cotemporalityOfSurroundingEvent === "current"
+                  ? " border-[#EDAB00]"
+                  : " border-gray-500")
             }
           />
         ) : null}
         {isEventWithSeparatedEnd ? (
           <div
             className={
-              "absolute top-4.5 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 border-[#EDAB00]" +
+              "absolute top-4.5 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
               (cotemporality
                 ? cotemporality === "past"
                   ? " border-green-400"
                   : cotemporality === "current"
                     ? " border-[#EDAB00]"
-                    : cotemporality === "backlog"
-                      ? " border-blue-400"
-                      : " border-gray-500"
+                    : " border-gray-500"
                 : " border-gray-500")
             }
           />
@@ -112,15 +101,13 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         {isEventEnd ? (
           <div
             className={
-              "absolute -top-1 bottom-px left-0.5 w-7 rounded-bl border-b-2 border-l-2 border-[#EDAB00]" +
+              "absolute -top-1 bottom-px left-0.5 w-7 rounded-bl border-b-2 border-l-2 " +
               (cotemporality
                 ? cotemporality === "past"
                   ? " border-green-400"
                   : cotemporality === "current"
                     ? " border-[#EDAB00]"
-                    : cotemporality === "backlog"
-                      ? " border-blue-400"
-                      : " border-gray-500"
+                    : " border-gray-500"
                 : " border-gray-500")
             }
           />
