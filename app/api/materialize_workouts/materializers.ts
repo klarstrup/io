@@ -814,6 +814,8 @@ export async function* materializeGrippyWorkouts(
         _id: 0,
         id: { $toString: "$uuid" },
         userId: { $literal: user.id },
+        // Hard-coded home location since Grippy doesn't have location data, and most users only have one location
+        locationId: "68926831b5dadadcf3f9d0ee",
         // This is in the wrong timezone, fix in ingest?
         createdAt: "$start_time",
         updatedAt: "$end_time",
