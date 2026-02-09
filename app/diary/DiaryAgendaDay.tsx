@@ -82,7 +82,6 @@ gql`
               name
               isHidden
               inputs {
-                id
                 type
               }
               instructions {
@@ -169,7 +168,6 @@ gql`
             name
             isHidden
             inputs {
-              id
               type
             }
             instructions {

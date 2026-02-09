@@ -170,7 +170,6 @@ export function WorkoutForm<R extends string>({
                 name
                 isHidden
                 inputs {
-                  id
                   type
                 }
                 instructions {

@@ -78,7 +78,6 @@ export async function getDiaryEntriesShallow({
                 name
                 isHidden
                 inputs {
-                  id
                   type
                 }
                 instructions {

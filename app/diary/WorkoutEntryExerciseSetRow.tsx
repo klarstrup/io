@@ -1,6 +1,10 @@
 import { Fragment } from "react";
 import Grade from "../../grades";
-import { ExerciseInfo, WorkoutSet } from "../../graphql.generated";
+import type {
+  ExerciseInfo,
+  WorkoutSet,
+  WorkoutSetInput,
+} from "../../graphql.generated";
 import { PRType } from "../../lib";
 import {
   AssistType,
@@ -8,7 +12,10 @@ import {
   InputType,
   Unit,
 } from "../../models/exercises.types";
-import type { WorkoutExerciseSet } from "../../models/workout";
+import type {
+  WorkoutExerciseSet,
+  WorkoutExerciseSetInput,
+} from "../../models/workout";
 import { HOUR_IN_SECONDS, MINUTE_IN_SECONDS, seconds2time } from "../../utils";
 
 function pad(i: number, width: number, z = "0") {
@@ -54,7 +61,7 @@ export function WorkoutEntryExerciseSetRow({
         )}
         {set.inputs.length ? (
           set.inputs
-            .map((input, index) => {
+            .map((input: WorkoutExerciseSetInput | WorkoutSetInput, index) => {
               const inputDefinition = exercise.inputs[index]!;
               const inputOptions =
                 inputDefinition.type === InputType.Options &&
@@ -67,12 +74,12 @@ export function WorkoutEntryExerciseSetRow({
                 index,
                 element: (
                   <span className="tabular-nums">
-                    {inputType === InputType.Pace ? (
+                    {inputType === InputType.Pace && input.value ? (
                       <>
                         {decimalAsTime(input.value)}
                         <small>min/km</small>
                       </>
-                    ) : inputType === InputType.Time ? (
+                    ) : inputType === InputType.Time && input.value ? (
                       seconds2time(
                         input.unit === Unit.Hr
                           ? input.value * HOUR_IN_SECONDS
@@ -80,7 +87,7 @@ export function WorkoutEntryExerciseSetRow({
                             ? input.value * MINUTE_IN_SECONDS
                             : input.value,
                       )
-                    ) : inputType === InputType.Distance ? (
+                    ) : inputType === InputType.Distance && input.value ? (
                       <>
                         {(input.unit === Unit.M
                           ? input.value / 1000
@@ -91,11 +98,15 @@ export function WorkoutEntryExerciseSetRow({
                         })}
                         <small>km</small>
                       </>
-                    ) : inputType === InputType.Options && inputOptions ? (
+                    ) : inputType === InputType.Options &&
+                      inputOptions &&
+                      input.value != undefined ? (
                       String(inputOptions[input.value]?.value ?? "")
-                    ) : input.unit === Unit.FrenchRounded ? (
+                    ) : input.unit === Unit.FrenchRounded &&
+                      input.value != undefined ? (
                       new Grade(input.value).name
-                    ) : !isNaN(input.value) &&
+                    ) : input.value != undefined &&
+                      !isNaN(input.value) &&
                       input.value !== undefined &&
                       input.value !== null &&
                       (inputType === InputType.Weightassist
@@ -131,9 +142,8 @@ export function WorkoutEntryExerciseSetRow({
             .map(({ element, input, index }, elIndex) => {
               const separator =
                 elIndex > 0 &&
+                input.value != undefined &&
                 !isNaN(input.value) &&
-                input.value !== undefined &&
-                input.value !== null &&
                 (exercise.inputs[index]?.type === InputType.Weightassist
                   ? input.value !== 0
                   : true)

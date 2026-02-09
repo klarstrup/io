@@ -817,7 +817,6 @@ export const typeDefs = gql`
 
   type ExerciseInfoInput {
     # populate this when migrating workoutform to use ExerciseInfo instead of ExerciseData
-    id: Int!
     type: String!
   }
 
