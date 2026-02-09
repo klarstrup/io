@@ -27,6 +27,7 @@ import {
 import { useVisibilityAwarePollInterval } from "../../hooks";
 import { WorkoutSource } from "../../models/workout";
 import {
+  dateMidpoint,
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
@@ -493,26 +494,29 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
         > | null = null;
         for (let i = 0; i < dayJournalEntries.length; i++) {
           const entry = dayJournalEntries[i]!;
+          const previousEntry = dayJournalEntries[i - 1];
           const location = getLocationFromJournalEntry(entry);
-          const previousLocation =
-            i > 0
-              ? getLocationFromJournalEntry(dayJournalEntries[i - 1]!)
-              : null;
+          const previousLocation = previousEntry
+            ? getLocationFromJournalEntry(previousEntry)
+            : null;
 
           if (
             location &&
             (!previousLocation || previousLocation.id !== location.id) &&
             (!lastLocation || lastLocation.id !== location.id)
           ) {
+            const targetDate = dateMidpoint(
+              (previousEntry &&
+                getJournalEntryPrincipalDate(previousEntry)?.end) ||
+                dayStart,
+              getJournalEntryPrincipalDate(entry)?.start || dayEnd,
+            );
+
             dayJournalEntriesIncludingLocationChanges.push({
               __typename: "LocationChange",
               id: `location-change-${i}`,
               location: location.name,
-              date: new Date(
-                getJournalEntryPrincipalDate(
-                  entry.__typename === "Workout" ? entry.exercises[0]! : entry,
-                )?.start || new Date(),
-              ),
+              date: targetDate,
             });
             lastLocation = location;
           }
