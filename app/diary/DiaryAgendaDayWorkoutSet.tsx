@@ -26,6 +26,7 @@ export function DiaryAgendaDayWorkoutSet({
   setsWithLocation,
   mostRecentWorkout,
   workoutDateStr,
+  cotemporalityOfSurroundingEvent,
 }: {
   workout: Workout;
   workoutExercise: WorkoutExercise;
@@ -33,6 +34,7 @@ export function DiaryAgendaDayWorkoutSet({
   setsWithLocation: (readonly [WorkoutSet, Location | undefined, Workout])[];
   mostRecentWorkout: Workout | null;
   workoutDateStr: string;
+  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const client = useApolloClient();
   const {
@@ -64,6 +66,7 @@ export function DiaryAgendaDayWorkoutSet({
   return (
     <DiaryAgendaDayEntry
       icon={faDumbbell}
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       cotemporality={cotemporality({
         start: min([
           workout.workedOutAt,

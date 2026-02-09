@@ -1,6 +1,7 @@
 import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { forwardRef, ReactElement } from "react";
+import { twMerge } from "tailwind-merge";
 
 export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   {
@@ -14,6 +15,9 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     onIconClick,
     cotemporality,
     className,
+    cotemporalityOfSurroundingEvent,
+    isEventWithSeparatedEnd,
+    isEventEnd,
     ...props
   }: {
     icon?: IconDefinition;
@@ -27,13 +31,35 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
       e: React.MouseEvent<HTMLButtonElement | HTMLDivElement, MouseEvent>,
     ) => void;
     cotemporality?: "past" | "current" | "future" | "backlog";
+    cotemporalityOfSurroundingEvent?:
+      | "past"
+      | "current"
+      | "future"
+      | "backlog"
+      | null;
+    isEventWithSeparatedEnd?: boolean;
+    isEventEnd?: boolean;
   } & React.HTMLAttributes<HTMLDivElement>,
   ref: React.Ref<HTMLDivElement>,
 ) {
   const IconContainer = onIconClick ? "button" : "div";
 
   return (
-    <div ref={ref} className="flex" {...props}>
+    <div
+      ref={ref}
+      className={twMerge(
+        "relative flex",
+        /*
+        isBetweenAnEventAndItsEnd || isEventWithSeparatedEnd || isEventEnd
+          ? "border-l-8 border-blue-300"
+          : "",
+        isEventWithSeparatedEnd ? "border-t-8 border-blue-300" : "",
+        isEventEnd ? "border-b-8 border-blue-300" : "",
+        isBetweenAnEventAndItsEnd || isEventWithSeparatedEnd ? "-mb-1.5" : "",
+        */
+      )}
+      {...props}
+    >
       <IconContainer
         disabled={iconDisabled}
         className={
@@ -45,12 +71,60 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
                 ? " text-[#EDAB00]"
                 : cotemporality === "backlog"
                   ? " text-blue-400"
-                  : " text-gray-900/50"
-            : "text-gray-900/50") +
+                  : " text-gray-500"
+            : "text-gray-500") +
           (onIconClick ? " cursor-pointer" : "")
         }
         onClick={onIconClick}
       >
+        {cotemporalityOfSurroundingEvent ? (
+          <div
+            className={
+              "absolute -top-1 -bottom-1 left-0.5 w-2 border-l-2 border-[#EDAB00]" +
+              (cotemporalityOfSurroundingEvent
+                ? cotemporalityOfSurroundingEvent === "past"
+                  ? " border-green-400"
+                  : cotemporalityOfSurroundingEvent === "current"
+                    ? " border-[#EDAB00]"
+                    : cotemporalityOfSurroundingEvent === "backlog"
+                      ? " border-blue-400"
+                      : " border-gray-500"
+                : " border-gray-500")
+            }
+          />
+        ) : null}
+        {isEventWithSeparatedEnd ? (
+          <div
+            className={
+              "absolute top-4.5 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 border-[#EDAB00]" +
+              (cotemporality
+                ? cotemporality === "past"
+                  ? " border-green-400"
+                  : cotemporality === "current"
+                    ? " border-[#EDAB00]"
+                    : cotemporality === "backlog"
+                      ? " border-blue-400"
+                      : " border-gray-500"
+                : " border-gray-500")
+            }
+          />
+        ) : null}
+        {isEventEnd ? (
+          <div
+            className={
+              "absolute -top-1 bottom-px left-0.5 w-7 rounded-bl border-b-2 border-l-2 border-[#EDAB00]" +
+              (cotemporality
+                ? cotemporality === "past"
+                  ? " border-green-400"
+                  : cotemporality === "current"
+                    ? " border-[#EDAB00]"
+                    : cotemporality === "backlog"
+                      ? " border-blue-400"
+                      : " border-gray-500"
+                : " border-gray-500")
+            }
+          />
+        ) : null}
         {icon ? (
           <FontAwesomeIcon
             icon={icon}

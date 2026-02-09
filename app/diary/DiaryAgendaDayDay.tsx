@@ -14,7 +14,12 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import { Location, Workout, WorkoutSet } from "../../graphql.generated";
+import type {
+  Event,
+  Location,
+  Workout,
+  WorkoutSet,
+} from "../../graphql.generated";
 import { WorkoutSource } from "../../models/workout";
 import { DataSource } from "../../sources/utils";
 import {
@@ -97,7 +102,27 @@ export function DiaryAgendaDayDay({
     return isBefore(principalDate.end, now);
   };
   for (const journalEntry of dayJournalEntries) {
-    const previousJournalEntry = i > 0 ? dayJournalEntries[i - 1] : undefined;
+    const previousEvents = dayJournalEntries
+      .slice(0, i)
+      .filter(
+        (je): je is Event => "__typename" in je && je.__typename === "Event",
+      );
+    const followingEndOfEvents = dayJournalEntries
+      .slice(i + 1)
+      .filter(
+        (je): je is Event =>
+          "__typename" in je &&
+          je.__typename === "Event" &&
+          "_this_is_the_end_of_a_event" in je &&
+          je._this_is_the_end_of_a_event,
+      );
+
+    const surroundingEvent = previousEvents.find((prevEvent) =>
+      followingEndOfEvents.some((endOfEvent) => prevEvent.id === endOfEvent.id),
+    );
+    const cotemporalityOfSurroundingEvent = surroundingEvent
+      ? cotemporality(surroundingEvent)
+      : null;
 
     if (
       "__typename" in journalEntry &&
@@ -105,7 +130,13 @@ export function DiaryAgendaDayDay({
     ) {
       dayJournalEntryElements.push({
         id: "now-divider",
-        element: <DiaryAgendaDayNow key="now-divider" date={date} />,
+        element: (
+          <DiaryAgendaDayNow
+            key="now-divider"
+            date={date}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+          />
+        ),
       });
     } else if (
       "__typename" in journalEntry &&
@@ -209,6 +240,10 @@ export function DiaryAgendaDayDay({
               user={user}
               event={event}
               key={event.id}
+              isEventWithSeparatedEnd={followingEndOfEvents.some(
+                (endOfEvent) => endOfEvent.id === event.id,
+              )}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
           ),
         });
@@ -220,7 +255,13 @@ export function DiaryAgendaDayDay({
       const todo = journalEntry;
       dayJournalEntryElements.push({
         id: client.cache.identify(todo) || todo.id,
-        element: <DiaryAgendaDayTodo todo={todo} key={todo.id} />,
+        element: (
+          <DiaryAgendaDayTodo
+            todo={todo}
+            key={todo.id}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+          />
+        ),
       });
     } else if ("scheduleEntry" in journalEntry) {
       const dueSet = journalEntry;
@@ -235,6 +276,7 @@ export function DiaryAgendaDayDay({
             userId={user.id}
             dueSet={dueSet}
             date={dayDate}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             exerciseInfo={dueSet.scheduleEntry.exerciseInfo}
             workouts={dayJournalEntries
               .filter(
@@ -294,6 +336,7 @@ export function DiaryAgendaDayDay({
                 "-" +
                 String(workoutExercise.exerciseId)
               }
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
           ),
         });

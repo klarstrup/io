@@ -1,7 +1,11 @@
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
-import { faCalendar, faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendar,
+  faCalendarCheck,
+  faCalendarMinus,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
@@ -20,10 +24,14 @@ export function DiaryAgendaDayEvent({
   dayDate,
   user,
   event,
+  isEventWithSeparatedEnd,
+  cotemporalityOfSurroundingEvent,
 }: {
   dayDate: Date;
   user?: Session["user"];
   event: Event;
+  isEventWithSeparatedEnd?: boolean;
+  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const client = useApolloClient();
   const {
@@ -74,11 +82,16 @@ export function DiaryAgendaDayEvent({
       {...attributes}
       isDragging={isDragging}
       key={event.id}
-      icon={isPassed ? faCalendarCheck : faCalendar}
-      cotemporality={cotemporality({
-        start: event.start,
-        end: event.end,
-      })}
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+      isEventWithSeparatedEnd={isEventWithSeparatedEnd}
+      icon={
+        cotemporalityOfSurroundingEvent
+          ? faCalendarMinus
+          : isPassed
+            ? faCalendarCheck
+            : faCalendar
+      }
+      cotemporality={cotemporality(event)}
     >
       <div key={event.id} className="flex gap-1.5 leading-snug">
         <div className="text-center">

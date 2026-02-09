@@ -6,8 +6,10 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 
 export function DiaryAgendaDayNow({
   date,
+  cotemporalityOfSurroundingEvent,
 }: {
   date: `${number}-${number}-${number}`;
+  cotemporalityOfSurroundingEvent: boolean;
 }) {
   const {
     isDragging,
@@ -24,7 +26,7 @@ export function DiaryAgendaDayNow({
 
   return (
     <DiaryAgendaDayEntry
-      key="now-divider"
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       iconTxt={
         <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
       }

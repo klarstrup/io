@@ -88,6 +88,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
       workouts,
       locations,
       isDragging,
+      cotemporalityOfSurroundingEvent,
       ...props
     }: {
       userId: string;
@@ -97,6 +98,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
       workouts?: Workout[];
       locations?: Location[];
       isDragging: boolean;
+      cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
     } & React.HTMLAttributes<HTMLDivElement>,
     ref2: React.Ref<HTMLDivElement>,
   ) {
@@ -242,6 +244,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     return (
       <DiaryAgendaDayEntry
         ref={ref2}
+        cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
         {...props}
         icon={faDumbbell}
         onIconClick={

@@ -30,8 +30,10 @@ gql`
 
 export function DiaryAgendaDayTodo({
   todo,
+  isBetweenAnEventAndItsEnd,
 }: {
   todo: DiaryAgendaDayTodoFragment;
+  isBetweenAnEventAndItsEnd?: boolean;
 }) {
   const client = useApolloClient();
   const {
@@ -62,6 +64,7 @@ export function DiaryAgendaDayTodo({
       {...attributes}
       todo={todo}
       isDragging={isDragging}
+      isBetweenAnEventAndItsEnd={isBetweenAnEventAndItsEnd}
     />
   );
 }
@@ -71,10 +74,12 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     {
       todo,
       isDragging,
+      isBetweenAnEventAndItsEnd,
       ...props
     }: {
       todo: DiaryAgendaDayTodoFragment;
       isDragging: boolean;
+      isBetweenAnEventAndItsEnd?: boolean;
     } & React.HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<HTMLDivElement>,
   ) {
@@ -154,6 +159,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
     return (
       <DiaryAgendaDayEntry
         ref={ref}
+        isBetweenAnEventAndItsEnd={isBetweenAnEventAndItsEnd}
         {...props}
         icon={faCircleCheck}
         onIconClick={

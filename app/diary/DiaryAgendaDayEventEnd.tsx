@@ -47,10 +47,8 @@ export function DiaryAgendaDayEventEnd({
       {...attributes}
       isDragging={isDragging}
       icon={faArrowsDownToLine}
-      cotemporality={cotemporality({
-        start: event.start,
-        end: event.end,
-      })}
+      cotemporality={cotemporality(event)}
+      isEventEnd
     >
       <div key={event.id} className="flex gap-1.5 leading-snug">
         <div className="text-center">
