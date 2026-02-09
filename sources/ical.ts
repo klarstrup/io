@@ -104,9 +104,11 @@ export async function getUserIcalEventsBetween(
   })) {
     const dataSource = dataSourceByUrlHash?.[event._io_icalUrlHash!];
 
-    if (!event.location && dataSource?.config.url.includes("proprty.ai")) {
+    if (dataSource?.config.url.includes("proprty.ai")) {
       // Company calendars often have no location set but they're nearly always at the office
-      event.location = "Gammel Mønt 3, 1117 København, Denmark";
+      if (!event.location) {
+        event.location = "Gammel Mønt 3, 1117 København, Denmark";
+      }
     }
 
     const sourceStartDate = dataSource?.config.startDate;

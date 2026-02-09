@@ -549,6 +549,7 @@ const getLocationFromJournalEntry = (
   if (entry.__typename === "Event" && "location" in entry && entry.location) {
     if (entry.location.trim() === "") return null;
     if (entry.location === "Microsoft Teams-møde") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
+    if (entry.location === "Microsoft Teams Meeting") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
 
     return { id: entry.location, name: entry.location };
   }
