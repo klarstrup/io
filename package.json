@@ -6,7 +6,7 @@
     "dev": "bun run --parallel \"dev:*\"",
     "dev:next": "TZ=Etc/UTC next dev --port 1337",
     "dev:graphql": "bun run codegen -- --watch",
-    "build": "bun run --sequential \"build:*\"",
+    "build": "bun run --sequential build:*",
     "build:next": "next build",
     "build:graphql": "bun run codegen",
     "start": "next start",
