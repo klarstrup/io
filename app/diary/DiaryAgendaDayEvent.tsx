@@ -83,7 +83,7 @@ export function DiaryAgendaDayEvent({
       icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
     >
-      <div key={event.id} className="flex gap-1.5 leading-snug">
+      <div className="flex items-center gap-1.5 leading-snug">
         <div className="text-center">
           <div className="font-semibold tabular-nums">
             {event.datetype === "date-time" && dayNo <= 1 ? (
@@ -96,7 +96,10 @@ export function DiaryAgendaDayEvent({
               <>Day {dayNo}</>
             )}{" "}
           </div>
-          <div className="text-[0.666rem] whitespace-nowrap tabular-nums">
+        </div>
+        <div className="flex-1">
+          {event.summary}{" "}
+          <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
             {dayNo === 1 && duration ? (
               <>
                 {duration.days ? `${duration.days}d` : null}
@@ -114,21 +117,7 @@ export function DiaryAgendaDayEvent({
                 })}
               </>
             ) : null}
-          </div>
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            {event.summary}
-            {
-              // figure out how to know that the end has a separated end showing
-              /*<div className="text-[0.666rem] whitespace-nowrap tabular-nums">
-              START
-            </div>*/
-            }
-          </div>
-          <div className="text-[0.666rem] leading-snug italic">
-            {event.location}
-          </div>
+          </span>
         </div>
       </div>
     </DiaryAgendaDayEntry>

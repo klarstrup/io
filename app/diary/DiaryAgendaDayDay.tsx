@@ -1,6 +1,10 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import { faCalendarWeek } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendarWeek,
+  faLocation,
+  faMapPin,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
@@ -342,6 +346,27 @@ export function DiaryAgendaDayDay({
           ),
         });
       }
+    } else if (
+      "__typename" in journalEntry &&
+      journalEntry.__typename === "LocationChange"
+    ) {
+      const locationChange = journalEntry;
+      dayJournalEntryElements.push({
+        id: locationChange.id,
+        element: (
+          <DiaryAgendaDayEntry
+            key={locationChange.id}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+          >
+            <center
+              key={locationChange.id}
+              className="-ml-6 w-full text-xs font-medium opacity-75 [font-variant:small-caps]"
+            >
+              {locationChange.location}
+            </center>
+          </DiaryAgendaDayEntry>
+        ),
+      });
     }
 
     i++;

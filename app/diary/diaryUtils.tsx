@@ -26,6 +26,8 @@ export type JournalEntry =
   | Workout
   | ExerciseSchedule
   | WorkoutExercise
+  // These are synthetic entries that don't correspond to models but are used for rendering purposes
+  | { __typename: "LocationChange"; id: string; location: string; date: Date }
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
 
 const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {

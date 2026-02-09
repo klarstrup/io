@@ -434,6 +434,94 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
         const dayDueSets = dueSetsByDate[dayName] || [];
         const dayTodos = todosByDate[dayName] || [];
 
+        const dayJournalEntries = [
+          ...dayEvents,
+          ...dayDueSets,
+          ...dayTodos,
+          ...dayWorkouts,
+        ]
+          .sort((a, b) =>
+            compareAsc(
+              getJournalEntryPrincipalDate(
+                b.__typename === "Workout" ? b.exercises[0]! : b,
+              )?.end || new Date(0),
+              getJournalEntryPrincipalDate(
+                a.__typename === "Workout" ? a.exercises[0]! : a,
+              )?.end || new Date(0),
+            ),
+          )
+          .sort((a, b) => {
+            const aAllDay = a.__typename === "Event" && a.datetype === "date";
+            const bAllDay = b.__typename === "Event" && b.datetype === "date";
+            if (aAllDay && !bAllDay) return -1;
+            if (!aAllDay && bAllDay) return 1;
+
+            return compareAsc(
+              getJournalEntryPrincipalDate(
+                a.__typename === "Workout" ? a.exercises[0]! : a,
+              )?.start || new Date(0),
+              getJournalEntryPrincipalDate(
+                b.__typename === "Workout" ? b.exercises[0]! : b,
+              )?.start || new Date(0),
+            );
+          })
+          .filter((entry, i, entries) => {
+            const isEventEndEntry =
+              entry.__typename === "Event" &&
+              "_this_is_the_end_of_a_event" in entry &&
+              entry._this_is_the_end_of_a_event;
+
+            if (isEventEndEntry) {
+              const eventId = entry.id;
+              const previousEntry = entries[i - 1];
+              if (
+                previousEntry &&
+                previousEntry.__typename === "Event" &&
+                previousEntry.id === eventId
+              ) {
+                // If the previous entry is the same event, we skip the end entry
+                return false;
+              }
+            }
+
+            return true;
+          });
+
+        const dayJournalEntriesIncludingLocationChanges: typeof dayJournalEntries =
+          [];
+
+        let lastLocation: ReturnType<
+          typeof getLocationFromJournalEntry
+        > | null = null;
+        for (let i = 0; i < dayJournalEntries.length; i++) {
+          const entry = dayJournalEntries[i]!;
+          const location = getLocationFromJournalEntry(entry);
+          const previousLocation =
+            i > 0
+              ? getLocationFromJournalEntry(dayJournalEntries[i - 1]!)
+              : null;
+
+          if (
+            location &&
+            (!previousLocation || previousLocation.id !== location.id) &&
+            (!lastLocation || lastLocation.id !== location.id)
+          ) {
+            dayJournalEntriesIncludingLocationChanges.push({
+              __typename: "LocationChange",
+              id: `location-change-${i}`,
+              location: location.name,
+              date: new Date(
+                getJournalEntryPrincipalDate(
+                  entry.__typename === "Workout" ? entry.exercises[0]! : entry,
+                )?.start || new Date(),
+              ),
+            });
+            lastLocation = location;
+          }
+
+          dayJournalEntriesIncludingLocationChanges.push(entry);
+        }
+
         return (
           <TodoDroppable key={dayI} date={setHours(dayDate, dayStartHour)}>
             <DiaryAgendaDayDay
@@ -441,60 +529,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
               dayDate={dayDate}
               user={user}
               dayLocations={dayLocations}
-              dayJournalEntries={[
-                ...dayEvents,
-                ...dayDueSets,
-                ...dayTodos,
-                ...dayWorkouts,
-              ]
-                .sort((a, b) =>
-                  compareAsc(
-                    getJournalEntryPrincipalDate(
-                      b.__typename === "Workout" ? b.exercises[0]! : b,
-                    )?.end || new Date(0),
-                    getJournalEntryPrincipalDate(
-                      a.__typename === "Workout" ? a.exercises[0]! : a,
-                    )?.end || new Date(0),
-                  ),
-                )
-                .sort((a, b) => {
-                  const aAllDay =
-                    a.__typename === "Event" && a.datetype === "date";
-                  const bAllDay =
-                    b.__typename === "Event" && b.datetype === "date";
-                  if (aAllDay && !bAllDay) return -1;
-                  if (!aAllDay && bAllDay) return 1;
-
-                  return compareAsc(
-                    getJournalEntryPrincipalDate(
-                      a.__typename === "Workout" ? a.exercises[0]! : a,
-                    )?.start || new Date(0),
-                    getJournalEntryPrincipalDate(
-                      b.__typename === "Workout" ? b.exercises[0]! : b,
-                    )?.start || new Date(0),
-                  );
-                })
-                .filter((entry, i, entries) => {
-                  const isEventEndEntry =
-                    entry.__typename === "Event" &&
-                    "_this_is_the_end_of_a_event" in entry &&
-                    entry._this_is_the_end_of_a_event;
-
-                  if (isEventEndEntry) {
-                    const eventId = entry.id;
-                    const previousEntry = entries[i - 1];
-                    if (
-                      previousEntry &&
-                      previousEntry.__typename === "Event" &&
-                      previousEntry.id === eventId
-                    ) {
-                      // If the previous entry is the same event, we skip the end entry
-                      return false;
-                    }
-                  }
-
-                  return true;
-                })}
+              dayJournalEntries={dayJournalEntriesIncludingLocationChanges}
             />
           </TodoDroppable>
         );
@@ -503,3 +538,21 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     </div>
   );
 }
+
+const getLocationFromJournalEntry = (
+  entry: JournalEntry,
+): { id: string; name: string } | null => {
+  if (entry.__typename === "Workout" && entry.location) {
+    return { id: entry.location.id, name: entry.location.name };
+  }
+  if (entry.__typename === "Workout" && entry.locationId) {
+    return { id: entry.locationId, name: entry.locationId };
+  }
+  if (entry.__typename === "Event" && "location" in entry && entry.location) {
+    if (entry.location.trim() === "") return null;
+    if (entry.location === "Microsoft Teams-møde") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
+
+    return { id: entry.location, name: entry.location };
+  }
+  return null;
+};
