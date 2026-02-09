@@ -228,6 +228,7 @@ export function DiaryAgendaDayDay({
               user={user}
               event={event}
               key={"end-of-" + (client.cache.identify(event) || event.id)}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
           ),
         });

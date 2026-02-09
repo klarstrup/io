@@ -11,9 +11,11 @@ import { getTodoPrincipalDate } from "./diaryUtils";
 export function DiaryAgendaDayEventEnd({
   user,
   event,
+  cotemporalityOfSurroundingEvent,
 }: {
   user?: Session["user"];
   event: Event;
+  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const client = useApolloClient();
   const {
@@ -48,6 +50,7 @@ export function DiaryAgendaDayEventEnd({
       isDragging={isDragging}
       icon={faArrowsDownToLine}
       cotemporality={cotemporality(event)}
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventEnd
     >
       <div key={event.id} className="flex gap-1.5 leading-snug">
