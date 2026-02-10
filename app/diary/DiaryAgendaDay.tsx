@@ -502,8 +502,8 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
 
           if (
             location &&
-            (!previousLocation || previousLocation.id !== location.id) &&
-            (!lastLocation || lastLocation.id !== location.id)
+            (!previousLocation || previousLocation.name !== location.name) &&
+            (!lastLocation || lastLocation.name !== location.name)
           ) {
             const targetDate = dateMidpoint(
               (previousEntry &&
