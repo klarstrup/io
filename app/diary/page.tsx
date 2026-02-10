@@ -8,7 +8,7 @@ export default async function DiaryLayout(_props: PageProps<"/diary">) {
   const user = (await auth())?.user;
 
   return (
-    <div className="max-h-screen min-h-screen">
+    <div className="max-h-screen min-h-screen py-2">
       <div className="mx-auto max-h-screen max-w-2xl self-stretch border-black/25 px-2">
         <TodoDragDropContainer userId={user?.id}>
           <DiaryAgendaDay user={user} />
