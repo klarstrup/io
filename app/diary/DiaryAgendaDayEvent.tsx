@@ -97,7 +97,7 @@ export function DiaryAgendaDayEvent({
             )}{" "}
           </div>
         </div>
-        <div className="flex-1">
+        <div className="leading-tight">
           {event.summary}{" "}
           <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
             {dayNo === 1 && duration ? (

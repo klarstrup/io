@@ -53,7 +53,7 @@ export function DiaryAgendaDayEventEnd({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventEnd
     >
-      <div key={event.id} className="flex gap-1.5 leading-snug">
+      <div key={event.id} className="flex items-center gap-1.5 leading-tight">
         <div className="text-center">
           <div className="font-semibold tabular-nums">
             {roundToNearestMinutes(event.end).toLocaleTimeString("en-DK", {
@@ -63,9 +63,7 @@ export function DiaryAgendaDayEventEnd({
             })}
           </div>
         </div>
-        <div className="flex flex-1 items-center gap-2">
-          <div>{event.summary}</div>
-        </div>
+        <div className="leading-tight">{event.summary}</div>
       </div>
     </DiaryAgendaDayEntry>
   );
