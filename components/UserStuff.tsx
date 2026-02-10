@@ -14,11 +14,18 @@ export default function UserStuff() {
       <Suspense>
         <GraphQLListenerButItHasUserAlready />
       </Suspense>
-      <UserStuffLink href="/diary">📔</UserStuffLink>
-      <UserStuffLink href="/lists">✅</UserStuffLink>
-      <UserStuffLink href="/calendar">🗓️</UserStuffLink>
+      <UserStuffLink href="/diary" prefetch={false}>
+        📔
+      </UserStuffLink>
+      <UserStuffLink href="/lists" prefetch={false}>
+        ✅
+      </UserStuffLink>
+      <UserStuffLink href="/calendar" prefetch={false}>
+        🗓️
+      </UserStuffLink>
       <UserStuffLink
         href={"/events" as __next_route_internal_types__.RouteImpl<"/events">}
+        prefetch={false}
       >
         🏅
       </UserStuffLink>
