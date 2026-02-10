@@ -1,7 +1,7 @@
 export default function UserLayout({ children }: LayoutProps<"/user">) {
   return (
-    <div className="min-H-screen p-2">
-      <div className="mx-auto max-w-xl self-stretch rounded-xl border border-black/25 bg-white p-2">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-stretch justify-center p-2">
+      <div className="flex max-h-screen max-w-xl flex-col items-stretch self-stretch rounded-xl border border-black/25 bg-white p-2 px-2">
         {children}
       </div>
     </div>

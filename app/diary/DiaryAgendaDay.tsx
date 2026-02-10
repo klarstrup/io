@@ -205,10 +205,16 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
   const date = dateToString(subHours(now, 5));
   const tzDate = new TZDate(date, timeZone);
 
-  const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), user ? -8 : 0), dayStartHour),
-    end: addHours(addDays(endOfDay(tzDate), user ? 10 : 0), dayStartHour),
+  const justTodayInterval = {
+    start: addHours(startOfDay(tzDate), dayStartHour),
+    end: addHours(endOfDay(tzDate), dayStartHour),
   };
+  const fetchingInterval = user
+    ? {
+        start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
+        end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
+      }
+    : justTodayInterval;
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
   const { data } = useQuery(
@@ -267,9 +273,12 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<string, NextSet[]> = {};
 
-  const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
-    (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
-  );
+  const daysOfInterval = data
+    ? eachDayOfInterval(fetchingInterval).filter(
+        (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
+      )
+    : [justTodayInterval.start];
+
   for (const dueSet of nextSets) {
     const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
     if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
@@ -323,7 +332,9 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
       ),
     };
 
-    for (const date of eachDayOfInterval(eventInterval, { in: tz(timeZone) })) {
+    for (const date of eachDayOfInterval(eventInterval, {
+      in: tz(timeZone),
+    })) {
       const dayStart = addHours(startOfDay(date), dayStartHour);
       const dayEnd = addHours(endOfDay(date), dayStartHour);
 
