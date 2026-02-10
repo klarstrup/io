@@ -13,9 +13,11 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
+import type { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
+import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import {
   ExerciseInfo,
   Location,
@@ -28,6 +30,7 @@ import {
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { durationToMs } from "../../models/workout";
+import { DataSource } from "../../sources/utils";
 import {
   type cotemporality,
   dateToString,
@@ -86,7 +89,7 @@ export function DiaryAgendaDayDueSet({
 export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
   function DiaryAgendaDayDueSetButItsNotDraggable(
     {
-      userId,
+      user,
       dueSet,
       exerciseInfo,
       date,
@@ -96,7 +99,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
       cotemporalityOfSurroundingEvent,
       ...props
     }: {
-      userId: string;
+      user: Session["user"];
       dueSet: NextSet;
       exerciseInfo: ExerciseInfo;
       date: Date;
@@ -113,75 +116,71 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     useClickOutside(ref, onClickOutside);
     const router = useRouter();
 
-    const [snoozeExerciseSchedule, { loading: isSnoozingExerciseSchedule }] =
-      useMutation<
-        SnoozeExerciseScheduleMutation,
-        SnoozeExerciseScheduleMutationVariables
-      >(gql`
-        mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
-          snoozeExerciseSchedule(input: $input) {
-            exerciseSchedule {
-              id
+    const [snoozeExerciseSchedule] = useMutation<
+      SnoozeExerciseScheduleMutation,
+      SnoozeExerciseScheduleMutationVariables
+    >(gql`
+      mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
+        snoozeExerciseSchedule(input: $input) {
+          exerciseSchedule {
+            id
+            exerciseId
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            order
+            nextSet {
+              workedOutAt
+              dueOn
               exerciseId
-              enabled
-              frequency {
-                years
-                months
-                weeks
-                days
-                hours
-                minutes
-                seconds
+              successful
+              nextWorkingSets
+              nextWorkingSetInputs {
+                unit
+                value
+                assistType
               }
-              increment
-              workingSets
-              workingReps
-              deloadFactor
-              baseWeight
-              snoozedUntil
-              order
-              nextSet {
-                workedOutAt
-                dueOn
+              scheduleEntry {
+                id
                 exerciseId
-                successful
-                nextWorkingSets
-                nextWorkingSetInputs {
-                  unit
-                  value
-                  assistType
+                enabled
+                frequency {
+                  years
+                  months
+                  weeks
+                  days
+                  hours
+                  minutes
+                  seconds
                 }
-                scheduleEntry {
-                  id
-                  exerciseId
-                  enabled
-                  frequency {
-                    years
-                    months
-                    weeks
-                    days
-                    hours
-                    minutes
-                    seconds
-                  }
-                  increment
-                  workingSets
-                  workingReps
-                  deloadFactor
-                  baseWeight
-                  snoozedUntil
-                  order
-                }
+                increment
+                workingSets
+                workingReps
+                deloadFactor
+                baseWeight
+                snoozedUntil
+                order
               }
             }
           }
         }
-      `);
+      }
+    `);
 
-    const [
-      unsnoozeExerciseSchedule,
-      { loading: isUnsnoozingExerciseSchedule },
-    ] = useMutation<
+    const [unsnoozeExerciseSchedule] = useMutation<
       UnsnoozeExerciseScheduleMutation,
       UnsnoozeExerciseScheduleMutationVariables
     >(gql`
@@ -454,6 +453,14 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                   </select>
                 </button>
               )}
+              {dueSet.exerciseId === 2006 ? (
+                <div className="rounded-md border border-black/20 bg-white p-1">
+                  <UserStuffSourcesForm
+                    sourceOptions={[DataSource.Grippy]}
+                    user={user}
+                  />
+                </div>
+              ) : null}
             </div>
           )}
         </div>

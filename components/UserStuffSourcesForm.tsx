@@ -514,19 +514,31 @@ export default function UserStuffSourcesForm({
       <div className="flex flex-col items-stretch gap-2">
         <button
           type="button"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 hover:text-white"
+          className={
+            sourceOptions.length > 1
+              ? "rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 hover:text-white"
+              : // Smaller button for single source for compact UI
+                "rounded-md bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 hover:text-white"
+          }
           onClick={() => setIsEditing(true)}
         >
           Edit Data Sources
         </button>
         {user?.dataSources && user.dataSources.length > 0 ? (
-          <FieldSetX legend="Data Sources" className="w-full">
-            <div className="flex flex-col">
+          <FieldSetX
+            legend={sourceOptions.length > 1 ? "Data Sources" : undefined}
+            className="w-full"
+          >
+            <div className="flex min-w-3xs flex-col">
               {user.dataSources.map((source) => {
                 const wasFetchedRecently = Boolean(
                   source.lastAttemptedAt &&
                   source.lastAttemptedAt > new Date(Date.now() - 1000 * 60 * 5),
                 );
+
+                if (!sourceOptions.includes(source.source)) {
+                  return null;
+                }
 
                 return (
                   <div
