@@ -206,12 +206,12 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
   const tzDate = new TZDate(date, timeZone);
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
-    end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
+    start: addHours(addDays(startOfDay(tzDate), user ? -8 : 0), dayStartHour),
+    end: addHours(addDays(endOfDay(tzDate), user ? 10 : 0), dayStartHour),
   };
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
-  const { data, dataState } = useQuery(
+  const { data } = useQuery(
     DiaryAgendaDayUserTodosDocument,
     user
       ? { variables: { interval: fetchingInterval }, pollInterval }
@@ -222,7 +222,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
     return (
       <FieldSetY
         legend={null}
-        className="mx-auto max-w-2xl self-stretch border-black/50 bg-gray-500/25 px-2"
+        className="mx-auto max-w-2xl border-black/50 bg-gray-500/25 px-2"
       >
         <center className="text-white">
           Please{" "}
@@ -237,17 +237,6 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
           </a>{" "}
           to see your journal
         </center>
-      </FieldSetY>
-    );
-  }
-
-  if (dataState !== "complete") {
-    return (
-      <FieldSetY
-        legend={null}
-        className="mx-auto max-w-2xl self-stretch border-black/50 bg-gray-500/25 px-2"
-      >
-        <center className="text-white">Loading journal...</center>
       </FieldSetY>
     );
   }
