@@ -1,11 +1,6 @@
 import { Suspense } from "react";
 import { GraphQLListenerButItHasUserAlready } from "./GraphQLListenerButItHasUserAlready";
-import Popover from "./Popover";
 import UserStuffLink from "./UserStuffLink";
-import UserStuffLocations from "./UserStuffLocations";
-import UserStuffSettings from "./UserStuffSettings";
-import UserStuffSources from "./UserStuffSources";
-import UserStuffWorkoutSchedule from "./UserStuffWorkoutSchedule";
 
 export default function UserStuff() {
   return (
@@ -28,37 +23,10 @@ export default function UserStuff() {
         🏅
       </UserStuffLink>
       <span className="text-3xl text-gray-400/25 xl:text-4xl">❘</span>
-      <Popover control={<span className="text-3xl xl:text-4xl">⚙️</span>}>
-        <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
-          <Suspense>
-            <UserStuffWorkoutSchedule />
-          </Suspense>
-        </div>
-      </Popover>
-      <Popover control={<span className="text-3xl xl:text-4xl">📡</span>}>
-        <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
-          <Suspense>
-            <UserStuffSources />
-          </Suspense>
-        </div>
-      </Popover>
-      <Popover
-        control={<span className="text-3xl xl:text-4xl">📍</span>}
-        className="-mx-1"
-      >
-        <div className="absolute left-1/2 z-30 max-h-[66vh] w-140 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
-          <Suspense>
-            <UserStuffLocations />
-          </Suspense>
-        </div>
-      </Popover>
-      <Popover control={<span className="text-3xl xl:text-4xl">🌞</span>}>
-        <div className="absolute left-1/2 z-30 max-h-[66vh] w-96 max-w-[88vw] -translate-x-1/2 overflow-auto overscroll-contain rounded-lg bg-[yellow] p-2 shadow-[black_0_0_20px] pointer-coarse:bottom-9 pointer-fine:top-9">
-          <Suspense>
-            <UserStuffSettings />
-          </Suspense>
-        </div>
-      </Popover>
+      <UserStuffLink href="/user/workout-schedules">⚙️</UserStuffLink>
+      <UserStuffLink href="/user/sources">📡</UserStuffLink>
+      <UserStuffLink href="/user/locations">📍</UserStuffLink>
+      <UserStuffLink href="/user/settings">🌞</UserStuffLink>
     </div>
   );
 }

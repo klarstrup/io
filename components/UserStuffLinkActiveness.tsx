@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UrlObject } from "url";
 
@@ -8,9 +7,9 @@ export default function UserStuffLinkActiveness(props: {
   children?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (!pathname.startsWith(String(props.href))) {
-    return null;
-  }
+
+  if (!pathname.startsWith(String(props.href))) return null;
+
   return (
     <>
       <span className="absolute left-0 -z-10 blur-sm invert">
