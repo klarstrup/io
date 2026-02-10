@@ -1,3 +1,4 @@
+import { isGrippyAuthTokens } from "../lib";
 import { proxyCollection } from "../utils.server";
 
 export namespace Grippy {
@@ -151,20 +152,9 @@ export const GrippyWorkoutLogs = proxyCollection<
   Grippy.WorkoutLog & { _io_userId: string }
 >("grippy_workout_logs");
 
-export const isGrippyAuthTokens = (obj: any): obj is Grippy.AuthTokens => {
-  return (
-    typeof obj === "object" &&
-    typeof obj.access_token === "string" &&
-    typeof obj.expires_in === "number" &&
-    typeof obj.token_type === "string" &&
-    typeof obj.scope === "string" &&
-    typeof obj.refresh_token === "string"
-  );
-};
-
 export const logInGrippy = async (email: string, password: string) => {
   const body = new FormData();
-  body.append("grant_type", "password"); 
+  body.append("grant_type", "password");
   body.append("username", email);
   body.append("password", password);
 
