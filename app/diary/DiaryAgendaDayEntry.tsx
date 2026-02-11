@@ -87,7 +87,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         {isEventWithSeparatedEnd ? (
           <div
             className={
-              "absolute top-1/2 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
+              "absolute top-1/2 -bottom-1 left-0.5 w-2 rounded-tl-2xl border-t-2 border-l-2 " +
               (cotemporality
                 ? cotemporality === "past"
                   ? " border-green-400"
@@ -101,7 +101,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         {isEventEnd ? (
           <div
             className={
-              "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
+              "absolute -top-1 bottom-1/2 left-0.5 w-2 rounded-bl-2xl border-b-2 border-l-2 " +
               (cotemporality
                 ? cotemporality === "past"
                   ? " border-green-400"
