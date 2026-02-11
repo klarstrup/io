@@ -1,16 +1,14 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import {
-  faCalendarWeek,
-  faLocation,
-  faMapPin,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCalendarWeek } from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
   endOfDay,
   isBefore,
   isPast,
+  isSameDay,
+  roundToNearestMinutes,
   startOfDay,
   subHours,
 } from "date-fns";
@@ -91,13 +89,6 @@ export function DiaryAgendaDayDay({
   const dayJournalEntryElements: { id: string; element: ReactElement }[] = [];
 
   let i = 0;
-  const getJournalEntryBegun = (
-    journalEntry: (typeof dayJournalEntries)[number],
-  ) => {
-    const principalDate = getJournalEntryPrincipalDate(journalEntry);
-    if (!principalDate) return false;
-    return isBefore(principalDate.start, now);
-  };
   const getJournalEntryPassed = (
     journalEntry: (typeof dayJournalEntries)[number],
   ) => {
@@ -105,6 +96,8 @@ export function DiaryAgendaDayDay({
     if (!principalDate) return false;
     return isBefore(principalDate.end, now);
   };
+  const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
+    [];
   for (const journalEntry of dayJournalEntries) {
     const previousEvents = dayJournalEntries
       .slice(0, i)
@@ -121,9 +114,19 @@ export function DiaryAgendaDayDay({
           je._this_is_the_end_of_a_event,
       );
 
-    const surroundingEvent = previousEvents.find((prevEvent) =>
-      followingEndOfEvents.some((endOfEvent) => prevEvent.id === endOfEvent.id),
-    );
+    const surroundingEvent = previousEvents
+      .filter(
+        (prevEvent) =>
+          !eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.includes(
+            prevEvent.id,
+          ),
+      )
+      .find((prevEvent) =>
+        followingEndOfEvents.some(
+          (endOfEvent) => prevEvent.id === endOfEvent.id,
+        ),
+      );
+
     const cotemporalityOfSurroundingEvent = surroundingEvent
       ? cotemporality(surroundingEvent)
       : null;
@@ -225,18 +228,84 @@ export function DiaryAgendaDayDay({
         "_this_is_the_end_of_a_event" in event &&
         event._this_is_the_end_of_a_event
       ) {
-        dayJournalEntryElements.push({
-          id: "end-of-" + (client.cache.identify(event) || event.id),
-          element: (
-            <DiaryAgendaDayEventEnd
-              user={user}
-              event={event}
-              key={"end-of-" + (client.cache.identify(event) || event.id)}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-            />
-          ),
-        });
+        const followingEvent = dayJournalEntries
+          .slice(i + 1)
+          .find(
+            (je): je is Event =>
+              "__typename" in je &&
+              je.__typename === "Event" &&
+              je.id !== event.id,
+          );
+
+        const followingEventHasSeparateEndEvent =
+          followingEvent &&
+          dayJournalEntries
+            .slice(i + 2)
+            .some(
+              (je): je is Event =>
+                "__typename" in je &&
+                je.__typename === "Event" &&
+                "_this_is_the_end_of_a_event" in je &&
+                je._this_is_the_end_of_a_event &&
+                je.id === followingEvent.id,
+            );
+
+        if (
+          followingEvent &&
+          followingEventHasSeparateEndEvent &&
+          roundToNearestMinutes(event.end).getTime() ===
+            followingEvent.start.getTime()
+        ) {
+          eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
+            followingEvent.id,
+          );
+        } else {
+          dayJournalEntryElements.push({
+            id: "end-of-" + (client.cache.identify(event) || event.id),
+            element: (
+              <DiaryAgendaDayEventEnd
+                user={user}
+                event={event}
+                key={"end-of-" + (client.cache.identify(event) || event.id)}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEvent
+                }
+              />
+            ),
+          });
+        }
       } else {
+        const precedingEndOfEvent = dayJournalEntries
+          .slice(0, i)
+          .find(
+            (je): je is Event =>
+              "__typename" in je && je.__typename === "Event",
+          );
+
+        const eventHasSeparateEndEvent = dayJournalEntries
+          .slice(i + 1)
+          .some(
+            (je): je is Event =>
+              "__typename" in je &&
+              je.__typename === "Event" &&
+              "_this_is_the_end_of_a_event" in je &&
+              je._this_is_the_end_of_a_event &&
+              je.id === event.id,
+          );
+
+        // If the preceding journal entry is the end of an event and it ends exactly when the current event starts, then we can treat them as a single continuous event instead of two separate events for the purpose of drawing the little bracket
+        const isEventEnd =
+          eventHasSeparateEndEvent &&
+          precedingEndOfEvent &&
+          roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
+            event.start.getTime();
+
+        if (isEventEnd) {
+          eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
+            precedingEndOfEvent.id,
+          );
+        }
+
         dayJournalEntryElements.push({
           id: client.cache.identify(event) || event.id,
           element: (
@@ -245,6 +314,7 @@ export function DiaryAgendaDayDay({
               user={user}
               event={event}
               key={event.id}
+              isEventEnd={isEventEnd}
               isEventWithSeparatedEnd={followingEndOfEvents.some(
                 (endOfEvent) => endOfEvent.id === event.id,
               )}
@@ -322,6 +392,32 @@ export function DiaryAgendaDayDay({
             workout,
           ] as const;
         });
+        const workoutDate = isSameDay(
+          addHours(workout.workedOutAt, dayStartHour),
+          subHours(
+            setsWithLocation[0]?.[0].createdAt || workout.workedOutAt,
+            dayStartHour,
+          ),
+        )
+          ? setsWithLocation[0]?.[0].createdAt || workout.workedOutAt
+          : workout.workedOutAt;
+
+        // why the fuck is recalculating this necessary for the cotemporalityOfSurroundingEvent to be correct
+        const eventThatSurroundsWorkoutExercise = dayJournalEntries
+          .filter(
+            (je): je is Event =>
+              "__typename" in je && je.__typename === "Event",
+          )
+          .find(
+            (event) =>
+              isBefore(event.start, workoutDate) &&
+              isBefore(workoutDate, event.end),
+          );
+
+        const cotemporalityOfSurroundingEvent =
+          eventThatSurroundsWorkoutExercise
+            ? cotemporality(eventThatSurroundsWorkoutExercise)
+            : null;
 
         dayJournalEntryElements.push({
           id:
