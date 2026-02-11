@@ -24,16 +24,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
-        <LoadingIndicator /> 
+        <SessionProvider>
           <SerwistProvider swUrl="/serwist/sw.js">
             <ApolloWrapper>
               <AblyWrapper>
+                <LoadingIndicator />
                 <UserStuff />
                 <Suspense>{children}</Suspense>
                 <Analytics />
               </AblyWrapper>
             </ApolloWrapper>
-          </SerwistProvider> 
+          </SerwistProvider>
+        </SessionProvider>
       </body>
     </html>
   );

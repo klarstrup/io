@@ -1,5 +1,5 @@
 "use client";
-import { skipToken, useQuery } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import {
   addDays,
@@ -17,9 +17,10 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
-import type { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 import { FieldSetY } from "../../components/FieldSet";
 import {
+  DiaryAgendaDayUserDocument,
   DiaryAgendaDayUserTodosDocument,
   type NextSet,
   type Todo,
@@ -38,6 +39,19 @@ import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
+
+gql`
+  query DiaryAgendaDayUser {
+    user {
+      id
+      name
+      email
+      image
+      emailVerified
+      timeZone
+    }
+  }
+`;
 
 gql`
   query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
@@ -199,32 +213,39 @@ gql`
   }
 `;
 
-export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
+export function DiaryAgendaDay() {
+  const pollInterval = useVisibilityAwarePollInterval(300000);
+
+  const { data: sessionData, status: sessionStatus } = useSession();
+  const sessionDataLoading = sessionStatus === "loading";
+  const sessionUser = sessionData?.user;
+
+  const { data: gqlUserData, dataState: gqlUserDataState } = useQuery(
+    DiaryAgendaDayUserDocument,
+    { pollInterval },
+  );
+  const gqlUser = gqlUserData?.user;
+  const gqlUserLoading = gqlUserDataState !== "complete";
+
+  const user = gqlUser || sessionUser;
+  const userLoading = gqlUserLoading && sessionDataLoading;
+
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
   const date = dateToString(subHours(now, 5));
   const tzDate = new TZDate(date, timeZone);
 
-  const justTodayInterval = {
-    start: addHours(startOfDay(tzDate), dayStartHour),
-    end: addHours(endOfDay(tzDate), dayStartHour),
+  const fetchingInterval = {
+    start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
+    end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
   };
-  const fetchingInterval = user
-    ? {
-        start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
-        end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
-      }
-    : justTodayInterval;
-  const pollInterval = useVisibilityAwarePollInterval(300000);
 
-  const { data } = useQuery(
-    DiaryAgendaDayUserTodosDocument,
-    user
-      ? { variables: { interval: fetchingInterval }, pollInterval }
-      : skipToken,
-  );
+  const { data } = useQuery(DiaryAgendaDayUserTodosDocument, {
+    variables: { interval: fetchingInterval },
+    pollInterval,
+  });
 
-  if (!user) {
+  if (!user && !userLoading) {
     return (
       <FieldSetY
         legend={null}
@@ -273,11 +294,9 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<string, NextSet[]> = {};
 
-  const daysOfInterval = data
-    ? eachDayOfInterval(fetchingInterval).filter(
-        (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
-      )
-    : [justTodayInterval.start];
+  const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
+    (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
+  );
 
   for (const dueSet of nextSets) {
     const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
@@ -525,7 +544,7 @@ export function DiaryAgendaDay({ user }: { user?: Session["user"] }) {
         }
 
         return (
-          <TodoDroppable key={dayI} date={setHours(dayDate, dayStartHour)}>
+          <TodoDroppable key={dayName} date={setHours(dayDate, dayStartHour)}>
             <DiaryAgendaDayDay
               date={dayName}
               dayDate={dayDate}

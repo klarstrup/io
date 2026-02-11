@@ -5,7 +5,7 @@ export interface IUser {
   name: string;
   email: string;
   image: string;
-  emailVerified: boolean;
+  emailVerified?: boolean | null;
   timeZone?: string | null;
   exerciseSchedules?: ExerciseSchedule[];
   dataSources?: UserDataSource[];

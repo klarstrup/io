@@ -55,10 +55,7 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
 
 const NOW_SYMBOL = Symbol("now");
 
-export function TodoDragDropContainer(props: {
-  children: ReactNode;
-  userId?: string;
-}) {
+export function TodoDragDropContainer(props: { children: ReactNode }) {
   const client = useApolloClient();
   const [updateTodo] = useMutation(UpdateTodoDocument);
   const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
@@ -189,7 +186,7 @@ export function TodoDragDropContainer(props: {
     targetDate = min([max([targetDate, dayStart]), dayEnd]);
     console.log({ targetDate });
 
-    if (props.userId && active.data.current.nextSet) {
+    if (active.data.current.nextSet) {
       const nextSet: NextSet = active.data.current.nextSet;
 
       void snoozeExerciseSchedule({

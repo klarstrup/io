@@ -660,7 +660,7 @@ export const typeDefs = gql`
     name: String!
     email: String!
     image: String!
-    emailVerified: Boolean!
+    emailVerified: Boolean
     timeZone: String
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
