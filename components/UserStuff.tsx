@@ -30,10 +30,18 @@ export default function UserStuff() {
         🏅
       </UserStuffLink>
       <span className="text-3xl text-gray-400/25 xl:text-4xl">❘</span>
-      <UserStuffLink href="/user/workout-schedules">⚙️</UserStuffLink>
-      <UserStuffLink href="/user/sources">📡</UserStuffLink>
-      <UserStuffLink href="/user/locations">📍</UserStuffLink>
-      <UserStuffLink href="/user/settings">🌞</UserStuffLink>
+      <UserStuffLink href="/user/workout-schedules" prefetch={false}>
+        ⚙️
+      </UserStuffLink>
+      <UserStuffLink href="/user/sources" prefetch={false}>
+        📡
+      </UserStuffLink>
+      <UserStuffLink href="/user/locations" prefetch={false}>
+        📍
+      </UserStuffLink>
+      <UserStuffLink href="/user/settings" prefetch={false}>
+        🌞
+      </UserStuffLink>
     </div>
   );
 }
