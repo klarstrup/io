@@ -1,9 +1,6 @@
-import { TZDate } from "@date-fns/tz";
 import { auth } from "../../../auth";
 import { Modal } from "../../../components/Modal";
-import { DEFAULT_TIMEZONE } from "../../../utils";
 import { DiaryAgenda } from "../DiaryAgenda";
-import { DiaryPoller } from "../DiaryPoller";
 import { KeyHandler } from "./KeyHandler";
 
 export default async function DiaryDayModal(props: {

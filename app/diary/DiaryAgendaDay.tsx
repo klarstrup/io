@@ -245,7 +245,8 @@ export function DiaryAgendaDay() {
     pollInterval,
   });
 
-  if (!user && !userLoading) {
+  if (!sessionUser && !sessionDataLoading) {
+    // We are now sure there is no user, so don't optimistically show the persisted cache data, as it might be for another user. Instead show a login prompt.
     return (
       <FieldSetY
         legend={null}
@@ -267,6 +268,8 @@ export function DiaryAgendaDay() {
       </FieldSetY>
     );
   }
+
+  if (!data) return null;
 
   const userData = {
     calendarTodos: data?.user?.todos || [],
