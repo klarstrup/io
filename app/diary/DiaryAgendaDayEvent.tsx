@@ -22,12 +22,14 @@ export function DiaryAgendaDayEvent({
   event,
   isEventWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
+  isEventEnd,
 }: {
   dayDate: Date;
   user?: Session["user"];
   event: Event;
   isEventWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  isEventEnd?: boolean;
 }) {
   const client = useApolloClient();
   const {
@@ -80,6 +82,7 @@ export function DiaryAgendaDayEvent({
       key={event.id}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventWithSeparatedEnd={isEventWithSeparatedEnd}
+      isEventEnd={isEventEnd}
       icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
     >
