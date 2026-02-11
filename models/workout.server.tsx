@@ -14,14 +14,12 @@ import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import type { Location } from "../graphql.generated";
 import type { PRType } from "../lib";
-import { ExerciseSchedule } from "../sources/fitocracy";
+import type { ExerciseSchedule } from "../sources/fitocracy";
 import { dayStartHour, epoch } from "../utils";
 import { proxyCollection } from "../utils.server";
+import { exercisesById } from "./exercises";
 import {
-  exercisesById,
-} from "./exercises";
-import {
-  AssistType, 
+  AssistType,
   InputType,
   SendType,
   TagType,
@@ -83,23 +81,37 @@ export const getNextSet = async ({
     },
   ]).toArray();
 
+  // Historical workouts may have workedOutAt timestamps that are not adjusted for dayStartHour, so adjust them here for the purpose of calculating due dates
   const adjustedWorkedOutAt =
-    workout?.workedOutAt &&
-    isEqual(
+    workout &&
+    (isEqual(
       workout.workedOutAt,
       startOfDay(workout.workedOutAt, { in: tz("UTC") }),
     )
       ? addHours(workout.workedOutAt, dayStartHour)
-      : workout?.workedOutAt;
+      : workout.workedOutAt);
+
+  const lastSetEndedAt =
+    workout &&
+    max(
+      [
+        ...workout.exercise.sets.flatMap((set) => [
+          set.createdAt,
+          set.updatedAt,
+        ]),
+        // Fallback if no sets have timestamps for some reason
+        adjustedWorkedOutAt,
+      ].filter(Boolean),
+    );
 
   let dueOn = addMilliseconds(
-    adjustedWorkedOutAt || epoch,
+    lastSetEndedAt || epoch,
     durationToMs(scheduleEntry.frequency),
   );
 
   if (
     scheduleEntry.snoozedUntil &&
-    (!adjustedWorkedOutAt || adjustedWorkedOutAt < scheduleEntry.snoozedUntil)
+    (!lastSetEndedAt || lastSetEndedAt < scheduleEntry.snoozedUntil)
   ) {
     dueOn = scheduleEntry.snoozedUntil;
   }
