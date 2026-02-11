@@ -101,14 +101,11 @@ export function DiaryAgendaDayDay({
   for (const journalEntry of dayJournalEntries) {
     const previousEvents = dayJournalEntries
       .slice(0, i)
-      .filter(
-        (je): je is Event => "__typename" in je && je.__typename === "Event",
-      );
+      .filter((je): je is Event => je.__typename === "Event");
     const followingEndOfEvents = dayJournalEntries
       .slice(i + 1)
       .filter(
         (je): je is Event =>
-          "__typename" in je &&
           je.__typename === "Event" &&
           "_this_is_the_end_of_a_event" in je &&
           je._this_is_the_end_of_a_event,
@@ -131,10 +128,7 @@ export function DiaryAgendaDayDay({
       ? cotemporality(surroundingEvent)
       : null;
 
-    if (
-      "__typename" in journalEntry &&
-      journalEntry.__typename === "NowDivider"
-    ) {
+    if (journalEntry.__typename === "NowDivider") {
       dayJournalEntryElements.push({
         id: "now-divider",
         element: (
@@ -145,10 +139,7 @@ export function DiaryAgendaDayDay({
           />
         ),
       });
-    } else if (
-      "__typename" in journalEntry &&
-      journalEntry.__typename === "Event"
-    ) {
+    } else if (journalEntry.__typename === "Event") {
       const event = journalEntry;
 
       const isAllDayEvent =
@@ -232,9 +223,7 @@ export function DiaryAgendaDayDay({
           .slice(i + 1)
           .find(
             (je): je is Event =>
-              "__typename" in je &&
-              je.__typename === "Event" &&
-              je.id !== event.id,
+              je.__typename === "Event" && je.id !== event.id,
           );
 
         const followingEventHasSeparateEndEvent =
@@ -243,7 +232,6 @@ export function DiaryAgendaDayDay({
             .slice(i + 2)
             .some(
               (je): je is Event =>
-                "__typename" in je &&
                 je.__typename === "Event" &&
                 "_this_is_the_end_of_a_event" in je &&
                 je._this_is_the_end_of_a_event &&
@@ -277,16 +265,12 @@ export function DiaryAgendaDayDay({
       } else {
         const precedingEndOfEvent = dayJournalEntries
           .slice(0, i)
-          .find(
-            (je): je is Event =>
-              "__typename" in je && je.__typename === "Event",
-          );
+          .find((je): je is Event => je.__typename === "Event");
 
         const eventHasSeparateEndEvent = dayJournalEntries
           .slice(i + 1)
           .some(
             (je): je is Event =>
-              "__typename" in je &&
               je.__typename === "Event" &&
               "_this_is_the_end_of_a_event" in je &&
               je._this_is_the_end_of_a_event &&
@@ -323,10 +307,7 @@ export function DiaryAgendaDayDay({
           ),
         });
       }
-    } else if (
-      "__typename" in journalEntry &&
-      journalEntry.__typename === "Todo"
-    ) {
+    } else if (journalEntry.__typename === "Todo") {
       const todo = journalEntry;
       dayJournalEntryElements.push({
         id: client.cache.identify(todo) || todo.id,
@@ -354,20 +335,14 @@ export function DiaryAgendaDayDay({
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             exerciseInfo={dueSet.scheduleEntry.exerciseInfo}
             workouts={dayJournalEntries
-              .filter(
-                (jE): jE is Workout =>
-                  "__typename" in jE && jE.__typename === "Workout",
-              )
+              .filter((jE): jE is Workout => jE.__typename === "Workout")
               .filter((w) => w.source === WorkoutSource.Self)
               .map((d) => ({ ...d, _id: d.id.toString() }))}
             locations={dayLocations}
           />
         ),
       });
-    } else if (
-      "__typename" in journalEntry &&
-      journalEntry.__typename === "Workout"
-    ) {
+    } else if (journalEntry.__typename === "Workout") {
       const workout = journalEntry;
 
       const mostRecentWorkout = workout;
@@ -404,10 +379,7 @@ export function DiaryAgendaDayDay({
 
         // why the fuck is recalculating this necessary for the cotemporalityOfSurroundingEvent to be correct
         const eventThatSurroundsWorkoutExercise = dayJournalEntries
-          .filter(
-            (je): je is Event =>
-              "__typename" in je && je.__typename === "Event",
-          )
+          .filter((je): je is Event => je.__typename === "Event")
           .find(
             (event) =>
               isBefore(event.start, workoutDate) &&
@@ -442,10 +414,7 @@ export function DiaryAgendaDayDay({
           ),
         });
       }
-    } else if (
-      "__typename" in journalEntry &&
-      journalEntry.__typename === "LocationChange"
-    ) {
+    } else if (journalEntry.__typename === "LocationChange") {
       const locationChange = journalEntry;
       dayJournalEntryElements.push({
         id: locationChange.id,
