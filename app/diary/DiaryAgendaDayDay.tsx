@@ -99,6 +99,9 @@ export function DiaryAgendaDayDay({
   const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
     [];
   for (const journalEntry of dayJournalEntries) {
+    const precedingJournalEntry = dayJournalEntries[i - 1];
+    const followingJournalEntry = dayJournalEntries[i + 1];
+
     const previousEvents = dayJournalEntries
       .slice(0, i)
       .filter((je): je is Event => je.__typename === "Event");
@@ -219,12 +222,10 @@ export function DiaryAgendaDayDay({
         "_this_is_the_end_of_a_event" in event &&
         event._this_is_the_end_of_a_event
       ) {
-        const followingEvent = dayJournalEntries
-          .slice(i + 1)
-          .find(
-            (je): je is Event =>
-              je.__typename === "Event" && je.id !== event.id,
-          );
+        const followingEvent =
+          followingJournalEntry && followingJournalEntry.__typename === "Event"
+            ? followingJournalEntry
+            : null;
 
         const followingEventHasSeparateEndEvent =
           followingEvent &&
@@ -263,9 +264,12 @@ export function DiaryAgendaDayDay({
           });
         }
       } else {
-        const precedingEndOfEvent = dayJournalEntries
-          .slice(0, i)
-          .find((je): je is Event => je.__typename === "Event");
+        const precedingEndOfEvent =
+          precedingJournalEntry &&
+          "_this_is_the_end_of_a_event" in precedingJournalEntry &&
+          precedingJournalEntry._this_is_the_end_of_a_event
+            ? precedingJournalEntry
+            : null;
 
         const eventHasSeparateEndEvent = dayJournalEntries
           .slice(i + 1)
@@ -278,13 +282,14 @@ export function DiaryAgendaDayDay({
           );
 
         // If the preceding journal entry is the end of an event and it ends exactly when the current event starts, then we can treat them as a single continuous event instead of two separate events for the purpose of drawing the little bracket
-        const isEventEnd =
+        const isEventEnd = Boolean(
           eventHasSeparateEndEvent &&
           precedingEndOfEvent &&
           roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
-            event.start.getTime();
+            event.start.getTime(),
+        );
 
-        if (isEventEnd) {
+        if (precedingEndOfEvent && isEventEnd) {
           eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
             precedingEndOfEvent.id,
           );
