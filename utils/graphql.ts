@@ -81,7 +81,7 @@ class ApolloError extends Error {
     ]
       .filter(Boolean)
       .join("\n");
-    this.cause = [...(graphQLErrors || [])].find((e) => !!e) || null;
+    this.cause = [...(graphQLErrors || [])].find(Boolean) || null;
 
     // We're not using `Object.setPrototypeOf` here as it isn't fully
     // supported on Android (see issue #3236).
@@ -352,7 +352,7 @@ function shouldIncludeField(
           if (arg.name.value === "if") {
             let argValue: boolean;
             if (arg.value.kind === Kind.VARIABLE) {
-              argValue = variables && !!variables[arg.value.name.value];
+              argValue = variables && Boolean(variables[arg.value.name.value]);
             } else if (arg.value.kind === Kind.BOOLEAN) {
               argValue = arg.value.value;
             } else {
