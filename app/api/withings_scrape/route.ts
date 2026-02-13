@@ -12,7 +12,13 @@ import {
 } from "../../../sources/withings.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
-const uri = "http://localhost:1337/api/withings_scrape";
+
+// Could probably be derived from the request object but who cares
+const uri =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:1337/api/withings_scrape"
+    : "https://io.klarstrup.dk/api/withings_scrape";
+
 const inState = "lolself";
 
 export const maxDuration = 45;
