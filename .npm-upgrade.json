@@ -5,7 +5,7 @@
       "reason": ""
     },
     "eslint": {
-      "versions": "^9",
+      "versions": "10.0.0",
       "reason": ""
     }
   }
