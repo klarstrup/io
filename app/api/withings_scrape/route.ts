@@ -185,7 +185,7 @@ export const GET = async (req: NextRequest) => {
 
         for (const measureGroup of measureResponse.body.measuregrps) {
           const updateResult = await WithingsMeasureGroup.updateOne(
-            { uuid: measureGroup.grpid },
+            { grpid: measureGroup.grpid },
             {
               $set: {
                 ...measureGroup,
@@ -222,7 +222,7 @@ export const GET = async (req: NextRequest) => {
 
         for (const sleepSeries of sleepSummaryResponse.body.series) {
           const updateResult = await WithingsSleepSummarySeries.updateOne(
-            { uuid: sleepSeries.id },
+            { id: sleepSeries.id },
             {
               $set: {
                 ...sleepSeries,
