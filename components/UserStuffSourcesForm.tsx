@@ -21,6 +21,7 @@ import {
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
+import { useSession } from "next-auth/react";
 
 function SourceStatus({ source }: { source: UserDataSource }) {
   return source.lastAttemptedAt &&
@@ -28,21 +29,21 @@ function SourceStatus({ source }: { source: UserDataSource }) {
       source.lastAttemptedAt > source.lastSuccessfulAt) &&
     (!source.lastFailedAt || source.lastAttemptedAt > source.lastFailedAt) ? (
     <>
-      Started <DistanceToNowStrict date={source.lastAttemptedAt} />{" "}
+      Started <DistanceToNowStrict date={new Date(source.lastAttemptedAt)} />{" "}
       <div className="inline-block animate-spin">↻</div>
     </>
   ) : source.lastSuccessfulAt &&
     (!source.lastFailedAt || source.lastSuccessfulAt > source.lastFailedAt) ? (
     <>
       Last successful fetch{" "}
-      <DistanceToNowStrict date={source.lastSuccessfulAt} />{" "}
+      <DistanceToNowStrict date={new Date(source.lastSuccessfulAt)} />{" "}
       {source.lastSuccessfulRuntime ? (
         <>in {(source.lastSuccessfulRuntime / 1000)?.toFixed(2)}s</>
       ) : null}
     </>
   ) : source.lastFailedAt ? (
     <>
-      Last failed fetch <DistanceToNowStrict date={source.lastFailedAt} />{" "}
+      Last failed fetch <DistanceToNowStrict date={new Date(source.lastFailedAt)} />{" "}
       {source.lastFailedRuntime ? (
         <>in {(source.lastFailedRuntime / 1000)?.toFixed(2)}s</>
       ) : null}
@@ -482,12 +483,13 @@ function UserStuffSourceForm({
 }
 
 export default function UserStuffSourcesForm({
-  user,
   sourceOptions,
 }: {
   user?: Session["user"];
   sourceOptions: DataSource[];
 }) {
+  const { data: sessionData } = useSession();
+  const user = sessionData?.user;
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -539,7 +541,8 @@ export default function UserStuffSourcesForm({
             {user.dataSources.map((source) => {
               const wasFetchedRecently = Boolean(
                 source.lastAttemptedAt &&
-                source.lastAttemptedAt > new Date(Date.now() - 1000 * 60 * 5),
+                new Date(source.lastAttemptedAt) >
+                  new Date(Date.now() - 1000 * 60 * 5),
               );
 
               if (!sourceOptions.includes(source.source)) {
@@ -562,13 +565,15 @@ export default function UserStuffSourcesForm({
                     <div className="text-md">
                       {source.lastAttemptedAt &&
                       (!source.lastSuccessfulAt ||
-                        source.lastAttemptedAt > source.lastSuccessfulAt) &&
+                        new Date(source.lastAttemptedAt) >
+                          new Date(source.lastSuccessfulAt)) &&
                       (!source.lastFailedAt ||
-                        source.lastAttemptedAt > source.lastFailedAt) ? (
+                        new Date(source.lastAttemptedAt) >
+                          new Date(source.lastFailedAt)) ? (
                         <>
                           <small>
                             <DistanceToNowStrict
-                              date={source.lastAttemptedAt}
+                              date={new Date(source.lastAttemptedAt)}
                             />
                           </small>{" "}
                           <div className="inline-block animate-spin text-lg leading-0">
@@ -577,11 +582,12 @@ export default function UserStuffSourcesForm({
                         </>
                       ) : source.lastSuccessfulAt &&
                         (!source.lastFailedAt ||
-                          source.lastSuccessfulAt > source.lastFailedAt) ? (
+                          new Date(source.lastSuccessfulAt) >
+                            new Date(source.lastFailedAt)) ? (
                         <>
                           <small>
                             <DistanceToNowStrict
-                              date={source.lastSuccessfulAt}
+                              date={new Date(source.lastSuccessfulAt)}
                             />
                           </small>{" "}
                           ✅
@@ -589,7 +595,9 @@ export default function UserStuffSourcesForm({
                       ) : source.lastFailedAt ? (
                         <>
                           <small>
-                            <DistanceToNowStrict date={source.lastFailedAt} />
+                            <DistanceToNowStrict
+                              date={new Date(source.lastFailedAt)}
+                            />
                           </small>{" "}
                           <span title={source.lastError || "Unknown error"}>
                             ⚠️
@@ -604,10 +612,11 @@ export default function UserStuffSourcesForm({
                           Boolean(
                             source.lastAttemptedAt &&
                             (!source.lastSuccessfulAt ||
-                              source.lastAttemptedAt >
-                                source.lastSuccessfulAt) &&
+                              new Date(source.lastAttemptedAt) >
+                                new Date(source.lastSuccessfulAt)) &&
                             (!source.lastFailedAt ||
-                              source.lastAttemptedAt > source.lastFailedAt),
+                              new Date(source.lastAttemptedAt) >
+                                new Date(source.lastFailedAt)),
                           ) || wasFetchedRecently
                         }
                         className="cursor-pointer text-xs disabled:cursor-not-allowed disabled:opacity-50"
