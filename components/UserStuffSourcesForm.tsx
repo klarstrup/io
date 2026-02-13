@@ -21,7 +21,7 @@ function UserStuffSourceForm({
   source: UserDataSource;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const { data: sessionData } = useSession();
+  const { data: sessionData, update } = useSession();
   const user = sessionData?.user;
   const router = useRouter();
   const client = useApolloClient();
@@ -57,10 +57,10 @@ function UserStuffSourceForm({
     return (
       <div
         key={source.id}
-        className="flex items-start gap-1 rounded-md border border-gray-300 bg-white/75 p-1"
+        className="flex items-start justify-between gap-1 rounded-md border border-gray-300 bg-white/75 p-1"
       >
-        <div className="flex flex-1 flex-col items-stretch">
-          <div className="flex flex-1 flex-wrap gap-1">
+        <div className="flex flex-col items-stretch">
+          <div className="flex flex-wrap gap-1">
             <button
               type="button"
               className="cursor-pointer text-sm"
@@ -160,7 +160,7 @@ function UserStuffSourceForm({
   switch (dataSource) {
     case DataSource.Fitocracy:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           User ID:
           <input
             type="number"
@@ -169,7 +169,7 @@ function UserStuffSourceForm({
               valueAsNumber: true,
             })}
             placeholder="User ID"
-            className="flex-1"
+            className="w-full"
           />
         </label>
       );
@@ -177,31 +177,31 @@ function UserStuffSourceForm({
     case DataSource.MyFitnessPal:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Token:
             <input
               type="text"
               {...register("config.token", { required: true })}
               placeholder="Token"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Username:
             <input
               type="text"
               {...register("config.userName", { required: true })}
               placeholder="User Name"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             User ID:
             <input
               type="text"
               {...register("config.userId", { required: true })}
               placeholder="User ID"
-              className="flex-1"
+              className="w-full"
             />
           </label>
         </>
@@ -209,13 +209,13 @@ function UserStuffSourceForm({
       break;
     case DataSource.RunDouble:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           ID:
           <input
             type="text"
             {...register("config.id", { required: true })}
             placeholder="ID"
-            className="flex-1"
+            className="w-full"
           />
         </label>
       );
@@ -223,25 +223,25 @@ function UserStuffSourceForm({
     case DataSource.TopLogger:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             ID:
             <input
               type="number"
               {...register("config.id", { required: true })}
               placeholder="ID"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             GraphQL ID:
             <input
               type="text"
               {...register("config.graphQLId", { required: true })}
               placeholder="GraphQL ID"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Auth Tokens:
             <input
               type="text"
@@ -257,7 +257,7 @@ function UserStuffSourceForm({
                   shouldValidate: true,
                 });
               }}
-              className="flex-1 font-mono"
+              className="w-full font-mono"
             />
           </label>
         </>
@@ -266,22 +266,22 @@ function UserStuffSourceForm({
     case DataSource.ICal:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             iCal URL:{" "}
             <input
               type="text"
               {...register("config.url")}
               placeholder="URL"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Start Date (optional):{" "}
             <input
               type="datetime-local"
               {...register("config.startDate", { valueAsDate: true })}
               placeholder="Start Date"
-              className="flex-1"
+              className="w-full"
             />
           </label>
         </>
@@ -290,22 +290,22 @@ function UserStuffSourceForm({
     case DataSource.KilterBoard:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Token:
             <input
               type="text"
               {...register("config.token", { required: true })}
               placeholder="Token"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             User ID:
             <input
               type="text"
               {...register("config.user_id", { required: true })}
               placeholder="User ID"
-              className="flex-1"
+              className="w-full"
             />
           </label>
         </>
@@ -314,22 +314,22 @@ function UserStuffSourceForm({
     case DataSource.MoonBoard:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Token:
             <input
               type="text"
               {...register("config.token", { required: true })}
               placeholder="Token"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             User ID:
             <input
               type="text"
               {...register("config.user_id", { required: true })}
               placeholder="User ID"
-              className="flex-1"
+              className="w-full"
             />
           </label>
         </>
@@ -338,7 +338,7 @@ function UserStuffSourceForm({
     case DataSource.Grippy:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Auth Tokens:
             <input
               type="text"
@@ -354,7 +354,7 @@ function UserStuffSourceForm({
                   shouldValidate: true,
                 });
               }}
-              className="flex-1 font-mono"
+              className="w-full font-mono"
             />
           </label>
         </>
@@ -362,13 +362,13 @@ function UserStuffSourceForm({
       break;
     case DataSource.Crimpd:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           Token:{" "}
           <input
             type="text"
             {...register("config.token")}
             placeholder="Token"
-            className="flex-1"
+            className="w-full"
           />
         </label>
       );
@@ -376,22 +376,22 @@ function UserStuffSourceForm({
     case DataSource.ClimbAlong:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Token:{" "}
             <input
               type="text"
               {...register("config.token")}
               placeholder="Token"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             User ID:{" "}
             <input
               type="text"
               {...register("config.userId")}
               placeholder="User ID"
-              className="flex-1"
+              className="w-full"
             />
           </label>
         </>
@@ -399,7 +399,7 @@ function UserStuffSourceForm({
       break;
     case DataSource.Tomorrow:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           Geohash:{" "}
           <UserStuffGeohashInput
             geohash={source.config.geohash}
@@ -416,22 +416,22 @@ function UserStuffSourceForm({
     case DataSource.Onsight:
       formElements = (
         <>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Token:{" "}
             <input
               type="text"
               {...register("config.token")}
               placeholder="Token"
-              className="flex-1"
+              className="w-full"
             />
           </label>
-          <label className="flex gap-1">
+          <label className="flex flex-col gap-1">
             Username (Email):{" "}
             <input
               type="text"
               {...register("config.username")}
               placeholder="Username (Email)"
-              className="flex-1"
+              className="w-full"
             />
           </label>
         </>
@@ -439,7 +439,7 @@ function UserStuffSourceForm({
       break;
     case DataSource.Sportstiming:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           Name:
           <input
             type="text"
@@ -447,14 +447,14 @@ function UserStuffSourceForm({
               required: true,
             })}
             placeholder="Name"
-            className="flex-1"
+            className="w-full"
           />
         </label>
       );
       break;
     case DataSource.Songkick:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           Artist ID:
           <input
             type="number"
@@ -463,14 +463,14 @@ function UserStuffSourceForm({
               valueAsNumber: true,
             })}
             placeholder="Artist ID"
-            className="flex-1"
+            className="w-full"
           />
         </label>
       );
       break;
     case DataSource.Withings:
       formElements = (
-        <label className="flex gap-1">
+        <label className="flex flex-col gap-1">
           Access Token Response:
           <code>
             {JSON.stringify(source.config.accessTokenResponse, null, 2)}
@@ -497,8 +497,9 @@ function UserStuffSourceForm({
         setIsEditing(false);
         router.refresh();
         client.refetchQueries({ include: "all" });
+        update();
       })}
-      className="flex w-full flex-col items-stretch gap-1"
+      className="flex w-full max-w-full flex-col items-stretch gap-1"
     >
       <FieldSetY
         legend={
@@ -510,17 +511,19 @@ function UserStuffSourceForm({
             >
               <FontAwesomeIcon icon={faTimes} />
             </button>
-            {source.source}:{" "}
-            <input
-              type="text"
-              {...register("name")}
-              placeholder="Name"
-              className="flex-1"
-            />
+            {source.source}
           </div>
         }
-        className="flex w-full flex-col items-stretch gap-1"
+        className="flex w-full max-w-full flex-col items-stretch gap-1 overflow-hidden px-2"
       >
+        <label>
+          <input
+            type="text"
+            {...register("name")}
+            placeholder="Display Name"
+            className="w-full"
+          />
+        </label>
         <label>
           <input type="checkbox" {...register("paused")} /> Paused
         </label>
