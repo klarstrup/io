@@ -71,6 +71,7 @@ type UserDataSourceConfig =
 export interface UserDataSourceMeta {
   id: string;
   name: string;
+  paused?: boolean;
   updatedAt: Date;
   createdAt: Date;
   lastAttemptedAt: Date | null;

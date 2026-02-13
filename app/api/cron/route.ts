@@ -13,6 +13,7 @@ export async function GET() {
   const dataSources = users
     .flatMap((user) => user.dataSources)
     .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
+    .filter((dataSource) => !dataSource.paused)
     .filter(
       (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
     )

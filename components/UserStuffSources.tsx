@@ -9,7 +9,6 @@ export default async function UserStuffSources() {
 
   return (
     <UserStuffSourcesForm
-      user={user}
       sourceOptions={[
         ...dataSourceGroups.workouts,
         ...dataSourceGroups.events,

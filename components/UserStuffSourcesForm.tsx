@@ -23,37 +23,6 @@ import { FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 import { useSession } from "next-auth/react";
 
-function SourceStatus({ source }: { source: UserDataSource }) {
-  return source.lastAttemptedAt &&
-    (!source.lastSuccessfulAt ||
-      source.lastAttemptedAt > source.lastSuccessfulAt) &&
-    (!source.lastFailedAt || source.lastAttemptedAt > source.lastFailedAt) ? (
-    <>
-      Started <DistanceToNowStrict date={new Date(source.lastAttemptedAt)} />{" "}
-      <div className="inline-block animate-spin">↻</div>
-    </>
-  ) : source.lastSuccessfulAt &&
-    (!source.lastFailedAt || source.lastSuccessfulAt > source.lastFailedAt) ? (
-    <>
-      Last successful fetch{" "}
-      <DistanceToNowStrict date={new Date(source.lastSuccessfulAt)} />{" "}
-      {source.lastSuccessfulRuntime ? (
-        <>in {(source.lastSuccessfulRuntime / 1000)?.toFixed(2)}s</>
-      ) : null}
-    </>
-  ) : source.lastFailedAt ? (
-    <>
-      Last failed fetch <DistanceToNowStrict date={new Date(source.lastFailedAt)} />{" "}
-      {source.lastFailedRuntime ? (
-        <>in {(source.lastFailedRuntime / 1000)?.toFixed(2)}s</>
-      ) : null}
-      <div className="text-red-600">{source.lastError ?? "Unknown error"}</div>
-    </>
-  ) : (
-    "Never fetched"
-  );
-}
-
 function UserStuffSourceForm({
   sourceOptions,
   source,
@@ -452,41 +421,28 @@ function UserStuffSourceForm({
             placeholder="Name"
             className="flex-1"
           />
+          <label>
+            <input
+              type="checkbox"
+              {...register(`dataSources.${index}.paused`)}
+            />{" "}
+            Paused
+          </label>
         </div>
       }
       className="flex flex-col items-stretch gap-1"
     >
       {formElements}
-      {source.source !== DataSource.Fitocracy ? ( // Fitocracy is read-only
-        <div className="text-xs">
-          <SourceStatus source={source} /> -{" "}
-          <button
-            type="button"
-            disabled={
-              Boolean(
-                source.lastAttemptedAt &&
-                (!source.lastSuccessfulAt ||
-                  source.lastAttemptedAt > source.lastSuccessfulAt) &&
-                (!source.lastFailedAt ||
-                  source.lastAttemptedAt > source.lastFailedAt),
-              ) || wasFetchedRecently
-            }
-            className="cursor-pointer text-xs underline disabled:cursor-not-allowed disabled:line-through"
-            onClick={() => void fetchSource()}
-          >
-            Fetch now
-          </button>
-        </div>
-      ) : null}
     </FieldSetY>
   );
 }
 
 export default function UserStuffSourcesForm({
   sourceOptions,
+  isInsideSmallPopover,
 }: {
-  user?: Session["user"];
   sourceOptions: DataSource[];
+  isInsideSmallPopover?: boolean;
 }) {
   const { data: sessionData } = useSession();
   const user = sessionData?.user;
@@ -524,20 +480,24 @@ export default function UserStuffSourcesForm({
   if (!isEditing) {
     return (
       <div className="flex flex-col items-stretch gap-2">
-        <button
-          type="button"
-          className={
-            sourceOptions.length > 1
-              ? "rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 hover:text-white"
-              : // Smaller button for single source for compact UI
-                "rounded-md bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 hover:text-white"
-          }
-          onClick={() => setIsEditing(true)}
-        >
-          Edit Data Sources
-        </button>
+        {!isInsideSmallPopover ? (
+          <button
+            type="button"
+            className={
+              sourceOptions.length > 1
+                ? "rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 hover:text-white"
+                : // Smaller button for single source for compact UI
+                  "rounded-md bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 hover:text-white"
+            }
+            onClick={() => setIsEditing(true)}
+          >
+            Edit Data Sources
+          </button>
+        ) : (
+          <span>Data Sources</span>
+        )}
         {user?.dataSources && user.dataSources.length > 0 ? (
-          <div className="flex flex-col">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
             {user.dataSources.map((source) => {
               const wasFetchedRecently = Boolean(
                 source.lastAttemptedAt &&
@@ -552,24 +512,32 @@ export default function UserStuffSourcesForm({
               return (
                 <div
                   key={source.id}
-                  className="flex gap-1 border border-t-0 border-gray-300 bg-white/75 p-1 first:rounded-t-md first:border-t last:rounded-b-md"
+                  className="flex items-start gap-1 rounded-md border border-gray-300 bg-white/75 p-1"
                 >
-                  <div className="flex flex-1 gap-1">
-                    {source.name !== source.source ? (
-                      <small>{source.source}</small>
-                    ) : null}
-                    <div className="text-sm font-semibold">{source.name}</div>
-                  </div>
+                  <div className="flex flex-1 flex-col items-stretch">
+                    <div className="flex flex-1 flex-wrap gap-1">
+                      {source.name !== source.source ? (
+                        <small>{source.source}</small>
+                      ) : null}
+                      <div className="text-sm font-semibold">{source.name}</div>
+                    </div>
 
-                  {source.source !== DataSource.Fitocracy ? (
                     <div className="text-md">
-                      {source.lastAttemptedAt &&
-                      (!source.lastSuccessfulAt ||
-                        new Date(source.lastAttemptedAt) >
-                          new Date(source.lastSuccessfulAt)) &&
-                      (!source.lastFailedAt ||
-                        new Date(source.lastAttemptedAt) >
-                          new Date(source.lastFailedAt)) ? (
+                      {source.paused ||
+                      source.source === DataSource.Fitocracy ? (
+                        <>
+                          <small>Paused</small>{" "}
+                          <span title="This data source is paused and will not be automatically fetched.">
+                            ⏸️
+                          </span>
+                        </>
+                      ) : source.lastAttemptedAt &&
+                        (!source.lastSuccessfulAt ||
+                          new Date(source.lastAttemptedAt) >
+                            new Date(source.lastSuccessfulAt)) &&
+                        (!source.lastFailedAt ||
+                          new Date(source.lastAttemptedAt) >
+                            new Date(source.lastFailedAt)) ? (
                         <>
                           <small>
                             <DistanceToNowStrict
@@ -605,36 +573,37 @@ export default function UserStuffSourcesForm({
                         </>
                       ) : (
                         "☑️"
-                      )}{" "}
-                      <button
-                        type="button"
-                        disabled={
-                          Boolean(
-                            source.lastAttemptedAt &&
-                            (!source.lastSuccessfulAt ||
-                              new Date(source.lastAttemptedAt) >
-                                new Date(source.lastSuccessfulAt)) &&
-                            (!source.lastFailedAt ||
-                              new Date(source.lastAttemptedAt) >
-                                new Date(source.lastFailedAt)),
-                          ) || wasFetchedRecently
-                        }
-                        className="cursor-pointer text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                        onClick={async () => {
-                          const promise = fetch(`/api/${source.source}_scrape`);
-                          await new Promise((resolve) =>
-                            setTimeout(resolve, 1000),
-                          );
-                          router.refresh();
-                          await promise;
-                          router.refresh();
-                        }}
-                      >
-                        🔄
-                      </button>
+                      )}
                     </div>
-                  ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={
+                      Boolean(
+                        source.lastAttemptedAt &&
+                        (!source.lastSuccessfulAt ||
+                          new Date(source.lastAttemptedAt) >
+                            new Date(source.lastSuccessfulAt)) &&
+                        (!source.lastFailedAt ||
+                          new Date(source.lastAttemptedAt) >
+                            new Date(source.lastFailedAt)),
+                      ) ||
+                      wasFetchedRecently ||
+                      source.paused ||
+                      source.source === DataSource.Fitocracy
+                    }
+                    className="cursor-pointer text-4xl disabled:cursor-not-allowed disabled:opacity-50"
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                    onClick={async () => {
+                      const promise = fetch(`/api/${source.source}_scrape`);
+                      await new Promise((resolve) => setTimeout(resolve, 1000));
+                      router.refresh();
+                      await promise;
+                      router.refresh();
+                    }}
+                  >
+                    🔄
+                  </button>
                 </div>
               );
             })}

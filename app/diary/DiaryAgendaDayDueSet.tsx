@@ -456,29 +456,29 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
               {dueSet.exerciseId === 2006 ? (
                 <div className="rounded-md border border-black/20 bg-white p-1">
                   <UserStuffSourcesForm
+                    isInsideSmallPopover
                     sourceOptions={[DataSource.Grippy]}
-                    user={user}
                   />
                 </div>
               ) : dueSet.exerciseId === 2003 ? (
                 <div className="rounded-md border border-black/20 bg-white p-1">
                   <UserStuffSourcesForm
+                    isInsideSmallPopover
                     sourceOptions={[
                       DataSource.KilterBoard,
                       DataSource.MoonBoard,
                     ]}
-                    user={user}
                   />
                 </div>
               ) : dueSet.exerciseId === 2001 ? (
                 <div className="rounded-md border border-black/20 bg-white p-1">
                   <UserStuffSourcesForm
+                    isInsideSmallPopover
                     sourceOptions={[
                       DataSource.TopLogger,
                       DataSource.ClimbAlong,
                       DataSource.Onsight,
                     ]}
-                    user={user}
                   />
                 </div>
               ) : null}
