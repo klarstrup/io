@@ -12,7 +12,6 @@ import {
 } from "../../../sources/withings.server";
 import { jsonStreamResponse } from "../scraper-utils";
 
-
 // Could probably be derived from the request object but who cares
 const uri =
   process.env.NODE_ENV === "development"
@@ -103,8 +102,6 @@ export const GET = async (req: NextRequest) => {
       })
     ).json();
 
-    console.log("Withings access token response:", accessTokenResponse);
-
     if (accessTokenResponse.access_token) {
       await Users.updateOne(
         { _id: new ObjectId(user!.id) },
@@ -120,6 +117,8 @@ export const GET = async (req: NextRequest) => {
         },
         { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
       );
+
+      return new NextResponse("Access token obtained and saved");
     }
   }
 
