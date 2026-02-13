@@ -227,15 +227,12 @@ export function DiaryAgendaDay() {
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
-  const { data: gqlUserData, dataState: gqlUserDataState } = useQuery(
-    DiaryAgendaDayUserDocument,
-    { pollInterval },
-  );
+  const { data: gqlUserData } = useQuery(DiaryAgendaDayUserDocument, {
+    pollInterval,
+  });
   const gqlUser = gqlUserData?.user;
-  const gqlUserLoading = gqlUserDataState !== "complete";
 
   const user = gqlUser || sessionUser;
-  const userLoading = gqlUserLoading && sessionDataLoading;
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
