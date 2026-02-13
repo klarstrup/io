@@ -205,7 +205,7 @@ export const GET = async (req: NextRequest) => {
         const sleepUrl = new URL("https://wbsapi.withings.net/v2/sleep");
 
         sleepUrl.searchParams.append("action", "getsummary");
-        sleepUrl.searchParams.append("startdateymd", "2015-01-01");
+        sleepUrl.searchParams.append("startdateymd", "2026-01-01");
         sleepUrl.searchParams.append(
           "enddateymd",
           addDays(new Date(), 1).toISOString().split("T")[0]!,
