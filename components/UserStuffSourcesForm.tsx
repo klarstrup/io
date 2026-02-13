@@ -426,6 +426,29 @@ function UserStuffSourceForm({
         </label>
       );
       break;
+    case DataSource.Withings:
+      formElements = (
+        <>
+          <label className="flex gap-1">
+            User ID:
+            <input
+              type="text"
+              {...register(`dataSources.${index}.config.userId`, {
+                required: true,
+              })}
+              placeholder="User ID"
+              className="flex-1"
+            />
+          </label>
+          <label className="flex gap-1">
+            Access Token Response:
+            <code>
+              {JSON.stringify(source.config.accessTokenResponse, null, 2)}
+            </code>
+          </label>
+        </>
+      );
+      break;
     default:
       return dataSource satisfies never;
   }
@@ -852,6 +875,25 @@ export default function UserStuffSourcesForm({
                     config: { artistId: NaN },
                   });
                   break;
+                case DataSource.Withings:
+                  append({
+                    ...initialSourceMeta,
+                    source: DataSource.Withings,
+                    config: {
+                      userId: "",
+                      accessTokenResponse: {
+                        userid: "",
+                        access_token: "",
+                        refresh_token: "",
+                        expires_in: 0,
+                        scope: "",
+                        csrf_token: "",
+                        token_type: "",
+                      },
+                    },
+                  });
+                  break;
+
                 default:
                   return value satisfies never;
               }

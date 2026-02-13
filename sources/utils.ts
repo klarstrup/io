@@ -1,5 +1,6 @@
 import type { TopLoggerAuthTokens } from "../lib";
 import type { Grippy } from "./grippy";
+import type { Withings } from "./withings";
 
 type UserDataSourceConfig =
   | {
@@ -61,6 +62,13 @@ type UserDataSourceConfig =
   | {
       source: DataSource.Songkick;
       config: { artistId: number };
+    }
+  | {
+      source: DataSource.Withings;
+      config: {
+        accessTokenResponse: Withings.AccessTokenResponse;
+        userId: string;
+      };
     };
 
 export interface UserDataSourceMeta {
@@ -94,6 +102,7 @@ export enum DataSource {
   Onsight = "onsight",
   Sportstiming = "sportstiming",
   Songkick = "songkick",
+  Withings = "withings",
 }
 
 export const dataSourceGroups = {
@@ -112,4 +121,5 @@ export const dataSourceGroups = {
   food: [DataSource.MyFitnessPal],
   events: [DataSource.ICal],
   weather: [DataSource.Tomorrow],
+  health: [DataSource.Withings],
 };
