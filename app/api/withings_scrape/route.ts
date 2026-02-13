@@ -112,7 +112,7 @@ export const GET = async (req: NextRequest) => {
               expires_at: new Date(
                 Date.now() + accessTokenResponse.expires_in * 1000,
               ),
-            } as any,
+            },
           },
         },
         { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
@@ -159,7 +159,7 @@ export const GET = async (req: NextRequest) => {
                   expires_at: new Date(
                     Date.now() + refreshTokenResponse.expires_in * 1000,
                   ),
-                } as any,
+                },
               },
             },
             { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
