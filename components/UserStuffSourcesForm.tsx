@@ -1,5 +1,5 @@
 "use client";
-import { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ReactElement, useEffect, useId, useMemo, useState } from "react";
 import {
@@ -21,7 +21,7 @@ import {
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
-import { useSession } from "next-auth/react";
+import { useApolloClient } from "@apollo/client/react";
 
 function UserStuffSourceForm({
   sourceOptions,
@@ -38,25 +38,9 @@ function UserStuffSourceForm({
   watch: UseFormWatch<{ dataSources: UserDataSource[] }>;
   update: UseFieldArrayUpdate<{ dataSources: UserDataSource[] }, "dataSources">;
 }) {
-  const router = useRouter();
   let formElements: Element | ReactElement | null = null;
 
-  const wasFetchedRecently = Boolean(
-    source.lastAttemptedAt &&
-    source.lastAttemptedAt > new Date(Date.now() - 1000 * 60 * 5),
-  );
-
-  const fetchSource = async () => {
-    const promise = fetch(`/api/${source.source}_scrape`);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.refresh();
-    await promise;
-    router.refresh();
-  };
-
-  if (!sourceOptions.includes(source.source)) {
-    return null;
-  }
+  if (!sourceOptions.includes(source.source)) return null;
 
   const dataSource = source.source;
   switch (dataSource) {
@@ -447,6 +431,7 @@ export default function UserStuffSourcesForm({
   const { data: sessionData } = useSession();
   const user = sessionData?.user;
   const router = useRouter();
+  const client = useApolloClient()
   const [isEditing, setIsEditing] = useState(false);
 
   const defaultValues = useMemo(
@@ -635,6 +620,7 @@ export default function UserStuffSourcesForm({
           );
           setIsEditing(false);
           router.refresh();
+          client.refetchQueries({ include: "all" });
         })}
         className="flex min-w-[50%] flex-1 flex-col gap-1"
       >
