@@ -11,6 +11,7 @@ import type {
   Event,
   ExerciseSchedule,
   NextSet,
+  Sleep,
   Todo,
   Workout,
   WorkoutExercise,
@@ -26,6 +27,7 @@ export type JournalEntry =
   | Workout
   | ExerciseSchedule
   | WorkoutExercise
+  | Sleep
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | { __typename: "LocationChange"; id: string; location: string; date: Date }
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
@@ -86,6 +88,9 @@ export const getJournalEntryPrincipalDate = (
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if ("__typename" in entry && entry.__typename === "Todo") {
     return getTodoPrincipalDate(entry);
+  }
+  if ("__typename" in entry && entry.__typename === "Sleep") {
+    return { start: entry.startedAt, end: entry.endedAt };
   }
   if (
     "_this_is_the_end_of_a_event" in entry &&

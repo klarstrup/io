@@ -1,10 +1,16 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import { faCalendarWeek } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBed,
+  faBedPulse,
+  faCalendarWeek,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
   endOfDay,
+  type Interval,
+  intervalToDuration,
   isBefore,
   isPast,
   isSameDay,
@@ -140,6 +146,64 @@ export function DiaryAgendaDayDay({
             date={date}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
           />
+        ),
+      });
+    } else if (journalEntry.__typename === "Sleep") {
+      const sleep = journalEntry;
+
+      const principalDate = getJournalEntryPrincipalDate(sleep);
+
+      const duration = intervalToDuration({
+        start: 0,
+        end: journalEntry.totalSleepTime * 1000,
+      });
+
+      // TODO: smarter way of determining if it's waking up or going to sleep
+      const isLastEntry = !followingJournalEntry;
+
+      dayJournalEntryElements.push({
+        id: client.cache.identify(sleep) || sleep.id,
+        element: (
+          <DiaryAgendaDayEntry
+            icon={isLastEntry ? faBed : faBedPulse}
+            cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
+            key={sleep.id}
+          >
+            <div className="flex items-center gap-1.5 leading-snug">
+              <div className="text-center font-semibold tabular-nums">
+                {!isLastEntry
+                  ? sleep.endedAt.toLocaleTimeString("en-DK", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone,
+                    })
+                  : sleep.startedAt.toLocaleTimeString("en-DK", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone,
+                    })}
+              </div>{" "}
+              <div className="flex items-baseline gap-2">
+                {isLastEntry ? (
+                  <span>Went to bed</span>
+                ) : (
+                  <span>Got out of bed</span>
+                )}
+                {!isLastEntry ? (
+                  <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
+                    {duration ? (
+                      <>
+                        {duration.days ? `${duration.days}d` : null}
+                        {duration.hours ? `${duration.hours}h` : null}
+                        {duration.minutes ? `${duration.minutes}m` : null}
+                        {duration.seconds ? `${duration.seconds}s` : null} slept
+                      </>
+                    ) : null}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </DiaryAgendaDayEntry>
         ),
       });
     } else if (journalEntry.__typename === "Event") {

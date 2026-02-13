@@ -2,7 +2,7 @@ import { tz } from "@date-fns/tz";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
 import { ObjectId } from "bson";
-import { isValid, startOfDay } from "date-fns";
+import { addSeconds, isValid, startOfDay } from "date-fns";
 import {
   DocumentNode,
   GraphQLScalarType,
@@ -34,6 +34,7 @@ import {
 import { IcalEvents } from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
 import { DataSource } from "./sources/utils";
+import { WithingsSleepSummarySeries } from "./sources/withings.server";
 import { pick, rangeToQuery } from "./utils";
 
 const emitGraphQLUpdate = async (
@@ -138,6 +139,37 @@ export const resolvers: Resolvers = {
       return (await getUserIcalEventsBetween(user.id, args.interval)).map(
         (event) => ({ ...event, id: event.uid, __typename: "Event" }),
       );
+    },
+    sleeps: async (_parent, args) => {
+      const user = (await auth())?.user;
+
+      if (!user) return [];
+
+      // For now, we only support Withings sleep data, so we look for a Withings data source and query the sleeps from there
+      const withingsDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      );
+
+      const withingsUserId =
+        withingsDataSource?.config?.accessTokenResponse?.userid;
+      if (!withingsUserId) return null;
+
+      return (
+        await WithingsSleepSummarySeries.find(
+          {
+            _withings_userId: withingsUserId,
+            startedAt: { $gte: new Date(args.interval.start) },
+            endedAt: { $lte: new Date(args.interval.end) },
+          },
+          { sort: { startedAt: -1 } },
+        ).toArray()
+      ).map((sleep) => ({
+        ...sleep,
+        id: String(sleep.id),
+        totalSleepTime: sleep.data.total_sleep_time,
+        endedAt: addSeconds(sleep.startedAt, sleep.data.total_timeinbed),
+        __typename: "Sleep",
+      }));
     },
     foodEntries: async (_parent, args) => {
       const user = (await auth())?.user;
@@ -667,7 +699,15 @@ export const typeDefs = gql`
     workouts(interval: IntervalInput!): [Workout!]
     exerciseSchedules: [ExerciseSchedule!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
+    sleeps(interval: IntervalInput!): [Sleep!]
     # dataSources: [UserDataSource!]
+  }
+
+  type Sleep {
+    id: ID!
+    startedAt: Date!
+    endedAt: Date!
+    totalSleepTime: Float!
   }
 
   type FoodEntry {

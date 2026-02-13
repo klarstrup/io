@@ -54,4 +54,10 @@ export const typePolicies: TypePolicies = {
       dueOn: { read: (d) => d && new Date(d) },
     },
   },
+  Sleep: {
+    fields: {
+      startedAt: { read: (d) => d && new Date(d) },
+      endedAt: { read: (d) => d && new Date(d) },
+    },
+  },
 };

@@ -167,7 +167,19 @@ export const GET = async (req: NextRequest) => {
 
           accessTokenResponse = refreshTokenResponse;
         } else {
-          throw new Error("Failed to refresh access token");
+          await Users.updateOne(
+            { _id: new ObjectId(user!.id) },
+            {
+              $set: {
+                "dataSources.$[source].config.accessTokenResponse": null,
+              },
+            },
+            { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+          );
+
+          throw new Error(
+            "Failed to refresh access token, clearing existing token",
+          );
         }
 
         const measUrl = new URL("https://wbsapi.withings.net/measure");
@@ -201,6 +213,7 @@ export const GET = async (req: NextRequest) => {
 
           setUpdated(updateResult);
         }
+        yield `Fetched and upserted ${measureResponse.body.measuregrps.length} measure groups`;
 
         const sleepUrl = new URL("https://wbsapi.withings.net/v2/sleep");
 
@@ -239,6 +252,8 @@ export const GET = async (req: NextRequest) => {
 
           setUpdated(updateResult);
         }
+
+        yield `Fetched and upserted ${sleepSummaryResponse.body.series.length} sleep summary series`;
       },
     );
   });

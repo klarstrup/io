@@ -23,6 +23,7 @@ import {
   DiaryAgendaDayUserDocument,
   DiaryAgendaDayUserTodosDocument,
   type NextSet,
+  type Sleep,
   type Todo,
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
@@ -57,6 +58,12 @@ gql`
   query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
     user {
       id
+      sleeps(interval: $interval) {
+        id
+        startedAt
+        endedAt
+        totalSleepTime
+      }
       exerciseSchedules {
         id
         exerciseId
@@ -280,6 +287,7 @@ export function DiaryAgendaDay() {
           .map((schedule) => schedule.nextSet)
           .filter(Boolean)
       : [],
+    sleeps: data?.user?.sleeps || [],
   };
 
   const {
@@ -287,6 +295,7 @@ export function DiaryAgendaDay() {
     calendarTodos = [],
     workouts = [],
     nextSets = [],
+    sleeps = [],
   } = userData || {};
 
   const eventsByDate: Record<string, JournalEntry[]> = {
@@ -296,6 +305,7 @@ export function DiaryAgendaDay() {
   };
   const todosByDate: Record<string, Todo[]> = {};
   const dueSetsByDate: Record<string, NextSet[]> = {};
+  const sleepsByDate: Record<string, Sleep[]> = {};
 
   const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
     (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
@@ -305,6 +315,16 @@ export function DiaryAgendaDay() {
     const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
     if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
     dueSetsByDate[calName].push(dueSet);
+  }
+
+  for (const sleep of sleeps) {
+    const calName = dateToString(addHours(sleep.endedAt, -dayStartHour));
+    if (!sleepsByDate[calName]) sleepsByDate[calName] = [];
+    sleepsByDate[calName].push(sleep);
+
+    const calName2 = dateToString(addHours(sleep.startedAt, -dayStartHour));
+    if (!sleepsByDate[calName2]) sleepsByDate[calName2] = [];
+    sleepsByDate[calName2].push(sleep);
   }
 
   for (const event of calendarEvents) {
@@ -454,12 +474,14 @@ export function DiaryAgendaDay() {
         );
         const dayDueSets = dueSetsByDate[dayName] || [];
         const dayTodos = todosByDate[dayName] || [];
+        const daySleeps = sleepsByDate[dayName] || [];
 
         const dayJournalEntries = [
           ...dayEvents,
           ...dayDueSets,
           ...dayTodos,
           ...dayWorkouts,
+          ...daySleeps,
         ]
           .sort((a, b) =>
             compareAsc(
@@ -571,6 +593,15 @@ const getLocationFromJournalEntry = (
   }
   if (entry.__typename === "Workout" && entry.locationId) {
     return { id: entry.locationId, name: entry.locationId };
+  }
+  if (
+    entry.__typename === "Sleep" &&
+    "location" in entry &&
+    entry.location &&
+    typeof entry.location === "string"
+  ) {
+    if (entry.location.trim() === "") return null;
+    return { id: entry.location, name: entry.location };
   }
   if (entry.__typename === "Event" && "location" in entry && entry.location) {
     if (entry.location.trim() === "") return null;
