@@ -21,9 +21,10 @@ export async function* wrapSources<
   source: S,
   fn: (dataSource: DS, setUpdated: SetUpdatedFn) => AsyncGenerator<T>,
 ) {
-  const dataSources = (user.dataSources ?? []).filter(
-    (ds): ds is DS => ds.source === source,
-  );
+  const dataSources = (user.dataSources ?? [])
+    .filter((ds): ds is DS => ds.source === source)
+    .filter((dataSource) => !dataSource.paused);
+
   for (const dataSource of dataSources) {
     const filter = { _id: new ObjectId(user.id) };
     const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
