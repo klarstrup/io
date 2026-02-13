@@ -32,7 +32,7 @@ export async function GET() {
   const mostRecentlyAttemptedAt =
     mostRecentlyAttempted.lastAttemptedAt ?? epoch;
   const timeSinceMostRecentlyAttempted =
-    now.getTime() - mostRecentlyAttemptedAt.getTime();
+    now.getTime() - new Date(mostRecentlyAttemptedAt).getTime();
 
   // If the most recently attempted scrape was less than 15 minutes ago, skip.
   if (timeSinceMostRecentlyAttempted < 15 * 60 * 1000) {
