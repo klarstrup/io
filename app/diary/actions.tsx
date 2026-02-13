@@ -175,21 +175,40 @@ export async function updateUserExerciseSchedules(
     .exerciseSchedules!;
 }
 
-export async function updateUserDataSources(
+export async function updateUserDataSource(
   userId: string,
-  dataSources: UserDataSource[],
+  dataSourceId: UserDataSource["id"],
+  dataSource: UserDataSource,
 ) {
   const user = (await auth())?.user;
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   await Users.updateOne(
     { _id: new ObjectId(user.id) },
-    { $set: { dataSources } },
+    {
+      $set: {
+        "dataSources.$[source]": {
+          ...dataSource,
+          updatedAt: new Date(),
+          createdAt: dataSource.createdAt && new Date(dataSource.createdAt),
+          lastAttemptedAt:
+            dataSource.lastAttemptedAt && new Date(dataSource.lastAttemptedAt),
+          lastSuccessfulAt:
+            dataSource.lastSuccessfulAt &&
+            new Date(dataSource.lastSuccessfulAt),
+          lastFailedAt:
+            dataSource.lastFailedAt && new Date(dataSource.lastFailedAt),
+        },
+      },
+    },
+    { arrayFilters: [{ "source.id": dataSourceId }] },
   );
 
   emitIoUpdate(user.id);
 
-  return (await Users.findOne({ _id: new ObjectId(user.id) }))!.dataSources;
+  return (await Users.findOne({
+    _id: new ObjectId(user.id),
+  }))!.dataSources?.find((source) => source.id === dataSourceId)!;
 }
 
 export async function updateLocation(
