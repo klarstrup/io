@@ -121,10 +121,7 @@ export const GET = async (req: NextRequest) => {
     yield* wrapSources(
       user,
       DataSource.Withings,
-      async function* (
-        { config: { accessTokenResponse, userId } },
-        setUpdated,
-      ) {
+      async function* ({ config: { accessTokenResponse } }, setUpdated) {
         const refreshTokenUrl = new URL(
           "https://wbsapi.withings.net/v2/oauth2",
         );
@@ -190,7 +187,7 @@ export const GET = async (req: NextRequest) => {
                 measuredAt: new Date(measureGroup.date * 1000),
                 createdAt: new Date(measureGroup.created * 1000),
                 modifiedAt: new Date(measureGroup.modified * 1000),
-                _withings_userId: userId,
+                _withings_userId: accessTokenResponse.userid,
                 _io_userId: user.id,
               },
             },
@@ -228,7 +225,7 @@ export const GET = async (req: NextRequest) => {
                 endedAt: new Date(sleepSeries.enddate * 1000),
                 createdAt: new Date(sleepSeries.created * 1000),
                 modifiedAt: new Date(sleepSeries.modified * 1000),
-                _withings_userId: userId,
+                _withings_userId: accessTokenResponse.userid,
                 _io_userId: user.id,
               },
             },

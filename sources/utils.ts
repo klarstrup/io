@@ -65,10 +65,7 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.Withings;
-      config: {
-        accessTokenResponse: Withings.AccessTokenResponse;
-        userId: string;
-      };
+      config: { accessTokenResponse: Withings.AccessTokenResponse };
     };
 
 export interface UserDataSourceMeta {
