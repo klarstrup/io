@@ -354,7 +354,8 @@ export default function UserStuffLocationsForm({
   );
 
   return (
-    <FieldSetX legend="Locations" className="w-full">
+    <div className="flex flex-col items-stretch gap-2">
+      <span>Locations</span>
       {locationBeingEdited ? (
         <div className="flex flex-col gap-1">
           <UserStuffLocationForm
@@ -389,6 +390,6 @@ export default function UserStuffLocationsForm({
           ))}
         </div>
       )}
-    </FieldSetX>
+    </div>
   );
 }
