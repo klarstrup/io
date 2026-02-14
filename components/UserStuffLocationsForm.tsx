@@ -1,7 +1,9 @@
 "use client";
+import { useApolloClient } from "@apollo/client/react";
 import { isPast } from "date-fns";
 import { Session } from "next-auth";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { v4 } from "uuid";
@@ -14,10 +16,14 @@ import { FieldSetX, FieldSetY } from "./FieldSet";
 function UserStuffLocationForm({
   user,
   location,
+  onDismiss,
 }: {
   user?: Session["user"];
   location: LocationData & { id: string };
+  onDismiss: () => void;
 }) {
+  const router = useRouter();
+  const client = useApolloClient();
   const defaultValues = useMemo(() => omit(location, "id"), [location]);
   const {
     handleSubmit,
@@ -52,8 +58,10 @@ function UserStuffLocationForm({
         }
 
         const newLocation = await updateLocation(user.id, location.id, data);
-
+        router.refresh();
+        await client.refetchQueries({ include: "all" });
         reset(newLocation ? newLocation : defaultValues);
+        onDismiss();
       })}
       className="flex min-w-[50%] flex-1 flex-col gap-1"
     >
@@ -67,6 +75,7 @@ function UserStuffLocationForm({
                 {...register(`name`)}
                 placeholder="Name"
                 className="flex-1"
+                autoFocus
               />{" "}
               <button
                 type="button"
@@ -279,6 +288,18 @@ function UserStuffLocationForm({
         </FieldSetX>
         <div className="flex items-center justify-center gap-2">
           <button
+            type="button"
+            onClick={() => onDismiss()}
+            disabled={isSubmitting}
+            className={
+              "rounded-md px-2 py-1 text-sm font-semibold " +
+              (isSubmitting ? " cursor-not-allowed" : " cursor-pointer") +
+              (isSubmitting ? " opacity-50" : "")
+            }
+          >
+            Cancel
+          </button>
+          <button
             type="submit"
             disabled={!isDirty || isSubmitting}
             className={
@@ -324,17 +345,50 @@ export default function UserStuffLocationsForm({
   user?: Session["user"];
   locations?: (LocationData & { id: string })[];
 }) {
+  const [editingLocationId, setEditingLocationId] = useState<string | null>(
+    null,
+  );
+
+  const locationBeingEdited = locations?.find(
+    (location) => location.id === editingLocationId,
+  );
+
   return (
     <FieldSetX legend="Locations" className="w-full">
-      <div className="flex flex-col gap-1">
-        {locations?.map((location) => (
+      {locationBeingEdited ? (
+        <div className="flex flex-col gap-1">
           <UserStuffLocationForm
-            key={location.id}
             user={user}
-            location={location}
+            location={locationBeingEdited}
+            onDismiss={() => setEditingLocationId(null)}
           />
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2">
+          {locations?.map((location) => (
+            <div
+              key={location.id}
+              className="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1"
+            >
+              <button
+                type="button"
+                onClick={() => setEditingLocationId(location.id)}
+                className={"cursor-pointer text-2xl"}
+              >
+                ✍️
+              </button>
+              <Link
+                prefetch={false}
+                href={`/diary/locations/${location.id}`}
+                className="font-bold"
+                style={{ color: "#edab00" }}
+              >
+                {location.name}
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
     </FieldSetX>
   );
 }
