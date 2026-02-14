@@ -560,13 +560,15 @@ export default function UserStuffSourcesForm({
       <span>Data Sources</span>
       {user?.dataSources && user.dataSources.length > 0 ? (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
-          {user.dataSources.map((source) => (
-            <UserStuffSourceForm
-              key={source.id}
-              sourceOptions={sourceOptions}
-              source={source}
-            />
-          ))}
+          {[...user.dataSources]
+            .sort((a, b) => a.source.localeCompare(b.source))
+            .map((source) => (
+              <UserStuffSourceForm
+                key={source.id}
+                sourceOptions={sourceOptions}
+                source={source}
+              />
+            ))}
         </div>
       ) : null}
     </div>
