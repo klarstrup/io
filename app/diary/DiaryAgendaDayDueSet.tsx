@@ -30,7 +30,7 @@ import {
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { durationToMs } from "../../models/workout";
-import { DataSource } from "../../sources/utils";
+import { exerciseIdToDataSourceMapping } from "../../sources/utils";
 import {
   type cotemporality,
   dateToString,
@@ -453,27 +453,13 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                   </select>
                 </button>
               )}
-              {dueSet.exerciseId === 2006 ? (
-                <div className="rounded-md border border-black/20 bg-white p-1">
-                  <UserStuffSourcesForm sourceOptions={[DataSource.Grippy]} />
-                </div>
-              ) : dueSet.exerciseId === 2003 ? (
+              {dueSet.exerciseId in exerciseIdToDataSourceMapping &&
+              exerciseIdToDataSourceMapping[dueSet.exerciseId] ? (
                 <div className="rounded-md border border-black/20 bg-white p-1">
                   <UserStuffSourcesForm
-                    sourceOptions={[
-                      DataSource.KilterBoard,
-                      DataSource.MoonBoard,
-                    ]}
-                  />
-                </div>
-              ) : dueSet.exerciseId === 2001 ? (
-                <div className="rounded-md border border-black/20 bg-white p-1">
-                  <UserStuffSourcesForm
-                    sourceOptions={[
-                      DataSource.TopLogger,
-                      DataSource.ClimbAlong,
-                      DataSource.Onsight,
-                    ]}
+                    sourceOptions={
+                      exerciseIdToDataSourceMapping[dueSet.exerciseId]!
+                    }
                   />
                 </div>
               ) : null}

@@ -1,4 +1,5 @@
 import type { TopLoggerAuthTokens } from "../lib";
+import { ExerciseData } from "../models/exercises.types";
 import type { Grippy } from "./grippy";
 import type { Withings } from "./withings";
 
@@ -120,4 +121,13 @@ export const dataSourceGroups = {
   events: [DataSource.ICal],
   weather: [DataSource.Tomorrow],
   health: [DataSource.Withings],
+};
+
+export const exerciseIdToDataSourceMapping: Partial<
+  Record<ExerciseData["id"], DataSource[]>
+> = {
+  518: [DataSource.RunDouble, DataSource.Sportstiming],
+  2001: [DataSource.TopLogger, DataSource.ClimbAlong, DataSource.Onsight],
+  2003: [DataSource.KilterBoard, DataSource.MoonBoard],
+  2006: [DataSource.Grippy],
 };
