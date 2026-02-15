@@ -3,6 +3,10 @@ import type { Session } from "next-auth";
 import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
 import { Users } from "../models/user.server";
+import {
+  updateExerciseCounts,
+  updateLocationCounts,
+} from "../models/workout.server";
 import type { DataSource, UserDataSource } from "./utils";
 
 export type SetUpdatedFn = (
@@ -92,6 +96,11 @@ export async function* wrapSources<
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore - some runtimes think this is too complex
         yield* materializer?.(user, dataSource);
+
+        await Promise.all([
+          updateLocationCounts(user.id),
+          updateExerciseCounts(user.id),
+        ]);
       }
 
       if (updatedDatabase !== false) {

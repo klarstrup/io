@@ -8,6 +8,7 @@ import {
   startOfDay,
   subDays,
   subMonths,
+  subQuarters,
   subYears,
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
@@ -451,8 +452,13 @@ export const getAllWorkoutLocations = async (user: Session["user"]) => {
   );
 };
 
-export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
-  await WorkoutExercisesView.aggregate([
+export const updateExerciseCounts = async (userId: Session["user"]["id"]) => {
+  // Calculcate quarterly and monthly frequency
+  const now = new Date();
+  const oneMonthAgo = subMonths(now, 1);
+  const oneQuarterAgo = subQuarters(now, 1);
+
+  await MaterializedWorkoutsView.aggregate([
     { $match: { userId, deletedAt: { $exists: false } } },
     { $unwind: "$exercises" },
     {
@@ -462,6 +468,16 @@ export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
         userId: { $first: "$userId" },
         exerciseCount: { $count: {} },
         workedOutAt: { $max: "$workedOutAt" },
+        monthlyCount: {
+          $sum: {
+            $cond: [{ $gte: ["$workedOutAt", oneMonthAgo] }, 1, 0],
+          },
+        },
+        quarterlyCount: {
+          $sum: {
+            $cond: [{ $gte: ["$workedOutAt", oneQuarterAgo] }, 1, 0],
+          },
+        },
       },
     },
     {
@@ -469,14 +485,17 @@ export const updateExerciseCounts = async (userId: Session["user"]["id"]) =>
         $setField: { field: "userId", input: "$$ROOT", value: userId },
       },
     },
-    { $merge: { into: "workout_exercises_view", whenMatched: "replace" } },
+    { $merge: { into: "workout_exercises_view" } },
   ]).toArray();
+};
 
 export interface IWorkoutExercisesView {
   userId: string;
   exerciseId: number;
   exerciseCount: number;
   workedOutAt: Date;
+  monthlyCount: number;
+  quarterlyCount: number;
 }
 
 export const WorkoutExercisesView = proxyCollection<IWorkoutExercisesView>(

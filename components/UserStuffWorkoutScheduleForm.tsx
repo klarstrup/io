@@ -1,6 +1,13 @@
 "use client";
 import { useApolloClient } from "@apollo/client/react";
-import { compareDesc, isFuture, isValid } from "date-fns";
+import {
+  compareDesc,
+  differenceInDays,
+  isFuture,
+  isValid,
+  subMonths,
+  subQuarters,
+} from "date-fns";
 import { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +20,7 @@ import { InputType } from "../models/exercises.types";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { epoch } from "../utils";
+import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
 
 /**
@@ -359,11 +367,7 @@ export default function UserStuffWorkoutSchedulesForm({
 
                   return (
                     <tr key={schedule.id}>
-                      <td
-                        className={
-                          "px-1 text-left font-semibold whitespace-nowrap"
-                        }
-                      >
+                      <td className={"px-1 text-left whitespace-nowrap"}>
                         <div
                           className={
                             "flex items-center gap-1 " +
@@ -382,29 +386,35 @@ export default function UserStuffWorkoutSchedulesForm({
                               onClick={() =>
                                 setExerciseScheduleBeingEditedId(schedule.id)
                               }
-                              className="cursor-pointer text-2xl text-gray-500"
+                              className="cursor-pointer text-xl text-gray-500"
                             >
                               ✍️
                             </button>
+                            <span
+                              title={schedule.enabled ? "Enabled" : "Disabled"}
+                              className={"cursor-help text-xs"}
+                            >
+                              {schedule.enabled ? "✅" : "❌"}
+                            </span>
                           </div>
-                          <div className={"flex flex-col"}>
-                            <div>
+                          <div className={"flex flex-col leading-snug"}>
+                            <div className="font-semibold">
                               {[exercise.name, ...exercise.aliases]
                                 .filter((name) => name.length >= 4)
                                 .sort((a, b) => a.length - b.length)[0]!
                                 .replace("Barbell", "")}{" "}
-                              <span
-                                title={
-                                  schedule.enabled ? "Enabled" : "Disabled"
-                                }
-                                className={"cursor-help"}
-                              >
-                                {schedule.enabled ? "✅" : "❌"}
-                              </span>
                             </div>
                             {stats ? (
                               <div className="text-xs text-gray-500">
-                                ({stats.exerciseCount})
+                                {stats?.workedOutAt ? (
+                                  <>
+                                    ⏳{" "}
+                                    <DistanceToNowStrict
+                                      date={stats.workedOutAt}
+                                    />{" "}
+                                  </>
+                                ) : null}
+                                ({stats.exerciseCount} total)
                               </div>
                             ) : null}
                           </div>
@@ -418,10 +428,43 @@ export default function UserStuffWorkoutSchedulesForm({
                             : null}
                         </td>
                       ) : null}
-                      <td className="text-xs text-gray-500">
+                      <td className="leading-none text-gray-500">
+                        every{" "}
                         {schedule.frequency.days
                           ? `${schedule.frequency.days.toLocaleString("en-DK")} days`
                           : "N/A"}
+                        <br />
+                        <small>
+                          <small>
+                            {stats?.monthlyCount && schedule.frequency.days
+                              ? `${(
+                                  (stats.monthlyCount /
+                                    differenceInDays(
+                                      new Date(),
+                                      subMonths(new Date(), 1),
+                                    ) /
+                                    (1 / schedule.frequency.days)) *
+                                  100
+                                ).toLocaleString("en-DK", {
+                                  maximumFractionDigits: 0,
+                                })}% 1M`
+                              : "N/A"}{" "}
+                            /{" "}
+                            {stats?.quarterlyCount && schedule.frequency.days
+                              ? `${(
+                                  (stats.quarterlyCount /
+                                    differenceInDays(
+                                      new Date(),
+                                      subQuarters(new Date(), 1),
+                                    ) /
+                                    (1 / schedule.frequency.days)) *
+                                  100
+                                ).toLocaleString("en-DK", {
+                                  maximumFractionDigits: 0,
+                                })}% 1Q`
+                              : "N/A"}
+                          </small>
+                        </small>
                       </td>
                       <td className="text-xs text-gray-500">
                         {schedule.workingSets ? schedule.workingSets : null}
