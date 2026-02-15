@@ -151,6 +151,29 @@ export async function snoozeUserExerciseSchedule(
   }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
 }
 
+export async function updateUserExerciseSchedule(
+  userId: string,
+  exerciseScheduleId: ExerciseSchedule["id"],
+  exerciseSchedule: ExerciseSchedule,
+) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  console.log(
+    await Users.updateOne(
+      { _id: new ObjectId(user.id) },
+      { $set: { "exerciseSchedules.$[exerciseSchedule]": exerciseSchedule } },
+      { arrayFilters: [{ "exerciseSchedule.id": exerciseScheduleId }] },
+    ),
+  );
+
+  emitIoUpdate(user.id);
+
+  return (await Users.findOne({
+    _id: new ObjectId(user.id),
+  }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId)!;
+}
+
 export async function updateUserExerciseSchedules(
   userId: string,
   schedules: ExerciseSchedule[],

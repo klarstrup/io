@@ -59,99 +59,108 @@ function UserStuffSourceForm({
         key={source.id}
         className="flex items-start justify-between gap-1 rounded-md border border-gray-300 bg-white/75 p-1"
       >
-        <div className="flex flex-col items-stretch">
-          <div className="flex flex-wrap gap-1">
-            <button
-              type="button"
-              className="cursor-pointer text-sm"
-              onClick={() => setIsEditing(true)}
+        <div className="flex items-stretch">
+          <div className="flex gap-2">
+            <div
+              className={
+                "flex h-full flex-col items-center justify-between gap-0.5 rounded-md text-sm"
+              }
             >
-              ✏️
-            </button>
-            {source.name !== source.source ? (
-              <small>{source.source}</small>
-            ) : null}
-            <div className="text-sm font-semibold">{source.name}</div>
-          </div>
-
-          <div className="text-md">
-            {source.paused || source.source === DataSource.Fitocracy ? (
-              <>
-                <small>Paused</small>{" "}
-                <span title="This data source is paused and will not be automatically fetched.">
-                  ⏸️
-                </span>
-              </>
-            ) : source.lastAttemptedAt &&
-              (!source.lastSuccessfulAt ||
-                new Date(source.lastAttemptedAt) >
-                  new Date(source.lastSuccessfulAt)) &&
-              (!source.lastFailedAt ||
-                new Date(source.lastAttemptedAt) >
-                  new Date(source.lastFailedAt)) ? (
-              <>
-                <small>
-                  <DistanceToNowStrict
-                    date={new Date(source.lastAttemptedAt)}
-                  />
-                </small>{" "}
-                <div className="inline-block animate-spin text-lg leading-0">
-                  ↻
-                </div>
-              </>
-            ) : source.lastSuccessfulAt &&
-              (!source.lastFailedAt ||
-                new Date(source.lastSuccessfulAt) >
-                  new Date(source.lastFailedAt)) ? (
-              <>
-                <small>
-                  <DistanceToNowStrict
-                    date={new Date(source.lastSuccessfulAt)}
-                  />
-                </small>{" "}
-                ✅
-              </>
-            ) : source.lastFailedAt ? (
-              <>
-                <small>
-                  <DistanceToNowStrict date={new Date(source.lastFailedAt)} />
-                </small>{" "}
-                <span title={source.lastError || "Unknown error"}>⚠️</span>
-              </>
-            ) : (
-              "☑️"
-            )}
+              <button
+                type="button"
+                className="cursor-pointer text-2xl leading-none"
+                onClick={() => setIsEditing(true)}
+              >
+                ✍️
+              </button>
+              <button
+                type="button"
+                disabled={
+                  Boolean(
+                    source.lastAttemptedAt &&
+                    (!source.lastSuccessfulAt ||
+                      new Date(source.lastAttemptedAt) >
+                        new Date(source.lastSuccessfulAt)) &&
+                    (!source.lastFailedAt ||
+                      new Date(source.lastAttemptedAt) >
+                        new Date(source.lastFailedAt)),
+                  ) ||
+                  wasFetchedRecently ||
+                  source.paused ||
+                  source.source === DataSource.Fitocracy
+                }
+                className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                onClick={async () => {
+                  const promise = fetch(`/api/${source.source}_scrape`);
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                  router.refresh();
+                  await promise;
+                  router.refresh();
+                  client.refetchQueries({ include: "all" });
+                }}
+              >
+                🔄
+              </button>
+            </div>
+            <div className="flex flex-1 flex-col justify-between leading-snug">
+              {source.name !== source.source ? (
+                <small>{source.source}</small>
+              ) : null}
+              <div className="text-sm font-semibold">{source.name}</div>
+              <div>
+                {source.paused || source.source === DataSource.Fitocracy ? (
+                  <>
+                    <small>Paused</small>{" "}
+                    <span title="This data source is paused and will not be automatically fetched.">
+                      ⏸️
+                    </span>
+                  </>
+                ) : source.lastAttemptedAt &&
+                  (!source.lastSuccessfulAt ||
+                    new Date(source.lastAttemptedAt) >
+                      new Date(source.lastSuccessfulAt)) &&
+                  (!source.lastFailedAt ||
+                    new Date(source.lastAttemptedAt) >
+                      new Date(source.lastFailedAt)) ? (
+                  <>
+                    <small>
+                      <DistanceToNowStrict
+                        date={new Date(source.lastAttemptedAt)}
+                      />
+                    </small>{" "}
+                    <div className="inline-block animate-spin text-lg leading-0">
+                      ↻
+                    </div>
+                  </>
+                ) : source.lastSuccessfulAt &&
+                  (!source.lastFailedAt ||
+                    new Date(source.lastSuccessfulAt) >
+                      new Date(source.lastFailedAt)) ? (
+                  <>
+                    <small>
+                      <DistanceToNowStrict
+                        date={new Date(source.lastSuccessfulAt)}
+                      />
+                    </small>{" "}
+                    ✅
+                  </>
+                ) : source.lastFailedAt ? (
+                  <>
+                    <small>
+                      <DistanceToNowStrict
+                        date={new Date(source.lastFailedAt)}
+                      />
+                    </small>{" "}
+                    <span title={source.lastError || "Unknown error"}>⚠️</span>
+                  </>
+                ) : (
+                  "☑️"
+                )}
+              </div>
+            </div>
           </div>
         </div>
-        <button
-          type="button"
-          disabled={
-            Boolean(
-              source.lastAttemptedAt &&
-              (!source.lastSuccessfulAt ||
-                new Date(source.lastAttemptedAt) >
-                  new Date(source.lastSuccessfulAt)) &&
-              (!source.lastFailedAt ||
-                new Date(source.lastAttemptedAt) >
-                  new Date(source.lastFailedAt)),
-            ) ||
-            wasFetchedRecently ||
-            source.paused ||
-            source.source === DataSource.Fitocracy
-          }
-          className="cursor-pointer text-4xl disabled:cursor-not-allowed disabled:opacity-50"
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onClick={async () => {
-            const promise = fetch(`/api/${source.source}_scrape`);
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            router.refresh();
-            await promise;
-            router.refresh();
-            client.refetchQueries({ include: "all" });
-          }}
-        >
-          🔄
-        </button>
       </div>
     );
   }
@@ -557,7 +566,7 @@ export default function UserStuffSourcesForm({
 
   return (
     <div className="flex flex-col items-stretch gap-2">
-      <span>Data Sources</span>
+      <h1 className="text-lg font-bold">Data Sources</h1>
       {user?.dataSources && user.dataSources.length > 0 ? (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
           {[...user.dataSources]

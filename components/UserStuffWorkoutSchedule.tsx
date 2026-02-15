@@ -1,6 +1,6 @@
 import { auth } from "../auth";
 import { getAllWorkoutExercises } from "../models/workout.server";
-import { UserStuffWorkoutScheduleFormLoader } from "./UserStuffWorkoutScheduleFormLoader";
+import UserStuffWorkoutSchedulesForm from "./UserStuffWorkoutScheduleForm";
 
 export default async function UserStuffWorkoutSchedule() {
   const user = (await auth())?.user;
@@ -8,7 +8,7 @@ export default async function UserStuffWorkoutSchedule() {
   if (!user) return null;
 
   return (
-    <UserStuffWorkoutScheduleFormLoader
+    <UserStuffWorkoutSchedulesForm
       exercisesStats={await getAllWorkoutExercises(user)}
       user={user}
     />

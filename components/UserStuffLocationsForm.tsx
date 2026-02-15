@@ -355,7 +355,7 @@ export default function UserStuffLocationsForm({
 
   return (
     <div className="flex flex-col items-stretch gap-2">
-      <span>Locations</span>
+      <h1 className="text-lg font-bold">Locations</h1>
       {locationBeingEdited ? (
         <div className="flex flex-col gap-1">
           <UserStuffLocationForm
