@@ -555,7 +555,7 @@ export function DiaryAgendaDay() {
 
             dayJournalEntriesIncludingLocationChanges.push({
               __typename: "LocationChange",
-              id: `location-change-${i}`,
+              id: `location-change-${dayName}-${i}`,
               location: location.name,
               date: targetDate,
             });

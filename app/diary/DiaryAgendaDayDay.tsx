@@ -46,6 +46,7 @@ import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
 import { DiaryAgendaDayEventEnd } from "./DiaryAgendaDayEventEnd";
+import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkoutSet } from "./DiaryAgendaDayWorkoutSet";
@@ -484,21 +485,14 @@ export function DiaryAgendaDayDay({
         });
       }
     } else if (journalEntry.__typename === "LocationChange") {
-      const locationChange = journalEntry;
       dayJournalEntryElements.push({
-        id: locationChange.id,
+        id: "location-change-" + journalEntry.id,
         element: (
-          <DiaryAgendaDayEntry
-            key={locationChange.id}
+          <DiaryAgendaDayLocationChange
+            key={"location-change-" + journalEntry.id}
+            locationChange={journalEntry}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-          >
-            <center
-              key={locationChange.id}
-              className="-ml-6 w-full text-xs font-medium opacity-75 [font-variant:small-caps]"
-            >
-              {locationChange.location}
-            </center>
-          </DiaryAgendaDayEntry>
+          />
         ),
       });
     }
