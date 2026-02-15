@@ -444,7 +444,7 @@ export function DiaryAgendaDay() {
 
   return (
     <div className="flex flex-col items-stretch justify-start">
-      {daysOfInterval.map((dayDate, dayI) => {
+      {daysOfInterval.map((dayDate) => {
         const dayStart = addHours(startOfDay(dayDate), dayStartHour);
         const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
 
