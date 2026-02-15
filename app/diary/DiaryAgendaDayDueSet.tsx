@@ -288,12 +288,23 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 : " rounded-r-[5px]")
             }
           >
-            <Link prefetch={false} href={`/diary/exercises/${exerciseInfo.id}`}>
-              {[exerciseInfo.name, ...exerciseInfo.aliases]
+            {!isActive ? (
+              [exerciseInfo.name, ...exerciseInfo.aliases]
                 .filter((name) => name.length >= 4)
                 .sort((a, b) => a.length - b.length)[0]!
-                .replace("Barbell", "")}
-            </Link>
+                .replace("Barbell", "")
+            ) : (
+              <Link
+                prefetch={false}
+                href={`/diary/exercises/${exerciseInfo.id}`}
+                className="hover:underline"
+              >
+                {[exerciseInfo.name, ...exerciseInfo.aliases]
+                  .filter((name) => name.length >= 4)
+                  .sort((a, b) => a.length - b.length)[0]!
+                  .replace("Barbell", "")}
+              </Link>
+            )}
           </div>
           {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
             <div
