@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { addDays } from "date-fns";
 import gql from "graphql-tag";
-import { forwardRef, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   type DeleteTodoMutation,
@@ -14,7 +14,6 @@ import {
   type UpdateTodoMutation,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
-import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getTodoPrincipalDate } from "./diaryUtils";
@@ -192,7 +191,7 @@ export const DiaryAgendaDayTodo =
           <div
             className={
               "h-full self-stretch" +
-              (isActive ? " px-1 pt-1 pb-1" : " px-1.5 py-0.5")
+              (isActive ? " px-1 pt-1 pb-1" : " px-1.5 py-0")
             }
           >
             <form
