@@ -1,7 +1,6 @@
 import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { forwardRef, ReactElement } from "react";
-import { twMerge } from "tailwind-merge";
 
 export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   {
@@ -40,21 +39,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   const IconContainer = onIconClick ? "button" : "div";
 
   return (
-    <div
-      ref={ref}
-      className={twMerge(
-        "relative flex",
-        /*
-        isBetweenAnEventAndItsEnd || isEventWithSeparatedEnd || isEventEnd
-          ? "border-l-8 border-blue-300"
-          : "",
-        isEventWithSeparatedEnd ? "border-t-8 border-blue-300" : "",
-        isEventEnd ? "border-b-8 border-blue-300" : "",
-        isBetweenAnEventAndItsEnd || isEventWithSeparatedEnd ? "-mb-1.5" : "",
-        */
-      )}
-      {...props}
-    >
+    <div ref={ref} className={"relative flex"} {...props}>
       <IconContainer
         disabled={iconDisabled}
         className={
