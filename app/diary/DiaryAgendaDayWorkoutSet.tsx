@@ -118,7 +118,7 @@ export function DiaryAgendaDayWorkoutSet({
       >
         <div
           className={
-            "flex w-32 flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] leading-tight " +
+            "flex flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] leading-tight " +
             (!workoutExercise.sets.length ||
             isClimbingExercise(workoutExercise.exerciseId)
               ? " rounded-r-[5px]"
@@ -128,9 +128,7 @@ export function DiaryAgendaDayWorkoutSet({
             workout.source === WorkoutSource.Self
               ? " py-0.5"
               : " ") +
-            (workout.source === WorkoutSource.Self
-              ? " bg-black/20 px-1.5 text-sm text-white"
-              : "")
+            (workout.source === WorkoutSource.Self ? " px-1.5 text-sm" : "")
           }
         >
           <div className="flex items-center justify-between">
@@ -152,7 +150,7 @@ export function DiaryAgendaDayWorkoutSet({
         {setsWithLocation.length > 0 ? (
           <div
             className={
-              "flex flex-1 items-center text-xs " +
+              "border-l-black/20 flex flex-1 items-center border-l text-xs " +
               (isClimbingExercise(exerciseInfo.id) ? " pb-1" : " ") +
               (workout.source === WorkoutSource.Self ? " px-1 py-0.5" : "")
             }
