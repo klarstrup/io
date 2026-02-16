@@ -50,7 +50,9 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
               }),
             ),
       clientAwareness: {
-        name: typeof window === "undefined" ? "io-server" : "io-client",
+        name:
+          (typeof window === "undefined" ? "io-server" : "io-client") +
+          (process.env.NODE_ENV === "development" ? "-dev" : ""),
         // commit
         version: process.env.NEXT_PUBLIC_COMMIT_SHA,
       },

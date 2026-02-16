@@ -12,7 +12,8 @@ const makeApolloClient = () =>
     cache: new InMemoryCache({ typePolicies }),
     link: new SchemaLink({ schema }),
     clientAwareness: {
-      name: "io-server",
+      name:
+        "io-server" + (process.env.NODE_ENV === "development" ? "-dev" : ""),
       // commit
       version: process.env.NEXT_PUBLIC_COMMIT_SHA,
     },
