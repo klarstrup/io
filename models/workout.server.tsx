@@ -189,7 +189,7 @@ export const getNextSet = async ({
   }
 
   const exercise = workout?.exercise;
-  const exerciseDefinition = exercisesById[scheduleEntry.exerciseId]!;
+  const exerciseDefinition = exercisesById.get(scheduleEntry.exerciseId)!;
   let effortInputIndex = exerciseDefinition.inputs.findIndex(
     ({ type }) =>
       type === InputType.Weight ||
@@ -343,7 +343,7 @@ export function getIsSetPR(
   exerciseId: WorkoutData["exercises"][number]["exerciseId"],
   set: WorkoutExerciseSet,
 ) {
-  const exercise = exercisesById[exerciseId];
+  const exercise = exercisesById.get(exerciseId);
   if (!exercise) return noPR;
 
   const inputValues = set.inputs.map(

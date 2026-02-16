@@ -108,7 +108,7 @@ function WorkoutsSummary({ workouts }: { workouts: Workout[] }) {
         Array.from(exercisesDone)
           .sort()
           .map((exerciseId) => {
-            const exercise = exercisesById[exerciseId]!;
+            const exercise = exercisesById.get(exerciseId)!;
 
             let icon: JSX.Element | string = (
               <span

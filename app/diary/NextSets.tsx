@@ -64,7 +64,7 @@ export function NextSets({
           nextWorkingSetInputs,
           workedOutAt,
         } = dueSet;
-        const exercise = exercisesById[exerciseId]!;
+        const exercise = exercisesById.get(exerciseId)!;
 
         return (
           <li

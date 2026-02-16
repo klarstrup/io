@@ -65,7 +65,7 @@ function UserStuffWorkoutScheduleForm({
     defaultValues: exerciseScheduleForForm(exerciseSchedule),
   });
 
-  const exercise = exercisesById[exerciseSchedule.exerciseId];
+  const exercise = exercisesById.get(exerciseSchedule.exerciseId);
   if (!exercise) {
     throw new Error(
       `Exercise with ID ${exerciseSchedule.exerciseId} not found`,
@@ -344,7 +344,7 @@ export default function UserStuffWorkoutSchedulesForm({
                       : 1,
                 )
                 .map((schedule) => {
-                  const exercise = exercisesById[schedule.exerciseId];
+                  const exercise = exercisesById.get(schedule.exerciseId);
                   if (!exercise) return null;
 
                   const stats = exercisesStats.find(

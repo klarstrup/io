@@ -177,7 +177,7 @@ export default function WorkoutEntry({
         }}
       >
         {workout.exercises.map((workoutExercise, exerciseIndex) => {
-          const exercise = exercisesById[workoutExercise.exerciseId]!;
+          const exercise = exercisesById.get(workoutExercise.exerciseId)!;
 
           return (
             <div key={exerciseIndex}>

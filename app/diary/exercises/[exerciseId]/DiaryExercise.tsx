@@ -26,7 +26,7 @@ export default async function DiaryExercise({
   mergeWorkouts?: boolean;
   timeframe?: ExerciseHistoryTimeframe;
 }) {
-  const exercise = exercisesById[exerciseId]!;
+  const exercise = exercisesById.get(exerciseId)!;
   const user = (await auth())?.user;
 
   return (

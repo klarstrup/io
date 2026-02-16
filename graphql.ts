@@ -260,7 +260,7 @@ export const resolvers: Resolvers = {
         ...workout,
         location: undefined,
         exercises: workout.exercises.map((exercise) => {
-          const exerciseInfo = exercisesById[exercise.exerciseId]!;
+          const exerciseInfo = exercisesById.get(exercise.exerciseId)!;
 
           return {
             ...exercise,
@@ -548,7 +548,7 @@ export const resolvers: Resolvers = {
   },
   WorkoutExercise: {
     exerciseInfo: async (parent) => {
-      const exerciseInfo = exercisesById[parent.exerciseId];
+      const exerciseInfo = exercisesById.get(parent.exerciseId);
 
       if (!exerciseInfo) {
         throw new Error(
@@ -583,7 +583,7 @@ export const resolvers: Resolvers = {
   },
   ExerciseSchedule: {
     exerciseInfo: async (parent) => {
-      const exerciseInfo = exercisesById[parent.exerciseId];
+      const exerciseInfo = exercisesById.get(parent.exerciseId);
 
       if (!exerciseInfo) {
         throw new Error(

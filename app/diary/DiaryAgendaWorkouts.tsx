@@ -58,8 +58,9 @@ export async function DiaryAgendaWorkouts({
                 }))) ??
               undefined;
 
-            const exerciseData =
-              exercisesById[workout.exercises[0]!.exerciseId!];
+            const exerciseData = exercisesById.get(
+              workout.exercises[0]!.exerciseId!,
+            );
 
             if (!exerciseData) {
               throw new Error(

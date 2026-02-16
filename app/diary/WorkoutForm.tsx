@@ -287,7 +287,7 @@ export function WorkoutForm<R extends string>({
   const handleAddExercise = useEvent((dueSet: NextSet) => {
     const scheduleEntry = dueSet.scheduleEntry;
 
-    const exerciseDefinition = exercisesById[dueSet.exerciseId]!;
+    const exerciseDefinition = exercisesById.get(dueSet.exerciseId)!;
 
     let effortInputIndex = exerciseDefinition.inputs.findIndex(
       ({ type }) =>
@@ -498,7 +498,7 @@ export function WorkoutForm<R extends string>({
         </div>
         <div className="flex flex-col gap-1">
           {fields.map((field, index) => {
-            const exercise = exercisesById[field.exerciseId];
+            const exercise = exercisesById.get(field.exerciseId);
             if (!exercise) {
               throw new Error(`Exercise with ID ${field.exerciseId} not found`);
             }

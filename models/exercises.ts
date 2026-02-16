@@ -57430,6 +57430,6 @@ export const exercises = [
   },
 ] as unknown as ExerciseData[];
 
-const exercisesById: Record<number, ExerciseData> = {};
-for (const exercise of exercises) exercisesById[exercise.id] = exercise;
+const exercisesById: Map<number, ExerciseData> = new Map();
+for (const exercise of exercises) exercisesById.set(exercise.id, exercise);
 export { exercisesById };
