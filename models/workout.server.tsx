@@ -133,9 +133,7 @@ export const getNextSet = async ({
             deletedAt: { $exists: false },
           },
         },
-        {
-          $sort: { workedOutAt: -1 },
-        },
+        { $sort: { workedOutAt: -1 } },
         {
           $project: {
             _id: 0,

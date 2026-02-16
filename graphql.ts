@@ -170,21 +170,21 @@ export const resolvers: Resolvers = {
       if (!withingsUserId) return null;
 
       return (
-        await WithingsSleepSummarySeries.find(
-          {
-            _withings_userId: withingsUserId,
-            startedAt: { $gte: new Date(args.interval.start) },
-            endedAt: { $lte: new Date(args.interval.end) },
-          },
-          { sort: { startedAt: -1 } },
-        ).toArray()
-      ).map((sleep) => ({
-        ...sleep,
-        id: String(sleep.id),
-        totalSleepTime: sleep.data.total_sleep_time,
-        endedAt: addSeconds(sleep.startedAt, sleep.data.total_timeinbed),
-        __typename: "Sleep",
-      }));
+        await WithingsSleepSummarySeries.find({
+          _withings_userId: withingsUserId,
+          startedAt: { $gte: new Date(args.interval.start) },
+          endedAt: { $lte: new Date(args.interval.end) },
+        }).toArray()
+      ).map(
+        (sleep) =>
+          ({
+            ...sleep,
+            id: String(sleep.id),
+            totalSleepTime: sleep.data.total_sleep_time,
+            endedAt: addSeconds(sleep.startedAt, sleep.data.total_timeinbed),
+            __typename: "Sleep",
+          }) as const,
+      );
     },
     foodEntries: async (_parent, args) => {
       const user = (await auth())?.user;
@@ -237,72 +237,60 @@ export const resolvers: Resolvers = {
       if (!user) return [];
 
       return (
-        await MaterializedWorkoutsView.find(
-          {
-            userId: user.id,
-            $or: [
-              {
-                workedOutAt: rangeToQuery(
-                  args.interval.start,
-                  args.interval.end,
-                ),
-              },
-              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-              {
-                workedOutAt: startOfDay(args.interval.start, { in: tz("UTC") }),
-              },
-            ],
-            deletedAt: { $exists: false },
-          },
-          { sort: { workedOutAt: -1 } },
-        ).toArray()
-      ).map(async (workout) => ({
-        ...workout,
-        location: undefined,
-        exercises: workout.exercises.map((exercise) => {
-          const exerciseInfo = exercisesById.get(exercise.exerciseId)!;
-
-          return {
-            ...exercise,
-            exerciseInfo: {
-              ...exerciseInfo,
-              isHidden: exerciseInfo.is_hidden,
-              __typename: "ExerciseInfo",
-              inputs: exerciseInfo.inputs.map((input) => ({
-                ...input,
-                __typename: "ExerciseInfoInput",
-              })),
-              instructions: exerciseInfo.instructions.map((instruction) => ({
-                ...instruction,
-                __typename: "ExerciseInfoInstruction",
-              })),
-              tags: exerciseInfo.tags?.map((tag) => ({
-                ...tag,
-                __typename: "ExerciseInfoTag",
-              })),
+        await MaterializedWorkoutsView.find({
+          userId: user.id,
+          $or: [
+            {
+              workedOutAt: rangeToQuery(args.interval.start, args.interval.end),
             },
-            __typename: "WorkoutExercise",
-            sets: exercise.sets.map((set) => ({
-              ...set,
-              __typename: "WorkoutSet",
-              inputs: set.inputs.map((input) => ({
-                ...input,
-                __typename: "WorkoutSetInput",
-              })),
-              meta:
-                set.meta &&
-                Object.entries(set.meta || {}).map(([key, value]) => ({
-                  key,
-                  value: String(value),
-                  __typename: "WorkoutSetMeta",
-                })),
-            })),
-          };
-        }),
-        // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
-        id: workout.id || workout._id.toString(),
-        __typename: "Workout",
-      }));
+            // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+            { workedOutAt: startOfDay(args.interval.start, { in: tz("UTC") }) },
+          ],
+          deletedAt: { $exists: false },
+        }).toArray()
+      ).map(
+        (workout) =>
+          ({
+            ...workout,
+            location: undefined,
+            exercises: workout.exercises.map(
+              (exercise) =>
+                ({
+                  ...exercise,
+                  __typename: "WorkoutExercise",
+                  // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                  exerciseInfo: undefined as unknown as ExerciseInfo,
+                  sets: exercise.sets.map(
+                    (set) =>
+                      ({
+                        ...set,
+                        __typename: "WorkoutSet",
+                        inputs: set.inputs.map(
+                          (input) =>
+                            ({
+                              ...input,
+                              __typename: "WorkoutSetInput",
+                            }) as const,
+                        ),
+                        meta:
+                          set.meta &&
+                          Object.entries(set.meta || {}).map(
+                            ([key, value]) =>
+                              ({
+                                key,
+                                value: String(value),
+                                __typename: "WorkoutSetMeta",
+                              }) as const,
+                          ),
+                      }) as const,
+                  ),
+                }) as const,
+            ),
+            // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
+            id: workout.id || workout._id.toString(),
+            __typename: "Workout",
+          }) as const,
+      );
     },
   },
   Mutation: {
