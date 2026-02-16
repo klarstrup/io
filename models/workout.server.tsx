@@ -262,14 +262,24 @@ export const getNextSet = async ({
   const finalWorkingSetReps =
     workingSets?.[workingSets.length - 1]?.inputs[repsInputIndex]?.value;
 
+  const totalReps = exercise?.sets?.reduce(
+    (m, s) => m + Number(s.inputs[repsInputIndex]?.value || 0),
+    0,
+  );
+
   const goalEffort = scheduleEntry.increment
     ? heaviestSetEffort !== undefined && heaviestSetEffort !== null
       ? successful
-        ? finalWorkingSetReps &&
-          scheduleEntry.workingReps &&
-          finalWorkingSetReps >= scheduleEntry.workingReps * 2
-          ? scheduleEntry.increment * 2 + heaviestSetEffort
-          : scheduleEntry.increment + heaviestSetEffort
+        ? !scheduleEntry.workingSets &&
+          !scheduleEntry.workingReps &&
+          effortInputIndex === repsInputIndex &&
+          totalReps
+          ? totalReps + scheduleEntry.increment
+          : finalWorkingSetReps &&
+              scheduleEntry.workingReps &&
+              finalWorkingSetReps >= scheduleEntry.workingReps * 2
+            ? scheduleEntry.increment * 2 + heaviestSetEffort
+            : scheduleEntry.increment + heaviestSetEffort
         : scheduleEntry.deloadFactor
           ? scheduleEntry.deloadFactor * heaviestSetEffort
           : scheduleEntry.baseWeight
