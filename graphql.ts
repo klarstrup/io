@@ -122,6 +122,21 @@ export const resolvers: Resolvers = {
     },
   },
   User: {
+    locations: async (parent) => {
+      if (!parent.id) return [];
+
+      return (await Locations.find({ userId: parent.id }).toArray()).map(
+        (location) => ({
+          ...location,
+          boulderCircuits: location.boulderCircuits?.map((circuit) => ({
+            ...circuit,
+            __typename: "BoulderCircuit",
+          })),
+          __typename: "Location",
+          id: String(location._id),
+        }),
+      );
+    },
     todos: async (_parent, args) => {
       const user = (await auth())?.user;
 
@@ -241,72 +256,53 @@ export const resolvers: Resolvers = {
           },
           { sort: { workedOutAt: -1 } },
         ).toArray()
-      ).map(async (workout) => {
-        const location = workout.locationId
-          ? await Locations.findOne({
-              _id: new ObjectId(workout.locationId),
-              userId: user.id,
-            })
-          : null;
+      ).map(async (workout) => ({
+        ...workout,
+        location: undefined,
+        exercises: workout.exercises.map((exercise) => {
+          const exerciseInfo = exercisesById[exercise.exerciseId]!;
 
-        return {
-          ...workout,
-          location: location
-            ? {
-                ...location,
-                boulderCircuits: location.boulderCircuits?.map((circuit) => ({
-                  ...circuit,
-                  __typename: "BoulderCircuit",
-                })),
-                __typename: "Location",
-                id: String(location._id),
-              }
-            : null,
-          exercises: workout.exercises.map((exercise) => {
-            const exerciseInfo = exercisesById[exercise.exerciseId]!;
-
-            return {
-              ...exercise,
-              exerciseInfo: {
-                ...exerciseInfo,
-                isHidden: exerciseInfo.is_hidden,
-                __typename: "ExerciseInfo",
-                inputs: exerciseInfo.inputs.map((input) => ({
-                  ...input,
-                  __typename: "ExerciseInfoInput",
-                })),
-                instructions: exerciseInfo.instructions.map((instruction) => ({
-                  ...instruction,
-                  __typename: "ExerciseInfoInstruction",
-                })),
-                tags: exerciseInfo.tags?.map((tag) => ({
-                  ...tag,
-                  __typename: "ExerciseInfoTag",
-                })),
-              },
-              __typename: "WorkoutExercise",
-              sets: exercise.sets.map((set) => ({
-                ...set,
-                __typename: "WorkoutSet",
-                inputs: set.inputs.map((input) => ({
-                  ...input,
-                  __typename: "WorkoutSetInput",
-                })),
-                meta:
-                  set.meta &&
-                  Object.entries(set.meta || {}).map(([key, value]) => ({
-                    key,
-                    value: String(value),
-                    __typename: "WorkoutSetMeta",
-                  })),
+          return {
+            ...exercise,
+            exerciseInfo: {
+              ...exerciseInfo,
+              isHidden: exerciseInfo.is_hidden,
+              __typename: "ExerciseInfo",
+              inputs: exerciseInfo.inputs.map((input) => ({
+                ...input,
+                __typename: "ExerciseInfoInput",
               })),
-            };
-          }),
-          // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
-          id: workout.id || workout._id.toString(),
-          __typename: "Workout",
-        };
-      });
+              instructions: exerciseInfo.instructions.map((instruction) => ({
+                ...instruction,
+                __typename: "ExerciseInfoInstruction",
+              })),
+              tags: exerciseInfo.tags?.map((tag) => ({
+                ...tag,
+                __typename: "ExerciseInfoTag",
+              })),
+            },
+            __typename: "WorkoutExercise",
+            sets: exercise.sets.map((set) => ({
+              ...set,
+              __typename: "WorkoutSet",
+              inputs: set.inputs.map((input) => ({
+                ...input,
+                __typename: "WorkoutSetInput",
+              })),
+              meta:
+                set.meta &&
+                Object.entries(set.meta || {}).map(([key, value]) => ({
+                  key,
+                  value: String(value),
+                  __typename: "WorkoutSetMeta",
+                })),
+            })),
+          };
+        }),
+        // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
+        id: workout.id || workout._id.toString(),
+        __typename: "Workout",
+      }));
     },
   },
   Mutation: {
@@ -529,6 +525,27 @@ export const resolvers: Resolvers = {
         typeof v === "number" && !Number.isNaN(v) ? v : null,
       ) || null,
   },
+  Workout: {
+    location: async (parent) => {
+      if (!parent.locationId) return null;
+
+      const location = await Locations.findOne({
+        _id: new ObjectId(parent.locationId),
+      });
+
+      if (!location) return null;
+
+      return {
+        ...location,
+        boulderCircuits: location.boulderCircuits?.map((circuit) => ({
+          ...circuit,
+          __typename: "BoulderCircuit",
+        })),
+        __typename: "Location",
+        id: String(location._id),
+      };
+    },
+  },
   WorkoutExercise: {
     exerciseInfo: async (parent) => {
       const exerciseInfo = exercisesById[parent.exerciseId];
@@ -694,6 +711,7 @@ export const typeDefs = gql`
     image: String!
     emailVerified: Boolean
     timeZone: String
+    locations: [Location!]
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
@@ -808,6 +826,7 @@ export const typeDefs = gql`
     createdAt: Date!
     updatedAt: Date!
     isFavorite: Boolean
+    knownAddresses: [String!]
     boulderCircuits: [BoulderCircuit!]
   }
 

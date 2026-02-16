@@ -22,6 +22,7 @@ import { FieldSetY } from "../../components/FieldSet";
 import {
   DiaryAgendaDayUserDocument,
   DiaryAgendaDayUserTodosDocument,
+  type Location,
   type NextSet,
   type Sleep,
   type Todo,
@@ -58,6 +59,26 @@ gql`
   query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
     user {
       id
+      locations {
+        id
+        createdAt
+        updatedAt
+        name
+        userId
+        knownAddresses
+        boulderCircuits {
+          id
+          holdColor
+          gradeEstimate
+          gradeRange
+          name
+          labelColor
+          hasZones
+          description
+          createdAt
+          updatedAt
+        }
+      }
       sleeps(interval: $interval) {
         id
         startedAt
@@ -160,25 +181,6 @@ gql`
         workedOutAt
         materializedAt
         locationId
-        location {
-          id
-          createdAt
-          updatedAt
-          name
-          userId
-          boulderCircuits {
-            id
-            holdColor
-            gradeEstimate
-            gradeRange
-            name
-            labelColor
-            hasZones
-            description
-            createdAt
-            updatedAt
-          }
-        }
         source
         exercises {
           exerciseId
@@ -285,6 +287,7 @@ export function DiaryAgendaDay() {
           .filter(Boolean)
       : [],
     sleeps: data?.user?.sleeps || [],
+    locations: data?.user?.locations || [],
   };
 
   const {
@@ -293,6 +296,7 @@ export function DiaryAgendaDay() {
     workouts = [],
     nextSets = [],
     sleeps = [],
+    locations: userLocations = [],
   } = userData || {};
 
   const eventsByDate: Record<string, JournalEntry[]> = {
@@ -466,7 +470,11 @@ export function DiaryAgendaDay() {
           );
 
         const dayLocations = uniqueBy(
-          dayWorkouts.map((workout) => workout.location).filter(Boolean),
+          dayWorkouts
+            .map(({ locationId }) =>
+              userLocations?.find(({ id }) => id === locationId),
+            )
+            .filter(Boolean),
           (location) => location.id,
         );
         const dayDueSets = dueSetsByDate[dayName] || [];
@@ -536,9 +544,9 @@ export function DiaryAgendaDay() {
         for (let i = 0; i < dayJournalEntries.length; i++) {
           const entry = dayJournalEntries[i]!;
           const previousEntry = dayJournalEntries[i - 1];
-          const location = getLocationFromJournalEntry(entry);
+          const location = getLocationFromJournalEntry(userLocations, entry);
           const previousLocation = previousEntry
-            ? getLocationFromJournalEntry(previousEntry)
+            ? getLocationFromJournalEntry(userLocations, previousEntry)
             : null;
 
           if (
@@ -583,12 +591,19 @@ export function DiaryAgendaDay() {
 }
 
 const getLocationFromJournalEntry = (
+  locations: Location[],
   entry: JournalEntry,
 ): { id: string; name: string } | null => {
   if (entry.__typename === "Workout" && entry.location) {
     return { id: entry.location.id, name: entry.location.name };
   }
   if (entry.__typename === "Workout" && entry.locationId) {
+    for (const location of locations) {
+      if (location.id === entry.locationId) {
+        return { id: location.id, name: location.name };
+      }
+    }
+
     return { id: entry.locationId, name: entry.locationId };
   }
   if (
@@ -601,6 +616,14 @@ const getLocationFromJournalEntry = (
     return { id: entry.location, name: entry.location };
   }
   if (entry.__typename === "Event" && "location" in entry && entry.location) {
+    for (const location of locations) {
+      for (const knownAddress of location.knownAddresses || []) {
+        if (entry.location.includes(knownAddress)) {
+          return { id: location.id, name: location.name };
+        }
+      }
+    }
+
     if (entry.location.trim() === "") return null;
     if (entry.location === "Microsoft Teams-møde") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
     if (entry.location === "Microsoft Teams Meeting") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it

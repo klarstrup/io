@@ -5,6 +5,7 @@ export interface LocationData {
   deletedAt?: Date;
   name: string;
   isFavorite?: boolean;
+  knownAddresses?: string[];
   boulderCircuits?: {
     id: string;
     name: string;

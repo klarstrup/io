@@ -12,6 +12,7 @@ import { frenchRounded } from "../grades";
 import { LocationData } from "../models/location";
 import { omit } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
+import { TextAreaThatGrows } from "./TextAreaThatGrows";
 
 function UserStuffLocationForm({
   user,
@@ -24,7 +25,13 @@ function UserStuffLocationForm({
 }) {
   const router = useRouter();
   const client = useApolloClient();
-  const defaultValues = useMemo(() => omit(location, "id"), [location]);
+  const defaultValues = useMemo(
+    () => ({
+      ...omit(location, "id"),
+      knownAddresses: location.knownAddresses?.join("\n") ?? "",
+    }),
+    [location],
+  );
   const {
     handleSubmit,
     register,
@@ -57,10 +64,25 @@ function UserStuffLocationForm({
           return;
         }
 
-        const newLocation = await updateLocation(user.id, location.id, data);
+        console.log({ data });
+
+        const newLocation = await updateLocation(user.id, location.id, {
+          ...data,
+          knownAddresses: data.knownAddresses
+            ?.split("\n")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0),
+        });
         router.refresh();
         await client.refetchQueries({ include: "all" });
-        reset(newLocation ? newLocation : defaultValues);
+        reset(
+          newLocation
+            ? {
+                ...newLocation,
+                knownAddresses: newLocation.knownAddresses?.join("\n") ?? "",
+              }
+            : defaultValues,
+        );
         onDismiss();
       })}
       className="flex min-w-[50%] flex-1 flex-col gap-1"
@@ -108,6 +130,14 @@ function UserStuffLocationForm({
         <label>
           Favorite: <input type="checkbox" {...register("isFavorite")} />
         </label>
+        <label>
+          Known Addresses (line separated):
+          <TextAreaThatGrows
+            {...register("knownAddresses")}
+            placeholder={`123 Main St\n456 Elm St`}
+            className="-mt-px -mb-px w-full bg-transparent p-0.5 font-mono text-sm"
+          />
+        </label>
         <FieldSetX
           legend="Bouldering Circuits"
           className="flex flex-col items-stretch gap-1"
@@ -130,12 +160,16 @@ function UserStuffLocationForm({
                     ➕
                   </button>
                 </th>
-                <th>Name</th>
-                <th>Zones</th>
-                <th>Hold Color</th>
-                <th>Label Color</th>
-                <th>Grade</th>
-                <th>Grade Range</th>
+                {boulderCircuits?.length ? (
+                  <>
+                    <th>Name</th>
+                    <th>Zones</th>
+                    <th>Hold Color</th>
+                    <th>Label Color</th>
+                    <th>Grade</th>
+                    <th>Grade Range</th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -266,9 +300,7 @@ function UserStuffLocationForm({
                           disabled={isDisabled}
                           {...register(
                             `boulderCircuits.${index}.gradeRange.1`,
-                            {
-                              valueAsNumber: true,
-                            },
+                            { valueAsNumber: true },
                           )}
                         >
                           <option value="">---</option>
