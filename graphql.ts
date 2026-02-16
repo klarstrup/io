@@ -11,7 +11,7 @@ import {
 } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
-import type { auth } from "./auth";
+import { auth } from "./auth";
 import type {
   ExerciseInfo,
   ExerciseSchedule,
@@ -97,13 +97,15 @@ const dateScalar = new GraphQLScalarType({
 
 const editableTodoFields = ["summary", "start", "due", "completed"] as const;
 
-export const resolvers: Resolvers<{
-  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"] | null;
-}> = {
+export const resolvers: Resolvers<
+  | { user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"] | null }
+  | undefined
+> = {
   Date: dateScalar,
   Query: {
     hello: () => "worlasdd",
-    user: async (_parent, _args, { user }) => {
+    user: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
 
       return {
@@ -137,17 +139,18 @@ export const resolvers: Resolvers<{
         }),
       );
     },
-    todos: async (parent, args) => {
-      return (
-        await getUserIcalTodosBetween(parent.id, args.interval ?? undefined)
-      ).map((todo) => ({ ...todo, id: todo.uid, __typename: "Todo" }));
-    },
-    events: async (parent, args) => {
-      return (await getUserIcalEventsBetween(parent.id, args.interval)).map(
+    todos: async (parent, args) =>
+      (await getUserIcalTodosBetween(parent.id, args.interval)).map((todo) => ({
+        ...todo,
+        id: todo.uid,
+        __typename: "Todo",
+      })),
+    events: async (parent, args) =>
+      (await getUserIcalEventsBetween(parent.id, args.interval)).map(
         (event) => ({ ...event, id: event.uid, __typename: "Event" }),
-      );
-    },
-    sleeps: async (_parent, args, { user }) => {
+      ),
+    sleeps: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
 
       // For now, we only support Withings sleep data, so we look for a Withings data source and query the sleeps from there
@@ -176,7 +179,8 @@ export const resolvers: Resolvers<{
           }) as const,
       );
     },
-    foodEntries: async (_parent, args, { user }) => {
+    foodEntries: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
       let foodEntries: FoodEntry[] = [];
 
       if (!user) return foodEntries;
@@ -277,7 +281,8 @@ export const resolvers: Resolvers<{
       ),
   },
   Mutation: {
-    createTodo: async (_parent, args, { user }, info) => {
+    createTodo: async (_parent, args, context, info) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
       const insertResult = await IcalEvents.insertOne({
@@ -326,7 +331,8 @@ export const resolvers: Resolvers<{
         });
       }
     },
-    updateTodo: async (_parent, args, { user }, info) => {
+    updateTodo: async (_parent, args, context, info) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
       const todo = await IcalEvents.findOne<MongoVTodo>({
@@ -382,7 +388,8 @@ export const resolvers: Resolvers<{
         });
       }
     },
-    deleteTodo: async (_parent, args, { user }, info) => {
+    deleteTodo: async (_parent, args, context, info) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
       const result = await IcalEvents.deleteMany({
@@ -406,7 +413,8 @@ export const resolvers: Resolvers<{
         });
       }
     },
-    snoozeExerciseSchedule: async (_parent, args, { user }) => {
+    snoozeExerciseSchedule: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
@@ -443,7 +451,8 @@ export const resolvers: Resolvers<{
         },
       } as SnoozeExerciseSchedulePayload;
     },
-    unsnoozeExerciseSchedule: async (_parent, args, { user }) => {
+    unsnoozeExerciseSchedule: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
@@ -575,7 +584,8 @@ export const resolvers: Resolvers<{
         })),
       } satisfies ExerciseInfo;
     },
-    nextSet: async (parent, _args, { user }) => {
+    nextSet: async (parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
       if (!parent.enabled) return null;

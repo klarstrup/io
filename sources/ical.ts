@@ -232,7 +232,7 @@ export async function getUserIcalEventsBetween(
 
 export async function getUserIcalTodosBetween(
   userId: string,
-  interval?: Interval<Date, Date> | Interval<TZDate, TZDate>,
+  interval?: Interval<Date, Date> | Interval<TZDate, TZDate> | null,
 ) {
   const { start, end } = interval || {};
   const user = (await auth())?.user;
