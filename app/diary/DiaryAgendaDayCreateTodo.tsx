@@ -110,7 +110,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
                 defaultValue=""
                 className="-mt-px -mb-px w-full p-0.5 font-mono text-sm"
                 disabled={loading}
-                innerRef={(el) => {
+                ref={(el) => {
                   if (!el) return;
                   const length = el.value.length;
                   el.setSelectionRange(length, length);

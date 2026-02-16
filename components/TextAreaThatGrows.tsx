@@ -1,12 +1,10 @@
-import { useLayoutEffect, useRef } from "react";
+import { forwardRef, useLayoutEffect, useRef } from "react";
 import mergeRefs from "../utils/merge-refs";
 
-export function TextAreaThatGrows({
-  innerRef,
-  ...props
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
-  innerRef?: React.Ref<HTMLTextAreaElement>;
-}) {
+export const TextAreaThatGrows = forwardRef(function TextAreaThatGrows(
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  ref: React.Ref<HTMLTextAreaElement>,
+) {
   const textboxRef = useRef<HTMLTextAreaElement>(null);
 
   function adjustHeight() {
@@ -21,11 +19,11 @@ export function TextAreaThatGrows({
   return (
     <textarea
       {...props}
-      ref={mergeRefs(textboxRef, innerRef)}
+      ref={mergeRefs(textboxRef, ref)}
       onChange={(e) => {
         adjustHeight();
         props.onChange?.(e);
       }}
     />
   );
-}
+});
