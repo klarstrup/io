@@ -11,6 +11,11 @@ const makeApolloClient = () =>
   new ApolloClient({
     cache: new InMemoryCache({ typePolicies }),
     link: new SchemaLink({ schema }),
+    clientAwareness: {
+      name: "io-server",
+      // commit
+      version: process.env.NEXT_PUBLIC_COMMIT_SHA,
+    },
   });
 
 export const { getClient, query, PreloadQuery } =

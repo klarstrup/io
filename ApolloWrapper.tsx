@@ -49,6 +49,11 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
                     : "https://io.klarstrup.dk/api/graphql",
               }),
             ),
+      clientAwareness: {
+        name: typeof window === "undefined" ? "io-server" : "io-client",
+        // commit
+        version: process.env.NEXT_PUBLIC_COMMIT_SHA,
+      },
     });
 
     return client;
