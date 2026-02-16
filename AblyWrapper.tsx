@@ -1,6 +1,7 @@
 "use client";
 import * as Ably from "ably";
 import { AblyProvider, ChannelProvider } from "ably/react";
+import { useSession } from "next-auth/react";
 
 // Create your Ably Realtime client
 const realtimeClient =
@@ -15,11 +16,14 @@ export default function AblyWrapper({
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session } = useSession();
+  const user = session?.user;
+  if (!user) return <>{children}</>;
   if (!realtimeClient) return <>{children}</>;
 
   return (
     <AblyProvider client={realtimeClient}>
-      <ChannelProvider channelName="GraphQL:65a85e2c9a437530d3de2e35">
+      <ChannelProvider channelName={`GraphQL:${user.id}`}>
         {children}
       </ChannelProvider>
     </AblyProvider>
