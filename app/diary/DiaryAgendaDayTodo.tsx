@@ -29,60 +29,27 @@ gql`
   }
 `;
 
-export function DiaryAgendaDayTodo({
-  todo,
-  cotemporalityOfSurroundingEvent,
-}: {
-  todo: DiaryAgendaDayTodoFragment;
-  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
-}) {
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: client.cache.identify(todo) || todo.id,
-    data: { todo, date: getTodoPrincipalDate(todo)?.start },
-  });
-
-  return (
-    <DiaryAgendaDayTodoButItsNotDraggable
-      ref={setNodeRef}
-      style={{
-        transition,
-        ...(transform
-          ? {
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 100,
-            }
-          : undefined),
-      }}
-      {...listeners}
-      {...attributes}
-      todo={todo}
-      isDragging={isDragging}
-      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-    />
-  );
-}
-
-export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
-  function DiaryAgendaDayTodoButItsNotDraggable(
-    {
-      todo,
+export const DiaryAgendaDayTodo =
+  function DiaryAgendaDayTodoButItsNotDraggable({
+    todo,
+    cotemporalityOfSurroundingEvent,
+  }: {
+    todo: DiaryAgendaDayTodoFragment;
+    cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
+  }) {
+    const client = useApolloClient();
+    const {
       isDragging,
-      cotemporalityOfSurroundingEvent,
-      ...props
-    }: {
-      todo: DiaryAgendaDayTodoFragment;
-      isDragging: boolean;
-      cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;    } & React.HTMLAttributes<HTMLDivElement>,
-    ref: React.Ref<HTMLDivElement>,
-  ) {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({
+      id: client.cache.identify(todo) || todo.id,
+      data: { todo, date: getTodoPrincipalDate(todo)?.start },
+    });
+
     const [updateTodo] = useMutation<UpdateTodoMutation>(
       gql`
         mutation UpdateTodo($input: UpdateTodoInput!) {
@@ -158,9 +125,18 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
 
     return (
       <DiaryAgendaDayEntry
-        ref={ref}
-        cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-        {...props}
+        ref={setNodeRef}
+        style={{
+          transition,
+          ...(transform
+            ? {
+                transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+                zIndex: 100,
+              }
+            : undefined),
+        }}
+        {...listeners}
+        {...attributes}
         icon={faCircleCheck}
         onIconClick={
           todo.completed
@@ -197,6 +173,9 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
               ? "past"
               : "future"
         }
+        cotemporalityOfSurroundingEvent={
+          !isDragging ? cotemporalityOfSurroundingEvent : undefined
+        }
       >
         <div
           ref={ref2}
@@ -210,7 +189,12 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
           }
           onClick={() => setIsActive(true)}
         >
-          <div className="h-full self-stretch px-1.5 py-0.5">
+          <div
+            className={
+              "h-full self-stretch" +
+              (isActive ? " px-1 pt-1 pb-1" : " px-1.5 py-0.5")
+            }
+          >
             <form
               ref={formRef}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -263,7 +247,7 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
             </form>
           </div>
           {isActive && (
-            <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-t-0 border-black/5 bg-white p-1">
+            <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-md border border-black/20 bg-white p-1">
               {todo.completed ? (
                 <button
                   type="button"
@@ -421,5 +405,4 @@ export const DiaryAgendaDayTodoButItsNotDraggable = forwardRef(
         </div>
       </DiaryAgendaDayEntry>
     );
-  },
-);
+  };

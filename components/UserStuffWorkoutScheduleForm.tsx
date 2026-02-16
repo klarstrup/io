@@ -21,6 +21,7 @@ import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { epoch } from "../utils";
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
+import { ExerciseName } from "./ExerciseName";
 import { FieldSetY } from "./FieldSet";
 
 /**
@@ -110,10 +111,7 @@ function UserStuffWorkoutScheduleForm({
               href={`/diary/exercises/${exercise.id}`}
               style={{ color: "#edab00" }}
             >
-              {[exercise.name, ...exercise.aliases]
-                .filter((name) => name.length >= 4)
-                .sort((a, b) => a.length - b.length)[0]!
-                .replace("Barbell", "")}
+              <ExerciseName exerciseInfo={exercise} />
             </Link>
             <label>
               <input type="checkbox" {...register("enabled")} /> Enabled
@@ -399,10 +397,7 @@ export default function UserStuffWorkoutSchedulesForm({
                           </div>
                           <div className={"flex flex-col leading-snug"}>
                             <div className="font-semibold">
-                              {[exercise.name, ...exercise.aliases]
-                                .filter((name) => name.length >= 4)
-                                .sort((a, b) => a.length - b.length)[0]!
-                                .replace("Barbell", "")}{" "}
+                              <ExerciseName exerciseInfo={exercise} />
                             </div>
                             {stats ? (
                               <div className="text-xs text-gray-500">

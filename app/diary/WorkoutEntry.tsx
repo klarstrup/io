@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExerciseName } from "../../components/ExerciseName";
 import { FieldSetX } from "../../components/FieldSet";
 import { Workout, WorkoutSet } from "../../graphql.generated";
 import { PRType } from "../../lib";
@@ -188,11 +189,9 @@ export default function WorkoutEntry({
                     style={{ color: "#edab00" }}
                     className="block text-sm leading-none font-bold"
                   >
-                    {workoutExercise.displayName ??
-                      [exercise.name, ...exercise.aliases]
-                        .filter((name) => name.length >= 4)
-                        .sort((a, b) => a.length - b.length)[0]!
-                        .replace("Barbell", "")}
+                    {workoutExercise.displayName ?? (
+                      <ExerciseName exerciseInfo={exercise} />
+                    )}
                   </Link>
                 ) : null}
                 {isClimbingExercise(exercise.id) ? (

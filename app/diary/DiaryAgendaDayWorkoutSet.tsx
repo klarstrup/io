@@ -3,6 +3,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { isSameDay, max, min, subHours } from "date-fns";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ExerciseName } from "../../components/ExerciseName";
 import {
   ExerciseInfo,
   Location,
@@ -36,6 +38,7 @@ export function DiaryAgendaDayWorkoutSet({
   workoutDateStr: string;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
+  const router = useRouter();
   const client = useApolloClient();
   const {
     isDragging,
@@ -90,6 +93,16 @@ export function DiaryAgendaDayWorkoutSet({
       {...listeners}
       {...attributes}
       isDragging={isDragging}
+      onIconClick={
+        mostRecentWorkout &&
+        (mostRecentWorkout.source === WorkoutSource.Self ||
+          !mostRecentWorkout.source)
+          ? () =>
+              router.push(
+                `/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`,
+              )
+          : undefined
+      }
     >
       <div
         className={
@@ -126,26 +139,12 @@ export function DiaryAgendaDayWorkoutSet({
                 prefetch={false}
                 href={`/diary/exercises/${exerciseInfo.id}`}
               >
-                {[exerciseInfo.name, ...exerciseInfo.aliases]
-                  .filter((name) => name.length >= 4)
-                  .sort((a, b) => a.length - b.length)[0]!
-                  .replace("Barbell", "")}
+                <ExerciseName exerciseInfo={exerciseInfo} />
               </Link>
               {isClimbingExercise(exerciseInfo.id) ? (
                 <ClimbingStats setAndLocationPairs={setsWithLocation} />
               ) : null}
             </div>
-            {mostRecentWorkout &&
-            (mostRecentWorkout.source === WorkoutSource.Self ||
-              !mostRecentWorkout.source) ? (
-              <Link
-                prefetch={false}
-                href={`/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`}
-                className="text-sm leading-none font-semibold text-orange-200"
-              >
-                ⏎
-              </Link>
-            ) : null}
           </div>
         </div>
         {setsWithLocation.length > 0 ? (

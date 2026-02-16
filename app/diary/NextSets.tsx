@@ -4,6 +4,7 @@ import { formatDistanceStrict, startOfDay } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { useEffect } from "react";
+import { ExerciseName } from "../../components/ExerciseName";
 import { StealthButton } from "../../components/StealthButton";
 import { NextSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
@@ -97,11 +98,7 @@ export function NextSets({
                 style={{ color: "#edab00" }}
                 className="font-semibold whitespace-nowrap"
               >
-                {
-                  [exercise.name, ...exercise.aliases]
-                    .filter((name) => name.length >= 4)
-                    .sort((a, b) => a.length - b.length)[0]!
-                }
+                <ExerciseName exerciseInfo={exercise} />
               </Link>
               {showDetails &&
               (nextWorkingSetInputs?.length || nextWorkingSets) ? (

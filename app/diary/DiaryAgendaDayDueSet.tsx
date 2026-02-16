@@ -40,6 +40,7 @@ import {
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
+import { ExerciseName } from "../../components/ExerciseName";
 
 export function DiaryAgendaDayDueSet({
   ...props
@@ -279,7 +280,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         >
           <div
             className={
-              "h-full w-32 self-stretch bg-black/20 px-1.5 py-0.5 text-left text-sm text-white " +
+              "h-full w-32 self-stretch border-r border-r-black/20 px-1.5 py-0.5 text-left text-sm " +
               (isActive
                 ? "rounded-l-[5px] rounded-b-none "
                 : "rounded-l-[5px] ") +
@@ -289,20 +290,14 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
             }
           >
             {!isActive ? (
-              [exerciseInfo.name, ...exerciseInfo.aliases]
-                .filter((name) => name.length >= 4)
-                .sort((a, b) => a.length - b.length)[0]!
-                .replace("Barbell", "")
+              <ExerciseName exerciseInfo={exerciseInfo} />
             ) : (
               <Link
                 prefetch={false}
                 href={`/diary/exercises/${exerciseInfo.id}`}
                 className="hover:underline"
               >
-                {[exerciseInfo.name, ...exerciseInfo.aliases]
-                  .filter((name) => name.length >= 4)
-                  .sort((a, b) => a.length - b.length)[0]!
-                  .replace("Barbell", "")}
+                <ExerciseName exerciseInfo={exerciseInfo} />
               </Link>
             )}
           </div>
@@ -328,7 +323,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
             </div>
           ) : null}
           {isActive && (
-            <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-[5px] border border-t-0 border-black/20 bg-white p-1">
+            <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-[5px] border border-black/20 bg-white p-1">
               <button
                 type="button"
                 onClick={() =>
@@ -355,7 +350,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                   })
                 }
                 className={
-                  "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                  "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-2 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                 }
               >
                 Snooze
@@ -438,7 +433,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                     );
                   }}
                   className={
-                    "text-md cursor-pointer rounded-xl bg-green-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                    "text-md cursor-pointer rounded-xl bg-green-500/80 px-1 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                   }
                 >
                   Do now{" "}
