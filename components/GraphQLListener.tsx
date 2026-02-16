@@ -5,6 +5,7 @@ import { parse } from "graphql";
 import { ListPageUserDocument } from "../graphql.generated";
 import { useChannel } from "../hooks/useChannel";
 import { uniqueBy } from "../utils";
+import { useSession } from "next-auth/react";
 
 function messageToGraphQLUpdate(
   client: ReturnType<typeof useApolloClient>,
@@ -117,10 +118,12 @@ function messageToGraphQLUpdate(
   }
 }
 
-export function GraphQLListener({ userId }: { userId: string }) {
+export function GraphQLListener() {
   const client = useApolloClient();
+  const { data: session } = useSession();
+  const user = session?.user;
 
-  useChannel("GraphQL:" + userId, (message) => {
+  useChannel({ channelName: "GraphQL:" + user?.id, skip: !user }, (message) => {
     console.log("Ably:", message);
     messageToGraphQLUpdate(client, message.data);
   });

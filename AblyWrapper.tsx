@@ -18,12 +18,12 @@ export default function AblyWrapper({
 }) {
   const { data: session } = useSession();
   const user = session?.user;
-  if (!user) return <>{children}</>;
+
   if (!realtimeClient) return <>{children}</>;
 
   return (
     <AblyProvider client={realtimeClient}>
-      <ChannelProvider channelName={`GraphQL:${user.id}`}>
+      <ChannelProvider channelName={`GraphQL:${user?.id}`}>
         {children}
       </ChannelProvider>
     </AblyProvider>

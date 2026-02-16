@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { GraphQLListenerButItHasUserAlready } from "./GraphQLListenerButItHasUserAlready";
+import { GraphQLListener } from "./GraphQLListener";
 import UserStuffLink from "./UserStuffLink";
 
 export default function UserStuff() {
@@ -12,7 +12,7 @@ export default function UserStuff() {
       }}
     >
       <Suspense>
-        <GraphQLListenerButItHasUserAlready />
+        <GraphQLListener />
       </Suspense>
       <UserStuffLink href="/diary" prefetch={false}>
         📔
