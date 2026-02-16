@@ -1,17 +1,17 @@
 import { tz } from "@date-fns/tz";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
-import { ObjectId } from "bson";
 import { addSeconds, isValid, startOfDay } from "date-fns";
 import {
-  DocumentNode,
+  type DocumentNode,
   GraphQLScalarType,
   Kind,
-  OperationDefinitionNode,
+  type OperationDefinitionNode,
   print,
 } from "graphql";
 import gql from "graphql-tag";
-import { auth } from "./auth";
+import { ObjectId } from "mongodb";
+import type { auth } from "./auth";
 import type {
   ExerciseInfo,
   ExerciseSchedule,
@@ -97,13 +97,13 @@ const dateScalar = new GraphQLScalarType({
 
 const editableTodoFields = ["summary", "start", "due", "completed"] as const;
 
-export const resolvers: Resolvers = {
+export const resolvers: Resolvers<{
+  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"] | null;
+}> = {
   Date: dateScalar,
   Query: {
     hello: () => "worlasdd",
-    user: async () => {
-      const user = (await auth())?.user;
-
+    user: async (_parent, _args, { user }) => {
       if (!user) return null;
 
       return {
@@ -137,27 +137,17 @@ export const resolvers: Resolvers = {
         }),
       );
     },
-    todos: async (_parent, args) => {
-      const user = (await auth())?.user;
-
-      if (!user) return [];
-
+    todos: async (parent, args) => {
       return (
-        await getUserIcalTodosBetween(user.id, args.interval ?? undefined)
+        await getUserIcalTodosBetween(parent.id, args.interval ?? undefined)
       ).map((todo) => ({ ...todo, id: todo.uid, __typename: "Todo" }));
     },
-    events: async (_parent, args) => {
-      const user = (await auth())?.user;
-
-      if (!user) return [];
-
-      return (await getUserIcalEventsBetween(user.id, args.interval)).map(
+    events: async (parent, args) => {
+      return (await getUserIcalEventsBetween(parent.id, args.interval)).map(
         (event) => ({ ...event, id: event.uid, __typename: "Event" }),
       );
     },
-    sleeps: async (_parent, args) => {
-      const user = (await auth())?.user;
-
+    sleeps: async (_parent, args, { user }) => {
       if (!user) return [];
 
       // For now, we only support Withings sleep data, so we look for a Withings data source and query the sleeps from there
@@ -186,9 +176,7 @@ export const resolvers: Resolvers = {
           }) as const,
       );
     },
-    foodEntries: async (_parent, args) => {
-      const user = (await auth())?.user;
-
+    foodEntries: async (_parent, args, { user }) => {
       let foodEntries: FoodEntry[] = [];
 
       if (!user) return foodEntries;
@@ -231,14 +219,10 @@ export const resolvers: Resolvers = {
 
       return foodEntries;
     },
-    workouts: async (_parent, args) => {
-      const user = (await auth())?.user;
-
-      if (!user) return [];
-
-      return (
+    workouts: async (parent, args) =>
+      (
         await MaterializedWorkoutsView.find({
-          userId: user.id,
+          userId: parent.id,
           $or: [
             {
               workedOutAt: rangeToQuery(args.interval.start, args.interval.end),
@@ -290,12 +274,10 @@ export const resolvers: Resolvers = {
             id: workout.id || workout._id.toString(),
             __typename: "Workout",
           }) as const,
-      );
-    },
+      ),
   },
   Mutation: {
-    createTodo: async (_parent, args, _context, info) => {
-      const user = (await auth())?.user;
+    createTodo: async (_parent, args, { user }, info) => {
       if (!user) throw new Error("Unauthorized");
 
       const insertResult = await IcalEvents.insertOne({
@@ -344,8 +326,7 @@ export const resolvers: Resolvers = {
         });
       }
     },
-    updateTodo: async (_parent, args, _context, info) => {
-      const user = (await auth())?.user;
+    updateTodo: async (_parent, args, { user }, info) => {
       if (!user) throw new Error("Unauthorized");
 
       const todo = await IcalEvents.findOne<MongoVTodo>({
@@ -401,8 +382,7 @@ export const resolvers: Resolvers = {
         });
       }
     },
-    deleteTodo: async (_parent, args, _context, info) => {
-      const user = (await auth())?.user;
+    deleteTodo: async (_parent, args, { user }, info) => {
       if (!user) throw new Error("Unauthorized");
 
       const result = await IcalEvents.deleteMany({
@@ -426,8 +406,7 @@ export const resolvers: Resolvers = {
         });
       }
     },
-    snoozeExerciseSchedule: async (_parent, args, _context) => {
-      const user = (await auth())?.user;
+    snoozeExerciseSchedule: async (_parent, args, { user }) => {
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
@@ -464,8 +443,7 @@ export const resolvers: Resolvers = {
         },
       } as SnoozeExerciseSchedulePayload;
     },
-    unsnoozeExerciseSchedule: async (_parent, args, _context) => {
-      const user = (await auth())?.user;
+    unsnoozeExerciseSchedule: async (_parent, args, { user }) => {
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
@@ -597,8 +575,7 @@ export const resolvers: Resolvers = {
         })),
       } satisfies ExerciseInfo;
     },
-    nextSet: async (parent, _args, _context) => {
-      const user = (await auth())?.user;
+    nextSet: async (parent, _args, { user }) => {
       if (!user) throw new Error("Unauthorized");
 
       if (!parent.enabled) return null;
