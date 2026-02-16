@@ -139,7 +139,9 @@ export function DiaryAgendaDayWorkoutSet({
                 prefetch={false}
                 href={`/diary/exercises/${exerciseInfo.id}`}
               >
-                <ExerciseName exerciseInfo={exerciseInfo} />
+                {workoutExercise.displayName || (
+                  <ExerciseName exerciseInfo={exerciseInfo} />
+                )}
               </Link>
               {isClimbingExercise(exerciseInfo.id) ? (
                 <ClimbingStats setAndLocationPairs={setsWithLocation} />
