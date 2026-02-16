@@ -150,9 +150,11 @@ export function DiaryAgendaDayWorkoutSet({
         {setsWithLocation.length > 0 ? (
           <div
             className={
-              "border-l-black/20 flex flex-1 items-center border-l text-xs " +
+              "flex flex-1 items-center text-xs " +
               (isClimbingExercise(exerciseInfo.id) ? " pb-1" : " ") +
-              (workout.source === WorkoutSource.Self ? " px-1 py-0.5" : "")
+              (workout.source === WorkoutSource.Self
+                ? " border-l border-l-black/20 px-1 py-0.5"
+                : "")
             }
           >
             <WorkoutEntryExercise
