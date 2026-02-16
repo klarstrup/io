@@ -280,7 +280,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         >
           <div
             className={
-              "h-full w-32 self-stretch border-r border-r-black/20 px-1.5 py-0.5 text-left text-sm " +
+              "h-full w-32 self-stretch px-1.5 py-0.5 text-left text-sm " +
               (isActive
                 ? "rounded-l-[5px] rounded-b-none "
                 : "rounded-l-[5px] ") +
@@ -304,8 +304,8 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
           {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
             <div
               className={
-                "flex items-center justify-center self-stretch px-1.5 text-xs " +
-                (isActive ? "rounded-b-none" : "rounded-b-[5px]")
+                "flex items-center justify-center self-stretch border-l border-l-black/20 px-1.5 text-xs " +
+                (isActive ? "rounded-br-none" : "rounded-br-[5px]")
               }
             >
               <table className="w-auto max-w-0">
