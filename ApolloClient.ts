@@ -19,5 +19,6 @@ const makeApolloClient = () =>
     },
   });
 
+/** user shit won't work in RSC because i didnt figure out context auth in this scenario */
 export const { getClient, query, PreloadQuery } =
   registerApolloClient(makeApolloClient);
