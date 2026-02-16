@@ -53,7 +53,7 @@ export function DiaryAgendaDayLocationChange({
         key={locationChange.id}
         className="-ml-6 w-full text-xs font-medium opacity-75 [font-variant:small-caps]"
       >
-        {locationChange.location}
+        {locationChange.location.replace(/\d\d\d\d (.+), Denmark/g, "$1")}
       </center>
     </DiaryAgendaDayEntry>
   );
