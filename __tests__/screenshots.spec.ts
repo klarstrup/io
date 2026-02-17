@@ -44,7 +44,15 @@ test("takes screenshots", async ({ page }) => {
 
   await screenshotOnDevices(page, { path: "front-signed-out" });
 
-  await page.click(".diary-entry");
+  await page.goto(
+    "/diary/" +
+      (new Date().getFullYear() +
+        "-" +
+        String(new Date().getMonth() + 1) +
+        "-" +
+        String(new Date().getDate())),
+    { waitUntil: "networkidle" },
+  );
 
   await screenshotOnDevices(page.locator(".fixed > div"), {
     path: "day-signed-out",
