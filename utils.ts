@@ -456,19 +456,20 @@ const getRoundingMethod =
 export interface RoundToNearestDaysOptions<DateType extends Date = Date>
   extends RoundingOptions, ContextOptions<DateType> {}
 export function roundToNearestDay<
-  DateType extends Date,
-  ResultDate extends Date = DateType,
+  DateType extends DateArg<Date>,
+  ResultDate extends Date = Date,
 >(date: DateType, options?: RoundToNearestDaysOptions<ResultDate>): ResultDate {
+  const inDate = new Date(date);
   const hours =
-    date.getHours() +
-    date.getMinutes() / 60 +
-    date.getSeconds() / 60 / 60 +
-    date.getMilliseconds() / 1000 / 60 / 60;
+    inDate.getHours() +
+    inDate.getMinutes() / 60 +
+    inDate.getSeconds() / 60 / 60 +
+    inDate.getMilliseconds() / 1000 / 60 / 60;
 
   const roundingMethod = getRoundingMethod(options?.roundingMethod ?? "round");
 
   return addDays(
-    startOfDay(date, { in: options?.in }),
+    startOfDay(inDate, { in: options?.in }),
     roundingMethod(hours / 24),
   );
 }
