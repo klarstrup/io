@@ -89,7 +89,7 @@ export function DiaryAgendaDayEvent({
       <div className="flex items-center gap-1.5 leading-snug">
         <div className="text-center font-semibold tabular-nums">
           {event.datetype === "date-time" && dayNo <= 1 ? (
-            event.start.toLocaleTimeString("en-DK", {
+            new Date(event.start).toLocaleTimeString("en-DK", {
               hour: "2-digit",
               minute: "2-digit",
               timeZone,
@@ -111,7 +111,7 @@ export function DiaryAgendaDayEvent({
             ) : isLastDay ? (
               <>
                 -
-                {event.end.toLocaleTimeString("en-DK", {
+                {new Date(event.end).toLocaleTimeString("en-DK", {
                   hour: "2-digit",
                   minute: "2-digit",
                   timeZone,
