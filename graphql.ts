@@ -1,7 +1,7 @@
 import { tz } from "@date-fns/tz";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
-import { addSeconds, isValid, startOfDay } from "date-fns";
+import { addSeconds, addWeeks, isValid, startOfDay } from "date-fns";
 import {
   type DocumentNode,
   GraphQLScalarType,
@@ -167,7 +167,7 @@ export const resolvers: Resolvers<
 
       const sleepEntries = await WithingsSleepSummarySeries.find({
         _withings_userId: Number(withingsUserId),
-        endedAt: { $gte: addSeconds(new Date(), -7 * 24 * 60 * 60) }, // Last 7 days
+        endedAt: { $gte: addWeeks(new Date(), -1) }, // Past week
       }).toArray();
 
       const totalSleepTime = sleepEntries.reduce(
@@ -191,7 +191,7 @@ export const resolvers: Resolvers<
 
       const sleepEntries = await WithingsSleepSummarySeries.find({
         _withings_userId: Number(withingsUserId),
-        endedAt: { $gte: addSeconds(new Date(), -7 * 24 * 60 * 60) }, // Last 7 days
+        endedAt: { $gte: addWeeks(new Date(), -1) }, // Past week
       }).toArray();
 
       const totalSleepTime = sleepEntries.reduce(
@@ -201,7 +201,7 @@ export const resolvers: Resolvers<
 
       const idealSleepTime = 8 * 60 * 60 * sleepEntries.length;
 
-      return totalSleepTime / idealSleepTime  ;
+      return totalSleepTime / idealSleepTime;
     },
     locations: async (parent) => {
       if (!parent.id) return [];
