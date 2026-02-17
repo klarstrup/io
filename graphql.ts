@@ -155,6 +155,40 @@ export const resolvers: Resolvers<
         ? latestWeightMeasure.value * 10 ** latestWeightMeasure.unit
         : null;
     },
+    sleepDebt: async (parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+
+      if (!user) return null;
+
+      // For now, we only support Withings sleep data, so we look for a Withings data source and query the sleep entries from there
+
+      const withingsDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      );
+      const withingsUserId =
+        withingsDataSource?.config?.accessTokenResponse?.userid;
+      if (!withingsUserId) return null;
+
+      const sleepEntries = await WithingsSleepSummarySeries.find({
+        _withings_userId: Number(withingsUserId),
+        endedAt: { $gte: addSeconds(new Date(), -7 * 24 * 60 * 60) }, // Last 7 days
+      }).toArray();
+
+      const totalSleepTime = sleepEntries.reduce(
+        (total, entry) => total + entry.data.total_sleep_time,
+        0,
+      );
+
+      const idealSleepTime = 8 * 60 * 60; // 8 hours in seconds
+
+      console.log({
+        sleepEntries,
+        totalSleepTime,
+        idealSleepTime: idealSleepTime * sleepEntries.length,
+      });
+
+      return totalSleepTime - idealSleepTime * sleepEntries.length;
+    },
     locations: async (parent) => {
       if (!parent.id) return [];
 
@@ -727,6 +761,7 @@ export const typeDefs = gql`
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
     weight: Float
+    sleepDebt: Float
     # dataSources: [UserDataSource!]
   }
 

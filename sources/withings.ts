@@ -1,6 +1,6 @@
 export namespace Withings {
   export interface AccessTokenResponse {
-    userid: string;
+    userid: number;
     access_token: string;
     refresh_token: string;
     expires_in: number;

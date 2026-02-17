@@ -29,7 +29,7 @@ export default function UserStuff() {
       >
         🏅
       </UserStuffLink>
-      <span className="text-3xl text-gray-400/25 xl:text-4xl">❘</span>
+      <div className="h-8 w-1 rounded-full bg-[yellow]/25" />
       <UserStuffLink href="/user/workout-schedules" prefetch={false}>
         ⚙️
       </UserStuffLink>
