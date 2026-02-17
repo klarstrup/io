@@ -43,6 +43,30 @@ function BarNumberContainer({
   );
 }
 
+function BarIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative px-1">
+      <span
+        className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          filter: "invert(1) blur(2px)",
+        }}
+      >
+        {children}
+      </span>
+      <span
+        className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          filter: "invert(1) blur(4px)",
+        }}
+      >
+        {children}
+      </span>
+      {children}
+    </div>
+  );
+}
+
 export default function JournalNumbersBar() {
   const { data } = useQuery(GetLatestWeightEntryDocument);
 
@@ -63,7 +87,7 @@ export default function JournalNumbersBar() {
       }}
     >
       <div className="flex items-center">
-        <span className="px-1 text-shadow-md">💤</span>
+        <BarIcon>💤</BarIcon>
         <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
           {data?.user?.sleepDebtFractionTimeSeries
             ? (sleepDebt * 100).toLocaleString(undefined, {
@@ -88,7 +112,7 @@ export default function JournalNumbersBar() {
       </div>
       <div className="h-8 w-1 rounded-full bg-[yellow]/25" />
       <div className="flex items-center">
-        <span className="px-1 text-shadow-md">⚖️</span>
+        <BarIcon>⚖️</BarIcon>
         <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
           {weight
             ? weight.toLocaleString(undefined, {
