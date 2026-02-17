@@ -24,28 +24,28 @@ export default function JournalNumbersBar() {
           "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
       }}
     >
-      <span className="font-bold">
-        💤{" "}
+      <span className="font-bold inline-flex gap-2 items-center">
+        <span>💤</span>
         {data?.user?.sleepDebtFraction ? (
-          <>
+          <span>
             {~~(data.user.sleepDebtFraction * 100)}
             <small>%</small>
-          </>
+          </span>
         ) : (
           "N/A"
         )}
       </span>
       <div className="h-8 w-1 rounded-full bg-[yellow]/25" />
-      <span className="font-bold">
-        ⚖️{" "}
+      <span className="font-bold inline-flex gap-2 items-center">
+        <span>⚖️</span>{" "}
         {data?.user?.weight ? (
-          <>
+          <span>
             {data.user.weight.toLocaleString(undefined, {
               minimumFractionDigits: 1,
               maximumFractionDigits: 1,
             })}
             <small>kg</small>
-          </>
+          </span>
         ) : (
           "N/A"
         )}
