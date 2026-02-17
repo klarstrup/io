@@ -63,7 +63,7 @@ function createTrend(data: { timestamp: Date; value: number }[]) {
 
 export default function useTrendingNumber(
   timeSeries: FloatTimeSeriesEntry[],
-  updateInterval = 1000,
+  updateInterval = 10000,
 ) {
   const now = useNow(updateInterval);
 
