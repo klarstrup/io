@@ -174,12 +174,12 @@ export function DiaryAgendaDayDay({
             <div className="flex items-center gap-1.5 leading-snug">
               <div className="text-center font-semibold tabular-nums">
                 {!isLastEntry
-                  ? sleep.endedAt.toLocaleTimeString("en-DK", {
+                  ? new Date(sleep.endedAt).toLocaleTimeString("en-DK", {
                       hour: "2-digit",
                       minute: "2-digit",
                       timeZone,
                     })
-                  : sleep.startedAt.toLocaleTimeString("en-DK", {
+                  : new Date(sleep.startedAt).toLocaleTimeString("en-DK", {
                       hour: "2-digit",
                       minute: "2-digit",
                       timeZone,
