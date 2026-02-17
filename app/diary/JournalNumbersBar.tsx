@@ -8,7 +8,7 @@ gql`
   query GetLatestWeightEntry {
     user {
       weight
-      sleepDebt
+      sleepDebtFraction
     }
   }
 `;
@@ -26,19 +26,16 @@ export default function JournalNumbersBar() {
     >
       <span className="font-bold">
         💤{" "}
-        {data?.user?.sleepDebt ? (
+        {data?.user?.sleepDebtFraction ? (
           <>
-            {(data.user.sleepDebt / 3600).toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })}
-            <small>h</small>
+            {~~(data.user.sleepDebtFraction * 100)}
+            <small>%</small>
           </>
         ) : (
           "N/A"
         )}
       </span>
-      <div className="h-8 w-1 bg-[yellow]/25 rounded-full" />
+      <div className="h-8 w-1 rounded-full bg-[yellow]/25" />
       <span className="font-bold">
         ⚖️{" "}
         {data?.user?.weight ? (
