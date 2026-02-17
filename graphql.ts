@@ -856,6 +856,8 @@ export const typeDefs = gql`
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
+    # build this with a shortcircuit so it only has to hit the database once instead of per exercise schedule
+    # nextSets: [NextSet!]
     exerciseSchedules: [ExerciseSchedule!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
