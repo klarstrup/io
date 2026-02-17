@@ -11,7 +11,7 @@ export function DiaryPoller({ userId }: { userId: string }) {
   const id = useId();
   const client = useApolloClient();
 
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" && Math.random() > 2) {
     usePartySocket({
       host: "ws://localhost:1337/_next/webpack-hmr?id=" + id,
       room: "diary-poller-" + id,
@@ -21,6 +21,7 @@ export function DiaryPoller({ userId }: { userId: string }) {
         if ("type" in data && data.type === "built") {
           // A webpack rebuild happened, likely due to code changes
           // TODO: Make this smarter to avoid unnecessary refreshes
+          // TODO: Prevent circular updates if the client also triggers a rebuild
           console.log(
             "[DiaryPoller] Webpack rebuild detected, refetching queries",
           );
