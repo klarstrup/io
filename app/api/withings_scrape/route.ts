@@ -204,7 +204,7 @@ export const GET = async (req: NextRequest) => {
                 measuredAt: new Date(measureGroup.date * 1000),
                 createdAt: new Date(measureGroup.created * 1000),
                 modifiedAt: new Date(measureGroup.modified * 1000),
-                _withings_userId: accessTokenResponse.userid,
+                _withings_userId: Number(accessTokenResponse.userid),
                 _io_userId: user.id,
               },
             },
@@ -243,7 +243,8 @@ export const GET = async (req: NextRequest) => {
                 endedAt: new Date(sleepSeries.enddate * 1000),
                 createdAt: new Date(sleepSeries.created * 1000),
                 modifiedAt: new Date(sleepSeries.modified * 1000),
-                _withings_userId: accessTokenResponse.userid,
+                // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
+                _withings_userId: Number(accessTokenResponse.userid),
                 _io_userId: user.id,
               },
             },

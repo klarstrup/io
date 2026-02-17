@@ -10,5 +10,5 @@ export const WithingsSleepSummarySeries = proxyCollection<
   }
 >("withings_sleep_summary_series");
 export const WithingsMeasureGroup = proxyCollection<
-  Withings.MeasureGroup & { _withings_userId: string; _io_userId: string }
+  Withings.MeasureGroup & { _withings_userId: number; _io_userId: string }
 >("withings_measure_groups");
