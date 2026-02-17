@@ -23,6 +23,7 @@ export async function DiaryAgendaFood({
         query: gql`
           query DiaryAgendaFood($interval: IntervalInput!) {
             user {
+              id
               foodEntries(interval: $interval) {
                 id
                 datetime
