@@ -34,7 +34,10 @@ import {
 import { IcalEvents } from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
 import { DataSource } from "./sources/utils";
-import { WithingsSleepSummarySeries } from "./sources/withings.server";
+import {
+  WithingsMeasureGroup,
+  WithingsSleepSummarySeries,
+} from "./sources/withings.server";
 import { pick, rangeToQuery } from "./utils";
 
 const emitGraphQLUpdate = async (
@@ -124,6 +127,34 @@ export const resolvers: Resolvers<
     },
   },
   User: {
+    weight: async (parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+
+      // For now, we only support Withings weight data, so we look for a Withings data source and query the weight entries from there
+      const withingsDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      );
+
+      const withingsUserId =
+        withingsDataSource?.config?.accessTokenResponse?.userid;
+      if (!withingsUserId) return null;
+
+      const latestWeightMeasure = (
+        await WithingsMeasureGroup.findOne(
+          {
+            // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
+            _withings_userId: Number(withingsUserId),
+            measures: { $elemMatch: { type: 1 } },
+          },
+          { sort: { createdAt: -1 } },
+        )
+      )?.measures.find((measure) => measure.type === 1);
+
+      return latestWeightMeasure
+        ? latestWeightMeasure.value * 10 ** latestWeightMeasure.unit
+        : null;
+    },
     locations: async (parent) => {
       if (!parent.id) return [];
 
@@ -695,6 +726,7 @@ export const typeDefs = gql`
     exerciseSchedules: [ExerciseSchedule!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
+    weight: Float
     # dataSources: [UserDataSource!]
   }
 
