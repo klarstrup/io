@@ -6,6 +6,7 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 export function DiaryAgendaDayLocationChange({
   locationChange,
   cotemporalityOfSurroundingEvent,
+  className,
 }: {
   locationChange: {
     __typename: "LocationChange";
@@ -14,6 +15,7 @@ export function DiaryAgendaDayLocationChange({
     date: Date;
   };
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  className?: string;
 }) {
   const {
     isDragging,
@@ -48,10 +50,11 @@ export function DiaryAgendaDayLocationChange({
       isDragging={isDragging}
       key={locationChange.id}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+      className={className}
     >
       <center
         key={locationChange.id}
-        className="-ml-6 w-full text-xs font-medium opacity-75 [font-variant:small-caps]"
+        className="-my-1 -ml-6 w-full text-xs font-medium opacity-75 [font-variant:small-caps]"
       >
         {locationChange.location.replace(/\d\d\d\d (.+), Denmark/g, "$1")}
       </center>

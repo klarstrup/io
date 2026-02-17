@@ -109,6 +109,9 @@ export function DiaryAgendaDayDay({
     const precedingJournalEntry = dayJournalEntries[i - 1];
     const followingJournalEntry = dayJournalEntries[i + 1];
 
+    const isLastEntry = !followingJournalEntry;
+    const isFirstEntry = !precedingJournalEntry;
+
     const previousEvents = dayJournalEntries
       .slice(0, i)
       .filter((je): je is Event => je.__typename === "Event");
@@ -159,13 +162,11 @@ export function DiaryAgendaDayDay({
         end: journalEntry.totalSleepTime * 1000,
       });
 
-      // TODO: smarter way of determining if it's waking up or going to sleep
-      const isLastEntry = !followingJournalEntry;
-
       dayJournalEntryElements.push({
         id: client.cache.identify(sleep) || sleep.id,
         element: (
           <DiaryAgendaDayEntry
+            // TODO: smarter way of determining if it's waking up or going to sleep
             icon={isLastEntry ? faBed : faBedPulse}
             cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
             key={sleep.id}
@@ -492,6 +493,7 @@ export function DiaryAgendaDayDay({
             key={"location-change-" + journalEntry.id}
             locationChange={journalEntry}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+            className={isFirstEntry ? "-mt-1" : ""}
           />
         ),
       });
