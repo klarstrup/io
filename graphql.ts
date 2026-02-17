@@ -15,6 +15,7 @@ import { auth } from "./auth";
 import type {
   ExerciseInfo,
   ExerciseSchedule,
+  FloatTimeSeriesEntry,
   FoodEntry,
   NextSet,
   Resolvers,
@@ -155,6 +156,39 @@ export const resolvers: Resolvers<
         ? latestWeightMeasure.value * 10 ** latestWeightMeasure.unit
         : null;
     },
+    weightTimeSeries: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+
+      const withingsDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      );
+      const withingsUserId =
+        withingsDataSource?.config?.accessTokenResponse?.userid;
+      if (!withingsUserId) return null;
+
+      const weightMeasureGroups = await WithingsMeasureGroup.find(
+        {
+          _withings_userId: Number(withingsUserId),
+          measures: { $elemMatch: { type: 1 } },
+        },
+        { sort: { measuredAt: -1 }, limit: 14 },
+      ).toArray();
+
+      return weightMeasureGroups
+        .map((group) => {
+          const weightMeasure = group.measures.find((m) => m.type === 1);
+          if (!weightMeasure) return null;
+          return {
+            timestamp: group.measuredAt,
+            value: weightMeasure.value * 10 ** weightMeasure.unit,
+            __typename: "FloatTimeSeriesEntry",
+          } as FloatTimeSeriesEntry;
+        })
+        .filter(Boolean)
+        .slice(0, 4)
+        .reverse();
+    },
     sleepDebt: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
 
@@ -189,10 +223,13 @@ export const resolvers: Resolvers<
       )?.config?.accessTokenResponse?.userid;
       if (!withingsUserId) return null;
 
-      const sleepEntries = await WithingsSleepSummarySeries.find({
-        _withings_userId: Number(withingsUserId),
-        endedAt: { $gte: addWeeks(new Date(), -1) }, // Past week
-      }).toArray();
+      const sleepEntries = await WithingsSleepSummarySeries.find(
+        {
+          _withings_userId: Number(withingsUserId),
+          endedAt: { $gte: addWeeks(new Date(), -2) }, // Past week
+        },
+        { sort: { endedAt: -1 }, limit: 7 },
+      ).toArray();
 
       const totalSleepTime = sleepEntries.reduce(
         (total, entry) => total + entry.data.total_sleep_time,
@@ -202,6 +239,49 @@ export const resolvers: Resolvers<
       const idealSleepTime = 8 * 60 * 60 * sleepEntries.length;
 
       return totalSleepTime / idealSleepTime;
+    },
+    sleepDebtFractionTimeSeries: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+
+      if (!user) return null;
+
+      const withingsUserId = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      )?.config?.accessTokenResponse?.userid;
+      if (!withingsUserId) return null;
+
+      const sleepEntries = (
+        await WithingsSleepSummarySeries.find(
+          {
+            _withings_userId: Number(withingsUserId),
+            endedAt: { $gte: addWeeks(new Date(), -4) },
+          },
+          { sort: { startedAt: -1 }, limit: 14 },
+        ).toArray()
+      ).reverse();
+
+      let sleepDebtFractionTimeSeries: FloatTimeSeriesEntry[] = [];
+      for (let i = 6; i < sleepEntries.length; i++) {
+        const windowEntries = sleepEntries.slice(i - 6, i + 1); // 7-day window
+
+        const totalSleepTime = windowEntries.reduce(
+          (total, entry) => total + entry.data.total_sleep_time,
+          0,
+        );
+
+        const idealSleepTime = 8 * 60 * 60 * windowEntries.length;
+
+        sleepDebtFractionTimeSeries.push({
+          timestamp: windowEntries[windowEntries.length - 1]!.endedAt,
+          value: totalSleepTime / idealSleepTime,
+          __typename: "FloatTimeSeriesEntry",
+        });
+      }
+      return sleepDebtFractionTimeSeries
+        .slice()
+        .reverse()
+        .slice(0, 4)
+        .reverse();
     },
     locations: async (parent) => {
       if (!parent.id) return [];
@@ -760,6 +840,11 @@ export const typeDefs = gql`
     end: Date!
   }
 
+  type FloatTimeSeriesEntry {
+    timestamp: Date!
+    value: Float!
+  }
+
   type User {
     id: ID!
     name: String!
@@ -775,8 +860,10 @@ export const typeDefs = gql`
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
     weight: Float
+    weightTimeSeries: [FloatTimeSeriesEntry!]
     sleepDebt: Float
     sleepDebtFraction: Float
+    sleepDebtFractionTimeSeries: [FloatTimeSeriesEntry!]
     # dataSources: [UserDataSource!]
   }
 

@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import useInterval from "./hooks/useInterval";
 
 type AnyFunction = (...args: unknown[]) => unknown;
 
@@ -434,4 +435,15 @@ export const useVisibilityAwarePollInterval = (pollInterval: number) => {
   const isPageVisible = usePageVisibility();
 
   return isPageVisible ? pollInterval : undefined;
+};
+
+export const useNow = (updateInterval = 500) => {
+  const [now, setNow] = useState(() => new Date());
+
+  useInterval(
+    () => setNow(new Date()),
+    useVisibilityAwarePollInterval(updateInterval),
+  );
+
+  return now;
 };

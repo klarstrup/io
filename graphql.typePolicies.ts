@@ -60,4 +60,7 @@ export const typePolicies: TypePolicies = {
       endedAt: { read: (d) => d && new Date(d) },
     },
   },
+  FloatTimeSeriesEntry: {
+    fields: { timestamp: { read: (d) => d && new Date(d) } },
+  },
 };
