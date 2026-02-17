@@ -32,7 +32,7 @@ export function DiaryAgendaDayNow({
         <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
       }
       cotemporality="current"
-      className="mt-0.5 mb-2 gap-1.5"
+      className="pt-0.5 pb-1.5 gap-1.5"
       ref={setNodeRef}
       style={{
         transition,
