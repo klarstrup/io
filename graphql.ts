@@ -164,7 +164,8 @@ export const resolvers: Resolvers<
 
       return (
         await WithingsSleepSummarySeries.find({
-          _withings_userId: withingsUserId,
+          // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
+          _withings_userId: Number(withingsUserId),
           startedAt: { $gte: new Date(args.interval.start) },
           endedAt: { $lte: new Date(args.interval.end) },
         }).toArray()
@@ -172,6 +173,7 @@ export const resolvers: Resolvers<
         (sleep) =>
           ({
             ...sleep,
+            deviceId: sleep.hash_deviceid,
             id: String(sleep.id),
             totalSleepTime: sleep.data.total_sleep_time,
             endedAt: addSeconds(sleep.startedAt, sleep.data.total_timeinbed),
@@ -698,6 +700,7 @@ export const typeDefs = gql`
 
   type Sleep {
     id: ID!
+    deviceId: String!
     startedAt: Date!
     endedAt: Date!
     totalSleepTime: Float!

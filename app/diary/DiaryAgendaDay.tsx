@@ -84,6 +84,7 @@ gql`
         startedAt
         endedAt
         totalSleepTime
+        deviceId
       }
       exerciseSchedules {
         id
@@ -594,32 +595,30 @@ const getLocationFromJournalEntry = (
   locations: Location[],
   entry: JournalEntry,
 ): { id: string; name: string } | null => {
-  if (entry.__typename === "Workout" && entry.location) {
-    return { id: entry.location.id, name: entry.location.name };
-  }
+  if (entry.__typename === "Workout" && entry.location) return entry.location;
+
   if (entry.__typename === "Workout" && entry.locationId) {
     for (const location of locations) {
-      if (location.id === entry.locationId) {
-        return { id: location.id, name: location.name };
-      }
+      if (location.id === entry.locationId) return location;
     }
 
     return { id: entry.locationId, name: entry.locationId };
   }
   if (
     entry.__typename === "Sleep" &&
-    "location" in entry &&
-    entry.location &&
-    typeof entry.location === "string"
+    "deviceId" in entry &&
+    entry.deviceId &&
+    typeof entry.deviceId === "string"
   ) {
-    if (entry.location.trim() === "") return null;
-    return { id: entry.location, name: entry.location };
+    if (entry.deviceId.trim() === "a5805286bee9039cd23c4e59200b776eba02c6f7") {
+      return locations.find((l) => l.name === "Home") || null;
+    }
   }
   if (entry.__typename === "Event" && "location" in entry && entry.location) {
     for (const location of locations) {
       for (const knownAddress of location.knownAddresses || []) {
         if (entry.location.includes(knownAddress)) {
-          return { id: location.id, name: location.name };
+          return location;
         }
       }
     }
