@@ -568,17 +568,40 @@ export default function UserStuffSourcesForm({
     <div className="flex flex-col items-stretch gap-2">
       <h1 className="text-lg font-bold">Data Sources</h1>
       {user?.dataSources && user.dataSources.length > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
+        <>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
+            {[...user.dataSources]
+              .sort((a, b) => a.source.localeCompare(b.source))
+              .filter((source) => sourceOptions.includes(source.source))
+              .filter((source) => !source.paused)
+              .map((source) => (
+                <UserStuffSourceForm
+                  key={source.id}
+                  sourceOptions={sourceOptions}
+                  source={source}
+                />
+              ))}
+          </div>
           {[...user.dataSources]
             .sort((a, b) => a.source.localeCompare(b.source))
-            .map((source) => (
-              <UserStuffSourceForm
-                key={source.id}
-                sourceOptions={sourceOptions}
-                source={source}
-              />
-            ))}
-        </div>
+            .filter((source) => sourceOptions.includes(source.source))
+            .filter((source) => source.paused).length ? (
+            <hr className={"my-2 border-gray-300"} />
+          ) : null}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
+            {[...user.dataSources]
+              .sort((a, b) => a.source.localeCompare(b.source))
+              .filter((source) => sourceOptions.includes(source.source))
+              .filter((source) => source.paused)
+              .map((source) => (
+                <UserStuffSourceForm
+                  key={source.id}
+                  sourceOptions={sourceOptions}
+                  source={source}
+                />
+              ))}
+          </div>
+        </>
       ) : null}
     </div>
   );
