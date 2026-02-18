@@ -1,6 +1,5 @@
 import { useSortable } from "@dnd-kit/sortable";
 import Link from "next/link";
-import { ScrollToMe } from "../../components/CenterMe";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -32,7 +31,7 @@ export function DiaryAgendaDayNow({
         <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
       }
       cotemporality="current"
-      className="pt-0.5 pb-1.5 gap-1.5"
+      className="gap-1.5 pt-0.5 pb-1.5"
       ref={setNodeRef}
       style={{
         transition,
@@ -65,7 +64,6 @@ export function DiaryAgendaDayNow({
       >
         <span className="text-xs">➕</span> Event
       </span>
-      <ScrollToMe />
     </DiaryAgendaDayEntry>
   );
 }

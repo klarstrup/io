@@ -9,7 +9,6 @@ import {
   addHours,
   differenceInDays,
   endOfDay,
-  type Interval,
   intervalToDuration,
   isBefore,
   isPast,
@@ -17,10 +16,11 @@ import {
   roundToNearestMinutes,
   startOfDay,
   subHours,
+  type Interval,
 } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
-import type { ReactElement } from "react";
+import { useEffect, useRef, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import type {
   Event,
@@ -51,7 +51,7 @@ import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkoutSet } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
-import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
+import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
 
 export function DiaryAgendaDayDay({
   date,
@@ -71,6 +71,13 @@ export function DiaryAgendaDayDay({
   const now = TZDate.tz(timeZone);
   const todayStr = dateToString(subHours(now, dayStartHour));
   const isToday = date === todayStr;
+  const ref = useRef<HTMLFieldSetElement>(null);
+
+  useEffect(() => {
+    if (isToday) {
+      ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
+    }
+  }, [isToday]);
 
   const tzDate = new TZDate(date, timeZone);
 
@@ -508,6 +515,7 @@ export function DiaryAgendaDayDay({
 
   return (
     <FieldSetX
+      ref={ref}
       legend={
         <div className="-ml-1 flex items-center gap-1 leading-normal">
           <span
