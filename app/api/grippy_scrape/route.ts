@@ -130,14 +130,14 @@ export const GET = () =>
             metadata: { count, next },
           } = await fetchGrippyWorkoutLogsByPage(page, authTokens);
 
-          console.log(
+          yield [
             "Fetched workout logs",
             workoutLogs.length,
             "on page ",
             page,
             "of",
             Math.ceil(count / workoutLogs.length),
-          );
+          ].join(" ");
 
           for (const workoutLog of workoutLogs) {
             const updateResult = await GrippyWorkoutLogs.updateOne(
@@ -166,7 +166,6 @@ export const GET = () =>
             }
             workoutIds.add(workoutLog.workout.uuid);
           }
-          yield { workoutLogs };
 
           if (
             next &&
@@ -176,13 +175,14 @@ export const GET = () =>
           ) {
             continue;
           } else {
+            yield "No more workout log pages to fetch or all logs are already fetched";
             break;
           }
         }
-        console.log({
+        yield {
           insertedOrUpdatedLogs: Array.from(insertedOrUpdatedLogs),
           workoutIds: Array.from(workoutIds),
-        });
+        };
 
         // Fetch workout details for any new workouts
         for (const workoutId of workoutIds) {
