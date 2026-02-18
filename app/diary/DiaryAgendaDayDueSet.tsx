@@ -249,7 +249,9 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     return (
       <DiaryAgendaDayEntry
         ref={ref2}
-        cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+        cotemporalityOfSurroundingEvent={
+          !isDragging ? cotemporalityOfSurroundingEvent : null
+        }
         {...props}
         icon={faDumbbell}
         onIconClick={
