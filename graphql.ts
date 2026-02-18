@@ -11,6 +11,7 @@ import {
 } from "graphql";
 import gql from "graphql-tag";
 import { ObjectId } from "mongodb";
+import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
 import { auth } from "./auth";
 import type {
   ExerciseInfo,
@@ -27,7 +28,11 @@ import { exercisesById } from "./models/exercises";
 import { Locations } from "./models/location.server";
 import { Users } from "./models/user.server";
 import { WorkoutSource } from "./models/workout";
-import { getNextSet, MaterializedWorkoutsView } from "./models/workout.server";
+import {
+  getNextSet,
+  MaterializedWorkoutsView,
+  Workouts,
+} from "./models/workout.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
@@ -649,6 +654,80 @@ export const resolvers: Resolvers<
         },
       } as UnsnoozeExerciseSchedulePayload;
     },
+    updateWorkout: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      const workoutId = args.input.id;
+      const workedOutAt = args.input.data.workedOutAt;
+
+      if (!workoutId || !workedOutAt) {
+        throw new Error("workoutId and workedOutAt are required");
+      }
+
+      const updateResult = await Workouts.updateOne(
+        { _id: new ObjectId(workoutId), userId: user.id },
+        { $set: { workedOutAt } },
+      );
+
+      if (updateResult.matchedCount === 0) {
+        throw new Error("Failed to update workout");
+      }
+
+      for await (const _ of materializeIoWorkouts(user)) {
+      }
+
+      const updatedWorkout = await MaterializedWorkoutsView.findOne({
+        id: workoutId,
+        userId: user.id,
+      });
+
+      if (!updatedWorkout) {
+        throw new Error("Workout not found after update");
+      }
+
+      return {
+        __typename: "UpdateWorkoutPayload",
+        workout: {
+          __typename: "Workout",
+          ...updatedWorkout,
+          location: undefined,
+          exercises: updatedWorkout.exercises.map(
+            (exercise) =>
+              ({
+                ...exercise,
+                __typename: "WorkoutExercise",
+                exerciseInfo: undefined as unknown as ExerciseInfo,
+                sets: exercise.sets.map(
+                  (set) =>
+                    ({
+                      ...set,
+                      __typename: "WorkoutSet",
+                      inputs: set.inputs.map(
+                        (input) =>
+                          ({
+                            ...input,
+                            __typename: "WorkoutSetInput",
+                          }) as const,
+                      ),
+                      meta:
+                        set.meta &&
+                        Object.entries(set.meta || {}).map(
+                          ([key, value]) =>
+                            ({
+                              key,
+                              value: String(value),
+                              __typename: "WorkoutSetMeta",
+                            }) as const,
+                        ),
+                    }) as const,
+                ),
+              }) as const,
+          ),
+          id: updatedWorkout.id || updatedWorkout._id.toString(),
+        },
+      };
+    },
   },
   BoulderCircuit: {
     gradeEstimate: (parent) =>
@@ -801,7 +880,7 @@ export const typeDefs = gql`
   }
 
   input UpdateTodoInput {
-    id: String!
+    id: ID!
     data: TodoInput!
   }
 
@@ -823,6 +902,20 @@ export const typeDefs = gql`
     exerciseSchedule: ExerciseSchedule
   }
 
+  type UpdateWorkoutPayload {
+    workout: Workout
+  }
+
+  input UpdateWorkoutInput {
+    id: ID!
+    data: UpdateWorkoutDataInput!
+  }
+
+  input UpdateWorkoutDataInput {
+    workedOutAt: Date
+    locationId: String
+  }
+
   type Mutation {
     createTodo(input: CreateTodoInput!): CreateTodoPayload
     updateTodo(input: UpdateTodoInput!): UpdateTodoPayload
@@ -833,6 +926,7 @@ export const typeDefs = gql`
     unsnoozeExerciseSchedule(
       input: UnsnoozeExerciseScheduleInput!
     ): UnsnoozeExerciseSchedulePayload
+    updateWorkout(input: UpdateWorkoutInput!): UpdateWorkoutPayload
   }
 
   input IntervalInput {

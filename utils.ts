@@ -1,15 +1,19 @@
 import { TZDate } from "@date-fns/tz";
 import {
   addDays,
+  addHours,
   type ContextOptions,
   type DateArg,
   differenceInDays,
+  endOfDay,
   type Interval,
   isDate,
+  isSameDay,
   isWithinInterval,
   type RoundingMethod,
   type RoundingOptions,
   startOfDay,
+  subHours,
 } from "date-fns";
 import type { DateInterval } from "./lib";
 
@@ -687,3 +691,18 @@ export const getTrendLine = (
 
 export const partition = <T>(a: T[], fn: (v: T) => boolean) =>
   a.reduce<[T[], T[]]>((m, v) => (m[fn(v) ? 0 : 1].push(v), m), [[], []]);
+
+export const isSameDayButItRespectsDayStartHour = (
+  dateLeft: Date,
+  dateRight: Date,
+) =>
+  isSameDay(
+    subHours(dateLeft, dayStartHour),
+    subHours(dateRight, dayStartHour),
+  );
+
+export const startOfDayButItRespectsDayStartHour = (date: Date) =>
+  addHours(startOfDay(subHours(date, dayStartHour)), dayStartHour);
+
+export const endOfDayButItRespectsDayStartHour = (date: Date) =>
+  addHours(endOfDay(subHours(date, dayStartHour)), dayStartHour);

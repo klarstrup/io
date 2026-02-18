@@ -28,13 +28,15 @@ import {
   type Todo,
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
-import { WorkoutSource } from "../../models/workout";
 import {
   dateMidpoint,
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
+  endOfDayButItRespectsDayStartHour,
+  isSameDayButItRespectsDayStartHour,
   roundToNearestDay,
+  startOfDayButItRespectsDayStartHour,
   uniqueBy,
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
@@ -239,12 +241,12 @@ export function DiaryAgendaDay() {
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
-  const date = dateToString(subHours(now, 5));
-  const tzDate = new TZDate(date, timeZone);
+  const startOfAgendaDay = startOfDayButItRespectsDayStartHour(now);
+  const tzDate = new TZDate(startOfAgendaDay, timeZone);
 
   const fetchingInterval = {
-    start: addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
-    end: addHours(addDays(endOfDay(tzDate), 10), dayStartHour),
+    start: addDays(startOfDay(tzDate), -8),
+    end: addDays(endOfDayButItRespectsDayStartHour(tzDate), 14),
   };
 
   const { data } = useQuery(DiaryAgendaDayUserTodosDocument, {
@@ -301,7 +303,7 @@ export function DiaryAgendaDay() {
   } = userData || {};
 
   const eventsByDate: Record<string, JournalEntry[]> = {
-    [dateToString(addHours(startOfDay(tzDate), dayStartHour))]: [
+    [dateToString(startOfAgendaDay)]: [
       { __typename: "NowDivider", id: "now-divider", start: now, end: now },
     ],
   };
@@ -457,11 +459,10 @@ export function DiaryAgendaDay() {
         const dayName = dateToString(dayDate);
         const dayWorkouts = workouts
           .filter((workout) =>
-            workout.source === WorkoutSource.Self
-              ? workout.workedOutAt >= startOfDay(dayDate) &&
-                workout.workedOutAt <= endOfDay(dayDate)
-              : workout.workedOutAt >= dayStart &&
-                workout.workedOutAt <= dayEnd,
+            isSameDayButItRespectsDayStartHour(
+              new Date(getJournalEntryPrincipalDate(workout)!.start!),
+              dayStart,
+            ),
           )
           .flatMap((workout) =>
             workout.exercises.map((exercise) => ({
@@ -491,12 +492,8 @@ export function DiaryAgendaDay() {
         ]
           .sort((a, b) =>
             compareAsc(
-              getJournalEntryPrincipalDate(
-                b.__typename === "Workout" ? b.exercises[0]! : b,
-              )?.end || new Date(0),
-              getJournalEntryPrincipalDate(
-                a.__typename === "Workout" ? a.exercises[0]! : a,
-              )?.end || new Date(0),
+              getJournalEntryPrincipalDate(b)?.end || new Date(0),
+              getJournalEntryPrincipalDate(a)?.end || new Date(0),
             ),
           )
           .sort((a, b) => {
@@ -506,12 +503,8 @@ export function DiaryAgendaDay() {
             if (!aAllDay && bAllDay) return 1;
 
             return compareAsc(
-              getJournalEntryPrincipalDate(
-                a.__typename === "Workout" ? a.exercises[0]! : a,
-              )?.start || new Date(0),
-              getJournalEntryPrincipalDate(
-                b.__typename === "Workout" ? b.exercises[0]! : b,
-              )?.start || new Date(0),
+              getJournalEntryPrincipalDate(a)?.start || new Date(0),
+              getJournalEntryPrincipalDate(b)?.start || new Date(0),
             );
           })
           .filter((entry, i, entries) => {

@@ -41,9 +41,10 @@ export function DiaryAgendaDayLocationChange({
         ...(transform
           ? {
               transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 100,
+              zIndex: 5,
             }
           : undefined),
+        ...(isDragging ? { zIndex: 10 } : {}),
       }}
       {...listeners}
       {...attributes}

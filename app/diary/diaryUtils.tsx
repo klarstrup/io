@@ -1,6 +1,10 @@
 import {
   addHours,
   endOfDay,
+  getHours,
+  getMilliseconds,
+  getMinutes,
+  getSeconds,
   type Interval,
   isWithinInterval,
   max,
@@ -16,7 +20,7 @@ import type {
   Workout,
   WorkoutExercise,
 } from "../../graphql.generated";
-import type { WorkoutData } from "../../models/workout";
+import { WorkoutData } from "../../models/workout";
 import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
@@ -71,7 +75,7 @@ export const getTodoPrincipalDate = (
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (todo.completed)
     return {
-      start: todo.start ? min([todo.start, todo.completed]) : todo.completed,
+      start: todo.completed,
       end: todo.completed,
     };
   if (todo.start)
@@ -139,26 +143,25 @@ export const getJournalEntryPrincipalDate = (
   }
   if ("exercises" in entry) {
     const workout = entry;
-    return getWorkoutPrincipalDate(workout);
-  }
-  if ("sets" in entry) {
-    const workoutExercise = entry;
 
-    const sets = workoutExercise.sets;
-
-    if (sets.length === 0) return null;
-
-    const createdAts = sets
-      .map((s) => s.createdAt)
-      .filter((date): date is Date => Boolean(date));
-    const updatedAts = sets
-      .map((s) => s.updatedAt)
-      .filter((date): date is Date => Boolean(date));
+    // If the workout is exactly at midnight and the workout's principal date would be the previous day, we want to consider it as part of the next day instead, since that's likely what the user intends
+    if (
+      getMilliseconds(workout.workedOutAt) === 0 &&
+      getSeconds(workout.workedOutAt) === 0 &&
+      getMinutes(workout.workedOutAt) === 0
+    ) {
+      console.log(workout, getWorkoutPrincipalDate(workout));
+      return getWorkoutPrincipalDate(workout);
+    }
 
     return {
-      start: min([...createdAts, ...updatedAts]),
-      end: max([...createdAts, ...updatedAts]),
+      start: workout.workedOutAt,
+      end: workout.workedOutAt,
     };
+  }
+
+  if (entry.__typename === "LocationChange") {
+    return { start: entry.date, end: entry.date };
   }
 
   return null;

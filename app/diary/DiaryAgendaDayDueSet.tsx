@@ -75,9 +75,10 @@ export function DiaryAgendaDayDueSet({
         ...(transform
           ? {
               transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 100,
+              zIndex: 5,
             }
           : undefined),
+        ...(isDragging ? { zIndex: 10 } : {}),
       }}
       isDragging={isDragging}
       {...listeners}

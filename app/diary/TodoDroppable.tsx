@@ -1,9 +1,12 @@
 "use client";
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import {
+  closestCenter,
+  CollisionDetection,
   DndContext,
   DragEndEvent,
   MouseSensor,
+  rectIntersection,
   TouchSensor,
   type UniqueIdentifier,
   useDroppable,
@@ -16,28 +19,28 @@ import {
   type SortableContextProps,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  addHours,
-  addMilliseconds,
-  isFuture,
-  max,
-  min,
-  setHours,
-} from "date-fns";
+import { isFuture, isPast, max, min } from "date-fns";
+import gql from "graphql-tag";
 import type { ReactNode } from "react";
 import {
   type NextSet,
   SnoozeExerciseScheduleDocument,
   type Todo,
   UpdateTodoDocument,
+  UpdateWorkoutDocument,
   type Workout,
 } from "../../graphql.generated";
-import { dateMidpoint, dayStartHour } from "../../utils";
+import {
+  dateMidpoint,
+  endOfDayButItRespectsDayStartHour,
+  isSameDayButItRespectsDayStartHour,
+  startOfDayButItRespectsDayStartHour,
+} from "../../utils";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
-    id: "droppable-day-" + new Date(props.date).toISOString(),
+    id: "droppable-day-" + new Date(props.date).toISOString().split("T")[0]!,
     data: { date: props.date },
   });
 
@@ -55,10 +58,102 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
 
 const NOW_SYMBOL = Symbol("now");
 
+gql`
+  mutation UpdateWorkout($input: UpdateWorkoutInput!) {
+    updateWorkout(input: $input) {
+      workout {
+        id
+        createdAt
+        updatedAt
+        workedOutAt
+        materializedAt
+        locationId
+        source
+        exercises {
+          exerciseId
+          displayName
+          comment
+          exerciseInfo {
+            id
+            aliases
+            name
+            isHidden
+            inputs {
+              type
+            }
+            instructions {
+              value
+            }
+            tags {
+              name
+              type
+            }
+          }
+          sets {
+            comment
+            createdAt
+            updatedAt
+            inputs {
+              unit
+              value
+              assistType
+            }
+            meta {
+              key
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const customCollisionDetectionAlgorithm: CollisionDetection = ({
+  droppableContainers,
+  ...args
+}) => {
+  const dateBeingDragged = args.active.data.current?.date;
+
+  // First, let's see if the `trash` droppable rect is intersecting
+  const rectIntersectionCollisions = rectIntersection({
+    ...args,
+    droppableContainers: droppableContainers.filter(
+      ({ id, data }) =>
+        String(id).startsWith("droppable-day-") &&
+        data.current &&
+        "date" in data.current &&
+        !isSameDayButItRespectsDayStartHour(
+          data.current.date,
+          dateBeingDragged,
+        ),
+    ),
+  });
+
+  // Collision detection algorithms return an array of collisions
+  if (rectIntersectionCollisions.length > 0) {
+    // The trash is intersecting, return early
+    return rectIntersectionCollisions;
+  }
+
+  // Compute other collisions
+  return closestCenter({
+    ...args,
+    droppableContainers: droppableContainers.filter(
+      ({ id, data }) =>
+        !String(id).startsWith("droppable-day-") &&
+        data.current &&
+        "date" in data.current &&
+        isSameDayButItRespectsDayStartHour(data.current.date, dateBeingDragged),
+    ),
+  });
+};
+
 export function TodoDragDropContainer(props: { children: ReactNode }) {
   const client = useApolloClient();
   const [updateTodo] = useMutation(UpdateTodoDocument);
   const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
+  const [updateWorkout] = useMutation(UpdateWorkoutDocument);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -119,17 +214,6 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
             ([key]) => sortableId.startsWith(key) || key === sortableId,
           )?.[1];
 
-          if (
-            sortableId.startsWith("Workout:") &&
-            sortableId.split("-").length === 2
-          ) {
-            const workoutExercise = item?.exercises.find(
-              (we) => String(we.exerciseId) === sortableId.split("-")[1],
-            );
-
-            item = workoutExercise;
-          }
-
           if (!item) return null;
 
           return [sortableId, item] as const;
@@ -172,11 +256,18 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
     const overStart =
       over.data.current.date && new Date(over.data.current.date);
-    const dayStart = setHours(overStart, dayStartHour);
-    const dayEnd = addMilliseconds(
-      setHours(addHours(dayStart, 24), dayStartHour),
-      -1,
-    );
+    const dayStart = startOfDayButItRespectsDayStartHour(overStart);
+    const dayEnd = endOfDayButItRespectsDayStartHour(overStart);
+
+    console.log({
+      precedingDate,
+      followingDate,
+      followingEntry,
+      overStart,
+      dayStart,
+      dayEnd,
+    });
+
     let targetDate = dateMidpoint(
       precedingDate || dayStart,
       followingDate || dayEnd,
@@ -245,6 +336,25 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           },
         });
       }
+    } else if (active.data.current.workout) {
+      const workout: Workout = active.data.current.workout;
+
+      if (isPast(targetDate)) {
+        void updateWorkout({
+          variables: {
+            input: {
+              id: workout.id,
+              data: { workedOutAt: targetDate },
+            },
+          },
+          optimisticResponse: {
+            updateWorkout: {
+              __typename: "UpdateWorkoutPayload",
+              workout: { ...workout, workedOutAt: targetDate },
+            },
+          },
+        });
+      }
     }
   }
 
@@ -260,6 +370,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       id="TodoDragDropContainer"
       sensors={sensors}
       onDragEnd={handleDragEnd}
+      collisionDetection={customCollisionDetectionAlgorithm}
     >
       {props.children}
     </DndContext>

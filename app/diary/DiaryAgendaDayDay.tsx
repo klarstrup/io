@@ -445,15 +445,8 @@ export function DiaryAgendaDayDay({
             workout,
           ] as const;
         });
-        const workoutDate = isSameDay(
-          addHours(workout.workedOutAt, dayStartHour),
-          subHours(
-            setsWithLocation[0]?.[0].createdAt || workout.workedOutAt,
-            dayStartHour,
-          ),
-        )
-          ? setsWithLocation[0]?.[0].createdAt || workout.workedOutAt
-          : workout.workedOutAt;
+        const workoutDate =
+          getJournalEntryPrincipalDate(workout)?.start || workout.workedOutAt;
 
         // why the fuck is recalculating this necessary for the cotemporalityOfSurroundingEvent to be correct
         const eventThatSurroundsWorkoutExercise = dayJournalEntries

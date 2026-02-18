@@ -165,6 +165,7 @@ export type Mutation = {
   snoozeExerciseSchedule?: Maybe<SnoozeExerciseSchedulePayload>;
   unsnoozeExerciseSchedule?: Maybe<UnsnoozeExerciseSchedulePayload>;
   updateTodo?: Maybe<UpdateTodoPayload>;
+  updateWorkout?: Maybe<UpdateWorkoutPayload>;
 };
 
 
@@ -190,6 +191,11 @@ export type MutationUnsnoozeExerciseScheduleArgs = {
 
 export type MutationUpdateTodoArgs = {
   input: UpdateTodoInput;
+};
+
+
+export type MutationUpdateWorkoutArgs = {
+  input: UpdateWorkoutInput;
 };
 
 export type NextSet = {
@@ -270,12 +276,27 @@ export type UnsnoozeExerciseSchedulePayload = {
 
 export type UpdateTodoInput = {
   data: TodoInput;
-  id: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type UpdateTodoPayload = {
   __typename: 'UpdateTodoPayload';
   todo?: Maybe<Todo>;
+};
+
+export type UpdateWorkoutDataInput = {
+  locationId?: InputMaybe<Scalars['String']['input']>;
+  workedOutAt?: InputMaybe<Scalars['Date']['input']>;
+};
+
+export type UpdateWorkoutInput = {
+  data: UpdateWorkoutDataInput;
+  id: Scalars['ID']['input'];
+};
+
+export type UpdateWorkoutPayload = {
+  __typename: 'UpdateWorkoutPayload';
+  workout?: Maybe<Workout>;
 };
 
 export type User = {
@@ -437,6 +458,13 @@ export type GetLatestWeightEntryQueryVariables = Exact<{ [key: string]: never; }
 
 export type GetLatestWeightEntryQuery = { user?: { __typename: 'User', id: string, weight?: number | null, sleepDebtFraction?: number | null, weightTimeSeries?: Array<{ __typename: 'FloatTimeSeriesEntry', timestamp: Date, value: number }> | null, sleepDebtFractionTimeSeries?: Array<{ __typename: 'FloatTimeSeriesEntry', timestamp: Date, value: number }> | null } | null };
 
+export type UpdateWorkoutMutationVariables = Exact<{
+  input: UpdateWorkoutInput;
+}>;
+
+
+export type UpdateWorkoutMutation = { updateWorkout?: { __typename: 'UpdateWorkoutPayload', workout?: { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt?: Date | null, locationId?: string | null, source?: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName?: string | null, comment?: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment?: string | null, createdAt?: Date | null, updatedAt?: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }>, meta?: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> } | null } | null };
+
 export type WorkoutFormNextSetsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -556,6 +584,9 @@ export type ResolversTypes = {
   UnsnoozeExerciseSchedulePayload: ResolverTypeWrapper<UnsnoozeExerciseSchedulePayload>;
   UpdateTodoInput: UpdateTodoInput;
   UpdateTodoPayload: ResolverTypeWrapper<UpdateTodoPayload>;
+  UpdateWorkoutDataInput: UpdateWorkoutDataInput;
+  UpdateWorkoutInput: UpdateWorkoutInput;
+  UpdateWorkoutPayload: ResolverTypeWrapper<UpdateWorkoutPayload>;
   User: ResolverTypeWrapper<User>;
   Workout: ResolverTypeWrapper<Workout>;
   WorkoutExercise: ResolverTypeWrapper<WorkoutExercise>;
@@ -602,6 +633,9 @@ export type ResolversParentTypes = {
   UnsnoozeExerciseSchedulePayload: UnsnoozeExerciseSchedulePayload;
   UpdateTodoInput: UpdateTodoInput;
   UpdateTodoPayload: UpdateTodoPayload;
+  UpdateWorkoutDataInput: UpdateWorkoutDataInput;
+  UpdateWorkoutInput: UpdateWorkoutInput;
+  UpdateWorkoutPayload: UpdateWorkoutPayload;
   User: User;
   Workout: Workout;
   WorkoutExercise: WorkoutExercise;
@@ -737,6 +771,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   snoozeExerciseSchedule?: Resolver<Maybe<ResolversTypes['SnoozeExerciseSchedulePayload']>, ParentType, ContextType, RequireFields<MutationSnoozeExerciseScheduleArgs, 'input'>>;
   unsnoozeExerciseSchedule?: Resolver<Maybe<ResolversTypes['UnsnoozeExerciseSchedulePayload']>, ParentType, ContextType, RequireFields<MutationUnsnoozeExerciseScheduleArgs, 'input'>>;
   updateTodo?: Resolver<Maybe<ResolversTypes['UpdateTodoPayload']>, ParentType, ContextType, RequireFields<MutationUpdateTodoArgs, 'input'>>;
+  updateWorkout?: Resolver<Maybe<ResolversTypes['UpdateWorkoutPayload']>, ParentType, ContextType, RequireFields<MutationUpdateWorkoutArgs, 'input'>>;
 };
 
 export type NextSetResolvers<ContextType = any, ParentType extends ResolversParentTypes['NextSet'] = ResolversParentTypes['NextSet']> = {
@@ -793,6 +828,10 @@ export type UnsnoozeExerciseSchedulePayloadResolvers<ContextType = any, ParentTy
 
 export type UpdateTodoPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateTodoPayload'] = ResolversParentTypes['UpdateTodoPayload']> = {
   todo?: Resolver<Maybe<ResolversTypes['Todo']>, ParentType, ContextType>;
+};
+
+export type UpdateWorkoutPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateWorkoutPayload'] = ResolversParentTypes['UpdateWorkoutPayload']> = {
+  workout?: Resolver<Maybe<ResolversTypes['Workout']>, ParentType, ContextType>;
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
@@ -881,6 +920,7 @@ export type Resolvers<ContextType = any> = {
   Todo?: TodoResolvers<ContextType>;
   UnsnoozeExerciseSchedulePayload?: UnsnoozeExerciseSchedulePayloadResolvers<ContextType>;
   UpdateTodoPayload?: UpdateTodoPayloadResolvers<ContextType>;
+  UpdateWorkoutPayload?: UpdateWorkoutPayloadResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   Workout?: WorkoutResolvers<ContextType>;
   WorkoutExercise?: WorkoutExerciseResolvers<ContextType>;
@@ -901,5 +941,6 @@ export const UpdateTodoDocument = {"kind":"Document","definitions":[{"kind":"Ope
 export const DeleteTodoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteTodo"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteTodo"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<DeleteTodoMutation, DeleteTodoMutationVariables>;
 export const DiaryAgendaFoodDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DiaryAgendaFood"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interval"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"IntervalInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"foodEntries"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"interval"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interval"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"datetime"}},{"kind":"Field","name":{"kind":"Name","value":"mealName"}},{"kind":"Field","name":{"kind":"Name","value":"nutritionalContents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"energy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"unit"}}]}},{"kind":"Field","name":{"kind":"Name","value":"protein"}}]}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"food"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"servingSizes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"nutritionMultiplier"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"servings"}},{"kind":"Field","name":{"kind":"Name","value":"servingSize"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"nutritionMultiplier"}}]}}]}}]}}]}}]} as unknown as DocumentNode<DiaryAgendaFoodQuery, DiaryAgendaFoodQueryVariables>;
 export const GetLatestWeightEntryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLatestWeightEntry"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"weight"}},{"kind":"Field","name":{"kind":"Name","value":"weightTimeSeries"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"sleepDebtFraction"}},{"kind":"Field","name":{"kind":"Name","value":"sleepDebtFractionTimeSeries"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"timestamp"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<GetLatestWeightEntryQuery, GetLatestWeightEntryQueryVariables>;
+export const UpdateWorkoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWorkout"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateWorkoutInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWorkout"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"materializedAt"}},{"kind":"Field","name":{"kind":"Name","value":"locationId"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"sets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<UpdateWorkoutMutation, UpdateWorkoutMutationVariables>;
 export const WorkoutFormNextSetsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WorkoutFormNextSets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseSchedules"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"frequency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"years"}},{"kind":"Field","name":{"kind":"Name","value":"months"}},{"kind":"Field","name":{"kind":"Name","value":"weeks"}},{"kind":"Field","name":{"kind":"Name","value":"days"}},{"kind":"Field","name":{"kind":"Name","value":"hours"}},{"kind":"Field","name":{"kind":"Name","value":"minutes"}},{"kind":"Field","name":{"kind":"Name","value":"seconds"}}]}},{"kind":"Field","name":{"kind":"Name","value":"increment"}},{"kind":"Field","name":{"kind":"Name","value":"workingSets"}},{"kind":"Field","name":{"kind":"Name","value":"workingReps"}},{"kind":"Field","name":{"kind":"Name","value":"deloadFactor"}},{"kind":"Field","name":{"kind":"Name","value":"baseWeight"}},{"kind":"Field","name":{"kind":"Name","value":"snoozedUntil"}},{"kind":"Field","name":{"kind":"Name","value":"order"}},{"kind":"Field","name":{"kind":"Name","value":"nextSet"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"dueOn"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"successful"}},{"kind":"Field","name":{"kind":"Name","value":"nextWorkingSets"}},{"kind":"Field","name":{"kind":"Name","value":"nextWorkingSetInputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"scheduleEntry"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"frequency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"years"}},{"kind":"Field","name":{"kind":"Name","value":"months"}},{"kind":"Field","name":{"kind":"Name","value":"weeks"}},{"kind":"Field","name":{"kind":"Name","value":"days"}},{"kind":"Field","name":{"kind":"Name","value":"hours"}},{"kind":"Field","name":{"kind":"Name","value":"minutes"}},{"kind":"Field","name":{"kind":"Name","value":"seconds"}}]}},{"kind":"Field","name":{"kind":"Name","value":"increment"}},{"kind":"Field","name":{"kind":"Name","value":"workingSets"}},{"kind":"Field","name":{"kind":"Name","value":"workingReps"}},{"kind":"Field","name":{"kind":"Name","value":"deloadFactor"}},{"kind":"Field","name":{"kind":"Name","value":"baseWeight"}},{"kind":"Field","name":{"kind":"Name","value":"snoozedUntil"}},{"kind":"Field","name":{"kind":"Name","value":"order"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<WorkoutFormNextSetsQuery, WorkoutFormNextSetsQueryVariables>;
 export const ListPageUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListPageUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"todos"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"start"}},{"kind":"Field","name":{"kind":"Name","value":"due"}},{"kind":"Field","name":{"kind":"Name","value":"completed"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}}]}}]}}]}}]} as unknown as DocumentNode<ListPageUserQuery, ListPageUserQueryVariables>;

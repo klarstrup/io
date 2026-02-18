@@ -62,14 +62,17 @@ export function DiaryAgendaDayWorkoutSet({
       )
         ? setsWithLocation[0]?.[0].createdAt || workout.workedOutAt
         : workout.workedOutAt,
+      workout,
     },
-    disabled: true,
+    disabled: workout.source !== WorkoutSource.Self,
   });
 
   return (
     <DiaryAgendaDayEntry
       icon={faDumbbell}
-      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+      cotemporalityOfSurroundingEvent={
+        !isDragging ? cotemporalityOfSurroundingEvent : null
+      }
       cotemporality={cotemporality({
         start: min([
           workout.workedOutAt,
@@ -86,9 +89,10 @@ export function DiaryAgendaDayWorkoutSet({
         ...(transform
           ? {
               transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 100,
+              zIndex: 5,
             }
           : undefined),
+        ...(isDragging ? { zIndex: 10 } : {}),
       }}
       {...listeners}
       {...attributes}
@@ -115,6 +119,7 @@ export function DiaryAgendaDayWorkoutSet({
             ? " border border-black/20 bg-white"
             : "")
         }
+        style={isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}}
       >
         <div
           className={
