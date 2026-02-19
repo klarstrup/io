@@ -454,39 +454,43 @@ export const resolvers: Resolvers<
           ?.filter((schedule) => schedule.enabled)
           .map((schedule) => schedule.exerciseId) || [],
       );
-      const mostRecentWorkoutOfEachEnabledExerciseSchedule: {
-        workedOutAt: Date;
-        exercise: WorkoutExercise;
-      }[] = [];
-      // TODO: figure out how to do this in one aggregation query instead of multiple queries and in-memory processing
-      for await (const workout of MaterializedWorkoutsView.find(
-        {
-          userId: user.id,
-          "exercises.exerciseId": {
-            $in: Array.from(
-              enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
-            ),
+      const mostRecentWorkoutOfEachEnabledExerciseSchedule =
+        await MaterializedWorkoutsView.aggregate<{
+          workedOutAt: Date;
+          exercise: WorkoutExercise;
+        }>([
+          {
+            $match: {
+              userId: user.id,
+              "exercises.exerciseId": {
+                $in: Array.from(
+                  enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
+                ),
+              },
+            },
           },
-        },
-        { sort: { workedOutAt: -1 } },
-      )) {
-        for (const exercise of workout.exercises) {
-          if (
-            enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor.has(
-              exercise.exerciseId,
-            )
-          ) {
-            mostRecentWorkoutOfEachEnabledExerciseSchedule.push({
-              workedOutAt: workout.workedOutAt,
-              exercise,
-            });
-
-            enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor.delete(
-              exercise.exerciseId,
-            );
-          }
-        }
-      }
+          { $sort: { workedOutAt: -1 } },
+          { $unwind: "$exercises" },
+          {
+            $match: {
+              "exercises.exerciseId": {
+                $in: Array.from(
+                  enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
+                ),
+              },
+            },
+          },
+          // Group by exercise ID to get the most recent workout for each exercise
+          {
+            $group: {
+              _id: "$exercises.exerciseId",
+              workedOutAt: { $first: "$workedOutAt" },
+              exercise: { $first: "$exercises" },
+            },
+          },
+          // Project to match the expected output format
+          { $project: { _id: 0, workedOutAt: 1, exercise: 1 } },
+        ]).toArray();
 
       return (
         await Promise.all(
