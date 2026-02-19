@@ -16,7 +16,7 @@ import {
   Workouts,
 } from "../../models/workout.server";
 import type { ExerciseSchedule } from "../../sources/fitocracy";
-import type { UserDataSource } from "../../sources/utils";
+import type { DataSource, UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable, omit } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
 
@@ -198,11 +198,45 @@ export async function updateUserExerciseSchedules(
     .exerciseSchedules!;
 }
 
-export async function updateUserDataSource(
+export async function createUserDataSource<
+  S extends DataSource,
+  DS extends Extract<UserDataSource, { source: S }>,
+>(
   userId: string,
-  dataSourceId: UserDataSource["id"],
-  dataSource: UserDataSource,
+  source: S,
+  dataSource: Pick<DS, "config" | "name" | "source">,
 ) {
+  const user = (await auth())?.user;
+  if (!user || user.id !== userId) throw new Error("Unauthorized");
+
+  const newDataSource = {
+    ...dataSource,
+    id: uuid(),
+    updatedAt: new Date(),
+    createdAt: new Date(),
+    lastAttemptedAt: null,
+    lastSuccessfulAt: null,
+    lastSuccessfulRuntime: null,
+    lastResult: null,
+    lastFailedAt: null,
+    lastFailedRuntime: null,
+    lastError: null,
+  };
+
+  await Users.updateOne(
+    { _id: new ObjectId(user.id) },
+    { $push: { dataSources: newDataSource as UserDataSource } },
+  );
+
+  emitIoUpdate(user.id);
+
+  return newDataSource;
+}
+
+export async function updateUserDataSource<
+  S extends DataSource,
+  DS extends Extract<UserDataSource, { source: S }>,
+>(userId: string, dataSourceId: DS["id"], dataSource: DS) {
   const user = (await auth())?.user;
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 

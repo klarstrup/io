@@ -45,6 +45,7 @@ import {
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
 import { pick, rangeToQuery } from "./utils";
+import { SpiirAccountGroups } from "./sources/spiir.server";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -133,6 +134,33 @@ export const resolvers: Resolvers<
     },
   },
   User: {
+    availableBalance: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+
+      console.log({
+        asfd: "asdfasdf",
+      });
+
+      const spiirDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Spiir,
+      );
+      if (!spiirDataSource) return null;
+
+      const spiirAccountGroups = await SpiirAccountGroups.find({
+        _io_userId: user.id,
+      }).toArray();
+
+      console.log({
+        spiirAccountGroups,
+      });
+
+      return spiirAccountGroups.reduce(
+        (totalBalance, accountGroup) =>
+          (totalBalance += accountGroup.availableBalance),
+        0,
+      );
+    },
     weight: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -1043,6 +1071,7 @@ export const typeDefs = gql`
     sleepDebt: Float
     sleepDebtFraction: Float
     sleepDebtFractionTimeSeries: [FloatTimeSeriesEntry!]
+    availableBalance: Float
     # dataSources: [UserDataSource!]
   }
 

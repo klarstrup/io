@@ -4,11 +4,19 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { type ReactElement, useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
-import { updateUserDataSource } from "../app/diary/actions";
+import Select, { components, OnChangeValue } from "react-select";
+import {
+  createUserDataSource,
+  updateUserDataSource,
+} from "../app/diary/actions";
 import type { TopLoggerAuthTokens } from "../lib";
-import { DataSource, type UserDataSource } from "../sources/utils";
+import {
+  DataSource,
+  UserDataSourceMeta,
+  type UserDataSource,
+} from "../sources/utils";
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
 import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
@@ -487,6 +495,19 @@ function UserStuffSourceForm({
         </label>
       );
       break;
+    case DataSource.Spiir:
+      formElements = (
+        <label className="flex flex-col gap-1">
+          Session Key:
+          <input
+            type="text"
+            {...register("config.SessionKey")}
+            placeholder="Session Key"
+            className="w-full"
+          />
+        </label>
+      );
+      break;
     default:
       return dataSource satisfies never;
   }
@@ -567,6 +588,7 @@ export default function UserStuffSourcesForm({
   return (
     <div className="flex flex-col items-stretch gap-2">
       <h1 className="text-lg font-bold">Data Sources</h1>
+      <UserStuffSourceCreateForm sourceOptions={sourceOptions} />
       {user?.dataSources && user.dataSources.length > 0 ? (
         <>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
@@ -605,277 +627,218 @@ export default function UserStuffSourcesForm({
       ) : null}
     </div>
   );
+}
 
-  /* 
+function UserStuffSourceCreateForm({
+  sourceOptions,
+}: {
+  sourceOptions: DataSource[];
+}) {
+  const instanceId = useId();
+  const { data: sessionData } = useSession();
+  const user = sessionData?.user;
+  const router = useRouter();
+  const client = useApolloClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-  const defaultValues = useMemo(
-    () => ({ dataSources: user?.dataSources ?? [] }),
-    [user],
-  );
-  const {
-    handleSubmit,
-    register,
-    reset,
-    control,
-    watch,
-    formState: { isDirty, isSubmitting },
-  } = useForm({ defaultValues });
-  useEffect(() => {
-    reset(defaultValues);
-  }, [defaultValues, reset]);
-
-  const {
-    fields: sources,
-    update,
-    append,
-  } = useFieldArray({
-    control,
-    name: "dataSources",
-    keyName: "key",
-  });
   return (
-    <div className="flex flex-wrap gap-1">
-      <form
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onSubmit={handleSubmit(async (data) => {
-          if (!user) {
-            // Log-in gate here
-            return;
-          }
+    <Select
+      components={{
+        Input: (props) => (
+          <components.Input {...props} aria-activedescendant={undefined} />
+        ),
+      }}
+      instanceId={instanceId}
+      isDisabled={isSubmitting}
+      placeholder="Add data source..."
+      options={sourceOptions.map((source) => ({
+        label: source,
+        value: source,
+      }))}
+      onChange={(
+        selected: OnChangeValue<
+          { label: DataSource; value: DataSource },
+          false
+        >,
+      ) => {
+        if (!selected) return;
 
-          const sources = data.dataSources;
-          console.info({ sources });
-          const newSources = await updateUserDataSource(user.id, sources);
-          console.info({ newSources });
+        const value = selected.value;
+        const initialSourceMeta: Pick<UserDataSourceMeta, "name"> = {
+          name: value,
+        };
 
-          reset(
-            newSources
-              ? { dataSources: newSources }
-              : { dataSources: user.dataSources },
-          );
-          setIsEditing(false);
-          router.refresh();
-          client.refetchQueries({ include: "all" });
-        })}
-        className="flex min-w-[50%] flex-1 flex-col gap-1"
-      >
-        <div className="flex items-center justify-evenly">
-          <button
-            type="submit"
-            disabled={!isDirty || isSubmitting}
-            className={
-              "rounded-md px-4 py-2 text-sm font-semibold " +
-              (isDirty
-                ? "bg-blue-600 text-white"
-                : "bg-gray-300 text-gray-600") +
-              " hover:bg-blue-700 hover:text-white" +
-              (isSubmitting ? " cursor-not-allowed" : "") +
-              (isDirty ? " cursor-pointer" : "") +
-              (isSubmitting ? " opacity-50" : "")
-            }
-          >
-            Update Data Sources
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-gray-300 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-400"
-            onClick={() => {
-              reset();
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Select
-            components={{
-              Input: (props) => (
-                <components.Input
-                  {...props}
-                  aria-activedescendant={undefined}
-                />
-              ),
-            }}
-            instanceId={instanceId}
-            isDisabled={isSubmitting}
-            placeholder="Add data source..."
-            options={sourceOptions.map((source) => ({
-              label: source,
-              value: source,
-            }))}
-            onChange={(
-              selected: OnChangeValue<
-                { label: DataSource; value: DataSource },
-                false
-              >,
-            ) => {
-              if (!selected) return;
+        function append(newSource: Pick<UserDataSource, "source" | "config">) {
+          if (!user) return;
+          setIsSubmitting(true);
+          createUserDataSource(user.id, newSource.source, {
+            ...initialSourceMeta,
+            ...newSource,
+          })
+            .then(() => {
+              setIsSubmitting(false);
+              router.refresh();
+              client.refetchQueries({ include: "all" });
+            })
+            .catch((err) => {
+              setIsSubmitting(false);
 
-              const value = selected.value;
-              const initialSourceMeta: UserDataSourceMeta = {
-                id: uuid(),
-                name: value,
-                updatedAt: new Date(),
-                createdAt: new Date(),
-                lastAttemptedAt: null,
-                lastSuccessfulAt: null,
-                lastSuccessfulRuntime: null,
-                lastResult: null,
-                lastFailedAt: null,
-                lastFailedRuntime: null,
-                lastError: null,
-              };
+              alert(String(err.message || err));
+            });
+        }
 
-              switch (value) {
-                case DataSource.Fitocracy:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Fitocracy,
-                    config: { userId: NaN },
-                  });
-                  break;
-                case DataSource.MyFitnessPal:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.MyFitnessPal,
-                    config: { token: "", userName: "", userId: "" },
-                  });
-                  break;
-                case DataSource.RunDouble:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.RunDouble,
-                    config: { id: "" },
-                  });
-                  break;
-                case DataSource.TopLogger:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.TopLogger,
-                    config: {
-                      id: NaN,
-                      graphQLId: "",
-                      authTokens: {
-                        access: {
-                          token: "",
-                          expiresAt: "",
-                          __typename: "AuthToken",
-                        },
-                        refresh: {
-                          token: "",
-                          expiresAt: "",
-                          __typename: "AuthToken",
-                        },
-                        __typename: "AuthTokens",
-                      },
-                    },
-                  });
-                  break;
-                case DataSource.ICal:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.ICal,
-                    config: { url: "", startDate: undefined },
-                  });
-                  break;
-                case DataSource.KilterBoard:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.KilterBoard,
-                    config: { token: "", user_id: "" },
-                  });
-                  break;
-                case DataSource.MoonBoard:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.MoonBoard,
-                    config: { token: "", user_id: "" },
-                  });
-                  break;
-                case DataSource.Grippy:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Grippy,
-                    config: {
-                      authTokens: {
-                        access_token: "",
-                        expires_in: NaN,
-                        token_type: "",
-                        scope: "",
-                        refresh_token: "",
-                      },
-                    },
-                  });
-                  break;
-                case DataSource.Crimpd:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Crimpd,
-                    config: { token: "" },
-                  });
-                  break;
-                case DataSource.ClimbAlong:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.ClimbAlong,
-                    config: { token: "", userId: "" },
-                  });
-                  break;
-                case DataSource.Tomorrow:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Tomorrow,
-                    config: { geohash: "" },
-                  });
-                  break;
-                case DataSource.Onsight:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Onsight,
-                    config: { token: "", username: "" },
-                  });
-                  break;
-                case DataSource.Sportstiming:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Sportstiming,
-                    config: { name: "" },
-                  });
-                  break;
-                case DataSource.Songkick:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Songkick,
-                    config: { artistId: NaN },
-                  });
-                  break;
-                case DataSource.Withings:
-                  append({
-                    ...initialSourceMeta,
-                    source: DataSource.Withings,
-                    config: {
-                      accessTokenResponse: {
-                        userid: "",
-                        access_token: "",
-                        refresh_token: "",
-                        expires_in: 0,
-                        scope: "",
-                        csrf_token: "",
-                        token_type: "",
-                      },
-                    },
-                  });
-                  break;
+        switch (value) {
+          case DataSource.Fitocracy:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Fitocracy,
+              config: { userId: NaN },
+            });
+            break;
+          case DataSource.MyFitnessPal:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.MyFitnessPal,
+              config: { token: "", userName: "", userId: "" },
+            });
+            break;
+          case DataSource.RunDouble:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.RunDouble,
+              config: { id: "" },
+            });
+            break;
+          case DataSource.TopLogger:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.TopLogger,
+              config: {
+                id: NaN,
+                graphQLId: "",
+                authTokens: {
+                  access: {
+                    token: "",
+                    expiresAt: "",
+                    __typename: "AuthToken",
+                  },
+                  refresh: {
+                    token: "",
+                    expiresAt: "",
+                    __typename: "AuthToken",
+                  },
+                  __typename: "AuthTokens",
+                },
+              },
+            });
+            break;
+          case DataSource.ICal:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.ICal,
+              config: { url: "", startDate: undefined },
+            });
+            break;
+          case DataSource.KilterBoard:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.KilterBoard,
+              config: { token: "", user_id: "" },
+            });
+            break;
+          case DataSource.MoonBoard:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.MoonBoard,
+              config: { token: "", user_id: "" },
+            });
+            break;
+          case DataSource.Grippy:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Grippy,
+              config: {
+                authTokens: {
+                  access_token: "",
+                  expires_in: NaN,
+                  token_type: "",
+                  scope: "",
+                  refresh_token: "",
+                },
+              },
+            });
+            break;
+          case DataSource.Crimpd:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Crimpd,
+              config: { token: "" },
+            });
+            break;
+          case DataSource.ClimbAlong:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.ClimbAlong,
+              config: { token: "", userId: "" },
+            });
+            break;
+          case DataSource.Tomorrow:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Tomorrow,
+              config: { geohash: "" },
+            });
+            break;
+          case DataSource.Onsight:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Onsight,
+              config: { token: "", username: "" },
+            });
+            break;
+          case DataSource.Sportstiming:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Sportstiming,
+              config: { name: "" },
+            });
+            break;
+          case DataSource.Songkick:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Songkick,
+              config: { artistId: NaN },
+            });
+            break;
+          case DataSource.Withings:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Withings,
+              config: {
+                accessTokenResponse: {
+                  userid: NaN,
+                  access_token: "",
+                  refresh_token: "",
+                  expires_in: 0,
+                  scope: "",
+                  csrf_token: "",
+                  token_type: "",
+                },
+              },
+            });
+            break;
+          case DataSource.Spiir:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Spiir,
+              config: { SessionKey: "" },
+            });
+            break;
 
-                default:
-                  return value satisfies never;
-              }
-            }}
-          />
-        </div>
-      </form>
-    </div>
+          default:
+            return value satisfies never;
+        }
+      }}
+    />
   );
-  */
 }

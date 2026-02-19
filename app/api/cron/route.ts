@@ -21,10 +21,27 @@ export async function GET() {
       compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
     );
 
-  const leastRecentlyAttempted = dataSources[0];
+  const moreThan15MinutesSinceWeFetchedSpiir = dataSources.every(
+    (dataSource) => {
+      if (dataSource.source !== DataSource.Spiir) return true;
+      const lastAttemptedAt = dataSource.lastAttemptedAt ?? epoch;
+      const timeSinceLastAttempted =
+        new Date().getTime() - new Date(lastAttemptedAt).getTime();
+      return timeSinceLastAttempted > 15 * 60 * 1000;
+    },
+  );
+
+  console.log({
+    moreThan15MinutesSinceWeFetchedSpiir,
+  });
+
+  const leastRecentlyAttemptedOrSpiir = moreThan15MinutesSinceWeFetchedSpiir
+    ? dataSources.find((source) => source.source === DataSource.Spiir)
+    : dataSources[0];
+
   const mostRecentlyAttempted = dataSources[dataSources.length - 1];
 
-  if (!leastRecentlyAttempted || !mostRecentlyAttempted) {
+  if (!leastRecentlyAttemptedOrSpiir || !mostRecentlyAttempted) {
     return Response.json({});
   }
 
@@ -37,17 +54,17 @@ export async function GET() {
   // If the most recently attempted scrape was less than 15 minutes ago, skip.
   if (timeSinceMostRecentlyAttempted < 15 * 60 * 1000) {
     console.log(
-      `Skipping /cron /${leastRecentlyAttempted.source}_scrape scrape because another scrape was attempted less than 15 minutes ago.`,
+      `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because another scrape was attempted less than 15 minutes ago.`,
     );
     return Response.json({});
   }
 
   if (!process.env.VERCEL) {
     console.log(
-      `Skipping /cron /${leastRecentlyAttempted.source}_scrape scrape because we are not on Vercel`,
+      `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because we are not on Vercel`,
     );
     return Response.json({});
   }
 
-  redirect(`/api/${leastRecentlyAttempted.source}_scrape`);
+  redirect(`/api/${leastRecentlyAttemptedOrSpiir.source}_scrape`);
 }

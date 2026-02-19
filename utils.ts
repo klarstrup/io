@@ -62,6 +62,11 @@ export function unique<T>(arr: T[] | Readonly<T[]>): T[] {
   return Array.from(new Set(arr));
 }
 
+export const sample = <T>(arr: T[] | Readonly<T[]>): T | undefined => {
+  if (arr.length === 0) return undefined;
+  return arr[Math.floor(Math.random() * arr.length)]!;
+};
+
 export function uniqueBy<T>(arr: T[], predicate: (item: T) => unknown): T[] {
   return Array.from(
     arr

@@ -67,6 +67,10 @@ type UserDataSourceConfig =
   | {
       source: DataSource.Withings;
       config: { accessTokenResponse: Withings.AccessTokenResponse };
+    }
+  | {
+      source: DataSource.Spiir;
+      config: { SessionKey: string };
     };
 
 export interface UserDataSourceMeta {
@@ -102,6 +106,7 @@ export enum DataSource {
   Sportstiming = "sportstiming",
   Songkick = "songkick",
   Withings = "withings",
+  Spiir = "spiir",
 }
 
 export const dataSourceGroups = {
@@ -121,6 +126,7 @@ export const dataSourceGroups = {
   events: [DataSource.ICal],
   weather: [DataSource.Tomorrow],
   health: [DataSource.Withings],
+  finance: [DataSource.Spiir],
 };
 
 export const exerciseIdToDataSourceMapping: Partial<

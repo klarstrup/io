@@ -19,6 +19,7 @@ gql`
         timestamp
         value
       }
+      availableBalance
     }
   }
 `;
@@ -78,6 +79,8 @@ export default function DashBar() {
     data?.user?.weightTimeSeries || [],
   );
 
+  const availableBalance = data?.user?.availableBalance;
+
   return (
     <div
       className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-1 overflow-hidden border border-[yellow]/25 bg-white/10 px-1 py-1 backdrop-blur-md sm:gap-2 pointer-coarse:top-0 pointer-coarse:rounded-b-2xl pointer-fine:bottom-0 pointer-fine:rounded-t-2xl"
@@ -133,6 +136,19 @@ export default function DashBar() {
           >
             kg
           </span>
+        </BarNumberContainer>
+      </div>
+      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
+      <div className="flex items-center">
+        <BarIcon>💰</BarIcon>
+        <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
+          {availableBalance
+            ? availableBalance.toLocaleString("da", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })
+            : "N/A"}
+          <span className={"text-[10px]"}>,-</span>
         </BarNumberContainer>
       </div>
     </div>
