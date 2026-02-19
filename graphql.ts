@@ -449,38 +449,40 @@ export const resolvers: Resolvers<
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
 
-      const nextSets: NextSet[] = [];
-      for (const exerciseSchedule of (user.exerciseSchedules || []).filter(
-        (schedule) => schedule.enabled,
-      )) {
-        const nextSet = await getNextSet({
-          userId: user.id,
-          scheduleEntry: exerciseSchedule,
-        });
-        if (nextSet) {
-          nextSets.push({
-            ...nextSet,
-            __typename: "NextSet",
-            nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
-              (input) => ({
-                ...input,
-                __typename: "WorkoutSetInput",
-              }),
-            ),
-            scheduleEntry: {
-              ...exerciseSchedule,
-              __typename: "ExerciseSchedule",
-              frequency: {
-                ...exerciseSchedule.frequency,
-                __typename: "Duration",
-              },
-              // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-              exerciseInfo: undefined as unknown as ExerciseInfo,
-            },
-          });
-        }
-      }
-      return nextSets;
+      return (
+        await Promise.all(
+          (user.exerciseSchedules || [])
+            .filter((schedule) => schedule.enabled)
+            .map(async (exerciseSchedule): Promise<NextSet | null> => {
+              const nextSet = await getNextSet({
+                userId: user.id,
+                scheduleEntry: exerciseSchedule,
+              });
+              if (!nextSet) return null;
+
+              return {
+                ...nextSet,
+                __typename: "NextSet",
+                nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+                  (input) => ({
+                    ...input,
+                    __typename: "WorkoutSetInput",
+                  }),
+                ),
+                scheduleEntry: {
+                  ...exerciseSchedule,
+                  __typename: "ExerciseSchedule",
+                  frequency: {
+                    ...exerciseSchedule.frequency,
+                    __typename: "Duration",
+                  },
+                  // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                  exerciseInfo: undefined as unknown as ExerciseInfo,
+                },
+              };
+            }),
+        )
+      ).filter(Boolean);
     },
   },
   Mutation: {
