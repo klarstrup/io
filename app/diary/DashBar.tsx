@@ -110,7 +110,7 @@ export default function DashBar() {
           </span>
         </BarNumberContainer>
       </div>
-      <div className="h-8 w-1 rounded-full bg-[yellow]/25" />
+      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
       <div className="flex items-center">
         <BarIcon>⚖️</BarIcon>
         <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
