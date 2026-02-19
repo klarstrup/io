@@ -46,42 +46,46 @@ export const MaterializedWorkoutsView = proxyCollection<
 export const getNextSet = async ({
   userId,
   exerciseSchedule,
+  prefetchedWorkout,
 }: {
   userId: Session["user"]["id"];
   exerciseSchedule: ExerciseSchedule;
+  prefetchedWorkout?: { workedOutAt: Date; exercise: WorkoutExercise };
 }) => {
   const id = `next-${exerciseSchedule.id}` as const;
-  const [workout] = await MaterializedWorkoutsView.aggregate<{
-    workedOutAt: Date;
-    exercise: WorkoutExercise;
-  }>([
-    {
-      $match: {
-        userId,
-        "exercises.exerciseId": exerciseSchedule.exerciseId,
-        deletedAt: { $exists: false },
-      },
-    },
-    { $sort: { workedOutAt: -1 } },
-    { $limit: 1 },
-    {
-      $project: {
-        _id: 0,
-        workedOutAt: 1,
-        exercise: {
-          $first: {
-            $filter: {
-              input: "$exercises",
-              as: "exercise",
-              cond: {
-                $eq: ["$$exercise.exerciseId", exerciseSchedule.exerciseId],
+  const [workout] = prefetchedWorkout
+    ? [prefetchedWorkout]
+    : await MaterializedWorkoutsView.aggregate<{
+        workedOutAt: Date;
+        exercise: WorkoutExercise;
+      }>([
+        {
+          $match: {
+            userId,
+            "exercises.exerciseId": exerciseSchedule.exerciseId,
+            deletedAt: { $exists: false },
+          },
+        },
+        { $sort: { workedOutAt: -1 } },
+        { $limit: 1 },
+        {
+          $project: {
+            _id: 0,
+            workedOutAt: 1,
+            exercise: {
+              $first: {
+                $filter: {
+                  input: "$exercises",
+                  as: "exercise",
+                  cond: {
+                    $eq: ["$$exercise.exerciseId", exerciseSchedule.exerciseId],
+                  },
+                },
               },
             },
           },
         },
-      },
-    },
-  ]).toArray();
+      ]).toArray();
 
   // Historical workouts may have workedOutAt timestamps that are not adjusted for dayStartHour, so adjust them here for the purpose of calculating due dates
   const adjustedWorkedOutAt =

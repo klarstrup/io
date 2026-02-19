@@ -27,7 +27,7 @@ import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
 import { Locations } from "./models/location.server";
 import { Users } from "./models/user.server";
-import { WorkoutSource } from "./models/workout";
+import { type WorkoutExercise, WorkoutSource } from "./models/workout";
 import {
   getNextSet,
   MaterializedWorkoutsView,
@@ -449,6 +449,45 @@ export const resolvers: Resolvers<
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
 
+      const enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor = new Set(
+        user.exerciseSchedules
+          ?.filter((schedule) => schedule.enabled)
+          .map((schedule) => schedule.exerciseId) || [],
+      );
+      const mostRecentWorkoutOfEachEnabledExerciseSchedule: {
+        workedOutAt: Date;
+        exercise: WorkoutExercise;
+      }[] = [];
+      // TODO: figure out how to do this in one aggregation query instead of multiple queries and in-memory processing
+      for await (const workout of MaterializedWorkoutsView.find(
+        {
+          userId: user.id,
+          "exercises.exerciseId": {
+            $in: Array.from(
+              enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
+            ),
+          },
+        },
+        { sort: { workedOutAt: -1 } },
+      )) {
+        for (const exercise of workout.exercises) {
+          if (
+            enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor.has(
+              exercise.exerciseId,
+            )
+          ) {
+            mostRecentWorkoutOfEachEnabledExerciseSchedule.push({
+              workedOutAt: workout.workedOutAt,
+              exercise,
+            });
+
+            enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor.delete(
+              exercise.exerciseId,
+            );
+          }
+        }
+      }
+
       return (
         await Promise.all(
           (user.exerciseSchedules || [])
@@ -458,6 +497,11 @@ export const resolvers: Resolvers<
               const nextSet = await getNextSet({
                 userId: user.id,
                 exerciseSchedule,
+                prefetchedWorkout:
+                  mostRecentWorkoutOfEachEnabledExerciseSchedule.find(
+                    (w) =>
+                      w.exercise.exerciseId === exerciseSchedule.exerciseId,
+                  ),
               });
               if (!nextSet) return null;
 
