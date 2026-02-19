@@ -454,84 +454,80 @@ export const resolvers: Resolvers<
           ?.filter((schedule) => schedule.enabled)
           .map((schedule) => schedule.exerciseId) || [],
       );
-      const mostRecentWorkoutOfEachEnabledExerciseSchedule =
-        await MaterializedWorkoutsView.aggregate<{
-          workedOutAt: Date;
-          exercise: WorkoutExercise;
-        }>([
-          {
-            $match: {
+      const promises: Promise<NextSet>[] = [];
+      for await (const mostRecentWorkoutOfEachEnabledExerciseSchedule of MaterializedWorkoutsView.aggregate<{
+        workedOutAt: Date;
+        exercise: WorkoutExercise;
+      }>([
+        {
+          $match: {
+            userId: user.id,
+            "exercises.exerciseId": {
+              $in: Array.from(
+                enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
+              ),
+            },
+          },
+        },
+        { $sort: { workedOutAt: -1 } },
+        { $unwind: "$exercises" },
+        {
+          $match: {
+            "exercises.exerciseId": {
+              $in: Array.from(
+                enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
+              ),
+            },
+          },
+        },
+        // Group by exercise ID to get the most recent workout for each exercise
+        {
+          $group: {
+            _id: "$exercises.exerciseId",
+            workedOutAt: { $first: "$workedOutAt" },
+            exercise: { $first: "$exercises" },
+          },
+        },
+        // Project to match the expected output format
+        { $project: { _id: 0, workedOutAt: 1, exercise: 1 } },
+      ])) {
+        for (const exerciseSchedule of (user.exerciseSchedules || []).filter(
+          (schedule) =>
+            schedule.enabled &&
+            schedule.exerciseId ===
+              mostRecentWorkoutOfEachEnabledExerciseSchedule.exercise
+                .exerciseId,
+        )) {
+          promises.push(
+            getNextSet({
               userId: user.id,
-              "exercises.exerciseId": {
-                $in: Array.from(
-                  enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
-                ),
-              },
-            },
-          },
-          { $sort: { workedOutAt: -1 } },
-          { $unwind: "$exercises" },
-          {
-            $match: {
-              "exercises.exerciseId": {
-                $in: Array.from(
-                  enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
-                ),
-              },
-            },
-          },
-          // Group by exercise ID to get the most recent workout for each exercise
-          {
-            $group: {
-              _id: "$exercises.exerciseId",
-              workedOutAt: { $first: "$workedOutAt" },
-              exercise: { $first: "$exercises" },
-            },
-          },
-          // Project to match the expected output format
-          { $project: { _id: 0, workedOutAt: 1, exercise: 1 } },
-        ]).toArray();
-
-      return (
-        await Promise.all(
-          (user.exerciseSchedules || [])
-            .filter((schedule) => schedule.enabled)
-            .map(async (exerciseSchedule): Promise<NextSet | null> => {
-              // TODO:Fetch most recent workout for every exercise schedule to determine the next set in one go.
-              const nextSet = await getNextSet({
-                userId: user.id,
-                exerciseSchedule,
-                prefetchedWorkout:
-                  mostRecentWorkoutOfEachEnabledExerciseSchedule.find(
-                    (w) =>
-                      w.exercise.exerciseId === exerciseSchedule.exerciseId,
-                  ),
-              });
-              if (!nextSet) return null;
-
-              return {
-                ...nextSet,
-                __typename: "NextSet",
-                nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
-                  (input) => ({
-                    ...input,
-                    __typename: "WorkoutSetInput",
-                  }),
-                ),
-                exerciseSchedule: {
-                  ...exerciseSchedule,
-                  __typename: "ExerciseSchedule",
-                  frequency: {
-                    ...exerciseSchedule.frequency,
-                    __typename: "Duration",
-                  },
-                  // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                  exerciseInfo: undefined as unknown as ExerciseInfo,
+              exerciseSchedule,
+              prefetchedWorkout: mostRecentWorkoutOfEachEnabledExerciseSchedule,
+            }).then((nextSet) => ({
+              ...nextSet,
+              __typename: "NextSet",
+              nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+                (input) => ({
+                  ...input,
+                  __typename: "WorkoutSetInput",
+                }),
+              ),
+              exerciseSchedule: {
+                ...exerciseSchedule,
+                __typename: "ExerciseSchedule",
+                frequency: {
+                  ...exerciseSchedule.frequency,
+                  __typename: "Duration",
                 },
-              };
-            }),
-        )
-      ).filter(Boolean);
+                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                exerciseInfo: undefined as unknown as ExerciseInfo,
+              },
+            })),
+          );
+        }
+      }
+
+      return Promise.all(promises);
     },
   },
   Mutation: {
