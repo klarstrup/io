@@ -138,10 +138,6 @@ export const resolvers: Resolvers<
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
 
-      console.log({
-        asfd: "asdfasdf",
-      });
-
       const spiirDataSource = user.dataSources?.find(
         (dataSource) => dataSource.source === DataSource.Spiir,
       );
@@ -150,10 +146,6 @@ export const resolvers: Resolvers<
       const spiirAccountGroups = await SpiirAccountGroups.find({
         _io_userId: user.id,
       }).toArray();
-
-      console.log({
-        spiirAccountGroups,
-      });
 
       return spiirAccountGroups.reduce(
         (totalBalance, accountGroup) =>
