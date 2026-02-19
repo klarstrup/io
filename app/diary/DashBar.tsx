@@ -89,68 +89,68 @@ export default function DashBar() {
           "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
       }}
     >
-      <div className="flex items-center">
-        <BarIcon>💤</BarIcon>
-        <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
-          {data?.user?.sleepDebtFractionTimeSeries
-            ? (sleepDebt * 100).toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })
-            : "N/A"}
-          <span
-            className={
-              "text-[10px] " +
-              // positive slope means sleep debt is increasing, negative means it's decreasing
-              (sleepDebtSlope > 0
-                ? "text-green-500"
-                : sleepDebtSlope < 0
-                  ? "text-red-500"
-                  : "text-gray-500")
-            }
-          >
-            %
-          </span>
-        </BarNumberContainer>
-      </div>
-      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
-      <div className="flex items-center">
-        <BarIcon>⚖️</BarIcon>
-        <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
-          {weight
-            ? weight.toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })
-            : "N/A"}
-          <span
-            className={
-              "text-[10px] " +
-              // positive slope means weight is increasing, negative means it's decreasing
-              (weightSlope > 0
-                ? "text-red-500"
-                : weightSlope < 0
+      {data?.user?.sleepDebtFractionTimeSeries ? (
+        <div className="flex items-center">
+          <BarIcon>💤</BarIcon>
+          <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
+            {(sleepDebt * 100).toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span
+              className={
+                "text-[10px] " +
+                // positive slope means sleep debt is increasing, negative means it's decreasing
+                (sleepDebtSlope > 0
                   ? "text-green-500"
-                  : "text-gray-500")
-            }
-          >
-            kg
-          </span>
-        </BarNumberContainer>
-      </div>
+                  : sleepDebtSlope < 0
+                    ? "text-red-500"
+                    : "text-gray-500")
+              }
+            >
+              %
+            </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
-      <div className="flex items-center">
-        <BarIcon>💰</BarIcon>
-        <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
-          {availableBalance
-            ? availableBalance.toLocaleString("da", {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })
-            : "N/A"}
-          <span className={"text-[10px]"}>,-</span>
-        </BarNumberContainer>
-      </div>
+      {data?.user?.weightTimeSeries ? (
+        <div className="flex items-center">
+          <BarIcon>⚖️</BarIcon>
+          <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
+            {weight.toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span
+              className={
+                "text-[10px] " +
+                // positive slope means weight is increasing, negative means it's decreasing
+                (weightSlope > 0
+                  ? "text-red-500"
+                  : weightSlope < 0
+                    ? "text-green-500"
+                    : "text-gray-500")
+              }
+            >
+              kg
+            </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
+      {availableBalance ? (
+        <div className="flex items-center">
+          <BarIcon>💰</BarIcon>
+          <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
+            {availableBalance.toLocaleString("da", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+            <span className={"text-[10px]"}>,-</span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
     </div>
   );
 }
