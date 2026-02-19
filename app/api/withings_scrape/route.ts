@@ -1,4 +1,4 @@
-import { addDays } from "date-fns";
+import { addDays, subDays } from "date-fns";
 import { ObjectId } from "mongodb";
 import { connection, NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../auth";
@@ -126,7 +126,16 @@ export const GET = async (req: NextRequest) => {
     yield* wrapSources(
       user,
       DataSource.Withings,
-      async function* ({ config: { accessTokenResponse } }, setUpdated) {
+      async function* (
+        {
+          config: {
+            accessTokenResponse,
+            backfilledSleepSummaries,
+            backfilledMeasureGroups,
+          },
+        },
+        setUpdated,
+      ) {
         const refreshTokenUrl = new URL(
           "https://wbsapi.withings.net/v2/oauth2",
         );
@@ -182,79 +191,149 @@ export const GET = async (req: NextRequest) => {
           );
         }
 
-        const measUrl = new URL("https://wbsapi.withings.net/measure");
+        let getMeasureGroupsOffset = 0;
+        for (let i = 0; ; i++) {
+          const measUrl = new URL("https://wbsapi.withings.net/measure");
 
-        measUrl.searchParams.append("action", "getmeas");
-
-        const measureResponse = (await (
-          await fetch(measUrl, {
-            method: "POST",
-            headers: {
-              authorization: `Bearer ${accessTokenResponse.access_token}`,
-            },
-          })
-        ).json()) as Withings.MeasureResponse;
-
-        for (const measureGroup of measureResponse.body.measuregrps) {
-          const updateResult = await WithingsMeasureGroup.updateOne(
-            { grpid: measureGroup.grpid },
-            {
-              $set: {
-                ...measureGroup,
-                measuredAt: new Date(measureGroup.date * 1000),
-                createdAt: new Date(measureGroup.created * 1000),
-                modifiedAt: new Date(measureGroup.modified * 1000),
-                _withings_userId: Number(accessTokenResponse.userid),
-                _io_userId: user.id,
-              },
-            },
-            { upsert: true },
+          measUrl.searchParams.append("action", "getmeas");
+          measUrl.searchParams.append(
+            "startdate",
+            (~~(
+              (backfilledMeasureGroups
+                ? subDays(new Date(), 21)
+                : new Date(2018, 0, 1)
+              ).getTime() / 1000
+            )).toString(),
           );
-
-          setUpdated(updateResult);
-        }
-        yield `Fetched and upserted ${measureResponse.body.measuregrps.length} measure groups`;
-
-        const sleepUrl = new URL("https://wbsapi.withings.net/v2/sleep");
-
-        sleepUrl.searchParams.append("action", "getsummary");
-        sleepUrl.searchParams.append("startdateymd", "2026-01-01");
-        sleepUrl.searchParams.append(
-          "enddateymd",
-          addDays(new Date(), 1).toISOString().split("T")[0]!,
-        );
-
-        const sleepSummaryResponse = (await (
-          await fetch(sleepUrl, {
-            method: "POST",
-            headers: {
-              authorization: `Bearer ${accessTokenResponse.access_token}`,
-            },
-          })
-        ).json()) as Withings.SleepSummaryResponse;
-
-        for (const sleepSeries of sleepSummaryResponse.body.series) {
-          const updateResult = await WithingsSleepSummarySeries.updateOne(
-            { id: sleepSeries.id },
-            {
-              $set: {
-                ...sleepSeries,
-                startedAt: new Date(sleepSeries.startdate * 1000),
-                endedAt: new Date(sleepSeries.enddate * 1000),
-                createdAt: new Date(sleepSeries.created * 1000),
-                modifiedAt: new Date(sleepSeries.modified * 1000),
-                // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
-                _withings_userId: Number(accessTokenResponse.userid),
-                _io_userId: user.id,
-              },
-            },
-            { upsert: true },
+          measUrl.searchParams.append(
+            "enddate",
+            (~~(addDays(new Date(), 1).getTime() / 1000)).toString(),
           );
+          measUrl.searchParams.append("offset", String(getMeasureGroupsOffset));
 
-          setUpdated(updateResult);
+          yield `Fetching measure groups ${measUrl}`;
+
+          const measureResponse = (await (
+            await fetch(measUrl, {
+              method: "POST",
+              headers: {
+                authorization: `Bearer ${accessTokenResponse.access_token}`,
+              },
+            })
+          ).json()) as Withings.MeasureResponse;
+
+          for (const measureGroup of measureResponse.body.measuregrps) {
+            const updateResult = await WithingsMeasureGroup.updateOne(
+              { grpid: measureGroup.grpid },
+              {
+                $set: {
+                  ...measureGroup,
+                  measuredAt: new Date(measureGroup.date * 1000),
+                  createdAt: new Date(measureGroup.created * 1000),
+                  modifiedAt: new Date(measureGroup.modified * 1000),
+                  _withings_userId: Number(accessTokenResponse.userid),
+                  _io_userId: user.id,
+                },
+              },
+              { upsert: true },
+            );
+
+            setUpdated(updateResult);
+          }
+          yield `Fetched and upserted ${measureResponse.body.measuregrps.length} measure groups`;
+
+          if (!backfilledMeasureGroups) {
+            if (measureResponse.body.more) {
+              getMeasureGroupsOffset += measureResponse.body.measuregrps.length;
+            } else if (getMeasureGroupsOffset > 0) {
+              await Users.updateOne(
+                { _id: new ObjectId(user!.id) },
+                {
+                  $set: {
+                    "dataSources.$[source].config.backfilledMeasureGroups": true,
+                  },
+                },
+                { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+              );
+
+              break;
+            }
+          } else {
+            break;
+          }
         }
 
-        yield `Fetched and upserted ${sleepSummaryResponse.body.series.length} sleep summary series`;
+        let getSleepSummaryOffset = 0;
+        for (let i = 0; ; i++) {
+          const sleepUrl = new URL("https://wbsapi.withings.net/v2/sleep");
+          sleepUrl.searchParams.append("action", "getsummary");
+          sleepUrl.searchParams.append(
+            "startdateymd",
+
+            backfilledSleepSummaries
+              ? subDays(new Date(), 21).toISOString().split("T")[0]!
+              : "2018-01-01",
+          );
+          sleepUrl.searchParams.append(
+            "enddateymd",
+            addDays(new Date(), 1).toISOString().split("T")[0]!,
+          );
+          sleepUrl.searchParams.append("offset", String(getSleepSummaryOffset));
+
+          yield `Fetching sleep summary ${sleepUrl}`;
+
+          const sleepSummaryResponse = (await (
+            await fetch(sleepUrl, {
+              method: "POST",
+              headers: {
+                authorization: `Bearer ${accessTokenResponse.access_token}`,
+              },
+            })
+          ).json()) as Withings.SleepSummaryResponse;
+
+          for (const sleepSeries of sleepSummaryResponse.body.series) {
+            const updateResult = await WithingsSleepSummarySeries.updateOne(
+              { id: sleepSeries.id },
+              {
+                $set: {
+                  ...sleepSeries,
+                  startedAt: new Date(sleepSeries.startdate * 1000),
+                  endedAt: new Date(sleepSeries.enddate * 1000),
+                  createdAt: new Date(sleepSeries.created * 1000),
+                  modifiedAt: new Date(sleepSeries.modified * 1000),
+                  // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
+                  _withings_userId: Number(accessTokenResponse.userid),
+                  _io_userId: user.id,
+                },
+              },
+              { upsert: true },
+            );
+
+            setUpdated(updateResult);
+          }
+
+          yield `Fetched and upserted ${sleepSummaryResponse.body.series.length} sleep summary series`;
+
+          if (!backfilledSleepSummaries) {
+            if (sleepSummaryResponse.body.more) {
+              getSleepSummaryOffset += sleepSummaryResponse.body.series.length;
+            } else if (getSleepSummaryOffset > 0) {
+              await Users.updateOne(
+                { _id: new ObjectId(user!.id) },
+                {
+                  $set: {
+                    "dataSources.$[source].config.backfilledSleepSummaries": true,
+                  },
+                },
+                { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+              );
+
+              break;
+            }
+          } else {
+            break;
+          }
+        }
       },
     );
   });

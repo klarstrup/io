@@ -66,7 +66,11 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.Withings;
-      config: { accessTokenResponse: Withings.AccessTokenResponse };
+      config: {
+        accessTokenResponse: Withings.AccessTokenResponse;
+        backfilledSleepSummaries?: boolean;
+        backfilledMeasureGroups?: boolean;
+      };
     }
   | {
       source: DataSource.Spiir;
