@@ -259,15 +259,6 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     const dayStart = startOfDayButItRespectsDayStartHour(overStart);
     const dayEnd = endOfDayButItRespectsDayStartHour(overStart);
 
-    console.log({
-      precedingDate,
-      followingDate,
-      followingEntry,
-      overStart,
-      dayStart,
-      dayEnd,
-    });
-
     let targetDate = dateMidpoint(
       precedingDate || dayStart,
       followingDate || dayEnd,

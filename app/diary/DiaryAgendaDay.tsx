@@ -88,74 +88,54 @@ gql`
         totalSleepTime
         deviceId
       }
-      exerciseSchedules {
+      nextSets {
         id
+        workedOutAt
+        dueOn
         exerciseId
-        enabled
-        frequency {
-          years
-          months
-          weeks
-          days
-          hours
-          minutes
-          seconds
+        successful
+        nextWorkingSets
+        nextWorkingSetInputs {
+          unit
+          value
+          assistType
         }
-        increment
-        workingSets
-        workingReps
-        deloadFactor
-        baseWeight
-        snoozedUntil
-        order
-        nextSet {
-          workedOutAt
-          dueOn
+        scheduleEntry {
+          id
           exerciseId
-          successful
-          nextWorkingSets
-          nextWorkingSetInputs {
-            unit
-            value
-            assistType
-          }
-          scheduleEntry {
+          exerciseInfo {
             id
-            exerciseId
-            exerciseInfo {
-              id
-              aliases
+            aliases
+            name
+            isHidden
+            inputs {
+              type
+            }
+            instructions {
+              value
+            }
+            tags {
               name
-              isHidden
-              inputs {
-                type
-              }
-              instructions {
-                value
-              }
-              tags {
-                name
-                type
-              }
+              type
             }
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            order
           }
+          enabled
+          frequency {
+            years
+            months
+            weeks
+            days
+            hours
+            minutes
+            seconds
+          }
+          increment
+          workingSets
+          workingReps
+          deloadFactor
+          baseWeight
+          snoozedUntil
+          order
         }
       }
       todos(interval: $interval) {
@@ -284,11 +264,7 @@ export function DiaryAgendaDay() {
     calendarTodos: data?.user?.todos || [],
     calendarEvents: data?.user?.events || [],
     workouts: data?.user?.workouts || [],
-    nextSets: data?.user?.exerciseSchedules
-      ? data.user.exerciseSchedules
-          .map((schedule) => schedule.nextSet)
-          .filter(Boolean)
-      : [],
+    nextSets: data?.user?.nextSets || [],
     sleeps: data?.user?.sleeps || [],
     locations: data?.user?.locations || [],
   };

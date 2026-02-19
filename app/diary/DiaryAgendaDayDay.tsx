@@ -12,7 +12,6 @@ import {
   intervalToDuration,
   isBefore,
   isPast,
-  isSameDay,
   roundToNearestMinutes,
   startOfDay,
   subHours,
@@ -401,12 +400,10 @@ export function DiaryAgendaDayDay({
       const dueSet = journalEntry;
 
       dayJournalEntryElements.push({
-        id:
-          client.cache.identify(dueSet.scheduleEntry) ||
-          dueSet.scheduleEntry.id,
+        id: client.cache.identify(dueSet) || dueSet.id,
         element: (
           <DiaryAgendaDayDueSet
-            key={dueSet.scheduleEntry.id}
+            key={dueSet.id}
             user={user!}
             dueSet={dueSet}
             date={dayDate}

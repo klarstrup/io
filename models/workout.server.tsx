@@ -50,6 +50,7 @@ export const getNextSet = async ({
   userId: Session["user"]["id"];
   scheduleEntry: ExerciseSchedule;
 }) => {
+  const id = `next-${scheduleEntry.id}` as const;
   const [workout] = await MaterializedWorkoutsView.aggregate<{
     workedOutAt: Date;
     exercise: WorkoutExercise;
@@ -163,6 +164,7 @@ export const getNextSet = async ({
 
         if (successful) {
           return {
+            id,
             workedOutAt,
             dueOn,
             exerciseId: scheduleEntry.exerciseId,
@@ -176,6 +178,7 @@ export const getNextSet = async ({
     }
 
     return {
+      id,
       workedOutAt: workout?.workedOutAt || null,
       dueOn,
       exerciseId: scheduleEntry.exerciseId,
@@ -319,6 +322,7 @@ export const getNextSet = async ({
   }
 
   return {
+    id,
     workedOutAt: workout?.workedOutAt || null,
     dueOn,
     exerciseId: scheduleEntry.exerciseId,

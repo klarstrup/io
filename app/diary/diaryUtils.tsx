@@ -150,7 +150,6 @@ export const getJournalEntryPrincipalDate = (
       getSeconds(workout.workedOutAt) === 0 &&
       getMinutes(workout.workedOutAt) === 0
     ) {
-      console.log(workout, getWorkoutPrincipalDate(workout));
       return getWorkoutPrincipalDate(workout);
     }
 

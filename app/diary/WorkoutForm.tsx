@@ -130,83 +130,61 @@ export function WorkoutForm<R extends string>({
     query WorkoutFormNextSets {
       user {
         id
-        exerciseSchedules {
+        nextSets {
           id
+          workedOutAt
+          dueOn
           exerciseId
-          enabled
-          frequency {
-            years
-            months
-            weeks
-            days
-            hours
-            minutes
-            seconds
+          successful
+          nextWorkingSets
+          nextWorkingSetInputs {
+            unit
+            value
+            assistType
           }
-          increment
-          workingSets
-          workingReps
-          deloadFactor
-          baseWeight
-          snoozedUntil
-          order
-          nextSet {
-            workedOutAt
-            dueOn
+          scheduleEntry {
+            id
             exerciseId
-            successful
-            nextWorkingSets
-            nextWorkingSetInputs {
-              unit
-              value
-              assistType
-            }
-            scheduleEntry {
+            exerciseInfo {
               id
-              exerciseId
-              exerciseInfo {
-                id
-                aliases
+              aliases
+              name
+              isHidden
+              inputs {
+                type
+              }
+              instructions {
+                value
+              }
+              tags {
                 name
-                isHidden
-                inputs {
-                  type
-                }
-                instructions {
-                  value
-                }
-                tags {
-                  name
-                  type
-                }
+                type
               }
-              enabled
-              frequency {
-                years
-                months
-                weeks
-                days
-                hours
-                minutes
-                seconds
-              }
-              increment
-              workingSets
-              workingReps
-              deloadFactor
-              baseWeight
-              snoozedUntil
-              order
             }
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            order
           }
         }
       }
     }
   `);
 
-  const nextSets = nextSetsData?.user?.exerciseSchedules
-    ?.map((sched) => sched.nextSet)
-    .filter(Boolean);
+  const nextSets = nextSetsData?.user?.nextSets?.filter(Boolean);
 
   const {
     handleSubmit,

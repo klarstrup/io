@@ -445,6 +445,43 @@ export const resolvers: Resolvers<
             __typename: "Workout",
           }) as const,
       ),
+    nextSets: async (parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return [];
+
+      const nextSets: NextSet[] = [];
+      for (const exerciseSchedule of (user.exerciseSchedules || []).filter(
+        (schedule) => schedule.enabled,
+      )) {
+        const nextSet = await getNextSet({
+          userId: user.id,
+          scheduleEntry: exerciseSchedule,
+        });
+        if (nextSet) {
+          nextSets.push({
+            ...nextSet,
+            __typename: "NextSet",
+            nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+              (input) => ({
+                ...input,
+                __typename: "WorkoutSetInput",
+              }),
+            ),
+            scheduleEntry: {
+              ...exerciseSchedule,
+              __typename: "ExerciseSchedule",
+              frequency: {
+                ...exerciseSchedule.frequency,
+                __typename: "Duration",
+              },
+              // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+              exerciseInfo: undefined as unknown as ExerciseInfo,
+            },
+          });
+        }
+      }
+      return nextSets;
+    },
   },
   Mutation: {
     createTodo: async (_parent, args, context, info) => {
@@ -950,8 +987,7 @@ export const typeDefs = gql`
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
-    # build this with a shortcircuit so it only has to hit the database once instead of per exercise schedule
-    # nextSets: [NextSet!]
+    nextSets: [NextSet!]
     exerciseSchedules: [ExerciseSchedule!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
@@ -1031,6 +1067,8 @@ export const typeDefs = gql`
   }
 
   type NextSet {
+    # This is just the schedule entry ID prefixed with "next-", so normalizing works
+    id: ID!
     workedOutAt: Date
     dueOn: Date!
     exerciseId: Int!

@@ -57,9 +57,7 @@ export function DiaryAgendaDayDueSet({
     transform,
     transition,
   } = useSortable({
-    id:
-      client.cache.identify(props.dueSet.scheduleEntry) ||
-      props.dueSet.scheduleEntry.id,
+    id: client.cache.identify(props.dueSet) || props.dueSet.id,
     data: {
       nextSet: props.dueSet,
       date:
@@ -145,6 +143,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
             snoozedUntil
             order
             nextSet {
+              id
               workedOutAt
               dueOn
               exerciseId
@@ -211,6 +210,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
             snoozedUntil
             order
             nextSet {
+              id
               workedOutAt
               dueOn
               exerciseId
