@@ -115,7 +115,7 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
-      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
+      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
       {/*
       {data?.user?.weightTimeSeries ? (
         <div className="flex items-center">
@@ -141,8 +141,8 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
+      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
        */}
-      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
       {availableBalance ? (
         <div className="flex items-center">
           <BarIcon>💰</BarIcon>
@@ -158,7 +158,7 @@ export default function DashBar() {
 
       {data?.user?.sunnivaAt ? (
         <>
-          <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
+          <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
           <div className="flex items-center">
             <BarIcon>👊</BarIcon>
             <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
