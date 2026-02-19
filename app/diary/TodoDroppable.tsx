@@ -274,7 +274,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       void snoozeExerciseSchedule({
         variables: {
           input: {
-            exerciseScheduleId: nextSet.scheduleEntry.id,
+            exerciseScheduleId: nextSet.exerciseSchedule.id,
             snoozedUntil: targetDate,
           },
         },
@@ -282,7 +282,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           snoozeExerciseSchedule: {
             __typename: "SnoozeExerciseSchedulePayload",
             exerciseSchedule: {
-              ...nextSet.scheduleEntry,
+              ...nextSet.exerciseSchedule,
               snoozedUntil: targetDate,
               nextSet: { ...nextSet, dueOn: targetDate },
             },

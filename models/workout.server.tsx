@@ -45,12 +45,12 @@ export const MaterializedWorkoutsView = proxyCollection<
 
 export const getNextSet = async ({
   userId,
-  scheduleEntry,
+  exerciseSchedule,
 }: {
   userId: Session["user"]["id"];
-  scheduleEntry: ExerciseSchedule;
+  exerciseSchedule: ExerciseSchedule;
 }) => {
-  const id = `next-${scheduleEntry.id}` as const;
+  const id = `next-${exerciseSchedule.id}` as const;
   const [workout] = await MaterializedWorkoutsView.aggregate<{
     workedOutAt: Date;
     exercise: WorkoutExercise;
@@ -58,7 +58,7 @@ export const getNextSet = async ({
     {
       $match: {
         userId,
-        "exercises.exerciseId": scheduleEntry.exerciseId,
+        "exercises.exerciseId": exerciseSchedule.exerciseId,
         deletedAt: { $exists: false },
       },
     },
@@ -74,7 +74,7 @@ export const getNextSet = async ({
               input: "$exercises",
               as: "exercise",
               cond: {
-                $eq: ["$$exercise.exerciseId", scheduleEntry.exerciseId],
+                $eq: ["$$exercise.exerciseId", exerciseSchedule.exerciseId],
               },
             },
           },
@@ -108,21 +108,21 @@ export const getNextSet = async ({
 
   let dueOn = addMilliseconds(
     lastSetEndedAt || epoch,
-    durationToMs(scheduleEntry.frequency),
+    durationToMs(exerciseSchedule.frequency),
   );
 
   if (
-    scheduleEntry.snoozedUntil &&
-    (!lastSetEndedAt || lastSetEndedAt < scheduleEntry.snoozedUntil)
+    exerciseSchedule.snoozedUntil &&
+    (!lastSetEndedAt || lastSetEndedAt < exerciseSchedule.snoozedUntil)
   ) {
-    dueOn = scheduleEntry.snoozedUntil;
+    dueOn = exerciseSchedule.snoozedUntil;
   }
 
   // Due date cannot be in the past
   dueOn = max([dueOn, new Date()]);
 
-  if (isClimbingExercise(scheduleEntry.exerciseId)) {
-    if (scheduleEntry.workingSets && scheduleEntry.workingSets > 0) {
+  if (isClimbingExercise(exerciseSchedule.exerciseId)) {
+    if (exerciseSchedule.workingSets && exerciseSchedule.workingSets > 0) {
       const workouts = MaterializedWorkoutsView.aggregate<{
         workedOutAt: Date;
         exercise: WorkoutExercise;
@@ -130,7 +130,7 @@ export const getNextSet = async ({
         {
           $match: {
             userId,
-            "exercises.exerciseId": scheduleEntry.exerciseId,
+            "exercises.exerciseId": exerciseSchedule.exerciseId,
             deletedAt: { $exists: false },
           },
         },
@@ -145,7 +145,7 @@ export const getNextSet = async ({
                   input: "$exercises",
                   as: "exercise",
                   cond: {
-                    $eq: ["$$exercise.exerciseId", scheduleEntry.exerciseId],
+                    $eq: ["$$exercise.exerciseId", exerciseSchedule.exerciseId],
                   },
                 },
               },
@@ -160,18 +160,19 @@ export const getNextSet = async ({
             (set.inputs[2]?.value as SendType) === SendType.Top ||
             (set.inputs[2]?.value as SendType) === SendType.Repeat,
         );
-        const successful = successfulSets.length >= scheduleEntry.workingSets;
+        const successful =
+          successfulSets.length >= exerciseSchedule.workingSets;
 
         if (successful) {
           return {
             id,
             workedOutAt,
             dueOn,
-            exerciseId: scheduleEntry.exerciseId,
+            exerciseId: exerciseSchedule.exerciseId,
             successful: true,
-            nextWorkingSets: scheduleEntry.workingSets ?? null,
+            nextWorkingSets: exerciseSchedule.workingSets ?? null,
             nextWorkingSetInputs: [],
-            scheduleEntry,
+            exerciseSchedule,
           };
         }
       }
@@ -181,16 +182,16 @@ export const getNextSet = async ({
       id,
       workedOutAt: workout?.workedOutAt || null,
       dueOn,
-      exerciseId: scheduleEntry.exerciseId,
+      exerciseId: exerciseSchedule.exerciseId,
       successful: true,
-      nextWorkingSets: scheduleEntry.workingSets ?? null,
+      nextWorkingSets: exerciseSchedule.workingSets ?? null,
       nextWorkingSetInputs: [],
-      scheduleEntry,
+      exerciseSchedule,
     };
   }
 
   const exercise = workout?.exercise;
-  const exerciseDefinition = exercisesById.get(scheduleEntry.exerciseId)!;
+  const exerciseDefinition = exercisesById.get(exerciseSchedule.exerciseId)!;
   let effortInputIndex = exerciseDefinition.inputs.findIndex(
     ({ type }) =>
       type === InputType.Weight ||
@@ -212,13 +213,15 @@ export const getNextSet = async ({
     return setWeight &&
       setReps &&
       (!accWeight || setWeight > accWeight) &&
-      (scheduleEntry.workingReps ? setReps >= scheduleEntry.workingReps : true)
+      (exerciseSchedule.workingReps
+        ? setReps >= exerciseSchedule.workingReps
+        : true)
       ? set
       : acc;
   }, exercise.sets[0]);
 
   let heaviestSetEffort =
-    heaviestSet?.inputs[effortInputIndex]?.value || scheduleEntry.baseWeight;
+    heaviestSet?.inputs[effortInputIndex]?.value || exerciseSchedule.baseWeight;
 
   const workingSets =
     (heaviestSetEffort !== undefined &&
@@ -228,27 +231,27 @@ export const getNextSet = async ({
     null;
   const successful =
     workingSets &&
-    (scheduleEntry.workingSets
-      ? workingSets.length >= scheduleEntry.workingSets
+    (exerciseSchedule.workingSets
+      ? workingSets.length >= exerciseSchedule.workingSets
       : true) &&
-    (scheduleEntry.workingReps
-      ? !scheduleEntry.workingSets &&
+    (exerciseSchedule.workingReps
+      ? !exerciseSchedule.workingSets &&
         workingSets.every(
           ({ inputs }) =>
             inputs.length === 1 &&
             inputs.every(({ unit }) => unit === Unit.Reps),
         )
         ? workingSets.reduce((m, s) => m + s.inputs[0]!.value, 0) >=
-          scheduleEntry.workingReps
+          exerciseSchedule.workingReps
         : workingSets.every(
             ({ inputs }) =>
               inputs[repsInputIndex] &&
-              inputs[repsInputIndex].value >= scheduleEntry.workingReps!,
+              inputs[repsInputIndex].value >= exerciseSchedule.workingReps!,
           )
       : true);
 
   if (
-    !scheduleEntry.workingSets &&
+    !exerciseSchedule.workingSets &&
     workingSets?.every(
       ({ inputs }) =>
         inputs.length === 1 && inputs.every(({ unit }) => unit === Unit.Reps),
@@ -268,23 +271,23 @@ export const getNextSet = async ({
     0,
   );
 
-  const goalEffort = scheduleEntry.increment
+  const goalEffort = exerciseSchedule.increment
     ? heaviestSetEffort !== undefined && heaviestSetEffort !== null
       ? successful
-        ? !scheduleEntry.workingSets &&
-          !scheduleEntry.workingReps &&
+        ? !exerciseSchedule.workingSets &&
+          !exerciseSchedule.workingReps &&
           effortInputIndex === repsInputIndex &&
           totalReps
-          ? totalReps + scheduleEntry.increment
+          ? totalReps + exerciseSchedule.increment
           : finalWorkingSetReps &&
-              scheduleEntry.workingReps &&
-              finalWorkingSetReps >= scheduleEntry.workingReps * 2
-            ? scheduleEntry.increment * 2 + heaviestSetEffort
-            : scheduleEntry.increment + heaviestSetEffort
-        : scheduleEntry.deloadFactor
-          ? scheduleEntry.deloadFactor * heaviestSetEffort
-          : scheduleEntry.baseWeight
-      : scheduleEntry.baseWeight
+              exerciseSchedule.workingReps &&
+              finalWorkingSetReps >= exerciseSchedule.workingReps * 2
+            ? exerciseSchedule.increment * 2 + heaviestSetEffort
+            : exerciseSchedule.increment + heaviestSetEffort
+        : exerciseSchedule.deloadFactor
+          ? exerciseSchedule.deloadFactor * heaviestSetEffort
+          : exerciseSchedule.baseWeight
+      : exerciseSchedule.baseWeight
     : null;
 
   const nextWorkingSetsEffort = goalEffort
@@ -304,15 +307,16 @@ export const getNextSet = async ({
               value: nextWorkingSetsEffort,
               unit: exercise?.sets[0]?.inputs[inputIndex]?.unit || metric_unit,
             }
-          : scheduleEntry.workingReps && type === InputType.Reps
+          : exerciseSchedule.workingReps && type === InputType.Reps
             ? {
-                value: scheduleEntry.workingReps ?? scheduleEntry.baseWeight,
+                value:
+                  exerciseSchedule.workingReps ?? exerciseSchedule.baseWeight,
                 unit: Unit.Reps,
               }
             : { value: NaN },
     );
 
-  const nextWorkingSets = scheduleEntry.workingSets ?? null;
+  const nextWorkingSets = exerciseSchedule.workingSets ?? null;
 
   if (
     nextWorkingSetInputs.every(({ value }) => Number.isNaN(value)) &&
@@ -325,11 +329,11 @@ export const getNextSet = async ({
     id,
     workedOutAt: workout?.workedOutAt || null,
     dueOn,
-    exerciseId: scheduleEntry.exerciseId,
+    exerciseId: exerciseSchedule.exerciseId,
     successful,
     nextWorkingSetInputs,
     nextWorkingSets,
-    scheduleEntry,
+    exerciseSchedule,
   };
 };
 

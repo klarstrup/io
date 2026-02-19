@@ -129,9 +129,9 @@ export const isNextSetDue = (tzDate: Date | TZDate, nextSet: NextSet) => {
   const dayEnd = addHours(endOfDay(tzDate, { in: inn }), dayStartHour);
 
   const effectiveDueDate =
-    nextSet.scheduleEntry.snoozedUntil &&
-    !isAfter(dayEnd, endOfDay(nextSet.scheduleEntry.snoozedUntil, { in: inn }))
-      ? nextSet.scheduleEntry.snoozedUntil
+    nextSet.exerciseSchedule.snoozedUntil &&
+    !isAfter(dayEnd, endOfDay(nextSet.exerciseSchedule.snoozedUntil, { in: inn }))
+      ? nextSet.exerciseSchedule.snoozedUntil
       : nextSet.dueOn;
 
   return (

@@ -31,19 +31,19 @@ export function NextSets({
   const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
 
   useEffect(() => {
-    const queryScheduleEntryId = new URLSearchParams(
+    const queryExerciseScheduleId = new URLSearchParams(
       window.location.search,
-    ).get("scheduleEntryId");
-    if (queryScheduleEntryId) {
+    ).get("exerciseScheduleId");
+    if (queryExerciseScheduleId) {
       const dueSet = nextSets.find(
-        (ds) => ds.scheduleEntry.id === queryScheduleEntryId,
+        (ds) => ds.exerciseSchedule.id === queryExerciseScheduleId,
       );
       if (dueSet && onAddExerciseAction) {
         onAddExerciseAction(dueSet);
 
         // Remove the query param from the URL
         const url = new URL(window.location.href);
-        url.searchParams.delete("scheduleEntryId");
+        url.searchParams.delete("exerciseScheduleId");
         window.history.replaceState({}, "", url.toString());
       }
     }
@@ -59,7 +59,7 @@ export function NextSets({
         const {
           exerciseId,
           successful,
-          scheduleEntry,
+          exerciseSchedule,
           nextWorkingSets,
           nextWorkingSetInputs,
           workedOutAt,
@@ -67,10 +67,7 @@ export function NextSets({
         const exercise = exercisesById.get(exerciseId)!;
 
         return (
-          <li
-            key={JSON.stringify(scheduleEntry)}
-            className="flex items-start gap-2"
-          >
+          <li key={dueSet.id} className="flex items-start gap-2">
             <div className="flex flex-col leading-tight">
               {onAddExerciseAction && !exercise.is_hidden ? (
                 <StealthButton onClick={() => onAddExerciseAction(dueSet)}>
@@ -141,7 +138,7 @@ export function NextSets({
                     )}
                     {successful === false ? " (failed)" : null}
                   </span>
-                  {showDueDate && scheduleEntry?.frequency && workedOutAt ? (
+                  {showDueDate && exerciseSchedule?.frequency && workedOutAt ? (
                     <span className="text-xs">
                       , due{" "}
                       {formatDistanceStrict(dueSet.dueOn, date, {

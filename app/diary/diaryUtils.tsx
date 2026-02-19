@@ -1,7 +1,6 @@
 import {
   addHours,
   endOfDay,
-  getHours,
   getMilliseconds,
   getMinutes,
   getSeconds,
@@ -116,11 +115,11 @@ export const getJournalEntryPrincipalDate = (
           : new Date(entry.start),
     };
   }
-  if ("scheduleEntry" in entry && entry.scheduleEntry) {
+  if ("exerciseSchedule" in entry && entry.exerciseSchedule) {
     const nextSet = entry;
 
-    const effectiveDueDate = nextSet.scheduleEntry.snoozedUntil
-      ? max([nextSet.scheduleEntry.snoozedUntil, nextSet.dueOn])
+    const effectiveDueDate = nextSet.exerciseSchedule.snoozedUntil
+      ? max([nextSet.exerciseSchedule.snoozedUntil, nextSet.dueOn])
       : nextSet.dueOn;
 
     return {
@@ -129,11 +128,11 @@ export const getJournalEntryPrincipalDate = (
     };
   }
   if ("nextSet" in entry && entry.nextSet) {
-    const scheduleEntry = entry;
+    const exerciseSchedule = entry;
     const nextSet = entry.nextSet;
 
-    const effectiveDueDate = scheduleEntry.snoozedUntil
-      ? max([scheduleEntry.snoozedUntil, nextSet.dueOn])
+    const effectiveDueDate = exerciseSchedule.snoozedUntil
+      ? max([exerciseSchedule.snoozedUntil, nextSet.dueOn])
       : nextSet.dueOn;
 
     return {

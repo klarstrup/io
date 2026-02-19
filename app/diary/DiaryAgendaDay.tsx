@@ -100,7 +100,7 @@ gql`
           value
           assistType
         }
-        scheduleEntry {
+        exerciseSchedule {
           id
           exerciseId
           exerciseInfo {

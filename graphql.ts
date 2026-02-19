@@ -454,9 +454,10 @@ export const resolvers: Resolvers<
           (user.exerciseSchedules || [])
             .filter((schedule) => schedule.enabled)
             .map(async (exerciseSchedule): Promise<NextSet | null> => {
+              // TODO:Fetch most recent workout for every exercise schedule to determine the next set in one go.
               const nextSet = await getNextSet({
                 userId: user.id,
-                scheduleEntry: exerciseSchedule,
+                exerciseSchedule,
               });
               if (!nextSet) return null;
 
@@ -469,7 +470,7 @@ export const resolvers: Resolvers<
                     __typename: "WorkoutSetInput",
                   }),
                 ),
-                scheduleEntry: {
+                exerciseSchedule: {
                   ...exerciseSchedule,
                   __typename: "ExerciseSchedule",
                   frequency: {
@@ -871,7 +872,7 @@ export const resolvers: Resolvers<
 
       const nextSet = await getNextSet({
         userId: user.id,
-        scheduleEntry: parent,
+        exerciseSchedule: parent,
       });
 
       return {
@@ -881,11 +882,11 @@ export const resolvers: Resolvers<
             ...input,
             __typename: "WorkoutSetInput",
           })) || null,
-        scheduleEntry: {
-          ...nextSet.scheduleEntry,
+        exerciseSchedule: {
+          ...nextSet.exerciseSchedule,
           __typename: "ExerciseSchedule",
           frequency: {
-            ...nextSet.scheduleEntry.frequency,
+            ...nextSet.exerciseSchedule.frequency,
             __typename: "Duration",
           },
         },
@@ -1077,7 +1078,7 @@ export const typeDefs = gql`
     successful: Boolean
     nextWorkingSets: Int
     nextWorkingSetInputs: [WorkoutSetInput!]
-    scheduleEntry: ExerciseSchedule!
+    exerciseSchedule: ExerciseSchedule!
   }
 
   type Todo {

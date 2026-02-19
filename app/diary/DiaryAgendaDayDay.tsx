@@ -396,7 +396,7 @@ export function DiaryAgendaDayDay({
           />
         ),
       });
-    } else if ("scheduleEntry" in journalEntry) {
+    } else if ("exerciseSchedule" in journalEntry) {
       const dueSet = journalEntry;
 
       dayJournalEntryElements.push({
@@ -408,7 +408,7 @@ export function DiaryAgendaDayDay({
             dueSet={dueSet}
             date={dayDate}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-            exerciseInfo={dueSet.scheduleEntry.exerciseInfo}
+            exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
             workouts={dayJournalEntries
               .filter((jE): jE is Workout => jE.__typename === "Workout")
               .filter((w) => w.source === WorkoutSource.Self)

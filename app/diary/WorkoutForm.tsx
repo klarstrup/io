@@ -142,7 +142,7 @@ export function WorkoutForm<R extends string>({
             value
             assistType
           }
-          scheduleEntry {
+          exerciseSchedule {
             id
             exerciseId
             exerciseInfo {
@@ -251,11 +251,11 @@ export function WorkoutForm<R extends string>({
           compareAsc(
             addMilliseconds(
               a.workedOutAt!,
-              durationToMs(a.scheduleEntry.frequency),
+              durationToMs(a.exerciseSchedule.frequency),
             ),
             addMilliseconds(
               b.workedOutAt!,
-              durationToMs(b.scheduleEntry.frequency),
+              durationToMs(b.exerciseSchedule.frequency),
             ),
           ),
         ),
@@ -263,7 +263,7 @@ export function WorkoutForm<R extends string>({
   );
 
   const handleAddExercise = useEvent((dueSet: NextSet) => {
-    const scheduleEntry = dueSet.scheduleEntry;
+    const exerciseSchedule = dueSet.exerciseSchedule;
 
     const exerciseDefinition = exercisesById.get(dueSet.exerciseId)!;
 
@@ -285,7 +285,7 @@ export function WorkoutForm<R extends string>({
     const setEfforts: number[] = [goalEffort ?? NaN];
 
     // Schedule entries without a working set goal don't get warmup sets
-    if (scheduleEntry.workingSets) {
+    if (exerciseSchedule.workingSets) {
       while (setEfforts[setEfforts.length - 1]! > 20 + warmupIncrement) {
         setEfforts.push(setEfforts[setEfforts.length - 1]! - warmupIncrement);
       }
@@ -314,7 +314,7 @@ export function WorkoutForm<R extends string>({
 
     await snoozeUserExerciseSchedule(
       user.id,
-      dueSet.scheduleEntry.id,
+      dueSet.exerciseSchedule.id,
       newNextDueDate,
     );
 

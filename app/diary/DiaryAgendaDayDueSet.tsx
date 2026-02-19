@@ -17,6 +17,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
+import { ExerciseName } from "../../components/ExerciseName";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import {
   ExerciseInfo,
@@ -40,7 +41,6 @@ import {
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
-import { ExerciseName } from "../../components/ExerciseName";
 
 export function DiaryAgendaDayDueSet({
   ...props
@@ -154,7 +154,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 value
                 assistType
               }
-              scheduleEntry {
+              exerciseSchedule {
                 id
                 exerciseId
                 enabled
@@ -221,7 +221,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 value
                 assistType
               }
-              scheduleEntry {
+              exerciseSchedule {
                 id
                 exerciseId
                 enabled
@@ -265,7 +265,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 const dateStr = dateToString(
                   subHours(new Date(), dayStartHour),
                 );
-                const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
+                const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
                 router.push(`/diary/${dateStr}/workout?${searchStr}`);
               }
         }
@@ -333,7 +333,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                   void snoozeExerciseSchedule({
                     variables: {
                       input: {
-                        exerciseScheduleId: dueSet.scheduleEntry.id,
+                        exerciseScheduleId: dueSet.exerciseSchedule.id,
                         snoozedUntil: addDays(dueSet.dueOn, 1),
                       },
                     },
@@ -341,7 +341,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                       snoozeExerciseSchedule: {
                         __typename: "SnoozeExerciseSchedulePayload",
                         exerciseSchedule: {
-                          ...dueSet.scheduleEntry,
+                          ...dueSet.exerciseSchedule,
                           snoozedUntil: addDays(dueSet.dueOn, 1),
                           nextSet: {
                             ...dueSet,
@@ -358,12 +358,12 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
               >
                 Snooze
               </button>
-              {dueSet.scheduleEntry.snoozedUntil &&
-                isFuture(dueSet.scheduleEntry.snoozedUntil) && (
+              {dueSet.exerciseSchedule.snoozedUntil &&
+                isFuture(dueSet.exerciseSchedule.snoozedUntil) && (
                   <div className="w-full text-center text-sm text-black/60">
                     <small>
                       Snoozed until{" "}
-                      {dueSet.scheduleEntry.snoozedUntil.toLocaleDateString(
+                      {dueSet.exerciseSchedule.snoozedUntil.toLocaleDateString(
                         undefined,
                         { month: "short", day: "numeric" },
                       )}
@@ -374,14 +374,14 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                         void unsnoozeExerciseSchedule({
                           variables: {
                             input: {
-                              exerciseScheduleId: dueSet.scheduleEntry.id,
+                              exerciseScheduleId: dueSet.exerciseSchedule.id,
                             },
                           },
                           optimisticResponse: {
                             unsnoozeExerciseSchedule: {
                               __typename: "UnsnoozeExerciseSchedulePayload",
                               exerciseSchedule: {
-                                ...dueSet.scheduleEntry,
+                                ...dueSet.exerciseSchedule,
                                 snoozedUntil: null,
                                 nextSet: {
                                   ...dueSet,
@@ -399,7 +399,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                                         )
                                       : dueSet.workedOutAt) || epoch,
                                     durationToMs(
-                                      dueSet.scheduleEntry.frequency,
+                                      dueSet.exerciseSchedule.frequency,
                                     ),
                                   ),
                                 },
@@ -428,7 +428,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                     const dateStr = dateToString(
                       subHours(new Date(), dayStartHour),
                     );
-                    const searchStr = `scheduleEntryId=${dueSet.scheduleEntry.id}`;
+                    const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
                     router.push(
                       selectedExistingWorkout
                         ? `/diary/${dateStr}/workout/${selectedExistingWorkout}?${searchStr}`
