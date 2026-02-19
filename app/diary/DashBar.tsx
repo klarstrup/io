@@ -2,6 +2,7 @@
 
 import { useQuery } from "@apollo/client/react";
 import gql from "graphql-tag";
+import { DistanceToNowStrict } from "../../components/DistanceToNowStrict";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
 
@@ -20,6 +21,7 @@ gql`
         value
       }
       availableBalance
+      sunnivaAt
     }
   }
 `;
@@ -114,6 +116,7 @@ export default function DashBar() {
         </div>
       ) : null}
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
+      {/*
       {data?.user?.weightTimeSeries ? (
         <div className="flex items-center">
           <BarIcon>⚖️</BarIcon>
@@ -138,6 +141,7 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
+       */}
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
       {availableBalance ? (
         <div className="flex items-center">
@@ -150,6 +154,18 @@ export default function DashBar() {
             <span className={"text-[10px]"}>,-</span>
           </BarNumberContainer>
         </div>
+      ) : null}
+
+      {data?.user?.sunnivaAt ? (
+        <>
+          <div className="h-7 w-[0.5px] rounded-full bg-[yellow]" />
+          <div className="flex items-center">
+            <BarIcon>👊</BarIcon>
+            <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
+              <DistanceToNowStrict date={new Date(data.user.sunnivaAt)} />
+            </BarNumberContainer>
+          </div>
+        </>
       ) : null}
     </div>
   );

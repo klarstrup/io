@@ -134,6 +134,25 @@ export const resolvers: Resolvers<
     },
   },
   User: {
+    sunnivaAt: async (parent) => {
+      const user = await Users.findOne({ _id: new ObjectId(parent.id) });
+      if (!user) return null;
+
+      await IcalEvents.createIndexes([{ key: { summary: "text" } }]);
+
+      for await (const event of IcalEvents.find(
+        {
+          _io_userId: parent.id,
+          type: "VEVENT",
+          $text: { $search: "Sunniva" },
+          start: { $gte: new Date() },
+        },
+        { sort: { start: 1 }, limit: 5 },
+      )) {
+        if (event.start) return event.start;
+      }
+      return null;
+    },
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -1064,6 +1083,7 @@ export const typeDefs = gql`
     sleepDebtFraction: Float
     sleepDebtFractionTimeSeries: [FloatTimeSeriesEntry!]
     availableBalance: Float
+    sunnivaAt: Date
     # dataSources: [UserDataSource!]
   }
 
