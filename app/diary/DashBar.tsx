@@ -67,7 +67,7 @@ function BarIcon({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function JournalNumbersBar() {
+export default function DashBar() {
   const { data } = useQuery(GetLatestWeightEntryDocument);
 
   const { value: sleepDebt, slope: sleepDebtSlope } = useTrendingNumber(
