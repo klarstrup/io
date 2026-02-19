@@ -162,7 +162,10 @@ export default function DashBar() {
           <div className="flex items-center">
             <BarIcon>👊</BarIcon>
             <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
-              <DistanceToNowStrict date={new Date(data.user.sunnivaAt)} />
+              <DistanceToNowStrict
+                date={new Date(data.user.sunnivaAt)}
+                addSuffix={false}
+              />
             </BarNumberContainer>
           </div>
         </>

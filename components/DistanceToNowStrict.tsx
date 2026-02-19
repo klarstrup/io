@@ -4,7 +4,13 @@ import { formatDistanceToNow, formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useState } from "react";
 import useInterval from "../hooks/useInterval";
 
-export function DistanceToNowStrict({ date }: { date: Date }) {
+export function DistanceToNowStrict({
+  date,
+  addSuffix = true,
+}: {
+  date: Date;
+  addSuffix?: boolean;
+}) {
   const [state, setState] = useState<Record<string, never> | undefined>();
 
   useInterval(() => {
@@ -17,7 +23,7 @@ export function DistanceToNowStrict({ date }: { date: Date }) {
   if (!date) return null;
 
   return state
-    ? formatDistanceToNowStrict(date, { addSuffix: true })
+    ? formatDistanceToNowStrict(date, { addSuffix })
     : date.toISOString();
 }
 
