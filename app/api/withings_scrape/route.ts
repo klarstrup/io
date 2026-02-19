@@ -20,29 +20,10 @@ const uri =
 
 const inState = "lolself";
 
-export const maxDuration = 45;
+export const maxDuration = 300;
 
 const clientId = process.env.WITHINGS_CLIENT_ID!;
 const clientSecret = process.env.WITHINGS_CLIENT_SECRET!;
-
-const withingsMeasureTypes = [
-  ["WEIGHT", 1, "Weight (kg)"],
-  ["HEIGHT", 4, "Height (meter)"],
-  ["FAT_FREE_MASS", 5, "Fat Free Mass (kg)"],
-  ["FAT_RATIO", 6, "Fat Ratio (%)"],
-  ["FAT_MASS", 8, "Fat Mass Weight (kg)"],
-  ["DIASTSOLIC_BLOOD_PRESSURE", 9, "Diastolic Blood Pressure (mmHg)"],
-  ["SYSTOLIC_BLOOD_PRESSURE", 10, "Systolic Blood Pressure (mmHg)"],
-  ["HEART_PULE", 11, "Heart Pulse (bpm) - only for BPM and scale devices"],
-  ["TEMPERATURE", 12, "Temperature (celsius)"],
-  ["SPO2", 54, "SpO2 (%)"],
-  ["BODY_TEMPERATURE", 71, "Body Temperature (celsius)"],
-  ["SKIN_TEMPERATURE", 73, "Skin Temperature (celsius)"],
-  ["MUSCLE_MASS", 76, "Muscle Mass (kg)"],
-  ["HYDRATION", 77, "Hydration (kg)"],
-  ["BONE_MASS", 88, "Bone Mass (kg)"],
-  ["PULE_WAVE_VELOCITY", 91, "Pulse Wave Velocity (m/s)"],
-] as const;
 
 export const GET = async (req: NextRequest) => {
   if (!clientId || !clientSecret) {
