@@ -16,7 +16,7 @@ import { SetUpdatedFn, wrapSources } from "../../../sources/utils.server";
 import { shuffle } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
-export const maxDuration = 45;
+export const maxDuration = 300;
 
 async function* fetchSertAscents(
   token: string,
