@@ -3,7 +3,7 @@ import type { UserDataSource } from "../sources/utils";
 
 export interface IUser {
   name: string;
-  email: string;
+  email?: string | null;
   image: string;
   emailVerified?: boolean | null;
   timeZone?: string | null;
