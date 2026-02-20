@@ -36,19 +36,22 @@ export const GET = () =>
           _io_icalUrlHash: icalUrlHash,
           _io_source: DataSource.ICal,
         };
+        const now1 = new Date();
         const { calendar, events } = extractIcalCalendarAndEvents(icalData);
+        yield `Fetched ${events.length} events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now1.getTime()) / 1000).toFixed(2)} seconds`;
 
         const existingEventsCount = await IcalEvents.countDocuments(ioIcalMeta);
 
         // This accounts for a situation where we ingest an empty or otherwise malformed iCal feed
         if (existingEventsCount * 0.25 > events.length) {
-          console.log(
-            `Existing events count(${existingEventsCount}) is much greater than new events count(${events.length}) for icalUrlHash: ${icalUrlHash}, skipping`,
-          );
+          yield `Existing events count(${existingEventsCount}) is much greater than new events count(${events.length}) for icalUrlHash: ${icalUrlHash}, skipping`;
           setUpdated(false);
           return;
         }
+        const now2 = new Date();
         const deleteResult = await IcalEvents.deleteMany(ioIcalMeta);
+        yield `Deleted ${deleteResult.deletedCount} existing events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now2.getTime()) / 1000).toFixed(2)} seconds`;
+        const now3 = new Date();
         const insertResult = await IcalEvents.insertMany(
           events.map((event) => ({
             ...event,
@@ -61,6 +64,7 @@ export const GET = () =>
             ...ioIcalMeta,
           })),
         );
+        yield `Inserted ${insertResult.insertedCount} events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now3.getTime()) / 1000).toFixed(2)} seconds`;
 
         yield {
           icalUrlHash,

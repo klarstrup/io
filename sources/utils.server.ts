@@ -17,6 +17,7 @@ export type SetUpdatedFn = (
     | Pick<DeleteResult, "deletedCount">,
 ) => void;
 
+// TODO: Allow this to run in parallel for certain data sources, for example iCal feeds, wh
 export async function* wrapSources<
   S extends DataSource,
   DS extends UserDataSource & { source: S },
