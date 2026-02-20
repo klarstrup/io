@@ -20,7 +20,7 @@ const uri =
 
 const inState = "lolself";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 const clientId = process.env.WITHINGS_CLIENT_ID!;
 const clientSecret = process.env.WITHINGS_CLIENT_SECRET!;
