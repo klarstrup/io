@@ -34,10 +34,6 @@ export async function GET() {
     },
   );
 
-  console.log({
-    moreThan15MinutesSinceWeFetchedSpiir,
-  });
-
   const mostRecentlyAttempted = dataSources[dataSources.length - 1];
   const leastRecentlyAttemptedOrSpiir =
     moreThan15MinutesSinceWeFetchedSpiir &&
