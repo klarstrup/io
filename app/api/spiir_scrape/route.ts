@@ -34,6 +34,14 @@ export const GET = () =>
 
         const accountGroups = await getAccountGroups({ headers });
 
+        if (!Array.isArray(accountGroups)) {
+          yield `Invalid response from Spiir when fetching account groups:`;
+          yield accountGroups;
+          throw new Error(
+            "Invalid response from Spiir when fetching account groups",
+          );
+        }
+
         for (const accountGroup of accountGroups) {
           const updateResult = await SpiirAccountGroups.updateOne(
             { id: accountGroup.id },
