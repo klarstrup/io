@@ -35,11 +35,12 @@ export async function GET() {
     moreThan15MinutesSinceWeFetchedSpiir,
   });
 
-  const leastRecentlyAttemptedOrSpiir = moreThan15MinutesSinceWeFetchedSpiir
-    ? dataSources.find((source) => source.source === DataSource.Spiir)
-    : dataSources[0];
-
   const mostRecentlyAttempted = dataSources[dataSources.length - 1];
+  const leastRecentlyAttemptedOrSpiir =
+    moreThan15MinutesSinceWeFetchedSpiir &&
+    mostRecentlyAttempted?.source !== DataSource.Spiir
+      ? dataSources.find((source) => source.source === DataSource.Spiir)
+      : dataSources[0];
 
   if (!leastRecentlyAttemptedOrSpiir || !mostRecentlyAttempted) {
     return Response.json({});
@@ -52,7 +53,7 @@ export async function GET() {
     now.getTime() - new Date(mostRecentlyAttemptedAt).getTime();
 
   // If the most recently attempted scrape was less than 15 minutes ago, skip.
-  if (timeSinceMostRecentlyAttempted < 15 * 60 * 1000) {
+  if (timeSinceMostRecentlyAttempted < 5 * 60 * 1000) {
     console.log(
       `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because another scrape was attempted less than 15 minutes ago.`,
     );
