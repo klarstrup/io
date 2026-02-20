@@ -3,23 +3,26 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
-import { epoch } from "../../../utils";
+import { epoch, uniqueBy } from "../../../utils";
 
 export async function GET() {
   await connection();
 
   const users = await Users.find({}).toArray();
 
-  const dataSources = users
-    .flatMap((user) => user.dataSources)
-    .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
-    .filter((dataSource) => !dataSource.paused)
-    .filter(
-      (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
-    )
-    .sort((a, b) =>
-      compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
-    );
+  const dataSources = uniqueBy(
+    users
+      .flatMap((user) => user.dataSources)
+      .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
+      .filter((dataSource) => !dataSource.paused)
+      .filter(
+        (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
+      )
+      .sort((a, b) =>
+        compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
+      ),
+    (ds) => ds.source,
+  );
 
   const moreThan15MinutesSinceWeFetchedSpiir = dataSources.every(
     (dataSource) => {
