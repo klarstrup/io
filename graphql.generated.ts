@@ -303,7 +303,7 @@ export type UpdateWorkoutPayload = {
 export type User = {
   __typename: 'User';
   availableBalance?: Maybe<Scalars['Float']['output']>;
-  email: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
   emailVerified?: Maybe<Scalars['Boolean']['output']>;
   events?: Maybe<Array<Event>>;
   exerciseSchedules?: Maybe<Array<ExerciseSchedule>>;
@@ -409,7 +409,7 @@ export type GetLatestWeightEntryQuery = { user?: { __typename: 'User', id: strin
 export type DiaryAgendaDayUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type DiaryAgendaDayUserQuery = { user?: { __typename: 'User', id: string, name: string, email: string, image: string, emailVerified?: boolean | null, timeZone?: string | null } | null };
+export type DiaryAgendaDayUserQuery = { user?: { __typename: 'User', id: string, name: string, email?: string | null, image: string, emailVerified?: boolean | null, timeZone?: string | null } | null };
 
 export type DiaryAgendaDayUserTodosQueryVariables = Exact<{
   interval: IntervalInput;
@@ -841,7 +841,7 @@ export type UpdateWorkoutPayloadResolvers<ContextType = any, ParentType extends 
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   availableBalance?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   emailVerified?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   events?: Resolver<Maybe<Array<ResolversTypes['Event']>>, ParentType, ContextType, RequireFields<UserEventsArgs, 'interval'>>;
   exerciseSchedules?: Resolver<Maybe<Array<ResolversTypes['ExerciseSchedule']>>, ParentType, ContextType>;

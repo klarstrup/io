@@ -1065,7 +1065,7 @@ export const typeDefs = gql`
   type User {
     id: ID!
     name: String!
-    email: String!
+    email: String
     image: String!
     emailVerified: Boolean
     timeZone: String
