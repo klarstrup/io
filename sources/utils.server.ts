@@ -7,6 +7,7 @@ import {
   updateExerciseCounts,
   updateLocationCounts,
 } from "../models/workout.server";
+import { shuffle } from "../utils";
 import type { DataSource, UserDataSource } from "./utils";
 
 export type SetUpdatedFn = (
@@ -25,9 +26,13 @@ export async function* wrapSources<
   source: S,
   fn: (dataSource: DS, setUpdated: SetUpdatedFn) => AsyncGenerator<T>,
 ) {
-  const dataSources = (user.dataSources ?? [])
-    .filter((ds): ds is DS => ds.source === source)
-    .filter((dataSource) => !dataSource.paused);
+  // Randomize the order of data sources to improve scraping coverage for users with many data sources
+  // TODO: Let a source be prioritized, for example if it hasn't been scraped in a while, maybe by URL
+  const dataSources = shuffle(
+    (user.dataSources ?? [])
+      .filter((ds): ds is DS => ds.source === source)
+      .filter((dataSource) => !dataSource.paused),
+  );
 
   for (const dataSource of dataSources) {
     const filter = { _id: new ObjectId(user.id) };

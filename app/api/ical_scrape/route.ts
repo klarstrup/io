@@ -9,7 +9,7 @@ import { wrapSources } from "../../../sources/utils.server";
 import { parseICS } from "../../../vendor/ical";
 import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
-export const maxDuration = 45;
+export const maxDuration = 60;
 
 export const GET = () =>
   jsonStreamResponse(async function* () {
