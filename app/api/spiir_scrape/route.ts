@@ -12,6 +12,35 @@ const fetchSpiir = async <T>(input: string | URL, init?: RequestInit) => {
   return fetchJson<T>(url, init);
 };
 
+const fetchSpiirAPI = async <T>(input: string | URL, init?: RequestInit) => {
+  const url = new URL(input, "https://api.spiir.dk/");
+  return fetchJson<T>(url, init);
+};
+
+interface StartAutosyncResponse {
+  updated: boolean;
+  result: string;
+  credentialsNeedingSupervisedLogin: [];
+  disabledMessage: null;
+}
+const startAutosync = async (SessionKey: string) => {
+  const headers = {
+    "Content-Type": "application/json",
+    "User-Agent":
+      "Mozilla/5.0 (Linux; Android 16; sdk_gphone64_arm64 Build/BP22.250325.006; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/133.0.6943.137 Mobile Safari/537.36",
+    "X-Legal-Region": "EEA",
+    "X-Platform": "Android",
+    "X-PlatformVersion": "16",
+    "X-Requested-With": "com.spiir",
+    "X-Session": SessionKey,
+  };
+  return await fetchSpiirAPI<StartAutosyncResponse>("Banks/StartAutosync", {
+    method: "POST",
+    headers,
+    body: "true",
+  });
+};
+
 const getAccountGroups = (init?: RequestInit) =>
   fetchSpiir<Spiir.AccountGroup[]>("Account/GetAccountGroups", init);
 
@@ -29,6 +58,9 @@ export const GET = () =>
         if (!SessionKey) {
           throw new Error("No SessionKey configured for Spiir");
         }
+
+        // Try to make Spiir sync bank data
+        yield await startAutosync(SessionKey);
 
         const headers = { cookie: `SessionKey=${SessionKey}` };
 
@@ -64,6 +96,8 @@ export const GET = () =>
             },
             { upsert: true },
           );
+
+          yield accountGroup.id;
 
           setUpdated(updateResult);
         }
