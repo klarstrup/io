@@ -436,6 +436,9 @@ export function DiaryAgendaDay() {
     }
   }
 
+  let lastLocation: ReturnType<typeof getLocationFromJournalEntry> | null =
+    null;
+
   return (
     <div className="flex flex-col items-stretch justify-start">
       {daysOfInterval
@@ -545,9 +548,6 @@ export function DiaryAgendaDay() {
             const dayJournalEntriesIncludingLocationChanges: typeof dayJournalEntries =
               [];
 
-            let lastLocation: ReturnType<
-              typeof getLocationFromJournalEntry
-            > | null = null;
             for (let i = 0; i < dayJournalEntries.length; i++) {
               const entry = dayJournalEntries[i]!;
               const previousEntry =
