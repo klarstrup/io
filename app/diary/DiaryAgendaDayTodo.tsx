@@ -176,6 +176,7 @@ export const DiaryAgendaDayTodo =
         cotemporalityOfSurroundingEvent={
           !isDragging ? cotemporalityOfSurroundingEvent : undefined
         }
+        className={"select-none"}
       >
         <div
           ref={ref2}

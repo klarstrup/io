@@ -269,6 +269,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
                 router.push(`/diary/${dateStr}/workout?${searchStr}`);
               }
         }
+        className="select-none"
       >
         <div
           ref={ref}

@@ -1,11 +1,10 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { intervalToDuration } from "date-fns";
 import gql from "graphql-tag";
+import { twMerge } from "tailwind-merge";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
-import { formatShortDuration } from "../../models/workout";
 
 gql`
   query GetLatestWeightEntry {
@@ -40,7 +39,7 @@ function BarNumberContainer({
 }) {
   return (
     <div
-      className={`rounded-xl border border-[yellow]/25 bg-white/50 py-0.5 pr-1.5 pl-2 ${className}`}
+      className={`rounded-xl border border-[yellow]/25 bg-white/50 py-0.5 pr-1.5 pl-1.5 leading-tight ${className}`}
       style={{
         boxShadow:
           "inset 0 0 8px rgba(0, 0, 0, 0.25), inset 0 0 4px #edab00, inset 0 0 4px #edab00, inset 0 0 1px rgba(0, 0, 0, 1), inset 0 0 0.5px rgba(0, 0, 0, 1)",
@@ -53,7 +52,7 @@ function BarNumberContainer({
 
 function BarIcon({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative px-1">
+    <div className="relative">
       <span
         className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"
         style={{
@@ -93,14 +92,18 @@ export default function DashBar() {
 
   return (
     <div
-      className="fixed left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-1 overflow-hidden border border-[yellow]/25 bg-white/10 px-1 py-1 backdrop-blur-md sm:gap-2 pointer-coarse:top-0 pointer-coarse:rounded-b-2xl pointer-fine:bottom-0 pointer-fine:rounded-t-2xl"
+      className={twMerge(
+        "fixed left-1/2 z-50 -translate-x-1/2 transform pointer-coarse:top-0 pointer-coarse:rounded-b-2xl pointer-fine:bottom-0 pointer-fine:rounded-t-2xl",
+        "border border-[yellow]/25 bg-white/10 select-none",
+        "flex max-w-[calc(100%-0.5rem)] min-w-92 flex-wrap items-center justify-between gap-1 overflow-hidden px-2 py-1 backdrop-blur-md sm:gap-2",
+      )}
       style={{
         boxShadow:
           "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
       }}
     >
       {data?.user?.sleepDebtFractionTimeSeries ? (
-        <div className="flex items-center">
+        <div className="flex items-center gap-px">
           <BarIcon>💤</BarIcon>
           <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
             {(sleepDebt * 100).toLocaleString(undefined, {
@@ -123,9 +126,8 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
-      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
       {data?.user?.weightTimeSeries ? (
-        <div className="flex items-center">
+        <div className="flex items-center gap-px">
           <BarIcon>⚖️</BarIcon>
           <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
             {weight.toLocaleString(undefined, {
@@ -149,7 +151,7 @@ export default function DashBar() {
         </div>
       ) : null}
       {data?.user?.fatRatioTimeSeries ? (
-        <div className="flex items-center">
+        <div className="flex items-center gap-px">
           <BarIcon>🤰</BarIcon>
           <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
             {fatRatio.toLocaleString(undefined, {
@@ -172,16 +174,14 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
-      <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
       {availableBalance ? (
-        <div className="flex items-center">
+        <div className="flex items-center gap-px">
           <BarIcon>💰</BarIcon>
           <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
             {availableBalance.toLocaleString("da", {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
             })}
-            <span className={"text-[10px]"}>,-</span>
           </BarNumberContainer>
         </div>
       ) : null}

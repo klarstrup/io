@@ -107,10 +107,11 @@ export function DiaryAgendaDayWorkoutSet({
               )
           : undefined
       }
+      className="select-none"
     >
       <div
         className={
-          "inline-flex h-auto justify-center rounded-md " +
+          "inline-flex h-auto justify-center rounded-md" +
           (isClimbingExercise(workoutExercise.exerciseId) ||
           workout.source !== WorkoutSource.Self
             ? " w-full flex-col"
