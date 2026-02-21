@@ -242,7 +242,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       precedingEntry &&
       (precedingEntry[1] === NOW_SYMBOL
         ? new Date()
-        : precedingEntry[0].startsWith("end-of-")
+        : precedingEntry[0].startsWith("end-of-") ||
+            precedingEntry[0].startsWith("Sleep:")
           ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
           : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
 
@@ -266,7 +267,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
     // Ensure targetDate is within the day boundaries
     targetDate = min([max([targetDate, dayStart]), dayEnd]);
-    console.log({ targetDate });
+    console.log({ targetDate, precedingDate, followingDate, dayStart, dayEnd });
 
     if (active.data.current.nextSet) {
       const nextSet: NextSet = active.data.current.nextSet;
