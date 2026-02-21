@@ -21,8 +21,12 @@ gql`
         timestamp
         value
       }
+      fatRatio
+      fatRatioTimeSeries {
+        timestamp
+        value
+      }
       availableBalance
-      sunnivaAt
     }
   }
 `;
@@ -83,6 +87,9 @@ export default function DashBar() {
   );
 
   const availableBalance = data?.user?.availableBalance;
+  const { value: fatRatio, slope: fatRatioSlope } = useTrendingNumber(
+    data?.user?.fatRatioTimeSeries || [],
+  );
 
   return (
     <div
@@ -141,6 +148,30 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
+      {data?.user?.fatRatioTimeSeries ? (
+        <div className="flex items-center">
+          <BarIcon>🤰</BarIcon>
+          <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
+            {fatRatio.toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span
+              className={
+                "text-[10px] " +
+                // positive slope means fat ratio is increasing, negative means it's decreasing
+                (fatRatioSlope > 0
+                  ? "text-red-500"
+                  : fatRatioSlope < 0
+                    ? "text-green-500"
+                    : "text-gray-500")
+              }
+            >
+              %
+            </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
       {availableBalance ? (
         <div className="flex items-center">
@@ -153,23 +184,6 @@ export default function DashBar() {
             <span className={"text-[10px]"}>,-</span>
           </BarNumberContainer>
         </div>
-      ) : null}
-
-      {data?.user?.sunnivaAt ? (
-        <>
-          <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
-          <div className="flex items-center">
-            <BarIcon>👊</BarIcon>
-            <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
-              {formatShortDuration(
-                intervalToDuration({
-                  start: new Date(),
-                  end: data.user.sunnivaAt,
-                }),
-              )}
-            </BarNumberContainer>
-          </div>
-        </>
       ) : null}
     </div>
   );

@@ -46,6 +46,7 @@ import {
 } from "./sources/withings.server";
 import { pick, rangeToQuery } from "./utils";
 import { SpiirAccountGroups } from "./sources/spiir.server";
+import { Withings } from "./sources/withings";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -134,25 +135,6 @@ export const resolvers: Resolvers<
     },
   },
   User: {
-    sunnivaAt: async (parent) => {
-      const user = await Users.findOne({ _id: new ObjectId(parent.id) });
-      if (!user) return null;
-
-      await IcalEvents.createIndexes([{ key: { summary: "text" } }]);
-
-      for await (const event of IcalEvents.find(
-        {
-          _io_userId: parent.id,
-          type: "VEVENT",
-          $text: { $search: "Sunniva" },
-          start: { $gte: new Date() },
-        },
-        { sort: { start: 1 }, limit: 5 },
-      )) {
-        if (event.start) return event.start;
-      }
-      return null;
-    },
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -190,11 +172,13 @@ export const resolvers: Resolvers<
           {
             // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
             _withings_userId: Number(withingsUserId),
-            measures: { $elemMatch: { type: 1 } },
+            measures: { $elemMatch: { type: Withings.MeasureType.Weight } },
           },
           { sort: { createdAt: -1 } },
         )
-      )?.measures.find((measure) => measure.type === 1);
+      )?.measures.find(
+        (measure) => measure.type === Withings.MeasureType.Weight,
+      );
 
       return latestWeightMeasure
         ? latestWeightMeasure.value * 10 ** latestWeightMeasure.unit
@@ -214,18 +198,83 @@ export const resolvers: Resolvers<
       const weightMeasureGroups = await WithingsMeasureGroup.find(
         {
           _withings_userId: Number(withingsUserId),
-          measures: { $elemMatch: { type: 1 } },
+          measures: { $elemMatch: { type: Withings.MeasureType.Weight } },
         },
         { sort: { measuredAt: -1 }, limit: 14 },
       ).toArray();
 
       return weightMeasureGroups
         .map((group) => {
-          const weightMeasure = group.measures.find((m) => m.type === 1);
+          const weightMeasure = group.measures.find(
+            (m) => m.type === Withings.MeasureType.Weight,
+          );
           if (!weightMeasure) return null;
           return {
             timestamp: group.measuredAt,
             value: weightMeasure.value * 10 ** weightMeasure.unit,
+            __typename: "FloatTimeSeriesEntry",
+          } as FloatTimeSeriesEntry;
+        })
+        .filter(Boolean)
+        .slice(0, 4)
+        .reverse();
+    },
+    fatRatio: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+
+      const withingsDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      );
+      const withingsUserId =
+        withingsDataSource?.config?.accessTokenResponse?.userid;
+
+      if (!withingsUserId) return null;
+
+      const latestBodyFatMeasure = (
+        await WithingsMeasureGroup.findOne(
+          {
+            _withings_userId: Number(withingsUserId),
+            measures: {
+              $elemMatch: { type: Withings.MeasureType.FatRatio },
+            },
+          },
+          { sort: { createdAt: -1 } },
+        )
+      )?.measures.find(
+        (measure) => measure.type === Withings.MeasureType.FatRatio,
+      );
+      return latestBodyFatMeasure
+        ? latestBodyFatMeasure.value * 10 ** latestBodyFatMeasure.unit
+        : null;
+    },
+    fatRatioTimeSeries: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+      const withingsDataSource = user.dataSources?.find(
+        (dataSource) => dataSource.source === DataSource.Withings,
+      );
+      const withingsUserId =
+        withingsDataSource?.config?.accessTokenResponse?.userid;
+      if (!withingsUserId) return null;
+      const bodyFatMeasureGroups = await WithingsMeasureGroup.find(
+        {
+          _withings_userId: Number(withingsUserId),
+          measures: {
+            $elemMatch: { type: Withings.MeasureType.FatRatio },
+          },
+        },
+        { sort: { measuredAt: -1 }, limit: 14 },
+      ).toArray();
+      return bodyFatMeasureGroups
+        .map((group) => {
+          const bodyFatMeasure = group.measures.find(
+            (m) => m.type === Withings.MeasureType.FatRatio,
+          );
+          if (!bodyFatMeasure) return null;
+          return {
+            timestamp: group.measuredAt,
+            value: bodyFatMeasure.value * 10 ** bodyFatMeasure.unit,
             __typename: "FloatTimeSeriesEntry",
           } as FloatTimeSeriesEntry;
         })
@@ -1079,11 +1128,12 @@ export const typeDefs = gql`
     sleeps(interval: IntervalInput!): [Sleep!]
     weight: Float
     weightTimeSeries: [FloatTimeSeriesEntry!]
+    fatRatio: Float
+    fatRatioTimeSeries: [FloatTimeSeriesEntry!]
     sleepDebt: Float
     sleepDebtFraction: Float
     sleepDebtFractionTimeSeries: [FloatTimeSeriesEntry!]
     availableBalance: Float
-    sunnivaAt: Date
     # dataSources: [UserDataSource!]
   }
 
