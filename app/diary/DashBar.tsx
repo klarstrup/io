@@ -117,7 +117,6 @@ export default function DashBar() {
         </div>
       ) : null}
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
-      {/*
       {data?.user?.weightTimeSeries ? (
         <div className="flex items-center">
           <BarIcon>⚖️</BarIcon>
@@ -143,7 +142,6 @@ export default function DashBar() {
         </div>
       ) : null}
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
-       */}
       {availableBalance ? (
         <div className="flex items-center">
           <BarIcon>💰</BarIcon>
