@@ -588,7 +588,6 @@ export default function UserStuffSourcesForm({
   return (
     <div className="flex flex-col items-stretch gap-2">
       <h1 className="text-lg font-bold">Data Sources</h1>
-      <UserStuffSourceCreateForm sourceOptions={sourceOptions} />
       {user?.dataSources && user.dataSources.length > 0 ? (
         <>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
@@ -625,6 +624,7 @@ export default function UserStuffSourcesForm({
           </div>
         </>
       ) : null}
+      <UserStuffSourceCreateForm sourceOptions={sourceOptions} />
     </div>
   );
 }
