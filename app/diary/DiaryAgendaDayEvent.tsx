@@ -12,6 +12,7 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { Event } from "../../graphql.generated";
+import { formatShortDuration } from "../../models/workout";
 import {
   cotemporality,
   dayStartHour,
@@ -108,12 +109,7 @@ export function DiaryAgendaDayEvent({
           {event.summary}{" "}
           <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
             {dayNo === 1 && duration ? (
-              <>
-                {duration.days ? `${duration.days}d` : null}
-                {duration.hours ? `${duration.hours}h` : null}
-                {duration.minutes ? `${duration.minutes}m` : null}
-                {duration.seconds ? `${duration.seconds}s` : null}
-              </>
+              formatShortDuration(duration)
             ) : isLastDay ? (
               <>
                 -

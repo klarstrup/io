@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
+import { intervalToDuration } from "date-fns";
 import gql from "graphql-tag";
-import { DistanceToNowStrict } from "../../components/DistanceToNowStrict";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
+import { formatShortDuration } from "../../models/workout";
 
 gql`
   query GetLatestWeightEntry {
@@ -162,10 +163,12 @@ export default function DashBar() {
           <div className="flex items-center">
             <BarIcon>👊</BarIcon>
             <BarNumberContainer className="flex items-baseline gap-px font-bold whitespace-nowrap tabular-nums">
-              <DistanceToNowStrict
-                date={new Date(data.user.sunnivaAt)}
-                addSuffix={false}
-              />
+              {formatShortDuration(
+                intervalToDuration({
+                  start: new Date(),
+                  end: data.user.sunnivaAt,
+                }),
+              )}
             </BarNumberContainer>
           </div>
         </>

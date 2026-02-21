@@ -109,6 +109,30 @@ const hoursInMs = 60 * 60 * 1000;
 const minutesInMs = 60 * 1000;
 const secondsInMs = 1000;
 
+export const msToDuration = (ms: number): Duration => {
+  const years = Math.floor(ms / yearsInMs);
+  ms -= years * yearsInMs;
+
+  const months = Math.floor(ms / monthsInMs);
+  ms -= months * monthsInMs;
+
+  const weeks = Math.floor(ms / weeksInMs);
+  ms -= weeks * weeksInMs;
+
+  const days = Math.floor(ms / daysInMs);
+  ms -= days * daysInMs;
+
+  const hours = Math.floor(ms / hoursInMs);
+  ms -= hours * hoursInMs;
+
+  const minutes = Math.floor(ms / minutesInMs);
+  ms -= minutes * minutesInMs;
+
+  const seconds = Math.floor(ms / secondsInMs);
+
+  return { years, months, weeks, days, hours, minutes, seconds };
+};
+
 export const durationToMs = (duration: Duration) =>
   (duration.years ?? 0) * yearsInMs +
   (duration.months ?? 0) * monthsInMs +
@@ -117,6 +141,18 @@ export const durationToMs = (duration: Duration) =>
   (duration.hours ?? 0) * hoursInMs +
   (duration.minutes ?? 0) * minutesInMs +
   (duration.seconds ?? 0) * secondsInMs;
+
+export const formatShortDuration = (duration: Duration) => {
+  const parts: string[] = [];
+  if (duration.years) parts.push(`${duration.years}y`);
+  if (duration.months) parts.push(`${duration.months}mo`);
+  if (duration.weeks) parts.push(`${duration.weeks}w`);
+  if (duration.days) parts.push(`${duration.days}d`);
+  if (duration.hours) parts.push(`${duration.hours}h`);
+  if (duration.minutes) parts.push(`${duration.minutes}m`);
+  if (duration.seconds) parts.push(`${duration.seconds}s`);
+  return parts.join("");
+};
 
 export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
   durationToMs(a) >= durationToMs(b);
@@ -130,7 +166,10 @@ export const isNextSetDue = (tzDate: Date | TZDate, nextSet: NextSet) => {
 
   const effectiveDueDate =
     nextSet.exerciseSchedule.snoozedUntil &&
-    !isAfter(dayEnd, endOfDay(nextSet.exerciseSchedule.snoozedUntil, { in: inn }))
+    !isAfter(
+      dayEnd,
+      endOfDay(nextSet.exerciseSchedule.snoozedUntil, { in: inn }),
+    )
       ? nextSet.exerciseSchedule.snoozedUntil
       : nextSet.dueOn;
 

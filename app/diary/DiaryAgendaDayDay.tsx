@@ -28,7 +28,7 @@ import type {
   Workout,
   WorkoutSet,
 } from "../../graphql.generated";
-import { WorkoutSource } from "../../models/workout";
+import { formatShortDuration, WorkoutSource } from "../../models/workout";
 import { DataSource } from "../../sources/utils";
 import {
   cotemporality,
@@ -216,12 +216,7 @@ export function DiaryAgendaDayDay({
                 {!isLastEntry ? (
                   <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
                     {duration ? (
-                      <>
-                        {duration.days ? `${duration.days}d` : null}
-                        {duration.hours ? `${duration.hours}h` : null}
-                        {duration.minutes ? `${duration.minutes}m` : null}
-                        {duration.seconds ? `${duration.seconds}s` : null} slept
-                      </>
+                      <>{formatShortDuration(duration)} slept</>
                     ) : null}
                   </span>
                 ) : null}
