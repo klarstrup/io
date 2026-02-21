@@ -386,42 +386,38 @@ export function DiaryAgendaDayDay({
           );
         }
 
-        if (!(dayNo > 1 && days > 1 && isLastDay && eventHasSeparateEndEvent))
-          dayJournalEntryElements.push({
-            id: client.cache.identify(event) || event.id,
-            element: (
-              <DiaryAgendaDayEvent
-                dayDate={dayDate}
-                user={user}
-                event={event}
-                key={event.id}
-                isEventEnd={isEventEnd}
-                isEventWithSeparatedEnd={
-                  (followingEndOfEvents.some(
-                    (endOfEvent) => endOfEvent.id === event.id,
-                  ) &&
-                    isEqual(
-                      startOfDayButItRespectsDayStartHour(dayStart),
-                      startOfDayButItRespectsDayStartHour(event.start),
-                    )) ||
-                  (!isSameDayButItRespectsDayStartHour(
-                    event.start,
-                    event.end,
-                  ) &&
-                    isEqual(
-                      startOfDayButItRespectsDayStartHour(dayStart),
-                      startOfDayButItRespectsDayStartHour(event.start),
-                    ))
-                }
-                cotemporalityOfSurroundingEvent={
-                  cotemporalityOfSurroundingEvent ||
-                  (dayNo > 1 && days > 1 && eventHasSeparateEndEvent
-                    ? cotemporality(event)
-                    : null)
-                }
-              />
-            ),
-          });
+        dayJournalEntryElements.push({
+          id: client.cache.identify(event) || event.id,
+          element: (
+            <DiaryAgendaDayEvent
+              dayDate={dayDate}
+              user={user}
+              event={event}
+              key={event.id}
+              isEventEnd={isEventEnd}
+              isEventWithSeparatedEnd={
+                (followingEndOfEvents.some(
+                  (endOfEvent) => endOfEvent.id === event.id,
+                ) &&
+                  isEqual(
+                    startOfDayButItRespectsDayStartHour(dayStart),
+                    startOfDayButItRespectsDayStartHour(event.start),
+                  )) ||
+                (!isSameDayButItRespectsDayStartHour(event.start, event.end) &&
+                  isEqual(
+                    startOfDayButItRespectsDayStartHour(dayStart),
+                    startOfDayButItRespectsDayStartHour(event.start),
+                  ))
+              }
+              cotemporalityOfSurroundingEvent={
+                cotemporalityOfSurroundingEvent ||
+                (dayNo > 1 && days > 1 && eventHasSeparateEndEvent
+                  ? cotemporality(event)
+                  : null)
+              }
+            />
+          ),
+        });
       }
     } else if (journalEntry.__typename === "Todo") {
       const todo = journalEntry;

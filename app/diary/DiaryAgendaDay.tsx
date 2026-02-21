@@ -372,17 +372,28 @@ export function DiaryAgendaDay() {
       }
 
       if (!eventsByDate[calName]) eventsByDate[calName] = [];
-      eventsByDate[calName].push(event);
       if (
         event.datetype !== "date" &&
         "end" in event &&
         event.end &&
         isBefore(event.end, dayEnd)
       ) {
+        // Do not insert event start event if the event started on a previous day, but insert an event end event, so that the event appears as ongoing until the end time, but not as starting at the start time
+
+        if (
+          !("start" in event) ||
+          !event.start ||
+          isAfter(event.start, dayStart)
+        ) {
+          eventsByDate[calName].push(event);
+        }
+
         eventsByDate[calName].push({
           ...event,
           _this_is_the_end_of_a_event: true,
         });
+      } else {
+        eventsByDate[calName].push(event);
       }
     }
   }
@@ -427,134 +438,175 @@ export function DiaryAgendaDay() {
 
   return (
     <div className="flex flex-col items-stretch justify-start">
-      {daysOfInterval.map((dayDate) => {
-        const dayStart = addHours(startOfDay(dayDate), dayStartHour);
-        const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
+      {daysOfInterval
+        .map((dayDate) => {
+          const dayStart = addHours(startOfDay(dayDate), dayStartHour);
 
-        const dayEvents = eventsByDate[dateToString(dayDate)] || [];
-        const dayName = dateToString(dayDate);
-        const dayWorkouts = workouts
-          .filter((workout) =>
-            isSameDayButItRespectsDayStartHour(
-              new Date(getJournalEntryPrincipalDate(workout)!.start!),
-              dayStart,
-            ),
-          )
-          .flatMap((workout) =>
-            workout.exercises.map((exercise) => ({
-              ...workout,
-              exercises: [exercise],
-            })),
-          );
-
-        const dayLocations = uniqueBy(
-          dayWorkouts
-            .map(({ locationId }) =>
-              userLocations?.find(({ id }) => id === locationId),
+          const dayEvents = eventsByDate[dateToString(dayDate)] || [];
+          const dayName = dateToString(dayDate);
+          const dayWorkouts = workouts
+            .filter((workout) =>
+              isSameDayButItRespectsDayStartHour(
+                new Date(getJournalEntryPrincipalDate(workout)!.start!),
+                dayStart,
+              ),
             )
-            .filter(Boolean),
-          (location) => location.id,
-        );
-        const dayDueSets = dueSetsByDate[dayName] || [];
-        const dayTodos = todosByDate[dayName] || [];
-        const daySleeps = sleepsByDate[dayName] || [];
-
-        const dayJournalEntries = [
-          ...dayEvents,
-          ...dayDueSets,
-          ...dayTodos,
-          ...dayWorkouts,
-          ...daySleeps,
-        ]
-          .sort((a, b) =>
-            compareAsc(
-              getJournalEntryPrincipalDate(b)?.end || new Date(0),
-              getJournalEntryPrincipalDate(a)?.end || new Date(0),
-            ),
-          )
-          .sort((a, b) => {
-            const aAllDay = a.__typename === "Event" && a.datetype === "date";
-            const bAllDay = b.__typename === "Event" && b.datetype === "date";
-            if (aAllDay && !bAllDay) return -1;
-            if (!aAllDay && bAllDay) return 1;
-
-            return compareAsc(
-              getJournalEntryPrincipalDate(a)?.start || new Date(0),
-              getJournalEntryPrincipalDate(b)?.start || new Date(0),
+            .flatMap((workout) =>
+              workout.exercises.map((exercise) => ({
+                ...workout,
+                exercises: [exercise],
+              })),
             );
-          })
-          .filter((entry, i, entries) => {
-            const isEventEndEntry =
-              entry.__typename === "Event" &&
-              "_this_is_the_end_of_a_event" in entry &&
-              entry._this_is_the_end_of_a_event;
 
-            if (isEventEndEntry) {
-              const eventId = entry.id;
-              const previousEntry = entries[i - 1];
-              if (
-                previousEntry &&
-                previousEntry.__typename === "Event" &&
-                previousEntry.id === eventId
-              ) {
-                // If the previous entry is the same event, we skip the end entry
-                return false;
+          const dayDueSets = dueSetsByDate[dayName] || [];
+          const dayTodos = todosByDate[dayName] || [];
+          const daySleeps = sleepsByDate[dayName] || [];
+
+          const dayJournalEntries = [
+            ...dayEvents,
+            ...dayDueSets,
+            ...dayTodos,
+            ...dayWorkouts,
+            ...daySleeps,
+          ]
+            .sort((a, b) =>
+              compareAsc(
+                getJournalEntryPrincipalDate(b)?.end || new Date(0),
+                getJournalEntryPrincipalDate(a)?.end || new Date(0),
+              ),
+            )
+            .sort((a, b) => {
+              const aAllDay = a.__typename === "Event" && a.datetype === "date";
+              const bAllDay = b.__typename === "Event" && b.datetype === "date";
+              if (aAllDay && !bAllDay) return -1;
+              if (!aAllDay && bAllDay) return 1;
+
+              return compareAsc(
+                getJournalEntryPrincipalDate(a)?.start || new Date(0),
+                getJournalEntryPrincipalDate(b)?.start || new Date(0),
+              );
+            })
+            .filter((entry, i, entries) => {
+              const isEventEndEntry =
+                entry.__typename === "Event" &&
+                "_this_is_the_end_of_a_event" in entry &&
+                entry._this_is_the_end_of_a_event;
+
+              if (isEventEndEntry) {
+                const eventId = entry.id;
+                const previousEntry = entries[i - 1];
+                if (
+                  previousEntry &&
+                  previousEntry.__typename === "Event" &&
+                  previousEntry.id === eventId
+                ) {
+                  // If the previous entry is the same event, we skip the end entry
+                  return false;
+                }
               }
+
+              return true;
+            });
+
+          return [dayDate, dayJournalEntries] as const;
+        })
+        .map(
+          (
+            [dayDate, dayJournalEntries],
+            dayJournalEntriesIndex,
+            dayJournalEntriesList,
+          ) => {
+            const dayStart = addHours(startOfDay(dayDate), dayStartHour);
+            const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
+
+            const dayName = dateToString(dayDate);
+            const dayWorkouts = workouts
+              .filter((workout) =>
+                isSameDayButItRespectsDayStartHour(
+                  new Date(getJournalEntryPrincipalDate(workout)!.start!),
+                  dayStart,
+                ),
+              )
+              .flatMap((workout) =>
+                workout.exercises.map((exercise) => ({
+                  ...workout,
+                  exercises: [exercise],
+                })),
+              );
+
+            const dayLocations = uniqueBy(
+              dayWorkouts
+                .map(({ locationId }) =>
+                  userLocations?.find(({ id }) => id === locationId),
+                )
+                .filter(Boolean),
+              (location) => location.id,
+            );
+            const dayJournalEntriesIncludingLocationChanges: typeof dayJournalEntries =
+              [];
+
+            let lastLocation: ReturnType<
+              typeof getLocationFromJournalEntry
+            > | null = null;
+            for (let i = 0; i < dayJournalEntries.length; i++) {
+              const entry = dayJournalEntries[i]!;
+              const previousEntry =
+                dayJournalEntries[i - 1] ||
+                // If there is no previous entry, we look for the last entry of the previous day, as that might be an entry that indicates the location at the start of the day
+                dayJournalEntriesList[dayJournalEntriesIndex - 1]?.[1].slice(
+                  -1,
+                )?.[0] ||
+                null;
+
+              const location = getLocationFromJournalEntry(
+                userLocations,
+                entry,
+              );
+              const previousLocation = previousEntry
+                ? getLocationFromJournalEntry(userLocations, previousEntry)
+                : null;
+
+              if (
+                location &&
+                (!previousLocation ||
+                  previousLocation.name !== location.name) &&
+                (!lastLocation || lastLocation.name !== location.name)
+              ) {
+                const targetDate = dateMidpoint(
+                  (previousEntry &&
+                    getJournalEntryPrincipalDate(previousEntry)?.end) ||
+                    dayStart,
+                  getJournalEntryPrincipalDate(entry)?.start || dayEnd,
+                );
+
+                dayJournalEntriesIncludingLocationChanges.push({
+                  __typename: "LocationChange",
+                  id: `location-change-${dayName}-${i}`,
+                  location: location.name,
+                  date: targetDate,
+                });
+                lastLocation = location;
+              }
+
+              dayJournalEntriesIncludingLocationChanges.push(entry);
             }
 
-            return true;
-          });
-
-        const dayJournalEntriesIncludingLocationChanges: typeof dayJournalEntries =
-          [];
-
-        let lastLocation: ReturnType<
-          typeof getLocationFromJournalEntry
-        > | null = null;
-        for (let i = 0; i < dayJournalEntries.length; i++) {
-          const entry = dayJournalEntries[i]!;
-          const previousEntry = dayJournalEntries[i - 1];
-          const location = getLocationFromJournalEntry(userLocations, entry);
-          const previousLocation = previousEntry
-            ? getLocationFromJournalEntry(userLocations, previousEntry)
-            : null;
-
-          if (
-            location &&
-            (!previousLocation || previousLocation.name !== location.name) &&
-            (!lastLocation || lastLocation.name !== location.name)
-          ) {
-            const targetDate = dateMidpoint(
-              (previousEntry &&
-                getJournalEntryPrincipalDate(previousEntry)?.end) ||
-                dayStart,
-              getJournalEntryPrincipalDate(entry)?.start || dayEnd,
+            return (
+              <TodoDroppable
+                key={dayName}
+                date={setHours(dayDate, dayStartHour)}
+              >
+                <DiaryAgendaDayDay
+                  date={dayName}
+                  dayDate={dayDate}
+                  user={user}
+                  dayLocations={dayLocations}
+                  dayJournalEntries={dayJournalEntriesIncludingLocationChanges}
+                />
+              </TodoDroppable>
             );
-
-            dayJournalEntriesIncludingLocationChanges.push({
-              __typename: "LocationChange",
-              id: `location-change-${dayName}-${i}`,
-              location: location.name,
-              date: targetDate,
-            });
-            lastLocation = location;
-          }
-
-          dayJournalEntriesIncludingLocationChanges.push(entry);
-        }
-
-        return (
-          <TodoDroppable key={dayName} date={setHours(dayDate, dayStartHour)}>
-            <DiaryAgendaDayDay
-              date={dayName}
-              dayDate={dayDate}
-              user={user}
-              dayLocations={dayLocations}
-              dayJournalEntries={dayJournalEntriesIncludingLocationChanges}
-            />
-          </TodoDroppable>
-        );
-      })}
+          },
+        )}
       {user ? <DiaryPoller userId={user.id} /> : null}
     </div>
   );
