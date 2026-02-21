@@ -1,7 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { isSameDay, max, min, subHours } from "date-fns";
+import { max, min } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExerciseName } from "../../components/ExerciseName";
@@ -17,9 +17,10 @@ import {
   isClimbingExercise,
   WorkoutSource,
 } from "../../models/workout";
-import { cotemporality, dayStartHour } from "../../utils";
+import { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { WorkoutEntryExercise } from "./WorkoutEntryExercise";
+import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayWorkoutSet({
   workout,
@@ -53,15 +54,7 @@ export function DiaryAgendaDayWorkoutSet({
       "-" +
       String(workoutExercise.exerciseId),
     data: {
-      date: isSameDay(
-        subHours(workout.workedOutAt, dayStartHour),
-        subHours(
-          setsWithLocation[0]?.[0].createdAt || workout.workedOutAt,
-          dayStartHour,
-        ),
-      )
-        ? setsWithLocation[0]?.[0].createdAt || workout.workedOutAt
-        : workout.workedOutAt,
+      date: getJournalEntryPrincipalDate(workout)!.start,
       workout,
     },
     disabled: workout.source !== WorkoutSource.Self,
