@@ -48,24 +48,36 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
     ),
   };
 
-  return {
-    start: max([
-      dayInterval.start,
-      workout.createdAt,
+  const start = max([
+    dayInterval.start,
+    workout.createdAt,
+    ...workout.exercises
+      .flatMap((e) => e.sets.map((s) => s.createdAt))
+      .filter(Boolean)
+      .filter((date) => isWithinInterval(date, dayInterval)),
+    ...workout.exercises
+      .flatMap((e) => e.sets.map((s) => s.updatedAt))
+      .filter(Boolean)
+      .filter((date) => isWithinInterval(date, dayInterval)),
+  ]);
+
+  const end = max([
+    min([
+      dayInterval.end,
+      workout.updatedAt,
       ...workout.exercises
         .flatMap((e) => e.sets.map((s) => s.createdAt))
         .filter(Boolean)
         .filter((date) => isWithinInterval(date, dayInterval)),
-    ]),
-    end: min([
-      dayInterval.end,
-      workout.updatedAt,
       ...workout.exercises
         .flatMap((e) => e.sets.map((s) => s.updatedAt))
         .filter(Boolean)
         .filter((date) => isWithinInterval(date, dayInterval)),
     ]),
-  };
+    start,
+  ]);
+
+  return { start, end };
 };
 
 export const getTodoPrincipalDate = (

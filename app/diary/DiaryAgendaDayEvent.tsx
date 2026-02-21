@@ -12,7 +12,12 @@ import {
 } from "date-fns";
 import type { Session } from "next-auth";
 import { Event } from "../../graphql.generated";
-import { cotemporality, dayStartHour, DEFAULT_TIMEZONE } from "../../utils";
+import {
+  cotemporality,
+  dayStartHour,
+  DEFAULT_TIMEZONE,
+  startOfDayButItRespectsDayStartHour,
+} from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getTodoPrincipalDate } from "./diaryUtils";
 
@@ -58,8 +63,8 @@ export function DiaryAgendaDayEvent({
       roundingMethod: "ceil",
     }),
   });
-  const startDay = startOfDay(addHours(event.start, -dayStartHour));
-  const endDay = startOfDay(addHours(event.end, -dayStartHour));
+  const startDay = startOfDayButItRespectsDayStartHour(event.start);
+  const endDay = startOfDayButItRespectsDayStartHour(event.end);
   const days = differenceInDays(endDay, startDay) + 1;
   const dayNo = differenceInDays(dayStart, startDay) + 1;
   const isLastDay = dayNo === days;
