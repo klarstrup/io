@@ -10,6 +10,7 @@ import {
   compareDesc,
   formatDistanceToNowStrict,
   isPast,
+  isSameDay,
   isValid,
 } from "date-fns";
 import gql from "graphql-tag";
@@ -25,7 +26,6 @@ import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
-  ListPageUserDocument,
   type NextSet,
   type WorkoutFormNextSetsQuery,
 } from "../../graphql.generated";
@@ -74,10 +74,15 @@ import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
  * Hack when using `defaultValues` in `react-hook-form`
  * This is because `react-hook-form` doesn't support `defaultValue` of type `Date` even if the types say so
  */
-function dateToInputDate(date?: Date) {
+function dateToInputDate(
+  date?: Date,
+  timeZone: string = DEFAULT_TIMEZONE,
+): Date | undefined {
   if (!date || !isValid(date)) return undefined;
 
-  return date.toJSON().slice(0, 10) as unknown as Date;
+  return new TZDate(date, timeZone)
+    .toISOString()
+    .split(".")[0] as unknown as Date;
 }
 
 const setValueAs = (v: unknown) =>
@@ -125,11 +130,13 @@ export function WorkoutForm<R extends string>({
     () => new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE),
     [date, user?.timeZone],
   );
+  const now = useMemo(() => new Date(), []);
 
   const { data: nextSetsData, client } = useQuery<WorkoutFormNextSetsQuery>(gql`
     query WorkoutFormNextSets {
       user {
         id
+        timeZone
         nextSets {
           id
           workedOutAt
@@ -200,7 +207,10 @@ export function WorkoutForm<R extends string>({
     defaultValues: workout
       ? {
           ...workout,
-          workedOutAt: dateToInputDate(workout?.workedOutAt),
+          workedOutAt: dateToInputDate(
+            workout?.workedOutAt,
+            user?.timeZone ?? DEFAULT_TIMEZONE,
+          ),
           exercises: workout.exercises.map((exercise) => ({
             ...exercise,
             sets: exercise.sets.map((set) => ({
@@ -326,6 +336,16 @@ export function WorkoutForm<R extends string>({
 
   const location = locations?.find(
     (location) => watch("locationId") === location.location._id,
+  );
+
+  console.log(
+    String(
+      dateToInputDate(
+        workout?.workedOutAt ??
+          (isSameDay(tzDate, new Date()) ? new Date() : tzDate),
+        user?.timeZone ?? DEFAULT_TIMEZONE,
+      ),
+    ),
   );
 
   return (
@@ -464,10 +484,14 @@ export function WorkoutForm<R extends string>({
           />
           <center>
             <input
-              type="date"
+              type="datetime-local"
               {...register("workedOutAt", { valueAsDate: true })}
               defaultValue={String(
-                dateToInputDate(workout?.workedOutAt ?? tzDate),
+                dateToInputDate(
+                  workout?.workedOutAt ??
+                    (isSameDay(tzDate, now) ? now : tzDate),
+                  user?.timeZone ?? DEFAULT_TIMEZONE,
+                ),
               )}
               hidden={!workout}
               className="border-b-2 border-gray-200 text-center text-xl focus:border-gray-500"
