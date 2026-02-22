@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { twMerge } from "tailwind-merge";
 import DashBar from "../app/diary/DashBar";
 import { GraphQLListener } from "./GraphQLListener";
 import UserStuffLink from "./UserStuffLink";
@@ -21,7 +22,19 @@ export default function UserStuff() {
       <UserStuffLink href="/user/settings" prefetch={false}>
         🌞
       </UserStuffLink>
-      <DashBar />
+      <Suspense
+        fallback={
+          <div
+            className={twMerge(
+              "select-none",
+              "gap-x-2 gap-y-0.5 overflow-auto",
+              "grid auto-cols-auto grid-flow-col-dense grid-cols-[repeat(auto-fit,1fr)] grid-rows-2",
+            )}
+          />
+        }
+      >
+        <DashBar />
+      </Suspense>
     </div>
   );
 }
