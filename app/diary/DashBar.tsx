@@ -135,7 +135,7 @@ export default function DashBar() {
         className={twMerge(
           "pointer-coarse:rounded-b-2xl pointer-fine:rounded-t-2xl",
           "border border-[yellow]/25 bg-white/10 select-none",
-          "flex flex-wrap items-center justify-around gap-x-3 gap-y-1 overflow-hidden pl-2 pr-1 py-1 backdrop-blur-md sm:gap-x-4",
+          "flex flex-wrap items-center justify-evenly gap-x-3 gap-y-1 overflow-hidden pl-2 pr-1 py-1 backdrop-blur-md sm:gap-x-4",
         )}
         style={{
           boxShadow:
