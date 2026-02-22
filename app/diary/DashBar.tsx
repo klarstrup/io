@@ -191,6 +191,7 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
+      {/*
       {data?.user?.weightTimeSeries ? (
         <div className="flex items-center gap-1">
           <BarIcon>⚖️</BarIcon>
@@ -239,6 +240,7 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
+       */}
       {availableBalance ? (
         <div className="flex items-center gap-1">
           <BarIcon>💰</BarIcon>
