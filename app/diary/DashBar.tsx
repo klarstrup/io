@@ -128,7 +128,7 @@ export default function DashBar() {
   return (
     <div
       className={
-        "fixed left-1/2 z-50 flex w-full max-w-[80%] -translate-x-1/2 transform items-center justify-center pointer-coarse:top-0 pointer-fine:bottom-0"
+        "fixed left-1/2 z-50 flex w-full -translate-x-1/2 transform items-center justify-center pointer-coarse:top-0 pointer-fine:bottom-0"
       }
     >
       <div
