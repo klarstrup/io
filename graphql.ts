@@ -404,7 +404,7 @@ export const resolvers: Resolvers<
           return hours;
         }),
       );
-      const totalHours = 2 * 7 * 24 - 2 * 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
+      const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
     },
@@ -434,7 +434,7 @@ export const resolvers: Resolvers<
           return hours;
         }),
       );
-      const totalHours = 2 * 7 * 24 - 2 * 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
+      const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
     },
