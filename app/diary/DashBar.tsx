@@ -128,7 +128,7 @@ export default function DashBar() {
   return (
     <div
       className={
-        "fixed left-1/2 z-50 flex w-full -translate-x-1/2 transform items-center justify-center pointer-coarse:top-0 pointer-fine:bottom-0"
+        "fixed left-1/2 z-50 flex w-full -translate-x-1/2 transform items-center justify-center px-[1vw] pointer-coarse:top-0 pointer-fine:bottom-0"
       }
     >
       <div
@@ -199,56 +199,54 @@ export default function DashBar() {
             </BarNumberContainer>
           </div>
         ) : null}
-        {/*
-      {data?.user?.weightTimeSeries ? (
-        <div className="flex items-center gap-1">
-          <BarIcon>⚖️</BarIcon>
-          <BarNumberContainer>
-            {weight.toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })}
-            <span
-              className={
-                "text-[10px] " +
-                // positive slope means weight is increasing, negative means it's decreasing
-                (weightSlope > 0
-                  ? "text-red-500"
-                  : weightSlope < 0
-                    ? "text-green-500"
-                    : "text-gray-500")
-              }
-            >
-              kg
-            </span>
-          </BarNumberContainer>
-        </div>
-      ) : null}
-      {data?.user?.fatRatioTimeSeries ? (
-        <div className="flex items-center gap-1">
-          <BarIcon>🤰</BarIcon>
-          <BarNumberContainer>
-            {fatRatio.toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            })}
-            <span
-              className={
-                "text-[10px] " +
-                // positive slope means fat ratio is increasing, negative means it's decreasing
-                (fatRatioSlope > 0
-                  ? "text-red-500"
-                  : fatRatioSlope < 0
-                    ? "text-green-500"
-                    : "text-gray-500")
-              }
-            >
-              %
-            </span>
-          </BarNumberContainer>
-        </div>
-      ) : null}
-       */}
+        {data?.user?.weightTimeSeries ? (
+          <div className="flex items-center gap-1">
+            <BarIcon>⚖️</BarIcon>
+            <BarNumberContainer>
+              {weight.toLocaleString(undefined, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}
+              <span
+                className={
+                  "text-[10px] " +
+                  // positive slope means weight is increasing, negative means it's decreasing
+                  (weightSlope > 0
+                    ? "text-red-500"
+                    : weightSlope < 0
+                      ? "text-green-500"
+                      : "text-gray-500")
+                }
+              >
+                kg
+              </span>
+            </BarNumberContainer>
+          </div>
+        ) : null}
+        {data?.user?.fatRatioTimeSeries ? (
+          <div className="flex items-center gap-1">
+            <BarIcon>🤰</BarIcon>
+            <BarNumberContainer>
+              {fatRatio.toLocaleString(undefined, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}
+              <span
+                className={
+                  "text-[10px] " +
+                  // positive slope means fat ratio is increasing, negative means it's decreasing
+                  (fatRatioSlope > 0
+                    ? "text-red-500"
+                    : fatRatioSlope < 0
+                      ? "text-green-500"
+                      : "text-gray-500")
+                }
+              >
+                %
+              </span>
+            </BarNumberContainer>
+          </div>
+        ) : null}
         {availableBalance ? (
           <div className="flex items-center gap-1">
             <BarIcon>💰</BarIcon>
