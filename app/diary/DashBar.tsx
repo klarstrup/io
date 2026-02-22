@@ -65,24 +65,24 @@ function BarNumberContainer({
 
 function BarIcon({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative">
+    <div className="relative px-1">
       <span
-        className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
-          filter: "invert(1) blur(2px)",
+          filter: "invert(1) blur(1.5px)",
         }}
       >
         {children}
       </span>
       <span
-        className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
-          filter: "invert(1) blur(4px)",
+          filter: "invert(1) blur(3px)",
         }}
       >
         {children}
       </span>
-      {children}
+      <span className="relative">{children}</span>
     </div>
   );
 }
@@ -127,154 +127,144 @@ export default function DashBar() {
 
   return (
     <div
-      className={
-        "fixed left-1/2 z-50 flex w-full -translate-x-1/2 transform items-center justify-center px-[1vw] pointer-coarse:top-0 pointer-fine:bottom-12"
-      }
+      className={twMerge(
+        "select-none",
+        "gap-x-2 gap-y-0.5 overflow-auto",
+        "grid auto-cols-auto grid-flow-col-dense grid-cols-[repeat(auto-fit,1fr)] grid-rows-2",
+      )}
     >
-      <div
-        className={twMerge(
-          "pointer-coarse:rounded-b-2xl pointer-fine:rounded-2xl",
-          "border border-[yellow]/25 bg-white/10 select-none",
-          "flex flex-wrap items-center justify-evenly gap-x-3 gap-y-1 overflow-hidden py-1 pr-1 pl-2 backdrop-blur-md sm:gap-x-6",
-        )}
-        style={{
-          boxShadow:
-            "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
-        }}
-      >
-        {data?.user?.sleepDebtFractionTimeSeries ? (
-          <div className="flex items-center gap-2">
-            <BarIcon>💤</BarIcon>
-            <BarNumberContainer>
-              {(sleepDebt * 100).toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })}
-              <span
-                className={
-                  "text-[10px] " +
-                  // positive slope means sleep debt is increasing, negative means it's decreasing
-                  (sleepDebtSlope > 0
-                    ? "text-green-500"
-                    : sleepDebtSlope < 0
-                      ? "text-red-500"
-                      : "text-gray-500")
-                }
-              >
-                %
-              </span>
-            </BarNumberContainer>
-          </div>
-        ) : null}
-        {data?.user?.pastBusynessFraction ||
-        data?.user?.futureBusynessFraction ? (
-          <div className="flex items-center gap-2">
-            <BarIcon>🐝</BarIcon>
-            <BarNumberContainer>
-              {data.user.pastBusynessFraction &&
-                (data.user.pastBusynessFraction * 100).toLocaleString(
-                  undefined,
-                  { minimumFractionDigits: 0, maximumFractionDigits: 0 },
-                )}
-              <span className="text-[10px]">%</span>
-              <div
-                className="mx-1 h-5 w-[0.5px] self-center rounded-full bg-[yellow]"
-                style={{
-                  boxShadow:
-                    "0 0 8px rgba(0, 0, 0, 0.25), 0 0 4px #edab00, 0 0 4px #edab00, 0 0 1px rgba(0, 0, 0, 1), 0 0 0.5px rgba(0, 0, 0, 1)",
-                }}
-              />
-              {data.user.futureBusynessFraction &&
-                (data.user.futureBusynessFraction * 100).toLocaleString(
-                  undefined,
-                  { minimumFractionDigits: 0, maximumFractionDigits: 0 },
-                )}
-              <span className="text-[10px]">%</span>
-            </BarNumberContainer>
-          </div>
-        ) : null}
-        {data?.user?.weightTimeSeries ? (
-          <div className="flex items-center gap-2">
-            <BarIcon>⚖️</BarIcon>
-            <BarNumberContainer>
-              {weight.toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })}
-              <span
-                className={
-                  "text-[10px] " +
-                  // positive slope means weight is increasing, negative means it's decreasing
-                  (weightSlope > 0
+      {availableBalance ? (
+        <div className="flex items-center">
+          <BarIcon>💰</BarIcon>
+          <BarNumberContainer>
+            {availableBalance.toLocaleString("da", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      {data?.user?.sleepDebtFractionTimeSeries ? (
+        <div className="flex items-center">
+          <BarIcon>💤</BarIcon>
+          <BarNumberContainer>
+            {(sleepDebt * 100).toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span
+              className={
+                "text-[10px] " +
+                // positive slope means sleep debt is increasing, negative means it's decreasing
+                (sleepDebtSlope > 0
+                  ? "text-green-500"
+                  : sleepDebtSlope < 0
                     ? "text-red-500"
-                    : weightSlope < 0
-                      ? "text-green-500"
-                      : "text-gray-500")
-                }
-              >
-                kg
-              </span>
-            </BarNumberContainer>
-          </div>
-        ) : null}
-        {data?.user?.fatRatioTimeSeries ? (
-          <div className="flex items-center gap-2">
-            <BarIcon>🤰</BarIcon>
-            <BarNumberContainer>
-              {fatRatio.toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })}
-              <span
-                className={
-                  "text-[10px] " +
-                  // positive slope means fat ratio is increasing, negative means it's decreasing
-                  (fatRatioSlope > 0
-                    ? "text-red-500"
-                    : fatRatioSlope < 0
-                      ? "text-green-500"
-                      : "text-gray-500")
-                }
-              >
-                %
-              </span>
-            </BarNumberContainer>
-          </div>
-        ) : null}
-        {availableBalance ? (
-          <div className="flex items-center gap-2">
-            <BarIcon>💰</BarIcon>
-            <BarNumberContainer>
-              {availableBalance.toLocaleString("da", {
+                    : "text-gray-500")
+              }
+            >
+              %
+            </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      {data?.user?.pastBusynessFraction ||
+      data?.user?.futureBusynessFraction ? (
+        <div className="flex items-center">
+          <BarIcon>🐝</BarIcon>
+          <BarNumberContainer>
+            {data.user.pastBusynessFraction &&
+              (data.user.pastBusynessFraction * 100).toLocaleString(undefined, {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
               })}
-            </BarNumberContainer>
-          </div>
-        ) : null}
-        {sunrise && isFuture(sunrise) ? (
-          <span className="flex items-center gap-2 whitespace-nowrap">
-            <BarIcon>🌅</BarIcon>
-            <BarNumberContainer>
-              <DistanceToNowShort date={sunrise} />
-            </BarNumberContainer>
-          </span>
-        ) : sunset && isFuture(sunset) ? (
-          <span className="flex items-center gap-2 whitespace-nowrap">
-            <BarIcon>🌇</BarIcon>
-            <BarNumberContainer>
-              <DistanceToNowShort date={sunset} />
-            </BarNumberContainer>
-          </span>
-        ) : sunriseTomorrow ? (
-          <span className="flex items-center gap-2 whitespace-nowrap">
-            <BarIcon>🌅</BarIcon>
-            <BarNumberContainer>
-              <DistanceToNowShort date={sunriseTomorrow} />
-            </BarNumberContainer>
-          </span>
-        ) : null}
-      </div>
+            <span className="text-[10px]">%</span>
+            <div
+              className="mx-1 h-5 w-[0.5px] self-center rounded-full bg-[yellow]"
+              style={{
+                boxShadow:
+                  "0 0 8px rgba(0, 0, 0, 0.25), 0 0 4px #edab00, 0 0 4px #edab00, 0 0 1px rgba(0, 0, 0, 1), 0 0 0.5px rgba(0, 0, 0, 1)",
+              }}
+            />
+            {data.user.futureBusynessFraction &&
+              (data.user.futureBusynessFraction * 100).toLocaleString(
+                undefined,
+                { minimumFractionDigits: 0, maximumFractionDigits: 0 },
+              )}
+            <span className="text-[10px]">%</span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      {sunrise && isFuture(sunrise) ? (
+        <span className="flex items-center whitespace-nowrap">
+          <BarIcon>🌅</BarIcon>
+          <BarNumberContainer>
+            <DistanceToNowShort date={sunrise} />
+          </BarNumberContainer>
+        </span>
+      ) : sunset && isFuture(sunset) ? (
+        <span className="flex items-center whitespace-nowrap">
+          <BarIcon>🌇</BarIcon>
+          <BarNumberContainer>
+            <DistanceToNowShort date={sunset} />
+          </BarNumberContainer>
+        </span>
+      ) : sunriseTomorrow ? (
+        <span className="flex items-center whitespace-nowrap">
+          <BarIcon>🌅</BarIcon>
+          <BarNumberContainer>
+            <DistanceToNowShort date={sunriseTomorrow} />
+          </BarNumberContainer>
+        </span>
+      ) : null}
+      {data?.user?.weightTimeSeries ? (
+        <div className="flex items-center">
+          <BarIcon>⚖️</BarIcon>
+          <BarNumberContainer>
+            {weight.toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span
+              className={
+                "text-[10px] " +
+                // positive slope means weight is increasing, negative means it's decreasing
+                (weightSlope > 0
+                  ? "text-red-500"
+                  : weightSlope < 0
+                    ? "text-green-500"
+                    : "text-gray-500")
+              }
+            >
+              kg
+            </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      {data?.user?.fatRatioTimeSeries ? (
+        <div className="flex items-center">
+          <BarIcon>🤰</BarIcon>
+          <BarNumberContainer>
+            {fatRatio.toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span
+              className={
+                "text-[10px] " +
+                // positive slope means fat ratio is increasing, negative means it's decreasing
+                (fatRatioSlope > 0
+                  ? "text-red-500"
+                  : fatRatioSlope < 0
+                    ? "text-green-500"
+                    : "text-gray-500")
+              }
+            >
+              %
+            </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
     </div>
   );
 }
