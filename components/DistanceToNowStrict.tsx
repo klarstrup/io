@@ -1,8 +1,13 @@
 "use client";
 
-import { formatDistanceToNow, formatDistanceToNowStrict } from "date-fns";
+import {
+  formatDistanceToNow,
+  formatDistanceToNowStrict,
+  intervalToDuration,
+} from "date-fns";
 import { useEffect, useState } from "react";
 import useInterval from "../hooks/useInterval";
+import { formatDurationAsTimer } from "../models/workout";
 
 export function DistanceToNowStrict({
   date,
@@ -41,6 +46,24 @@ export function DistanceToNow({ date }: { date: Date }) {
       {state
         ? formatDistanceToNow(date, { addSuffix: true })
         : date.toISOString()}
+    </time>
+  );
+}
+
+export function DistanceToNowShort({ date }: { date: Date }) {
+  const [start, setNow] = useState(Date.now());
+
+  useInterval(() => {
+    setNow(Date.now());
+  }, 500);
+
+  if (!date) return null;
+
+  return (
+    <time dateTime={date.toISOString()} title={date.toISOString()}>
+      {formatDurationAsTimer(
+        intervalToDuration({ start, end: date.getTime() }),
+      )}
     </time>
   );
 }

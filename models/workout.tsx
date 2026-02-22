@@ -142,16 +142,35 @@ export const durationToMs = (duration: Duration) =>
   (duration.minutes ?? 0) * minutesInMs +
   (duration.seconds ?? 0) * secondsInMs;
 
-export const formatShortDuration = (duration: Duration) => {
+export const formatShortDuration = (
+  duration: Duration,
+  includeSmallestUnit: boolean = false,
+) => {
   const parts: string[] = [];
-  if (duration.years) parts.push(`${duration.years}y`);
-  if (duration.months) parts.push(`${duration.months}mo`);
-  if (duration.weeks) parts.push(`${duration.weeks}w`);
-  if (duration.days) parts.push(`${duration.days}d`);
-  if (duration.hours) parts.push(`${duration.hours}h`);
-  if (duration.minutes) parts.push(`${duration.minutes}m`);
-  if (duration.seconds) parts.push(`${duration.seconds}s`);
+  if (duration.years || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.years ?? 0}y`);
+  if (duration.months || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.months ?? 0}mo`);
+  if (duration.weeks || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.weeks ?? 0}w`);
+  if (duration.days || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.days ?? 0}d`);
+  if (duration.hours || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.hours ?? 0}h`);
+  if (duration.minutes || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.minutes ?? 0}m`);
+  if (duration.seconds || (includeSmallestUnit && parts.length))
+    parts.push(`${duration.seconds ?? 0}s`);
   return parts.join("");
+};
+
+export const formatDurationAsTimer = (duration: Duration) => {
+  const hours = duration.hours ?? 0;
+  const minutes = duration.minutes ?? 0;
+  const seconds = duration.seconds ?? 0;
+  return `${hours > 0 ? `${hours}:` : ""}${hours > 0 ? String(minutes).padStart(2, "0") : minutes}:${String(
+    seconds,
+  ).padStart(2, "0")}`;
 };
 
 export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>

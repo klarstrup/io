@@ -1,10 +1,21 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
+import { TZDate } from "@date-fns/tz";
+import { addDays, isFuture } from "date-fns";
 import gql from "graphql-tag";
+import { useSession } from "next-auth/react";
 import { twMerge } from "tailwind-merge";
+import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
+import { DataSource } from "../../sources/utils";
+import {
+  decodeGeohash,
+  DEFAULT_TIMEZONE,
+  getSunrise,
+  getSunset,
+} from "../../utils";
 
 gql`
   query GetLatestWeightEntry {
@@ -75,6 +86,7 @@ function BarIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashBar() {
+  const { data: sessionData } = useSession();
   const { data } = useQuery(GetLatestWeightEntryDocument);
 
   const { value: sleepDebt, slope: sleepDebtSlope } = useTrendingNumber(
@@ -89,6 +101,27 @@ export default function DashBar() {
   const { value: fatRatio, slope: fatRatioSlope } = useTrendingNumber(
     data?.user?.fatRatioTimeSeries || [],
   );
+
+  const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
+  const tzDate = TZDate.tz(timeZone);
+
+  const userGeohash = sessionData?.user?.dataSources?.find(
+    (source) => source.source === DataSource.Tomorrow,
+  )?.config?.geohash;
+  const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
+  const sunrise =
+    userLocation &&
+    getSunrise(userLocation.latitude, userLocation.longitude, tzDate);
+  const sunset =
+    userLocation &&
+    getSunset(userLocation.latitude, userLocation.longitude, tzDate);
+  const sunriseTomorrow =
+    userLocation &&
+    getSunrise(
+      userLocation.latitude,
+      userLocation.longitude,
+      addDays(tzDate, 1),
+    );
 
   return (
     <div
@@ -184,6 +217,28 @@ export default function DashBar() {
             })}
           </BarNumberContainer>
         </div>
+      ) : null}
+      {sunrise && isFuture(sunrise) ? (
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <BarIcon>🌅</BarIcon>
+          <BarNumberContainer>
+            <DistanceToNowShort date={sunrise} />
+          </BarNumberContainer>
+        </span>
+      ) : sunset && isFuture(sunset) ? (
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <BarIcon>🌇</BarIcon>
+          <BarNumberContainer>
+            <DistanceToNowShort date={sunset} />
+          </BarNumberContainer>
+        </span>
+      ) : sunriseTomorrow ? (
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <BarIcon>🌅</BarIcon>
+          <BarNumberContainer>
+            <DistanceToNowShort date={sunriseTomorrow} />
+          </BarNumberContainer>
+        </span>
       ) : null}
     </div>
   );
