@@ -135,7 +135,7 @@ export default function DashBar() {
         className={twMerge(
           "pointer-coarse:rounded-b-2xl pointer-fine:rounded-t-2xl",
           "border border-[yellow]/25 bg-white/10 select-none",
-          "flex flex-wrap items-center justify-around gap-1 overflow-hidden px-1 py-1 backdrop-blur-md sm:gap-2",
+          "flex flex-wrap items-center justify-around gap-x-3 gap-y-1 overflow-hidden pl-2 pr-1 py-1 backdrop-blur-md sm:gap-x-4",
         )}
         style={{
           boxShadow:
@@ -143,7 +143,7 @@ export default function DashBar() {
         }}
       >
         {data?.user?.sleepDebtFractionTimeSeries ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <BarIcon>💤</BarIcon>
             <BarNumberContainer>
               {(sleepDebt * 100).toLocaleString(undefined, {
@@ -168,7 +168,7 @@ export default function DashBar() {
         ) : null}
         {data?.user?.pastBusynessFraction ||
         data?.user?.futureBusynessFraction ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <BarIcon>🐝</BarIcon>
             <BarNumberContainer>
               {data.user.pastBusynessFraction &&
@@ -194,7 +194,7 @@ export default function DashBar() {
           </div>
         ) : null}
         {data?.user?.weightTimeSeries ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <BarIcon>⚖️</BarIcon>
             <BarNumberContainer>
               {weight.toLocaleString(undefined, {
@@ -218,7 +218,7 @@ export default function DashBar() {
           </div>
         ) : null}
         {data?.user?.fatRatioTimeSeries ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <BarIcon>🤰</BarIcon>
             <BarNumberContainer>
               {fatRatio.toLocaleString(undefined, {
@@ -242,7 +242,7 @@ export default function DashBar() {
           </div>
         ) : null}
         {availableBalance ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <BarIcon>💰</BarIcon>
             <BarNumberContainer>
               {availableBalance.toLocaleString("da", {
@@ -253,21 +253,21 @@ export default function DashBar() {
           </div>
         ) : null}
         {sunrise && isFuture(sunrise) ? (
-          <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="flex items-center gap-2 whitespace-nowrap">
             <BarIcon>🌅</BarIcon>
             <BarNumberContainer>
               <DistanceToNowShort date={sunrise} />
             </BarNumberContainer>
           </span>
         ) : sunset && isFuture(sunset) ? (
-          <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="flex items-center gap-2 whitespace-nowrap">
             <BarIcon>🌇</BarIcon>
             <BarNumberContainer>
               <DistanceToNowShort date={sunset} />
             </BarNumberContainer>
           </span>
         ) : sunriseTomorrow ? (
-          <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="flex items-center gap-2 whitespace-nowrap">
             <BarIcon>🌅</BarIcon>
             <BarNumberContainer>
               <DistanceToNowShort date={sunriseTomorrow} />
