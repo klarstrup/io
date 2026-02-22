@@ -128,14 +128,14 @@ export default function DashBar() {
   return (
     <div
       className={
-        "fixed left-1/2 z-50 flex w-full -translate-x-1/2 transform items-center justify-center px-[1vw] pointer-coarse:top-0 pointer-fine:bottom-0"
+        "fixed left-1/2 z-50 flex w-full -translate-x-1/2 transform items-center justify-center px-[1vw] pointer-coarse:top-0 pointer-fine:bottom-12"
       }
     >
       <div
         className={twMerge(
-          "pointer-coarse:rounded-b-2xl pointer-fine:rounded-t-2xl",
+          "pointer-coarse:rounded-b-2xl pointer-fine:rounded-2xl",
           "border border-[yellow]/25 bg-white/10 select-none",
-          "flex flex-wrap items-center justify-evenly gap-x-3 gap-y-1 overflow-hidden pl-2 pr-1 py-1 backdrop-blur-md sm:gap-x-4",
+          "flex flex-wrap items-center justify-evenly gap-x-3 gap-y-1 overflow-hidden py-1 pr-1 pl-2 backdrop-blur-md sm:gap-x-6",
         )}
         style={{
           boxShadow:
