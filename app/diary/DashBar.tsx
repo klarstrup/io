@@ -26,6 +26,8 @@ gql`
         timestamp
         value
       }
+      pastBusynessFraction
+      futureBusynessFraction
       sleepDebtFraction
       sleepDebtFractionTimeSeries {
         timestamp
@@ -156,6 +158,36 @@ export default function DashBar() {
             >
               %
             </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      {data?.user?.pastBusynessFraction ||
+      data?.user?.futureBusynessFraction ? (
+        <div className="flex items-center gap-px">
+          <BarIcon>📅</BarIcon>
+          <BarNumberContainer>
+            {data.user.pastBusynessFraction &&
+              (data.user.pastBusynessFraction * 100).toLocaleString(undefined, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}
+            <span className="text-[10px]">%</span>
+            <div
+              className="mx-px h-5 w-[0.5px] self-center rounded-full bg-[yellow]/100"
+              style={{
+                boxShadow:
+                  "0 0 8px rgba(0, 0, 0, 0.25), 0 0 4px #edab00, 0 0 4px #edab00, 0 0 1px rgba(0, 0, 0, 1), 0 0 0.5px rgba(0, 0, 0, 1)",
+              }}
+            />
+            {data.user.futureBusynessFraction &&
+              (data.user.futureBusynessFraction * 100).toLocaleString(
+                undefined,
+                {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                },
+              )}
+            <span className="text-[10px]">%</span>
           </BarNumberContainer>
         </div>
       ) : null}

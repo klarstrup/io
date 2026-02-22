@@ -108,6 +108,8 @@ const dateScalar = new GraphQLScalarType({
 
 const editableTodoFields = ["summary", "start", "due", "completed"] as const;
 
+const idealDailySleepInSeconds = 8 * 60 * 60;
+
 export const resolvers: Resolvers<
   | { user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"] | null }
   | undefined
@@ -302,7 +304,7 @@ export const resolvers: Resolvers<
         0,
       );
 
-      const idealSleepTime = 8 * 60 * 60 * sleepEntries.length;
+      const idealSleepTime = idealDailySleepInSeconds * sleepEntries.length;
 
       return totalSleepTime - idealSleepTime;
     },
@@ -329,7 +331,7 @@ export const resolvers: Resolvers<
         0,
       );
 
-      const idealSleepTime = 8 * 60 * 60 * sleepEntries.length;
+      const idealSleepTime = idealDailySleepInSeconds * sleepEntries.length;
 
       return totalSleepTime / idealSleepTime;
     },
@@ -362,7 +364,7 @@ export const resolvers: Resolvers<
           0,
         );
 
-        const idealSleepTime = 8 * 60 * 60 * windowEntries.length;
+        const idealSleepTime = idealDailySleepInSeconds * windowEntries.length;
 
         sleepDebtFractionTimeSeries.push({
           timestamp: windowEntries[windowEntries.length - 1]!.endedAt,
@@ -375,6 +377,66 @@ export const resolvers: Resolvers<
         .reverse()
         .slice(0, 4)
         .reverse();
+    },
+    pastBusynessFraction: async (_parent, _args, context) => {
+      // Get events for the past week and calculate busyness fraction based on number of hours that have events scheduled vs total hours
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+      const userId = user.id;
+      const now = new Date();
+      const oneWeekAgo = addWeeks(now, -1);
+      const events = await getUserIcalEventsBetween(userId, {
+        start: oneWeekAgo,
+        end: now,
+      });
+      const hoursWithEvents = new Set(
+        events.flatMap((event) => {
+          const eventStart = new Date(event.start);
+          const eventEnd = new Date(event.end);
+          const hours: Date[] = [];
+          for (
+            let hour = eventStart.getTime();
+            hour < eventEnd.getTime();
+            hour += 60 * 60 * 1000
+          ) {
+            hours.push(new Date(hour));
+          }
+          return hours;
+        }),
+      );
+      const totalHours = 7 * 24 - 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
+      const busyHours = hoursWithEvents.size;
+      return busyHours / totalHours;
+    },
+    futureBusynessFraction: async (_parent, _args, context) => {
+      // Get events for the next week and calculate busyness fraction based on number of hours that have events scheduled vs total hours
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+      const userId = user.id;
+      const now = new Date();
+      const oneWeekFromNow = addWeeks(now, 1);
+      const events = await getUserIcalEventsBetween(userId, {
+        start: now,
+        end: oneWeekFromNow,
+      });
+      const hoursWithEvents = new Set(
+        events.flatMap((event) => {
+          const eventStart = new Date(event.start);
+          const eventEnd = new Date(event.end);
+          const hours: Date[] = [];
+          for (
+            let hour = eventStart.getTime();
+            hour < eventEnd.getTime();
+            hour += 60 * 60 * 1000
+          ) {
+            hours.push(new Date(hour));
+          }
+          return hours;
+        }),
+      );
+      const totalHours = 7 * 24 - 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
+      const busyHours = hoursWithEvents.size;
+      return busyHours / totalHours;
     },
     locations: async (parent) => {
       if (!parent.id) return [];
@@ -1134,6 +1196,8 @@ export const typeDefs = gql`
     sleepDebtFraction: Float
     sleepDebtFractionTimeSeries: [FloatTimeSeriesEntry!]
     availableBalance: Float
+    pastBusynessFraction: Float
+    futureBusynessFraction: Float
     # dataSources: [UserDataSource!]
   }
 
