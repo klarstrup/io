@@ -164,16 +164,16 @@ export default function DashBar() {
       {data?.user?.pastBusynessFraction ||
       data?.user?.futureBusynessFraction ? (
         <div className="flex items-center gap-1">
-          <BarIcon>📅</BarIcon>
+          <BarIcon>⏳</BarIcon>
           <BarNumberContainer>
             {data.user.pastBusynessFraction &&
               (data.user.pastBusynessFraction * 100).toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
               })}
             <span className="text-[10px]">%</span>
             <div
-              className="mx-px h-5 w-[0.5px] self-center rounded-full bg-[yellow]"
+              className="mx-1 h-5 w-[0.5px] self-center rounded-full bg-[yellow]"
               style={{
                 boxShadow:
                   "0 0 8px rgba(0, 0, 0, 0.25), 0 0 4px #edab00, 0 0 4px #edab00, 0 0 1px rgba(0, 0, 0, 1), 0 0 0.5px rgba(0, 0, 0, 1)",
@@ -183,8 +183,8 @@ export default function DashBar() {
               (data.user.futureBusynessFraction * 100).toLocaleString(
                 undefined,
                 {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 1,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
                 },
               )}
             <span className="text-[10px]">%</span>
