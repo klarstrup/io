@@ -384,7 +384,7 @@ export const resolvers: Resolvers<
       if (!user) return null;
       const userId = user.id;
       const now = new Date();
-      const oneWeekAgo = addWeeks(now, -1);
+      const oneWeekAgo = addWeeks(now, -2);
       const events = await getUserIcalEventsBetween(userId, {
         start: oneWeekAgo,
         end: now,
@@ -404,7 +404,7 @@ export const resolvers: Resolvers<
           return hours;
         }),
       );
-      const totalHours = 7 * 24 - 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
+      const totalHours = 2 * 7 * 24 - 2 * 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
     },
@@ -414,7 +414,7 @@ export const resolvers: Resolvers<
       if (!user) return null;
       const userId = user.id;
       const now = new Date();
-      const oneWeekFromNow = addWeeks(now, 1);
+      const oneWeekFromNow = addWeeks(now, 2);
       const events = await getUserIcalEventsBetween(userId, {
         start: now,
         end: oneWeekFromNow,
@@ -434,7 +434,7 @@ export const resolvers: Resolvers<
           return hours;
         }),
       );
-      const totalHours = 7 * 24 - 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
+      const totalHours = 2 * 7 * 24 - 2 * 7 * (idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
     },
