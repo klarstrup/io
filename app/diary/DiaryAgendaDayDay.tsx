@@ -29,15 +29,11 @@ import type {
   WorkoutSet,
 } from "../../graphql.generated";
 import { formatShortDuration, WorkoutSource } from "../../models/workout";
-import { DataSource } from "../../sources/utils";
 import {
   cotemporality,
   dateToString,
   dayStartHour,
-  decodeGeohash,
   DEFAULT_TIMEZONE,
-  getSunrise,
-  getSunset,
   isSameDayButItRespectsDayStartHour,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
@@ -80,23 +76,6 @@ export function DiaryAgendaDayDay({
       ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
     }
   }, [isToday]);
-
-  const tzDate = new TZDate(date, timeZone);
-
-  const userGeohash = user?.dataSources?.find(
-    (source) => source.source === DataSource.Tomorrow,
-  )?.config?.geohash;
-  const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
-  const sunrise = getSunrise(
-    userLocation?.latitude ?? 55.658693,
-    userLocation?.longitude ?? 12.489322,
-    tzDate,
-  );
-  const sunset = getSunset(
-    userLocation?.latitude ?? 55.658693,
-    userLocation?.longitude ?? 12.489322,
-    tzDate,
-  );
 
   const dayStart = addHours(startOfDay(dayDate), dayStartHour);
   const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
@@ -542,23 +521,7 @@ export function DiaryAgendaDayDay({
                   weekday: "long",
                 })}
           </b>
-          {todayStr === dayName ? (
-            <span className="ml-2 font-medium whitespace-nowrap text-white text-shadow-black/60 text-shadow-md">
-              ☀️
-              <small>
-                {sunrise.toLocaleTimeString("en-DK", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                -
-                {sunset.toLocaleTimeString("en-DK", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </small>
-              🌙
-            </span>
-          ) : (
+          {todayStr === dayName ? null : (
             <DiaryAgendaDayCreateExpander
               inactiveButtonClassName={
                 isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"
