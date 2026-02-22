@@ -138,7 +138,7 @@ export default function DashBar() {
       }}
     >
       {data?.user?.sleepDebtFractionTimeSeries ? (
-        <div className="flex items-center gap-px">
+        <div className="flex items-center gap-1">
           <BarIcon>💤</BarIcon>
           <BarNumberContainer>
             {(sleepDebt * 100).toLocaleString(undefined, {
@@ -163,7 +163,7 @@ export default function DashBar() {
       ) : null}
       {data?.user?.pastBusynessFraction ||
       data?.user?.futureBusynessFraction ? (
-        <div className="flex items-center gap-px">
+        <div className="flex items-center gap-1">
           <BarIcon>📅</BarIcon>
           <BarNumberContainer>
             {data.user.pastBusynessFraction &&
@@ -173,7 +173,7 @@ export default function DashBar() {
               })}
             <span className="text-[10px]">%</span>
             <div
-              className="mx-px h-5 w-[0.5px] self-center rounded-full bg-[yellow]/100"
+              className="mx-px h-5 w-[0.5px] self-center rounded-full bg-[yellow]"
               style={{
                 boxShadow:
                   "0 0 8px rgba(0, 0, 0, 0.25), 0 0 4px #edab00, 0 0 4px #edab00, 0 0 1px rgba(0, 0, 0, 1), 0 0 0.5px rgba(0, 0, 0, 1)",
@@ -192,7 +192,7 @@ export default function DashBar() {
         </div>
       ) : null}
       {data?.user?.weightTimeSeries ? (
-        <div className="flex items-center gap-px">
+        <div className="flex items-center gap-1">
           <BarIcon>⚖️</BarIcon>
           <BarNumberContainer>
             {weight.toLocaleString(undefined, {
@@ -216,7 +216,7 @@ export default function DashBar() {
         </div>
       ) : null}
       {data?.user?.fatRatioTimeSeries ? (
-        <div className="flex items-center gap-px">
+        <div className="flex items-center gap-1">
           <BarIcon>🤰</BarIcon>
           <BarNumberContainer>
             {fatRatio.toLocaleString(undefined, {
@@ -240,7 +240,7 @@ export default function DashBar() {
         </div>
       ) : null}
       {availableBalance ? (
-        <div className="flex items-center gap-px">
+        <div className="flex items-center gap-1">
           <BarIcon>💰</BarIcon>
           <BarNumberContainer>
             {availableBalance.toLocaleString("da", {
