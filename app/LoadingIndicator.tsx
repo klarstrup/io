@@ -10,7 +10,7 @@ export default function LoadingIndicator() {
   // Instead, conditionally render the hourglass inside the div.
 
   return (
-    <div className="pointer-events-none fixed top-4 right-4 z-50 flex items-center justify-center p-4">
+    <div className="pointer-events-none fixed top-4 right-4 z-200 flex items-center justify-center p-4">
       <span className="animate-spin text-4xl">
         {networkStatus.numPendingQueries === 0 &&
         networkStatus.numPendingMutations === 0
