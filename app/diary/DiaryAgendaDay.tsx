@@ -635,7 +635,12 @@ const getLocationFromJournalEntry = (
       return locations.find((l) => l.name === "Home") || null;
     }
   }
-  if (entry.__typename === "Event" && "location" in entry && entry.location) {
+  if (
+    entry.__typename === "Event" &&
+    "location" in entry &&
+    entry.location &&
+    entry.datetype === "date-time"
+  ) {
     for (const location of locations) {
       for (const knownAddress of location.knownAddresses || []) {
         if (entry.location.includes(knownAddress)) {
