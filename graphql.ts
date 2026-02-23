@@ -390,19 +390,22 @@ export const resolvers: Resolvers<
         end: now,
       });
       const hoursWithEvents = new Set(
-        events.flatMap((event) => {
-          const eventStart = new Date(event.start);
-          const eventEnd = new Date(event.end);
-          const hours: Date[] = [];
-          for (
-            let hour = eventStart.getTime();
-            hour < eventEnd.getTime();
-            hour += 60 * 60 * 1000
-          ) {
-            hours.push(new Date(hour));
-          }
-          return hours;
-        }),
+        events
+          // Usually all-day events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
+          .filter((event) => event.datetype === "date-time")
+          .flatMap((event) => {
+            const eventStart = new Date(event.start);
+            const eventEnd = new Date(event.end);
+            const hours: Date[] = [];
+            for (
+              let hour = eventStart.getTime();
+              hour < eventEnd.getTime();
+              hour += 60 * 60 * 1000
+            ) {
+              hours.push(new Date(hour));
+            }
+            return hours;
+          }),
       );
       const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
@@ -420,19 +423,22 @@ export const resolvers: Resolvers<
         end: oneWeekFromNow,
       });
       const hoursWithEvents = new Set(
-        events.flatMap((event) => {
-          const eventStart = new Date(event.start);
-          const eventEnd = new Date(event.end);
-          const hours: Date[] = [];
-          for (
-            let hour = eventStart.getTime();
-            hour < eventEnd.getTime();
-            hour += 60 * 60 * 1000
-          ) {
-            hours.push(new Date(hour));
-          }
-          return hours;
-        }),
+        events
+          // Usually all-day events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
+          .filter((event) => event.datetype === "date-time")
+          .flatMap((event) => {
+            const eventStart = new Date(event.start);
+            const eventEnd = new Date(event.end);
+            const hours: Date[] = [];
+            for (
+              let hour = eventStart.getTime();
+              hour < eventEnd.getTime();
+              hour += 60 * 60 * 1000
+            ) {
+              hours.push(new Date(hour));
+            }
+            return hours;
+          }),
       );
       const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
