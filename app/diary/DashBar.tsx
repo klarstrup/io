@@ -172,7 +172,15 @@ export default function DashBar() {
       {data?.user?.inboxEmailCount != undefined ? (
         <div className="flex items-center">
           <BarIcon>📧</BarIcon>
-          <BarNumberContainer>
+          <BarNumberContainer
+            className={
+              data.user.inboxEmailCount === 0
+                ? "border-green-500/50 bg-green-500/90 text-green-700"
+                : data.user.inboxEmailCount > 100
+                  ? "border-red-500/25 bg-red-500/50 text-red-700"
+                  : ""
+            }
+          >
             {data.user.inboxEmailCount.toLocaleString(undefined, {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
