@@ -5,8 +5,8 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, isFuture } from "date-fns";
 import gql from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { twMerge } from "tailwind-merge";
 import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
+import { Masonry } from "../../components/Masonry";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
 import { DataSource } from "../../sources/utils";
@@ -127,12 +127,10 @@ export default function DashBar() {
     );
 
   return (
-    <div
-      className={twMerge(
-        "select-none",
-        "gap-x-4 gap-y-0.5 overflow-auto pr-0.5",
-        "grid auto-cols-auto grid-flow-col-dense grid-cols-[repeat(auto-fit,1fr)] grid-rows-2",
-      )}
+    <Masonry
+      rows={2}
+      className="gap-y-0.5 overflow-auto pr-0.5 select-none"
+      rowProps={{ className: "gap-x-2" }}
     >
       {availableBalance ? (
         <div className="flex items-center">
@@ -285,6 +283,6 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
-    </div>
+    </Masonry>
   );
 }
