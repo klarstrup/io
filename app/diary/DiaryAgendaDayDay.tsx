@@ -1,10 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
-import {
-  faBed,
-  faBedPulse,
-  faCalendarWeek,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
+import { faBed, faBedPulse } from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
@@ -216,7 +213,7 @@ export function DiaryAgendaDayDay({
           id: client.cache.identify(event) || event.id,
           element: (
             <DiaryAgendaDayEntry
-              icon={faCalendarWeek}
+              icon={faCalendarRegular}
               cotemporality={cotemporality(event)}
               key={event.id}
             >
@@ -236,16 +233,10 @@ export function DiaryAgendaDayDay({
                 const numDays = differenceInDays(eventEnd, eventStart);
                 const isFirstDay = dayNo === 1;
                 const isLastDay = dayNo === numDays;
+
                 return (
-                  <span className="inline-flex items-stretch overflow-hidden rounded-md border border-solid border-black/20 bg-white leading-snug">
-                    {numDays > 1 ? (
-                      <div className="flex h-full flex-col items-center justify-center self-stretch bg-black/60 px-px text-xs leading-none opacity-40">
-                        <span className="px-px text-white">{dayNo}</span>
-                        <hr className="w-full border-t-[0.5px] border-solid border-white opacity-40" />
-                        <span className="px-px text-white">{numDays}</span>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center gap-1 px-1.5 py-0.5">
+                  <span className="inline-flex items-stretch leading-snug">
+                    <div className="flex items-baseline gap-1 py-0.5">
                       {numDays > 1 ? (
                         isFirstDay && event.datetype === "date-time" ? (
                           <>
@@ -268,11 +259,15 @@ export function DiaryAgendaDayDay({
                         ) : null
                       ) : null}
                       <span>{event.summary}</span>
-                      {event.location ? (
-                        <span className="text-[0.666rem] italic">
-                          {event.location}
-                        </span>
-                      ) : null}
+                      <span className="flex items-center text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
+                        {numDays > 1 ? (
+                          <>
+                            <span className="px-px">{dayNo}</span>
+                            <span className="text-[0.444rem]">/</span>
+                          </>
+                        ) : null}
+                        <span className="px-px">{numDays}d</span>
+                      </span>
                     </div>
                   </span>
                 );
