@@ -11,6 +11,7 @@ import {
   WithingsSleepSummarySeries,
 } from "../../../sources/withings.server";
 import { jsonStreamResponse } from "../scraper-utils";
+import { omit } from "../../../utils";
 
 // Could probably be derived from the request object but who cares
 const uri =
@@ -161,14 +162,19 @@ export const GET = async (req: NextRequest) => {
             { _id: new ObjectId(user!.id) },
             {
               $set: {
-                "dataSources.$[source].config.accessTokenResponse": null,
+                // We want to keep the userid lol
+                "dataSources.$[source].config.accessTokenResponse": omit(
+                  userWithingsSources.config.accessTokenResponse,
+                  "access_token",
+                  "refresh_token",
+                ),
               },
             },
             { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
           );
 
           throw new Error(
-            "Failed to refresh access token, clearing existing token",
+            "Failed to refresh access token, clearing existing tokens",
           );
         }
 
