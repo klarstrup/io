@@ -39,6 +39,7 @@ gql`
         value
       }
       availableBalance
+      inboxEmailCount
     }
   }
 `;
@@ -165,6 +166,17 @@ export default function DashBar() {
             >
               %
             </span>
+          </BarNumberContainer>
+        </div>
+      ) : null}
+      {data?.user?.inboxEmailCount ? (
+        <div className="flex items-center">
+          <BarIcon>📧</BarIcon>
+          <BarNumberContainer>
+            {data.user.inboxEmailCount.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
           </BarNumberContainer>
         </div>
       ) : null}

@@ -1,7 +1,9 @@
 import { tz } from "@date-fns/tz";
+import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
 import { addSeconds, addWeeks, isValid, startOfDay } from "date-fns";
+import { OAuth2Client } from "google-auth-library";
 import {
   type DocumentNode,
   GraphQLScalarType,
@@ -26,7 +28,7 @@ import type {
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
 import { Locations } from "./models/location.server";
-import { Users } from "./models/user.server";
+import { Accounts, Users } from "./models/user.server";
 import { type WorkoutExercise, WorkoutSource } from "./models/workout";
 import {
   getNextSet,
@@ -39,14 +41,14 @@ import {
 } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
+import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
+import { Withings } from "./sources/withings";
 import {
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
 import { pick, rangeToQuery } from "./utils";
-import { SpiirAccountGroups } from "./sources/spiir.server";
-import { Withings } from "./sources/withings";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -469,6 +471,42 @@ export const resolvers: Resolvers<
       (await getUserIcalEventsBetween(parent.id, args.interval)).map(
         (event) => ({ ...event, id: event.uid, __typename: "Event" }),
       ),
+    inboxEmailCount: async (_parent, _args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) return null;
+
+      const userGoogleAccount = await Accounts.findOne({
+        userId: new ObjectId(user.id) as unknown as string,
+        provider: "google",
+      });
+      if (!userGoogleAccount) return null;
+
+      // Authenticate with Google and get an authorized client.
+
+      const oAuth2Client = new OAuth2Client({
+        clientId: process.env.AUTH_GOOGLE_ID!,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      });
+      oAuth2Client.setCredentials({
+        access_token: userGoogleAccount.access_token,
+        refresh_token: userGoogleAccount.refresh_token,
+        token_type: userGoogleAccount.token_type,
+        scope: userGoogleAccount.scope,
+        expiry_date: userGoogleAccount.expires_at,
+        id_token: userGoogleAccount.id_token,
+      });
+
+      await oAuth2Client.getAccessToken();
+
+      const gm = gmail({ version: "v1", auth: oAuth2Client });
+
+      const { data } = await gm.users.messages.list({
+        userId: "me",
+        q: "in:inbox",
+      });
+
+      return data.messages?.length || null;
+    },
     sleeps: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
@@ -1204,6 +1242,7 @@ export const typeDefs = gql`
     availableBalance: Float
     pastBusynessFraction: Float
     futureBusynessFraction: Float
+    inboxEmailCount: Int
     # dataSources: [UserDataSource!]
   }
 
