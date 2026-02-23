@@ -31,7 +31,7 @@ export function DiaryAgendaDayNow({
         <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
       }
       cotemporality="current"
-      className="gap-1.5 pt-0.5 pb-1.5"
+      className="pt-0.5 pb-1.5"
       ref={setNodeRef}
       style={{
         transition,
@@ -51,7 +51,7 @@ export function DiaryAgendaDayNow({
         prefetch={false}
         href={`/diary/${date}/workout`}
         className={
-          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+          "mr-2 cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
         }
       >
         <span className="text-xs">➕</span> Workout
