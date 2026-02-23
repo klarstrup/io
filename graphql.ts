@@ -473,13 +473,14 @@ export const resolvers: Resolvers<
       ),
     inboxEmailCount: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
-      if (!user) return null;
+      if (!user) throw new Error("Unauthorized");
 
       const userGoogleAccount = await Accounts.findOne({
         userId: new ObjectId(user.id) as unknown as string,
         provider: "google",
       });
-      if (!userGoogleAccount) return null;
+      if (!userGoogleAccount)
+        throw new Error("Google account not found for user");
 
       // Authenticate with Google and get an authorized client.
 
@@ -505,7 +506,7 @@ export const resolvers: Resolvers<
         q: "in:inbox",
       });
 
-      return data.messages?.length || null;
+      return data.resultSizeEstimate ?? null;
     },
     sleeps: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
