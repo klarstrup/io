@@ -8,7 +8,7 @@ import {
 } from "../../../sources/climbalong.server";
 import { CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { FitocracyWorkouts } from "../../../sources/fitocracy.server";
-import { GrippyWorkoutLogs } from "../../../sources/grippy";
+import { GrippyWorkoutLogDetails } from "../../../sources/grippy";
 import {
   KilterBoardAscents,
   KilterBoardBids,
@@ -806,9 +806,18 @@ export async function* materializeGrippyWorkouts(
   yield "materializeGrippyWorkouts: start";
   const t = new Date();
 
-  await GrippyWorkoutLogs.createIndexes([{ key: { _io_userId: 1 } }]);
-  yield* GrippyWorkoutLogs.aggregate([
+  await GrippyWorkoutLogDetails.createIndexes([{ key: { _io_userId: 1 } }]);
+  yield* GrippyWorkoutLogDetails.aggregate([
     { $match: { _io_userId: user.id } },
+    {
+      $lookup: {
+        from: "grippy_workout_details",
+        localField: "workout.uuid",
+        foreignField: "uuid",
+        as: "workout",
+      },
+    },
+    { $set: { workout: { $first: "$workout" } } },
     {
       $project: {
         _id: 0,
@@ -824,32 +833,53 @@ export async function* materializeGrippyWorkouts(
         source: { $literal: WorkoutSource.Grippy },
         exercises: [
           {
-            displayName: "$workout.name",
-            exerciseId: 2006,
-            sets: [
-              {
-                createdAt: "$start_time",
-                updatedAt: "$end_time",
-                inputs: [
-                  { unit: Unit.SEC, value: "$total_hang_time" },
-                  {
-                    unit: Unit.Percent,
-                    value: { $multiply: ["$compliance", 100] },
-                  },
-                  {
-                    unit: { $toLower: "$weight_added_unit" },
-                    value: { $abs: "$weight_added" },
-                    assistType: {
-                      $cond: {
-                        if: { $gte: ["$weight_added", 0] },
-                        then: "weighted",
-                        else: "assisted",
-                      },
+            $cond: {
+              if: {
+                $regexMatch: { input: "$workout.name", regex: /Dead Hang/ },
+              },
+              then: {
+                exerciseId: 1434,
+                sets: {
+                  $map: {
+                    input: "$workout.sets",
+                    as: "set",
+                    in: {
+                      createdAt: "$start_time",
+                      updatedAt: "$end_time",
+                      inputs: [{ unit: Unit.SEC, value: "$$set.hang_time" }],
                     },
+                  },
+                },
+              },
+              else: {
+                displayName: "$workout.name",
+                exerciseId: 2006,
+                sets: [
+                  {
+                    createdAt: "$start_time",
+                    updatedAt: "$end_time",
+                    inputs: [
+                      { unit: Unit.SEC, value: "$total_hang_time" },
+                      {
+                        unit: Unit.Percent,
+                        value: { $multiply: ["$compliance", 100] },
+                      },
+                      {
+                        unit: { $toLower: "$weight_added_unit" },
+                        value: { $abs: "$weight_added" },
+                        assistType: {
+                          $cond: {
+                            if: { $gte: ["$weight_added", 0] },
+                            then: "weighted",
+                            else: "assisted",
+                          },
+                        },
+                      },
+                    ],
                   },
                 ],
               },
-            ],
+            },
           },
         ],
       },
