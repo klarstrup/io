@@ -137,6 +137,7 @@ export const exerciseIdToDataSourceMapping: Partial<
   Record<ExerciseData["id"], DataSource[]>
 > = {
   518: [DataSource.RunDouble, DataSource.Sportstiming],
+  1434: [DataSource.Grippy],
   2001: [DataSource.TopLogger, DataSource.ClimbAlong, DataSource.Onsight],
   2003: [DataSource.KilterBoard, DataSource.MoonBoard],
   2006: [DataSource.Grippy],
