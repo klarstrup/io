@@ -129,7 +129,7 @@ export default function DashBar() {
     <div
       className={twMerge(
         "select-none",
-        "gap-x-2 gap-y-0.5 overflow-auto pr-0.5",
+        "gap-x-4 gap-y-0.5 overflow-auto pr-0.5",
         "grid auto-cols-auto grid-flow-col-dense grid-cols-[repeat(auto-fit,1fr)] grid-rows-2",
       )}
     >
