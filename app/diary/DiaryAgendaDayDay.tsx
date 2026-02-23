@@ -259,11 +259,13 @@ export function DiaryAgendaDayDay({
                         ) : null
                       ) : null}
                       <span>{event.summary}</span>
-                      <span className="flex items-center text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
+                      <span className="flex items-baseline text-[0.555rem] whitespace-nowrap tabular-nums opacity-50">
                         {numDays > 1 ? (
                           <>
-                            <span className="px-px">{dayNo}</span>
-                            <span className="text-[0.444rem]">/</span>
+                            <span className="px-px text-[0.888rem]">
+                              {dayNo}
+                            </span>
+                            <span>/</span>
                           </>
                         ) : null}
                         <span className="px-px">{numDays}d</span>
@@ -549,7 +551,7 @@ export function DiaryAgendaDayDay({
         </div>
       }
       className={
-        "mb-1 flex flex-0! max-w-lg mx-auto flex-col items-stretch gap-1.5 pr-1 pb-2 pl-0 " +
+        "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-2 pl-0 " +
         ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
           ? "bg-green-50 pt-1"
           : todayStr === dayName
