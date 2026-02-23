@@ -1,6 +1,6 @@
 "use client";
-import { tz, TZDate } from "@date-fns/tz";
-import { formatDistanceStrict, startOfDay } from "date-fns";
+import { TZDate } from "@date-fns/tz";
+import { formatDistanceStrict } from "date-fns";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { useEffect } from "react";
@@ -28,7 +28,7 @@ export function NextSets({
   showDetails?: boolean;
   showDueDate?: boolean;
 }) {
-  const tzDate = new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE);
+  const now = TZDate.tz(user?.timeZone || DEFAULT_TIMEZONE);
 
   useEffect(() => {
     const queryExerciseScheduleId = new URLSearchParams(
@@ -125,13 +125,9 @@ export function NextSets({
                         href={`/diary/${new Date(workedOutAt).toISOString().slice(0, 10)}`}
                         style={{ color: "#edab00" }}
                       >
-                        {formatDistanceStrict(
-                          startOfDay(workedOutAt, {
-                            in: tz(user?.timeZone || DEFAULT_TIMEZONE),
-                          }),
-                          startOfDay(tzDate),
-                          { addSuffix: true, roundingMethod: "floor" },
-                        )}
+                        {formatDistanceStrict(workedOutAt, now, {
+                          addSuffix: true,
+                        })}
                       </Link>
                     ) : (
                       "never"
@@ -141,10 +137,9 @@ export function NextSets({
                   {showDueDate && exerciseSchedule?.frequency && workedOutAt ? (
                     <span className="text-xs">
                       , due{" "}
-                      {formatDistanceStrict(dueSet.dueOn, date, {
+                      {formatDistanceStrict(dueSet.dueOn, now, {
                         addSuffix: true,
                         roundingMethod: "floor",
-                        unit: "day",
                       })}
                     </span>
                   ) : null}
