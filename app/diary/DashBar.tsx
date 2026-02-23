@@ -169,7 +169,7 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
-      {data?.user?.inboxEmailCount ? (
+      {data?.user?.inboxEmailCount != undefined ? (
         <div className="flex items-center">
           <BarIcon>📧</BarIcon>
           <BarNumberContainer>
