@@ -501,7 +501,9 @@ export function DiaryAgendaDayDay({
       ref={ref}
       legend={
         <div className="-ml-1 flex items-center gap-1 leading-normal">
-          <span
+          <Link
+            href="/calendar"
+            prefetch={false}
             className={
               "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums text-shadow-md text-shadow-white"
             }
@@ -510,7 +512,7 @@ export function DiaryAgendaDayDay({
               month: "numeric",
               day: "numeric",
             })}
-          </span>
+          </Link>
           <b className="text-shadow-md text-shadow-white">
             {isToday
               ? "Today"
