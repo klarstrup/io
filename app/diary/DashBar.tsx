@@ -186,29 +186,35 @@ export default function DashBar() {
           </BarNumberContainer>
         </div>
       ) : null}
-      {data?.user?.pastBusynessFraction ||
-      data?.user?.futureBusynessFraction ? (
-        <div className="flex items-center">
+      {data?.user?.pastBusynessFraction != undefined &&
+      data?.user?.futureBusynessFraction != undefined ? (
+        <div
+          className="flex items-center"
+          title={
+            `Past busyness: ${(
+              data.user.pastBusynessFraction * 100
+            ).toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}%\n` +
+            `Future busyness: ${(
+              data.user.futureBusynessFraction * 100
+            ).toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}%`
+          }
+        >
           <BarIcon>🐝</BarIcon>
           <BarNumberContainer>
-            {data.user.pastBusynessFraction &&
-              (data.user.pastBusynessFraction * 100).toLocaleString(undefined, {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            <span className="text-[10px]">%</span>
-            <div
-              className="mx-1 h-5 w-[0.5px] self-center rounded-full bg-[yellow]"
-              style={{
-                boxShadow:
-                  "0 0 8px rgba(0, 0, 0, 0.25), 0 0 4px #edab00, 0 0 4px #edab00, 0 0 1px rgba(0, 0, 0, 1), 0 0 0.5px rgba(0, 0, 0, 1)",
-              }}
-            />
-            {data.user.futureBusynessFraction &&
-              (data.user.futureBusynessFraction * 100).toLocaleString(
-                undefined,
-                { minimumFractionDigits: 0, maximumFractionDigits: 0 },
-              )}
+            {(
+              (data.user.futureBusynessFraction -
+                data.user.pastBusynessFraction) *
+              100
+            ).toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
             <span className="text-[10px]">%</span>
           </BarNumberContainer>
         </div>
