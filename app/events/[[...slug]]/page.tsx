@@ -76,13 +76,12 @@ async function loadMoreData(cursor: string) {
   const events = await getData(disciplines, { from, to });
 
   return [
-    <Suspense>
+    <Suspense key={JSON.stringify({ disciplines, from, to })}>
       <TimelineEventsList
         from={from}
         to={to}
         disciplines={disciplines}
         events={events}
-        key={JSON.stringify({ disciplines, from, to })}
       />
     </Suspense>,
     JSON.stringify({

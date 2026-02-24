@@ -9,8 +9,6 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     iconTxt,
     iconDisabled,
     children,
-    isActive,
-    isDragging,
     onContentClick,
     onIconClick,
     cotemporality,
@@ -24,8 +22,6 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     iconTxt?: string | ReactElement;
     iconDisabled?: boolean;
     children: React.ReactNode;
-    isActive?: boolean;
-    isDragging?: boolean;
     onContentClick?: () => void;
     onIconClick?: (
       e: React.MouseEvent<HTMLButtonElement | HTMLDivElement, MouseEvent>,

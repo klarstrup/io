@@ -48,7 +48,6 @@ export function DiaryAgendaDayEventEnd({
       }}
       {...listeners}
       {...attributes}
-      isDragging={isDragging}
       icon={faArrowsDownToLine}
       cotemporality={cotemporality(event)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}

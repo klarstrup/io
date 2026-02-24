@@ -89,7 +89,6 @@ export function DiaryAgendaDayWorkoutSet({
       }}
       {...listeners}
       {...attributes}
-      isDragging={isDragging}
       onIconClick={
         mostRecentWorkout &&
         (mostRecentWorkout.source === WorkoutSource.Self ||

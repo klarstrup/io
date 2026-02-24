@@ -911,7 +911,7 @@ const objectHandlers = {
           curr.rrule.origOptions.bymonthday
       ) {
         curr.rrule.origOptions.bymonthday =
-          curr.rrule.origOptions.dtstart?.getUTCDate()!;
+          curr.rrule.origOptions.dtstart?.getUTCDate();
 
         curr.rrule = new RRule(curr.rrule.origOptions);
       }

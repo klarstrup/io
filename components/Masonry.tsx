@@ -30,13 +30,13 @@ type PropsToOmit<T extends ElementType, P> = keyof (AsProp<T> & P);
 
 type PolymorphicComponentProp<
   T extends ElementType,
-  Props = {},
+  Props = object,
 > = PropsWithChildren<Props & AsProp<T>> &
   Omit<ComponentPropsWithoutRef<T>, PropsToOmit<T, Props>>;
 
 type PolymorphicComponentPropWithRef<
   T extends ElementType,
-  Props = {},
+  Props = object,
 > = PolymorphicComponentProp<T, Props> & { ref?: PolymorphicRef<T> };
 
 type PolymorphicRef<T extends ElementType> = ComponentPropsWithRef<T>["ref"];
@@ -44,7 +44,7 @@ type PolymorphicRef<T extends ElementType> = ComponentPropsWithRef<T>["ref"];
 type MasonryOwnProps<T extends ElementType> = {
   rows?: Columns;
   gap?: number;
-  rowProps?: PolymorphicComponentPropWithRef<T, {}>;
+  rowProps?: PolymorphicComponentPropWithRef<T, object>;
 };
 type MasonryProps<T extends ElementType> = PolymorphicComponentPropWithRef<
   T,

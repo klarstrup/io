@@ -48,7 +48,6 @@ export function DiaryAgendaDayLocationChange({
       }}
       {...listeners}
       {...attributes}
-      isDragging={isDragging}
       key={locationChange.id}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={className}

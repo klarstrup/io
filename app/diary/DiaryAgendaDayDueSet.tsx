@@ -13,7 +13,6 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
-import type { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
@@ -89,20 +88,16 @@ export function DiaryAgendaDayDueSet({
 export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
   function DiaryAgendaDayDueSetButItsNotDraggable(
     {
-      user,
       dueSet,
       exerciseInfo,
-      date,
       workouts,
       locations,
       isDragging,
       cotemporalityOfSurroundingEvent,
       ...props
     }: {
-      user: Session["user"];
       dueSet: NextSet;
       exerciseInfo: ExerciseInfo;
-      date: Date;
       workouts?: Workout[];
       locations?: Location[];
       isDragging: boolean;

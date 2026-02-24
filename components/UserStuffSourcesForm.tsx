@@ -262,6 +262,7 @@ function UserStuffSourceForm({
             Auth Tokens:
             <input
               type="text"
+              // eslint-disable-next-line react-hooks/incompatible-library
               value={JSON.stringify(watch("config.authTokens"))}
               onChange={(e) => {
                 const value = e.target.value;

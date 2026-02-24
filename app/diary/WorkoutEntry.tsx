@@ -1,39 +1,17 @@
 import Link from "next/link";
 import { ExerciseName } from "../../components/ExerciseName";
 import { FieldSetX } from "../../components/FieldSet";
-import { Workout, WorkoutSet } from "../../graphql.generated";
+import { Workout } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import {
   ClimbingStats,
   isClimbingExercise,
-  type WorkoutExerciseSet,
-  type WorkoutExerciseSetInput,
   WorkoutSource,
 } from "../../models/workout";
 import { dateToString } from "../../utils";
 import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
 import { WorkoutEntryExercise } from "./WorkoutEntryExercise";
-
-const average = (arr: number[]) => arr.reduce((a, b) => a + b) / arr.length;
-
-const asc = (arr: number[]) => arr.sort((a: number, b: number) => a - b);
-const desc = (arr: number[]) => arr.sort((a: number, b: number) => b - a);
-const quantile = (arr: number[], q: number) => {
-  const sorted = asc(arr);
-
-  let pos = (sorted.length - 1) * q;
-  if (pos % 1 === 0) {
-    return sorted[pos]!;
-  }
-
-  pos = Math.floor(pos);
-  if (sorted[pos + 1] !== undefined) {
-    return (sorted[pos]! + sorted[pos + 1]!) / 2;
-  }
-
-  return sorted[pos]!;
-};
 
 export default function WorkoutEntry({
   showDate,
@@ -120,6 +98,7 @@ export default function WorkoutEntry({
                     </Link>
                     {workoutDateStr !== dateToString(new Date()) &&
                     // disable for now until fixed
+                    // eslint-disable-next-line react-hooks/purity
                     Math.random() > 1 ? (
                       <>
                         {" "}
@@ -227,17 +206,3 @@ export default function WorkoutEntry({
     </FieldSetX>
   );
 }
-const isEquivalentSet = (
-  setA: WorkoutExerciseSet | WorkoutSet,
-  setB: WorkoutExerciseSet | WorkoutSet,
-) => {
-  for (const [index, aInput] of Object.entries(setA.inputs)) {
-    const bInput = setB.inputs[index] as WorkoutExerciseSetInput;
-    for (const key in aInput) {
-      if (key !== "id" && aInput[key] !== bInput[key]) return false;
-    }
-  }
-  if (setA.comment !== setB.comment) return false;
-
-  return true;
-};

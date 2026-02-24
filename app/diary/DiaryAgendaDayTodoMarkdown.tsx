@@ -20,7 +20,7 @@ export function DiaryAgendaDayTodoMarkdown({
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
-          li({ node, ...props }) {
+          li({ node: _node, ...props }) {
             const isTaskItem = props.className?.includes("task-list-item");
             if (isTaskItem) {
               const [checkbox, ...restChildren] = Children.toArray(
@@ -37,7 +37,7 @@ export function DiaryAgendaDayTodoMarkdown({
             }
             return <li {...props} />;
           },
-          input({ node, ...props }) {
+          input({ node: _node, ...props }) {
             if (props.type === "checkbox") {
               return (
                 <input

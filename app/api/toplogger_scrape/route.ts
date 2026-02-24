@@ -1,7 +1,7 @@
 import { addDays, isFuture, subDays } from "date-fns";
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
-import { connection, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";

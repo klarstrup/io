@@ -120,11 +120,7 @@ async function* fetchSertBids(
   yield { bids };
 }
 
-async function* fetchSertClimbs(
-  token: string,
-  setUpdated: SetUpdatedFn,
-  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
-) {
+async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
   await KilterBoardClimbs.createIndexes([{ key: { created_at: -1 } }]);
   const newestClimbInDatabase = await KilterBoardClimbs.findOne(
     {},
@@ -174,11 +170,7 @@ async function* fetchSertClimbs(
   }
 }
 
-async function* fetchSertClimbStats(
-  token: string,
-  setUpdated: SetUpdatedFn,
-  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
-) {
+async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
   await KilterBoardClimbStats.createIndexes([
     { key: { climb_uuid: 1, angle: 1 }, unique: true },
     { key: { created_at: -1 } },
@@ -254,7 +246,6 @@ const fetchers = [
 ];
 
 export const GET = () =>
-  // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });

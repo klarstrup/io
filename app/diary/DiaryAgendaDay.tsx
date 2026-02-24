@@ -585,6 +585,7 @@ export function DiaryAgendaDay() {
                   location: location.name,
                   date: targetDate,
                 });
+                // eslint-disable-next-line react-hooks/immutability
                 lastLocation = location;
               }
 

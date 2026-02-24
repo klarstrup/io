@@ -265,7 +265,7 @@ export async function updateUserDataSource<
 
   return (await Users.findOne({
     _id: new ObjectId(user.id),
-  }))!.dataSources?.find((source) => source.id === dataSourceId)!;
+  }))!.dataSources!.find((source) => source.id === dataSourceId)!;
 }
 
 export async function updateLocation(

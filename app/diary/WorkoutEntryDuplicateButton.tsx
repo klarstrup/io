@@ -1,11 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Workout } from "../../graphql.generated";
 
 export function WorkoutEntryDuplicateButton({ workout }: { workout: Workout }) {
-  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
 
   return (

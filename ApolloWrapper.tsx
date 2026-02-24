@@ -40,6 +40,7 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
       cache,
       link:
         typeof window === "undefined"
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           ? new SchemaLink({ schema: require("./graphql.ts").schema })
           : link.concat(
               new HttpLink({

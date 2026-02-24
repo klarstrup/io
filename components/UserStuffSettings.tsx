@@ -50,7 +50,6 @@ export default async function UserStuffSettings() {
         <a href="/api/auth/signout">Sign out</a>
       </p>
       <FieldSetX legend="Settings">
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
         <form action={updateUser}>
           <input
             type="submit"

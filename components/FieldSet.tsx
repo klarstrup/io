@@ -28,7 +28,7 @@ export const FieldSetX = forwardRef<
   HTMLProps<HTMLFieldSetElement> & {
     legend: HTMLProps<HTMLFieldSetElement>["children"];
   }
->(({ children, legend, className, ...props }, ref) => {
+>(function FieldSetX({ children, legend, className, ...props }, ref) {
   return (
     <fieldset
       ref={ref}

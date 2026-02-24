@@ -181,6 +181,7 @@ function UserStuffLocationForm({
                   return null;
                 }
 
+                // eslint-disable-next-line react-hooks/incompatible-library
                 const deletedAt = watch(`boulderCircuits.${index}.deletedAt`);
                 return (
                   <tr

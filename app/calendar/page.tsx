@@ -28,6 +28,7 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 
   return [
     <Suspense
+      key={JSON.stringify({ start, end })}
       fallback={weeks.map((weekDate) => (
         <DiaryEntryWeek
           key={String(weekDate)}

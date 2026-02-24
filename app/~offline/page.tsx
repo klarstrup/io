@@ -6,11 +6,6 @@ export default function Offline() {
         It seems you have lost your internet connection. Please check your
         connection and try again.
       </p>
-      <img
-        src="/offline-illustration.png"
-        alt="Offline Illustration"
-        className="w-64"
-      />
     </div>
   );
 }

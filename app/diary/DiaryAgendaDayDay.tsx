@@ -415,9 +415,7 @@ export function DiaryAgendaDayDay({
         element: (
           <DiaryAgendaDayDueSet
             key={dueSet.id}
-            user={user!}
             dueSet={dueSet}
-            date={dayDate}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
             workouts={dayJournalEntries

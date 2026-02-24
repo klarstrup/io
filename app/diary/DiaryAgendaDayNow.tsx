@@ -45,7 +45,6 @@ export function DiaryAgendaDayNow({
       }}
       {...listeners}
       {...attributes}
-      isDragging={isDragging}
     >
       <Link
         prefetch={false}

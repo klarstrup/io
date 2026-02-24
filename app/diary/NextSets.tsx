@@ -13,7 +13,6 @@ import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 export function NextSets({
   user,
-  date,
   nextSets,
   onAddExerciseAction,
   onSnoozeDueSetAction,
@@ -21,7 +20,6 @@ export function NextSets({
   showDueDate = false,
 }: {
   user?: Session["user"];
-  date: `${number}-${number}-${number}`;
   nextSets: NextSet[];
   onAddExerciseAction?: (dueSet: NextSet) => void;
   onSnoozeDueSetAction?: (dueSet: NextSet) => void;

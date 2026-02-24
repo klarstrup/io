@@ -12,6 +12,7 @@ export function DiaryPoller({ userId }: { userId: string }) {
   const client = useApolloClient();
 
   if (process.env.NODE_ENV === "development" && Math.random() > 2) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     usePartySocket({
       host: "ws://localhost:1337/_next/webpack-hmr?id=" + id,
       room: "diary-poller-" + id,

@@ -31,8 +31,8 @@ export function useEvent<TCallback extends AnyFunction>(
   // Create a stable callback that always calls the latest callback:
   // using useRef instead of useCallback avoids creating and empty array on every render
   const stableRef = useRef<TCallback>(null as unknown as TCallback);
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!stableRef.current) {
+    // eslint-disable-next-line react-hooks/unsupported-syntax
     stableRef.current = function (this: unknown) {
       // eslint-disable-next-line prefer-rest-params
       return latestRef.current.apply(this, arguments) as unknown;
@@ -413,6 +413,7 @@ export function usePageVisibility() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPageVisible(document.visibilityState === "visible");
 
     function onVisibilityChange() {

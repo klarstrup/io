@@ -58,8 +58,6 @@ function UserStuffWorkoutScheduleForm({
     handleSubmit,
     register,
     reset,
-    control,
-    watch,
     formState: { isDirty, isSubmitting },
   } = useForm<ExerciseSchedule>({
     defaultValues: exerciseScheduleForForm(exerciseSchedule),

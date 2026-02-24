@@ -22,6 +22,7 @@ export function DistanceToNowStrict({
     setState({});
   }, 1000);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({});
   }, []);
 
@@ -51,7 +52,7 @@ export function DistanceToNow({ date }: { date: Date }) {
 }
 
 export function DistanceToNowShort({ date }: { date: Date }) {
-  const [start, setNow] = useState(Date.now());
+  const [start, setNow] = useState(() => Date.now());
 
   useInterval(() => {
     setNow(Date.now());

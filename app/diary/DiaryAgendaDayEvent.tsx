@@ -85,7 +85,6 @@ export function DiaryAgendaDayEvent({
       }}
       {...listeners}
       {...attributes}
-      isDragging={isDragging}
       key={event.id}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventWithSeparatedEnd={isEventWithSeparatedEnd}

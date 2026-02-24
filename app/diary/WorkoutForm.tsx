@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
 import { useQuery } from "@apollo/client/react";
@@ -198,7 +197,6 @@ export function WorkoutForm<R extends string>({
     register,
     reset,
     control,
-    watch,
     getValues,
     setValue,
     formState: { isDirty, isSubmitting },
@@ -238,12 +236,12 @@ export function WorkoutForm<R extends string>({
         ?.filter((nextSet) => isNextSetDue(tzDate, nextSet))
         .filter(
           (nextSet) =>
-            !watch("exercises")?.some(
+            !getValues("exercises")?.some(
               (exerciseValue) =>
                 exerciseValue.exerciseId === nextSet.exerciseId,
             ),
         ),
-    [nextSets, tzDate, watch],
+    [getValues, nextSets, tzDate],
   );
 
   const futureSets = useMemo(
@@ -252,7 +250,7 @@ export function WorkoutForm<R extends string>({
         ?.filter((nextSet) => !isNextSetDue(tzDate, nextSet))
         .filter(
           (nextSet) =>
-            !watch("exercises")?.some(
+            !getValues("exercises")?.some(
               (exerciseValue) =>
                 exerciseValue.exerciseId === nextSet.exerciseId,
             ),
@@ -269,7 +267,7 @@ export function WorkoutForm<R extends string>({
             ),
           ),
         ),
-    [nextSets, tzDate, watch],
+    [nextSets, tzDate, getValues],
   );
 
   const handleAddExercise = useEvent((dueSet: NextSet) => {
@@ -335,7 +333,7 @@ export function WorkoutForm<R extends string>({
   const locationInstanceId = useId();
 
   const location = locations?.find(
-    (location) => watch("locationId") === location.location._id,
+    (location) => getValues("locationId") === location.location._id,
   );
 
   console.log(
@@ -661,7 +659,6 @@ export function WorkoutForm<R extends string>({
             <b>Due Sets:</b>
             <NextSets
               user={user}
-              date={date}
               nextSets={dueSets}
               onAddExerciseAction={handleAddExercise}
               onSnoozeDueSetAction={handleSnoozeDueSet}
@@ -674,7 +671,6 @@ export function WorkoutForm<R extends string>({
               <b>Future Sets:</b>
               <NextSets
                 user={user}
-                date={date}
                 nextSets={futureSets}
                 onAddExerciseAction={handleAddExercise}
                 showDueDate

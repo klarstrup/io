@@ -26,6 +26,7 @@ export default function ApolloFucker() {
 
   const visibilityRef = useRef(isPageVisible);
   const lastVisibilityFetchRef = useRef(
+    // eslint-disable-next-line react-hooks/purity
     typeof window !== "undefined" ? Date.now() : 0,
   );
   useEffect(() => {

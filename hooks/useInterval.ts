@@ -20,7 +20,6 @@ export default function useInterval<A = unknown>(
       const id = setInterval(tick, delay);
       return () => clearInterval(id);
     }
-    // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [delay]);
 }

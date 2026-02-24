@@ -69,9 +69,6 @@ export const GET = () =>
       async function* ({ config: { authTokens }, ...source }, setUpdated) {
         setUpdated(false);
 
-        let headers: HeadersInit = {
-          authorization: `Bearer ${authTokens.access_token}`,
-        };
         yield { authTokens };
 
         yield "refreshing token";
