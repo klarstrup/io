@@ -13,7 +13,6 @@ import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 export const maxDuration = 45;
 
 export const GET = () =>
-  // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
