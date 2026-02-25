@@ -122,6 +122,9 @@ const customCollisionDetectionAlgorithm: CollisionDetection = ({
         String(id).startsWith("droppable-day-") &&
         data.current &&
         "date" in data.current &&
+        (typeof data.current.date === "string" ||
+          typeof data.current.date === "number" ||
+          isDate(data.current.date)) &&
         !isSameDayButItRespectsDayStartHour(
           data.current.date,
           dateBeingDragged,
@@ -143,6 +146,9 @@ const customCollisionDetectionAlgorithm: CollisionDetection = ({
         !String(id).startsWith("droppable-day-") &&
         data.current &&
         "date" in data.current &&
+        (typeof data.current.date === "string" ||
+          typeof data.current.date === "number" ||
+          isDate(data.current.date)) &&
         isSameDayButItRespectsDayStartHour(data.current.date, dateBeingDragged),
     ),
   });

@@ -126,7 +126,9 @@ export function GraphQLListener() {
 
   useChannel({ channelName: "GraphQL:" + user?.id, skip: !user }, (message) => {
     console.log("Ably:", message);
-    messageToGraphQLUpdate(client, message.data);
+    if (typeof message.data === "string") {
+      messageToGraphQLUpdate(client, message.data);
+    }
   });
 
   return null;
