@@ -35,14 +35,14 @@ export default function ListPage() {
       const aDate = a.start
         ? new Date(a.start)
         : a.due
-          ? new Date(a.due!)
+          ? new Date(a.due)
           : null;
       const bDate = b.start
         ? new Date(b.start)
         : b.due
-          ? new Date(b.due!)
+          ? new Date(b.due)
           : null;
-
+      
       if (aDate && bDate) {
         return bDate.getTime() - aDate.getTime();
       } else if (aDate) {

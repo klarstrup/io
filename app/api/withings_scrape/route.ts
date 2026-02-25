@@ -86,7 +86,7 @@ export const GET = async (req: NextRequest) => {
 
     if (accessTokenResponse.access_token) {
       await Users.updateOne(
-        { _id: new ObjectId(user!.id) },
+        { _id: new ObjectId(user.id) },
         {
           $set: {
             "dataSources.$[source].config.accessTokenResponse": {
@@ -97,7 +97,7 @@ export const GET = async (req: NextRequest) => {
             },
           },
         },
-        { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+        { arrayFilters: [{ "source.id": userWithingsSources.id }] },
       );
 
       return new NextResponse("Access token obtained and saved");
@@ -142,7 +142,7 @@ export const GET = async (req: NextRequest) => {
 
         if (refreshTokenResponse.access_token) {
           await Users.updateOne(
-            { _id: new ObjectId(user!.id) },
+            { _id: new ObjectId(user.id) },
             {
               $set: {
                 "dataSources.$[source].config.accessTokenResponse": {
@@ -153,13 +153,13 @@ export const GET = async (req: NextRequest) => {
                 },
               },
             },
-            { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+            { arrayFilters: [{ "source.id": userWithingsSources.id }] },
           );
 
           accessTokenResponse = refreshTokenResponse;
         } else {
           await Users.updateOne(
-            { _id: new ObjectId(user!.id) },
+            { _id: new ObjectId(user.id) },
             {
               $set: {
                 // We want to keep the userid lol
@@ -170,7 +170,7 @@ export const GET = async (req: NextRequest) => {
                 ),
               },
             },
-            { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+            { arrayFilters: [{ "source.id": userWithingsSources.id }] },
           );
 
           throw new Error(
@@ -234,13 +234,13 @@ export const GET = async (req: NextRequest) => {
               getMeasureGroupsOffset += measureResponse.body.measuregrps.length;
             } else if (getMeasureGroupsOffset > 0) {
               await Users.updateOne(
-                { _id: new ObjectId(user!.id) },
+                { _id: new ObjectId(user.id) },
                 {
                   $set: {
                     "dataSources.$[source].config.backfilledMeasureGroups": true,
                   },
                 },
-                { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+                { arrayFilters: [{ "source.id": userWithingsSources.id }] },
               );
 
               break;
@@ -306,13 +306,13 @@ export const GET = async (req: NextRequest) => {
               getSleepSummaryOffset += sleepSummaryResponse.body.series.length;
             } else if (getSleepSummaryOffset > 0) {
               await Users.updateOne(
-                { _id: new ObjectId(user!.id) },
+                { _id: new ObjectId(user.id) },
                 {
                   $set: {
                     "dataSources.$[source].config.backfilledSleepSummaries": true,
                   },
                 },
-                { arrayFilters: [{ "source.id": userWithingsSources!.id }] },
+                { arrayFilters: [{ "source.id": userWithingsSources.id }] },
               );
 
               break;

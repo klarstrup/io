@@ -16,7 +16,7 @@ export default class Cache<T> {
     let data: PersistedData<T> = this.cache.extract() as T;
 
     if (this.serialize) {
-      data = JSON.stringify(data) as string;
+      data = JSON.stringify(data);
     }
 
     return data;

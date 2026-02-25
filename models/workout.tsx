@@ -14,7 +14,6 @@ import type {
   NextSet,
   Workout,
   WorkoutSet,
-  WorkoutSetMeta,
 } from "../graphql.generated";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
@@ -249,7 +248,7 @@ export const climbingExerciseInputs = [
   },
 ] as const;
 
-const colorOptions = climbingExerciseInputs[1]!.options!;
+const colorOptions = climbingExerciseInputs[1].options;
 export const getCircuitByLocationAndSetColor = (
   exercise: ExerciseData,
   set: Omit<WorkoutExerciseSet, "inputs"> & {
@@ -298,12 +297,10 @@ export const getSetMeta = (
   if (!set.meta) return undefined;
 
   if (Array.isArray(set.meta)) {
-    const metaItem = (set.meta as WorkoutSetMeta[]).find((m) => m.key === key);
-    return metaItem?.value as string | undefined;
+    const metaItem = set.meta.find((m) => m.key === key);
+    return metaItem?.value;
   } else {
-    if (key in set.meta) {
-      return set.meta[key] as string;
-    }
+    if (key in set.meta) return set.meta[key] as string | undefined;
   }
 
   return undefined;

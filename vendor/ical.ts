@@ -370,7 +370,7 @@ const getTimeZone = (value: string) => {
 
   // Timezone not confirmed yet
   if (found === "")
-    found = !Number.isNaN(tzOffset(tz!, new Date())) ? tz! : null;
+    found = !Number.isNaN(tzOffset(tz, new Date())) ? tz! : null;
 
   return found === "" ? tz : found;
 };
@@ -462,7 +462,6 @@ const dateParameter =
         // Apply offset
         if (tz) newDate = addMinutes(newDate, -tzOffset(tz, newDate));
 
-        newDate = newDate as DateWithTimeZone;
         newDate.tz = tz;
 
         return storeValueParameter(name)(addTZ(newDate, parameters), curr);
@@ -878,7 +877,7 @@ const objectHandlers = {
             let timeString = curr.start.toISOString().replace(/[-:]/g, "");
             // If the original date has a TZID, add it
             if (curr.start.tz) {
-              const tz = getTimeZone(curr.start.tz!)!;
+              const tz = getTimeZone(curr.start.tz)!;
               const tzDate = new Date(curr.start);
               timeString = tzDate.toISOString().replace(/[-:]/g, "");
 

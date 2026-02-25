@@ -368,7 +368,7 @@ function ProblemBadge({
   );
 }
 
-const colorOptions = climbingExerciseInputs[1]!.options!;
+const colorOptions = climbingExerciseInputs[1].options;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet | WorkoutSet,

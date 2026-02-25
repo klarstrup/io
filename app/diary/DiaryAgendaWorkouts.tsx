@@ -59,7 +59,7 @@ export async function DiaryAgendaWorkouts({
               undefined;
 
             const exerciseData = exercisesById.get(
-              workout.exercises[0]!.exerciseId!,
+              workout.exercises[0]!.exerciseId,
             );
 
             if (!exerciseData) {
