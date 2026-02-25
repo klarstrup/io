@@ -1,4 +1,3 @@
-/* eslint-disable no-unexpected-multiline */
 import { tz } from "@date-fns/tz";
 import {
   addHours,

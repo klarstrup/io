@@ -83,6 +83,9 @@ const eslintConfig = defineConfig([
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+
+
+      "no-unexpected-multiline": "error",
     },
   },
   globalIgnores([
