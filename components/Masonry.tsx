@@ -21,7 +21,7 @@ import { twMerge } from "tailwind-merge";
 type BreakPoints = Record<number, number> | Array<number | undefined>;
 type BreakPointsArray = Array<number | undefined>;
 
-type BreakPointSpec = BreakPoints | BreakPointsArray;
+type BreakPointSpec = BreakPoints;
 type Columns = number | BreakPointSpec;
 
 type AsProp<T extends ElementType> = { as?: T };

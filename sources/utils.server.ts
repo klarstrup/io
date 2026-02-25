@@ -40,7 +40,7 @@ export async function* wrapSources<
     const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
 
     const attemptedAt = new Date();
-    let updatedDatabase: boolean | null | undefined | void = null;
+    let updatedDatabase: boolean | null | undefined = null;
     await Users.updateOne(
       filter,
       { $set: { "dataSources.$[source].lastAttemptedAt": attemptedAt } },

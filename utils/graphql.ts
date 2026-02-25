@@ -190,7 +190,7 @@ export type NormFieldValue =
 export interface NormFieldValueArray extends ReadonlyArray<NormFieldValue> {}
 
 export interface NormObj {
-  readonly [field: string]: null | NormFieldValue | Reference;
+  readonly [field: string]: NormFieldValue | Reference;
 }
 
 function getDocumentDefinitions(
@@ -282,7 +282,7 @@ function expandFragments(
 function resolveValueNode(
   valueNode: ValueNode,
   variables: Variables | undefined,
-): string | boolean | number | ReadonlyArray<unknown> | object | null {
+): string | boolean | number | object | null {
   switch (valueNode.kind) {
     case Kind.VARIABLE:
       return variables![valueNode.name.value]!;

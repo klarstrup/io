@@ -436,8 +436,7 @@ export function DiaryAgendaDay() {
     }
   }
 
-  let lastLocation: ReturnType<typeof getLocationFromJournalEntry> | null =
-    null;
+  let lastLocation: ReturnType<typeof getLocationFromJournalEntry> = null;
 
   return (
     <div className="flex flex-col items-stretch justify-start">

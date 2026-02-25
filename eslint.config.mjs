@@ -44,7 +44,7 @@ const eslintConfig = defineConfig([
       ],
       "@typescript-eslint/no-namespace": "error",
       "@typescript-eslint/no-non-null-asserted-optional-chain": "error",
-      // "@typescript-eslint/no-redundant-type-constituents": "error",
+      "@typescript-eslint/no-redundant-type-constituents": "error",
       "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/no-this-alias": "error",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
