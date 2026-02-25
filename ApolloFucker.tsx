@@ -37,7 +37,7 @@ export default function ApolloFucker() {
 
       lastVisibilityFetchRef.current = now;
       console.log("Page became visible, refetching active queries");
-      client.refetchQueries({ include: "active" });
+      void client.refetchQueries({ include: "active" });
     }
 
     visibilityRef.current = isPageVisible;

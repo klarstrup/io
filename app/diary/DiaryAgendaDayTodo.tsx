@@ -92,7 +92,7 @@ export const DiaryAgendaDayTodo =
         summary.trim().length > 0 &&
         summary.trim() !== todo.summary?.trim()
       ) {
-        updateTodo({
+        void updateTodo({
           variables: {
             input: { id: todo.id, data: { summary: summary.trim() } },
           },

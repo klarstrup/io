@@ -61,7 +61,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
     const formData = formRef.current && new FormData(formRef.current);
     const summary = formData?.get("summary");
     if (summary && typeof summary === "string" && summary.trim().length > 0) {
-      formRef.current && handleFormSubmit(formRef.current);
+      if (formRef.current) void handleFormSubmit(formRef.current);
     } else {
       setIsActive(false);
     }
@@ -97,7 +97,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
             ref={formRef}
             onSubmit={(e) => {
               e.preventDefault();
-              formRef.current && handleFormSubmit(formRef.current);
+              if (formRef.current) void handleFormSubmit(formRef.current);
             }}
           >
             <div className="flex min-w-50 flex-col items-stretch rounded-b-md border border-t-0 border-black/5 bg-white p-1">

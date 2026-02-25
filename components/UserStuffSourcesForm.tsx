@@ -104,7 +104,7 @@ function UserStuffSourceForm({
                   router.refresh();
                   await promise;
                   router.refresh();
-                  client.refetchQueries({ include: "all" });
+                  void client.refetchQueries({ include: "all" });
                 }}
               >
                 🔄
@@ -526,8 +526,8 @@ function UserStuffSourceForm({
         reset(updatedSource);
         setIsEditing(false);
         router.refresh();
-        client.refetchQueries({ include: "all" });
-        update();
+        void client.refetchQueries({ include: "all" });
+        void update();
       })}
       className="flex w-full max-w-full flex-col items-stretch gap-1"
     >
@@ -678,7 +678,7 @@ function UserStuffSourceCreateForm({
             .then(() => {
               setIsSubmitting(false);
               router.refresh();
-              client.refetchQueries({ include: "all" });
+              void client.refetchQueries({ include: "all" });
             })
             .catch((err: unknown) => {
               setIsSubmitting(false);

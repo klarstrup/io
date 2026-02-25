@@ -327,7 +327,7 @@ export function WorkoutForm<R extends string>({
     );
 
     router.refresh();
-    client.refetchObservableQueries();
+    void client.refetchObservableQueries();
   });
 
   const locationInstanceId = useId();

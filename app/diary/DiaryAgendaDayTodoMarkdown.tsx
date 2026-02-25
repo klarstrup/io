@@ -93,7 +93,7 @@ export function DiaryAgendaDayTodoMarkdown({
                           (idx !== thisCheckboxIndex && cb.checked),
                       );
 
-                    onUpdateTodo?.({
+                    void onUpdateTodo?.({
                       completed: allChecked ? new Date() : null,
                       summary: newSummary,
                     });

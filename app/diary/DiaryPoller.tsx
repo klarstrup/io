@@ -61,7 +61,7 @@ export function DiaryPoller({ userId }: { userId: string }) {
             `Refreshing diary because scrapedAt ${new Date(data.scrapedAt).toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
           );
           router.refresh();
-          client.refetchObservableQueries();
+          void client.refetchObservableQueries();
         }
       } catch (error) {
         console.error(error);

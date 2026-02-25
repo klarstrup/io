@@ -86,10 +86,8 @@ export default class Trigger<T> {
   };
 
   persist = () => {
-    if (this.paused) {
-      return;
-    }
+    if (this.paused) return;
 
-    this.persistor.persist();
+    void this.persistor.persist();
   };
 }
