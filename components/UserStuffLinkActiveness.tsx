@@ -8,7 +8,12 @@ export default function UserStuffLinkActiveness(props: {
 }) {
   const pathname = usePathname();
 
-  if (!pathname.startsWith(String(props.href))) return null;
+  if (
+    !pathname.startsWith(
+      typeof props.href === "string" ? props.href : props.href.href || "",
+    )
+  )
+    return null;
 
   return (
     <>
