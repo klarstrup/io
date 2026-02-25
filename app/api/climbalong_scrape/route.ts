@@ -24,7 +24,6 @@ const fetchCA = <T>(path: string, init?: RequestInit) =>
   fetchJson<T>(new URL(path, `https://comp.climbalong.com/api/`), init);
 
 export const GET = () =>
-  // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
     const startedAt = Date.now();
     const getTimeRemaining = () =>

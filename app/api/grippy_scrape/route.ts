@@ -56,7 +56,6 @@ async function fetchGrippyWorkoutDetailsByUuid(
 }
 
 export const GET = () =>
-  // eslint-disable-next-line require-yield
   jsonStreamResponse(async function* () {
     await connection();
 
