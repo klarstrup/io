@@ -18,7 +18,7 @@ export const maxDuration = 45;
 async function fetchGrippyWorkoutLogsByPage(
   page: number,
   authTokens: Grippy.AuthTokens,
-): Promise<Grippy.WorkoutLogsResponse> {
+) {
   const res = await fetch(
     "https://api.griptonite.io/workouts/logs?page=" + page,
     { headers: { authorization: `Bearer ${authTokens.access_token}` } },
@@ -26,33 +26,33 @@ async function fetchGrippyWorkoutLogsByPage(
   if (!res.ok || res.status !== 200) {
     throw new Error("Failed to fetch workout logs: " + res.statusText);
   }
-  return await res.json();
+  return (await res.json()) as Grippy.WorkoutLogsResponse;
 }
 
 async function fetchGrippyWorkoutLogDetailsByUuid(
   uuid: string,
   authTokens: Grippy.AuthTokens,
-): Promise<Grippy.WorkoutLogDetails> {
+) {
   const res = await fetch("https://api.griptonite.io/workouts/logs/" + uuid, {
     headers: { authorization: `Bearer ${authTokens.access_token}` },
   });
   if (!res.ok || res.status !== 200) {
     throw new Error("Failed to fetch workout log details: " + res.statusText);
   }
-  return await res.json();
+  return (await res.json()) as Grippy.WorkoutLogDetails;
 }
 
 async function fetchGrippyWorkoutDetailsByUuid(
   uuid: string,
   authTokens: Grippy.AuthTokens,
-): Promise<Grippy.WorkoutDetails> {
+) {
   const res = await fetch("https://api.griptonite.io/workouts/" + uuid, {
     headers: { authorization: `Bearer ${authTokens.access_token}` },
   });
   if (!res.ok || res.status !== 200) {
     throw new Error("Failed to fetch workout details: " + res.statusText);
   }
-  return await res.json();
+  return (await res.json()) as Grippy.WorkoutDetails;
 }
 
 export const GET = () =>

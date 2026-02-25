@@ -1,66 +1,74 @@
 import { TypePolicies } from "@apollo/client";
+import { isDate } from "date-fns";
+
+const readDate = (d: unknown) =>
+  typeof d === "string" || typeof d === "number"
+    ? new Date(d)
+    : isDate(d)
+      ? d
+      : null;
 
 export const typePolicies: TypePolicies = {
   Todo: {
     fields: {
-      created: { read: (d) => d && new Date(d) },
-      start: { read: (d) => (d ? new Date(d) : null) },
-      due: { read: (d) => (d ? new Date(d) : null) },
-      completed: { read: (d) => (d ? new Date(d) : null) },
+      created: { read: readDate },
+      start: { read: readDate },
+      due: { read: readDate },
+      completed: { read: readDate },
     },
   },
   Event: {
     fields: {
-      created: { read: (d) => d && new Date(d) },
-      start: { read: (d) => (d ? new Date(d) : null) },
-      end: { read: (d) => (d ? new Date(d) : null) },
-      due: { read: (d) => (d ? new Date(d) : null) },
+      created: { read: readDate },
+      start: { read: readDate },
+      end: { read: readDate },
+      due: { read: readDate },
     },
   },
   Workout: {
     fields: {
-      workedOutAt: { read: (d) => d && new Date(d) },
-      createdAt: { read: (d) => d && new Date(d) },
-      updatedAt: { read: (d) => d && new Date(d) },
-      materializedAt: { read: (d) => d && new Date(d) },
+      workedOutAt: { read: readDate },
+      createdAt: { read: readDate },
+      updatedAt: { read: readDate },
+      materializedAt: { read: readDate },
     },
   },
   WorkoutSet: {
     fields: {
-      createdAt: { read: (d) => d && new Date(d) },
-      updatedAt: { read: (d) => d && new Date(d) },
+      createdAt: { read: readDate },
+      updatedAt: { read: readDate },
     },
   },
   Location: {
     fields: {
-      createdAt: { read: (d) => d && new Date(d) },
-      updatedAt: { read: (d) => d && new Date(d) },
+      createdAt: { read: readDate },
+      updatedAt: { read: readDate },
     },
   },
   BoulderCircuit: {
     fields: {
-      createdAt: { read: (d) => d && new Date(d) },
-      updatedAt: { read: (d) => d && new Date(d) },
+      createdAt: { read: readDate },
+      updatedAt: { read: readDate },
     },
   },
   ExerciseSchedule: {
     fields: {
-      snoozedUntil: { read: (d) => (d ? new Date(d) : null) },
+      snoozedUntil: { read: readDate },
     },
   },
   NextSet: {
     fields: {
-      workedOutAt: { read: (d) => d && new Date(d) },
-      dueOn: { read: (d) => d && new Date(d) },
+      workedOutAt: { read: readDate },
+      dueOn: { read: readDate },
     },
   },
   Sleep: {
     fields: {
-      startedAt: { read: (d) => d && new Date(d) },
-      endedAt: { read: (d) => d && new Date(d) },
+      startedAt: { read: readDate },
+      endedAt: { read: readDate },
     },
   },
   FloatTimeSeriesEntry: {
-    fields: { timestamp: { read: (d) => d && new Date(d) } },
+    fields: { timestamp: { read: readDate } },
   },
 };
