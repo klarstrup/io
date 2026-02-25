@@ -126,6 +126,10 @@ export default function DashBar() {
       addDays(tzDate, 1),
     );
 
+  const userWithingsId = sessionData?.user?.dataSources?.find(
+    (source) => source.source === DataSource.Withings,
+  )?.config?.accessTokenResponse.userid;
+
   return (
     <Masonry
       rows={2}
@@ -133,7 +137,12 @@ export default function DashBar() {
       rowProps={{ className: "gap-x-2" }}
     >
       {availableBalance ? (
-        <div className="flex items-center">
+        <a
+          href="https://mine.spiir.dk/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex cursor-pointer! items-center"
+        >
           <BarIcon>💰</BarIcon>
           <BarNumberContainer>
             {availableBalance.toLocaleString("da", {
@@ -141,10 +150,15 @@ export default function DashBar() {
               maximumFractionDigits: 0,
             })}
           </BarNumberContainer>
-        </div>
+        </a>
       ) : null}
       {data?.user?.sleepDebtFractionTimeSeries ? (
-        <div className="flex items-center">
+        <a
+          href="https://healthmate.withings.com/9537172/sleep"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center"
+        >
           <BarIcon>💤</BarIcon>
           <BarNumberContainer>
             {(sleepDebt * 100).toLocaleString(undefined, {
@@ -165,10 +179,16 @@ export default function DashBar() {
               %
             </span>
           </BarNumberContainer>
-        </div>
+        </a>
       ) : null}
       {data?.user?.inboxEmailCount != undefined ? (
-        <div className="flex items-center">
+        <a
+          href="https://mail.google.com/mail/u/0/#inbox"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex cursor-pointer! items-center"
+          title={`${data.user.inboxEmailCount} emails in inbox`}
+        >
           <BarIcon>📧</BarIcon>
           <BarNumberContainer
             className={
@@ -184,12 +204,15 @@ export default function DashBar() {
               maximumFractionDigits: 0,
             })}
           </BarNumberContainer>
-        </div>
+        </a>
       ) : null}
       {data?.user?.pastBusynessFraction != undefined &&
       data?.user?.futureBusynessFraction != undefined ? (
-        <div
-          className="flex items-center"
+        <a
+          className="flex cursor-pointer! items-center"
+          href={"https://calendar.google.com/calendar/u/0/r"}
+          target="_blank"
+          rel="noopener noreferrer"
           title={
             `Past busyness: ${(
               data.user.pastBusynessFraction * 100
@@ -217,7 +240,7 @@ export default function DashBar() {
             })}
             <span className="text-[10px]">%</span>
           </BarNumberContainer>
-        </div>
+        </a>
       ) : null}
       {sunrise && isFuture(sunrise) ? (
         <span className="flex items-center whitespace-nowrap">
@@ -242,7 +265,12 @@ export default function DashBar() {
         </span>
       ) : null}
       {data?.user?.weightTimeSeries ? (
-        <div className="flex items-center">
+        <a
+          href={`https://healthmate.withings.com/${userWithingsId}/weight`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex cursor-pointer! items-center"
+        >
           <BarIcon>⚖️</BarIcon>
           <BarNumberContainer>
             {weight.toLocaleString(undefined, {
@@ -263,10 +291,15 @@ export default function DashBar() {
               kg
             </span>
           </BarNumberContainer>
-        </div>
+        </a>
       ) : null}
       {data?.user?.fatRatioTimeSeries ? (
-        <div className="flex items-center">
+        <a
+          href={`https://healthmate.withings.com/${userWithingsId}/weight`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex cursor-pointer! items-center"
+        >
           <BarIcon>🤰</BarIcon>
           <BarNumberContainer>
             {fatRatio.toLocaleString(undefined, {
@@ -287,7 +320,7 @@ export default function DashBar() {
               %
             </span>
           </BarNumberContainer>
-        </div>
+        </a>
       ) : null}
     </Masonry>
   );
