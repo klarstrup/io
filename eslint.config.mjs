@@ -75,7 +75,6 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/triple-slash-reference": "error",
       "@typescript-eslint/unbound-method": "error",
       // rules i want to have on but are currently disabled due to too many errors, will enable gradually as i fix them
-      "import/no-anonymous-default-export": "off",
       "@typescript-eslint/no-unused-expressions": "off",
 
       // actual rules i dont like
