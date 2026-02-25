@@ -5,8 +5,7 @@ import { max, min } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExerciseName } from "../../components/ExerciseName";
-import {
-  ExerciseInfo,
+import type {
   Location,
   Workout,
   WorkoutExercise,
@@ -22,20 +21,14 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { WorkoutEntryExercise } from "./WorkoutEntryExercise";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
-export function DiaryAgendaDayWorkoutSet({
+export function DiaryAgendaDayWorkout({
+  location,
   workout,
-  workoutExercise,
-  exerciseInfo,
-  setsWithLocation,
-  mostRecentWorkout,
   workoutDateStr,
   cotemporalityOfSurroundingEvent,
 }: {
+  location?: Location;
   workout: Workout;
-  workoutExercise: WorkoutExercise;
-  exerciseInfo: ExerciseInfo;
-  setsWithLocation: (readonly [WorkoutSet, Location | undefined, Workout])[];
-  mostRecentWorkout: Workout | null;
   workoutDateStr: string;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
@@ -49,10 +42,7 @@ export function DiaryAgendaDayWorkoutSet({
     transform,
     transition,
   } = useSortable({
-    id:
-      (client.cache.identify(workout) || workout.id) +
-      "-" +
-      String(workoutExercise.exerciseId),
+    id: client.cache.identify(workout) || workout.id,
     data: {
       date: getJournalEntryPrincipalDate(workout)!.start,
       workout,
@@ -69,11 +59,15 @@ export function DiaryAgendaDayWorkoutSet({
       cotemporality={cotemporality({
         start: min([
           workout.workedOutAt,
-          ...workoutExercise.sets.map((s) => s.createdAt).filter(Boolean),
+          ...workout.exercises
+            .flatMap((we) => we.sets.map((s) => s.createdAt))
+            .filter(Boolean),
         ]),
         end: max([
           workout.workedOutAt,
-          ...workoutExercise.sets.map((s) => s.updatedAt).filter(Boolean),
+          ...workout.exercises
+            .flatMap((we) => we.sets.map((s) => s.updatedAt))
+            .filter(Boolean),
         ]),
       })}
       ref={setNodeRef}
@@ -90,80 +84,127 @@ export function DiaryAgendaDayWorkoutSet({
       {...listeners}
       {...attributes}
       onIconClick={
-        mostRecentWorkout &&
-        (mostRecentWorkout.source === WorkoutSource.Self ||
-          !mostRecentWorkout.source)
-          ? () =>
-              router.push(
-                `/diary/${workoutDateStr}/workout/${mostRecentWorkout.id}`,
-              )
+        workout.source === WorkoutSource.Self || !workout.source
+          ? () => router.push(`/diary/${workoutDateStr}/workout/${workout.id}`)
           : undefined
       }
       className="select-none"
     >
-      <div
-        className={
-          "inline-flex h-auto justify-center rounded-md" +
-          (isClimbingExercise(workoutExercise.exerciseId) ||
-          workout.source !== WorkoutSource.Self
-            ? " w-full flex-col"
-            : " flex-row") +
-          (workout.source === WorkoutSource.Self
-            ? " border border-black/20 bg-white"
-            : "")
-        }
-        style={isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}}
-      >
+      {workout.exercises.filter((we) => !isClimbingExercise(we.exerciseId))
+        .length ? (
         <div
           className={
-            "flex flex-col flex-wrap items-stretch justify-center self-stretch rounded-l-[5px] leading-tight " +
-            (!workoutExercise.sets.length ||
-            isClimbingExercise(workoutExercise.exerciseId)
-              ? " rounded-r-[5px]"
-              : "") +
-            (isClimbingExercise(workoutExercise.exerciseId) ? " w-full" : " ") +
-            (isClimbingExercise(workoutExercise.exerciseId) &&
-            workout.source === WorkoutSource.Self
-              ? " py-0.5"
-              : " ") +
-            (workout.source === WorkoutSource.Self ? " px-1.5 text-sm" : "")
+            "flex flex-row gap-1 px-1" +
+            (workout.source === WorkoutSource.Self
+              ? " rounded-[5px] border border-black/20 bg-white"
+              : "")
           }
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-baseline gap-2">
-              <Link
-                prefetch={false}
-                href={`/diary/exercises/${exerciseInfo.id}`}
-              >
-                {workoutExercise.displayName || (
-                  <ExerciseName exerciseInfo={exerciseInfo} />
-                )}
-              </Link>
-              {isClimbingExercise(exerciseInfo.id) ? (
-                <ClimbingStats setAndLocationPairs={setsWithLocation} />
-              ) : null}
-            </div>
-          </div>
+          {workout.exercises
+            .filter((we) => !isClimbingExercise(we.exerciseId))
+            .map((we) => (
+              <DiaryAgendaDayWorkoutSet
+                key={we.exerciseId}
+                workout={workout}
+                workoutExercise={we}
+                location={location}
+              />
+            ))}
         </div>
-        {setsWithLocation.length > 0 ? (
+      ) : null}
+      {workout.exercises
+        .filter((we) => isClimbingExercise(we.exerciseId))
+        .map((we) => (
           <div
+            key={we.exerciseId}
             className={
-              "flex flex-1 items-center text-xs " +
-              (isClimbingExercise(exerciseInfo.id) ? " pb-1" : " ") +
-              (workout.source === WorkoutSource.Self ? " px-1 py-0.5" : "") +
-              (workout.source === WorkoutSource.Self &&
-              !isClimbingExercise(exerciseInfo.id)
-                ? " border-l border-l-black/20"
+              "w-full" +
+              (workout.source === WorkoutSource.Self
+                ? " rounded-[5px] border border-black/20 bg-white px-1 pb-1"
                 : "")
             }
           >
-            <WorkoutEntryExercise
-              exercise={exerciseInfo}
-              setsWithLocations={setsWithLocation}
+            <DiaryAgendaDayWorkoutSet
+              key={we.exerciseId}
+              workout={workout}
+              workoutExercise={we}
+              location={location}
             />
           </div>
-        ) : null}
-      </div>
+        ))}
     </DiaryAgendaDayEntry>
+  );
+}
+
+export function DiaryAgendaDayWorkoutSet({
+  workout,
+  workoutExercise,
+  location,
+}: {
+  workout: Workout;
+  workoutExercise: WorkoutExercise;
+  location?: Location;
+}) {
+  const { exerciseInfo } = workoutExercise;
+
+  const setsWithLocation = workoutExercise.sets.map(
+    (set) =>
+      [
+        {
+          ...set,
+          meta: (set.meta?.reduce((acc, curr) => {
+            acc[curr.key] = curr.value;
+            return acc;
+          }, {}) || {}) as WorkoutSet["meta"],
+        },
+        location,
+        workout,
+      ] as const,
+  );
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className={
+          "flex flex-col flex-wrap items-stretch justify-center leading-tight " +
+          (isClimbingExercise(workoutExercise.exerciseId) &&
+          workout.source === WorkoutSource.Self
+            ? " pb-0.5"
+            : "") +
+          (!isClimbingExercise(workoutExercise.exerciseId) &&
+          workout.source === WorkoutSource.Self
+            ? " px-1"
+            : "") +
+          (workout.source === WorkoutSource.Self ? " text-sm" : "")
+        }
+      >
+        <div className="flex items-baseline gap-2 text-center">
+          <Link prefetch={false} href={`/diary/exercises/${exerciseInfo.id}`}>
+            {workoutExercise.displayName || (
+              <ExerciseName exerciseInfo={exerciseInfo} />
+            )}
+          </Link>
+          {isClimbingExercise(exerciseInfo.id) ? (
+            <ClimbingStats setAndLocationPairs={setsWithLocation} />
+          ) : null}
+        </div>
+      </div>
+      {setsWithLocation.length > 0 ? (
+        <div
+          className={
+            "flex flex-1 items-start justify-center text-xs " +
+            (workout.source === WorkoutSource.Self &&
+            !isClimbingExercise(exerciseInfo.id)
+              ? " border-t border-t-black/20 px-1"
+              : "")
+          }
+        >
+          <WorkoutEntryExercise
+            exercise={exerciseInfo}
+            setsWithLocations={setsWithLocation}
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }

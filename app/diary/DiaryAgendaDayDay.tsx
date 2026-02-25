@@ -19,12 +19,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { useEffect, useRef, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import type {
-  Event,
-  Location,
-  Workout,
-  WorkoutSet,
-} from "../../graphql.generated";
+import type { Event, Location, Workout } from "../../graphql.generated";
 import { formatShortDuration, WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -44,7 +39,7 @@ import { DiaryAgendaDayEventEnd } from "./DiaryAgendaDayEventEnd";
 import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
-import { DiaryAgendaDayWorkoutSet } from "./DiaryAgendaDayWorkoutSet";
+import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
 
@@ -90,6 +85,9 @@ export function DiaryAgendaDayDay({
   };
   const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
     [];
+
+  console.log(dayJournalEntries);
+
   for (const journalEntry of dayJournalEntries) {
     const principalDate = getJournalEntryPrincipalDate(journalEntry);
 
@@ -433,47 +431,17 @@ export function DiaryAgendaDayDay({
       const workoutDateStr =
         mostRecentWorkout && dateToString(mostRecentWorkout.workedOutAt);
 
-      for (const workoutExercise of workout.exercises) {
-        const { exerciseInfo } = workoutExercise;
-
-        const setsWithLocation = workoutExercise.sets.map((set) => {
-          const setLocationId = workout.locationId;
-          const location = dayLocations.find((loc) => loc.id === setLocationId);
-          return [
-            {
-              ...set,
-              meta: (set.meta?.reduce((acc, curr) => {
-                acc[curr.key] = curr.value;
-                return acc;
-              }, {}) || {}) as WorkoutSet["meta"],
-            },
-            location,
-            workout,
-          ] as const;
-        });
-        dayJournalEntryElements.push({
-          id:
-            (client.cache.identify(workout) || workout.id) +
-            "-" +
-            String(workoutExercise.exerciseId),
-          element: (
-            <DiaryAgendaDayWorkoutSet
-              workout={workout}
-              workoutExercise={workoutExercise}
-              exerciseInfo={exerciseInfo}
-              setsWithLocation={setsWithLocation}
-              mostRecentWorkout={mostRecentWorkout}
-              workoutDateStr={workoutDateStr}
-              key={
-                (client.cache.identify(workout) || workout.id) +
-                "-" +
-                String(workoutExercise.exerciseId)
-              }
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-            />
-          ),
-        });
-      }
+      dayJournalEntryElements.push({
+        id: client.cache.identify(workout) || workout.id,
+        element: (
+          <DiaryAgendaDayWorkout
+            location={dayLocations.find((loc) => loc.id === workout.locationId)}
+            workout={workout}
+            workoutDateStr={workoutDateStr}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+          />
+        ),
+      });
     } else if (journalEntry.__typename === "LocationChange") {
       dayJournalEntryElements.push({
         id: "location-change-" + journalEntry.id,

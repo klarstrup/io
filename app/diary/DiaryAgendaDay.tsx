@@ -447,19 +447,12 @@ export function DiaryAgendaDay() {
 
           const dayEvents = eventsByDate[dateToString(dayDate)] || [];
           const dayName = dateToString(dayDate);
-          const dayWorkouts = workouts
-            .filter((workout) =>
-              isSameDayButItRespectsDayStartHour(
-                new Date(getJournalEntryPrincipalDate(workout)!.start!),
-                dayStart,
-              ),
-            )
-            .flatMap((workout) =>
-              workout.exercises.map((exercise) => ({
-                ...workout,
-                exercises: [exercise],
-              })),
-            );
+          const dayWorkouts = workouts.filter((workout) =>
+            isSameDayButItRespectsDayStartHour(
+              new Date(getJournalEntryPrincipalDate(workout)!.start!),
+              dayStart,
+            ),
+          );
 
           const dayDueSets = dueSetsByDate[dayName] || [];
           const dayTodos = todosByDate[dayName] || [];
