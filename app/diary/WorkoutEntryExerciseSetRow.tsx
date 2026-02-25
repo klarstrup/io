@@ -45,7 +45,7 @@ export function WorkoutEntryExerciseSetRow({
       <tr className="align-baseline whitespace-nowrap">
         {repeatCount &&
         !set.inputs.some(
-          (_, i) => exercise.inputs[i]?.type === InputType.Reps,
+          (_, i: number) => exercise.inputs[i]?.type === InputType.Reps,
         ) ? (
           <Fragment>
             <td className="p-0 text-right tabular-nums" width="0.01%">
@@ -124,7 +124,7 @@ export function WorkoutEntryExerciseSetRow({
                           !(
                             inputDefinition.type === InputType.Reps &&
                             set.inputs.some(
-                              (_, i) =>
+                              (_, i: number) =>
                                 exercise.inputs[i]?.type === InputType.Weight ||
                                 exercise.inputs[i]?.type ===
                                   InputType.Weightassist,

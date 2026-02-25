@@ -19,7 +19,7 @@ import {
   type SortableContextProps,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { isFuture, isPast, max, min } from "date-fns";
+import { isDate, isFuture, isPast, max, min } from "date-fns";
 import gql from "graphql-tag";
 import type { ReactNode } from "react";
 import {
@@ -158,11 +158,23 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     const { active, over } = event;
     if (!active.data.current || !over?.data.current) return;
 
+    const overCurrent = over.data.current as Record<string, unknown>;
+    const activeCurrent = active.data.current as Record<string, unknown>;
+
     console.log("Drag ended", { active, over });
 
-    const sortableItems = (
-      over.data.current.sortable?.items as UniqueIdentifier[] | undefined
-    )?.map(String);
+    const items: UniqueIdentifier[] | undefined =
+      typeof overCurrent === "object" &&
+      overCurrent &&
+      "sortable" in overCurrent &&
+      typeof overCurrent.sortable === "object" &&
+      overCurrent.sortable &&
+      "items" in overCurrent.sortable &&
+      Array.isArray(overCurrent.sortable.items)
+        ? overCurrent.sortable.items
+        : undefined;
+
+    const sortableItems = items?.map((id) => String(id));
     const cacheObjectEntries = Object.entries(
       client.cache.extract() as Record<string, Record<string, unknown>>,
     );
@@ -254,9 +266,13 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           ? getJournalEntryPrincipalDate(followingEntry[1])?.end
           : getJournalEntryPrincipalDate(followingEntry[1])?.start);
 
-    const overStart = over.data.current.date
-      ? new Date(over.data.current.date)
-      : undefined;
+    const overStart =
+      overCurrent.date &&
+      (typeof overCurrent.date === "string" ||
+        typeof overCurrent.date === "number" ||
+        isDate(overCurrent.date))
+        ? new Date(overCurrent.date)
+        : undefined;
     const dayStart = startOfDayButItRespectsDayStartHour(overStart!);
     const dayEnd = endOfDayButItRespectsDayStartHour(overStart!);
 
@@ -269,8 +285,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     targetDate = min([max([targetDate, dayStart]), dayEnd]);
     console.log({ targetDate, precedingDate, followingDate, dayStart, dayEnd });
 
-    if (active.data.current.nextSet) {
-      const nextSet = active.data.current.nextSet as NextSet;
+    if (activeCurrent.nextSet) {
+      const nextSet = activeCurrent.nextSet as NextSet;
 
       void snoozeExerciseSchedule({
         variables: {
@@ -291,8 +307,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         },
       });
       return;
-    } else if (active.data.current.todo) {
-      const todo = active.data.current.todo as Todo;
+    } else if (activeCurrent.todo) {
+      const todo = activeCurrent.todo as Todo;
 
       if (isFuture(targetDate)) {
         const updatedTodo = {
@@ -328,8 +344,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           },
         });
       }
-    } else if (active.data.current.workout) {
-      const workout = active.data.current.workout as Workout;
+    } else if (activeCurrent.workout) {
+      const workout = activeCurrent.workout as Workout;
 
       if (isPast(targetDate)) {
         void updateWorkout({

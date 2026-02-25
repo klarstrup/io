@@ -680,10 +680,16 @@ function UserStuffSourceCreateForm({
               router.refresh();
               client.refetchQueries({ include: "all" });
             })
-            .catch((err) => {
+            .catch((err: unknown) => {
               setIsSubmitting(false);
 
-              alert(String(err.message || err));
+              alert(
+                String(
+                  typeof err === "object" && err !== null && "message" in err
+                    ? err.message
+                    : err,
+                ),
+              );
             });
         }
 

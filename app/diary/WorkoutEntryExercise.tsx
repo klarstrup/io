@@ -138,7 +138,9 @@ const isEquivalentSet = (
   setA: WorkoutExerciseSet | WorkoutSet,
   setB: WorkoutExerciseSet | WorkoutSet,
 ) => {
-  for (const [index, aInput] of Object.entries(setA.inputs)) {
+  for (const [index, aInput] of Object.entries(
+    setA.inputs as WorkoutExerciseSetInput[],
+  )) {
     const bInput = setB.inputs[index] as WorkoutExerciseSetInput;
     for (const key in aInput) {
       if (key !== "id" && aInput[key] !== bInput[key]) return false;
