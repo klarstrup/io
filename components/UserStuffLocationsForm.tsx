@@ -57,7 +57,6 @@ function UserStuffLocationForm({
 
   return (
     <form
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onSubmit={handleSubmit(async (data) => {
         if (!user) {
           // login gate here

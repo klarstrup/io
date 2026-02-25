@@ -198,7 +198,6 @@ export const DiaryAgendaDayTodo =
           >
             <form
               ref={formRef}
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onSubmit={(e) => {
                 e.preventDefault();
                 formRef.current && handleFormSubmit(formRef.current);

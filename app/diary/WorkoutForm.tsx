@@ -349,7 +349,6 @@ export function WorkoutForm<R extends string>({
   return (
     <div className="flex w-full flex-1 flex-col gap-1">
       <form
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(async (data) => {
           if (!user) return;
 

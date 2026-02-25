@@ -11,7 +11,6 @@ export function WorkoutEntryDuplicateButton({ workout }: { workout: Workout }) {
       style={{ color: "#edab00" }}
       className="cursor-pointer text-xs font-semibold"
       disabled={isUpdating || Math.random() < 0} // Disable button for now because the upserting below needs to be fixed
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={async () => {
         try {
           if (isUpdating) return;

@@ -98,7 +98,6 @@ function UserStuffSourceForm({
                   source.source === DataSource.Fitocracy
                 }
                 className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
-                // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 onClick={async () => {
                   const promise = fetch(`/api/${source.source}_scrape`);
                   await new Promise((resolve) => setTimeout(resolve, 1000));

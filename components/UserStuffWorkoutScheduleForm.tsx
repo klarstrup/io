@@ -71,7 +71,6 @@ function UserStuffWorkoutScheduleForm({
   }
   return (
     <form
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onSubmit={handleSubmit(async (data) => {
         const newSchedule = await updateUserExerciseSchedule(
           user.id,
