@@ -84,6 +84,7 @@ const eslintConfig = defineConfig([
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
 
+      "require-yield": "error",
       "no-var": "error",
       "no-unexpected-multiline": "error",
     },
