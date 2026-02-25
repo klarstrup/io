@@ -127,9 +127,7 @@ export async function* wrapSources<
               socket.close();
               y(undefined);
             };
-            socket.onerror = (err) => {
-              n(err);
-            };
+            socket.onerror = (err) => n(err.error);
           });
         } catch (error) {
           console.error(error);
