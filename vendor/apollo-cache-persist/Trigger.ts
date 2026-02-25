@@ -51,6 +51,7 @@ export default class Trigger<T> {
         if (typeof trigger === "function") {
           this.uninstall = trigger(this.fire);
         } else {
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           throw Error(`Unrecognized trigger option: ${trigger}`);
         }
     }

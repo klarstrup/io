@@ -71,9 +71,9 @@ const eslintConfig = defineConfig([
       "require-await": "off",
       "@typescript-eslint/require-await": "error",
       "@typescript-eslint/restrict-plus-operands": "error",
-      // "@typescript-eslint/restrict-template-expressions": "error",
-      // "@typescript-eslint/triple-slash-reference": "error",
-      // "@typescript-eslint/unbound-method": "error",
+      "@typescript-eslint/restrict-template-expressions": "error",
+      "@typescript-eslint/triple-slash-reference": "error",
+      "@typescript-eslint/unbound-method": "error",
       // rules i want to have on but are currently disabled due to too many errors, will enable gradually as i fix them
       "@typescript-eslint/no-explicit-any": "off",
       "import/no-anonymous-default-export": "off",

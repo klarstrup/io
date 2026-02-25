@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { ApolloCache } from "@apollo/client/core";
 
 export interface TriggerFunctionConfig {
