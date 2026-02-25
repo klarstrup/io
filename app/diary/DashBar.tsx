@@ -17,6 +17,7 @@ import {
   getSunset,
 } from "../../utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   query GetLatestWeightEntry {
     user {

@@ -44,6 +44,7 @@ import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   query DiaryAgendaDayUser {
     user {
@@ -57,6 +58,7 @@ gql`
   }
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
     user {

@@ -58,6 +58,7 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
 
 const NOW_SYMBOL = Symbol("now");
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   mutation UpdateWorkout($input: UpdateWorkoutInput!) {
     updateWorkout(input: $input) {

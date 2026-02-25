@@ -8,6 +8,7 @@ import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 import { useVisibilityAwarePollInterval } from "../../hooks";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   query ListPageUser {
     user {
@@ -42,7 +43,7 @@ export default function ListPage() {
         : b.due
           ? new Date(b.due)
           : null;
-      
+
       if (aDate && bDate) {
         return bDate.getTime() - aDate.getTime();
       } else if (aDate) {

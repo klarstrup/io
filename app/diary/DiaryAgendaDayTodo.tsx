@@ -18,6 +18,7 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getTodoPrincipalDate } from "./diaryUtils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   fragment DiaryAgendaDayTodo on Todo {
     id
@@ -115,7 +116,7 @@ export const DiaryAgendaDayTodo =
       const formData = formRef.current && new FormData(formRef.current);
       const summary = formData?.get("summary");
       if (summary && typeof summary === "string" && summary.trim().length > 0) {
-        formRef.current && handleFormSubmit(formRef.current);
+        if (formRef.current) handleFormSubmit(formRef.current);
       } else {
         setIsActive(false);
       }
@@ -200,7 +201,7 @@ export const DiaryAgendaDayTodo =
               ref={formRef}
               onSubmit={(e) => {
                 e.preventDefault();
-                formRef.current && handleFormSubmit(formRef.current);
+                if (formRef.current) handleFormSubmit(formRef.current);
               }}
             >
               {isActive ? (
