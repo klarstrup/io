@@ -238,7 +238,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         ? newSortableCacheEntries?.[activeEntryIndex + 1]
         : undefined;
 
-    let precedingDate =
+    const precedingDate =
       precedingEntry &&
       (precedingEntry[1] === NOW_SYMBOL
         ? new Date()
@@ -247,7 +247,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
           : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
 
-    let followingDate =
+    const followingDate =
       followingEntry &&
       (followingEntry[1] === NOW_SYMBOL
         ? new Date()

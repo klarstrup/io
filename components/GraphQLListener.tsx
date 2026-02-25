@@ -12,7 +12,7 @@ function messageToGraphQLUpdate(
   message: string,
 ) {
   try {
-    let data = JSON.parse(message) as unknown;
+    const data = JSON.parse(message) as unknown;
     console.log(data);
     if (
       typeof data === "object" &&

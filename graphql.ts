@@ -357,7 +357,7 @@ export const resolvers: Resolvers<
         ).toArray()
       ).reverse();
 
-      let sleepDebtFractionTimeSeries: FloatTimeSeriesEntry[] = [];
+      const sleepDebtFractionTimeSeries: FloatTimeSeriesEntry[] = [];
       for (let i = 6; i < sleepEntries.length; i++) {
         const windowEntries = sleepEntries.slice(i - 6, i + 1); // 7-day window
 
@@ -542,7 +542,7 @@ export const resolvers: Resolvers<
     },
     foodEntries: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
-      let foodEntries: FoodEntry[] = [];
+      const foodEntries: FoodEntry[] = [];
 
       if (!user) return foodEntries;
 

@@ -117,8 +117,8 @@ export const GET = () =>
           throw new Error("Failed to refresh token");
         }
 
-        let insertedOrUpdatedLogs: Set<string> = new Set();
-        let workoutIds: Set<string> = new Set();
+        const insertedOrUpdatedLogs: Set<string> = new Set();
+        const workoutIds: Set<string> = new Set();
 
         for (let page = 1; ; page++) {
           const {
