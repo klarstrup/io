@@ -90,48 +90,51 @@ export function DiaryAgendaDayWorkout({
       }
       className="select-none"
     >
-      {workout.exercises.filter((we) => !isClimbingExercise(we.exerciseId))
-        .length ? (
-        <div
-          className={
-            "flex flex-row gap-1 px-1" +
-            (workout.source === WorkoutSource.Self
-              ? " rounded-[5px] border border-black/20 bg-white"
-              : "")
-          }
-        >
-          {workout.exercises
-            .filter((we) => !isClimbingExercise(we.exerciseId))
-            .map((we) => (
+      <div
+        className={
+          "inline-flex flex-col items-start gap-1 " +
+          (workout.source === WorkoutSource.Self
+            ? "rounded-[5px] border border-black/20 bg-white px-1"
+            : "") +
+          (workout.exercises.some((we) => isClimbingExercise(we.exerciseId))
+            ? " w-full"
+            : "")
+        }
+      >
+        {workout.exercises.filter((we) => !isClimbingExercise(we.exerciseId))
+          .length ? (
+          <div className={"flex flex-row flex-wrap gap-1"}>
+            {workout.exercises
+              .filter((we) => !isClimbingExercise(we.exerciseId))
+              .map((we) => (
+                <DiaryAgendaDayWorkoutSet
+                  key={we.exerciseId}
+                  workout={workout}
+                  workoutExercise={we}
+                  location={location}
+                />
+              ))}
+          </div>
+        ) : null}
+        {workout.exercises
+          .filter((we) => isClimbingExercise(we.exerciseId))
+          .map((we) => (
+            <div
+              key={we.exerciseId}
+              className={
+                "w-full" +
+                (workout.source === WorkoutSource.Self ? " pb-1" : "")
+              }
+            >
               <DiaryAgendaDayWorkoutSet
                 key={we.exerciseId}
                 workout={workout}
                 workoutExercise={we}
                 location={location}
               />
-            ))}
-        </div>
-      ) : null}
-      {workout.exercises
-        .filter((we) => isClimbingExercise(we.exerciseId))
-        .map((we) => (
-          <div
-            key={we.exerciseId}
-            className={
-              "w-full" +
-              (workout.source === WorkoutSource.Self
-                ? " rounded-[5px] border border-black/20 bg-white px-1 pb-1"
-                : "")
-            }
-          >
-            <DiaryAgendaDayWorkoutSet
-              key={we.exerciseId}
-              workout={workout}
-              workoutExercise={we}
-              location={location}
-            />
-          </div>
-        ))}
+            </div>
+          ))}
+      </div>
     </DiaryAgendaDayEntry>
   );
 }
@@ -167,10 +170,6 @@ export function DiaryAgendaDayWorkoutSet({
       <div
         className={
           "flex flex-col flex-wrap items-stretch justify-center leading-tight " +
-          (isClimbingExercise(workoutExercise.exerciseId) &&
-          workout.source === WorkoutSource.Self
-            ? " pb-0.5"
-            : "") +
           (!isClimbingExercise(workoutExercise.exerciseId) &&
           workout.source === WorkoutSource.Self
             ? " px-1"
@@ -178,7 +177,14 @@ export function DiaryAgendaDayWorkoutSet({
           (workout.source === WorkoutSource.Self ? " text-sm" : "")
         }
       >
-        <div className="flex items-baseline gap-2 text-center">
+        <div
+          className={
+            "flex items-baseline gap-2 text-center" +
+            (isClimbingExercise(exerciseInfo.id)
+              ? " justify-start"
+              : " justify-center")
+          }
+        >
           <Link prefetch={false} href={`/diary/exercises/${exerciseInfo.id}`}>
             {workoutExercise.displayName || (
               <ExerciseName exerciseInfo={exerciseInfo} />
