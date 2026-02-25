@@ -1,4 +1,3 @@
-/* eslint-disable no-var */
 import type { MongoClient } from "mongodb";
 import type { DefaultSession } from "next-auth";
 import type { IUser } from "./models/user";
