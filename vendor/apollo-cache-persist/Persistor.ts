@@ -1,8 +1,8 @@
-import Log from './Log';
-import Storage from './Storage';
-import Cache from './Cache';
+import Log from "./Log";
+import Storage from "./Storage";
+import Cache from "./Cache";
 
-import { ApolloPersistOptions, PersistenceMapperFunction } from './types';
+import { ApolloPersistOptions, PersistenceMapperFunction } from "./types";
 
 export interface PersistorConfig<T> {
   log: Log<T>;
@@ -20,7 +20,7 @@ export default class Persistor<T> {
 
   constructor(
     { log, cache, storage }: PersistorConfig<T>,
-    options: Pick<ApolloPersistOptions<T>, 'maxSize' | 'persistenceMapper'>,
+    options: Pick<ApolloPersistOptions<T>, "maxSize" | "persistenceMapper">,
   ) {
     const { maxSize = 1024 * 1024, persistenceMapper } = options;
 
@@ -48,7 +48,7 @@ export default class Persistor<T> {
 
       if (
         this.maxSize != null &&
-        typeof data === 'string' &&
+        typeof data === "string" &&
         data.length > this.maxSize &&
         !this.paused
       ) {
@@ -64,12 +64,12 @@ export default class Persistor<T> {
       await this.storage.write(data);
 
       this.log.info(
-        typeof data === 'string'
+        typeof data === "string"
           ? `Persisted cache of size ${data.length} characters`
-          : 'Persisted cache',
+          : "Persisted cache",
       );
     } catch (error) {
-      this.log.error('Error persisting cache', error);
+      this.log.error("Error persisting cache", error);
       throw error;
     }
   }
@@ -79,18 +79,18 @@ export default class Persistor<T> {
       const data = await this.storage.read();
 
       if (data != null) {
-        await this.cache.restore(data);
+        this.cache.restore(data);
 
         this.log.info(
-          typeof data === 'string'
+          typeof data === "string"
             ? `Restored cache of size ${data.length} characters`
-            : 'Restored cache',
+            : "Restored cache",
         );
       } else {
-        this.log.info('No stored cache to restore');
+        this.log.info("No stored cache to restore");
       }
     } catch (error) {
-      this.log.error('Error restoring cache', error);
+      this.log.error("Error restoring cache", error);
       throw error;
     }
   }
@@ -98,9 +98,9 @@ export default class Persistor<T> {
   async purge(): Promise<void> {
     try {
       await this.storage.purge();
-      this.log.info('Purged cache storage');
+      this.log.info("Purged cache storage");
     } catch (error) {
-      this.log.error('Error purging cache storage', error);
+      this.log.error("Error purging cache storage", error);
       throw error;
     }
   }

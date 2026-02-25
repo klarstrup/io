@@ -22,11 +22,11 @@ const eslintConfig = defineConfig([
     rules: {
       // "@typescript-eslint/no-unnecessary-condition": "error",
       // copied from typescript-eslint/recommended-type-checked
-      // "@typescript-eslint/await-thenable": "error",
-      // "@typescript-eslint/ban-ts-comment": "error",
-      // "no-array-constructor": "off",
-      // "@typescript-eslint/no-array-constructor": "error",
-      // "@typescript-eslint/no-array-delete": "error",
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/ban-ts-comment": "error",
+      "no-array-constructor": "off",
+      "@typescript-eslint/no-array-constructor": "error",
+      "@typescript-eslint/no-array-delete": "error",
       "@typescript-eslint/no-base-to-string": "error",
       "@typescript-eslint/no-duplicate-enum-values": "error",
       "@typescript-eslint/no-duplicate-type-constituents": "error",
