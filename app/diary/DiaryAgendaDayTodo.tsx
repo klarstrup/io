@@ -83,7 +83,7 @@ export const DiaryAgendaDayTodo =
     const ref2 = useRef<HTMLDivElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
 
-    const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
+    const handleFormSubmit = useEvent((formElement: HTMLFormElement) => {
       const formData = new FormData(formElement);
       const summary = formData.get("summary");
       setIsActive(false);

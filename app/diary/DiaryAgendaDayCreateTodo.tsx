@@ -95,7 +95,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
         <div className="absolute top-full right-0 left-0 z-10 flex flex-wrap items-center justify-center gap-1">
           <form
             ref={formRef}
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault();
               formRef.current && handleFormSubmit(formRef.current);
             }}

@@ -14,7 +14,7 @@ import { DiaryEntry } from "../../lib";
 import { dateToString } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
 
-export async function DiaryEntryWeek({
+export function DiaryEntryWeek({
   user,
   weekDate,
   diaryEntries,

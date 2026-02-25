@@ -16,7 +16,7 @@ import {
 import { dateToString, DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import WorkoutEntry from "./WorkoutEntry";
 
-export async function DiaryAgendaWorkouts({
+export function DiaryAgendaWorkouts({
   date,
   workouts,
   workoutsExerciseSetPRs,

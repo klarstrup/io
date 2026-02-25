@@ -11,7 +11,7 @@ export function WorkoutEntryDuplicateButton({ workout }: { workout: Workout }) {
       style={{ color: "#edab00" }}
       className="cursor-pointer text-xs font-semibold"
       disabled={isUpdating || Math.random() < 0} // Disable button for now because the upserting below needs to be fixed
-      onClick={async () => {
+      onClick={() => {
         try {
           if (isUpdating) return;
           setIsUpdating(true);

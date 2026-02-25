@@ -4,7 +4,7 @@ import { query } from "../../ApolloClient";
 import { auth } from "../../auth";
 import { CalendarUserWorkoutsQuery } from "../../graphql.generated";
 import type { DiaryEntry } from "../../lib";
-import { allPromises, dateToString, DEFAULT_TIMEZONE } from "../../utils";
+import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 
 type DayStr = `${number}-${number}-${number}`;
 
@@ -140,18 +140,12 @@ export async function getDiaryEntriesShallow({
     variables: { interval: { start: from, end: to } },
   });
 
-  await allPromises(
-    async () => {
-      for (const foodEntry of queryResult.data?.user?.foodEntries || []) {
-        addDiaryEntry(foodEntry.datetime, "food", foodEntry);
-      }
-    },
-    async () => {
-      for (const workout of queryResult.data?.user?.workouts || []) {
-        addDiaryEntry(workout.workedOutAt, "workouts", workout);
-      }
-    },
-  );
+  for (const foodEntry of queryResult.data?.user?.foodEntries || []) {
+    addDiaryEntry(foodEntry.datetime, "food", foodEntry);
+  }
+  for (const workout of queryResult.data?.user?.workouts || []) {
+    addDiaryEntry(workout.workedOutAt, "workouts", workout);
+  }
 
   const diaryEntries = Object.entries(diary).sort(
     ([a], [b]) =>

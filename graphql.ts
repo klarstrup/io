@@ -1041,7 +1041,7 @@ export const resolvers: Resolvers<
     },
   },
   WorkoutExercise: {
-    exerciseInfo: async (parent) => {
+    exerciseInfo(parent) {
       const exerciseInfo = exercisesById.get(parent.exerciseId);
 
       if (!exerciseInfo) {
@@ -1076,7 +1076,7 @@ export const resolvers: Resolvers<
         : null,
   },
   ExerciseSchedule: {
-    exerciseInfo: async (parent) => {
+    exerciseInfo(parent) {
       const exerciseInfo = exercisesById.get(parent.exerciseId);
 
       if (!exerciseInfo) {
