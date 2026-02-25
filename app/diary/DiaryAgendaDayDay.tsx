@@ -86,8 +86,6 @@ export function DiaryAgendaDayDay({
   const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
     [];
 
-  console.log(dayJournalEntries);
-
   for (const journalEntry of dayJournalEntries) {
     const principalDate = getJournalEntryPrincipalDate(journalEntry);
 
