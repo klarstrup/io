@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { differenceInDays, isPast } from "date-fns";
 import Link from "next/link";
 import { Fragment, HTMLProps } from "react";
@@ -152,7 +151,7 @@ export default async function TimelineEventContent({
             : eventEntry.source === EventSource.Songkick
               ? (await getSongkickEvents()).find(
                   ({ id }) => eventEntry.id === id,
-                )!
+                )
               : undefined
   )!;
 

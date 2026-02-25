@@ -79,11 +79,13 @@ const eslintConfig = defineConfig([
 
       // actual rules i dont like
       "@typescript-eslint/no-namespace": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
 
+      // actual rules i like
       "require-yield": "error",
       "no-var": "error",
       "no-unexpected-multiline": "error",

@@ -327,8 +327,7 @@ export async function getIoClimbAlongCompetitionEvent(
     type: "competition",
     discipline: "bouldering",
     id: competitionId,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
-    ioId: io?.athleteId!,
+    ioId: io?.athleteId,
     url: url.toString(),
     start: new Date(competition.startTime),
     end: new Date(competition.endTime),
@@ -497,7 +496,7 @@ export async function getIoClimbAlongCompetitionEvent(
                       grade: undefined,
                       attempt: Boolean(
                         ioPerformance?.numberOfAttempts ||
-                          memo.get(key)?.attempt,
+                        memo.get(key)?.attempt,
                       ),
                       attemptCount: ioPerformance?.numberOfAttempts,
                       zone: Boolean(
