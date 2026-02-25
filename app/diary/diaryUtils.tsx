@@ -13,12 +13,18 @@ import {
 import type {
   Event,
   ExerciseSchedule,
+  WorkoutExercise as GQWorkoutExercise,
   NextSet,
   Sleep,
   Todo,
   Workout,
+  WorkoutSet,
 } from "../../graphql.generated";
-import { WorkoutData } from "../../models/workout";
+import {
+  WorkoutData,
+  WorkoutExercise,
+  WorkoutExerciseSet,
+} from "../../models/workout";
 import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
@@ -50,11 +56,15 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
     dayInterval.start,
     workout.createdAt,
     ...workout.exercises
-      .flatMap((e) => e.sets.map((s) => s.createdAt))
+      .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
+        e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.createdAt),
+      )
       .filter(Boolean)
       .filter((date) => isWithinInterval(date, dayInterval)),
     ...workout.exercises
-      .flatMap((e) => e.sets.map((s) => s.updatedAt))
+      .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
+        e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.updatedAt),
+      )
       .filter(Boolean)
       .filter((date) => isWithinInterval(date, dayInterval)),
   ]);
@@ -64,11 +74,15 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
       dayInterval.end,
       workout.updatedAt,
       ...workout.exercises
-        .flatMap((e) => e.sets.map((s) => s.createdAt))
+        .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
+          e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.createdAt),
+        )
         .filter(Boolean)
         .filter((date) => isWithinInterval(date, dayInterval)),
       ...workout.exercises
-        .flatMap((e) => e.sets.map((s) => s.updatedAt))
+        .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
+          e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.updatedAt),
+        )
         .filter(Boolean)
         .filter((date) => isWithinInterval(date, dayInterval)),
     ]),

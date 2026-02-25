@@ -10,8 +10,8 @@ import {
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
 } from "../../../sources/withings.server";
-import { jsonStreamResponse } from "../scraper-utils";
 import { omit } from "../../../utils";
+import { jsonStreamResponse } from "../scraper-utils";
 
 // Could probably be derived from the request object but who cares
 const uri =
@@ -77,12 +77,12 @@ export const GET = async (req: NextRequest) => {
     body.append("code", code);
     body.append("redirect_uri", uri);
 
-    const { body: accessTokenResponse } = await (
+    const { body: accessTokenResponse } = (await (
       await fetch("https://wbsapi.withings.net/v2/oauth2", {
         method: "POST",
         body,
       })
-    ).json();
+    ).json()) as { body: Withings.AccessTokenResponse };
 
     if (accessTokenResponse.access_token) {
       await Users.updateOne(
@@ -131,14 +131,14 @@ export const GET = async (req: NextRequest) => {
           accessTokenResponse.refresh_token,
         );
 
-        const { body: refreshTokenResponse } = await (
+        const { body: refreshTokenResponse } = (await (
           await fetch(refreshTokenUrl, {
             method: "POST",
             headers: {
               authorization: `Bearer ${accessTokenResponse.access_token}`,
             },
           })
-        ).json();
+        ).json()) as { body: Withings.AccessTokenResponse };
 
         if (refreshTokenResponse.access_token) {
           await Users.updateOne(

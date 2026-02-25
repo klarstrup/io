@@ -251,7 +251,7 @@ export const logInGrippy = async (email: string, password: string) => {
   if (!res.ok) {
     throw new Error("Failed to log in to Grippy: " + (await res.text()));
   }
-  const json = await res.json();
+  const json = (await res.json()) as unknown;
 
   if (!isGrippyAuthTokens(json)) {
     throw new Error("Invalid response from Grippy auth token endpoint");

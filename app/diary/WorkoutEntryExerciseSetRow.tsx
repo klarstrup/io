@@ -61,79 +61,84 @@ export function WorkoutEntryExerciseSetRow({
         )}
         {set.inputs.length ? (
           set.inputs
-            .map((input: WorkoutExerciseSetInput | WorkoutSetInput, index) => {
-              const inputDefinition = exercise.inputs[index]!;
-              const inputOptions =
-                inputDefinition.type === InputType.Options &&
-                "options" in inputDefinition &&
-                inputDefinition.options;
+            .map(
+              (
+                input: WorkoutExerciseSetInput | WorkoutSetInput,
+                index: number,
+              ) => {
+                const inputDefinition = exercise.inputs[index]!;
+                const inputOptions =
+                  inputDefinition.type === InputType.Options &&
+                  "options" in inputDefinition &&
+                  inputDefinition.options;
 
-              const inputType = inputDefinition.type;
-              return {
-                input,
-                index,
-                element: (
-                  <span className="tabular-nums">
-                    {inputType === InputType.Pace && input.value ? (
-                      <>
-                        {decimalAsTime(input.value)}
-                        <small>min/km</small>
-                      </>
-                    ) : inputType === InputType.Time && input.value ? (
-                      seconds2time(
-                        input.unit === Unit.Hr
-                          ? input.value * HOUR_IN_SECONDS
-                          : input.unit === Unit.Min
-                            ? input.value * MINUTE_IN_SECONDS
-                            : input.value,
-                      )
-                    ) : inputType === InputType.Distance && input.value ? (
-                      <>
-                        {(input.unit === Unit.M
-                          ? input.value / 1000
-                          : input.value
-                        ).toLocaleString("en-DK", {
-                          unit: "kilometer",
-                          maximumSignificantDigits: 2,
-                        })}
-                        <small>km</small>
-                      </>
-                    ) : inputType === InputType.Options &&
-                      inputOptions &&
-                      input.value != undefined ? (
-                      String(inputOptions[input.value]?.value ?? "")
-                    ) : input.unit === Unit.FrenchRounded &&
-                      input.value != undefined ? (
-                      new Grade(input.value).name
-                    ) : input.value != undefined &&
-                      !isNaN(input.value) &&
-                      input.value !== undefined &&
-                      input.value !== null &&
-                      (inputType === InputType.Weightassist
-                        ? input.value !== 0
-                        : true) ? (
-                      <>
-                        {input.value.toLocaleString("en-DK", {
-                          maximumFractionDigits: 2,
-                        })}
-                        {set.inputs.length === 1 ||
-                        !(
-                          inputDefinition.type === InputType.Reps &&
-                          set.inputs.some(
-                            (_, i) =>
-                              exercise.inputs[i]?.type === InputType.Weight ||
-                              exercise.inputs[i]?.type ===
-                                InputType.Weightassist,
-                          )
-                        ) ? (
-                          <small>{input.unit}</small>
-                        ) : null}
-                      </>
-                    ) : null}
-                  </span>
-                ),
-              };
-            })
+                const inputType = inputDefinition.type;
+                return {
+                  input,
+                  index,
+                  element: (
+                    <span className="tabular-nums">
+                      {inputType === InputType.Pace && input.value ? (
+                        <>
+                          {decimalAsTime(input.value)}
+                          <small>min/km</small>
+                        </>
+                      ) : inputType === InputType.Time && input.value ? (
+                        seconds2time(
+                          input.unit === Unit.Hr
+                            ? input.value * HOUR_IN_SECONDS
+                            : input.unit === Unit.Min
+                              ? input.value * MINUTE_IN_SECONDS
+                              : input.value,
+                        )
+                      ) : inputType === InputType.Distance && input.value ? (
+                        <>
+                          {(input.unit === Unit.M
+                            ? input.value / 1000
+                            : input.value
+                          ).toLocaleString("en-DK", {
+                            unit: "kilometer",
+                            maximumSignificantDigits: 2,
+                          })}
+                          <small>km</small>
+                        </>
+                      ) : inputType === InputType.Options &&
+                        inputOptions &&
+                        input.value != undefined ? (
+                        String(inputOptions[input.value]?.value ?? "")
+                      ) : input.unit === Unit.FrenchRounded &&
+                        input.value != undefined ? (
+                        new Grade(input.value).name
+                      ) : input.value != undefined &&
+                        !isNaN(input.value) &&
+                        input.value !== undefined &&
+                        input.value !== null &&
+                        (inputType === InputType.Weightassist
+                          ? input.value !== 0
+                          : true) ? (
+                        <>
+                          {input.value.toLocaleString("en-DK", {
+                            maximumFractionDigits: 2,
+                          })}
+                          {set.inputs.length === 1 ||
+                          !(
+                            inputDefinition.type === InputType.Reps &&
+                            set.inputs.some(
+                              (_, i) =>
+                                exercise.inputs[i]?.type === InputType.Weight ||
+                                exercise.inputs[i]?.type ===
+                                  InputType.Weightassist,
+                            )
+                          ) ? (
+                            <small>{input.unit}</small>
+                          ) : null}
+                        </>
+                      ) : null}
+                    </span>
+                  ),
+                };
+              },
+            )
             .sort(
               (a, b) =>
                 Number(exercise.inputs[b.index]?.type === InputType.Reps) -

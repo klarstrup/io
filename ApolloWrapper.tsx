@@ -15,6 +15,7 @@ import {
   LocalStorageWrapper,
   persistCacheSync,
 } from "./vendor/apollo-cache-persist";
+import { GraphQLSchema } from "graphql";
 
 export const { link, useApolloNetworkStatus } = createNetworkStatusNotifier();
 
@@ -40,8 +41,10 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
       cache,
       link:
         typeof window === "undefined"
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          ? new SchemaLink({ schema: require("./graphql.ts").schema })
+          ? new SchemaLink({
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              schema: require("./graphql.ts").schema as GraphQLSchema,
+            })
           : link.concat(
               new HttpLink({
                 uri:

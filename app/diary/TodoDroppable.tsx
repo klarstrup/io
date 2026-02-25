@@ -113,9 +113,8 @@ const customCollisionDetectionAlgorithm: CollisionDetection = ({
   droppableContainers,
   ...args
 }) => {
-  const dateBeingDragged = args.active.data.current?.date;
+  const dateBeingDragged = args.active.data.current?.date as Date;
 
-  // First, let's see if the `trash` droppable rect is intersecting
   const rectIntersectionCollisions = rectIntersection({
     ...args,
     droppableContainers: droppableContainers.filter(
@@ -255,10 +254,11 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           ? getJournalEntryPrincipalDate(followingEntry[1])?.end
           : getJournalEntryPrincipalDate(followingEntry[1])?.start);
 
-    const overStart =
-      over.data.current.date && new Date(over.data.current.date);
-    const dayStart = startOfDayButItRespectsDayStartHour(overStart);
-    const dayEnd = endOfDayButItRespectsDayStartHour(overStart);
+    const overStart = over.data.current.date
+      ? new Date(over.data.current.date)
+      : undefined;
+    const dayStart = startOfDayButItRespectsDayStartHour(overStart!);
+    const dayEnd = endOfDayButItRespectsDayStartHour(overStart!);
 
     let targetDate = dateMidpoint(
       precedingDate || dayStart,
@@ -270,7 +270,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     console.log({ targetDate, precedingDate, followingDate, dayStart, dayEnd });
 
     if (active.data.current.nextSet) {
-      const nextSet: NextSet = active.data.current.nextSet;
+      const nextSet = active.data.current.nextSet as NextSet;
 
       void snoozeExerciseSchedule({
         variables: {
@@ -292,7 +292,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       });
       return;
     } else if (active.data.current.todo) {
-      const todo: Todo = active.data.current.todo;
+      const todo = active.data.current.todo as Todo;
 
       if (isFuture(targetDate)) {
         const updatedTodo = {
@@ -329,7 +329,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         });
       }
     } else if (active.data.current.workout) {
-      const workout: Workout = active.data.current.workout;
+      const workout = active.data.current.workout as Workout;
 
       if (isPast(targetDate)) {
         void updateWorkout({

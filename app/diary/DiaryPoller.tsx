@@ -17,9 +17,14 @@ export function DiaryPoller({ userId }: { userId: string }) {
       host: "ws://localhost:1337/_next/webpack-hmr?id=" + id,
       room: "diary-poller-" + id,
       onMessage(event) {
-        const data = JSON.parse(event.data as string);
+        const data = JSON.parse(event.data as string) as unknown;
 
-        if ("type" in data && data.type === "built") {
+        if (
+          data &&
+          typeof data === "object" &&
+          "type" in data &&
+          data.type === "built"
+        ) {
           // A webpack rebuild happened, likely due to code changes
           // TODO: Make this smarter to avoid unnecessary refreshes
           // TODO: Prevent circular updates if the client also triggers a rebuild
