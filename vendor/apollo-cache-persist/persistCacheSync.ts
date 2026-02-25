@@ -1,7 +1,7 @@
-import CachePersistor from './CachePersistor';
-import Persistor, { PersistorConfig } from './Persistor';
-import Storage from './Storage';
-import { ApolloPersistOptions } from './types';
+import CachePersistor from "./CachePersistor";
+import Persistor, { PersistorConfig } from "./Persistor";
+import Storage from "./Storage";
+import { ApolloPersistOptions } from "./types";
 
 /**
  * Add cache to persist engine using synchronous API
@@ -46,7 +46,11 @@ export class SynchronousPersistor<T> extends Persistor<T> {
   }
 
   restoreSync() {
-    this.cache.restore(this.storage.readSync());
+    this.cache.restore(
+      this.storage.readSync() as Awaited<
+        ReturnType<SynchronousStorage<T>["readSync"]>
+      >,
+    );
   }
 }
 
@@ -55,7 +59,7 @@ export class SynchronousStorage<T> extends Storage<T> {
     super(options);
   }
 
-  readSync(): any {
+  readSync() {
     return this.storage.getItem(this.key);
   }
 }

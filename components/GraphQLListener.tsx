@@ -6,6 +6,7 @@ import { ListPageUserDocument } from "../graphql.generated";
 import { useChannel } from "../hooks/useChannel";
 import { uniqueBy } from "../utils";
 import { useSession } from "next-auth/react";
+import { StoreObject } from "@apollo/client";
 
 function messageToGraphQLUpdate(
   client: ReturnType<typeof useApolloClient>,
@@ -30,7 +31,7 @@ function messageToGraphQLUpdate(
         "fragment" in data2
       ) {
         client.writeFragment({
-          id: client.cache.identify(data2.data as any),
+          id: client.cache.identify(data2.data as StoreObject),
           fragment: parse(data2.fragment),
           data: data2.data,
         });

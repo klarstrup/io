@@ -12,22 +12,22 @@ export default function onCacheWrite({ cache }: TriggerFunctionConfig) {
     const modify = cache.modify;
     const gc = cache.gc;
 
-    cache.write = (...args: any[]) => {
+    cache.write = (...args: unknown[]) => {
       const result = write.apply(cache, args) as ReturnType<typeof write>;
       persist();
       return result;
     };
-    cache.evict = (...args: any[]) => {
+    cache.evict = (...args: unknown[]) => {
       const result = evict.apply(cache, args) as ReturnType<typeof evict>;
       persist();
       return result;
     };
-    cache.modify = (...args: any[]) => {
+    cache.modify = (...args: unknown[]) => {
       const result = modify.apply(cache, args) as ReturnType<typeof modify>;
       persist();
       return result;
     };
-    cache.gc = (...args: any[]) => {
+    cache.gc = (...args: unknown[]) => {
       const result = gc.apply(cache, args) as ReturnType<typeof gc>;
       persist();
       return result;

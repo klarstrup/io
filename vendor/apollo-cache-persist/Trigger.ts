@@ -14,7 +14,7 @@ export default class Trigger<T> {
   debounce: number | undefined;
   persistor: Persistor<T>;
   paused: boolean;
-  timeout: any;
+  timeout: ReturnType<typeof setTimeout> | null = null;
   uninstall: TriggerUninstallFunction | null;
 
   static defaultDebounce = 1000;

@@ -15,7 +15,7 @@ export const useChannel =
       ): unknown => {
         // No-op for server-side rendering
         return {
-          publish: (_message: any) => {
+          publish: (_message: unknown) => {
             // no-op
           },
           unsubscribe: () => {

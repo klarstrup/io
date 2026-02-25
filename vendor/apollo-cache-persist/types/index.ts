@@ -2,7 +2,7 @@ import { ApolloCache } from "@apollo/client/core";
 
 export type LogLevel = "log" | "warn" | "error";
 
-export type LogLine = [LogLevel, any[]];
+export type LogLine = [LogLevel, unknown[]];
 
 export type TriggerUninstallFunction = () => void;
 
