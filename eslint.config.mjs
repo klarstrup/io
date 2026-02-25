@@ -51,7 +51,7 @@ const eslintConfig = defineConfig([
       // "@typescript-eslint/no-unnecessary-type-constraint": "error",
       // "@typescript-eslint/no-unsafe-argument": "error",
       "@typescript-eslint/no-unsafe-assignment": "error",
-      // "@typescript-eslint/no-unsafe-call": "error",
+      "@typescript-eslint/no-unsafe-call": "error",
       // "@typescript-eslint/no-unsafe-declaration-merging": "error",
       // "@typescript-eslint/no-unsafe-enum-comparison": "error",
       // "@typescript-eslint/no-unsafe-function-type": "error",

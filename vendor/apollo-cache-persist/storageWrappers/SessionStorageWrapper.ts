@@ -1,11 +1,7 @@
-import { PersistentStorage } from '../types';
+import { PersistentStorage } from "../types";
 
 export class SessionStorageWrapper implements PersistentStorage<string | null> {
-  protected storage;
-
-  constructor(storage: SessionStorageInterface) {
-    this.storage = storage;
-  }
+  constructor(protected storage: SessionStorageInterface) {}
 
   getItem(key: string): string | null {
     return this.storage.getItem(key);
