@@ -17,7 +17,6 @@ import type {
   Sleep,
   Todo,
   Workout,
-  WorkoutExercise,
 } from "../../graphql.generated";
 import { WorkoutData } from "../../models/workout";
 import { dayStartHour } from "../../utils";
@@ -29,7 +28,6 @@ export type JournalEntry =
   | NextSet
   | Workout
   | ExerciseSchedule
-  | WorkoutExercise
   | Sleep
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | { __typename: "LocationChange"; id: string; location: string; date: Date }
