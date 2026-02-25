@@ -698,8 +698,8 @@ export const partition = <T>(a: T[], fn: (v: T) => boolean) =>
   a.reduce<[T[], T[]]>((m, v) => (m[fn(v) ? 0 : 1].push(v), m), [[], []]);
 
 export const isSameDayButItRespectsDayStartHour = (
-  dateLeft: Date,
-  dateRight: Date,
+  dateLeft: DateArg<Date> & {},
+  dateRight: DateArg<Date> & {},
 ) =>
   isSameDay(
     subHours(dateLeft, dayStartHour),

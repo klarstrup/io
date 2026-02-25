@@ -449,7 +449,7 @@ export function DiaryAgendaDay() {
           const dayName = dateToString(dayDate);
           const dayWorkouts = workouts.filter((workout) =>
             isSameDayButItRespectsDayStartHour(
-              new Date(getJournalEntryPrincipalDate(workout)!.start!),
+              getJournalEntryPrincipalDate(workout)!.start!,
               dayStart,
             ),
           );
@@ -519,7 +519,7 @@ export function DiaryAgendaDay() {
             const dayWorkouts = workouts
               .filter((workout) =>
                 isSameDayButItRespectsDayStartHour(
-                  new Date(getJournalEntryPrincipalDate(workout)!.start!),
+                  getJournalEntryPrincipalDate(workout)!.start!,
                   dayStart,
                 ),
               )
