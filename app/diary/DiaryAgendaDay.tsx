@@ -284,7 +284,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const fetchingInterval = {
     start: dayDate
       ? addHours(dayDate, dayStartHour)
-      : addHours(addDays(startOfDay(tzDate), -8), -dayStartHour),
+      : addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
     end: dayDate
       ? addHours(endOfDay(dayDate), dayStartHour)
       : addDays(endOfDayButItRespectsDayStartHour(tzDate), 14),
