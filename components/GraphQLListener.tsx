@@ -124,12 +124,15 @@ export function GraphQLListener() {
   const { data: session } = useSession();
   const user = session?.user;
 
-  useChannel({ channelName: "GraphQL:" + user?.id, skip: !user }, (message) => {
-    console.log("Ably:", message);
-    if (typeof message.data === "string") {
-      messageToGraphQLUpdate(client, message.data);
-    }
-  });
+  useChannel(
+    { channelName: "GraphQL:" + (user?.id || ""), skip: !user },
+    (message) => {
+      console.log("Ably:", message);
+      if (typeof message.data === "string") {
+        messageToGraphQLUpdate(client, message.data);
+      }
+    },
+  );
 
   return null;
 }

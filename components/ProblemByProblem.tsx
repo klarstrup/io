@@ -486,7 +486,7 @@ export default function ProblemByProblem({
           .map(([, problems], i) => {
             const mostCommonColor = Object.entries(
               countBy(problems, "color"),
-            ).sort((a, b) => Number(b[1]) - Number(a[1]))[0]![0];
+            ).sort(([, a], [, b]) => b - a)[0]![0];
 
             return (
               <div key={i} className="flex items-center">

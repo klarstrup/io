@@ -30,7 +30,7 @@ async function* fetchSertAscents(
   const syncDate = new Date(
     newestAscentInDatabase ? newestAscentInDatabase.created_at : 0,
   );
-  const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+  const syncDateString = `${syncDate.toISOString().split("T")[0]!}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
 
   const { ascents } = await fetchJson<{
     ascents: KilterBoard.Ascent[];
@@ -82,7 +82,7 @@ async function* fetchSertBids(
   const syncDate = new Date(
     newestBidInDatabase ? newestBidInDatabase.created_at : 0,
   );
-  const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+  const syncDateString = `${syncDate.toISOString().split("T")[0]!}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
 
   const { bids } = await fetchJson<{ bids: KilterBoard.Bid[] }>(
     "https://kilterboardapp.com/sync",
@@ -130,7 +130,7 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
     newestClimbInDatabase ? newestClimbInDatabase.created_at : 0,
   );
   while (true) {
-    const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+    const syncDateString = `${syncDate.toISOString().split("T")[0]!}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
     yield { [`climbs${syncDateString}`]: "requesting" };
     const { climbs, shared_syncs } = await fetchJson<{
       climbs: KilterBoard.Climb[];
@@ -144,7 +144,7 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
       body: `climbs=${syncDateString}`,
     });
 
-    yield { [`climbs${syncDateString}`]: "inserting " + climbs.length };
+    yield { [`climbs${syncDateString}`]: `inserting ${climbs.length}` };
     for (const climb of climbs) {
       const updateResult = await KilterBoardClimbs.updateOne(
         { uuid: climb.uuid },
@@ -159,7 +159,7 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
       );
       setUpdated(updateResult);
     }
-    yield { [`climbs${syncDateString}`]: "inserted " + climbs.length };
+    yield { [`climbs${syncDateString}`]: `inserted ${climbs.length}` };
 
     if (climbs.length < 2000) {
       yield `stopped fetching climbs because there were less than 2000 in the last response (${climbs.length})`;
@@ -183,7 +183,7 @@ async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
     newestClimbStatInDatabase ? newestClimbStatInDatabase.created_at : 0,
   );
   while (true) {
-    const syncDateString = `${syncDate.toISOString().split("T")[0]}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
+    const syncDateString = `${syncDate.toISOString().split("T")[0]!}+${encodeURIComponent(syncDate.toISOString().split("T")[1]!.split("Z")[0]!)}`;
     yield { [`climb_stats${syncDateString}`]: "requesting" };
     const { climb_stats, shared_syncs } = await fetchJson<{
       climb_stats: KilterBoard.ClimbStat[];
@@ -200,7 +200,7 @@ async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
     });
 
     yield {
-      [`climb_stats${syncDateString}`]: "inserting " + climb_stats.length,
+      [`climb_stats${syncDateString}`]: `inserting ${climb_stats.length}`,
     };
     for (const climb_stat of climb_stats) {
       const updateResult = await KilterBoardClimbStats.updateOne(
@@ -226,7 +226,7 @@ async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
       setUpdated(updateResult);
     }
     yield {
-      [`climb_stats${syncDateString}`]: "inserted " + climb_stats.length,
+      [`climb_stats${syncDateString}`]: `inserted ${climb_stats.length}`,
     };
 
     if (climb_stats.length < 2000) {

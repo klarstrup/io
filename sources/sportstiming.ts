@@ -157,9 +157,9 @@ export async function getSportsTimingEventResults(
         id: eventId,
         noParticipants,
         category:
-          ioResult?.DistanceName.replace("Strandparken 2018", "Open Race")
+          (ioResult?.DistanceName.replace("Strandparken 2018", "Open Race")
             .replace("Refshaleøen ", "")
-            .replace("Strandparken ", "") + " (M)",
+            .replace("Strandparken ", "") || "") + " (M)",
         scores,
       },
     ],

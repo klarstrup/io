@@ -378,7 +378,7 @@ const getTimeZone = (value: string) => {
 const isDateOnly = (value: string, parameters: string[]) =>
   (parameters?.includes("VALUE=DATE") &&
     !parameters.includes("VALUE=DATE-TIME")) ||
-  /^\d{8}$/.test(value) === true;
+  /^\d{8}$/.test(value);
 
 const typeParameter =
   (name: "datetype") =>
@@ -417,7 +417,7 @@ const dateParameter =
     const pi = parameters.indexOf("TZID=tzone");
     if (pi >= 0) {
       // Correct the parameters with the part on the value
-      parameters[pi] = parameters[pi] + ":" + value.split(":")[0];
+      parameters[pi] = parameters[pi]! + ":" + value.split(":")[0]!;
       // Get the date from the field, other code uses the value parameter
       value = value.split(":")[1]!;
     }
@@ -551,7 +551,7 @@ const dateParameter =
         // Timezone confirmed or forced to offset
         newDate =
           found && tz
-            ? parse(value, "yyyyMMdd'T'HHmmss" + offset, TZDate.tz(tz))
+            ? parse(value, "yyyyMMdd'T'HHmmss" + offset!, TZDate.tz(tz))
             : (new Date(...compsNumbers) as DateWithTimeZone);
         if (found && tz) newDate.tz = tz;
       } else {
@@ -645,9 +645,7 @@ const exdateParameter =
           curr.exdate[exdateDate.toISOString().slice(0, 10)] = exdateDate;
         } else {
           throw new TypeError(
-            "No toISOString function in exdate[name]",
-            //@ts-expect-error -- asd
-            exdateDate,
+            "No toISOString function in exdate[name]" + String(exdateDate),
           );
         }
       }
@@ -692,6 +690,7 @@ const objectHandlers = {
           const object = curr[key as keyof typeof curr];
           if (typeof object === "string") {
             highLevel[key] = object;
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete curr[key];
           }
         }
@@ -735,9 +734,8 @@ const objectHandlers = {
           // Is the 1st character a negative sign?
           const indicator = curr.duration.startsWith("-") ? -1 : 1;
           curr.end = add(curr.start, {
-            [durationUnits[
-              r.toString().slice(-1) as keyof typeof durationUnits
-            ]]: Number.parseInt(r, 10) * indicator,
+            [durationUnits[r.slice(-1) as keyof typeof durationUnits]]:
+              Number.parseInt(r, 10) * indicator,
           });
           console.log("Duration applied, new end:", curr.end);
         }
@@ -869,7 +867,7 @@ const objectHandlers = {
       // Make sure the rrule starts with FREQ=
       rule = rule.slice(rule.lastIndexOf("FREQ="));
       // If no rule start date
-      if (rule.includes("DTSTART") === false) {
+      if (!rule.includes("DTSTART")) {
         // Get date/time into a specific format for comapare
         // If the date has an toISOString function
         if (curr.start && typeof curr.start.toISOString === "function") {

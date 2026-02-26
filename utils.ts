@@ -26,12 +26,9 @@ export const dateToString = (date: Date): `${number}-${number}-${number}` => {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-export const dateMidpoint = <
-  StartType extends DateArg<Date> = DateArg<Date>,
-  EndType extends DateArg<Date> = DateArg<Date>,
->(
-  date1: StartType,
-  date2: EndType,
+export const dateMidpoint = (
+  date1: DateArg<Date>,
+  date2: DateArg<Date>,
 ): Date => {
   return new Date((new Date(date1).getTime() + new Date(date2).getTime()) / 2);
 };
@@ -221,7 +218,7 @@ export function encodeGeohash(
 ) {
   lat = Number(lat);
   lon = Number(lon);
-  precision = Number(precision);
+  precision = precision;
 
   if (isNaN(lat) || isNaN(lon) || isNaN(precision))
     throw new Error("Invalid geohash");
@@ -464,10 +461,10 @@ const getRoundingMethod =
 
 export interface RoundToNearestDaysOptions<DateType extends Date = Date>
   extends RoundingOptions, ContextOptions<DateType> {}
-export function roundToNearestDay<
-  DateType extends DateArg<Date>,
-  ResultDate extends Date = Date,
->(date: DateType, options?: RoundToNearestDaysOptions<ResultDate>): ResultDate {
+export function roundToNearestDay<ResultDate extends Date = Date>(
+  date: DateArg<Date>,
+  options?: RoundToNearestDaysOptions<ResultDate>,
+): ResultDate {
   const inDate = new Date(date);
   const hours =
     inDate.getHours() +
@@ -495,7 +492,7 @@ function stringToColours(inputString: string) {
       "0." +
         Math.sin(sum + 1)
           .toString()
-          .substr(6),
+          .substring(6),
     ) * 256
   );
   const g = ~~(
@@ -503,7 +500,7 @@ function stringToColours(inputString: string) {
       "0." +
         Math.sin(sum + 2)
           .toString()
-          .substr(6),
+          .substring(6),
     ) * 256
   );
   const b = ~~(
@@ -511,7 +508,7 @@ function stringToColours(inputString: string) {
       "0." +
         Math.sin(sum + 3)
           .toString()
-          .substr(6),
+          .substring(6),
     ) * 256
   );
 

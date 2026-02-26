@@ -158,7 +158,7 @@ export const GET = () =>
 
                 const circuitChallengeEdge =
                   await fetchCA<Climbalong.CircuitChallengeEdge>(
-                    `v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]}`,
+                    `v0/nodes/${circuitChallengeNode.nodeId}/edges/${circuitChallengeNode.outputEdgeIds[0]!}`,
                   );
                 await ClimbAlongEdges.updateOne(
                   { processedBy: circuitChallengeEdge.processedBy },

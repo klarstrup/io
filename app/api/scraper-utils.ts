@@ -30,7 +30,7 @@ export async function jsonStreamResponse(generator: () => AsyncGenerator) {
 
     for await (const value of generator()) await flushJSON(value);
   })()
-    .catch(async (error: Error) => {
+    .catch(async (error: unknown) => {
       console.error(error);
 
       if (error instanceof Error) {
@@ -41,7 +41,7 @@ export async function jsonStreamResponse(generator: () => AsyncGenerator) {
           serializableError[key] = error[key];
         }
         if (process.env.NODE_ENV !== "development") {
-          // @ts-expect-error - mehs
+          // @ts-expect-error - i dont care
           delete serializableError.stack;
         }
 

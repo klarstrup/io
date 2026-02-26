@@ -55,10 +55,6 @@ export class SynchronousPersistor<T> extends Persistor<T> {
 }
 
 export class SynchronousStorage<T> extends Storage<T> {
-  constructor(options: ApolloPersistOptions<T>) {
-    super(options);
-  }
-
   readSync() {
     return this.storage.getItem(this.key);
   }

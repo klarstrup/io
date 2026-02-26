@@ -71,7 +71,7 @@ function BarNumberContainer({
 }) {
   return (
     <div
-      className={`flex items-baseline gap-px rounded-xl border border-[yellow]/25 bg-white/50 py-px pr-1.5 pl-1.5 leading-tight font-semibold -tracking-wider whitespace-nowrap tabular-nums ${className}`}
+      className={`flex items-baseline gap-px rounded-xl border border-[yellow]/25 bg-white/50 py-px pr-1.5 pl-1.5 leading-tight font-semibold -tracking-wider whitespace-nowrap tabular-nums ${className || ""}`}
       style={{
         boxShadow:
           "inset 0 0 8px rgba(0, 0, 0, 0.25), inset 0 0 4px #edab00, inset 0 0 4px #edab00, inset 0 0 1px rgba(0, 0, 0, 1), inset 0 0 0.5px rgba(0, 0, 0, 1)",
@@ -284,7 +284,11 @@ export default function DashBar() {
       ) : null}
       {data?.user?.weightTimeSeries ? (
         <a
-          href={`https://healthmate.withings.com/${userWithingsId}/weight`}
+          href={
+            userWithingsId
+              ? `https://healthmate.withings.com/${userWithingsId}/weight`
+              : undefined
+          }
           target="_blank"
           rel="noopener noreferrer"
           className="flex cursor-pointer! items-center"
@@ -313,7 +317,11 @@ export default function DashBar() {
       ) : null}
       {data?.user?.fatRatioTimeSeries ? (
         <a
-          href={`https://healthmate.withings.com/${userWithingsId}/weight`}
+          href={
+            userWithingsId
+              ? `https://healthmate.withings.com/${userWithingsId}/weight`
+              : undefined
+          }
           target="_blank"
           rel="noopener noreferrer"
           className="flex cursor-pointer! items-center"

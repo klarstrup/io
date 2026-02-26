@@ -44,7 +44,7 @@ type PolymorphicRef<T extends ElementType> = ComponentPropsWithRef<T>["ref"];
 type MasonryOwnProps<T extends ElementType> = {
   rows?: Columns;
   gap?: number;
-  rowProps?: PolymorphicComponentPropWithRef<T, object>;
+  rowProps?: PolymorphicComponentPropWithRef<T>;
 };
 type MasonryProps<T extends ElementType> = PolymorphicComponentPropWithRef<
   T,

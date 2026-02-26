@@ -45,12 +45,7 @@ test("takes screenshots", async ({ page }) => {
   await screenshotOnDevices(page, { path: "front-signed-out" });
 
   await page.goto(
-    "/diary/" +
-      (new Date().getFullYear() +
-        "-" +
-        String(new Date().getMonth() + 1) +
-        "-" +
-        String(new Date().getDate())),
+    `/diary/${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`,
     { waitUntil: "networkidle" },
   );
 

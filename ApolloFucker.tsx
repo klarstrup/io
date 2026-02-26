@@ -30,7 +30,7 @@ export default function ApolloFucker() {
     typeof window !== "undefined" ? Date.now() : 0,
   );
   useEffect(() => {
-    if (visibilityRef.current === false && isPageVisible === true) {
+    if (!visibilityRef.current && isPageVisible) {
       const now = Date.now();
       // Don't refetch if we've done so in the last 5 minutes, to avoid refetching when the user is switching tabs quickly
       if (now - lastVisibilityFetchRef.current < 300000) return;

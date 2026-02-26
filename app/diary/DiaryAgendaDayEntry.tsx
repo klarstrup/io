@@ -24,7 +24,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     children: React.ReactNode;
     onContentClick?: () => void;
     onIconClick?: (
-      e: React.MouseEvent<HTMLButtonElement | HTMLDivElement, MouseEvent>,
+      e: React.MouseEvent<HTMLButtonElement | HTMLDivElement>,
     ) => void;
     cotemporality?: "past" | "current" | "future" | "backlog";
     cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;

@@ -23,7 +23,7 @@ export default function AblyWrapper({
 
   return (
     <AblyProvider client={realtimeClient}>
-      <ChannelProvider channelName={`GraphQL:${user?.id}`}>
+      <ChannelProvider channelName={`GraphQL:${user?.id || ""}`}>
         {children}
       </ChannelProvider>
     </AblyProvider>

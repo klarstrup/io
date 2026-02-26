@@ -92,7 +92,7 @@ function optionsToId(options: IntersectionObserverInit) {
       (key) =>
         `${key}_${
           key === "root"
-            ? getRootId(options.root)
+            ? getRootId(options.root)!
             : JSON.stringify(options[key as keyof IntersectionObserverInit])
         }`,
     )

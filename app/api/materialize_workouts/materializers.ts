@@ -299,7 +299,7 @@ export async function* materializeToploggerWorkouts(
   ]);
 
   yield "materializeToploggerWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -321,7 +321,7 @@ export async function* materializeIoWorkouts(user: Session["user"]) {
   ]);
 
   yield "materializeIoWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -401,7 +401,7 @@ export async function* materializeFitocracyWorkouts(
   ]);
 
   yield "materializeFitocracyWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -456,7 +456,7 @@ export async function* materializeRunDoubleWorkouts(
   ]);
 
   yield "materializeRunDoubleWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -683,7 +683,7 @@ export async function* materializeKilterBoardWorkouts(
   ]);
 
   yield "materializeKilterBoardWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -794,7 +794,7 @@ export async function* materializeMoonBoardWorkouts(
   ]);
 
   yield "materializeMoonBoardWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -894,7 +894,7 @@ export async function* materializeGrippyWorkouts(
   ]);
 
   yield "materializeGrippyWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -950,7 +950,7 @@ export async function* materializeCrimpdWorkouts(
   ]);
 
   yield "materializeCrimpdWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -1108,7 +1108,7 @@ export async function* materializeOnsightWorkouts(
   ] as const);
 
   yield "materializeOnsightWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -1312,7 +1312,7 @@ export async function* materializeClimbalongWorkouts(
   ]);
 
   yield "materializeClimbalongWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 
@@ -1372,7 +1372,7 @@ export async function* materializeSportstimingWorkouts(
   ] as const);
 
   yield "materializeSportstimingWorkouts: done in " +
-    (new Date().getTime() - t.getTime()) +
+    String(new Date().getTime() - t.getTime()) +
     "ms";
 }
 

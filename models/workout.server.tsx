@@ -260,17 +260,14 @@ export const getNextSet = async ({
         inputs.length === 1 && inputs.every(({ unit }) => unit === Unit.Reps),
     )
   ) {
-    heaviestSetEffort = workingSets.reduce(
-      (m, s) => m + Number(s.inputs[0]!.value),
-      0,
-    );
+    heaviestSetEffort = workingSets.reduce((m, s) => m + s.inputs[0]!.value, 0);
   }
 
   const finalWorkingSetReps =
     workingSets?.[workingSets.length - 1]?.inputs[repsInputIndex]?.value;
 
   const totalReps = exercise?.sets?.reduce(
-    (m, s) => m + Number(s.inputs[repsInputIndex]?.value || 0),
+    (m, s) => m + (s.inputs[repsInputIndex]?.value || 0),
     0,
   );
 
@@ -627,8 +624,10 @@ export function mergeWorkoutsOfExercise(
     (acc, workout) => {
       const location = workout.locationId
         ? locations?.find((l) => l._id.toString() === workout.locationId)
-        : workout.location
-          ? locations?.find((l) => l.name === workout.location)
+        : // eslint-disable-next-line @typescript-eslint/no-deprecated
+          workout.location
+          ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+            locations?.find((l) => l.name === workout.location)
           : undefined;
 
       for (const exercise of workout.exercises) {

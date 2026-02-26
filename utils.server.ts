@@ -15,20 +15,20 @@ type ProxyCollection<TSchema extends Document> = Pick<
   | "createIndexes"
   | "aggregate"
 >;
-export function proxyCollection<
-  TSchema extends Document,
-  PCollection extends ProxyCollection<TSchema> = ProxyCollection<TSchema>,
->(name: string) {
-  return new Proxy({} as PCollection, {
-    // @ts-expect-error - ?
-    get<K extends keyof PCollection>(_target: unknown, property: K) {
+export function proxyCollection<TSchema extends Document>(name: string) {
+  return new Proxy({} as ProxyCollection<TSchema>, {
+    get<K extends keyof ProxyCollection<TSchema>>(
+      _target: unknown,
+      property: K,
+    ) {
       if (property === "find") {
-        return function (...args: Parameters<PCollection["find"]>) {
+        return function (
+          ...args: Parameters<ProxyCollection<TSchema>["find"]>
+        ) {
           return {
             async *[Symbol.asyncIterator]() {
               const DB = await getDB();
 
-              // @ts-expect-error - ?
               for await (const document of DB.collection(name).find(...args)) {
                 yield document;
               }
@@ -36,12 +36,9 @@ export function proxyCollection<
             async toArray() {
               const DB = await getDB();
 
-              return (
-                DB.collection(name)
-                  // @ts-expect-error - ?
-                  .find(...args)
-                  .toArray()
-              );
+              return DB.collection(name)
+                .find(...args)
+                .toArray();
             },
           };
         };
@@ -69,12 +66,11 @@ export function proxyCollection<
         };
       }
 
-      // @ts-expect-error - ?
-      return async function (...args: Parameters<PCollection[K]>) {
+      return async function (...args: Parameters<ProxyCollection<TSchema>[K]>) {
         const DB = await getDB();
 
-        // @ts-expect-error - ?
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+        // @ts-expect-error - we know this is a valid property, but TypeScript can't verify it
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return DB.collection(name)[property](...args);
       };
     },

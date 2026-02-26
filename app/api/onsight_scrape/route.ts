@@ -40,11 +40,11 @@ export const GET = () =>
                 _createdAt: new Date(competition._createdAt),
                 _updatedAt: new Date(competition._updatedAt),
                 startAt: new TZDate(
-                  `${competition.Date} ${competition.Start.split(" - ")[0]}`,
+                  `${competition.Date} ${competition.Start.split(" - ")[0]!}`,
                   "Europe/Copenhagen",
                 ),
                 endAt: new TZDate(
-                  `${competition.Date} ${competition.Start.split(" - ")[1]}`,
+                  `${competition.Date} ${competition.Start.split(" - ")[1]!}`,
                   "Europe/Copenhagen",
                 ),
               },

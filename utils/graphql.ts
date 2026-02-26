@@ -151,6 +151,7 @@ export const fetchGraphQLQuery = async <TData = Record<string, unknown>>(
 ): Promise<FetchResult<TData>> => {
   const result = await fetchJson<FetchResult<TData>>(url, {
     ...init,
+    // eslint-disable-next-line @typescript-eslint/no-misused-spread
     headers: { "Content-Type": "application/json", ...init?.headers },
     body: JSON.stringify({ operationName, variables, query: print(query) }),
     method: "POST",
@@ -324,7 +325,7 @@ const defaultGetObjectId: GetObjectId = (object: {
   readonly id: string;
   readonly __typename?: string;
 }): GetObjectToIdResult =>
-  object.id === undefined ? undefined : `${object.__typename}:${object.id}`;
+  object.id === undefined || object.__typename === undefined ? undefined : `${object.__typename}:${object.id}`;
 
 const resolveType: ResolveType = (object: {
   readonly __typename?: string;
@@ -491,7 +492,7 @@ function normalize(
       }
       // Expand any fragments
       const expandedSelections = expandFragments(
-        // @ts-expect-error -- ?
+        // @ts-expect-error -- boy howdy it is a fucking mess
         responseObjectOrArray,
         fieldNode.selectionSet.selections,
         fragmentMap,
@@ -517,14 +518,14 @@ function normalize(
             stack.push([
               field as FieldNodeWithSelectionSet,
               normObj,
-              // @ts-expect-error -- ?
+              // @ts-expect-error -- boy howdy it is a fucking mess
               responseFieldValue,
               // Use the current key plus fieldname as fallback id
               keyOrNewParentArray + "." + normFieldName,
             ]);
           } else {
             // This field is a primitive (not a array of normalized objects or a single normalized object)
-            // @ts-expect-error -- ?
+            // @ts-expect-error -- boy howdy it is a fucking mess
             normObj[normFieldName] = responseFieldValue;
           }
         }

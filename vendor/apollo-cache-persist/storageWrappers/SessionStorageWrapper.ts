@@ -7,16 +7,16 @@ export class SessionStorageWrapper implements PersistentStorage<string | null> {
     return this.storage.getItem(key);
   }
 
-  removeItem(key: string): void {
-    return this.storage.removeItem(key);
+  removeItem(key: string): undefined {
+    this.storage.removeItem(key);
   }
 
-  setItem(key: string, value: string | null): void {
+  setItem(key: string, value: string | null): undefined {
     if (value !== null) {
       // setting null to sessionstorage stores "null" as string
-      return this.storage.setItem(key, value);
+      this.storage.setItem(key, value);
     } else {
-      return this.removeItem(key);
+      this.removeItem(key);
     }
   }
 }

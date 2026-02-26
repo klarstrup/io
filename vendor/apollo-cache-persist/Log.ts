@@ -22,7 +22,7 @@ export default class Log<T> {
   }
 
   tailLogs(): void {
-    this.lines.forEach(([level, message]) => this.emit(level, message));
+    for (const [level, message] of this.lines) this.emit(level, message);
   }
 
   getLogs(): Array<LogLine> {

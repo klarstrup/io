@@ -51,6 +51,7 @@ export async function upsertWorkout(
   // Check if locationId is provided and if no such location exists with that
   // locationId as its name or its _id, create it with that as the name and
   // use it as the locationId in the workout document
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (workout.locationId && !workout.location) {
     const newLocationName = workout.locationId.trim();
     const location = await Locations.findOne(
@@ -234,8 +235,7 @@ export async function createUserDataSource<
 }
 
 export async function updateUserDataSource<
-  S extends DataSource,
-  DS extends Extract<UserDataSource, { source: S }>,
+  DS extends Extract<UserDataSource, { source: DataSource }>,
 >(userId: string, dataSourceId: DS["id"], dataSource: DS) {
   const user = (await auth())?.user;
   if (!user || user.id !== userId) throw new Error("Unauthorized");

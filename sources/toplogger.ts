@@ -242,7 +242,7 @@ export async function getIoTopLoggerCompEvent(
                   color:
                     holdColors.find(({ id }) => id === climb.holdColorId)
                       ?.color || undefined,
-                  grade: climb.grade ? Number(climb.grade / 100) : undefined,
+                  grade: climb.grade ? climb.grade / 100 : undefined,
                   attemptCount: climbLog ? climbLog?.tryIndex + 1 : null,
                   attempt: climbLog ? climbLog.tickType == 0 : false,
                   // TopLogger does not do zones, at least not for Beta Boulders

@@ -416,7 +416,7 @@ export default function UserStuffWorkoutSchedulesForm({
                         <td className="text-xs text-gray-500">
                           {schedule.snoozedUntil &&
                           isFuture(schedule.snoozedUntil)
-                            ? `${schedule.snoozedUntil.toJSON().slice(0, 10)}`
+                            ? schedule.snoozedUntil.toJSON().slice(0, 10)
                             : null}
                         </td>
                       ) : null}
@@ -486,14 +486,16 @@ export default function UserStuffWorkoutSchedulesForm({
                           <td className="text-xs text-gray-500">
                             {schedule.baseWeight
                               ? `${schedule.baseWeight} ${
-                                  exercise.inputs[effortInputIndex]?.metric_unit
+                                  exercise.inputs[effortInputIndex]
+                                    ?.metric_unit || ""
                                 }`
                               : null}
                           </td>
                           <td className="text-xs text-gray-500">
                             {schedule.increment
                               ? `+${schedule.increment} ${
-                                  exercise.inputs[effortInputIndex]?.metric_unit
+                                  exercise.inputs[effortInputIndex]
+                                    ?.metric_unit || ""
                                 }`
                               : null}
                           </td>
@@ -544,7 +546,7 @@ export default function UserStuffWorkoutSchedulesForm({
                       ? `(${new Intl.ListFormat("en-DK", {
                           type: "disjunction",
                         }).format(aliases)})`
-                      : aliases.length === 1
+                      : aliases[0]
                         ? `(${aliases[0]})`
                         : ""
                   }` + (stats ? ` (${stats.exerciseCount})` : ""),

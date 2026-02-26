@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated */
 import type { Session } from "next-auth";
 import { auth } from "../../../auth";
 import { Locations } from "../../../models/location.server";

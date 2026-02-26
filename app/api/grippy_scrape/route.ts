@@ -20,7 +20,7 @@ async function fetchGrippyWorkoutLogsByPage(
   authTokens: Grippy.AuthTokens,
 ) {
   const res = await fetch(
-    "https://api.griptonite.io/workouts/logs?page=" + page,
+    `https://api.griptonite.io/workouts/logs?page=${page}`,
     { headers: { authorization: `Bearer ${authTokens.access_token}` } },
   );
   if (!res.ok || res.status !== 200) {
@@ -33,7 +33,7 @@ async function fetchGrippyWorkoutLogDetailsByUuid(
   uuid: string,
   authTokens: Grippy.AuthTokens,
 ) {
-  const res = await fetch("https://api.griptonite.io/workouts/logs/" + uuid, {
+  const res = await fetch(`https://api.griptonite.io/workouts/logs/${uuid}`, {
     headers: { authorization: `Bearer ${authTokens.access_token}` },
   });
   if (!res.ok || res.status !== 200) {
@@ -46,7 +46,7 @@ async function fetchGrippyWorkoutDetailsByUuid(
   uuid: string,
   authTokens: Grippy.AuthTokens,
 ) {
-  const res = await fetch("https://api.griptonite.io/workouts/" + uuid, {
+  const res = await fetch(`https://api.griptonite.io/workouts/${uuid}`, {
     headers: { authorization: `Bearer ${authTokens.access_token}` },
   });
   if (!res.ok || res.status !== 200) {

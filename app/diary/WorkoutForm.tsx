@@ -436,7 +436,7 @@ export function WorkoutForm<R extends string>({
             name="locationId"
             control={control}
             render={({ field }) => (
-              <Creatable<{ label: string; value: string }, false>
+              <Creatable<{ label: string; value: string }>
                 className="text-2xl"
                 instanceId={locationInstanceId}
                 placeholder="Pick location..."
@@ -456,7 +456,7 @@ export function WorkoutForm<R extends string>({
                     compareDesc(a.mostRecentVisit ?? 0, b.mostRecentVisit ?? 0),
                   )
                   .map(({ location, visitCount }) => ({
-                    label: `${location.name} (${visitCount})`,
+                    label: `${location.name} (${visitCount || 0})`,
                     value: location._id,
                   }))}
                 {...field}
@@ -638,7 +638,7 @@ export function WorkoutForm<R extends string>({
                       ? `(${new Intl.ListFormat("en-DK", {
                           type: "disjunction",
                         }).format(aliases)})`
-                      : aliases.length === 1
+                      : aliases[0]
                         ? `(${aliases[0]})`
                         : ""
                   }` + (stats ? ` (${stats.exerciseCount})` : ""),
@@ -758,9 +758,9 @@ function SetsForm({
           "attemptCount" in set.meta &&
           set.meta?.attemptCount &&
           Number(set.meta.attemptCount) >= 0) ||
-        Number(set.inputs[2]?.value) === Number(SendType.Attempt) ||
-        Number(set.inputs[2]?.value) === Number(SendType.Top) ||
-        Number(set.inputs[2]?.value) === Number(SendType.Zone),
+        Number(set.inputs[2]?.value) === SendType.Attempt ||
+        Number(set.inputs[2]?.value) === SendType.Top ||
+        Number(set.inputs[2]?.value) === SendType.Zone,
     );
 
   const showZoneAttemptsInput =
@@ -771,7 +771,7 @@ function SetsForm({
           "zoneAttemptCount" in set.meta &&
           set.meta?.zoneAttemptCount &&
           Number(set.meta.zoneAttemptCount) >= 0) ||
-        Number(set.inputs[2]?.value) === Number(SendType.Zone) ||
+        Number(set.inputs[2]?.value) === SendType.Zone ||
         location?.boulderCircuits?.some((c) => c.hasZones),
     );
 
@@ -900,7 +900,7 @@ function SetsForm({
                               exercise,
                               watchedSets[index]!,
                               location,
-                            )?.name
+                            )!.name
                           }" assumed)`
                         : null}
                     </option>
@@ -932,7 +932,7 @@ function SetsForm({
                       disabled={
                         isDisabled ||
                         Number(watchedSets[index]?.inputs[2]?.value ?? -1) ===
-                          Number(SendType.Flash)
+                          SendType.Flash
                       }
                       {...register(
                         `exercises.${parentIndex}.sets.${index}.meta.zoneAttemptCount`,
@@ -956,7 +956,7 @@ function SetsForm({
                     disabled={
                       isDisabled ||
                       Number(watchedSets[index]?.inputs[2]?.value ?? -1) ===
-                        Number(SendType.Flash)
+                        SendType.Flash
                     }
                     {...register(
                       `exercises.${parentIndex}.sets.${index}.meta.attemptCount`,

@@ -1,10 +1,10 @@
-import Log from './Log';
-import Cache from './Cache';
-import Storage from './Storage';
-import Persistor from './Persistor';
-import Trigger from './Trigger';
+import Log from "./Log";
+import Cache from "./Cache";
+import Storage from "./Storage";
+import Persistor from "./Persistor";
+import Trigger from "./Trigger";
 
-import { ApolloPersistOptions, LogLine } from './types';
+import { ApolloPersistOptions, LogLine } from "./types";
 
 export default class CachePersistor<T> {
   log: Log<T>;
@@ -16,15 +16,15 @@ export default class CachePersistor<T> {
   constructor(options: ApolloPersistOptions<T>) {
     if (!options.cache) {
       throw new Error(
-        'In order to persist your Apollo Cache, you need to pass in a cache. ' +
-          'Please see https://www.apollographql.com/docs/react/basics/caching.html for our default InMemoryCache.',
+        "In order to persist your Apollo Cache, you need to pass in a cache. " +
+          "Please see https://www.apollographql.com/docs/react/basics/caching.html for our default InMemoryCache.",
       );
     }
 
     if (!options.storage) {
       throw new Error(
-        'In order to persist your Apollo Cache, you need to pass in an underlying storage provider. ' +
-          'Please see https://github.com/apollographql/apollo-cache-persist#storage-providers',
+        "In order to persist your Apollo Cache, you need to pass in an underlying storage provider. " +
+          "Please see https://github.com/apollographql/apollo-cache-persist#storage-providers",
       );
     }
 
@@ -78,7 +78,7 @@ export default class CachePersistor<T> {
    * Info accessor.
    */
 
-  getLogs(print = false): Array<LogLine> | void {
+  getLogs(print = false): Array<LogLine> | undefined {
     if (print) {
       this.log.tailLogs();
     } else {

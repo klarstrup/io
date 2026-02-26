@@ -165,6 +165,7 @@ export const GET = (request: NextRequest) =>
             "https://app.toplogger.nu/graphql",
             query,
             variables,
+            // eslint-disable-next-line @typescript-eslint/no-misused-spread
             { headers: { ...agentHeaders, ...headers } },
           );
           const requestMs = Date.now() - requestStarted;

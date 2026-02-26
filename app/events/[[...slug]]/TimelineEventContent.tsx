@@ -240,9 +240,9 @@ export default async function TimelineEventContent({
                 "",
               )
               .replace(
-                `${new Date(start).toLocaleDateString("da-DK", {
+                new Date(start).toLocaleDateString("da-DK", {
                   year: "numeric",
-                })}`,
+                }),
                 "",
               )
               .trim()}

@@ -18,20 +18,21 @@ export type SetUpdatedFn = (
 ) => void;
 
 // TODO: Allow this to run in parallel for certain data sources, for example iCal feeds, wh
-export async function* wrapSources<
-  S extends DataSource,
-  DS extends UserDataSource & { source: S },
-  T,
->(
+export async function* wrapSources<S extends DataSource, T>(
   user: Session["user"],
   source: S,
-  fn: (dataSource: DS, setUpdated: SetUpdatedFn) => AsyncGenerator<T>,
+  fn: (
+    dataSource: UserDataSource & { source: S },
+    setUpdated: SetUpdatedFn,
+  ) => AsyncGenerator<T>,
 ) {
   // Randomize the order of data sources to improve scraping coverage for users with many data sources
   // TODO: Let a source be prioritized, for example if it hasn't been scraped in a while, maybe by URL
   const dataSources = shuffle(
     (user.dataSources ?? [])
-      .filter((ds): ds is DS => ds.source === source)
+      .filter(
+        (ds): ds is UserDataSource & { source: S } => ds.source === source,
+      )
       .filter((dataSource) => !dataSource.paused),
   );
 

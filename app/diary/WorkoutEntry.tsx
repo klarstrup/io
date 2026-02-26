@@ -51,13 +51,13 @@ export default function WorkoutEntry({
               >
                 <small>{workoutDateStr}</small>
               </Link>
-              {showLocation && locationName ? (
+              {showLocation && locationName && location ? (
                 <small>
                   {" "}
                   -{" "}
                   <Link
                     prefetch={false}
-                    href={`/diary/locations/${location?.id}`}
+                    href={`/diary/locations/${location.id}`}
                     className="font-bold"
                     style={{ color: "#edab00" }}
                   >
@@ -66,12 +66,12 @@ export default function WorkoutEntry({
                 </small>
               ) : null}
             </div>
-          ) : showLocation && locationName ? (
+          ) : showLocation && locationName && location ? (
             <div>
               <small>
                 <Link
                   prefetch={false}
-                  href={`/diary/locations/${location?.id}`}
+                  href={`/diary/locations/${location.id}`}
                   className="font-bold"
                   style={{ color: "#edab00" }}
                 >

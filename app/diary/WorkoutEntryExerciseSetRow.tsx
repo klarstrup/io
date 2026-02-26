@@ -105,7 +105,7 @@ export function WorkoutEntryExerciseSetRow({
                       ) : inputType === InputType.Options &&
                         inputOptions &&
                         input.value != undefined ? (
-                        String(inputOptions[input.value]?.value ?? "")
+                        (inputOptions[input.value]?.value ?? "")
                       ) : input.unit === Unit.FrenchRounded &&
                         input.value != undefined ? (
                         new Grade(input.value).name

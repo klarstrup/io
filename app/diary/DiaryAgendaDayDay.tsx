@@ -385,7 +385,7 @@ export function DiaryAgendaDayDay({
             workouts={dayJournalEntries
               .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
               .filter((w) => w.source === WorkoutSource.Self)
-              .map((d) => ({ ...d, _id: d.id.toString() }))}
+              .map((d) => ({ ...d, _id: d.id }))}
             locations={dayLocations}
           />
         ),
