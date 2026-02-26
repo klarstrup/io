@@ -245,7 +245,7 @@ gql`
   }
 `;
 
-export function DiaryAgendaDay() {
+export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
   const { data: sessionData, status: sessionStatus } = useSession();
@@ -277,13 +277,17 @@ export function DiaryAgendaDay() {
       : undefined);
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const now = TZDate.tz(timeZone);
+  const now = dayDate || TZDate.tz(timeZone);
   const startOfAgendaDay = startOfDayButItRespectsDayStartHour(now);
   const tzDate = new TZDate(startOfAgendaDay, timeZone);
 
   const fetchingInterval = {
-    start: addDays(startOfDay(tzDate), -8),
-    end: addDays(endOfDayButItRespectsDayStartHour(tzDate), 14),
+    start: dayDate
+      ? addHours(dayDate, dayStartHour)
+      : addHours(addDays(startOfDay(tzDate), -8), -dayStartHour),
+    end: dayDate
+      ? addHours(endOfDay(dayDate), dayStartHour)
+      : addDays(endOfDayButItRespectsDayStartHour(tzDate), 14),
   };
 
   const { data } = useQuery(DiaryAgendaDayUserTodosDocument, {
