@@ -44,7 +44,7 @@ export default function DiaryAgendaDaySleep({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       key={sleep.id}
       ref={ref}
-      onClick={() => setIsOpen((open) => !open)}
+      onClick={() => setIsOpen(true)}
       className={"cursor-pointer" + (isOpen ? " bg-gray-100" : "")}
     >
       <div className="relative flex items-center gap-1.5 leading-snug">
