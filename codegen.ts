@@ -20,6 +20,7 @@ const config: CodegenConfig = {
       ],
       config: {
         typesPrefix: "GQ",
+        arrayInputCoercion: false,
         avoidOptionals: { field: false, inputValue: false },
         defaultScalarType: "unknown",
         // Apollo Client always includes `__typename` fields
