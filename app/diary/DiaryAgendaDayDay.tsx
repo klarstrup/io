@@ -1,19 +1,16 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
-import { faBed, faBedPulse } from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
   endOfDay,
-  intervalToDuration,
   isBefore,
   isEqual,
   isPast,
   roundToNearestMinutes,
   startOfDay,
   subHours,
-  type Interval,
 } from "date-fns";
 import Link from "next/link";
 import { useEffect, useRef, type ReactElement } from "react";
@@ -24,7 +21,7 @@ import type {
   GQUser,
   GQWorkout,
 } from "../../graphql.generated";
-import { formatShortDuration, WorkoutSource } from "../../models/workout";
+import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
   dateToString,
@@ -42,6 +39,7 @@ import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
 import { DiaryAgendaDayEventEnd } from "./DiaryAgendaDayEventEnd";
 import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
+import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
@@ -154,51 +152,17 @@ export function DiaryAgendaDayDay({
     } else if (journalEntry.__typename === "Sleep") {
       const sleep = journalEntry;
 
-      const duration = intervalToDuration({
-        start: 0,
-        end: journalEntry.totalSleepTime * 1000,
-      });
-
       dayJournalEntryElements.push({
         id: client.cache.identify(sleep) || sleep.id,
         element: (
-          <DiaryAgendaDayEntry
-            // TODO: smarter way of determining if it's waking up or going to sleep
-            icon={isLastEntry ? faBed : faBedPulse}
-            cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
+          <DiaryAgendaDaySleep
+            sleep={sleep}
+            user={user}
+            isLastEntry={isLastEntry}
+            principalDate={principalDate}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             key={sleep.id}
-          >
-            <div className="flex items-center gap-1.5 leading-snug">
-              <div className="text-center font-semibold tabular-nums">
-                {!isLastEntry
-                  ? new Date(sleep.endedAt).toLocaleTimeString("en-DK", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone,
-                    })
-                  : new Date(sleep.startedAt).toLocaleTimeString("en-DK", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone,
-                    })}
-              </div>{" "}
-              <div className="flex items-baseline gap-2">
-                {isLastEntry ? (
-                  <span>Went to bed</span>
-                ) : (
-                  <span>Got out of bed</span>
-                )}
-                {!isLastEntry ? (
-                  <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
-                    {duration ? (
-                      <>{formatShortDuration(duration)} slept</>
-                    ) : null}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </DiaryAgendaDayEntry>
+          />
         ),
       });
     } else if (journalEntry.__typename === "Event") {
