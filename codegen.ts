@@ -4,7 +4,8 @@ const config: CodegenConfig = {
   overwrite: true,
   schema: "./graphql.ts",
   documents: [
-    "app/**/*.{ts,tsx}",
+    "app/**/*.{ts,tsx,gql,graphql}",
+    "components/**/*.{ts,tsx,gql,graphql}",
     "!app/api/toplogger_scrape/queries.ts",
     "!app/api/toplogger_scrape/fragments.ts",
   ],
@@ -19,6 +20,7 @@ const config: CodegenConfig = {
         "typed-document-node",
       ],
       config: {
+        useTypeImports: true,
         typesPrefix: "GQ",
         arrayInputCoercion: false,
         avoidOptionals: { field: false, inputValue: false },

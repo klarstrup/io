@@ -15,11 +15,15 @@ import {
   subHours,
   type Interval,
 } from "date-fns";
-import type { Session } from "next-auth";
 import Link from "next/link";
 import { useEffect, useRef, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import type { GQEvent, GQLocation, GQWorkout } from "../../graphql.generated";
+import type {
+  GQEvent,
+  GQLocation,
+  GQUser,
+  GQWorkout,
+} from "../../graphql.generated";
 import { formatShortDuration, WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -52,7 +56,7 @@ export function DiaryAgendaDayDay({
 }: {
   date: `${number}-${number}-${number}`;
   dayDate: Date;
-  user?: Session["user"];
+  user?: Omit<GQUser, "exerciseSchedules">;
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
 }) {

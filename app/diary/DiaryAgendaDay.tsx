@@ -54,6 +54,44 @@ gql`
       image
       emailVerified
       timeZone
+      dataSources {
+        id
+        name
+        paused
+        createdAt
+        updatedAt
+        lastSyncedAt
+        lastSuccessfulAt
+        lastSuccessfulRuntime
+        lastResult
+        lastFailedAt
+        lastFailedRuntime
+        lastAttemptedAt
+        lastError
+        source
+        config
+      }
+      exerciseSchedules {
+        id
+        exerciseId
+        enabled
+        frequency {
+          years
+          months
+          weeks
+          days
+          hours
+          minutes
+          seconds
+        }
+        increment
+        workingSets
+        workingReps
+        deloadFactor
+        baseWeight
+        snoozedUntil
+        order
+      }
     }
   }
 `;
@@ -219,7 +257,24 @@ export function DiaryAgendaDay() {
   });
   const gqlUser = gqlUserData?.user;
 
-  const user = gqlUser || sessionUser;
+  const user =
+    gqlUser ||
+    (sessionUser
+      ? {
+          ...sessionUser,
+          __typename: "User",
+          dataSources: sessionUser.dataSources?.map((ds) => ({
+            ...ds,
+            __typename: "UserDataSource",
+          })),
+          exerciseSchedules: gqlUserData?.user?.exerciseSchedules?.map(
+            (es) => ({
+              ...es,
+              __typename: "ExerciseSchedule",
+            }),
+          ),
+        }
+      : undefined);
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);

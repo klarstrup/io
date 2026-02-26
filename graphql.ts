@@ -1209,12 +1209,14 @@ export const typeDefs = gql`
     createTodo(input: CreateTodoInput!): CreateTodoPayload
     updateTodo(input: UpdateTodoInput!): UpdateTodoPayload
     deleteTodo(id: String!): String
+
     snoozeExerciseSchedule(
       input: SnoozeExerciseScheduleInput!
     ): SnoozeExerciseSchedulePayload
     unsnoozeExerciseSchedule(
       input: UnsnoozeExerciseScheduleInput!
     ): UnsnoozeExerciseSchedulePayload
+
     updateWorkout(input: UpdateWorkoutInput!): UpdateWorkoutPayload
   }
 
@@ -1263,6 +1265,7 @@ export const typeDefs = gql`
     paused: Boolean
     createdAt: Date!
     updatedAt: Date!
+    lastAttemptedAt: Date
     lastSyncedAt: Date
     lastSuccessfulAt: Date
     lastSuccessfulRuntime: Float

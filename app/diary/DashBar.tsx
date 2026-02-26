@@ -42,6 +42,19 @@ gql`
       availableBalance
       inboxEmailCount
       dataSources {
+        id
+        name
+        paused
+        createdAt
+        updatedAt
+        lastSyncedAt
+        lastSuccessfulAt
+        lastSuccessfulRuntime
+        lastResult
+        lastFailedAt
+        lastFailedRuntime
+        lastAttemptedAt
+        lastError
         source
         config
       }

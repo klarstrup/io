@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ComponentProps, forwardRef, useRef, useState } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
-import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
+import SourceWidget from "../../components/SourceWidget";
 import {
   GQExerciseInfo,
   GQLocation,
@@ -461,11 +461,11 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
               {dueSet.exerciseId in exerciseIdToDataSourceMapping &&
               exerciseIdToDataSourceMapping[dueSet.exerciseId] ? (
                 <div className="rounded-md border border-black/20 bg-white p-1">
-                  <UserStuffSourcesForm
-                    sourceOptions={
-                      exerciseIdToDataSourceMapping[dueSet.exerciseId]!
-                    }
-                  />
+                  {exerciseIdToDataSourceMapping[dueSet.exerciseId]?.map(
+                    (source) => (
+                      <SourceWidget key={source} dataSource={source} />
+                    ),
+                  )}
                 </div>
               ) : null}
             </div>

@@ -10,8 +10,7 @@ import {
   roundToNearestMinutes,
   startOfDay,
 } from "date-fns";
-import type { Session } from "next-auth";
-import type { GQEvent } from "../../graphql.generated";
+import type { GQEvent, GQUser } from "../../graphql.generated";
 import { formatShortDuration } from "../../models/workout";
 import {
   cotemporality,
@@ -31,7 +30,7 @@ export function DiaryAgendaDayEvent({
   isEventEnd,
 }: {
   dayDate: Date;
-  user?: Session["user"];
+  user?: Pick<GQUser, "timeZone">;
   event: GQEvent;
   isEventWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
