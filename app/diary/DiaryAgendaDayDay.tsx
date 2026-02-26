@@ -433,6 +433,7 @@ export function DiaryAgendaDayDay({
         id: client.cache.identify(workout) || workout.id,
         element: (
           <DiaryAgendaDayWorkout
+            key={workout.id}
             location={dayLocations.find((loc) => loc.id === workout.locationId)}
             workout={workout}
             workoutDateStr={workoutDateStr}
