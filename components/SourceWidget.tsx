@@ -18,7 +18,8 @@ export default function SourceWidget({
   const now = useNow();
 
   const { data, refetch } = useQuery(SourceWidgetDocument, {
-    pollInterval: isScraping ? 1000 : 0, // Poll every second while scraping, stop polling when not scraping
+    // Poll every second while scraping, poll less frequently otherwise - this widget is never permanently anyway
+    pollInterval: isScraping ? 1000 : 5000,
   });
 
   const refreshDataSource = useCallback(() => {
