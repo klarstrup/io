@@ -8,9 +8,7 @@ export default async function DiaryDayModal(props: {
 
   return (
     <Modal dismissTo={`/diary`}>
-      <div className="h-screen w-full max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-2 shadow-xl shadow-black/50">
-        <DiaryAgendaDay dayDate={new Date(date)} />
-      </div>
+      <DiaryAgendaDay dayDate={new Date(date)} />
     </Modal>
   );
 }

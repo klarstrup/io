@@ -433,12 +433,18 @@ export function DiaryAgendaDayDay({
     <FieldSetX
       ref={ref}
       legend={
-        <div className="-ml-1 flex items-center gap-1 leading-normal">
+        <div
+          className="-ml-1 flex items-center gap-1 leading-normal"
+          style={{
+            textShadow:
+              "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
+          }}
+        >
           <Link
             href="/calendar"
             prefetch={false}
             className={
-              "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums text-shadow-md text-shadow-white"
+              "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums"
             }
           >
             {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
@@ -446,7 +452,7 @@ export function DiaryAgendaDayDay({
               day: "numeric",
             })}
           </Link>
-          <b className="text-shadow-md text-shadow-white">
+          <b>
             {isToday
               ? "Today"
               : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
