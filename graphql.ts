@@ -533,8 +533,8 @@ export const resolvers: GQResolvers<
         await WithingsSleepSummarySeries.find({
           // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
           _withings_userId: Number(withingsUserId),
-          startedAt: { $gte: new Date(args.interval.start) },
-          endedAt: { $lte: new Date(args.interval.end) },
+          startedAt: { $lte: new Date(args.interval.end) },
+          endedAt: { $gte: new Date(args.interval.start) },
         }).toArray()
       ).map(
         (sleep) =>
