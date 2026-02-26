@@ -41,6 +41,10 @@ gql`
       }
       availableBalance
       inboxEmailCount
+      dataSources {
+        source
+        config
+      }
     }
   }
 `;
@@ -92,6 +96,8 @@ function BarIcon({ children }: { children: React.ReactNode }) {
 export default function DashBar() {
   const { data: sessionData } = useSession();
   const { data } = useQuery(GetLatestWeightEntryDocument);
+
+  console.log("DashBar data", data);
 
   const { value: sleepDebt, slope: sleepDebtSlope } = useTrendingNumber(
     data?.user?.sleepDebtFractionTimeSeries || [],

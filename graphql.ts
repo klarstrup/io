@@ -12,6 +12,7 @@ import {
   print,
 } from "graphql";
 import gql from "graphql-tag";
+import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
 import { auth } from "./auth";
@@ -117,15 +118,22 @@ export const resolvers: Resolvers<
   | undefined
 > = {
   Date: dateScalar,
+  JSON: GraphQLJSON,
+  JSONObject: GraphQLJSONObject,
   Query: {
     hello: () => "worlasdd",
     user: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
-      if (!user) return null;
+      if (!user) throw new Error("Unauthorized");
 
       return {
         ...user,
         __typename: "User",
+        dataSources: user.dataSources?.map((dataSource) => ({
+          ...dataSource,
+          config: JSON.stringify(dataSource.config),
+          __typename: "UserDataSource",
+        })),
         exerciseSchedules:
           user.exerciseSchedules?.map(
             (schedule) =>
@@ -1137,6 +1145,8 @@ export const resolvers: Resolvers<
 
 export const typeDefs = gql`
   scalar Date
+  scalar JSON
+  scalar JSONObject
 
   type Query {
     hello: String
@@ -1244,7 +1254,25 @@ export const typeDefs = gql`
     pastBusynessFraction: Float
     futureBusynessFraction: Float
     inboxEmailCount: Int
-    # dataSources: [UserDataSource!]
+    dataSources: [UserDataSource!]
+  }
+
+  type UserDataSource {
+    id: ID!
+    name: String!
+    paused: Boolean
+    createdAt: Date!
+    updatedAt: Date!
+    lastSyncedAt: Date
+    lastSuccessfulAt: Date
+    lastSuccessfulRuntime: Float
+    lastResult: String
+    lastFailedAt: Date
+    lastFailedRuntime: Float
+    lastError: String
+    source: String!
+    # Pass this around as JSON because doing a Record in GraphQL is painful
+    config: JSON
   }
 
   type Sleep {

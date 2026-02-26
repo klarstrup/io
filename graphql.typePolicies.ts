@@ -71,4 +71,12 @@ export const typePolicies: TypePolicies = {
   FloatTimeSeriesEntry: {
     fields: { timestamp: { read: readDate } },
   },
+  UserDataSource: {
+    fields: {
+      config: {
+        read: (v: unknown) =>
+          typeof v === "string" ? (JSON.parse(v) as unknown) : null,
+      },
+    },
+  },
 };

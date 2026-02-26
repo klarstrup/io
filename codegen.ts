@@ -27,7 +27,11 @@ const config: CodegenConfig = {
         // don't generate a type for the `__typename` for root operation types.
         skipTypeNameForRoot: true,
         strictScalars: true,
-        scalars: { Date: "Date" },
+        scalars: {
+          Date: "Date",
+          JSON: "unknown",
+          JSONObject: "Record<string, unknown>",
+        },
       },
     },
   },
