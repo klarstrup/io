@@ -6,10 +6,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExerciseName } from "../../components/ExerciseName";
 import type {
-  Location,
-  Workout,
-  WorkoutExercise,
-  WorkoutSet,
+  GQLocation,
+  GQWorkout,
+  GQWorkoutExercise,
+  GQWorkoutSet,
 } from "../../graphql.generated";
 import {
   ClimbingStats,
@@ -27,8 +27,8 @@ export function DiaryAgendaDayWorkout({
   workoutDateStr,
   cotemporalityOfSurroundingEvent,
 }: {
-  location?: Location;
-  workout: Workout;
+  location?: GQLocation;
+  workout: GQWorkout;
   workoutDateStr: string;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
@@ -144,9 +144,9 @@ export function DiaryAgendaDayWorkoutSet({
   workoutExercise,
   location,
 }: {
-  workout: Workout;
-  workoutExercise: WorkoutExercise;
-  location?: Location;
+  workout: GQWorkout;
+  workoutExercise: GQWorkoutExercise;
+  location?: GQLocation;
 }) {
   const { exerciseInfo } = workoutExercise;
 
@@ -158,7 +158,7 @@ export function DiaryAgendaDayWorkoutSet({
           meta: (set.meta?.reduce((acc, curr) => {
             acc[curr.key] = curr.value;
             return acc;
-          }, {}) || {}) as WorkoutSet["meta"],
+          }, {}) || {}) as GQWorkoutSet["meta"],
         },
         location,
         workout,

@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
-import { Location, Workout, WorkoutSet } from "../graphql.generated";
+import { GQLocation, GQWorkout, GQWorkoutSet } from "../graphql.generated";
 import { PP } from "../lib";
 import { SendType } from "../models/exercises.types";
 import {
@@ -371,9 +371,9 @@ function ProblemBadge({
 const colorOptions = climbingExerciseInputs[1].options;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
-    WorkoutExerciseSet | WorkoutSet,
-    Location | undefined,
-    workout: WorkoutData | Workout | undefined,
+    WorkoutExerciseSet | GQWorkoutSet,
+    GQLocation | undefined,
+    workout: WorkoutData | GQWorkout | undefined,
   ])[],
 ): PP[] =>
   setsWithLocations.map(([set, location], i) => {

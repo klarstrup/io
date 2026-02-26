@@ -4,7 +4,7 @@ import gql from "graphql-tag";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  CreateTodoMutation,
+  GQCreateTodoMutation,
   DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
 } from "../../graphql.generated";
@@ -15,7 +15,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [createTodo, { loading }] = useMutation<CreateTodoMutation>(
+  const [createTodo, { loading }] = useMutation<GQCreateTodoMutation>(
     gql`
       mutation CreateTodo($input: CreateTodoInput!) {
         createTodo(input: $input) {

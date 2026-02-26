@@ -2,7 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import { gql } from "graphql-tag";
 import { query } from "../../ApolloClient";
 import { auth } from "../../auth";
-import { CalendarUserWorkoutsQuery } from "../../graphql.generated";
+import type { GQCalendarUserWorkoutsQuery } from "../../graphql.generated";
 import type { DiaryEntry } from "../../lib";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 
@@ -41,7 +41,7 @@ export async function getDiaryEntriesShallow({
     diary[dayStr] = day;
   }
 
-  const queryResult = await query<CalendarUserWorkoutsQuery>({
+  const queryResult = await query<GQCalendarUserWorkoutsQuery>({
     query: gql`
       query CalendarUserWorkouts($interval: IntervalInput!) {
         user {

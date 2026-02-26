@@ -4,10 +4,10 @@ import ProblemByProblem, {
 } from "../../components/ProblemByProblem";
 import Grade from "../../grades";
 import {
-  ExerciseInfo,
-  Location,
-  Workout,
-  WorkoutSet,
+  GQExerciseInfo,
+  GQLocation,
+  GQWorkout,
+  GQWorkoutSet,
 } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { type ExerciseData } from "../../models/exercises.types";
@@ -49,11 +49,11 @@ export function WorkoutEntryExercise({
   exerciseSetPRs,
   onlyPRs,
 }: {
-  exercise: ExerciseData | ExerciseInfo;
+  exercise: ExerciseData | GQExerciseInfo;
   setsWithLocations: (readonly [
-    WorkoutExerciseSet | WorkoutSet,
-    Location | undefined,
-    workout: WorkoutData | Workout | undefined,
+    WorkoutExerciseSet | GQWorkoutSet,
+    GQLocation | undefined,
+    workout: WorkoutData | GQWorkout | undefined,
   ])[];
   exerciseIndex?: number;
   exerciseSetPRs?: Record<PRType, boolean>[][];
@@ -135,8 +135,8 @@ export function WorkoutEntryExercise({
 }
 
 const isEquivalentSet = (
-  setA: WorkoutExerciseSet | WorkoutSet,
-  setB: WorkoutExerciseSet | WorkoutSet,
+  setA: WorkoutExerciseSet | GQWorkoutSet,
+  setB: WorkoutExerciseSet | GQWorkoutSet,
 ) => {
   for (const [index, aInput] of Object.entries(
     setA.inputs as WorkoutExerciseSetInput[],

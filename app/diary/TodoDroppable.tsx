@@ -23,12 +23,12 @@ import { isDate, isFuture, isPast, max, min } from "date-fns";
 import gql from "graphql-tag";
 import type { ReactNode } from "react";
 import {
-  type NextSet,
+  type GQNextSet,
+  type GQTodo,
+  type GQWorkout,
   SnoozeExerciseScheduleDocument,
-  type Todo,
   UpdateTodoDocument,
   UpdateWorkoutDocument,
-  type Workout,
 } from "../../graphql.generated";
 import {
   dateMidpoint,
@@ -198,7 +198,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         ) as [string, JournalEntry] | undefined;
         if (!a) return null;
 
-        return [sortableId, a[1] as Workout] as const;
+        return [sortableId, a[1] as GQWorkout] as const;
       })
       .filter(Boolean);
 
@@ -293,7 +293,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     console.log({ targetDate, precedingDate, followingDate, dayStart, dayEnd });
 
     if (activeCurrent.nextSet) {
-      const nextSet = activeCurrent.nextSet as NextSet;
+      const nextSet = activeCurrent.nextSet as GQNextSet;
 
       void snoozeExerciseSchedule({
         variables: {
@@ -315,7 +315,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       });
       return;
     } else if (activeCurrent.todo) {
-      const todo = activeCurrent.todo as Todo;
+      const todo = activeCurrent.todo as GQTodo;
 
       if (isFuture(targetDate)) {
         const updatedTodo = {
@@ -352,7 +352,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         });
       }
     } else if (activeCurrent.workout) {
-      const workout = activeCurrent.workout as Workout;
+      const workout = activeCurrent.workout as GQWorkout;
 
       if (isPast(targetDate)) {
         void updateWorkout({

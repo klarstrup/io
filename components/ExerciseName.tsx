@@ -1,4 +1,4 @@
-import { ExerciseInfo } from "../graphql.generated";
+import { GQExerciseInfo } from "../graphql.generated";
 import { ExerciseData } from "../models/exercises.types";
 
 export function ExerciseName({
@@ -6,7 +6,7 @@ export function ExerciseName({
 }: {
   exerciseInfo:
     | Pick<ExerciseData, "name" | "aliases">
-    | Pick<ExerciseInfo, "name" | "aliases">;
+    | Pick<GQExerciseInfo, "name" | "aliases">;
 }) {
   const shortestName = [exerciseInfo.name, ...exerciseInfo.aliases]
     .filter((name) => name.length >= 4)

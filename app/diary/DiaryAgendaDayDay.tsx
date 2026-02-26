@@ -19,7 +19,7 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { useEffect, useRef, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
-import type { Event, Location, Workout } from "../../graphql.generated";
+import type { GQEvent, GQLocation, GQWorkout } from "../../graphql.generated";
 import { formatShortDuration, WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -53,7 +53,7 @@ export function DiaryAgendaDayDay({
   date: `${number}-${number}-${number}`;
   dayDate: Date;
   user?: Session["user"];
-  dayLocations: Location[];
+  dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
 }) {
   const client = useApolloClient();
@@ -96,11 +96,11 @@ export function DiaryAgendaDayDay({
 
     const previousEvents = dayJournalEntries
       .slice(0, i)
-      .filter((je): je is Event => je.__typename === "Event");
+      .filter((je): je is GQEvent => je.__typename === "Event");
     const followingEndOfEvents = dayJournalEntries
       .slice(i + 1)
       .filter(
-        (je): je is Event =>
+        (je): je is GQEvent =>
           je.__typename === "Event" &&
           "_this_is_the_end_of_a_event" in je &&
           je._this_is_the_end_of_a_event,
@@ -122,7 +122,7 @@ export function DiaryAgendaDayDay({
         ) ||
       dayJournalEntries
         .filter(
-          (je): je is Event =>
+          (je): je is GQEvent =>
             je.__typename === "Event" && je.datetype !== "date",
         )
         .find(
@@ -287,7 +287,7 @@ export function DiaryAgendaDayDay({
           dayJournalEntries
             .slice(i + 2)
             .some(
-              (je): je is Event =>
+              (je): je is GQEvent =>
                 je.__typename === "Event" &&
                 "_this_is_the_end_of_a_event" in je &&
                 je._this_is_the_end_of_a_event &&
@@ -329,7 +329,7 @@ export function DiaryAgendaDayDay({
         const eventHasSeparateEndEvent = dayJournalEntries
           .slice(i + 1)
           .some(
-            (je): je is Event =>
+            (je): je is GQEvent =>
               je.__typename === "Event" &&
               "_this_is_the_end_of_a_event" in je &&
               je._this_is_the_end_of_a_event &&
@@ -415,7 +415,7 @@ export function DiaryAgendaDayDay({
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
             workouts={dayJournalEntries
-              .filter((jE): jE is Workout => jE.__typename === "Workout")
+              .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
               .filter((w) => w.source === WorkoutSource.Self)
               .map((d) => ({ ...d, _id: d.id.toString() }))}
             locations={dayLocations}

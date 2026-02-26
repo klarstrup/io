@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Workout } from "../../graphql.generated";
+import { GQWorkout } from "../../graphql.generated";
 
-export function WorkoutEntryDuplicateButton({ workout }: { workout: Workout }) {
+export function WorkoutEntryDuplicateButton({
+  workout,
+}: {
+  workout: GQWorkout;
+}) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   return (

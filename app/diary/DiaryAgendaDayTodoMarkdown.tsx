@@ -1,15 +1,15 @@
 import { Children } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { DiaryAgendaDayTodoFragment } from "../../graphql.generated";
+import type { GQDiaryAgendaDayTodoFragment } from "../../graphql.generated";
 
 export function DiaryAgendaDayTodoMarkdown({
   todo,
   onUpdateTodo,
 }: {
-  todo: DiaryAgendaDayTodoFragment;
+  todo: GQDiaryAgendaDayTodoFragment;
   onUpdateTodo?: (
-    updatedTodo: Omit<DiaryAgendaDayTodoFragment, "id" | "__typename">,
+    updatedTodo: Omit<GQDiaryAgendaDayTodoFragment, "id" | "__typename">,
   ) => Promise<void> | void;
 }) {
   return (

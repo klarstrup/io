@@ -3,7 +3,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { faArrowsDownToLine } from "@fortawesome/free-solid-svg-icons";
 import { roundToNearestMinutes } from "date-fns";
 import type { Session } from "next-auth";
-import { Event } from "../../graphql.generated";
+import { GQEvent } from "../../graphql.generated";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getTodoPrincipalDate } from "./diaryUtils";
@@ -14,7 +14,7 @@ export function DiaryAgendaDayEventEnd({
   cotemporalityOfSurroundingEvent,
 }: {
   user?: Session["user"];
-  event: Event;
+  event: GQEvent;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const client = useApolloClient();

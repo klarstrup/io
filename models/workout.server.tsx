@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
-import type { Location } from "../graphql.generated";
+import type { GQLocation } from "../graphql.generated";
 import type { PRType } from "../lib";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { dayStartHour, epoch } from "../utils";
@@ -549,7 +549,7 @@ export const calculate60dayTop10AverageSendGrade = (
                 (s.inputs[2]?.value as SendType) === SendType.Top ||
                 (s.inputs[2]?.value as SendType) === SendType.Flash,
             )
-            .map((set) => getSetGrade(set, location as unknown as Location)),
+            .map((set) => getSetGrade(set, location as unknown as GQLocation)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -577,7 +577,7 @@ export const calculate60dayTop10AverageFlashGrade = (
         .flatMap((e) =>
           e.sets
             .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Flash)
-            .map((set) => getSetGrade(set, location as unknown as Location)),
+            .map((set) => getSetGrade(set, location as unknown as GQLocation)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -607,7 +607,7 @@ export const calculate60dayTop10AverageAttemptGrade = (
             .filter(
               (s) => (s.inputs[2]?.value as SendType) === SendType.Attempt,
             )
-            .map((set) => getSetGrade(set, location as unknown as Location)),
+            .map((set) => getSetGrade(set, location as unknown as GQLocation)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -647,7 +647,7 @@ export function mergeWorkoutsOfExercise(
                     ...input,
                     value:
                       input.value ??
-                      getSetGrade(set, location as unknown as Location),
+                      getSetGrade(set, location as unknown as GQLocation),
                   }
                 : input,
             ),

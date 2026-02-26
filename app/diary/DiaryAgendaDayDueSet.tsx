@@ -19,14 +19,14 @@ import { ComponentProps, forwardRef, useRef, useState } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import UserStuffSourcesForm from "../../components/UserStuffSourcesForm";
 import {
-  ExerciseInfo,
-  Location,
-  NextSet,
-  SnoozeExerciseScheduleMutation,
-  type SnoozeExerciseScheduleMutationVariables,
-  UnsnoozeExerciseScheduleMutation,
-  type UnsnoozeExerciseScheduleMutationVariables,
-  Workout,
+  GQExerciseInfo,
+  GQLocation,
+  GQNextSet,
+  GQSnoozeExerciseScheduleMutation,
+  type GQSnoozeExerciseScheduleMutationVariables,
+  GQUnsnoozeExerciseScheduleMutation,
+  type GQUnsnoozeExerciseScheduleMutationVariables,
+  GQWorkout,
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { durationToMs } from "../../models/workout";
@@ -96,10 +96,10 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
       cotemporalityOfSurroundingEvent,
       ...props
     }: {
-      dueSet: NextSet;
-      exerciseInfo: ExerciseInfo;
-      workouts?: Workout[];
-      locations?: Location[];
+      dueSet: GQNextSet;
+      exerciseInfo: GQExerciseInfo;
+      workouts?: GQWorkout[];
+      locations?: GQLocation[];
       isDragging: boolean;
       cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
     } & React.HTMLAttributes<HTMLDivElement>,
@@ -112,8 +112,8 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     const router = useRouter();
 
     const [snoozeExerciseSchedule] = useMutation<
-      SnoozeExerciseScheduleMutation,
-      SnoozeExerciseScheduleMutationVariables
+      GQSnoozeExerciseScheduleMutation,
+      GQSnoozeExerciseScheduleMutationVariables
     >(gql`
       mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
         snoozeExerciseSchedule(input: $input) {
@@ -177,8 +177,8 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
     `);
 
     const [unsnoozeExerciseSchedule] = useMutation<
-      UnsnoozeExerciseScheduleMutation,
-      UnsnoozeExerciseScheduleMutationVariables
+      GQUnsnoozeExerciseScheduleMutation,
+      GQUnsnoozeExerciseScheduleMutationVariables
     >(gql`
       mutation UnsnoozeExerciseSchedule(
         $input: UnsnoozeExerciseScheduleInput!

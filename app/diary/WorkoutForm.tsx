@@ -25,8 +25,8 @@ import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
-  type NextSet,
-  type WorkoutFormNextSetsQuery,
+  type GQNextSet,
+  type GQWorkoutFormNextSetsQuery,
 } from "../../graphql.generated";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
@@ -131,64 +131,66 @@ export function WorkoutForm<R extends string>({
   );
   const now = useMemo(() => new Date(), []);
 
-  const { data: nextSetsData, client } = useQuery<WorkoutFormNextSetsQuery>(gql`
-    query WorkoutFormNextSets {
-      user {
-        id
-        timeZone
-        nextSets {
+  const { data: nextSetsData, client } = useQuery<GQWorkoutFormNextSetsQuery>(
+    gql`
+      query WorkoutFormNextSets {
+        user {
           id
-          workedOutAt
-          dueOn
-          exerciseId
-          successful
-          nextWorkingSets
-          nextWorkingSetInputs {
-            unit
-            value
-            assistType
-          }
-          exerciseSchedule {
+          timeZone
+          nextSets {
             id
+            workedOutAt
+            dueOn
             exerciseId
-            exerciseInfo {
+            successful
+            nextWorkingSets
+            nextWorkingSetInputs {
+              unit
+              value
+              assistType
+            }
+            exerciseSchedule {
               id
-              aliases
-              name
-              isHidden
-              inputs {
-                type
-              }
-              instructions {
-                value
-              }
-              tags {
+              exerciseId
+              exerciseInfo {
+                id
+                aliases
                 name
-                type
+                isHidden
+                inputs {
+                  type
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
               }
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
+              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+              order
             }
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            order
           }
         }
       }
-    }
-  `);
+    `,
+  );
 
   const nextSets = nextSetsData?.user?.nextSets?.filter(Boolean);
 
@@ -270,7 +272,7 @@ export function WorkoutForm<R extends string>({
     [nextSets, tzDate, getValues],
   );
 
-  const handleAddExercise = useEvent((dueSet: NextSet) => {
+  const handleAddExercise = useEvent((dueSet: GQNextSet) => {
     const exerciseSchedule = dueSet.exerciseSchedule;
 
     const exerciseDefinition = exercisesById.get(dueSet.exerciseId)!;
@@ -316,7 +318,7 @@ export function WorkoutForm<R extends string>({
     append({ exerciseId: dueSet.exerciseId, sets });
   });
 
-  const handleSnoozeDueSet = useEvent(async (dueSet: NextSet) => {
+  const handleSnoozeDueSet = useEvent(async (dueSet: GQNextSet) => {
     if (!user) return;
     const newNextDueDate = addDays(tzDate, 1);
 

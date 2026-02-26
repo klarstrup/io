@@ -1,4 +1,8 @@
-import type { BoulderCircuit, FoodEntry, Workout } from "./graphql.generated";
+import type {
+  GQBoulderCircuit,
+  GQFoodEntry,
+  GQWorkout,
+} from "./graphql.generated";
 import type { WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
 import type { DataSource } from "./sources/utils";
@@ -108,14 +112,14 @@ export interface PP {
   repeat: boolean;
   name?: string;
   angle?: number | null;
-  circuit?: BoulderCircuit;
+  circuit?: GQBoulderCircuit;
   attemptCount?: number | null;
   estGrade?: number | null;
 }
 
 export interface DiaryEntry {
-  workouts?: Workout[];
-  food?: FoodEntry[];
+  workouts?: GQWorkout[];
+  food?: GQFoodEntry[];
 }
 
 export interface ScrapedAt {

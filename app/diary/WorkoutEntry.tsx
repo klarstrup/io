@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ExerciseName } from "../../components/ExerciseName";
 import { FieldSetX } from "../../components/FieldSet";
-import { Workout } from "../../graphql.generated";
+import { GQWorkout } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import {
@@ -26,7 +26,7 @@ export default function WorkoutEntry({
   showExerciseName?: boolean;
   showLocation?: boolean;
   showSource?: boolean;
-  workout: Workout;
+  workout: GQWorkout;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {

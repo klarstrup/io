@@ -17,14 +17,14 @@ import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
 import { auth } from "./auth";
 import type {
-  ExerciseInfo,
-  ExerciseSchedule,
-  FloatTimeSeriesEntry,
-  FoodEntry,
-  NextSet,
-  Resolvers,
-  SnoozeExerciseSchedulePayload,
-  UnsnoozeExerciseSchedulePayload,
+  GQExerciseInfo,
+  GQExerciseSchedule,
+  GQFloatTimeSeriesEntry,
+  GQFoodEntry,
+  GQNextSet,
+  GQResolvers,
+  GQSnoozeExerciseSchedulePayload,
+  GQUnsnoozeExerciseSchedulePayload,
 } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
@@ -113,7 +113,7 @@ const editableTodoFields = ["summary", "start", "due", "completed"] as const;
 
 const idealDailySleepInSeconds = 8 * 60 * 60;
 
-export const resolvers: Resolvers<
+export const resolvers: GQResolvers<
   | { user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"] | null }
   | undefined
 > = {
@@ -141,7 +141,7 @@ export const resolvers: Resolvers<
                 ...schedule,
                 __typename: "ExerciseSchedule",
                 frequency: { ...schedule.frequency, __typename: "Duration" },
-              }) as ExerciseSchedule,
+              }) as GQExerciseSchedule,
           ) || null,
       };
     },
@@ -225,7 +225,7 @@ export const resolvers: Resolvers<
             timestamp: group.measuredAt,
             value: weightMeasure.value * 10 ** weightMeasure.unit,
             __typename: "FloatTimeSeriesEntry",
-          } as FloatTimeSeriesEntry;
+          } as GQFloatTimeSeriesEntry;
         })
         .filter(Boolean)
         .slice(0, 4)
@@ -288,7 +288,7 @@ export const resolvers: Resolvers<
             timestamp: group.measuredAt,
             value: bodyFatMeasure.value * 10 ** bodyFatMeasure.unit,
             __typename: "FloatTimeSeriesEntry",
-          } as FloatTimeSeriesEntry;
+          } as GQFloatTimeSeriesEntry;
         })
         .filter(Boolean)
         .slice(0, 4)
@@ -365,7 +365,7 @@ export const resolvers: Resolvers<
         ).toArray()
       ).reverse();
 
-      const sleepDebtFractionTimeSeries: FloatTimeSeriesEntry[] = [];
+      const sleepDebtFractionTimeSeries: GQFloatTimeSeriesEntry[] = [];
       for (let i = 6; i < sleepEntries.length; i++) {
         const windowEntries = sleepEntries.slice(i - 6, i + 1); // 7-day window
 
@@ -550,7 +550,7 @@ export const resolvers: Resolvers<
     },
     foodEntries: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
-      const foodEntries: FoodEntry[] = [];
+      const foodEntries: GQFoodEntry[] = [];
 
       if (!user) return foodEntries;
 
@@ -616,7 +616,7 @@ export const resolvers: Resolvers<
                   ...exercise,
                   __typename: "WorkoutExercise",
                   // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                  exerciseInfo: undefined as unknown as ExerciseInfo,
+                  exerciseInfo: undefined as unknown as GQExerciseInfo,
                   sets: exercise.sets.map(
                     (set) =>
                       ({
@@ -657,7 +657,7 @@ export const resolvers: Resolvers<
           ?.filter((schedule) => schedule.enabled)
           .map((schedule) => schedule.exerciseId) || [],
       );
-      const promises: Promise<NextSet>[] = [];
+      const promises: Promise<GQNextSet>[] = [];
       for await (const mostRecentWorkoutOfEachEnabledExerciseSchedule of MaterializedWorkoutsView.aggregate<{
         workedOutAt: Date;
         exercise: WorkoutExercise;
@@ -723,7 +723,7 @@ export const resolvers: Resolvers<
                   __typename: "Duration",
                 },
                 // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                exerciseInfo: undefined as unknown as ExerciseInfo,
+                exerciseInfo: undefined as unknown as GQExerciseInfo,
               },
             })),
           );
@@ -902,7 +902,7 @@ export const resolvers: Resolvers<
             __typename: "Duration",
           },
         },
-      } as SnoozeExerciseSchedulePayload;
+      } as GQSnoozeExerciseSchedulePayload;
     },
     unsnoozeExerciseSchedule: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -939,7 +939,7 @@ export const resolvers: Resolvers<
             __typename: "Duration",
           },
         },
-      } as UnsnoozeExerciseSchedulePayload;
+      } as GQUnsnoozeExerciseSchedulePayload;
     },
     updateWorkout: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -984,7 +984,7 @@ export const resolvers: Resolvers<
               ({
                 ...exercise,
                 __typename: "WorkoutExercise",
-                exerciseInfo: undefined as unknown as ExerciseInfo,
+                exerciseInfo: undefined as unknown as GQExerciseInfo,
                 sets: exercise.sets.map(
                   (set) =>
                     ({
@@ -1074,7 +1074,7 @@ export const resolvers: Resolvers<
           ...tag,
           __typename: "ExerciseInfoTag",
         })),
-      } satisfies ExerciseInfo;
+      } satisfies GQExerciseInfo;
     },
   },
   WorkoutSetInput: {
@@ -1109,7 +1109,7 @@ export const resolvers: Resolvers<
           ...tag,
           __typename: "ExerciseInfoTag",
         })),
-      } satisfies ExerciseInfo;
+      } satisfies GQExerciseInfo;
     },
     nextSet: async (parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -1138,7 +1138,7 @@ export const resolvers: Resolvers<
           },
         },
         __typename: "NextSet",
-      } as NextSet;
+      } as GQNextSet;
     },
   },
 };

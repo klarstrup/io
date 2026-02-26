@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { FloatTimeSeriesEntry } from "../graphql.generated";
+import { GQFloatTimeSeriesEntry } from "../graphql.generated";
 import { useNow } from "../hooks";
 
 const getAvg = (arr: number[]) =>
@@ -62,7 +62,7 @@ function createTrend(data: { timestamp: Date; value: number }[]) {
 }
 
 export default function useTrendingNumber(
-  timeSeries: FloatTimeSeriesEntry[],
+  timeSeries: GQFloatTimeSeriesEntry[],
   updateInterval = 10000,
 ) {
   const now = useNow(updateInterval);

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import { StealthButton } from "../../components/StealthButton";
-import { NextSet } from "../../graphql.generated";
+import { GQNextSet } from "../../graphql.generated";
 import { exercisesById } from "../../models/exercises";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
@@ -20,9 +20,9 @@ export function NextSets({
   showDueDate = false,
 }: {
   user?: Session["user"];
-  nextSets: NextSet[];
-  onAddExerciseAction?: (dueSet: NextSet) => void;
-  onSnoozeDueSetAction?: (dueSet: NextSet) => void;
+  nextSets: GQNextSet[];
+  onAddExerciseAction?: (dueSet: GQNextSet) => void;
+  onSnoozeDueSetAction?: (dueSet: GQNextSet) => void;
   showDetails?: boolean;
   showDueDate?: boolean;
 }) {

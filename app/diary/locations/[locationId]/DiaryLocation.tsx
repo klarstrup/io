@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { auth } from "../../../../auth";
-import { Workout } from "../../../../graphql.generated";
+import { GQWorkout } from "../../../../graphql.generated";
 import { Locations } from "../../../../models/location.server";
 import { MaterializedWorkoutsView } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
@@ -50,7 +50,7 @@ export default async function DiaryExercise({
             <WorkoutEntry
               showDate
               showLocation={false}
-              workout={workout as unknown as Workout}
+              workout={workout as unknown as GQWorkout}
             />
           </li>
         ))}

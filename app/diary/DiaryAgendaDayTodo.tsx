@@ -7,11 +7,11 @@ import gql from "graphql-tag";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  type DeleteTodoMutation,
-  type DiaryAgendaDayTodoFragment,
+  type GQDeleteTodoMutation,
+  type GQDiaryAgendaDayTodoFragment,
   DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
-  type UpdateTodoMutation,
+  type GQUpdateTodoMutation,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -34,7 +34,7 @@ export const DiaryAgendaDayTodo =
     todo,
     cotemporalityOfSurroundingEvent,
   }: {
-    todo: DiaryAgendaDayTodoFragment;
+    todo: GQDiaryAgendaDayTodoFragment;
     cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
   }) {
     const client = useApolloClient();
@@ -50,7 +50,7 @@ export const DiaryAgendaDayTodo =
       data: { todo, date: getTodoPrincipalDate(todo)?.start },
     });
 
-    const [updateTodo] = useMutation<UpdateTodoMutation>(
+    const [updateTodo] = useMutation<GQUpdateTodoMutation>(
       gql`
         mutation UpdateTodo($input: UpdateTodoInput!) {
           updateTodo(input: $input) {
@@ -69,7 +69,7 @@ export const DiaryAgendaDayTodo =
         refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
       },
     );
-    const [deleteTodo] = useMutation<DeleteTodoMutation>(
+    const [deleteTodo] = useMutation<GQDeleteTodoMutation>(
       gql`
         mutation DeleteTodo($id: String!) {
           deleteTodo(id: $id)

@@ -10,10 +10,10 @@ import {
 import type { WithId } from "mongodb";
 import Grade from "../grades";
 import type {
-  Location,
-  NextSet,
-  Workout,
-  WorkoutSet,
+  GQLocation,
+  GQNextSet,
+  GQWorkout,
+  GQWorkoutSet,
 } from "../graphql.generated";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
@@ -175,7 +175,7 @@ export const formatDurationAsTimer = (duration: Duration) => {
 export const isDurationGreaterOrEqual = (a: Duration, b: Duration) =>
   durationToMs(a) >= durationToMs(b);
 
-export const isNextSetDue = (tzDate: Date | TZDate, nextSet: NextSet) => {
+export const isNextSetDue = (tzDate: Date | TZDate, nextSet: GQNextSet) => {
   const timeZone =
     ("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE;
   const inn = tz(timeZone);
@@ -278,7 +278,7 @@ export const getCircuitByLocationAndSetColor = (
 
 const getCircuitByLocationAndColor = (
   color: string,
-  location: LocationData | Location,
+  location: LocationData | GQLocation,
 ) =>
   location.boulderCircuits?.find(
     (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
@@ -286,12 +286,12 @@ const getCircuitByLocationAndColor = (
 
 const getGradeOfColorByLocation = (
   color: string,
-  location: LocationData | Location,
+  location: LocationData | GQLocation,
 ) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
 // Utility to paint over difference in DB and GraphQL representation of set meta
 export const getSetMeta = (
-  set: WorkoutSet | WorkoutExerciseSet,
+  set: GQWorkoutSet | WorkoutExerciseSet,
   key: string,
 ): string | undefined => {
   if (!set.meta) return undefined;
@@ -307,8 +307,8 @@ export const getSetMeta = (
 };
 
 export function getSetGrade(
-  set: WorkoutSet | WorkoutExerciseSet,
-  location: Location | undefined | null,
+  set: GQWorkoutSet | WorkoutExerciseSet,
+  location: GQLocation | undefined | null,
 ) {
   const inputGrade = set.inputs[0]!.value;
   if (inputGrade) return inputGrade;
@@ -337,9 +337,9 @@ export function ClimbingStats({
   setAndLocationPairs,
 }: {
   setAndLocationPairs: (readonly [
-    set: WorkoutExerciseSet | WorkoutSet,
-    location: Location | undefined,
-    workout: WorkoutData | Workout | undefined,
+    set: WorkoutExerciseSet | GQWorkoutSet,
+    location: GQLocation | undefined,
+    workout: WorkoutData | GQWorkout | undefined,
   ])[];
 }) {
   const successfulSetAndLocationPairs = setAndLocationPairs.filter(

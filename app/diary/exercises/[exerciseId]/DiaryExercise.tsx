@@ -1,7 +1,7 @@
 import { startOfYear, subMonths, subYears } from "date-fns";
 import { Fragment, Suspense } from "react";
 import { auth } from "../../../../auth";
-import { Workout } from "../../../../graphql.generated";
+import { GQWorkout } from "../../../../graphql.generated";
 import { ExerciseHistoryTimeframe, PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
 import { Locations } from "../../../../models/location.server";
@@ -213,7 +213,7 @@ async function DiaryExerciseList({
                 exerciseSetPRs={workoutsExerciseSetPRs?.[workout.id]}
                 onlyPRs={prType || undefined}
                 showDate={!mergeWorkouts}
-                workout={workout as unknown as Workout}
+                workout={workout as unknown as GQWorkout}
               />
             </li>
           ))}

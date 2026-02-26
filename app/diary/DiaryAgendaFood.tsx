@@ -4,7 +4,7 @@ import { gql } from "graphql-tag";
 import type { Session } from "next-auth";
 import { query } from "../../ApolloClient";
 import { FieldSetY } from "../../components/FieldSet";
-import { DiaryAgendaFoodQuery } from "../../graphql.generated";
+import { GQDiaryAgendaFoodQuery } from "../../graphql.generated";
 import { DEFAULT_TIMEZONE, isNonEmptyArray } from "../../utils";
 import { FoodEntry } from "./FoodEntry";
 
@@ -19,7 +19,7 @@ export async function DiaryAgendaFood({
   const tzDate = new TZDate(date, timeZone);
   const food =
     (
-      await query<DiaryAgendaFoodQuery>({
+      await query<GQDiaryAgendaFoodQuery>({
         query: gql`
           query DiaryAgendaFood($interval: IntervalInput!) {
             user {

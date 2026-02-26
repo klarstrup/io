@@ -11,14 +11,14 @@ import {
   startOfDay,
 } from "date-fns";
 import type {
-  Event,
-  ExerciseSchedule,
-  WorkoutExercise as GQWorkoutExercise,
-  NextSet,
-  Sleep,
-  Todo,
-  Workout,
-  WorkoutSet,
+  GQEvent,
+  GQExerciseSchedule,
+  GQWorkoutExercise,
+  GQNextSet,
+  GQSleep,
+  GQTodo,
+  GQWorkout,
+  GQWorkoutSet,
 } from "../../graphql.generated";
 import {
   WorkoutData,
@@ -28,18 +28,18 @@ import {
 import { dayStartHour } from "../../utils";
 
 export type JournalEntry =
-  | Event
-  | (Event & { _this_is_the_end_of_a_event: true })
-  | Todo
-  | NextSet
-  | Workout
-  | ExerciseSchedule
-  | Sleep
+  | GQEvent
+  | (GQEvent & { _this_is_the_end_of_a_event: true })
+  | GQTodo
+  | GQNextSet
+  | GQWorkout
+  | GQExerciseSchedule
+  | GQSleep
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | { __typename: "LocationChange"; id: string; location: string; date: Date }
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
 
-const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
+const getWorkoutPrincipalDate = (workout: WorkoutData | GQWorkout): Interval => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
     start: addHours(
@@ -57,13 +57,13 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
     workout.createdAt,
     ...workout.exercises
       .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
-        e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.createdAt),
+        e.sets.map((s: GQWorkoutSet | WorkoutExerciseSet) => s.createdAt),
       )
       .filter(Boolean)
       .filter((date) => isWithinInterval(date, dayInterval)),
     ...workout.exercises
       .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
-        e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.updatedAt),
+        e.sets.map((s: GQWorkoutSet | WorkoutExerciseSet) => s.updatedAt),
       )
       .filter(Boolean)
       .filter((date) => isWithinInterval(date, dayInterval)),
@@ -75,13 +75,13 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
       workout.updatedAt,
       ...workout.exercises
         .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
-          e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.createdAt),
+          e.sets.map((s: GQWorkoutSet | WorkoutExerciseSet) => s.createdAt),
         )
         .filter(Boolean)
         .filter((date) => isWithinInterval(date, dayInterval)),
       ...workout.exercises
         .flatMap((e: GQWorkoutExercise | WorkoutExercise) =>
-          e.sets.map((s: WorkoutSet | WorkoutExerciseSet) => s.updatedAt),
+          e.sets.map((s: GQWorkoutSet | WorkoutExerciseSet) => s.updatedAt),
         )
         .filter(Boolean)
         .filter((date) => isWithinInterval(date, dayInterval)),
@@ -93,7 +93,7 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | Workout): Interval => {
 };
 
 export const getTodoPrincipalDate = (
-  todo: Partial<Pick<Todo, "completed" | "due" | "start">>,
+  todo: Partial<Pick<GQTodo, "completed" | "due" | "start">>,
 ): Interval | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (todo.completed)

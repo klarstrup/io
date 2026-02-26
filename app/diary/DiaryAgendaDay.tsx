@@ -22,10 +22,10 @@ import { FieldSetY } from "../../components/FieldSet";
 import {
   DiaryAgendaDayUserDocument,
   DiaryAgendaDayUserTodosDocument,
-  type Location,
-  type NextSet,
-  type Sleep,
-  type Todo,
+  type GQLocation,
+  type GQNextSet,
+  type GQSleep,
+  type GQTodo,
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
 import {
@@ -285,9 +285,9 @@ export function DiaryAgendaDay() {
       { __typename: "NowDivider", id: "now-divider", start: now, end: now },
     ],
   };
-  const todosByDate: Record<string, Todo[]> = {};
-  const dueSetsByDate: Record<string, NextSet[]> = {};
-  const sleepsByDate: Record<string, Sleep[]> = {};
+  const todosByDate: Record<string, GQTodo[]> = {};
+  const dueSetsByDate: Record<string, GQNextSet[]> = {};
+  const sleepsByDate: Record<string, GQSleep[]> = {};
 
   const daysOfInterval = eachDayOfInterval(fetchingInterval).filter(
     (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
@@ -608,7 +608,7 @@ export function DiaryAgendaDay() {
 }
 
 const getLocationFromJournalEntry = (
-  locations: Location[],
+  locations: GQLocation[],
   entry: JournalEntry,
 ): { id: string; name: string } | null => {
   if (entry.__typename === "Workout" && entry.location) return entry.location;

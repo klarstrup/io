@@ -3,7 +3,7 @@ import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import type { JSX } from "react";
-import type { Workout } from "../../graphql.generated";
+import type { GQWorkout } from "../../graphql.generated";
 import type { DiaryEntry } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { TagType } from "../../models/exercises.types";
@@ -82,7 +82,7 @@ export function DiaryEntryItem({
   );
 }
 
-function WorkoutsSummary({ workouts }: { workouts: Workout[] }) {
+function WorkoutsSummary({ workouts }: { workouts: GQWorkout[] }) {
   const exercisesDone = new Set<number>();
 
   for (const workout of workouts) {

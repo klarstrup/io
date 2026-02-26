@@ -1,9 +1,9 @@
 import { Fragment } from "react";
 import Grade from "../../grades";
 import type {
-  ExerciseInfo,
-  WorkoutSet,
-  WorkoutSetInput,
+  GQExerciseInfo,
+  GQWorkoutSet,
+  GQWorkoutSetInput,
 } from "../../graphql.generated";
 import { PRType } from "../../lib";
 import {
@@ -35,9 +35,9 @@ export function WorkoutEntryExerciseSetRow({
   exercise,
   setPR,
 }: {
-  set: WorkoutExerciseSet | WorkoutSet;
+  set: WorkoutExerciseSet | GQWorkoutSet;
   repeatCount?: number | null;
-  exercise: ExerciseData | ExerciseInfo;
+  exercise: ExerciseData | GQExerciseInfo;
   setPR?: Record<PRType, boolean>;
 }) {
   return (
@@ -63,7 +63,7 @@ export function WorkoutEntryExerciseSetRow({
           set.inputs
             .map(
               (
-                input: WorkoutExerciseSetInput | WorkoutSetInput,
+                input: WorkoutExerciseSetInput | GQWorkoutSetInput,
                 index: number,
               ) => {
                 const inputDefinition = exercise.inputs[index]!;

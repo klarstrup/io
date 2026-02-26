@@ -11,7 +11,7 @@ import {
   startOfDay,
 } from "date-fns";
 import type { Session } from "next-auth";
-import { Event } from "../../graphql.generated";
+import type { GQEvent } from "../../graphql.generated";
 import { formatShortDuration } from "../../models/workout";
 import {
   cotemporality,
@@ -32,7 +32,7 @@ export function DiaryAgendaDayEvent({
 }: {
   dayDate: Date;
   user?: Session["user"];
-  event: Event;
+  event: GQEvent;
   isEventWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   isEventEnd?: boolean;
