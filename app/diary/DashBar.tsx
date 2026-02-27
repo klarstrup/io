@@ -123,8 +123,6 @@ export default function DashBar() {
     data?.user?.fatRatioTimeSeries || [],
   );
 
-  console.log({sessionStatus})
-
   if (sessionStatus === "unauthenticated") {
     return <div className="min-h-12.5 min-w-xs" />;
   }
