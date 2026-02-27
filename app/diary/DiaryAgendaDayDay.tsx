@@ -132,6 +132,12 @@ export function DiaryAgendaDayDay({
             principalDate &&
             isBefore(event.start, new Date(principalDate.start)) &&
             isBefore(new Date(principalDate.end), event.end),
+        ) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
+      followingEndOfEvents
+        // followingEndOfEvent that has started(before today in this case) but doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event)
+        .find(
+          (endOfEvent) =>
+            principalDate && isBefore(endOfEvent.start, principalDate.start),
         );
 
     const cotemporalityOfSurroundingEvent = eventThatSurroundsEntry
@@ -180,6 +186,7 @@ export function DiaryAgendaDayDay({
               icon={faCalendarRegular}
               cotemporality={cotemporality(event)}
               key={event.id}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             >
               {(() => {
                 const eventStart =

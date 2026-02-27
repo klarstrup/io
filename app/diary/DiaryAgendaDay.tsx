@@ -603,13 +603,21 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
 
             for (let i = 0; i < dayJournalEntries.length; i++) {
               const entry = dayJournalEntries[i]!;
-              const previousEntry =
-                dayJournalEntries[i - 1] ||
+              let previousEntry = dayJournalEntries[i - 1] || null;
+              if (
+                previousEntry &&
+                previousEntry.__typename === "Event" &&
+                previousEntry.datetype === "date"
+              ) {
+                previousEntry = null;
+              }
+              if (!previousEntry && dayJournalEntriesIndex > 0) {
                 // If there is no previous entry, we look for the last entry of the previous day, as that might be an entry that indicates the location at the start of the day
-                dayJournalEntriesList[dayJournalEntriesIndex - 1]?.[1].slice(
-                  -1,
-                )?.[0] ||
-                null;
+                previousEntry =
+                  dayJournalEntriesList[dayJournalEntriesIndex - 1]?.[1].slice(
+                    -1,
+                  )?.[0] || null;
+              }
 
               const location = getLocationFromJournalEntry(
                 userLocations,
