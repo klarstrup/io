@@ -160,6 +160,7 @@ export const resolvers: GQResolvers<
         _io_userId: user.id,
       }).toArray();
 
+      // Could probably do this in the database with an aggregation, but since we expect there to be very few Spiir account groups per user, it's probably not worth the added complexity
       const rawBalance = spiirAccountGroups.reduce(
         (totalBalance, accountGroup) =>
           (totalBalance += accountGroup.availableBalance),
