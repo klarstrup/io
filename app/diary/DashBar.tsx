@@ -107,7 +107,7 @@ function BarIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashBar() {
-  const { data: sessionData } = useSession();
+  const { data: sessionData, status: sessionStatus } = useSession();
   const { data } = useQuery(GetLatestWeightEntryDocument);
 
   const { value: sleepDebt, slope: sleepDebtSlope } = useTrendingNumber(
@@ -122,6 +122,12 @@ export default function DashBar() {
   const { value: fatRatio, slope: fatRatioSlope } = useTrendingNumber(
     data?.user?.fatRatioTimeSeries || [],
   );
+
+  console.log({sessionStatus})
+
+  if (sessionStatus === "unauthenticated") {
+    return <div className="min-h-12.5 min-w-xs" />;
+  }
 
   const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = TZDate.tz(timeZone);
@@ -151,7 +157,7 @@ export default function DashBar() {
   return (
     <Masonry
       rows={2}
-      className="gap-y-0.5 overflow-auto pr-0.5 select-none"
+      className="min-h-12.5 min-w-xs gap-y-0.5 overflow-auto pr-0.5 select-none"
       rowProps={{ className: "gap-x-2" }}
     >
       {availableBalance ? (
@@ -161,8 +167,22 @@ export default function DashBar() {
           rel="noopener noreferrer"
           className="flex cursor-pointer! items-center"
         >
-          <BarIcon>💰</BarIcon>
-          <BarNumberContainer>
+          <BarIcon>
+            {availableBalance > 5000
+              ? "🤑"
+              : availableBalance < 1000
+                ? "💸"
+                : "💰"}
+          </BarIcon>
+          <BarNumberContainer
+            className={
+              availableBalance > 5000
+                ? "border-green-500/50 bg-green-500/90 text-green-700"
+                : availableBalance < 1000
+                  ? "border-red-500/25 bg-red-500/50 text-red-700"
+                  : ""
+            }
+          >
             {availableBalance.toLocaleString("da", {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,

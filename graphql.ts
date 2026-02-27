@@ -160,11 +160,13 @@ export const resolvers: GQResolvers<
         _io_userId: user.id,
       }).toArray();
 
-      return spiirAccountGroups.reduce(
+      const rawBalance = spiirAccountGroups.reduce(
         (totalBalance, accountGroup) =>
           (totalBalance += accountGroup.availableBalance),
         0,
       );
+
+      return Math.min(Math.max(rawBalance - 25000, 0), 9999);
     },
     weight: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -406,13 +408,13 @@ export const resolvers: GQResolvers<
           .flatMap((event) => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
-            const hours: Date[] = [];
+            const hours: number[] = [];
             for (
               let hour = eventStart.getTime();
               hour < eventEnd.getTime();
               hour += 60 * 60 * 1000
             ) {
-              hours.push(new Date(hour));
+              hours.push(hour);
             }
             return hours;
           }),
@@ -439,13 +441,13 @@ export const resolvers: GQResolvers<
           .flatMap((event) => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
-            const hours: Date[] = [];
+            const hours: number[] = [];
             for (
               let hour = eventStart.getTime();
               hour < eventEnd.getTime();
               hour += 60 * 60 * 1000
             ) {
-              hours.push(new Date(hour));
+              hours.push(hour);
             }
             return hours;
           }),
