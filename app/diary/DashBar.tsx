@@ -123,7 +123,9 @@ export default function DashBar() {
     data?.user?.fatRatioTimeSeries || [],
   );
 
-  if (sessionStatus === "unauthenticated") {
+  const unauthenticated = sessionStatus === "unauthenticated";
+
+  if (unauthenticated) {
     return <div className="min-h-12.5 min-w-xs" />;
   }
 
@@ -155,7 +157,7 @@ export default function DashBar() {
   return (
     <Masonry
       rows={2}
-      className="min-h-12.5 min-w-xs gap-y-0.5 overflow-auto pr-0.5 select-none"
+      className="min-h-12.5 min-w-xs gap-y-0.5 pr-0.5 select-none"
       rowProps={{ className: "gap-x-2" }}
     >
       {availableBalance ? (
