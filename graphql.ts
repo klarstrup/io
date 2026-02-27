@@ -2,7 +2,13 @@ import { tz } from "@date-fns/tz";
 import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
-import { addSeconds, addWeeks, isValid, startOfDay } from "date-fns";
+import {
+  addQuarters,
+  addSeconds,
+  addWeeks,
+  isValid,
+  startOfDay,
+} from "date-fns";
 import { OAuth2Client } from "google-auth-library";
 import {
   type DocumentNode,
@@ -667,6 +673,7 @@ export const resolvers: GQResolvers<
       }>([
         {
           $match: {
+            workedOutAt: { $gte: addQuarters(new Date(), -1) },
             userId: user.id,
             "exercises.exerciseId": {
               $in: Array.from(
