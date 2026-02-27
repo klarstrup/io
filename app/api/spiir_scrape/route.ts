@@ -74,6 +74,11 @@ export const GET = () =>
           );
         }
 
+        await SpiirAccountGroups.createIndexes([
+          { key: { id: 1 }, unique: true },
+          { key: { _io_userId: 1 } },
+        ]);
+
         for (const accountGroup of accountGroups) {
           const updateResult = await SpiirAccountGroups.updateOne(
             { id: accountGroup.id },
