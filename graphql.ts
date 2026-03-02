@@ -508,13 +508,14 @@ export const resolvers: GQResolvers<
         id_token: userGoogleAccount.id_token,
       });
 
-      console.log(userGoogleAccount.expires_at);
-
       const getAccessTokenResponse = await oAuth2Client.getAccessToken();
+
       if (getAccessTokenResponse.token) {
         const credentials = getAccessTokenResponse.res?.data as Parameters<
           Parameters<OAuth2Client["refreshAccessToken"]>[0]
         >[1];
+
+        // This is present when it refreshes the access token using a refresh token i think
         if (credentials && "access_token" in credentials) {
           await Accounts.updateOne(
             { providerAccountId: userGoogleAccount.providerAccountId },
