@@ -178,7 +178,9 @@ function BarIcon({ children }: { children: React.ReactNode }) {
 
 export default function DashBar() {
   const { data: sessionData, status: sessionStatus } = useSession();
-  const { data } = useQuery(GetLatestWeightEntryDocument);
+  const { data } = useQuery(GetLatestWeightEntryDocument, {
+    errorPolicy: "all",
+  });
 
   const { value: sleepDebt, slope: sleepDebtSlope } = useTrendingNumber(
     data?.user?.sleepDebtFractionTimeSeries

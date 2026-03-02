@@ -173,7 +173,7 @@ export const resolvers: GQResolvers<
         0,
       );
 
-      return Math.min(Math.max(rawBalance - 25000, 0), 9999);
+      return Math.min(rawBalance - 10000, 9999);
     },
     weight: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
