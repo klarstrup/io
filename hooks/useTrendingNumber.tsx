@@ -63,12 +63,12 @@ function createTrend(data: { timestamp: Date; value: number }[]) {
 
 export default function useTrendingNumber(
   timeSeries: GQFloatTimeSeriesEntry[],
-  updateInterval = 10000,
 ) {
-  const now = useNow(updateInterval);
-
   // Predict the current value by regressing from the series and extrapolating from the newest point to now
   const trend = useMemo(() => createTrend(timeSeries), [timeSeries]);
+
+  // Calculate the update interval based on the slope of the trend - if the slope is steep, update more frequently, if it's flat, update less frequently
+  const now = useNow(0.000001 / Math.abs(trend.slope));
 
   return { value: trend.calcY(now.getTime()), ...trend };
 }
