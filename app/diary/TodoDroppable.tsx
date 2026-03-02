@@ -33,6 +33,7 @@ import {
 import {
   dateMidpoint,
   endOfDayButItRespectsDayStartHour,
+  haptic,
   isSameDayButItRespectsDayStartHour,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -371,6 +372,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         });
       }
     }
+
+    haptic();
   }
 
   const sensors = useSensors(
@@ -384,6 +387,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     <DndContext
       id="TodoDragDropContainer"
       sensors={sensors}
+      onDragStart={() => haptic()}
       onDragEnd={handleDragEnd}
       collisionDetection={customCollisionDetectionAlgorithm}
     >
