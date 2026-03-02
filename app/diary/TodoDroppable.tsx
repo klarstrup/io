@@ -396,10 +396,13 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
   );
 }
 
-export function TodoSortableContext(props: SortableContextProps) {
+export function TodoSortableContext({
+  children,
+  ...props
+}: SortableContextProps) {
   return (
     <SortableContext strategy={verticalListSortingStrategy} {...props}>
-      {props.children}
+      {children}
     </SortableContext>
   );
 }

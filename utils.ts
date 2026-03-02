@@ -763,3 +763,6 @@ export function haptic(pattern: number | number[] = 50) {
     }
   } catch {}
 }
+
+export const emptyArray = [];
+export const emptyObject = {};
