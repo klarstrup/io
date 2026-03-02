@@ -236,7 +236,7 @@ export default function DashBar() {
       className="min-h-12.5 min-w-xs gap-y-0.5 pr-0.5 select-none"
       rowProps={{ className: "gap-x-2" }}
     >
-      {availableBalance ? (
+      {availableBalance != null ? (
         <a
           href="https://mine.spiir.dk/"
           target="_blank"
