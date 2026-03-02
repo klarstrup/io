@@ -53,7 +53,6 @@ export function DiaryAgendaDayDueSet({
   exerciseInfo: GQExerciseInfo;
   workouts?: GQWorkout[];
   locations?: GQLocation[];
-  isDragging: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 } & React.HTMLAttributes<HTMLDivElement>) {
   const client = useApolloClient();
