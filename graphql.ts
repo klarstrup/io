@@ -502,11 +502,46 @@ export const resolvers: GQResolvers<
         refresh_token: userGoogleAccount.refresh_token,
         token_type: userGoogleAccount.token_type,
         scope: userGoogleAccount.scope,
-        expiry_date: userGoogleAccount.expires_at,
+        expiry_date: userGoogleAccount.expires_at
+          ? userGoogleAccount.expires_at * 1000
+          : undefined,
         id_token: userGoogleAccount.id_token,
       });
 
-      await oAuth2Client.getAccessToken();
+      console.log(userGoogleAccount.expires_at);
+
+      const getAccessTokenResponse = await oAuth2Client.getAccessToken();
+      if (getAccessTokenResponse.token) {
+        const credentials = getAccessTokenResponse.res?.data as Parameters<
+          Parameters<OAuth2Client["refreshAccessToken"]>[0]
+        >[1];
+        if (credentials && "access_token" in credentials) {
+          await Accounts.updateOne(
+            { providerAccountId: userGoogleAccount.providerAccountId },
+            {
+              $set: {
+                access_token: credentials.access_token ?? undefined,
+                refresh_token: credentials.refresh_token ?? undefined,
+                token_type:
+                  (credentials.token_type as
+                    | Lowercase<string>
+                    | null
+                    | undefined) ?? undefined,
+                scope: credentials.scope ?? undefined,
+                expires_at: credentials.expiry_date
+                  ? ~~(credentials.expiry_date / 1000)
+                  : undefined,
+                id_token: credentials.id_token ?? undefined,
+              },
+            },
+          );
+        } else {
+          await Accounts.updateOne(
+            { providerAccountId: userGoogleAccount.providerAccountId },
+            { $set: { access_token: getAccessTokenResponse.token } },
+          );
+        }
+      }
 
       const gm = gmail({ version: "v1", auth: oAuth2Client });
 
