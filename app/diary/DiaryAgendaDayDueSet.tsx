@@ -15,14 +15,7 @@ import {
 import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  type ComponentProps,
-  forwardRef,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import SourceWidget from "../../components/SourceWidget";
 import {
@@ -49,11 +42,20 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
 
 export function DiaryAgendaDayDueSet({
+  dueSet,
+  exerciseInfo,
+  workouts,
+  locations,
+  cotemporalityOfSurroundingEvent,
   ...props
-}: {} & Omit<
-  ComponentProps<typeof DiaryAgendaDayDueSetButItsNotDraggable>,
-  "isDragging"
->) {
+}: {
+  dueSet: GQNextSet;
+  exerciseInfo: GQExerciseInfo;
+  workouts?: GQWorkout[];
+  locations?: GQLocation[];
+  isDragging: boolean;
+  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+} & React.HTMLAttributes<HTMLDivElement>) {
   const client = useApolloClient();
   const {
     isDragging,
@@ -63,11 +65,10 @@ export function DiaryAgendaDayDueSet({
     transform,
     transition,
   } = useSortable({
-    id: client.cache.identify(props.dueSet) || props.dueSet.id,
+    id: client.cache.identify(dueSet) || dueSet.id,
     data: {
-      nextSet: props.dueSet,
-      date:
-        getJournalEntryPrincipalDate(props.dueSet)?.start || props.dueSet.dueOn,
+      nextSet: dueSet,
+      date: getJournalEntryPrincipalDate(dueSet)?.start || dueSet.dueOn,
     },
   });
 
@@ -85,406 +86,369 @@ export function DiaryAgendaDayDueSet({
     [isDragging, transform, transition],
   );
 
+  const [isActive, setIsActive] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const onClickOutside = () => setIsActive(false);
+  useClickOutside(ref, onClickOutside);
+  const router = useRouter();
+
+  const [snoozeExerciseSchedule] = useMutation<
+    GQSnoozeExerciseScheduleMutation,
+    GQSnoozeExerciseScheduleMutationVariables
+  >(gql`
+    mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
+      snoozeExerciseSchedule(input: $input) {
+        exerciseSchedule {
+          id
+          exerciseId
+          enabled
+          frequency {
+            years
+            months
+            weeks
+            days
+            hours
+            minutes
+            seconds
+          }
+          increment
+          workingSets
+          workingReps
+          deloadFactor
+          baseWeight
+          snoozedUntil
+          order
+          nextSet {
+            id
+            workedOutAt
+            dueOn
+            exerciseId
+            successful
+            nextWorkingSets
+            nextWorkingSetInputs {
+              unit
+              value
+              assistType
+            }
+            exerciseSchedule {
+              id
+              exerciseId
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
+              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+              order
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const [unsnoozeExerciseSchedule] = useMutation<
+    GQUnsnoozeExerciseScheduleMutation,
+    GQUnsnoozeExerciseScheduleMutationVariables
+  >(gql`
+    mutation UnsnoozeExerciseSchedule($input: UnsnoozeExerciseScheduleInput!) {
+      unsnoozeExerciseSchedule(input: $input) {
+        exerciseSchedule {
+          id
+          exerciseId
+          enabled
+          frequency {
+            years
+            months
+            weeks
+            days
+            hours
+            minutes
+            seconds
+          }
+          increment
+          workingSets
+          workingReps
+          deloadFactor
+          baseWeight
+          snoozedUntil
+          order
+          nextSet {
+            id
+            workedOutAt
+            dueOn
+            exerciseId
+            successful
+            nextWorkingSets
+            nextWorkingSetInputs {
+              unit
+              value
+              assistType
+            }
+            exerciseSchedule {
+              id
+              exerciseId
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
+              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+              order
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const handleIconClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      // Hidden exercises cannot be manually logged
+      if (exerciseInfo.isHidden) return;
+
+      const dateStr = dateToString(subHours(new Date(), dayStartHour));
+      const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
+      router.push(`/diary/${dateStr}/workout?${searchStr}`);
+    },
+    [dueSet.exerciseSchedule.id, exerciseInfo.isHidden, router],
+  );
+
   return (
-    <DiaryAgendaDayDueSetButItsNotDraggable
+    <DiaryAgendaDayEntry
       ref={setNodeRef}
+      cotemporalityOfSurroundingEvent={
+        !isDragging ? cotemporalityOfSurroundingEvent : null
+      }
+      {...props}
+      icon={faDumbbell}
+      onIconClick={handleIconClick}
+      className="select-none"
       style={style}
-      isDragging={isDragging}
       {...listeners}
       {...attributes}
-      {...props}
-    />
-  );
-}
-
-export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
-  function DiaryAgendaDayDueSetButItsNotDraggable(
-    {
-      dueSet,
-      exerciseInfo,
-      workouts,
-      locations,
-      isDragging,
-      cotemporalityOfSurroundingEvent,
-      ...props
-    }: {
-      dueSet: GQNextSet;
-      exerciseInfo: GQExerciseInfo;
-      workouts?: GQWorkout[];
-      locations?: GQLocation[];
-      isDragging: boolean;
-      cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
-    } & React.HTMLAttributes<HTMLDivElement>,
-    ref2: React.Ref<HTMLDivElement>,
-  ) {
-    const [isActive, setIsActive] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-    const onClickOutside = () => setIsActive(false);
-    useClickOutside(ref, onClickOutside);
-    const router = useRouter();
-
-    const [snoozeExerciseSchedule] = useMutation<
-      GQSnoozeExerciseScheduleMutation,
-      GQSnoozeExerciseScheduleMutationVariables
-    >(gql`
-      mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
-        snoozeExerciseSchedule(input: $input) {
-          exerciseSchedule {
-            id
-            exerciseId
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            order
-            nextSet {
-              id
-              workedOutAt
-              dueOn
-              exerciseId
-              successful
-              nextWorkingSets
-              nextWorkingSetInputs {
-                unit
-                value
-                assistType
-              }
-              exerciseSchedule {
-                id
-                exerciseId
-                enabled
-                frequency {
-                  years
-                  months
-                  weeks
-                  days
-                  hours
-                  minutes
-                  seconds
-                }
-                increment
-                workingSets
-                workingReps
-                deloadFactor
-                baseWeight
-                snoozedUntil
-                order
-              }
-            }
-          }
+    >
+      <div
+        ref={ref}
+        style={isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}}
+        className={
+          "relative flex items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +
+          (isActive ? "rounded-b-none" : "cursor-pointer")
         }
-      }
-    `);
-
-    const [unsnoozeExerciseSchedule] = useMutation<
-      GQUnsnoozeExerciseScheduleMutation,
-      GQUnsnoozeExerciseScheduleMutationVariables
-    >(gql`
-      mutation UnsnoozeExerciseSchedule(
-        $input: UnsnoozeExerciseScheduleInput!
-      ) {
-        unsnoozeExerciseSchedule(input: $input) {
-          exerciseSchedule {
-            id
-            exerciseId
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            order
-            nextSet {
-              id
-              workedOutAt
-              dueOn
-              exerciseId
-              successful
-              nextWorkingSets
-              nextWorkingSetInputs {
-                unit
-                value
-                assistType
-              }
-              exerciseSchedule {
-                id
-                exerciseId
-                enabled
-                frequency {
-                  years
-                  months
-                  weeks
-                  days
-                  hours
-                  minutes
-                  seconds
-                }
-                increment
-                workingSets
-                workingReps
-                deloadFactor
-                baseWeight
-                snoozedUntil
-                order
-              }
-            }
-          }
-        }
-      }
-    `);
-
-    const handleIconClick = useCallback(
-      (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        // Hidden exercises cannot be manually logged
-        if (exerciseInfo.isHidden) return;
-
-        const dateStr = dateToString(subHours(new Date(), dayStartHour));
-        const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
-        router.push(`/diary/${dateStr}/workout?${searchStr}`);
-      },
-      [dueSet.exerciseSchedule.id, exerciseInfo.isHidden, router],
-    );
-
-    return (
-      <DiaryAgendaDayEntry
-        ref={ref2}
-        cotemporalityOfSurroundingEvent={
-          !isDragging ? cotemporalityOfSurroundingEvent : null
-        }
-        {...props}
-        icon={faDumbbell}
-        onIconClick={handleIconClick}
-        className="select-none"
+        onClick={() => setIsActive(true)}
       >
         <div
-          ref={ref}
-          style={
-            isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}
-          }
           className={
-            "relative flex items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +
-            (isActive ? "rounded-b-none" : "cursor-pointer")
+            "h-full self-stretch px-1.5 py-0.5 text-left text-sm " +
+            (isActive
+              ? "rounded-l-[5px] rounded-b-none "
+              : "rounded-l-[5px] ") +
+            (dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets
+              ? ""
+              : " rounded-r-[5px]")
           }
-          onClick={() => setIsActive(true)}
         >
+          {!isActive ? (
+            <ExerciseName exerciseInfo={exerciseInfo} />
+          ) : (
+            <Link
+              prefetch={false}
+              href={`/diary/exercises/${exerciseInfo.id}`}
+              className="hover:underline"
+            >
+              <ExerciseName exerciseInfo={exerciseInfo} />
+            </Link>
+          )}
+        </div>
+        {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
           <div
             className={
-              "h-full self-stretch px-1.5 py-0.5 text-left text-sm " +
-              (isActive
-                ? "rounded-l-[5px] rounded-b-none "
-                : "rounded-l-[5px] ") +
-              (dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets
-                ? ""
-                : " rounded-r-[5px]")
+              "flex items-center justify-center self-stretch border-l border-l-black/20 px-1.5 text-xs " +
+              (isActive ? "rounded-br-none" : "rounded-br-[5px]")
             }
           >
-            {!isActive ? (
-              <ExerciseName exerciseInfo={exerciseInfo} />
-            ) : (
-              <Link
-                prefetch={false}
-                href={`/diary/exercises/${exerciseInfo.id}`}
-                className="hover:underline"
-              >
-                <ExerciseName exerciseInfo={exerciseInfo} />
-              </Link>
-            )}
+            <table className="w-auto max-w-0">
+              <tbody>
+                <WorkoutEntryExerciseSetRow
+                  exercise={exerciseInfo}
+                  set={{
+                    __typename: "WorkoutSet",
+                    inputs: dueSet.nextWorkingSetInputs ?? [],
+                  }}
+                  repeatCount={dueSet.nextWorkingSets}
+                />
+              </tbody>
+            </table>
           </div>
-          {dueSet.nextWorkingSetInputs?.length || dueSet.nextWorkingSets ? (
-            <div
-              className={
-                "flex items-center justify-center self-stretch border-l border-l-black/20 px-1.5 text-xs " +
-                (isActive ? "rounded-br-none" : "rounded-br-[5px]")
-              }
-            >
-              <table className="w-auto max-w-0">
-                <tbody>
-                  <WorkoutEntryExerciseSetRow
-                    exercise={exerciseInfo}
-                    set={{
-                      __typename: "WorkoutSet",
-                      inputs: dueSet.nextWorkingSetInputs ?? [],
-                    }}
-                    repeatCount={dueSet.nextWorkingSets}
-                  />
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-          {isActive && (
-            <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-[5px] border border-black/20 bg-white p-1">
-              <button
-                type="button"
-                onClick={() =>
-                  void snoozeExerciseSchedule({
-                    variables: {
-                      input: {
-                        exerciseScheduleId: dueSet.exerciseSchedule.id,
-                        snoozedUntil: addDays(dueSet.dueOn, 1),
-                      },
+        ) : null}
+        {isActive && (
+          <div className="absolute top-full right-0 left-0 z-10 -mx-px flex flex-wrap items-center justify-center gap-1 rounded-b-[5px] border border-black/20 bg-white p-1">
+            <button
+              type="button"
+              onClick={() =>
+                void snoozeExerciseSchedule({
+                  variables: {
+                    input: {
+                      exerciseScheduleId: dueSet.exerciseSchedule.id,
+                      snoozedUntil: addDays(dueSet.dueOn, 1),
                     },
-                    optimisticResponse: {
-                      snoozeExerciseSchedule: {
-                        __typename: "SnoozeExerciseSchedulePayload",
-                        exerciseSchedule: {
-                          ...dueSet.exerciseSchedule,
-                          snoozedUntil: addDays(dueSet.dueOn, 1),
-                          nextSet: {
-                            ...dueSet,
-                            dueOn: addDays(dueSet.dueOn, 1),
-                          },
+                  },
+                  optimisticResponse: {
+                    snoozeExerciseSchedule: {
+                      __typename: "SnoozeExerciseSchedulePayload",
+                      exerciseSchedule: {
+                        ...dueSet.exerciseSchedule,
+                        snoozedUntil: addDays(dueSet.dueOn, 1),
+                        nextSet: {
+                          ...dueSet,
+                          dueOn: addDays(dueSet.dueOn, 1),
                         },
                       },
                     },
-                  })
-                }
-                className={
-                  "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-2 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
-                }
-              >
-                Snooze
-              </button>
-              {dueSet.exerciseSchedule.snoozedUntil &&
-                isFuture(dueSet.exerciseSchedule.snoozedUntil) && (
-                  <div className="w-full text-center text-sm text-black/60">
-                    <small>
-                      Snoozed until{" "}
-                      {dueSet.exerciseSchedule.snoozedUntil.toLocaleDateString(
-                        undefined,
-                        { month: "short", day: "numeric" },
-                      )}
-                    </small>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void unsnoozeExerciseSchedule({
-                          variables: {
-                            input: {
-                              exerciseScheduleId: dueSet.exerciseSchedule.id,
-                            },
+                  },
+                })
+              }
+              className={
+                "text-md cursor-pointer rounded-xl bg-yellow-500/80 px-2 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+              }
+            >
+              Snooze
+            </button>
+            {dueSet.exerciseSchedule.snoozedUntil &&
+              isFuture(dueSet.exerciseSchedule.snoozedUntil) && (
+                <div className="w-full text-center text-sm text-black/60">
+                  <small>
+                    Snoozed until{" "}
+                    {dueSet.exerciseSchedule.snoozedUntil.toLocaleDateString(
+                      undefined,
+                      { month: "short", day: "numeric" },
+                    )}
+                  </small>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void unsnoozeExerciseSchedule({
+                        variables: {
+                          input: {
+                            exerciseScheduleId: dueSet.exerciseSchedule.id,
                           },
-                          optimisticResponse: {
-                            unsnoozeExerciseSchedule: {
-                              __typename: "UnsnoozeExerciseSchedulePayload",
-                              exerciseSchedule: {
-                                ...dueSet.exerciseSchedule,
-                                snoozedUntil: null,
-                                nextSet: {
-                                  ...dueSet,
-                                  dueOn: addMilliseconds(
-                                    (dueSet?.workedOutAt &&
-                                    isEqual(
-                                      dueSet.workedOutAt,
-                                      startOfDay(dueSet.workedOutAt, {
-                                        in: tz("UTC"),
-                                      }),
-                                    )
-                                      ? addHours(
-                                          dueSet.workedOutAt,
-                                          dayStartHour,
-                                        )
-                                      : dueSet.workedOutAt) || epoch,
-                                    durationToMs(
-                                      dueSet.exerciseSchedule.frequency,
-                                    ),
+                        },
+                        optimisticResponse: {
+                          unsnoozeExerciseSchedule: {
+                            __typename: "UnsnoozeExerciseSchedulePayload",
+                            exerciseSchedule: {
+                              ...dueSet.exerciseSchedule,
+                              snoozedUntil: null,
+                              nextSet: {
+                                ...dueSet,
+                                dueOn: addMilliseconds(
+                                  (dueSet?.workedOutAt &&
+                                  isEqual(
+                                    dueSet.workedOutAt,
+                                    startOfDay(dueSet.workedOutAt, {
+                                      in: tz("UTC"),
+                                    }),
+                                  )
+                                    ? addHours(dueSet.workedOutAt, dayStartHour)
+                                    : dueSet.workedOutAt) || epoch,
+                                  durationToMs(
+                                    dueSet.exerciseSchedule.frequency,
                                   ),
-                                },
+                                ),
                               },
                             },
                           },
-                        })
-                      }
-                      className="ml-2 cursor-pointer rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"
-                    >
-                      Unsnooze
-                    </button>
-                  </div>
-                )}
-              {exerciseInfo.isHidden ? null : (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    console.log({ e });
-                    e.preventDefault();
-                    const select = e.currentTarget.querySelector(
-                      "select",
-                    ) as HTMLSelectElement;
-                    const selectedExistingWorkout = select.value || null;
-
-                    const dateStr = dateToString(
-                      subHours(new Date(), dayStartHour),
-                    );
-                    const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
-                    router.push(
-                      selectedExistingWorkout
-                        ? `/diary/${dateStr}/workout/${selectedExistingWorkout}?${searchStr}`
-                        : `/diary/${dateStr}/workout?${searchStr}`,
-                    );
-                  }}
-                  className={
-                    "text-md cursor-pointer rounded-xl bg-green-500/80 px-1 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
-                  }
-                >
-                  Do now{" "}
-                  <select
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    className="ml-1 rounded-md border border-black/5 bg-white px-1 py-0.5 text-black"
+                        },
+                      })
+                    }
+                    className="ml-2 cursor-pointer rounded-xl bg-red-500/80 px-2 py-0.5 leading-none font-semibold text-white"
                   >
-                    <option value="">in new workout</option>
-                    {workouts?.map((workout) => {
-                      const location = locations?.find(
-                        (loc) => loc.id === workout.locationId,
-                      );
-
-                      return (
-                        <option value={workout.id} key={workout.id}>
-                          at {location ? location.name : "Unknown location"}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </button>
-              )}
-              {dueSet.exerciseId in exerciseIdToDataSourceMapping &&
-              exerciseIdToDataSourceMapping[dueSet.exerciseId] ? (
-                <div className="rounded-md border border-black/20 bg-white p-1">
-                  {exerciseIdToDataSourceMapping[dueSet.exerciseId]?.map(
-                    (source) => (
-                      <SourceWidget key={source} dataSource={source} />
-                    ),
-                  )}
+                    Unsnooze
+                  </button>
                 </div>
-              ) : null}
-            </div>
-          )}
-        </div>
-      </DiaryAgendaDayEntry>
-    );
-  },
-);
+              )}
+            {exerciseInfo.isHidden ? null : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  console.log({ e });
+                  e.preventDefault();
+                  const select = e.currentTarget.querySelector(
+                    "select",
+                  ) as HTMLSelectElement;
+                  const selectedExistingWorkout = select.value || null;
+
+                  const dateStr = dateToString(
+                    subHours(new Date(), dayStartHour),
+                  );
+                  const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
+                  router.push(
+                    selectedExistingWorkout
+                      ? `/diary/${dateStr}/workout/${selectedExistingWorkout}?${searchStr}`
+                      : `/diary/${dateStr}/workout?${searchStr}`,
+                  );
+                }}
+                className={
+                  "text-md cursor-pointer rounded-xl bg-green-500/80 px-1 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                }
+              >
+                Do now{" "}
+                <select
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  className="ml-1 rounded-md border border-black/5 bg-white px-1 py-0.5 text-black"
+                >
+                  <option value="">in new workout</option>
+                  {workouts?.map((workout) => {
+                    const location = locations?.find(
+                      (loc) => loc.id === workout.locationId,
+                    );
+
+                    return (
+                      <option value={workout.id} key={workout.id}>
+                        at {location ? location.name : "Unknown location"}
+                      </option>
+                    );
+                  })}
+                </select>
+              </button>
+            )}
+            {dueSet.exerciseId in exerciseIdToDataSourceMapping &&
+            exerciseIdToDataSourceMapping[dueSet.exerciseId] ? (
+              <div className="rounded-md border border-black/20 bg-white p-1">
+                {exerciseIdToDataSourceMapping[dueSet.exerciseId]?.map(
+                  (source) => (
+                    <SourceWidget key={source} dataSource={source} />
+                  ),
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </DiaryAgendaDayEntry>
+  );
+}
