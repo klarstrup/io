@@ -1,7 +1,11 @@
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
-import { faCalendar, faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendar,
+  faCalendarCheck,
+  faExternalLink,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   addHours,
   differenceInDays,
@@ -21,6 +25,7 @@ import {
 } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getTodoPrincipalDate } from "./diaryUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export function DiaryAgendaDayEvent({
   dayDate,
@@ -124,7 +129,17 @@ export function DiaryAgendaDayEvent({
                 })}
               </>
             ) : null}
-          </span>
+          </span>{" "}
+          {event.url ? (
+            <a
+              href={event.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+            >
+              <FontAwesomeIcon icon={faExternalLink} />
+            </a>
+          ) : null}{" "}
         </div>
       </div>
     </DiaryAgendaDayEntry>

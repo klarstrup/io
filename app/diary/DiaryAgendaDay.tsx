@@ -192,6 +192,7 @@ gql`
         end
         datetype
         location
+        url
         order
       }
       workouts(interval: $interval) {

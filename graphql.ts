@@ -1410,6 +1410,7 @@ export const typeDefs = gql`
     due: Date
     datetype: String!
     location: String
+    url: String
     order: Int
   }
 

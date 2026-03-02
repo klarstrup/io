@@ -1,6 +1,8 @@
 import { useApolloClient } from "@apollo/client/react";
 import { tz, TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
+import { faExternalLink } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addHours,
   differenceInDays,
@@ -259,6 +261,16 @@ export function DiaryAgendaDayDay({
                           ) : null}
                           <span className="px-px">{numDays}d</span>
                         </span>
+                        {event.url ? (
+                          <a
+                            href={event.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                          >
+                            <FontAwesomeIcon icon={faExternalLink} />
+                          </a>
+                        ) : null}{" "}
                       </div>
                     </span>
                   );
