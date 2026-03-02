@@ -44,7 +44,6 @@ import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
-import { useWhyDidYouUpdate } from "../../hooks";
 
 type DayJournalEntryElement = { id: string; element: ReactElement };
 
@@ -462,17 +461,6 @@ export function DiaryAgendaDayDay({
     timeZone,
     user,
   ]);
-
-  useWhyDidYouUpdate("DiaryAgendaDayDay.useMemo(dayJournalItems)", {
-    "client.cache": client.cache,
-    date,
-    dayDate,
-    dayJournalEntries,
-    dayLocations,
-    dayStart,
-    timeZone,
-    user,
-  });
 
   const allCompleted = dayJournalEntries.every((je) =>
     getJournalEntryPassed(je, now),
