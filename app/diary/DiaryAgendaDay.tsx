@@ -422,6 +422,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             journalEntriesByDate[calName].push(event);
           }
 
+          // TODO: This is unstable as it creates a new object that rerenders all downstream components
           journalEntriesByDate[calName].push({
             ...event,
             _this_is_the_end_of_a_event: true,
@@ -594,6 +595,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               getJournalEntryPrincipalDate(entry)?.start || dayEnd,
             );
 
+            // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
             dayJournalEntriesIncludingLocationChanges.push({
               __typename: "LocationChange",
               id: `location-change-${dayName}-${i}`,
