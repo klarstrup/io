@@ -502,9 +502,7 @@ export const resolvers: GQResolvers<
         refresh_token: userGoogleAccount.refresh_token,
         token_type: userGoogleAccount.token_type,
         scope: userGoogleAccount.scope,
-        expiry_date: userGoogleAccount.expires_at
-          ? userGoogleAccount.expires_at * 1000
-          : undefined,
+        expiry_date: userGoogleAccount.expires_at,
         id_token: userGoogleAccount.id_token,
       });
 
@@ -529,9 +527,7 @@ export const resolvers: GQResolvers<
                     | null
                     | undefined) ?? undefined,
                 scope: credentials.scope ?? undefined,
-                expires_at: credentials.expiry_date
-                  ? ~~(credentials.expiry_date / 1000)
-                  : undefined,
+                expires_at: credentials.expiry_date ?? undefined,
                 id_token: credentials.id_token ?? undefined,
               },
             },
