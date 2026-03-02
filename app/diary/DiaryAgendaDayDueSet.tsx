@@ -15,7 +15,13 @@ import {
 import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ComponentProps, forwardRef, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  forwardRef,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import SourceWidget from "../../components/SourceWidget";
 import {
@@ -64,19 +70,24 @@ export function DiaryAgendaDayDueSet({
     },
   });
 
+  const style = useMemo(
+    () => ({
+      transition,
+      ...(transform
+        ? {
+            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+            zIndex: 5,
+          }
+        : undefined),
+      ...(isDragging ? { zIndex: 10 } : {}),
+    }),
+    [isDragging, transform, transition],
+  );
+
   return (
     <DiaryAgendaDayDueSetButItsNotDraggable
       ref={setNodeRef}
-      style={{
-        transition,
-        ...(transform
-          ? {
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 5,
-            }
-          : undefined),
-        ...(isDragging ? { zIndex: 10 } : {}),
-      }}
+      style={style}
       isDragging={isDragging}
       {...listeners}
       {...attributes}
