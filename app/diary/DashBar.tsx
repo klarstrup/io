@@ -281,8 +281,8 @@ export default function DashBar() {
             )}
           >
             {(sleepDebt * 100).toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
             })}
             <span
               className={
