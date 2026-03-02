@@ -24,9 +24,6 @@ import {
   DiaryAgendaDayUserDocument,
   DiaryAgendaDayUserTodosDocument,
   type GQLocation,
-  type GQNextSet,
-  type GQSleep,
-  type GQTodo,
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
 import {
@@ -36,7 +33,6 @@ import {
   DEFAULT_TIMEZONE,
   emptyArray,
   endOfDayButItRespectsDayStartHour,
-  isSameDayButItRespectsDayStartHour,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -315,272 +311,241 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     [fetchingInterval],
   );
 
-  const userData = {
-    calendarTodos: data?.user?.todos || [],
-    calendarEvents: data?.user?.events || [],
-    workouts: data?.user?.workouts || [],
-    nextSets: data?.user?.nextSets || [],
-    sleeps: data?.user?.sleeps || [],
-    locations: data?.user?.locations || [],
-  };
+  const calendarEvents = data?.user?.events || emptyArray;
+  const calendarTodos = data?.user?.todos || emptyArray;
+  const workouts = data?.user?.workouts || emptyArray;
+  const nextSets = data?.user?.nextSets || emptyArray;
+  const sleeps = data?.user?.sleeps || emptyArray;
+  const userLocations = data?.user?.locations || emptyArray;
 
-  const {
-    calendarEvents = emptyArray,
-    calendarTodos = emptyArray,
-    workouts = emptyArray,
-    nextSets = emptyArray,
-    sleeps = emptyArray,
-    locations: userLocations = emptyArray,
-  } = userData || {};
+  const journalEntriesByDate2 = useMemo(() => {
+    const journalEntriesByDate: Record<string, JournalEntry[]> = {
+      [dateToString(startOfAgendaDay)]: [
+        { __typename: "NowDivider", id: "now-divider", start: now, end: now },
+      ],
+    };
 
-  const [eventsByDate2, todosByDate2, dueSetsByDate2, sleepsByDate2] =
-    useMemo(() => {
-      const eventsByDate: Record<string, JournalEntry[]> = {
-        [dateToString(startOfAgendaDay)]: [
-          { __typename: "NowDivider", id: "now-divider", start: now, end: now },
-        ],
-      };
-      const todosByDate: Record<string, GQTodo[]> = {};
-      const dueSetsByDate: Record<string, GQNextSet[]> = {};
-      const sleepsByDate: Record<string, GQSleep[]> = {};
+    for (const dueSet of nextSets) {
+      const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
+      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+      journalEntriesByDate[calName].push(dueSet);
+    }
 
-      for (const dueSet of nextSets) {
-        const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
-        if (!dueSetsByDate[calName]) dueSetsByDate[calName] = [];
-        dueSetsByDate[calName].push(dueSet);
-      }
+    for (const sleep of sleeps) {
+      const calName = dateToString(addHours(sleep.endedAt, -dayStartHour));
+      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+      journalEntriesByDate[calName].push(sleep);
 
-      for (const sleep of sleeps) {
-        const calName = dateToString(addHours(sleep.endedAt, -dayStartHour));
-        if (!sleepsByDate[calName]) sleepsByDate[calName] = [];
-        sleepsByDate[calName].push(sleep);
+      const calName2 = dateToString(addHours(sleep.startedAt, -dayStartHour));
+      if (!journalEntriesByDate[calName2]) journalEntriesByDate[calName2] = [];
+      journalEntriesByDate[calName2].push(sleep);
+    }
 
-        const calName2 = dateToString(addHours(sleep.startedAt, -dayStartHour));
-        if (!sleepsByDate[calName2]) sleepsByDate[calName2] = [];
-        sleepsByDate[calName2].push(sleep);
-      }
-
-      for (const event of calendarEvents) {
-        const eventInterval = {
-          start: max(
-            [
-              subHours(
-                max(
-                  [
-                    "datetype" in event && event.datetype === "date"
-                      ? roundToNearestDay(event.start, {
-                          in: tz(DEFAULT_TIMEZONE),
-                        })
-                      : null,
-
-                    "completed" in event ? event.completed : null,
-                    "due" in event ? event.due : null,
-                    "start" in event ? event.start : null,
-                    fetchingInterval.start,
-                  ].filter(Boolean),
-                ),
-                dayStartHour,
-              ),
-              fetchingInterval.start,
-            ].filter(Boolean),
-          ),
-          end: min(
-            [
-              subHours(
-                min(
-                  [
-                    "datetype" in event && event.datetype === "date"
-                      ? roundToNearestDay(event.end, {
-                          in: tz(DEFAULT_TIMEZONE),
-                        })
-                      : null,
-                    "completed" in event ? event.completed : null,
-                    "due" in event ? event.due : null,
-                    "end" in event ? event.end : null,
-                    fetchingInterval.end,
-                  ].filter(Boolean),
-                ),
-                dayStartHour,
-              ),
-              fetchingInterval.end,
-            ].filter(Boolean),
-          ),
-        };
-
-        for (const date of eachDayOfInterval(eventInterval, {
-          in: tz(timeZone),
-        })) {
-          const dayStart = addHours(startOfDay(date), dayStartHour);
-          const dayEnd = addHours(endOfDay(date), dayStartHour);
-
-          const calName = dateToString(addHours(date, dayStartHour));
-
-          if (event.datetype === "date") {
-            if (
-              isBefore(dayEnd, addHours(event.start, dayStartHour)) ||
-              isAfter(dayStart, addHours(event.end, dayStartHour))
-            ) {
-              continue;
-            }
-          }
-
-          if (!eventsByDate[calName]) eventsByDate[calName] = [];
-          if (
-            event.datetype !== "date" &&
-            "end" in event &&
-            event.end &&
-            isBefore(event.end, dayEnd)
-          ) {
-            // Do not insert event start event if the event started on a previous day, but insert an event end event, so that the event appears as ongoing until the end time, but not as starting at the start time
-
-            if (
-              !("start" in event) ||
-              !event.start ||
-              isAfter(event.start, dayStart)
-            ) {
-              eventsByDate[calName].push(event);
-            }
-
-            eventsByDate[calName].push({
-              ...event,
-              _this_is_the_end_of_a_event: true,
-            });
-          } else {
-            eventsByDate[calName].push(event);
-          }
-        }
-      }
-
-      for (const todo of calendarTodos) {
-        for (const date of eachDayOfInterval(
-          {
-            start: subHours(
+    for (const event of calendarEvents) {
+      const eventInterval = {
+        start: max(
+          [
+            subHours(
               max(
                 [
-                  todo.completed || todo.due,
-                  todo.completed || todo.start,
+                  "datetype" in event && event.datetype === "date"
+                    ? roundToNearestDay(event.start, {
+                        in: tz(DEFAULT_TIMEZONE),
+                      })
+                    : null,
+
+                  "completed" in event ? event.completed : null,
+                  "due" in event ? event.due : null,
+                  "start" in event ? event.start : null,
                   fetchingInterval.start,
                 ].filter(Boolean),
               ),
               dayStartHour,
             ),
-            end: subHours(fetchingInterval.end, dayStartHour),
-          },
-          { in: tz(timeZone) },
-        )) {
-          const dayEnd = addHours(endOfDay(date), dayStartHour);
+            fetchingInterval.start,
+          ].filter(Boolean),
+        ),
+        end: min(
+          [
+            subHours(
+              min(
+                [
+                  "datetype" in event && event.datetype === "date"
+                    ? roundToNearestDay(event.end, {
+                        in: tz(DEFAULT_TIMEZONE),
+                      })
+                    : null,
+                  "completed" in event ? event.completed : null,
+                  "due" in event ? event.due : null,
+                  "end" in event ? event.end : null,
+                  fetchingInterval.end,
+                ].filter(Boolean),
+              ),
+              dayStartHour,
+            ),
+            fetchingInterval.end,
+          ].filter(Boolean),
+        ),
+      };
 
-          const calName = dateToString(addHours(date, dayStartHour));
-          if (!todo.start && !todo.due && !todo.completed) {
-            // If not done and no start or due date, this is a backlog item
-            // we don't show in the diary
-            continue;
-          }
+      for (const date of eachDayOfInterval(eventInterval, {
+        in: tz(timeZone),
+      })) {
+        const dayStart = addHours(startOfDay(date), dayStartHour);
+        const dayEnd = addHours(endOfDay(date), dayStartHour);
+
+        const calName = dateToString(addHours(date, dayStartHour));
+
+        if (event.datetype === "date") {
           if (
-            (isPast(dayEnd) && !todo.completed) ||
-            Object.values(todosByDate)
-              .flat()
-              .some((e) => e.id === todo.id)
+            isBefore(dayEnd, addHours(event.start, dayStartHour)) ||
+            isAfter(dayStart, addHours(event.end, dayStartHour))
           ) {
             continue;
           }
-          if (!todosByDate[calName]) todosByDate[calName] = [];
-          todosByDate[calName].push(todo);
+        }
+
+        if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+        if (
+          event.datetype !== "date" &&
+          "end" in event &&
+          event.end &&
+          isBefore(event.end, dayEnd)
+        ) {
+          // Do not insert event start event if the event started on a previous day, but insert an event end event, so that the event appears as ongoing until the end time, but not as starting at the start time
+
+          if (
+            !("start" in event) ||
+            !event.start ||
+            isAfter(event.start, dayStart)
+          ) {
+            journalEntriesByDate[calName].push(event);
+          }
+
+          journalEntriesByDate[calName].push({
+            ...event,
+            _this_is_the_end_of_a_event: true,
+          });
+        } else {
+          journalEntriesByDate[calName].push(event);
         }
       }
+    }
 
-      return [eventsByDate, todosByDate, dueSetsByDate, sleepsByDate];
-    }, [
-      calendarEvents,
-      calendarTodos,
-      fetchingInterval.end,
-      fetchingInterval.start,
-      nextSets,
-      now,
-      sleeps,
-      startOfAgendaDay,
-      timeZone,
-    ]);
-
-  const dayJournalEntries = useMemo(
-    () =>
-      daysOfInterval.map((dayDate) => {
-        const dayStart = addHours(startOfDay(dayDate), dayStartHour);
-
-        const dayEvents = eventsByDate2[dateToString(dayDate)] || [];
-        const dayName = dateToString(dayDate);
-        const dayWorkouts = workouts.filter((workout) =>
-          isSameDayButItRespectsDayStartHour(
-            getJournalEntryPrincipalDate(workout)!.start,
-            dayStart,
-          ),
-        );
-
-        const dayDueSets = dueSetsByDate2[dayName] || [];
-        const dayTodos = todosByDate2[dayName] || [];
-        const daySleeps = sleepsByDate2[dayName] || [];
-
-        const dayJournalEntries = [
-          ...dayEvents,
-          ...dayDueSets,
-          ...dayTodos,
-          ...dayWorkouts,
-          ...daySleeps,
-        ]
-          .sort((a, b) =>
-            compareAsc(
-              getJournalEntryPrincipalDate(b)?.end || new Date(0),
-              getJournalEntryPrincipalDate(a)?.end || new Date(0),
+    for (const todo of calendarTodos) {
+      for (const date of eachDayOfInterval(
+        {
+          start: subHours(
+            max(
+              [
+                todo.completed || todo.due,
+                todo.completed || todo.start,
+                fetchingInterval.start,
+              ].filter(Boolean),
             ),
-          )
-          .sort((a, b) => {
-            const aAllDay = a.__typename === "Event" && a.datetype === "date";
-            const bAllDay = b.__typename === "Event" && b.datetype === "date";
-            if (aAllDay && !bAllDay) return -1;
-            if (!aAllDay && bAllDay) return 1;
+            dayStartHour,
+          ),
+          end: subHours(fetchingInterval.end, dayStartHour),
+        },
+        { in: tz(timeZone) },
+      )) {
+        const dayEnd = addHours(endOfDay(date), dayStartHour);
 
-            return compareAsc(
-              getJournalEntryPrincipalDate(a)?.start || new Date(0),
-              getJournalEntryPrincipalDate(b)?.start || new Date(0),
-            );
-          })
-          .filter((entry, i, entries) => {
-            const isEventEndEntry =
-              entry.__typename === "Event" &&
-              "_this_is_the_end_of_a_event" in entry &&
-              entry._this_is_the_end_of_a_event;
+        const calName = dateToString(addHours(date, dayStartHour));
+        if (!todo.start && !todo.due && !todo.completed) {
+          // If not done and no start or due date, this is a backlog item
+          // we don't show in the diary
+          continue;
+        }
+        if (
+          (isPast(dayEnd) && !todo.completed) ||
+          Object.values(journalEntriesByDate)
+            .flat()
+            .some((e) => e.id === todo.id)
+        ) {
+          continue;
+        }
+        if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+        journalEntriesByDate[calName].push(todo);
+      }
+    }
 
-            if (isEventEndEntry) {
-              const eventId = entry.id;
-              const previousEntry = entries[i - 1];
-              if (
-                previousEntry &&
-                previousEntry.__typename === "Event" &&
-                previousEntry.id === eventId
-              ) {
-                // If the previous entry is the same event, we skip the end entry
-                return false;
+    for (const workout of workouts) {
+      const calName = dateToString(workout.workedOutAt);
+
+      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+      journalEntriesByDate[calName].push(workout);
+    }
+
+    return journalEntriesByDate;
+  }, [
+    calendarEvents,
+    calendarTodos,
+    fetchingInterval.end,
+    fetchingInterval.start,
+    nextSets,
+    now,
+    sleeps,
+    startOfAgendaDay,
+    timeZone,
+    workouts,
+  ]);
+
+  const daysJournalEntries = useMemo(
+    () =>
+      daysOfInterval
+        .filter((date) => addHours(date, dayStartHour) <= fetchingInterval.end)
+        .map((dayDate) => {
+          const dayName = dateToString(dayDate);
+
+          const dayJournalEntries = (journalEntriesByDate2[dayName] || [])
+            .sort((a, b) =>
+              compareAsc(
+                getJournalEntryPrincipalDate(b)?.end || new Date(0),
+                getJournalEntryPrincipalDate(a)?.end || new Date(0),
+              ),
+            )
+            .sort((a, b) => {
+              const aAllDay = a.__typename === "Event" && a.datetype === "date";
+              const bAllDay = b.__typename === "Event" && b.datetype === "date";
+              if (aAllDay && !bAllDay) return -1;
+              if (!aAllDay && bAllDay) return 1;
+
+              return compareAsc(
+                getJournalEntryPrincipalDate(a)?.start || new Date(0),
+                getJournalEntryPrincipalDate(b)?.start || new Date(0),
+              );
+            })
+            .filter((entry, i, entries) => {
+              const isEventEndEntry =
+                entry.__typename === "Event" &&
+                "_this_is_the_end_of_a_event" in entry &&
+                entry._this_is_the_end_of_a_event;
+
+              if (isEventEndEntry) {
+                const eventId = entry.id;
+                const previousEntry = entries[i - 1];
+                if (
+                  previousEntry &&
+                  previousEntry.__typename === "Event" &&
+                  previousEntry.id === eventId
+                ) {
+                  // If the previous entry is the same event, we skip the end entry
+                  return false;
+                }
               }
-            }
 
-            return true;
-          });
+              return true;
+            });
 
-        return [dayDate, dayJournalEntries] as const;
-      }),
-    [
-      daysOfInterval,
-      dueSetsByDate2,
-      eventsByDate2,
-      sleepsByDate2,
-      todosByDate2,
-      workouts,
-    ],
+          return [dayDate, dayJournalEntries] as const;
+        }),
+    [daysOfInterval, fetchingInterval.end, journalEntriesByDate2],
   );
 
-  const dayJournalEntriesIncludingLocationChanges2 = useMemo(() => {
+  const daysJournalEntriesIncludingLocationChanges2 = useMemo(() => {
     let lastLocation: ReturnType<typeof getLocationFromJournalEntry> = null;
-    return dayJournalEntries.map(
+    return daysJournalEntries.map(
       (
         [dayDate, dayJournalEntries],
         dayJournalEntriesIndex,
@@ -646,7 +611,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
         return [dayDate, dayJournalEntriesIncludingLocationChanges] as const;
       },
     );
-  }, [dayJournalEntries, userLocations]);
+  }, [daysJournalEntries, userLocations]);
 
   if (!sessionUser && !sessionDataLoading) {
     // We are now sure there is no user, so don't optimistically show the persisted cache data, as it might be for another user. Instead show a login prompt.
@@ -674,8 +639,8 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
 
   return (
     <div className="flex flex-col items-stretch justify-start">
-      {dayJournalEntriesIncludingLocationChanges2.map(
-        ([dayDate, dayJournalEntriesIncludingLocationChanges]) => (
+      {daysJournalEntriesIncludingLocationChanges2.map(
+        ([dayDate, dayJournalEntries]) => (
           <TodoDroppable
             key={dateToString(dayDate)}
             date={setHours(dayDate, dayStartHour)}
@@ -685,7 +650,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               dayDate={dayDate}
               user={user}
               dayLocations={userLocations}
-              dayJournalEntries={dayJournalEntriesIncludingLocationChanges}
+              dayJournalEntries={dayJournalEntries}
             />
           </TodoDroppable>
         ),
