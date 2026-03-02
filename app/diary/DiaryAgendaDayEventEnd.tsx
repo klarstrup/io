@@ -9,11 +9,11 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getTodoPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayEventEnd({
-  user,
+  userTimeZone,
   event,
   cotemporalityOfSurroundingEvent,
 }: {
-  user?: Pick<GQUser, "timeZone">;
+  userTimeZone: GQUser["timeZone"];
   event: GQEvent;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
@@ -31,7 +31,7 @@ export function DiaryAgendaDayEventEnd({
     disabled: true,
   });
 
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = userTimeZone || DEFAULT_TIMEZONE;
 
   const style = useMemo(
     () => ({

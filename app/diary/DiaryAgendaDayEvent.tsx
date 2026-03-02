@@ -24,14 +24,14 @@ import { getTodoPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayEvent({
   dayDate,
-  user,
+  userTimeZone,
   event,
   isEventWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
   isEventEnd,
 }: {
   dayDate: Date;
-  user?: Pick<GQUser, "timeZone">;
+  userTimeZone?: GQUser["timeZone"];
   event: GQEvent;
   isEventWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
@@ -51,7 +51,7 @@ export function DiaryAgendaDayEvent({
     disabled: true,
   });
 
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
 
   const dayStart = addHours(startOfDay(dayDate), dayStartHour);

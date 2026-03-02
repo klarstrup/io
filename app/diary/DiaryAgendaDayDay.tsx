@@ -27,6 +27,7 @@ import {
   dateToString,
   dayStartHour,
   DEFAULT_TIMEZONE,
+  emptyArray,
   isSameDayButItRespectsDayStartHour,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
@@ -95,6 +96,11 @@ export function DiaryAgendaDayDay({
     let i = 0;
     const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
       [];
+
+    let ownWorkouts = dayJournalEntries
+      .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
+      .filter((w) => w.source === WorkoutSource.Self);
+    if (!ownWorkouts.length) ownWorkouts = emptyArray;
 
     for (const journalEntry of dayJournalEntries) {
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
@@ -296,7 +302,7 @@ export function DiaryAgendaDayDay({
               id: "end-of-" + (client.cache.identify(event) || event.id),
               element: (
                 <DiaryAgendaDayEventEnd
-                  user={user}
+                  userTimeZone={user?.timeZone}
                   event={event}
                   key={"end-of-" + (client.cache.identify(event) || event.id)}
                   cotemporalityOfSurroundingEvent={
@@ -351,7 +357,7 @@ export function DiaryAgendaDayDay({
             element: (
               <DiaryAgendaDayEvent
                 dayDate={dayDate}
-                user={user}
+                userTimeZone={user?.timeZone}
                 event={event}
                 key={event.id}
                 isEventEnd={isEventEnd}
@@ -405,9 +411,7 @@ export function DiaryAgendaDayDay({
               dueSet={dueSet}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
               exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
-              workouts={dayJournalEntries
-                .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
-                .filter((w) => w.source === WorkoutSource.Self)}
+              workouts={ownWorkouts}
               locations={dayLocations}
             />
           ),
