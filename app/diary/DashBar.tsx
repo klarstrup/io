@@ -396,12 +396,10 @@ export default function DashBar() {
         >
           <BarIcon>⚖️</BarIcon>
           <BarNumberContainer
-            sparklineData={data.user.weightTimeSeries
-              .filter((point) => point.value != null)
-              .map((point) => ({
-                x: new Date(point.timestamp).getTime(),
-                y: point.value,
-              }))}
+            sparklineData={data.user.weightTimeSeries.map((point) => ({
+              x: new Date(point.timestamp).getTime(),
+              y: point.value,
+            }))}
           >
             {weight.toLocaleString(undefined, {
               minimumFractionDigits: 1,
@@ -436,12 +434,10 @@ export default function DashBar() {
         >
           <BarIcon>🤰</BarIcon>
           <BarNumberContainer
-            sparklineData={data.user.fatRatioTimeSeries
-              .filter((point) => point.value != null)
-              .map((point) => ({
-                x: new Date(point.timestamp).getTime(),
-                y: point.value,
-              }))}
+            sparklineData={data.user.fatRatioTimeSeries.map((point) => ({
+              x: new Date(point.timestamp).getTime(),
+              y: point.value,
+            }))}
           >
             {fatRatio.toLocaleString(undefined, {
               minimumFractionDigits: 1,
