@@ -2,7 +2,6 @@ import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { forwardRef, ReactElement } from "react";
 import { twMerge } from "tailwind-merge";
-import { useWhyDidYouUpdate } from "../../hooks";
 
 export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   {
@@ -34,19 +33,6 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   } & React.HTMLAttributes<HTMLDivElement>,
   ref: React.Ref<HTMLDivElement>,
 ) {
-  useWhyDidYouUpdate("DiaryAgendaDayEntry", {
-    icon,
-    iconTxt,
-    iconDisabled,
-    onContentClick,
-    onIconClick,
-    cotemporality,
-    className,
-    cotemporalityOfSurroundingEvent,
-    isEventWithSeparatedEnd,
-    isEventEnd,
-    ...props,
-  });
   const IconContainer = onIconClick ? "button" : "div";
 
   return (
