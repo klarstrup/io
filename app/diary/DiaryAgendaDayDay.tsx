@@ -407,8 +407,7 @@ export function DiaryAgendaDayDay({
               exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
               workouts={dayJournalEntries
                 .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
-                .filter((w) => w.source === WorkoutSource.Self)
-                .map((d) => ({ ...d, _id: d.id }))}
+                .filter((w) => w.source === WorkoutSource.Self)}
               locations={dayLocations}
             />
           ),
@@ -416,9 +415,7 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Workout") {
         const workout = journalEntry;
 
-        const mostRecentWorkout = workout;
-        const workoutDateStr =
-          mostRecentWorkout && dateToString(mostRecentWorkout.workedOutAt);
+        const workoutDateStr = dateToString(workout.workedOutAt);
 
         dayJournalEntryElements.push({
           id: client.cache.identify(workout) || workout.id,
