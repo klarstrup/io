@@ -87,17 +87,13 @@ function BarIcon({ children }: { children: React.ReactNode }) {
     <div className="relative px-1">
       <span
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          filter: "invert(1) blur(1.5px)",
-        }}
+        style={{ filter: "invert(1) blur(1.5px)" }}
       >
         {children}
       </span>
       <span
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{
-          filter: "invert(1) blur(3px)",
-        }}
+        style={{ filter: "invert(1) blur(3px)" }}
       >
         {children}
       </span>
