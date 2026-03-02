@@ -2,6 +2,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faArrowsDownToLine } from "@fortawesome/free-solid-svg-icons";
 import { roundToNearestMinutes } from "date-fns";
+import { useMemo } from "react";
 import { GQEvent, GQUser } from "../../graphql.generated";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -32,19 +33,24 @@ export function DiaryAgendaDayEventEnd({
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
 
+  const style = useMemo(
+    () => ({
+      transition,
+      ...(transform
+        ? {
+            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+            zIndex: 5,
+          }
+        : undefined),
+      ...(isDragging ? { zIndex: 10 } : {}),
+    }),
+    [isDragging, transform, transition],
+  );
+
   return (
     <DiaryAgendaDayEntry
       ref={setNodeRef}
-      style={{
-        transition,
-        ...(transform
-          ? {
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 5,
-            }
-          : undefined),
-        ...(isDragging ? { zIndex: 10 } : {}),
-      }}
+      style={style}
       {...listeners}
       {...attributes}
       icon={faArrowsDownToLine}

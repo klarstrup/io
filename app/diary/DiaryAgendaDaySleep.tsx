@@ -1,7 +1,7 @@
 "use client";
 import { faBed, faBedPulse } from "@fortawesome/free-solid-svg-icons";
 import { Interval, intervalToDuration } from "date-fns";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import SourceWidget from "../../components/SourceWidget";
 import { GQSleep, GQUser } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
@@ -36,6 +36,10 @@ export default function DiaryAgendaDaySleep({
   const ref = useRef<HTMLDivElement>(null);
   useClickOutside(ref, onClickOutside);
 
+  const handleOnClick = useCallback(() => {
+    setIsOpen((open) => !open);
+  }, []);
+
   return (
     <DiaryAgendaDayEntry
       // TODO: smarter way of determining if it's waking up or going to sleep
@@ -44,7 +48,7 @@ export default function DiaryAgendaDaySleep({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       key={sleep.id}
       ref={ref}
-      onClick={() => setIsOpen(true)}
+      onClick={handleOnClick}
       className={"cursor-pointer" + (isOpen ? " bg-gray-100" : "")}
     >
       <div className="relative flex items-center gap-1.5 leading-snug">

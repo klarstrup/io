@@ -4,13 +4,13 @@ import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { addDays } from "date-fns";
 import gql from "graphql-tag";
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  type GQDeleteTodoMutation,
-  type GQDiaryAgendaDayTodoFragment,
   DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
+  type GQDeleteTodoMutation,
+  type GQDiaryAgendaDayTodoFragment,
   type GQUpdateTodoMutation,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
@@ -123,49 +123,56 @@ export const DiaryAgendaDayTodo =
     };
     useClickOutside(ref2, onClickOutside);
 
+    const handleIconClick = useCallback(() => {
+      if (todo.completed) {
+        void updateTodo({
+          variables: {
+            input: { id: todo.id, data: { completed: null } },
+          },
+          optimisticResponse: {
+            updateTodo: {
+              __typename: "UpdateTodoPayload",
+              todo: { ...todo, completed: null },
+            },
+          },
+        });
+      } else {
+        void updateTodo({
+          variables: {
+            input: { id: todo.id, data: { completed: new Date() } },
+          },
+          optimisticResponse: {
+            updateTodo: {
+              __typename: "UpdateTodoPayload",
+              todo: { ...todo, completed: new Date() },
+            },
+          },
+        });
+      }
+    }, [todo, updateTodo]);
+
+    const style = useMemo(
+      () => ({
+        transition,
+        ...(transform
+          ? {
+              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+              zIndex: 5,
+            }
+          : undefined),
+        ...(isDragging ? { zIndex: 10 } : {}),
+      }),
+      [isDragging, transform, transition],
+    );
+
     return (
       <DiaryAgendaDayEntry
         ref={setNodeRef}
-        style={{
-          transition,
-          ...(transform
-            ? {
-                transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-                zIndex: 5,
-              }
-            : undefined),
-          ...(isDragging ? { zIndex: 10 } : {}),
-        }}
+        style={style}
         {...listeners}
         {...attributes}
         icon={faCircleCheck}
-        onIconClick={
-          todo.completed
-            ? () =>
-                void updateTodo({
-                  variables: {
-                    input: { id: todo.id, data: { completed: null } },
-                  },
-                  optimisticResponse: {
-                    updateTodo: {
-                      __typename: "UpdateTodoPayload",
-                      todo: { ...todo, completed: null },
-                    },
-                  },
-                })
-            : () =>
-                void updateTodo({
-                  variables: {
-                    input: { id: todo.id, data: { completed: new Date() } },
-                  },
-                  optimisticResponse: {
-                    updateTodo: {
-                      __typename: "UpdateTodoPayload",
-                      todo: { ...todo, completed: new Date() },
-                    },
-                  },
-                })
-        }
+        onIconClick={handleIconClick}
         // this should cope with todos with deadlines when that is implemented
         cotemporality={
           !todo.completed && !todo.start && !todo.due

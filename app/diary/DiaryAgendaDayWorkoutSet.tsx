@@ -4,6 +4,7 @@ import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { max, min } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCallback, useMemo } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import type {
   GQLocation,
@@ -50,6 +51,26 @@ export function DiaryAgendaDayWorkout({
     disabled: workout.source !== WorkoutSource.Self,
   });
 
+  const handleIconClick = useCallback(() => {
+    if (workout.source === WorkoutSource.Self || !workout.source) {
+      router.push(`/diary/${workoutDateStr}/workout/${workout.id}`);
+    }
+  }, [router, workoutDateStr, workout.id, workout.source]);
+
+  const style = useMemo(
+    () => ({
+      transition,
+      ...(transform
+        ? {
+            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+            zIndex: 5,
+          }
+        : undefined),
+      ...(isDragging ? { zIndex: 10 } : {}),
+    }),
+    [isDragging, transform, transition],
+  );
+
   return (
     <DiaryAgendaDayEntry
       icon={faDumbbell}
@@ -71,23 +92,10 @@ export function DiaryAgendaDayWorkout({
         ]),
       })}
       ref={setNodeRef}
-      style={{
-        transition,
-        ...(transform
-          ? {
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 5,
-            }
-          : undefined),
-        ...(isDragging ? { zIndex: 10 } : {}),
-      }}
+      style={style}
       {...listeners}
       {...attributes}
-      onIconClick={
-        workout.source === WorkoutSource.Self || !workout.source
-          ? () => router.push(`/diary/${workoutDateStr}/workout/${workout.id}`)
-          : undefined
-      }
+      onIconClick={handleIconClick}
       className="select-none"
     >
       <div

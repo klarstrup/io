@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import {
   type ComponentProps,
   forwardRef,
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -253,6 +254,20 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         }
       }
     `);
+
+    const handleIconClick = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        // Hidden exercises cannot be manually logged
+        if (exerciseInfo.isHidden) return;
+
+        const dateStr = dateToString(subHours(new Date(), dayStartHour));
+        const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
+        router.push(`/diary/${dateStr}/workout?${searchStr}`);
+      },
+      [dueSet.exerciseSchedule.id, exerciseInfo.isHidden, router],
+    );
+
     return (
       <DiaryAgendaDayEntry
         ref={ref2}
@@ -261,20 +276,7 @@ export const DiaryAgendaDayDueSetButItsNotDraggable = forwardRef(
         }
         {...props}
         icon={faDumbbell}
-        onIconClick={
-          // Hidden exercises cannot be manually logged
-          exerciseInfo.isHidden
-            ? undefined
-            : (e) => {
-                e.preventDefault();
-
-                const dateStr = dateToString(
-                  subHours(new Date(), dayStartHour),
-                );
-                const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
-                router.push(`/diary/${dateStr}/workout?${searchStr}`);
-              }
-        }
+        onIconClick={handleIconClick}
         className="select-none"
       >
         <div

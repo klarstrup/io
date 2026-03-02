@@ -1,5 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import Link from "next/link";
+import { useMemo } from "react";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -24,25 +25,33 @@ export function DiaryAgendaDayNow({
     disabled: true,
   });
 
+  const iconTxt = useMemo(
+    () => <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>,
+    [],
+  );
+
+  const style = useMemo(
+    () => ({
+      transition,
+      ...(transform
+        ? {
+            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+            zIndex: 5,
+          }
+        : undefined),
+      ...(isDragging ? { zIndex: 10 } : {}),
+    }),
+    [isDragging, transform, transition],
+  );
+
   return (
     <DiaryAgendaDayEntry
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-      iconTxt={
-        <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>
-      }
+      iconTxt={iconTxt}
       cotemporality="current"
       className="pt-0.5 pb-1.5"
       ref={setNodeRef}
-      style={{
-        transition,
-        ...(transform
-          ? {
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 5,
-            }
-          : undefined),
-        ...(isDragging ? { zIndex: 10 } : {}),
-      }}
+      style={style}
       {...listeners}
       {...attributes}
     >

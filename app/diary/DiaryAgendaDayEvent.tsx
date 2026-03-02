@@ -10,6 +10,7 @@ import {
   roundToNearestMinutes,
   startOfDay,
 } from "date-fns";
+import { useMemo } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated";
 import { formatShortDuration } from "../../models/workout";
 import {
@@ -69,19 +70,24 @@ export function DiaryAgendaDayEvent({
   const dayNo = differenceInDays(dayStart, startDay) + 1;
   const isLastDay = dayNo === days;
 
+  const style = useMemo(
+    () => ({
+      transition,
+      ...(transform
+        ? {
+            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+            zIndex: 5,
+          }
+        : undefined),
+      ...(isDragging ? { zIndex: 10 } : {}),
+    }),
+    [isDragging, transform, transition],
+  );
+
   return (
     <DiaryAgendaDayEntry
       ref={setNodeRef}
-      style={{
-        transition,
-        ...(transform
-          ? {
-              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-              zIndex: 5,
-            }
-          : undefined),
-        ...(isDragging ? { zIndex: 10 } : {}),
-      }}
+      style={style}
       {...listeners}
       {...attributes}
       key={event.id}
