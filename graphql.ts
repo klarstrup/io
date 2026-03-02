@@ -236,9 +236,7 @@ export const resolvers: GQResolvers<
             __typename: "FloatTimeSeriesEntry",
           } as GQFloatTimeSeriesEntry;
         })
-        .filter(Boolean)
-        .slice(0, 4)
-        .reverse();
+        .filter(Boolean);
     },
     fatRatio: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -299,9 +297,7 @@ export const resolvers: GQResolvers<
             __typename: "FloatTimeSeriesEntry",
           } as GQFloatTimeSeriesEntry;
         })
-        .filter(Boolean)
-        .slice(0, 4)
-        .reverse();
+        .filter(Boolean);
     },
     sleepDebt: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -370,7 +366,7 @@ export const resolvers: GQResolvers<
             _withings_userId: Number(withingsUserId),
             endedAt: { $gte: addWeeks(new Date(), -4) },
           },
-          { sort: { startedAt: -1 }, limit: 14 },
+          { sort: { startedAt: -1 }, limit: 28 },
         ).toArray()
       ).reverse();
 
@@ -391,11 +387,7 @@ export const resolvers: GQResolvers<
           __typename: "FloatTimeSeriesEntry",
         });
       }
-      return sleepDebtFractionTimeSeries
-        .slice()
-        .reverse()
-        .slice(0, 4)
-        .reverse();
+      return sleepDebtFractionTimeSeries.slice(-11);
     },
     pastBusynessFraction: async (_parent, _args, context) => {
       // Get events for the past week and calculate busyness fraction based on number of hours that have events scheduled vs total hours

@@ -5,6 +5,7 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, isFuture } from "date-fns";
 import gql from "graphql-tag";
 import { useSession } from "next-auth/react";
+import { SVGProps, useMemo } from "react";
 import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
 import { Masonry } from "../../components/Masonry";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
@@ -62,22 +63,95 @@ gql`
   }
 `;
 
+function SparkLine({
+  data,
+  strokeWidth = 1,
+  stroke = "transparent",
+  fill,
+  ...props
+}: {
+  data: (readonly [number, number])[];
+} & SVGProps<SVGSVGElement>) {
+  const viewBoxWidth = 64;
+  const viewBoxHeight = 24;
+
+  const pathD = useMemo(() => {
+    const xOffset = 0;
+    const yOffset = viewBoxHeight;
+    let minX: number | null = null,
+      maxX: number | null = null,
+      minY: number | null = null,
+      maxY: number | null = null;
+
+    for (const [x, y] of data) {
+      if (!minX || x < minX) minX = x;
+      if (!maxX || x > maxX) maxX = x;
+      if (!minY || y < minY) minY = y;
+      if (!maxY || y > maxY) maxY = y;
+    }
+    const XDelta = maxX! - minX!;
+    const YDelta = maxY! - minY!;
+    const dataPoints = data
+      .map(([x, y]) =>
+        [
+          "L",
+          xOffset + ((x - minX!) / XDelta) * viewBoxWidth,
+          yOffset - ((y - minY!) / YDelta) * viewBoxHeight,
+        ].join(" "),
+      )
+      .join(" ");
+
+    return `M 0 ${viewBoxHeight} L 0 ${viewBoxHeight} ${dataPoints} L ${viewBoxWidth} ${viewBoxHeight} Z`;
+  }, [data]);
+
+  return (
+    <svg
+      width="100%"
+      height={viewBoxHeight}
+      viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+      preserveAspectRatio="none"
+      {...props}
+    >
+      {pathD && (
+        <path d={pathD} stroke={stroke} strokeWidth={strokeWidth} fill={fill} />
+      )}
+    </svg>
+  );
+}
+
 function BarNumberContainer({
   children,
   className,
+  sparklineData,
 }: {
   children: React.ReactNode;
   className?: string;
+  sparklineData?: { x: number; y: number }[];
 }) {
   return (
     <div
-      className={`flex items-baseline gap-px rounded-xl border border-[yellow]/25 bg-white/50 py-px pr-1.5 pl-1.5 leading-tight font-semibold -tracking-wider whitespace-nowrap tabular-nums ${className || ""}`}
+      className={`relative flex items-baseline gap-px overflow-hidden rounded-xl border border-[yellow]/25 bg-white/50 py-px pr-1.5 pl-1.5 leading-tight font-semibold -tracking-wider whitespace-nowrap tabular-nums ${className || ""}`}
       style={{
         boxShadow:
           "inset 0 0 8px rgba(0, 0, 0, 0.25), inset 0 0 4px #edab00, inset 0 0 4px #edab00, inset 0 0 1px rgba(0, 0, 0, 1), inset 0 0 0.5px rgba(0, 0, 0, 1)",
       }}
     >
-      {children}
+      <span
+        style={{
+          textShadow:
+            "0 0 4px rgba(255, 255, 255, 0.5), 0 0 2px rgba(237, 171, 0, 1), 0 0 2px rgba(237, 171, 0, 1), 0 0 1px rgba(255, 255, 255, 1)",
+        }}
+      >
+        {children}
+      </span>
+      {sparklineData ? (
+        <SparkLine
+          data={sparklineData
+            .map((point) => [point.x, point.y] as const)
+            .sort(([x1], [x2]) => x1 - x2)}
+          className="absolute left-0 -z-10"
+        />
+      ) : null}
     </div>
   );
 }
@@ -107,7 +181,11 @@ export default function DashBar() {
   const { data } = useQuery(GetLatestWeightEntryDocument);
 
   const { value: sleepDebt, slope: sleepDebtSlope } = useTrendingNumber(
-    data?.user?.sleepDebtFractionTimeSeries || [],
+    data?.user?.sleepDebtFractionTimeSeries
+      ? data.user.sleepDebtFractionTimeSeries.slice(
+          -(data.user.sleepDebtFractionTimeSeries.length / 2),
+        )
+      : [],
   );
 
   const { value: weight, slope: weightSlope } = useTrendingNumber(
@@ -194,7 +272,14 @@ export default function DashBar() {
           className="flex items-center"
         >
           <BarIcon>💤</BarIcon>
-          <BarNumberContainer>
+          <BarNumberContainer
+            sparklineData={data.user.sleepDebtFractionTimeSeries.map(
+              (point) => ({
+                x: new Date(point.timestamp).getTime(),
+                y: point.value,
+              }),
+            )}
+          >
             {(sleepDebt * 100).toLocaleString(undefined, {
               minimumFractionDigits: 1,
               maximumFractionDigits: 1,
@@ -310,7 +395,14 @@ export default function DashBar() {
           className="flex cursor-pointer! items-center"
         >
           <BarIcon>⚖️</BarIcon>
-          <BarNumberContainer>
+          <BarNumberContainer
+            sparklineData={data.user.weightTimeSeries
+              .filter((point) => point.value != null)
+              .map((point) => ({
+                x: new Date(point.timestamp).getTime(),
+                y: point.value,
+              }))}
+          >
             {weight.toLocaleString(undefined, {
               minimumFractionDigits: 1,
               maximumFractionDigits: 1,
@@ -343,7 +435,14 @@ export default function DashBar() {
           className="flex cursor-pointer! items-center"
         >
           <BarIcon>🤰</BarIcon>
-          <BarNumberContainer>
+          <BarNumberContainer
+            sparklineData={data.user.fatRatioTimeSeries
+              .filter((point) => point.value != null)
+              .map((point) => ({
+                x: new Date(point.timestamp).getTime(),
+                y: point.value,
+              }))}
+          >
             {fatRatio.toLocaleString(undefined, {
               minimumFractionDigits: 1,
               maximumFractionDigits: 1,
