@@ -277,6 +277,7 @@ export function computeNextSetFromWorkout(
 }
 
 interface GetNextSetsDoc {
+  exerciseId: number;
   workedOutAt: Date;
   exercise: WorkoutExercise;
 }
@@ -306,16 +307,17 @@ export const getNextSets = async (
       {
         $group: {
           _id: "$exercises.exerciseId",
+          exerciseId: "$exercises.exerciseId",
           workedOutAt: { $first: "$workedOutAt" },
           exercise: { $first: "$exercises" },
         },
       },
-      { $project: { _id: 0, workedOutAt: 1, exercise: 1 } },
+      { $project: { _id: 0, exerciseId: 1, workedOutAt: 1, exercise: 1 } },
     ]).toArray();
 
   const mostRecentByExerciseId = new Map<number, GetNextSetsDoc>();
   for (const doc of mostRecentDocs) {
-    mostRecentByExerciseId.set(doc.exercise.exerciseId, doc);
+    mostRecentByExerciseId.set(doc.exerciseId, doc);
   }
 
   const climbingWithWorkingSets = enabled.filter(
@@ -332,16 +334,9 @@ export const getNextSets = async (
     climbingWithWorkingSets.map((s) => [s.exerciseId, s]),
   );
 
-  const firstSuccessfulByExerciseId = new Map<
-    number,
-    { workedOutAt: Date; exercise: WorkoutExercise }
-  >();
+  const firstSuccessfulByExerciseId = new Map<number, GetNextSetsDoc>();
   if (climbingExerciseIds.length > 0) {
-    const climbingCursor = MaterializedWorkoutsView.aggregate<{
-      exerciseId: number;
-      workedOutAt: Date;
-      exercise: WorkoutExercise;
-    }>([
+    const climbingCursor = MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
       {
         $match: {
           userId,
@@ -373,6 +368,7 @@ export const getNextSets = async (
       );
       if (successfulSets.length >= schedule.workingSets) {
         firstSuccessfulByExerciseId.set(doc.exerciseId, {
+          exerciseId: doc.exerciseId,
           workedOutAt: doc.workedOutAt,
           exercise: doc.exercise,
         });
