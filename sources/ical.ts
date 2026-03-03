@@ -250,10 +250,6 @@ export async function getUserIcalTodosBetween(
     ],
   } satisfies FilterOperators<Omit<VTodo, "recurrences">>;
 
-  await IcalEvents.createIndexes([
-    { key: { _io_userId: 1, type: 1, start: 1 } },
-    { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
-  ]);
   for await (const todo of IcalEvents.find<WithId<MongoVTodo>>({
     _io_userId: userId,
     type: "VTODO",
