@@ -1,4 +1,4 @@
-import { tz, TZDate, tzOffset } from "@date-fns/tz";
+import { TZDate, tzOffset } from "@date-fns/tz";
 import { createHash } from "crypto";
 import {
   addMinutes,
@@ -12,7 +12,7 @@ import type { FilterOperators, WithId } from "mongodb";
 import { RRule, RRuleSet } from "rrule";
 import { auth } from "../auth";
 import type { MongoVEvent, MongoVTodo } from "../lib";
-import { DEFAULT_TIMEZONE, omit, roundToNearestDay } from "../utils";
+import { omit } from "../utils";
 import type {
   CalendarResponse,
   VCalendar,
@@ -56,11 +56,6 @@ export async function getUserIcalEventsBetween(
       { start: { $gte: start, $lte: end } },
       { end: { $gte: start, $lte: end } },
       { start: { $lte: start }, end: { $gte: end } },
-      // VTODOs may not have an end date or a start date or a due date
-      { start: { $gte: start, $lte: end } },
-      { due: { $gte: start, $lte: end } },
-      { completed: { $gte: start, $lte: end } },
-      { start: { $exists: false } },
     ],
   } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
 
@@ -106,6 +101,7 @@ export async function getUserIcalEventsBetween(
     }
 
     const sourceStartDate = dataSource?.config.startDate;
+    const eventWithoutId = omit(event, "_id");
 
     if (event.recurrences) {
       for (const recurrence of event.recurrences) {
@@ -138,29 +134,16 @@ export async function getUserIcalEventsBetween(
         }
       }
     }
+
     if (
       areIntervalsOverlapping(
-        {
-          start:
-            event && event.datetype === "date"
-              ? roundToNearestDay(event.start, {
-                  in: tz(event.start.tz || DEFAULT_TIMEZONE),
-                })
-              : event.start,
-          end:
-            event.datetype === "date"
-              ? roundToNearestDay(event.end, {
-                  in: tz(event.end.tz || DEFAULT_TIMEZONE),
-                })
-              : event.end,
-        },
+        { start: event.start, end: event.end },
         { start, end },
       )
     ) {
-      if (sourceStartDate && event.end && event.end < sourceStartDate) {
-        continue;
-      }
-      eventsThatFallWithinRange.push(omit(event, "_id"));
+      if (sourceStartDate && event.end < sourceStartDate) continue;
+
+      eventsThatFallWithinRange.push(eventWithoutId);
     }
     const rrule = event.rrule?.origOptions
       ? new RRule({ ...event.rrule.origOptions, tzid: "UTC" })
@@ -184,25 +167,22 @@ export async function getUserIcalEventsBetween(
       // Avoid adding reccurences of the original event instance
       rruleSet.exdate(dtstart);
 
+      const eventDurationSeconds = differenceInSeconds(event.end, event.start);
       const rruleDates = rruleSet
         .between(start, end, true)
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
+      const recurrenceIdDates = new Set(
+        event.recurrences
+          ?.map((r) => r.recurrenceid?.toLocaleDateString())
+          .filter(Boolean),
+      );
       if (rruleDates?.length) {
         for (const rruleDate of rruleDates) {
-          if (
-            event.recurrences?.some(
-              (recurrence: Omit<VEvent, "recurrences">) =>
-                // These should be the same date, but timezones get fucked for whatever reason
-                recurrence.recurrenceid?.toLocaleDateString() ===
-                rruleDate.toLocaleDateString(),
-            )
-          ) {
+          // Skip if this date was overridden by a recurrence instance
+          if (recurrenceIdDates.has(rruleDate.toLocaleDateString())) {
             continue;
           }
-          const rruleDateEnd = addSeconds(
-            rruleDate,
-            differenceInSeconds(event.end, event.start),
-          );
+          const rruleDateEnd = addSeconds(rruleDate, eventDurationSeconds);
           if (
             sourceStartDate &&
             rruleDateEnd &&
@@ -211,7 +191,7 @@ export async function getUserIcalEventsBetween(
             continue;
           }
           eventsThatFallWithinRange.push({
-            ...omit(event, "_id"),
+            ...eventWithoutId,
             uid: `${rruleDate.toLocaleDateString()}-${event.uid}`,
             start: rruleDate,
             end: rruleDateEnd,
