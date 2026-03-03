@@ -23,19 +23,16 @@ gql`
   query GetLatestWeightEntry {
     user {
       id
-      weight
       weightTimeSeries {
         timestamp
         value
       }
       pastBusynessFraction
       futureBusynessFraction
-      sleepDebtFraction
       sleepDebtFractionTimeSeries {
         timestamp
         value
       }
-      fatRatio
       fatRatioTimeSeries {
         timestamp
         value
