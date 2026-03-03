@@ -64,13 +64,6 @@ export async function getUserIcalEventsBetween(
     ],
   } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
 
-  await IcalEvents.createIndexes([
-    { key: { _io_userId: 1, uid: 1 } },
-    { key: { _io_userId: 1, type: 1, start: 1 } },
-    { key: { _io_icalUrlHash: 1, _io_userId: 1 } },
-    { key: { _io_userId: 1, type: 1, due: 1 } },
-  ]);
-
   const dataSourceByUrlHash = user.dataSources
     ?.filter((s) => s.source === DataSource.ICal)
     .reduce(
