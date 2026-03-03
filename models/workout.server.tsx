@@ -307,7 +307,7 @@ export const getNextSets = async (
       {
         $group: {
           _id: "$exercises.exerciseId",
-          exerciseId: "$exercises.exerciseId",
+          exerciseId: { $first: "$exercises.exerciseId" },
           workedOutAt: { $first: "$workedOutAt" },
           exercise: { $first: "$exercises" },
         },
