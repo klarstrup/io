@@ -2,6 +2,7 @@ import { tz } from "@date-fns/tz";
 import {
   addHours,
   addMilliseconds,
+  addQuarters,
   isEqual,
   max,
   startOfDay,
@@ -42,51 +43,24 @@ export const MaterializedWorkoutsView = proxyCollection<
   WorkoutData & { materializedAt?: Date }
 >("materialized_workouts_view");
 
-export const getNextSet = async ({
-  userId,
-  exerciseSchedule,
-  prefetchedWorkout,
-}: {
-  userId: Session["user"]["id"];
+export type NextSetResult = {
+  id: `next-${string}`;
+  workedOutAt: Date | null;
+  dueOn: Date;
+  exerciseId: number;
+  successful: boolean;
+  nextWorkingSets: number | null;
+  nextWorkingSetInputs: WorkoutExerciseSetInput[] | null;
   exerciseSchedule: ExerciseSchedule;
-  prefetchedWorkout?: { workedOutAt: Date; exercise: WorkoutExercise };
-}) => {
-  const id = `next-${exerciseSchedule.id}` as const;
-  const [workout] = prefetchedWorkout
-    ? [prefetchedWorkout]
-    : await MaterializedWorkoutsView.aggregate<{
-        workedOutAt: Date;
-        exercise: WorkoutExercise;
-      }>([
-        {
-          $match: {
-            userId,
-            "exercises.exerciseId": exerciseSchedule.exerciseId,
-            deletedAt: { $exists: false },
-          },
-        },
-        { $sort: { workedOutAt: -1 } },
-        { $limit: 1 },
-        {
-          $project: {
-            _id: 0,
-            workedOutAt: 1,
-            exercise: {
-              $first: {
-                $filter: {
-                  input: "$exercises",
-                  as: "exercise",
-                  cond: {
-                    $eq: ["$$exercise.exerciseId", exerciseSchedule.exerciseId],
-                  },
-                },
-              },
-            },
-          },
-        },
-      ]).toArray();
+};
 
-  // Historical workouts may have workedOutAt timestamps that are not adjusted for dayStartHour, so adjust them here for the purpose of calculating due dates
+/** Pure computation: given a workout (or null) and schedule, returns the next set result. Caller must pass the correct workout (e.g. first successful for climbing). */
+export function computeNextSetFromWorkout(
+  workout: { workedOutAt: Date; exercise: WorkoutExercise } | null,
+  exerciseSchedule: ExerciseSchedule,
+): NextSetResult {
+  const id = `next-${exerciseSchedule.id}` as const;
+
   const adjustedWorkedOutAt =
     workout &&
     (isEqual(
@@ -104,7 +78,6 @@ export const getNextSet = async ({
           set.createdAt,
           set.updatedAt,
         ]),
-        // Fallback if no sets have timestamps for some reason
         adjustedWorkedOutAt,
       ].filter(Boolean),
     );
@@ -121,69 +94,36 @@ export const getNextSet = async ({
     dueOn = exerciseSchedule.snoozedUntil;
   }
 
-  // Due date cannot be in the past
   dueOn = max([dueOn, new Date()]);
 
   if (isClimbingExercise(exerciseSchedule.exerciseId)) {
-    if (exerciseSchedule.workingSets && exerciseSchedule.workingSets > 0) {
-      const workouts = MaterializedWorkoutsView.aggregate<{
-        workedOutAt: Date;
-        exercise: WorkoutExercise;
-      }>([
-        {
-          $match: {
-            userId,
-            "exercises.exerciseId": exerciseSchedule.exerciseId,
-            deletedAt: { $exists: false },
-          },
-        },
-        { $sort: { workedOutAt: -1 } },
-        {
-          $project: {
-            _id: 0,
-            workedOutAt: 1,
-            exercise: {
-              $first: {
-                $filter: {
-                  input: "$exercises",
-                  as: "exercise",
-                  cond: {
-                    $eq: ["$$exercise.exerciseId", exerciseSchedule.exerciseId],
-                  },
-                },
-              },
-            },
-          },
-        },
-      ]);
-      for await (const { workedOutAt, exercise } of workouts) {
-        const successfulSets = exercise.sets.filter(
-          (set) =>
-            (set.inputs[2]?.value as SendType) === SendType.Flash ||
-            (set.inputs[2]?.value as SendType) === SendType.Top ||
-            (set.inputs[2]?.value as SendType) === SendType.Repeat,
-        );
-        const successful =
-          successfulSets.length >= exerciseSchedule.workingSets;
-
-        if (successful) {
-          return {
-            id,
-            workedOutAt,
-            dueOn,
-            exerciseId: exerciseSchedule.exerciseId,
-            successful: true,
-            nextWorkingSets: exerciseSchedule.workingSets ?? null,
-            nextWorkingSetInputs: [],
-            exerciseSchedule,
-          };
-        }
-      }
+    if (
+      exerciseSchedule.workingSets &&
+      exerciseSchedule.workingSets > 0 &&
+      workout
+    ) {
+      const successfulSets = workout.exercise.sets.filter(
+        (set) =>
+          (set.inputs[2]?.value as SendType) === SendType.Flash ||
+          (set.inputs[2]?.value as SendType) === SendType.Top ||
+          (set.inputs[2]?.value as SendType) === SendType.Repeat,
+      );
+      const successful = successfulSets.length >= exerciseSchedule.workingSets;
+      return {
+        id,
+        workedOutAt: workout.workedOutAt,
+        dueOn,
+        exerciseId: exerciseSchedule.exerciseId,
+        successful,
+        nextWorkingSets: exerciseSchedule.workingSets ?? null,
+        nextWorkingSetInputs: [],
+        exerciseSchedule,
+      };
     }
 
     return {
       id,
-      workedOutAt: workout?.workedOutAt || null,
+      workedOutAt: workout?.workedOutAt ?? null,
       dueOn,
       exerciseId: exerciseSchedule.exerciseId,
       successful: true,
@@ -209,7 +149,7 @@ export const getNextSet = async ({
   const repsInputIndex = exerciseDefinition.inputs.findIndex(
     ({ type }) => type === InputType.Reps,
   );
-  const heaviestSet = exercise?.sets.reduce((acc, set) => {
+  const heaviestSet = (exercise?.sets ?? []).reduce((acc, set) => {
     const setReps = set.inputs[repsInputIndex]?.value;
     const setWeight = set.inputs[effortInputIndex]?.value;
     const accWeight = acc?.inputs[effortInputIndex]?.value;
@@ -221,10 +161,10 @@ export const getNextSet = async ({
         : true)
       ? set
       : acc;
-  }, exercise.sets[0]);
+  }, exercise?.sets?.[0]);
 
   let heaviestSetEffort =
-    heaviestSet?.inputs[effortInputIndex]?.value || exerciseSchedule.baseWeight;
+    heaviestSet?.inputs[effortInputIndex]?.value ?? exerciseSchedule.baseWeight;
 
   const workingSets =
     (heaviestSetEffort !== undefined &&
@@ -291,8 +231,7 @@ export const getNextSet = async ({
     : null;
 
   const nextWorkingSetsEffort = goalEffort
-    ? // Barbell exercises use two plates so not all subdivisions are possible
-      exerciseDefinition.tags?.find(
+    ? exerciseDefinition.tags?.find(
         ({ name, type }) => name === "Barbell" && type === TagType.Equipment,
       ) && Math.abs(goalEffort - Math.round(goalEffort)) < 0.5
       ? Math.round(goalEffort)
@@ -327,14 +266,131 @@ export const getNextSet = async ({
 
   return {
     id,
-    workedOutAt: workout?.workedOutAt || null,
+    workedOutAt: workout?.workedOutAt ?? null,
     dueOn,
     exerciseId: exerciseSchedule.exerciseId,
-    successful,
+    successful: successful ?? false,
     nextWorkingSetInputs,
     nextWorkingSets,
     exerciseSchedule,
   };
+}
+
+interface GetNextSetsDoc {
+  workedOutAt: Date;
+  exercise: WorkoutExercise;
+}
+export const getNextSets = async (
+  userId: Session["user"]["id"],
+  exerciseSchedules: ExerciseSchedule[],
+): Promise<NextSetResult[]> => {
+  const enabled = exerciseSchedules.filter((s) => s.enabled);
+  if (enabled.length === 0) return [];
+
+  const enabledExerciseIds = Array.from(
+    new Set(enabled.map((s) => s.exerciseId)),
+  );
+
+  const mostRecentDocs =
+    await MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
+      {
+        $match: {
+          workedOutAt: { $gte: addQuarters(new Date(), -1) },
+          userId,
+          "exercises.exerciseId": { $in: enabledExerciseIds },
+        },
+      },
+      { $sort: { workedOutAt: -1 } },
+      { $unwind: "$exercises" },
+      { $match: { "exercises.exerciseId": { $in: enabledExerciseIds } } },
+      {
+        $group: {
+          _id: "$exercises.exerciseId",
+          workedOutAt: { $first: "$workedOutAt" },
+          exercise: { $first: "$exercises" },
+        },
+      },
+      { $project: { _id: 0, workedOutAt: 1, exercise: 1 } },
+    ]).toArray();
+
+  const mostRecentByExerciseId = new Map<number, GetNextSetsDoc>();
+  for (const doc of mostRecentDocs) {
+    mostRecentByExerciseId.set(doc.exercise.exerciseId, doc);
+  }
+
+  const climbingWithWorkingSets = enabled.filter(
+    (s) =>
+      isClimbingExercise(s.exerciseId) &&
+      s.workingSets != null &&
+      s.workingSets > 0,
+  );
+  const climbingExerciseIds =
+    climbingWithWorkingSets.length > 0
+      ? [...new Set(climbingWithWorkingSets.map((s) => s.exerciseId))]
+      : [];
+  const schedulesByClimbingExerciseId = new Map(
+    climbingWithWorkingSets.map((s) => [s.exerciseId, s]),
+  );
+
+  const firstSuccessfulByExerciseId = new Map<
+    number,
+    { workedOutAt: Date; exercise: WorkoutExercise }
+  >();
+  if (climbingExerciseIds.length > 0) {
+    const climbingCursor = MaterializedWorkoutsView.aggregate<{
+      exerciseId: number;
+      workedOutAt: Date;
+      exercise: WorkoutExercise;
+    }>([
+      {
+        $match: {
+          userId,
+          "exercises.exerciseId": { $in: climbingExerciseIds },
+          deletedAt: { $exists: false },
+        },
+      },
+      { $sort: { workedOutAt: -1 } },
+      { $unwind: "$exercises" },
+      { $match: { "exercises.exerciseId": { $in: climbingExerciseIds } } },
+      {
+        $project: {
+          _id: 0,
+          exerciseId: "$exercises.exerciseId",
+          workedOutAt: 1,
+          exercise: "$exercises",
+        },
+      },
+    ]);
+    for await (const doc of climbingCursor) {
+      if (firstSuccessfulByExerciseId.has(doc.exerciseId)) continue;
+      const schedule = schedulesByClimbingExerciseId.get(doc.exerciseId);
+      if (!schedule?.workingSets) continue;
+      const successfulSets = doc.exercise.sets.filter(
+        (set) =>
+          (set.inputs[2]?.value as SendType) === SendType.Flash ||
+          (set.inputs[2]?.value as SendType) === SendType.Top ||
+          (set.inputs[2]?.value as SendType) === SendType.Repeat,
+      );
+      if (successfulSets.length >= schedule.workingSets) {
+        firstSuccessfulByExerciseId.set(doc.exerciseId, {
+          workedOutAt: doc.workedOutAt,
+          exercise: doc.exercise,
+        });
+      }
+    }
+  }
+
+  const results: NextSetResult[] = [];
+  for (const schedule of enabled) {
+    const workout =
+      (isClimbingExercise(schedule.exerciseId) &&
+      schedule.workingSets != null &&
+      schedule.workingSets > 0
+        ? firstSuccessfulByExerciseId.get(schedule.exerciseId)
+        : undefined) ?? mostRecentByExerciseId.get(schedule.exerciseId);
+    results.push(computeNextSetFromWorkout(workout ?? null, schedule));
+  }
+  return results;
 };
 
 export const noPR = {

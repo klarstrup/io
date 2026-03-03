@@ -2,13 +2,7 @@ import { tz } from "@date-fns/tz";
 import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
-import {
-  addQuarters,
-  addSeconds,
-  addWeeks,
-  isValid,
-  startOfDay,
-} from "date-fns";
+import { addSeconds, addWeeks, isValid, startOfDay } from "date-fns";
 import { OAuth2Client } from "google-auth-library";
 import {
   type DocumentNode,
@@ -36,9 +30,9 @@ import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
 import { Locations } from "./models/location.server";
 import { Accounts, Users } from "./models/user.server";
-import { type WorkoutExercise, WorkoutSource } from "./models/workout";
+import { WorkoutSource } from "./models/workout";
 import {
-  getNextSet,
+  getNextSets,
   MaterializedWorkoutsView,
   Workouts,
 } from "./models/workout.server";
@@ -684,87 +678,27 @@ export const resolvers: GQResolvers<
     nextSets: async (parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
+      if (!user.exerciseSchedules?.length) return [];
 
-      const enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor = new Set(
-        user.exerciseSchedules
-          ?.filter((schedule) => schedule.enabled)
-          .map((schedule) => schedule.exerciseId) || [],
-      );
-      const promises: Promise<GQNextSet>[] = [];
-      for await (const mostRecentWorkoutOfEachEnabledExerciseSchedule of MaterializedWorkoutsView.aggregate<{
-        workedOutAt: Date;
-        exercise: WorkoutExercise;
-      }>([
-        {
-          $match: {
-            workedOutAt: { $gte: addQuarters(new Date(), -1) },
-            userId: user.id,
-            "exercises.exerciseId": {
-              $in: Array.from(
-                enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
-              ),
-            },
+      const nextSetsRaw = await getNextSets(user.id, user.exerciseSchedules);
+      return nextSetsRaw.map((nextSet) => ({
+        ...nextSet,
+        __typename: "NextSet",
+        nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map((input) => ({
+          ...input,
+          __typename: "WorkoutSetInput",
+        })),
+        exerciseSchedule: {
+          ...nextSet.exerciseSchedule,
+          __typename: "ExerciseSchedule",
+          frequency: {
+            ...nextSet.exerciseSchedule.frequency,
+            __typename: "Duration",
           },
+          // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+          exerciseInfo: undefined as unknown as GQExerciseInfo,
         },
-        { $sort: { workedOutAt: -1 } },
-        { $unwind: "$exercises" },
-        {
-          $match: {
-            "exercises.exerciseId": {
-              $in: Array.from(
-                enabledExerciseScheduleExerciseIdsToLookUpWorkoutFor,
-              ),
-            },
-          },
-        },
-        // Group by exercise ID to get the most recent workout for each exercise
-        {
-          $group: {
-            _id: "$exercises.exerciseId",
-            workedOutAt: { $first: "$workedOutAt" },
-            exercise: { $first: "$exercises" },
-          },
-        },
-        // Project to match the expected output format
-        { $project: { _id: 0, workedOutAt: 1, exercise: 1 } },
-      ])) {
-        for (const exerciseSchedule of (user.exerciseSchedules || []).filter(
-          (schedule) =>
-            schedule.enabled &&
-            schedule.exerciseId ===
-              mostRecentWorkoutOfEachEnabledExerciseSchedule.exercise
-                .exerciseId,
-        )) {
-          promises.push(
-            getNextSet({
-              userId: user.id,
-              exerciseSchedule,
-              prefetchedWorkout: mostRecentWorkoutOfEachEnabledExerciseSchedule,
-            }).then((nextSet) => ({
-              ...nextSet,
-              __typename: "NextSet",
-              nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
-                (input) => ({
-                  ...input,
-                  __typename: "WorkoutSetInput",
-                }),
-              ),
-              exerciseSchedule: {
-                ...exerciseSchedule,
-                __typename: "ExerciseSchedule",
-                frequency: {
-                  ...exerciseSchedule.frequency,
-                  __typename: "Duration",
-                },
-                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                exerciseInfo: undefined as unknown as GQExerciseInfo,
-              },
-            })),
-          );
-        }
-      }
-
-      return Promise.all(promises);
+      }));
     },
   },
   Mutation: {
@@ -1151,11 +1085,9 @@ export const resolvers: GQResolvers<
 
       if (!parent.enabled) return null;
 
-      const nextSet = await getNextSet({
-        userId: user.id,
-        exerciseSchedule: parent,
-      });
+      const [nextSet] = await getNextSets(user.id, [parent]);
 
+      if (!nextSet) return null;
       return {
         ...nextSet,
         nextWorkingSetInputs:
