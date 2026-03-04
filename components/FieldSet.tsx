@@ -12,10 +12,10 @@ export const FieldSetY = ({
   return (
     <fieldset
       {...props}
-      className={
-        "flex-1 rounded-lg border-x-0 border-y-3 border-gray-900/20 px-1 pt-1 pb-2 " +
-        (className || "")
-      }
+      className={twMerge(
+        "flex-1 rounded-lg border-x-0 border-y-3 border-gray-900/20 px-1 pt-1 pb-2",
+        className,
+      )}
     >
       <legend className="ml-2">{legend}</legend>
       {children}
