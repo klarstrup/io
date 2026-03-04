@@ -616,50 +616,79 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     );
   }, [daysJournalEntries, userLocations]);
 
-  if (!sessionUser && !sessionDataLoading) {
-    // We are now sure there is no user, so don't optimistically show the persisted cache data, as it might be for another user. Instead show a login prompt.
-    return (
-      <FieldSetY
-        legend={null}
-        className="mx-auto max-w-2xl border-black/50 bg-gray-500/25 px-2"
-      >
-        <center className="text-white">
-          Please{" "}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            href="/api/auth/signin"
-            className={
-              "text-yellow-300 underline underline-offset-4 hover:text-yellow-400"
-            }
-          >
-            log in
-          </a>{" "}
-          to see your journal
-        </center>
-      </FieldSetY>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-stretch justify-start">
-      {daysJournalEntriesIncludingLocationChanges2.map(
-        ([dayDate, dayJournalEntries]) => (
-          <TodoDroppable
-            key={dateToString(dayDate)}
-            date={setHours(dayDate, dayStartHour)}
+    <>
+      {!sessionUser && !sessionDataLoading ? (
+        <div
+          className={"fixed inset-0 z-10 flex items-center justify-center p-4"}
+        >
+          <FieldSetY
+            legend={null}
+            className="flex max-w-2xl flex-col items-center justify-center border-black/50 bg-black/50 px-[3.2vw] py-[1.6vw] text-center text-white backdrop-blur-sm"
           >
-            <DiaryAgendaDayDay
-              date={dateToString(dayDate)}
-              dayDate={dayDate}
-              user={user}
-              dayLocations={userLocations}
-              dayJournalEntries={dayJournalEntries}
-            />
-          </TodoDroppable>
-        ),
-      )}
-      {user ? <DiaryPoller userId={user.id} /> : null}
-    </div>
+            <span className={"text-4xl"}>
+              Please{" "}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a
+                href="/api/auth/signin"
+                className={
+                  "text-yellow-300 underline underline-offset-4 hover:text-yellow-400"
+                }
+              >
+                log in
+              </a>{" "}
+              to use io&apos;s journal
+            </span>
+            <hr className="my-4 w-9/10 border-t-2 border-gray-900/20" />
+            <header className="mb-2 text-lg font-bold text-white">
+              What is this⁉
+            </header>
+            <p className="font-medium text-gray-100">
+              This is a diary that automatically fills itself with calendar
+              events, todos, workouts, sleeps and more from the services that i
+              already use.
+            </p>
+            <p className="mt-2 text-gray-100">
+              I use it to get an overview of my day, reflect on how I spend my
+              time, and plan my days by dragging and dropping the entries as
+              well as setting up workout schedules that automatically populate
+              the diary with my workouts based on set progressions and
+              frequencies that I define.
+            </p>
+
+            <a
+              href="https://github.com/klarstrup/io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={
+                "mt-4 block text-yellow-300 underline underline-offset-4 hover:text-yellow-400"
+              }
+            >
+              Learn more and read the source code on GitHub
+            </a>
+          </FieldSetY>
+        </div>
+      ) : null}
+      <div className="flex flex-col items-stretch justify-start">
+        {daysJournalEntriesIncludingLocationChanges2.map(
+          ([dayDate, dayJournalEntries]) => (
+            <TodoDroppable
+              key={dateToString(dayDate)}
+              date={setHours(dayDate, dayStartHour)}
+            >
+              <DiaryAgendaDayDay
+                date={dateToString(dayDate)}
+                dayDate={dayDate}
+                user={user}
+                dayLocations={userLocations}
+                dayJournalEntries={dayJournalEntries}
+              />
+            </TodoDroppable>
+          ),
+        )}
+        {user ? <DiaryPoller userId={user.id} /> : null}
+      </div>
+    </>
   );
 }
 
