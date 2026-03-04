@@ -394,6 +394,7 @@ export const resolvers: GQResolvers<
         start: oneWeekAgo,
         end: now,
       });
+      if (!events.length) return null;
       const hoursWithEvents = new Set(
         events
           // Usually all-day events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
@@ -427,6 +428,7 @@ export const resolvers: GQResolvers<
         start: now,
         end: oneWeekFromNow,
       });
+      if (!events.length) return null;
       const hoursWithEvents = new Set(
         events
           // Usually all-day events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
