@@ -320,11 +320,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const userLocations = data?.user?.locations || emptyArray;
 
   const journalEntriesByDate2 = useMemo(() => {
-    const journalEntriesByDate: Record<string, JournalEntry[]> = {
-      [dateToString(startOfAgendaDay)]: [
-        { __typename: "NowDivider", id: "now-divider", start: now, end: now },
-      ],
-    };
+    const journalEntriesByDate: Record<string, JournalEntry[]> = {};
 
     for (const dueSet of nextSets) {
       const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
@@ -486,9 +482,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     fetchingInterval.end,
     fetchingInterval.start,
     nextSets,
-    now,
     sleeps,
-    startOfAgendaDay,
     timeZone,
     workouts,
   ]);

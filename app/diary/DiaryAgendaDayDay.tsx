@@ -23,6 +23,7 @@ import type {
   GQUser,
   GQWorkout,
 } from "../../graphql.generated";
+import { useNow } from "../../hooks";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -71,7 +72,7 @@ export function DiaryAgendaDayDay({
 }) {
   const client = useApolloClient();
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const now = TZDate.tz(timeZone);
+  const now = useNow(60 * 1000); // Minute in milliseconds
   const todayStr = dateToString(subHours(now, dayStartHour));
   const isToday = date === todayStr;
   const ref = useRef<HTMLFieldSetElement>(null);
@@ -98,6 +99,22 @@ export function DiaryAgendaDayDay({
     let i = 0;
     const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
       [];
+
+    let pushedNow = false;
+    const pushNow = (
+      cotemporalityOfSurroundingEvent: "current" | "past" | "future" | null,
+    ) => {
+      dayJournalEntryElements.push({
+        id: "now-divider",
+        element: (
+          <DiaryAgendaDayNow
+            key="now-divider"
+            date={date}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+          />
+        ),
+      });
+    };
 
     let ownWorkouts = dayJournalEntries
       .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
@@ -160,18 +177,17 @@ export function DiaryAgendaDayDay({
         ? cotemporality(eventThatSurroundsEntry)
         : null;
 
-      if (journalEntry.__typename === "NowDivider") {
-        dayJournalEntryElements.push({
-          id: "now-divider",
-          element: (
-            <DiaryAgendaDayNow
-              key="now-divider"
-              date={date}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-            />
-          ),
-        });
-      } else if (journalEntry.__typename === "Sleep") {
+      if (
+        isToday &&
+        (precedingJournalEntry
+          ? getJournalEntryPrincipalDate(precedingJournalEntry)!.end <= now &&
+            getJournalEntryPrincipalDate(journalEntry)!.start >= now
+          : getJournalEntryPrincipalDate(journalEntry)!.start >= now)
+      ) {
+        pushNow(cotemporalityOfSurroundingEvent);
+        pushedNow = true;
+      }
+      if (journalEntry.__typename === "Sleep") {
         const sleep = journalEntry;
 
         dayJournalEntryElements.push({
@@ -463,6 +479,10 @@ export function DiaryAgendaDayDay({
       i++;
     }
 
+    if (isToday && !pushedNow) {
+      pushNow(null);
+    }
+
     return dayJournalEntryElements;
   }, [
     client.cache,
@@ -471,6 +491,8 @@ export function DiaryAgendaDayDay({
     dayJournalEntries,
     dayLocations,
     dayStart,
+    isToday,
+    now,
     timeZone,
     user,
   ]);
