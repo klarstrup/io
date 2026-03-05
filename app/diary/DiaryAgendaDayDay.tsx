@@ -177,16 +177,6 @@ export function DiaryAgendaDayDay({
         ? cotemporality(eventThatSurroundsEntry)
         : null;
 
-      if (
-        isToday &&
-        (precedingJournalEntry
-          ? getJournalEntryPrincipalDate(precedingJournalEntry)!.end <= now &&
-            getJournalEntryPrincipalDate(journalEntry)!.start >= now
-          : getJournalEntryPrincipalDate(journalEntry)!.start >= now)
-      ) {
-        pushNow(cotemporalityOfSurroundingEvent);
-        pushedNow = true;
-      }
       if (journalEntry.__typename === "Sleep") {
         const sleep = journalEntry;
 
@@ -476,11 +466,19 @@ export function DiaryAgendaDayDay({
         });
       }
 
-      i++;
-    }
+      if (
+        !pushedNow &&
+        isToday &&
+        ((followingJournalEntry
+          ? getJournalEntryPrincipalDate(followingJournalEntry)!.start >= now
+          : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
+          !followingJournalEntry)
+      ) {
+        pushNow(cotemporalityOfSurroundingEvent);
+        pushedNow = true;
+      }
 
-    if (isToday && !pushedNow) {
-      pushNow(null);
+      i++;
     }
 
     return dayJournalEntryElements;
