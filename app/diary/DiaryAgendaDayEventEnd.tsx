@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { GQEvent, GQUser } from "../../graphql.generated";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
-import { getTodoPrincipalDate } from "./diaryUtils";
+import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayEventEnd({
   userTimeZone,
@@ -27,7 +27,7 @@ export function DiaryAgendaDayEventEnd({
     transition,
   } = useSortable({
     id: "end-of-" + (client.cache.identify(event) || event.id),
-    data: { event, date: getTodoPrincipalDate(event)?.end },
+    data: { event, date: getJournalEntryPrincipalDate(event)?.end },
     disabled: true,
   });
 

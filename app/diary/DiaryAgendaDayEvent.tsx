@@ -6,6 +6,7 @@ import {
   faCalendarCheck,
   faExternalLink,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addHours,
   differenceInDays,
@@ -24,8 +25,7 @@ import {
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
-import { getTodoPrincipalDate } from "./diaryUtils";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayEvent({
   dayDate,
@@ -52,7 +52,7 @@ export function DiaryAgendaDayEvent({
     transition,
   } = useSortable({
     id: client.cache.identify(event) || event.id,
-    data: { event, date: getTodoPrincipalDate(event)?.start },
+    data: { event, date: getJournalEntryPrincipalDate(event)?.start },
     disabled: true,
   });
 
