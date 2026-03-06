@@ -13,6 +13,7 @@ import {
   roundToNearestMinutes,
   startOfDay,
   subHours,
+  type Interval,
 } from "date-fns";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, type ReactElement } from "react";
@@ -474,7 +475,11 @@ export function DiaryAgendaDayDay({
           : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
           !followingJournalEntry)
       ) {
-        pushNow(cotemporalityOfSurroundingEvent);
+        pushNow(
+          cotemporalityOfSurroundingEvent ||
+            (principalDate &&
+              cotemporality(principalDate as Interval<Date, Date>)),
+        );
         pushedNow = true;
       }
 
