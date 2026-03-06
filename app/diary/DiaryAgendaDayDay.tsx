@@ -481,7 +481,9 @@ export function DiaryAgendaDayDay({
         pushNow(
           cotemporalityOfSurroundingEvent ||
             (principalDate &&
-              cotemporality(principalDate as Interval<Date, Date>)),
+              !getJournalEntryPassed(journalEntry, now) &&
+              cotemporality(principalDate as Interval<Date, Date>)) ||
+            null,
         );
         pushedNow = true;
       }
