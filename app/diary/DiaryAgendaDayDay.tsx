@@ -73,9 +73,12 @@ export function DiaryAgendaDayDay({
 }) {
   const client = useApolloClient();
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const now = useNow(60 * 1000); // Minute in milliseconds
-  const todayStr = dateToString(subHours(now, dayStartHour));
+  const todayStr = useMemo(
+    () => dateToString(subHours(new Date(), dayStartHour)),
+    [],
+  );
   const isToday = date === todayStr;
+  const now = useNow(isToday ? 60 * 1000 : 60 * 60 * 1000);
   const ref = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
