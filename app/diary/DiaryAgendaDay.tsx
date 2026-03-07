@@ -469,7 +469,9 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     }
 
     for (const workout of workouts) {
-      const calName = dateToString(workout.workedOutAt);
+      const calName = dateToString(
+        addHours(workout.workedOutAt, -dayStartHour),
+      );
 
       if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
       journalEntriesByDate[calName].push(workout);
