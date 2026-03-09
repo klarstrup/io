@@ -97,8 +97,9 @@ export function DiaryAgendaDayDay({
   );
   const dayName = dateToString(dayDate);
 
-  const dayJournalItems: DayJournalEntryElement[] = useMemo(() => {
+  const [dayJournalItems, allDayJournalItems] = useMemo(() => {
     const dayJournalEntryElements: DayJournalEntryElement[] = [];
+    const allDayJournalEntryElements: DayJournalEntryElement[] = [];
 
     let i = 0;
     const eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
@@ -205,7 +206,7 @@ export function DiaryAgendaDayDay({
           event.datetype === "date";
 
         if (isAllDayEvent) {
-          dayJournalEntryElements.push({
+          allDayJournalEntryElements.push({
             id: client.cache.identify(event) || event.id,
             element: (
               <DiaryAgendaDayEntry
@@ -215,6 +216,15 @@ export function DiaryAgendaDayDay({
                 cotemporalityOfSurroundingEvent={
                   cotemporalityOfSurroundingEvent
                 }
+                className={
+                  "rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
+                  (isPast(dayEnd)
+                    ? "bg-green-50"
+                    : isToday
+                      ? "bg-yellow-50"
+                      : "bg-slate-50")
+                }
+                iconClassName="w-6 -mr-1"
               >
                 {(() => {
                   const eventStart =
@@ -236,7 +246,7 @@ export function DiaryAgendaDayDay({
                   const isLastDay = dayNo === numDays;
 
                   return (
-                    <span className="inline-flex items-stretch leading-snug">
+                    <span className="flex items-stretch leading-snug">
                       <div className="flex items-baseline gap-1 py-0.5">
                         {numDays > 1 ? (
                           isFirstDay && event.datetype === "date-time" ? (
@@ -263,7 +273,7 @@ export function DiaryAgendaDayDay({
                         <span className="flex items-baseline text-[0.555rem] whitespace-nowrap tabular-nums opacity-50">
                           {numDays > 1 ? (
                             <>
-                              <span className="px-px text-[0.888rem]">
+                              <span className="px-px text-[0.777rem]">
                                 {dayNo}
                               </span>
                               <span>/</span>
@@ -491,11 +501,12 @@ export function DiaryAgendaDayDay({
       i++;
     }
 
-    return dayJournalEntryElements;
+    return [dayJournalEntryElements, allDayJournalEntryElements] as const;
   }, [
     client.cache,
     date,
     dayDate,
+    dayEnd,
     dayJournalEntries,
     dayLocations,
     dayStart,
@@ -510,85 +521,88 @@ export function DiaryAgendaDayDay({
   );
 
   return (
-    <FieldSetX
-      ref={ref}
-      legend={
-        <div
-          className="-ml-1 flex items-center gap-1 leading-normal"
-          style={{
-            textShadow:
-              "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
-          }}
+    <>
+      <div
+        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 leading-normal"
+        style={{
+          textShadow:
+            "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
+        }}
+      >
+        <Link
+          href="/calendar"
+          prefetch={false}
+          className={
+            "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums"
+          }
         >
-          <Link
-            href="/calendar"
-            prefetch={false}
-            className={
-              "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums"
+          {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
+            month: "numeric",
+            day: "numeric",
+          })}
+        </Link>
+        <b>
+          {isToday
+            ? "Today"
+            : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
+                weekday: "long",
+              })}
+        </b>
+        {todayStr === dayName ? null : (
+          <DiaryAgendaDayCreateExpander
+            inactiveButtonClassName={
+              isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"
             }
           >
-            {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
-              month: "numeric",
-              day: "numeric",
-            })}
-          </Link>
-          <b>
-            {isToday
-              ? "Today"
-              : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
-                  weekday: "long",
-                })}
-          </b>
-          {todayStr === dayName ? null : (
-            <DiaryAgendaDayCreateExpander
-              inactiveButtonClassName={
-                isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"
+            {isPast(dayStart) ? (
+              <>
+                <Link
+                  prefetch={false}
+                  href={`/diary/${date}/workout`}
+                  className={
+                    "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+                  }
+                >
+                  <span className="text-xs opacity-25">➕</span> Workout
+                </Link>
+              </>
+            ) : null}
+            <DiaryAgendaDayCreateTodo date={dayStart} />
+            <span
+              hidden
+              className={
+                "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
               }
             >
-              {isPast(dayStart) ? (
-                <>
-                  <Link
-                    prefetch={false}
-                    href={`/diary/${date}/workout`}
-                    className={
-                      "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
-                    }
-                  >
-                    <span className="text-xs opacity-25">➕</span> Workout
-                  </Link>
-                </>
-              ) : null}
-              <DiaryAgendaDayCreateTodo date={dayStart} />
-              <span
-                hidden
-                className={
-                  "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
-                }
-              >
-                <span className="text-xs">➕</span> Event
-              </span>
-            </DiaryAgendaDayCreateExpander>
-          )}
-        </div>
-      }
-      className={
-        "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-2 pl-0 " +
-        ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
-          ? "bg-green-50 pt-1"
-          : todayStr === dayName
-            ? "bg-yellow-50 pt-1"
-            : "bg-slate-50 pt-1")
-      }
-    >
-      {dayJournalItems.length ? (
-        <TodoSortableContext items={dayJournalItems}>
-          {dayJournalItems.map(({ element }) => element)}
-        </TodoSortableContext>
-      ) : (
-        <DiaryAgendaDayEntry className="text-gray-400/50 italic">
-          {isPast(dayEnd) ? "Nothing logged" : "Nothing planned"}
-        </DiaryAgendaDayEntry>
-      )}
-    </FieldSetX>
+              <span className="text-xs">➕</span> Event
+            </span>
+          </DiaryAgendaDayCreateExpander>
+        )}
+        <div className="w-2" />
+        {allDayJournalItems.map(({ element }) => element)}
+      </div>
+      <FieldSetX
+        legend={null}
+        ref={ref}
+        className={
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-2 pl-0 " +
+          ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
+            ? "bg-green-50 pt-1"
+            : todayStr === dayName
+              ? "bg-yellow-50 pt-1"
+              : "bg-slate-50 pt-1")
+        }
+      >
+        {dayJournalItems.length ? (
+          <TodoSortableContext items={dayJournalItems}>
+            {dayJournalItems.map(({ element }) => element)}
+          </TodoSortableContext>
+        ) : (
+          <DiaryAgendaDayEntry className="text-gray-400/50 italic">
+            {isPast(dayEnd) ? "Nothing logged" : "Nothing planned"}
+          </DiaryAgendaDayEntry>
+        )}
+      </FieldSetX>
+    </>
   );
 }

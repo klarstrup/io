@@ -13,6 +13,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     onIconClick,
     cotemporality,
     className,
+    iconClassName,
     cotemporalityOfSurroundingEvent,
     isEventWithSeparatedEnd,
     isEventEnd,
@@ -21,6 +22,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     icon?: IconDefinition;
     iconTxt?: string | ReactElement;
     iconDisabled?: boolean;
+    iconClassName?: string;
     children: React.ReactNode;
     onContentClick?: () => void;
     onIconClick?: (
@@ -39,19 +41,20 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     <div ref={ref} {...props} className={twMerge("relative flex", className)}>
       <IconContainer
         disabled={iconDisabled}
-        className={
-          "text-md flex w-10 items-center justify-center " +
-          (cotemporality
+        className={twMerge(
+          "text-md flex w-10 items-center justify-center",
+          cotemporality
             ? cotemporality === "past"
-              ? " text-green-400"
+              ? "text-green-400"
               : cotemporality === "current"
-                ? " text-[#EDAB00]"
+                ? "text-[#EDAB00]"
                 : cotemporality === "backlog"
-                  ? " text-blue-400"
-                  : " text-gray-500"
-            : "text-gray-500") +
-          (onIconClick ? " cursor-pointer" : "")
-        }
+                  ? "text-blue-400"
+                  : "text-gray-500"
+            : "text-gray-500",
+          onIconClick ? "cursor-pointer" : "",
+          iconClassName ?? "",
+        )}
         onClick={onIconClick}
       >
         {cotemporalityOfSurroundingEvent ? (
