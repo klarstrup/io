@@ -104,7 +104,7 @@ function SparkLine({
   return (
     <svg
       width="100%"
-      height={viewBoxHeight}
+      height="100%"
       viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
       preserveAspectRatio="none"
       {...props}
@@ -146,7 +146,7 @@ function BarNumberContainer({
           data={sparklineData
             .map((point) => [point.x, point.y] as const)
             .sort(([x1], [x2]) => x1 - x2)}
-          className="absolute left-0 -z-10"
+          className="absolute inset-0 -z-10"
         />
       ) : null}
     </div>
