@@ -231,7 +231,7 @@ export default function DashBar() {
     <Masonry
       rows={2}
       className="min-h-12.5 min-w-xs gap-y-0.5 pr-0.5 select-none"
-      rowProps={{ className: "gap-x-2" }}
+      rowProps={{ className: "gap-x-1" }}
     >
       {availableBalance != null ? (
         <a
