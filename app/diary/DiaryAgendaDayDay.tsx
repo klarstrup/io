@@ -49,6 +49,7 @@ import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
+import { useIsSSR } from "../../hooks/useIsSSR";
 
 type DayJournalEntryElement = { id: string; element: ReactElement };
 
@@ -71,6 +72,7 @@ export function DiaryAgendaDayDay({
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
 }) {
+  const isSSR = useIsSSR();
   const client = useApolloClient();
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const todayStr = useMemo(
@@ -82,10 +84,10 @@ export function DiaryAgendaDayDay({
   const ref = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
-    if (isToday) {
+    if (isToday && !isSSR) {
       ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
     }
-  }, [isToday]);
+  }, [isToday, isSSR]);
 
   const dayStart = useMemo(
     () => addHours(startOfDay(dayDate), dayStartHour),
