@@ -15,11 +15,57 @@ export function DiaryAgendaDayTodoMarkdown({
   return (
     <div
       data-markdown-wrapper
-      className="prose prose-sm prose-ul:m-0 prose-p:m-0 prose-li:m-0 prose-headings:mb-0 max-w-full wrap-break-word text-black select-none [&_.contains-task-list]:flex [&_.contains-task-list]:list-none [&_.contains-task-list]:flex-col [&_.contains-task-list]:gap-2 [&_.contains-task-list]:p-0 [&_.task-list-item]:flex [&_.task-list-item]:items-center [&_.task-list-item]:gap-1.5 [&_.task-list-item]:pl-0 [&_.task-list-item]:leading-tight [&_.task-list-item-contents]:border-b [&_.task-list-item-contents]:border-dashed [&_.task-list-item-contents]:border-amber-600/75"
+      className="prose prose-sm prose-ul:m-0 prose-p:m-0 prose-li:m-0 prose-headings:mb-0 max-w-full wrap-break-word text-black select-none [&_.contains-task-list]:flex [&_.contains-task-list]:list-none [&_.contains-task-list]:flex-col [&_.contains-task-list]:gap-2 [&_.contains-task-list]:p-0 [&_.task-list-item]:flex [&_.task-list-item]:items-center [&_.task-list-item]:gap-1.5 [&_.task-list-item]:pl-0 [&_.task-list-item]:leading-tight [&_.task-list-item-contents]:border-b [&_.task-list-item-contents]:border-dashed [&_.task-list-item-contents]:border-amber-600/25"
     >
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
+          ul({ node: _node, ...props }) {
+            if (props.className?.includes("contains-task-list")) {
+              return (
+                <ul {...props} className={`${props.className} pb-1!`}>
+                  {props.children}
+                  {/* magic input to add more tasks */}
+                  <li
+                    className="task-list-item"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input type="checkbox" checked={false} readOnly className="opacity-50" />
+                    <span className="task-list-item-contents">
+                      <input
+                        type="text"
+                        placeholder="Add item..."
+                        className="w-full border-0! focus:outline-0!"
+                        onBlur={(e) => {
+                          e.preventDefault();
+                          const newTaskSummary = e.currentTarget.value.trim();
+                          if (newTaskSummary) {
+                            void onUpdateTodo?.({
+                              summary: `${todo.summary || ""}\n- [ ] ${newTaskSummary}`,
+                            });
+                            e.currentTarget.value = "";
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const newTaskSummary = e.currentTarget.value.trim();
+                            if (newTaskSummary) {
+                              void onUpdateTodo?.({
+                                summary: `${todo.summary || ""}\n- [ ] ${newTaskSummary}`,
+                              });
+                              e.currentTarget.value = "";
+                            }
+                          }
+                        }}
+                      />
+                    </span>
+                  </li>
+                </ul>
+              );
+            }
+            return <ul {...props} />;
+          },
           li({ node: _node, ...props }) {
             const isTaskItem = props.className?.includes("task-list-item");
             if (isTaskItem) {
@@ -29,7 +75,7 @@ export function DiaryAgendaDayTodoMarkdown({
               return (
                 <li {...props}>
                   {checkbox}
-                  <span className="task-list-item-contents">
+                  <span className="task-list-item-contents flex-1">
                     {restChildren}
                   </span>
                 </li>
@@ -52,7 +98,7 @@ export function DiaryAgendaDayTodoMarkdown({
                     );
                     const checkboxes =
                       markdownContainer?.querySelectorAll<HTMLInputElement>(
-                        'input[type="checkbox"]',
+                        'input[type="checkbox"]:not([readOnly])',
                       );
                     const thisCheckboxIndex = Array.from(
                       checkboxes || [],
