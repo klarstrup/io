@@ -10,7 +10,7 @@ export function DiaryAgendaDayTodoMarkdown({
   todo: GQDiaryAgendaDayTodoFragment;
   onUpdateTodo?: (
     updatedTodo: Omit<GQDiaryAgendaDayTodoFragment, "id" | "__typename">,
-  ) => Promise<void> | void;
+  ) => Promise<unknown>;
 }) {
   return (
     <div
@@ -26,28 +26,25 @@ export function DiaryAgendaDayTodoMarkdown({
                 <ul {...props} className={`${props.className} pb-1!`}>
                   {props.children}
                   {/* magic input to add more tasks */}
-                  <li
-                    className="task-list-item"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input type="checkbox" checked={false} readOnly className="opacity-50" />
-                    <span className="task-list-item-contents">
+                  {!todo.completed ? (
+                    <li
+                      key="new-todo-task-list-item"
+                      className="task-list-item"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <input
-                        type="text"
-                        placeholder="Add item..."
-                        className="w-full border-0! focus:outline-0!"
-                        onBlur={(e) => {
-                          e.preventDefault();
-                          const newTaskSummary = e.currentTarget.value.trim();
-                          if (newTaskSummary) {
-                            void onUpdateTodo?.({
-                              summary: `${todo.summary || ""}\n- [ ] ${newTaskSummary}`,
-                            });
-                            e.currentTarget.value = "";
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
+                        type="checkbox"
+                        checked={false}
+                        readOnly
+                        className="opacity-50"
+                      />
+                      <span className="task-list-item-contents">
+                        <input
+                          type="text"
+                          name="new-todo-task-list-item"
+                          placeholder="Add item..."
+                          className="w-full border-0! focus:outline-0!"
+                          onBlur={(e) => {
                             e.preventDefault();
                             const newTaskSummary = e.currentTarget.value.trim();
                             if (newTaskSummary) {
@@ -56,11 +53,33 @@ export function DiaryAgendaDayTodoMarkdown({
                               });
                               e.currentTarget.value = "";
                             }
-                          }
-                        }}
-                      />
-                    </span>
-                  </li>
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const newTaskSummary =
+                                e.currentTarget.value.trim();
+                              if (newTaskSummary) {
+                                void onUpdateTodo?.({
+                                  summary: `${todo.summary || ""}\n- [ ] ${newTaskSummary}`,
+                                }).then(async () => {
+                                  await new Promise(
+                                    (resolve) => setTimeout(resolve, 250), // lol
+                                  );
+                                  document
+                                    .querySelector<HTMLInputElement>(
+                                      "[name=new-todo-task-list-item]",
+                                    )
+                                    ?.focus();
+                                });
+                                e.currentTarget.value = "";
+                              }
+                            }
+                          }}
+                        />
+                      </span>
+                    </li>
+                  ) : null}
                 </ul>
               );
             }

@@ -223,8 +223,8 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
             ) : (
               <DiaryAgendaDayTodoMarkdown
                 todo={todo}
-                onUpdateTodo={(updatedTodo) =>
-                  void updateTodo({
+                onUpdateTodo={(updatedTodo) => {
+                  return updateTodo({
                     variables: {
                       input: {
                         id: todo.id,
@@ -244,8 +244,8 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                         },
                       },
                     },
-                  })
-                }
+                  });
+                }}
               />
             )}
             <button type="submit" className="hidden" />
