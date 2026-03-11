@@ -585,7 +585,7 @@ export function DiaryAgendaDayDay({
         legend={null}
         ref={ref}
         className={
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-2 pl-0 " +
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 " +
           ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
             ? "bg-green-50 pt-1"
             : todayStr === dayName
