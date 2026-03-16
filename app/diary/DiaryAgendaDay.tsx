@@ -616,11 +616,11 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     <>
       {!sessionUser && !sessionDataLoading ? (
         <div
-          className={"fixed inset-0 z-10 flex items-center justify-center p-4"}
+          className={"fixed inset-0 z-10 flex items-center justify-center p-4 backdrop-blur-sm"}
         >
           <FieldSetY
             legend={null}
-            className="flex max-w-2xl flex-col items-center justify-center border-black/50 bg-black/50 px-[3.2vw] py-[1.6vw] text-center text-white backdrop-blur-sm"
+            className="flex max-w-2xl flex-col items-center justify-center border-black/50 bg-black/50 px-[3.2vw] py-[1.6vw] text-center text-white"
           >
             <span className={"text-4xl"}>
               Please{" "}
