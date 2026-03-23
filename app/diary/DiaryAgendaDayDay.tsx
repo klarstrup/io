@@ -51,7 +51,10 @@ import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
 
-type DayJournalEntryElement = { id: string; element: ReactElement };
+interface DayJournalEntryElement {
+  id: string;
+  element: ReactElement;
+}
 
 const getJournalEntryPassed = (journalEntry: JournalEntry, now: Date) => {
   const principalDate = getJournalEntryPrincipalDate(journalEntry);
