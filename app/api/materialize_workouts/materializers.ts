@@ -841,12 +841,23 @@ export async function* materializeGrippyWorkouts(
                 exerciseId: 1434,
                 sets: {
                   $map: {
-                    input: "$workout.sets",
+                    input: "$sets",
                     as: "set",
                     in: {
-                      createdAt: "$start_time",
-                      updatedAt: "$end_time",
-                      inputs: [{ unit: Unit.SEC, value: "$$set.hang_time" }],
+                      createdAt: "$$set.start_time",
+                      updatedAt: "$$set.end_time",
+                      inputs: [
+                        {
+                          unit: Unit.SEC,
+                          value: {
+                            $dateDiff: {
+                              startDate: "$$set.start_time",
+                              endDate: "$$set.end_time",
+                              unit: "second",
+                            },
+                          },
+                        },
+                      ],
                     },
                   },
                 },
