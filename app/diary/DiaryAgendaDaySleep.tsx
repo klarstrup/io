@@ -14,13 +14,13 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 export default function DiaryAgendaDaySleep({
   sleep,
   user,
-  isLastEntry,
+  isFirstEntry,
   principalDate,
   cotemporalityOfSurroundingEvent,
 }: {
   sleep: GQSleep;
   user?: Pick<GQUser, "timeZone">;
-  isLastEntry?: boolean;
+  isFirstEntry?: boolean;
   principalDate?: ReturnType<typeof getJournalEntryPrincipalDate>;
   cotemporalityOfSurroundingEvent?: "current" | "past" | "future" | null;
 }) {
@@ -43,7 +43,7 @@ export default function DiaryAgendaDaySleep({
   return (
     <DiaryAgendaDayEntry
       // TODO: smarter way of determining if it's waking up or going to sleep
-      icon={isLastEntry ? faBed : faBedPulse}
+      icon={!isFirstEntry ? faBed : faBedPulse}
       cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       key={sleep.id}
@@ -59,7 +59,7 @@ export default function DiaryAgendaDaySleep({
           </div>
         ) : null}
         <div className="text-center font-semibold tabular-nums">
-          {!isLastEntry
+          {isFirstEntry
             ? new Date(sleep.endedAt).toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -72,8 +72,12 @@ export default function DiaryAgendaDaySleep({
               })}
         </div>{" "}
         <div className="flex items-baseline gap-2">
-          {isLastEntry ? <span>Went to bed</span> : <span>Got out of bed</span>}
-          {!isLastEntry ? (
+          {!isFirstEntry ? (
+            <span>Went to bed</span>
+          ) : (
+            <span>Got out of bed</span>
+          )}
+          {isFirstEntry ? (
             <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
               {duration ? <>{formatShortDuration(duration)} slept</> : null}
             </span>

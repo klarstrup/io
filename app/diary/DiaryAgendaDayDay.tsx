@@ -144,7 +144,7 @@ export function DiaryAgendaDayDay({
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
 
-      const isLastEntry = !followingJournalEntry;
+      const isFirstEntry = !precedingJournalEntry;
 
       const previousEvents = dayJournalEntries
         .slice(0, i)
@@ -203,7 +203,7 @@ export function DiaryAgendaDayDay({
             <DiaryAgendaDaySleep
               sleep={sleep}
               user={user}
-              isLastEntry={isLastEntry}
+              isFirstEntry={isFirstEntry}
               principalDate={principalDate}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
               key={sleep.id}
