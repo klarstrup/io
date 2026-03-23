@@ -25,6 +25,7 @@ import type {
   GQWorkout,
 } from "../../graphql.generated";
 import { useNow } from "../../hooks";
+import { useIsSSR } from "../../hooks/useIsSSR";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -49,7 +50,6 @@ import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
 import { TodoSortableContext } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
-import { useIsSSR } from "../../hooks/useIsSSR";
 
 type DayJournalEntryElement = { id: string; element: ReactElement };
 
@@ -81,13 +81,20 @@ export function DiaryAgendaDayDay({
   );
   const isToday = date === todayStr;
   const now = useNow(isToday ? 60 * 1000 : 60 * 60 * 1000);
+  const nowButItOnlyUpdatesEveryHour = useNow(60 * 60 * 1000);
   const ref = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
-    if (isToday && !isSSR) {
+    if (!isToday || isSSR) return;
+
+    const isTodayButTheNowButItOnlyUpdatesEveryHourIsStillToday =
+      isToday &&
+      date ===
+        dateToString(subHours(nowButItOnlyUpdatesEveryHour, dayStartHour));
+    if (isTodayButTheNowButItOnlyUpdatesEveryHourIsStillToday) {
       ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
     }
-  }, [isToday, isSSR]);
+  }, [isToday, isSSR, date, nowButItOnlyUpdatesEveryHour]);
 
   const dayStart = useMemo(
     () => addHours(startOfDay(dayDate), dayStartHour),
