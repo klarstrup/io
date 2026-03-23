@@ -506,6 +506,7 @@ export function WorkoutForm<R extends string>({
             const nextExerciseSet = nextSets?.find(
               (nextSet) => nextSet.exerciseId === exercise.id,
             );
+
             return (
               <FieldSetX
                 key={field.id}
@@ -546,7 +547,7 @@ export function WorkoutForm<R extends string>({
                   </div>
                 }
               >
-                {nextExerciseSet && nextExerciseSet.nextWorkingSets ? (
+                {nextExerciseSet?.nextWorkingSetInputs ? (
                   <div className="leading-none">
                     <span className="text-sm">
                       Goal{" "}
@@ -556,8 +557,7 @@ export function WorkoutForm<R extends string>({
                             exercise={exercise}
                             set={{
                               __typename: "WorkoutSet",
-                              inputs:
-                                nextExerciseSet.nextWorkingSetInputs || [],
+                              inputs: nextExerciseSet.nextWorkingSetInputs,
                             }}
                             repeatCount={nextExerciseSet.nextWorkingSets}
                           />
