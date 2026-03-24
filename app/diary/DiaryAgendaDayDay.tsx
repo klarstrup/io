@@ -282,17 +282,15 @@ export function DiaryAgendaDayDay({
                           ) : null
                         ) : null}
                         <span>{event.summary}</span>
-                        <span className="flex items-baseline text-[0.555rem] whitespace-nowrap tabular-nums opacity-50">
-                          {numDays > 1 ? (
-                            <>
-                              <span className="px-px text-[0.777rem]">
-                                {dayNo}
-                              </span>
-                              <span>/</span>
-                            </>
-                          ) : null}
-                          <span className="px-px">{numDays}d</span>
-                        </span>
+                        {numDays > 1 ? (
+                          <span className="flex items-baseline text-[0.555rem] whitespace-nowrap tabular-nums opacity-50">
+                            <span className="px-px text-[0.777rem]">
+                              {dayNo}
+                            </span>
+                            <span>/</span>
+                            <span className="px-px">{numDays}d</span>
+                          </span>
+                        ) : null}
                         {event.url ? (
                           <a
                             href={event.url}
