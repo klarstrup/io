@@ -4,7 +4,7 @@ import { add, addDays, addMinutes, parse } from "date-fns";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
 import { isNonEmptyArray } from "../utils";
-import * as zoneTable from "./windowsZones.json" with { type: "json" };
+import zoneTable from "./windowsZones.json" with { type: "json" };
 
 /** **************
  *  A tolerant, minimal icalendar parser
@@ -438,7 +438,7 @@ const dateParameter =
     const normalizedTzId =
       vTimezone && "tzid" in vTimezone
         ? Array.isArray(vTimezone.tzid)
-          ? vTimezone.tzid.slice(-1)[0]
+          ? vTimezone.tzid.at(-1)
           : vTimezone.tzid
         : null;
 
