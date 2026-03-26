@@ -16,8 +16,6 @@ import zoneTable from "./windowsZones.json" with { type: "json" };
 /**
  * Response objects
  */
-export type NodeIcalCallback = (error: unknown, data: CalendarResponse) => void;
-
 export type CalendarResponse = Record<string, CalendarComponent>;
 
 export type CalendarComponent = VTimeZone | VEvent | VCalendar | VTodo;
