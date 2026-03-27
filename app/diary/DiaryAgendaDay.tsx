@@ -27,6 +27,7 @@ import {
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
 import {
+  cotemporality,
   dateMidpoint,
   dateToString,
   dayStartHour,
@@ -523,12 +524,16 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               if (isEventEndEntry) {
                 const eventId = entry.id;
                 const previousEntry = entries[i - 1];
+
+                const isEventCurrentlyOngoing =
+                  cotemporality(entry) === "current";
                 if (
                   previousEntry &&
                   previousEntry.__typename === "Event" &&
-                  previousEntry.id === eventId
+                  previousEntry.id === eventId &&
+                  !isEventCurrentlyOngoing
                 ) {
-                  // If the previous entry is the same event, we skip the end entry
+                  // If the previous entry is the same event and we aren't in the middle of it, we skip the end entry
                   return false;
                 }
               }
@@ -616,7 +621,9 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     <>
       {!sessionUser && !sessionDataLoading ? (
         <div
-          className={"fixed inset-0 z-10 flex items-center justify-center p-4 backdrop-blur-sm"}
+          className={
+            "fixed inset-0 z-10 flex items-center justify-center p-4 backdrop-blur-sm"
+          }
         >
           <FieldSetY
             legend={null}
