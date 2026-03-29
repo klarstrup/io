@@ -140,7 +140,9 @@ export function DiaryAgendaDayDay({
 
     for (const journalEntry of dayJournalEntries) {
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
-
+      const journalEntryCotemporality = principalDate
+        ? cotemporality(principalDate as Interval<Date, Date>)
+        : null;
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
 
@@ -498,11 +500,11 @@ export function DiaryAgendaDayDay({
           : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
           !followingJournalEntry)
       ) {
+        console.log(eventThatSurroundsEntry, principalDate);
         pushNow(
           cotemporalityOfSurroundingEvent ||
-            (principalDate &&
-              !getJournalEntryPassed(journalEntry, now) &&
-              cotemporality(principalDate as Interval<Date, Date>)) ||
+            (journalEntryCotemporality === "current" &&
+              journalEntryCotemporality) ||
             null,
         );
         pushedNow = true;
