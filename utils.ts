@@ -1,11 +1,9 @@
 import { TZDate } from "@date-fns/tz";
 import {
   addDays,
-  addHours,
   type ContextOptions,
   type DateArg,
   differenceInDays,
-  endOfDay,
   type Interval,
   isDate,
   isSameDay,
@@ -13,7 +11,6 @@ import {
   type RoundingMethod,
   type RoundingOptions,
   startOfDay,
-  subHours,
 } from "date-fns";
 import type { DateInterval } from "./lib";
 
@@ -699,15 +696,31 @@ export const isSameDayButItRespectsDayStartHour = (
   dateRight: DateArg<Date> & {},
 ) =>
   isSameDay(
-    subHours(dateLeft, dayStartHour),
-    subHours(dateRight, dayStartHour),
+    startOfDayButItRespectsDayStartHour(new Date(dateLeft)),
+    startOfDayButItRespectsDayStartHour(new Date(dateRight)),
   );
 
 export const startOfDayButItRespectsDayStartHour = (date: Date) =>
-  addHours(startOfDay(subHours(date, dayStartHour)), dayStartHour);
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getHours() >= dayStartHour ? date.getDate() : date.getDate() - 1,
+    dayStartHour,
+    0,
+    0,
+    0,
+  );
 
 export const endOfDayButItRespectsDayStartHour = (date: Date) =>
-  addHours(endOfDay(subHours(date, dayStartHour)), dayStartHour);
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getHours() >= dayStartHour ? date.getDate() + 1 : date.getDate(),
+    dayStartHour - 1,
+    59,
+    59,
+    999,
+  );
 
 export const supportsHaptic =
   typeof window !== "undefined"
