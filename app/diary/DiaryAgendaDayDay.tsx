@@ -500,7 +500,6 @@ export function DiaryAgendaDayDay({
           : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
           !followingJournalEntry)
       ) {
-        console.log(eventThatSurroundsEntry, principalDate);
         pushNow(
           cotemporalityOfSurroundingEvent ||
             (journalEntryCotemporality === "current" &&
