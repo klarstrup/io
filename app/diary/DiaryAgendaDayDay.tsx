@@ -84,20 +84,13 @@ export function DiaryAgendaDayDay({
   );
   const isToday = date === todayStr;
   const now = useNow(isToday ? 60 * 1000 : 60 * 60 * 1000);
-  const nowButItOnlyUpdatesEveryHour = useNow(60 * 60 * 1000);
   const ref = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
     if (!isToday || isSSR) return;
 
-    const isTodayButTheNowButItOnlyUpdatesEveryHourIsStillToday =
-      isToday &&
-      date ===
-        dateToString(subHours(nowButItOnlyUpdatesEveryHour, dayStartHour));
-    if (isTodayButTheNowButItOnlyUpdatesEveryHourIsStillToday) {
-      ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
-    }
-  }, [isToday, isSSR, date, nowButItOnlyUpdatesEveryHour]);
+    ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
+  }, [isToday, isSSR, dayJournalEntries.length]);
 
   const dayStart = useMemo(
     () => addHours(startOfDay(dayDate), dayStartHour),
