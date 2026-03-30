@@ -2,7 +2,7 @@ import { tz } from "@date-fns/tz";
 import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
-import { addSeconds, addWeeks, isValid, startOfDay } from "date-fns";
+import { addWeeks, isValid, startOfDay } from "date-fns";
 import { OAuth2Client } from "google-auth-library";
 import {
   type DocumentNode,
@@ -17,14 +17,22 @@ import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
 import { auth } from "./auth";
 import type {
+  GQCreateTodoPayload,
   GQExerciseInfo,
   GQExerciseSchedule,
   GQFloatTimeSeriesEntry,
   GQFoodEntry,
   GQNextSet,
   GQResolvers,
+  GQSleep,
   GQSnoozeExerciseSchedulePayload,
   GQUnsnoozeExerciseSchedulePayload,
+  GQUpdateTodoPayload,
+  GQWorkout,
+  GQWorkoutExercise,
+  GQWorkoutSet,
+  GQWorkoutSetInput,
+  GQWorkoutSetMeta,
 } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
@@ -109,7 +117,7 @@ const dateScalar = new GraphQLScalarType({
   },
 });
 
-const editableTodoFields = ["summary", "start", "due", "completed"] as const;
+const editableTodoFields = ["summary", "due", "completed"] as const;
 
 const idealDailySleepInSeconds = 8 * 60 * 60;
 
@@ -141,12 +149,27 @@ export const resolvers: GQResolvers<
                 ...schedule,
                 __typename: "ExerciseSchedule",
                 frequency: { ...schedule.frequency, __typename: "Duration" },
-              }) as GQExerciseSchedule,
+                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                exerciseInfo: undefined as unknown as GQExerciseInfo,
+              }) satisfies GQExerciseSchedule,
           ) || null,
       };
     },
   },
   User: {
+    journalEntries: async (parent, args, context, info) =>
+      Promise.all([
+        typeof resolvers.User?.todos === "function" &&
+          resolvers.User.todos(parent, args, context, info),
+        typeof resolvers.User?.events === "function" &&
+          resolvers.User.events(parent, args, context, info),
+        typeof resolvers.User?.sleeps === "function" &&
+          resolvers.User.sleeps(parent, args, context, info),
+        typeof resolvers.User?.workouts === "function" &&
+          resolvers.User.workouts(parent, args, context, info),
+        typeof resolvers.User?.nextSets === "function" &&
+          resolvers.User.nextSets(parent, {}, context, info),
+      ]).then((entries) => entries.flat().filter(Boolean)),
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -228,7 +251,7 @@ export const resolvers: GQResolvers<
             timestamp: group.measuredAt,
             value: weightMeasure.value * 10 ** weightMeasure.unit,
             __typename: "FloatTimeSeriesEntry",
-          } as GQFloatTimeSeriesEntry;
+          } satisfies GQFloatTimeSeriesEntry;
         })
         .filter(Boolean);
     },
@@ -289,7 +312,7 @@ export const resolvers: GQResolvers<
             timestamp: group.measuredAt,
             value: bodyFatMeasure.value * 10 ** bodyFatMeasure.unit,
             __typename: "FloatTimeSeriesEntry",
-          } as GQFloatTimeSeriesEntry;
+          } satisfies GQFloatTimeSeriesEntry;
         })
         .filter(Boolean);
     },
@@ -572,9 +595,8 @@ export const resolvers: GQResolvers<
             deviceId: sleep.hash_deviceid,
             id: String(sleep.id),
             totalSleepTime: sleep.data.total_sleep_time,
-            endedAt: addSeconds(sleep.startedAt, sleep.data.total_timeinbed),
             __typename: "Sleep",
-          }) as const,
+          }) satisfies GQSleep,
       );
     },
     foodEntries: async (_parent, args, context) => {
@@ -656,7 +678,7 @@ export const resolvers: GQResolvers<
                             ({
                               ...input,
                               __typename: "WorkoutSetInput",
-                            }) as const,
+                            }) satisfies GQWorkoutSetInput,
                         ),
                         meta:
                           set.meta &&
@@ -666,16 +688,16 @@ export const resolvers: GQResolvers<
                                 key,
                                 value: String(value),
                                 __typename: "WorkoutSetMeta",
-                              }) as const,
+                              }) satisfies GQWorkoutSetMeta,
                           ),
-                      }) as const,
+                      }) satisfies GQWorkoutSet,
                   ),
-                }) as const,
+                }) satisfies GQWorkoutExercise,
             ),
             // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
             id: workout.id || workout._id.toString(),
             __typename: "Workout",
-          }) as const,
+          }) satisfies GQWorkout,
       ),
     nextSets: async (parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -733,7 +755,7 @@ export const resolvers: GQResolvers<
           id: newTodo.uid,
           ...newTodo,
         },
-      } as const;
+      } satisfies GQCreateTodoPayload;
 
       try {
         return result;
@@ -790,7 +812,7 @@ export const resolvers: GQResolvers<
           id: updatedTodo.uid,
           ...updatedTodo,
         },
-      } as const;
+      } satisfies GQUpdateTodoPayload;
 
       try {
         return result;
@@ -871,8 +893,10 @@ export const resolvers: GQResolvers<
             ...updatedExerciseSchedule!.frequency,
             __typename: "Duration",
           },
+          // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+          exerciseInfo: undefined as unknown as GQExerciseInfo,
         },
-      } as GQSnoozeExerciseSchedulePayload;
+      } satisfies GQSnoozeExerciseSchedulePayload;
     },
     unsnoozeExerciseSchedule: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -908,8 +932,10 @@ export const resolvers: GQResolvers<
             ...updatedExerciseSchedule!.frequency,
             __typename: "Duration",
           },
+          // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+          exerciseInfo: undefined as unknown as GQExerciseInfo,
         },
-      } as GQUnsnoozeExerciseSchedulePayload;
+      } satisfies GQUnsnoozeExerciseSchedulePayload;
     },
     updateWorkout: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
@@ -965,7 +991,7 @@ export const resolvers: GQResolvers<
                           ({
                             ...input,
                             __typename: "WorkoutSetInput",
-                          }) as const,
+                          }) satisfies GQWorkoutSetInput,
                       ),
                       meta:
                         set.meta &&
@@ -975,11 +1001,11 @@ export const resolvers: GQResolvers<
                               key,
                               value: String(value),
                               __typename: "WorkoutSetMeta",
-                            }) as const,
+                            }) satisfies GQWorkoutSetMeta,
                         ),
-                    }) as const,
+                    }) satisfies GQWorkoutSet,
                 ),
-              }) as const,
+              }) satisfies GQWorkoutExercise,
           ),
           id: updatedWorkout.id || updatedWorkout._id.toString(),
         },
@@ -1104,9 +1130,11 @@ export const resolvers: GQResolvers<
             ...nextSet.exerciseSchedule.frequency,
             __typename: "Duration",
           },
+          // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+          exerciseInfo: undefined as unknown as GQExerciseInfo,
         },
         __typename: "NextSet",
-      } as GQNextSet;
+      } satisfies GQNextSet;
     },
   },
 };
@@ -1123,7 +1151,6 @@ export const typeDefs = gql`
 
   input TodoInput {
     summary: String
-    start: Date
     due: Date
     completed: Date
   }
@@ -1198,6 +1225,12 @@ export const typeDefs = gql`
     value: Float!
   }
 
+  interface JournalEntry {
+    id: ID!
+  }
+
+  union JournalEntryUnion = Todo | Event | Workout | Sleep | NextSet
+
   type User {
     id: ID!
     name: String!
@@ -1206,6 +1239,7 @@ export const typeDefs = gql`
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]
+    journalEntries(interval: IntervalInput!): [JournalEntry!]
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
@@ -1246,7 +1280,7 @@ export const typeDefs = gql`
     config: JSON
   }
 
-  type Sleep {
+  type Sleep implements JournalEntry {
     id: ID!
     deviceId: String!
     startedAt: Date!
@@ -1313,10 +1347,10 @@ export const typeDefs = gql`
     nextSet: NextSet
   }
 
-  type NextSet {
+  type NextSet implements JournalEntry {
     # This is just the schedule entry ID prefixed with "next-", so normalizing works
     id: ID!
-    workedOutAt: Date
+    lastWorkedOutAt: Date
     dueOn: Date!
     exerciseId: Int!
     successful: Boolean
@@ -1325,17 +1359,16 @@ export const typeDefs = gql`
     exerciseSchedule: ExerciseSchedule!
   }
 
-  type Todo {
+  type Todo implements JournalEntry {
     id: ID!
     created: Date
     summary: String
-    start: Date
     due: Date
     completed: Date
     order: Int
   }
 
-  type Event {
+  type Event implements JournalEntry {
     id: ID!
     created: Date
     summary: String
@@ -1373,7 +1406,7 @@ export const typeDefs = gql`
     hasZones: Boolean
   }
 
-  type Workout {
+  type Workout implements JournalEntry {
     id: ID!
     workedOutAt: Date!
     materializedAt: Date

@@ -119,7 +119,7 @@ export function DiaryAgendaDayDueSet({
           order
           nextSet {
             id
-            workedOutAt
+            lastWorkedOutAt
             dueOn
             exerciseId
             successful
@@ -184,7 +184,7 @@ export function DiaryAgendaDayDueSet({
           order
           nextSet {
             id
-            workedOutAt
+            lastWorkedOutAt
             dueOn
             exerciseId
             successful
@@ -362,15 +362,18 @@ export function DiaryAgendaDayDueSet({
                               nextSet: {
                                 ...dueSet,
                                 dueOn: addMilliseconds(
-                                  (dueSet?.workedOutAt &&
+                                  (dueSet?.lastWorkedOutAt &&
                                   isEqual(
-                                    dueSet.workedOutAt,
-                                    startOfDay(dueSet.workedOutAt, {
+                                    dueSet.lastWorkedOutAt,
+                                    startOfDay(dueSet.lastWorkedOutAt, {
                                       in: tz("UTC"),
                                     }),
                                   )
-                                    ? addHours(dueSet.workedOutAt, dayStartHour)
-                                    : dueSet.workedOutAt) || epoch,
+                                    ? addHours(
+                                        dueSet.lastWorkedOutAt,
+                                        dayStartHour,
+                                      )
+                                    : dueSet.lastWorkedOutAt) || epoch,
                                   durationToMs(
                                     dueSet.exerciseSchedule.frequency,
                                   ),

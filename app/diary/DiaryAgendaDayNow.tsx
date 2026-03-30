@@ -8,9 +8,11 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 export function DiaryAgendaDayNow({
   date,
   cotemporalityOfSurroundingEvent,
+  now,
 }: {
   date: `${number}-${number}-${number}`;
   cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
+  now: Date;
 }) {
   const {
     isDragging,
@@ -19,11 +21,7 @@ export function DiaryAgendaDayNow({
     setNodeRef,
     transform,
     transition,
-  } = useSortable({
-    id: "now-divider",
-    data: { date: new Date() },
-    disabled: true,
-  });
+  } = useSortable({ id: "now-divider", data: { date: now }, disabled: true });
 
   const iconTxt = useMemo(
     () => <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>,

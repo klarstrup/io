@@ -12,7 +12,6 @@ export const typePolicies: TypePolicies = {
   Todo: {
     fields: {
       created: { read: readDate },
-      start: { read: readDate },
       due: { read: readDate },
       completed: { read: readDate },
     },

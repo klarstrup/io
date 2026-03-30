@@ -139,7 +139,7 @@ export function WorkoutForm<R extends string>({
           timeZone
           nextSets {
             id
-            workedOutAt
+            lastWorkedOutAt
             dueOn
             exerciseId
             successful
@@ -260,11 +260,11 @@ export function WorkoutForm<R extends string>({
         .sort((a, b) =>
           compareAsc(
             addMilliseconds(
-              a.workedOutAt!,
+              a.lastWorkedOutAt!,
               durationToMs(a.exerciseSchedule.frequency),
             ),
             addMilliseconds(
-              b.workedOutAt!,
+              b.lastWorkedOutAt!,
               durationToMs(b.exerciseSchedule.frequency),
             ),
           ),
@@ -564,17 +564,17 @@ export function WorkoutForm<R extends string>({
                         </tbody>
                       </table>
                     </span>
-                    {nextExerciseSet.workedOutAt ? (
+                    {nextExerciseSet.lastWorkedOutAt ? (
                       <span className="text-xs">
                         {" "}
                         based on{" "}
                         <Link
                           prefetch={false}
-                          href={`/diary/${dateToString(nextExerciseSet.workedOutAt)}`}
+                          href={`/diary/${dateToString(nextExerciseSet.lastWorkedOutAt)}`}
                           style={{ color: "#edab00" }}
                         >
                           last set{" "}
-                          {nextExerciseSet.workedOutAt.toLocaleDateString(
+                          {nextExerciseSet.lastWorkedOutAt.toLocaleDateString(
                             "da-DK",
                           )}
                         </Link>

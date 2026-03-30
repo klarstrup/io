@@ -60,7 +60,7 @@ export function NextSets({
           exerciseSchedule,
           nextWorkingSets,
           nextWorkingSetInputs,
-          workedOutAt,
+          lastWorkedOutAt,
         } = dueSet;
         const exercise = exercisesById.get(exerciseId)!;
 
@@ -117,13 +117,13 @@ export function NextSets({
                 <div className="align-baseline whitespace-nowrap">
                   <span className="text-xs">
                     Last set{" "}
-                    {workedOutAt ? (
+                    {lastWorkedOutAt ? (
                       <Link
                         prefetch={false}
-                        href={`/diary/${new Date(workedOutAt).toISOString().slice(0, 10)}`}
+                        href={`/diary/${new Date(lastWorkedOutAt).toISOString().slice(0, 10)}`}
                         style={{ color: "#edab00" }}
                       >
-                        {formatDistanceStrict(workedOutAt, now, {
+                        {formatDistanceStrict(lastWorkedOutAt, now, {
                           addSuffix: true,
                         })}
                       </Link>
@@ -132,7 +132,7 @@ export function NextSets({
                     )}
                     {successful === false ? " (failed)" : null}
                   </span>
-                  {showDueDate && exerciseSchedule?.frequency && workedOutAt ? (
+                  {showDueDate && exerciseSchedule?.frequency && lastWorkedOutAt ? (
                     <span className="text-xs">
                       , due{" "}
                       {formatDistanceStrict(dueSet.dueOn, now, {

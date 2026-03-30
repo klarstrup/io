@@ -2,7 +2,7 @@
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import { addDays } from "date-fns";
+import { addDays, subSeconds } from "date-fns";
 import gql from "graphql-tag";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
@@ -22,7 +22,7 @@ import { getTodoPrincipalDate } from "./diaryUtils";
 gql`
   fragment DiaryAgendaDayTodo on Todo {
     id
-    start
+    created
     due
     completed
     summary
@@ -32,9 +32,11 @@ gql`
 export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   todo,
   cotemporalityOfSurroundingEvent,
+  now,
 }: {
   todo: GQDiaryAgendaDayTodoFragment;
   cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
+  now: Date;
 }) {
   const client = useApolloClient();
   const {
@@ -56,7 +58,6 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
           todo {
             id
             created
-            start
             due
             completed
             summary
@@ -64,9 +65,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
         }
       }
     `,
-    {
-      refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
-    },
+    { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
   );
   const [deleteTodo] = useMutation<GQDeleteTodoMutation>(
     gql`
@@ -74,9 +73,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
         deleteTodo(id: $id)
       }
     `,
-    {
-      refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
-    },
+    { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
   );
 
   const [isActive, setIsActive] = useState(false);
@@ -138,17 +135,17 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     } else {
       void updateTodo({
         variables: {
-          input: { id: todo.id, data: { completed: new Date() } },
+          input: { id: todo.id, data: { completed: subSeconds(now, 1) } },
         },
         optimisticResponse: {
           updateTodo: {
             __typename: "UpdateTodoPayload",
-            todo: { ...todo, completed: new Date() },
+            todo: { ...todo, completed: subSeconds(now, 1) },
           },
         },
       });
     }
-  }, [todo, updateTodo]);
+  }, [todo, updateTodo, now]);
 
   const style = useMemo(
     () => ({
@@ -174,7 +171,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       onIconClick={handleIconClick}
       // this should cope with todos with deadlines when that is implemented
       cotemporality={
-        !todo.completed && !todo.start && !todo.due
+        !todo.completed && !todo.due
           ? "backlog"
           : todo.completed
             ? "past"
@@ -275,7 +272,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
               >
                 Undo
               </button>
-            ) : todo.start ? (
+            ) : todo.due ? (
               <>
                 <button
                   type="button"
@@ -304,19 +301,19 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                 <button
                   type="button"
                   onClick={() => {
-                    const snoozedStart = addDays(todo.start ?? new Date(), 1);
+                    const snoozedStart = addDays(todo.due ?? new Date(), 1);
 
                     void updateTodo({
                       variables: {
                         input: {
                           id: todo.id,
-                          data: { start: snoozedStart },
+                          data: { due: snoozedStart },
                         },
                       },
                       optimisticResponse: {
                         updateTodo: {
                           __typename: "UpdateTodoPayload",
-                          todo: { ...todo, start: snoozedStart },
+                          todo: { ...todo, due: snoozedStart },
                         },
                       },
                     });
@@ -332,12 +329,12 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                   onClick={() =>
                     void updateTodo({
                       variables: {
-                        input: { id: todo.id, data: { start: null } },
+                        input: { id: todo.id, data: { due: null } },
                       },
                       optimisticResponse: {
                         updateTodo: {
                           __typename: "UpdateTodoPayload",
-                          todo: { ...todo, start: null },
+                          todo: { ...todo, due: null },
                         },
                       },
                     })
@@ -355,12 +352,12 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                 onClick={() =>
                   void updateTodo({
                     variables: {
-                      input: { id: todo.id, data: { start: new Date() } },
+                      input: { id: todo.id, data: { due: new Date() } },
                     },
                     optimisticResponse: {
                       updateTodo: {
                         __typename: "UpdateTodoPayload",
-                        todo: { ...todo, start: new Date() },
+                        todo: { ...todo, due: new Date() },
                       },
                     },
                   })

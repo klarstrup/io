@@ -88,7 +88,6 @@ gql`
         deloadFactor
         baseWeight
         snoozedUntil
-        order
       }
     }
   }
@@ -119,123 +118,122 @@ gql`
           updatedAt
         }
       }
-      sleeps(interval: $interval) {
-        id
-        startedAt
-        endedAt
-        totalSleepTime
-        deviceId
-      }
-      nextSets {
-        id
-        workedOutAt
-        dueOn
-        exerciseId
-        successful
-        nextWorkingSets
-        nextWorkingSetInputs {
-          unit
-          value
-          assistType
-        }
-        exerciseSchedule {
+      journalEntries(interval: $interval) {
+        __typename
+        ... on Sleep {
           id
-          exerciseId
-          exerciseInfo {
-            id
-            aliases
-            name
-            isHidden
-            inputs {
-              type
-            }
-            instructions {
-              value
-            }
-            tags {
-              name
-              type
-            }
-          }
-          enabled
-          frequency {
-            years
-            months
-            weeks
-            days
-            hours
-            minutes
-            seconds
-          }
-          increment
-          workingSets
-          workingReps
-          deloadFactor
-          baseWeight
-          snoozedUntil
-          order
+          startedAt
+          endedAt
+          totalSleepTime
+          deviceId
         }
-      }
-      todos(interval: $interval) {
-        id
-        created
-        summary
-        start
-        due
-        completed
-        order
-      }
-      events(interval: $interval) {
-        id
-        created
-        summary
-        start
-        end
-        datetype
-        location
-        url
-        order
-      }
-      workouts(interval: $interval) {
-        id
-        createdAt
-        updatedAt
-        workedOutAt
-        materializedAt
-        locationId
-        source
-        exercises {
+        ... on NextSet {
+          id
+          lastWorkedOutAt
+          dueOn
           exerciseId
-          displayName
-          comment
-          exerciseInfo {
-            id
-            aliases
-            name
-            isHidden
-            inputs {
-              type
-            }
-            instructions {
-              value
-            }
-            tags {
-              name
-              type
-            }
+          successful
+          nextWorkingSets
+          nextWorkingSetInputs {
+            unit
+            value
+            assistType
           }
-          sets {
-            comment
-            createdAt
-            updatedAt
-            inputs {
-              unit
-              value
-              assistType
+          exerciseSchedule {
+            id
+            exerciseId
+            exerciseInfo {
+              id
+              aliases
+              name
+              isHidden
+              inputs {
+                type
+              }
+              instructions {
+                value
+              }
+              tags {
+                name
+                type
+              }
             }
-            meta {
-              key
-              value
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+          }
+        }
+        ... on Todo {
+          id
+          created
+          summary
+          due
+          completed
+        }
+        ... on Event {
+          id
+          created
+          summary
+          start: start
+          end
+          datetype
+          location
+          url
+        }
+        ... on Workout {
+          id
+          createdAt
+          updatedAt
+          workedOutAt
+          materializedAt
+          locationId
+          source
+          exercises {
+            exerciseId
+            displayName
+            comment
+            exerciseInfo {
+              id
+              aliases
+              name
+              isHidden
+              inputs {
+                type
+              }
+              instructions {
+                value
+              }
+              tags {
+                name
+                type
+              }
+            }
+            sets {
+              comment
+              createdAt
+              updatedAt
+              inputs {
+                unit
+                value
+                assistType
+              }
+              meta {
+                key
+                value
+              }
             }
           }
         }
@@ -313,181 +311,169 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     [fetchingInterval],
   );
 
-  const calendarEvents = data?.user?.events || emptyArray;
-  const calendarTodos = data?.user?.todos || emptyArray;
-  const workouts = data?.user?.workouts || emptyArray;
-  const nextSets = data?.user?.nextSets || emptyArray;
-  const sleeps = data?.user?.sleeps || emptyArray;
   const userLocations = data?.user?.locations || emptyArray;
+  const userJournalEntries = data?.user?.journalEntries || emptyArray;
 
   const journalEntriesByDate2 = useMemo(() => {
     const journalEntriesByDate: Record<string, JournalEntry[]> = {};
-
-    for (const dueSet of nextSets) {
-      const calName = dateToString(addHours(dueSet.dueOn, -dayStartHour));
-      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
-      journalEntriesByDate[calName].push(dueSet);
-    }
-
-    for (const sleep of sleeps) {
-      const calName = dateToString(addHours(sleep.endedAt, -dayStartHour));
-      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
-      journalEntriesByDate[calName].push(sleep);
-
-      const calName2 = dateToString(addHours(sleep.startedAt, -dayStartHour));
-      if (!journalEntriesByDate[calName2]) journalEntriesByDate[calName2] = [];
-      journalEntriesByDate[calName2].push(sleep);
-    }
-
-    for (const event of calendarEvents) {
-      const eventInterval = {
-        start: max(
-          [
-            subHours(
-              max(
-                [
-                  "datetype" in event && event.datetype === "date"
-                    ? roundToNearestDay(event.start, {
-                        in: tz(DEFAULT_TIMEZONE),
-                      })
-                    : null,
-
-                  "completed" in event ? event.completed : null,
-                  "due" in event ? event.due : null,
-                  "start" in event ? event.start : null,
-                  fetchingInterval.start,
-                ].filter(Boolean),
-              ),
-              dayStartHour,
-            ),
-            fetchingInterval.start,
-          ].filter(Boolean),
+    const addEntryToDate = (entry: JournalEntry, date: Date) => {
+      const calName = dateToString(
+        addHours(
+          date,
+          entry.__typename === "Sleep" ? -dayStartHour : dayStartHour,
         ),
-        end: min(
-          [
-            subHours(
-              min(
-                [
-                  "datetype" in event && event.datetype === "date"
-                    ? roundToNearestDay(event.end, {
-                        in: tz(DEFAULT_TIMEZONE),
-                      })
-                    : null,
-                  "completed" in event ? event.completed : null,
-                  "due" in event ? event.due : null,
-                  "end" in event ? event.end : null,
-                  fetchingInterval.end,
-                ].filter(Boolean),
+      );
+      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+      journalEntriesByDate[calName].push(entry);
+    };
+    for (const entry of userJournalEntries) {
+      if (entry.__typename === "NextSet") {
+        addEntryToDate(entry, entry.dueOn);
+      }
+
+      if (entry.__typename === "Sleep") {
+        addEntryToDate(entry, entry.startedAt);
+
+        // Hack for sleep ends as separate entries
+        addEntryToDate(
+          { ...entry, _this_is_the_end_of_a_sleep: true },
+          entry.endedAt,
+        );
+      }
+
+      if (entry.__typename === "Event") {
+        const eventInterval = {
+          start: max(
+            [
+              subHours(
+                max(
+                  [
+                    "datetype" in entry && entry.datetype === "date"
+                      ? roundToNearestDay(entry.start, {
+                          in: tz(DEFAULT_TIMEZONE),
+                        })
+                      : null,
+
+                    "completed" in entry ? entry.completed : null,
+                    "due" in entry ? entry.due : null,
+                    "start" in entry ? entry.start : null,
+                    fetchingInterval.start,
+                  ].filter(Boolean),
+                ),
+                dayStartHour,
               ),
-              dayStartHour,
-            ),
-            fetchingInterval.end,
-          ].filter(Boolean),
-        ),
-      };
+              fetchingInterval.start,
+            ].filter(Boolean),
+          ),
+          end: min(
+            [
+              subHours(
+                min(
+                  [
+                    "datetype" in entry && entry.datetype === "date"
+                      ? roundToNearestDay(entry.end, {
+                          in: tz(DEFAULT_TIMEZONE),
+                        })
+                      : null,
+                    "completed" in entry ? entry.completed : null,
+                    "due" in entry ? entry.due : null,
+                    "end" in entry ? entry.end : null,
+                    fetchingInterval.end,
+                  ].filter(Boolean),
+                ),
+                dayStartHour,
+              ),
+              fetchingInterval.end,
+            ].filter(Boolean),
+          ),
+        };
 
-      for (const date of eachDayOfInterval(eventInterval, {
-        in: tz(timeZone),
-      })) {
-        const dayStart = addHours(startOfDay(date), dayStartHour);
-        const dayEnd = addHours(endOfDay(date), dayStartHour);
+        for (const date of eachDayOfInterval(eventInterval, {
+          in: tz(timeZone),
+        })) {
+          const dayStart = addHours(startOfDay(date), dayStartHour);
+          const dayEnd = addHours(endOfDay(date), dayStartHour);
 
-        const calName = dateToString(addHours(date, dayStartHour));
+          if (entry.datetype === "date") {
+            if (
+              isBefore(dayEnd, addHours(entry.start, dayStartHour)) ||
+              isAfter(dayStart, addHours(entry.end, dayStartHour))
+            ) {
+              continue;
+            }
+          }
 
-        if (event.datetype === "date") {
           if (
-            isBefore(dayEnd, addHours(event.start, dayStartHour)) ||
-            isAfter(dayStart, addHours(event.end, dayStartHour))
+            entry.datetype !== "date" &&
+            "end" in entry &&
+            entry.end &&
+            isBefore(entry.end, dayEnd)
+          ) {
+            // Do not insert event start event if the event started on a previous day, but insert an event end event, so that the event appears as ongoing until the end time, but not as starting at the start time
+
+            if (
+              !("start" in entry) ||
+              !entry.start ||
+              isAfter(entry.start, dayStart)
+            ) {
+              addEntryToDate(entry, entry.start);
+            }
+
+            addEntryToDate(
+              { ...entry, _this_is_the_end_of_a_event: true },
+              entry.start,
+            );
+          } else {
+            addEntryToDate(entry, entry.start);
+          }
+        }
+      }
+
+      if (entry.__typename === "Todo") {
+        for (const date of eachDayOfInterval(
+          {
+            start: subHours(
+              max(
+                [entry.completed || entry.due, fetchingInterval.start].filter(
+                  Boolean,
+                ),
+              ),
+              dayStartHour,
+            ),
+            end: subHours(fetchingInterval.end, dayStartHour),
+          },
+          { in: tz(timeZone) },
+        )) {
+          const dayEnd = addHours(endOfDay(date), dayStartHour);
+
+          if (!entry.due && !entry.completed) {
+            // If not done and no due date, this is a backlog item
+            // we don't show in the diary
+            continue;
+          }
+          if (
+            (isPast(dayEnd) && !entry.completed) ||
+            Object.values(journalEntriesByDate)
+              .flat()
+              .some((e) => e.id === entry.id)
           ) {
             continue;
           }
-        }
-
-        if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
-        if (
-          event.datetype !== "date" &&
-          "end" in event &&
-          event.end &&
-          isBefore(event.end, dayEnd)
-        ) {
-          // Do not insert event start event if the event started on a previous day, but insert an event end event, so that the event appears as ongoing until the end time, but not as starting at the start time
-
-          if (
-            !("start" in event) ||
-            !event.start ||
-            isAfter(event.start, dayStart)
-          ) {
-            journalEntriesByDate[calName].push(event);
-          }
-
-          // TODO: This is unstable as it creates a new object that rerenders all downstream components
-          journalEntriesByDate[calName].push({
-            ...event,
-            _this_is_the_end_of_a_event: true,
-          });
-        } else {
-          journalEntriesByDate[calName].push(event);
+          addEntryToDate(entry, date);
         }
       }
-    }
 
-    for (const todo of calendarTodos) {
-      for (const date of eachDayOfInterval(
-        {
-          start: subHours(
-            max(
-              [
-                todo.completed || todo.due,
-                todo.completed || todo.start,
-                fetchingInterval.start,
-              ].filter(Boolean),
-            ),
-            dayStartHour,
-          ),
-          end: subHours(fetchingInterval.end, dayStartHour),
-        },
-        { in: tz(timeZone) },
-      )) {
-        const dayEnd = addHours(endOfDay(date), dayStartHour);
-
-        const calName = dateToString(addHours(date, dayStartHour));
-        if (!todo.start && !todo.due && !todo.completed) {
-          // If not done and no start or due date, this is a backlog item
-          // we don't show in the diary
-          continue;
-        }
-        if (
-          (isPast(dayEnd) && !todo.completed) ||
-          Object.values(journalEntriesByDate)
-            .flat()
-            .some((e) => e.id === todo.id)
-        ) {
-          continue;
-        }
-        if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
-        journalEntriesByDate[calName].push(todo);
+      if (entry.__typename === "Workout") {
+        addEntryToDate(entry, entry.workedOutAt);
       }
-    }
-
-    for (const workout of workouts) {
-      const calName = dateToString(
-        addHours(workout.workedOutAt, -dayStartHour),
-      );
-
-      if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
-      journalEntriesByDate[calName].push(workout);
     }
 
     return journalEntriesByDate;
   }, [
-    calendarEvents,
-    calendarTodos,
+    userJournalEntries,
     fetchingInterval.end,
     fetchingInterval.start,
-    nextSets,
-    sleeps,
     timeZone,
-    workouts,
   ]);
 
   const daysJournalEntries = useMemo(

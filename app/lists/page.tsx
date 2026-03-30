@@ -6,7 +6,7 @@ import { ListPageUserDocument } from "../../graphql.generated";
 import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
-import { useVisibilityAwarePollInterval } from "../../hooks";
+import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -16,7 +16,6 @@ gql`
       todos {
         id
         created
-        start
         due
         completed
         summary
@@ -28,21 +27,14 @@ gql`
 export default function ListPage() {
   const pollInterval = useVisibilityAwarePollInterval(300000);
   const { data, dataState } = useQuery(ListPageUserDocument, { pollInterval });
+  const now = useNow(60 * 1000);
 
   const calendarTodos = data?.user?.todos || [];
   const todos = calendarTodos
-    .filter((todo) => !todo.completed && (todo.start || todo.due))
+    .filter((todo) => !todo.completed && todo.due)
     .sort((a, b) => {
-      const aDate = a.start
-        ? new Date(a.start)
-        : a.due
-          ? new Date(a.due)
-          : null;
-      const bDate = b.start
-        ? new Date(b.start)
-        : b.due
-          ? new Date(b.due)
-          : null;
+      const aDate = a.due ? new Date(a.due) : null;
+      const bDate = b.due ? new Date(b.due) : null;
 
       if (aDate && bDate) {
         return bDate.getTime() - aDate.getTime();
@@ -61,7 +53,7 @@ export default function ListPage() {
         new Date(b.completed!).getTime() - new Date(a.completed!).getTime(),
     );
   const backlogTodos = calendarTodos
-    .filter((todo) => !todo.start && !todo.due && !todo.completed)
+    .filter((todo) => !todo.due && !todo.completed)
     .sort(
       (a, b) => new Date(b.created!).getTime() - new Date(a.created!).getTime(),
     );
@@ -80,7 +72,7 @@ export default function ListPage() {
         }
       >
         {todos.map((todo) => (
-          <DiaryAgendaDayTodo todo={todo} key={todo.id} />
+          <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
         ))}
         {dataState !== "complete" ? (
           <DiaryAgendaDayEntry iconTxt="⏳" className="min-h-8">
@@ -101,7 +93,7 @@ export default function ListPage() {
           }
         >
           {backlogTodos.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
           ))}
         </FieldSetY>
       )}
@@ -115,7 +107,7 @@ export default function ListPage() {
           }
         >
           {todones.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.id} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
           ))}
         </FieldSetY>
       )}

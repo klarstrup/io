@@ -13,14 +13,14 @@ import {
 import type {
   GQEvent,
   GQExerciseSchedule,
-  GQWorkoutExercise,
   GQNextSet,
   GQSleep,
   GQTodo,
   GQWorkout,
+  GQWorkoutExercise,
   GQWorkoutSet,
 } from "../../graphql.generated";
-import {
+import type {
   WorkoutData,
   WorkoutExercise,
   WorkoutExerciseSet,
@@ -35,11 +35,14 @@ export type JournalEntry =
   | GQWorkout
   | GQExerciseSchedule
   | GQSleep
+  | (GQSleep & { _this_is_the_end_of_a_sleep: true })
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | { __typename: "LocationChange"; id: string; location: string; date: Date }
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
 
-const getWorkoutPrincipalDate = (workout: WorkoutData | GQWorkout): Interval => {
+const getWorkoutPrincipalDate = (
+  workout: WorkoutData | GQWorkout,
+): Interval => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
     start: addHours(
@@ -93,7 +96,7 @@ const getWorkoutPrincipalDate = (workout: WorkoutData | GQWorkout): Interval => 
 };
 
 export const getTodoPrincipalDate = (
-  todo: Partial<Pick<GQTodo, "completed" | "due" | "start">>,
+  todo: Partial<Pick<GQTodo, "completed" | "due">>,
 ): Interval | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (todo.completed)
@@ -101,11 +104,12 @@ export const getTodoPrincipalDate = (
       start: todo.completed,
       end: todo.completed,
     };
-  if (todo.start)
+  if (todo.due) {
     return {
-      start: max([todo.start, slightlyIntoTheFuture]),
-      end: max([todo.start, slightlyIntoTheFuture]),
+      start: max([todo.due, slightlyIntoTheFuture]),
+      end: max([todo.due, slightlyIntoTheFuture]),
     };
+  }
   return { start: slightlyIntoTheFuture, end: slightlyIntoTheFuture };
 };
 
@@ -113,10 +117,10 @@ export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Interval | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
-  if ("__typename" in entry && entry.__typename === "Todo") {
+  if (entry.__typename === "Todo") {
     return getTodoPrincipalDate(entry);
   }
-  if ("__typename" in entry && entry.__typename === "Sleep") {
+  if (entry.__typename === "Sleep") {
     return { start: entry.startedAt, end: entry.endedAt };
   }
   if (

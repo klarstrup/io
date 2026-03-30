@@ -14,13 +14,11 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 export default function DiaryAgendaDaySleep({
   sleep,
   user,
-  isFirstEntry,
   principalDate,
   cotemporalityOfSurroundingEvent,
 }: {
-  sleep: GQSleep;
+  sleep: GQSleep | (GQSleep & { _this_is_the_end_of_a_sleep: true });
   user?: Pick<GQUser, "timeZone">;
-  isFirstEntry?: boolean;
   principalDate?: ReturnType<typeof getJournalEntryPrincipalDate>;
   cotemporalityOfSurroundingEvent?: "current" | "past" | "future" | null;
 }) {
@@ -40,10 +38,13 @@ export default function DiaryAgendaDaySleep({
     setIsOpen((open) => !open);
   }, []);
 
+  const isSleepEnd =
+    "_this_is_the_end_of_a_sleep" in sleep && sleep._this_is_the_end_of_a_sleep;
+
   return (
     <DiaryAgendaDayEntry
       // TODO: smarter way of determining if it's waking up or going to sleep
-      icon={!isFirstEntry ? faBed : faBedPulse}
+      icon={isSleepEnd ? faBedPulse : faBed}
       cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       key={sleep.id}
@@ -59,25 +60,21 @@ export default function DiaryAgendaDaySleep({
           </div>
         ) : null}
         <div className="text-center font-semibold tabular-nums">
-          {isFirstEntry
-            ? new Date(sleep.endedAt).toLocaleTimeString("en-DK", {
+          {!isSleepEnd
+            ? new Date(sleep.startedAt).toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",
                 timeZone,
               })
-            : new Date(sleep.startedAt).toLocaleTimeString("en-DK", {
+            : new Date(sleep.endedAt).toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",
                 timeZone,
               })}
         </div>{" "}
         <div className="flex items-baseline gap-2">
-          {!isFirstEntry ? (
-            <span>Went to bed</span>
-          ) : (
-            <span>Got out of bed</span>
-          )}
-          {isFirstEntry ? (
+          {!isSleepEnd ? <span>Went to bed</span> : <span>Got out of bed</span>}
+          {isSleepEnd ? (
             <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
               {duration ? <>{formatShortDuration(duration)} slept</> : null}
             </span>

@@ -120,6 +120,7 @@ export function DiaryAgendaDayDay({
           <DiaryAgendaDayNow
             key="now-divider"
             date={date}
+            now={now}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
           />
         ),
@@ -138,8 +139,6 @@ export function DiaryAgendaDayDay({
         : null;
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
-
-      const isFirstEntry = !precedingJournalEntry;
 
       const previousEvents = dayJournalEntries
         .slice(0, i)
@@ -198,7 +197,6 @@ export function DiaryAgendaDayDay({
             <DiaryAgendaDaySleep
               sleep={sleep}
               user={user}
-              isFirstEntry={isFirstEntry}
               principalDate={principalDate}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
               key={sleep.id}
@@ -434,6 +432,7 @@ export function DiaryAgendaDayDay({
               todo={todo}
               key={todo.id}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+              now={now}
             />
           ),
         });

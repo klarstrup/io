@@ -23,7 +23,6 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
             id
             created
             summary
-            start
             due
             completed
           }
@@ -48,7 +47,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
                   line.startsWith("▢") ? line.replace(/^(▢)/, "- [ ]") : line,
                 )
                 .join("\n"),
-              start: date,
+              due: date,
             },
           },
         },

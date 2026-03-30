@@ -244,7 +244,13 @@ export async function getUserIcalTodosBetween(
             ? todo.completed >= start && todo.completed <= end
             : true
     ) {
-      eventsThatFallWithinRange.push(omit(todo, "_id") as MongoVTodo);
+      eventsThatFallWithinRange.push(
+        omit(
+          { ...todo, due: todo.due || todo.start || todo.due },
+          "_id",
+          "start",
+        ) as MongoVTodo,
+      );
     }
   }
 

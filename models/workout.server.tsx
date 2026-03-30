@@ -45,7 +45,7 @@ export const MaterializedWorkoutsView = proxyCollection<
 
 export type NextSetResult = {
   id: `next-${string}`;
-  workedOutAt: Date | null;
+  lastWorkedOutAt: Date | null;
   dueOn: Date;
   exerciseId: number;
   successful: boolean;
@@ -111,7 +111,7 @@ export function computeNextSetFromWorkout(
       const successful = successfulSets.length >= exerciseSchedule.workingSets;
       return {
         id,
-        workedOutAt: workout.workedOutAt,
+        lastWorkedOutAt: workout.workedOutAt,
         dueOn,
         exerciseId: exerciseSchedule.exerciseId,
         successful,
@@ -123,7 +123,7 @@ export function computeNextSetFromWorkout(
 
     return {
       id,
-      workedOutAt: workout?.workedOutAt ?? null,
+      lastWorkedOutAt: workout?.workedOutAt ?? null,
       dueOn,
       exerciseId: exerciseSchedule.exerciseId,
       successful: true,
@@ -266,7 +266,7 @@ export function computeNextSetFromWorkout(
 
   return {
     id,
-    workedOutAt: workout?.workedOutAt ?? null,
+    lastWorkedOutAt: workout?.workedOutAt ?? null,
     dueOn,
     exerciseId: exerciseSchedule.exerciseId,
     successful: successful ?? false,

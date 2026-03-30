@@ -25,6 +25,7 @@ import type { ReactNode } from "react";
 import {
   type GQNextSet,
   type GQTodo,
+  type GQUpdateTodoInput,
   type GQWorkout,
   SnoozeExerciseScheduleDocument,
   UpdateTodoDocument,
@@ -221,7 +222,6 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           sortableId,
         ): readonly [string, JournalEntry | typeof NOW_SYMBOL] | null => {
           let item: JournalEntry | typeof NOW_SYMBOL | undefined;
-          if (sortableId === "now-divider") item = NOW_SYMBOL;
 
           if (sortableId.startsWith("end-of-Event:")) {
             item = sortableItemsFromCache?.find(
@@ -232,6 +232,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           item = sortableItemsFromCache?.find(
             ([key]) => sortableId.startsWith(key) || key === sortableId,
           )?.[1];
+
+          if (sortableId === "now-divider") item = NOW_SYMBOL;
 
           if (!item) return null;
 
@@ -320,9 +322,9 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
       if (isFuture(targetDate)) {
         const updatedTodo = {
-          start: targetDate,
+          due: targetDate,
           completed: null,
-        } as const;
+        } satisfies GQUpdateTodoInput["data"];
 
         void updateTodo({
           variables: {
