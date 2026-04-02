@@ -275,7 +275,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const timeZoneDate = useMemo(() => TZDate.tz(timeZone), [timeZone]);
-  const now = dayDate || timeZoneDate;
+  const now = dayDate ? addHours(dayDate, dayStartHour) : timeZoneDate;
   const startOfAgendaDay = useMemo(
     () => startOfDayButItRespectsDayStartHour(now),
     [now],
@@ -289,10 +289,10 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const fetchingInterval = useMemo(
     () => ({
       start: dayDate
-        ? addHours(dayDate, dayStartHour)
-        : addHours(addDays(startOfDay(tzDate), -8), dayStartHour),
+        ? tzDate
+        : addDays(startOfDayButItRespectsDayStartHour(tzDate), -8),
       end: dayDate
-        ? addHours(endOfDay(dayDate), dayStartHour)
+        ? endOfDayButItRespectsDayStartHour(tzDate)
         : addDays(endOfDayButItRespectsDayStartHour(tzDate), 14),
     }),
     [dayDate, tzDate],
