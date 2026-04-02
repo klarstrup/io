@@ -258,8 +258,8 @@ export async function getUserIcalTodosBetween(
     if (a.completed && !b.completed) return 1;
     if (!a.completed && b.completed) return -1;
     return compareAsc(
-      a.completed || a.start || a.created!,
-      b.completed || b.start || b.created!,
+      a.completed || a.start || a.due || a.created!,
+      b.completed || b.start || b.due || b.created!,
     );
   });
 }
