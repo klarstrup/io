@@ -57,7 +57,7 @@ export const typePolicies: TypePolicies = {
   },
   NextSet: {
     fields: {
-      workedOutAt: { read: readDate },
+      lastWorkedOutAt: { read: readDate },
       dueOn: { read: readDate },
     },
   },
