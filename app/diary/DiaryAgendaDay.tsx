@@ -317,12 +317,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const journalEntriesByDate2 = useMemo(() => {
     const journalEntriesByDate: Record<string, JournalEntry[]> = {};
     const addEntryToDate = (entry: JournalEntry, date: Date) => {
-      const calName = dateToString(
-        addHours(
-          date,
-          entry.__typename === "Sleep" ? -dayStartHour : dayStartHour,
-        ),
-      );
+      const calName = dateToString(startOfDayButItRespectsDayStartHour(date));
       if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
       journalEntriesByDate[calName].push(entry);
     };
@@ -430,6 +425,9 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       }
 
       if (entry.__typename === "Todo") {
+        // If not done and no due date, this is a backlog item, we don't show in the diary
+        if (!entry.due && !entry.completed) continue;
+
         for (const date of eachDayOfInterval(
           {
             start: subHours(
@@ -444,13 +442,8 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           },
           { in: tz(timeZone) },
         )) {
-          const dayEnd = addHours(endOfDay(date), dayStartHour);
+          const dayEnd = endOfDayButItRespectsDayStartHour(date);
 
-          if (!entry.due && !entry.completed) {
-            // If not done and no due date, this is a backlog item
-            // we don't show in the diary
-            continue;
-          }
           if (
             (isPast(dayEnd) && !entry.completed) ||
             Object.values(journalEntriesByDate)
@@ -459,7 +452,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           ) {
             continue;
           }
-          addEntryToDate(entry, date);
+          addEntryToDate(entry, entry.completed || entry.due || date);
         }
       }
 
