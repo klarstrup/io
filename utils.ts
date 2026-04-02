@@ -435,6 +435,11 @@ function calculate(
   );
 }
 
+export const isUTCMidnight = (date: Date) =>
+  date.getUTCHours() === 0 &&
+  date.getUTCMinutes() === 0 &&
+  date.getUTCSeconds() === 0;
+
 /**
  * Calculate Sunrise time for given longitude, latitude, zenith and date
  */

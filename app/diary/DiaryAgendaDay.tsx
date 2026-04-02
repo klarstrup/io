@@ -26,6 +26,7 @@ import {
   type GQLocation,
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
+import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
   dateMidpoint,
@@ -34,6 +35,7 @@ import {
   DEFAULT_TIMEZONE,
   emptyArray,
   endOfDayButItRespectsDayStartHour,
+  isUTCMidnight,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -419,7 +421,12 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               entry.start,
             );
           } else {
-            addEntryToDate(entry, entry.start);
+            addEntryToDate(
+              entry,
+              entry.datetype === "date" && isUTCMidnight(entry.start)
+                ? addHours(entry.start, dayStartHour)
+                : entry.start,
+            );
           }
         }
       }
@@ -457,7 +464,13 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       }
 
       if (entry.__typename === "Workout") {
-        addEntryToDate(entry, entry.workedOutAt);
+        addEntryToDate(
+          entry,
+          entry.source === WorkoutSource.Self &&
+            isUTCMidnight(entry.workedOutAt)
+            ? addHours(entry.workedOutAt, dayStartHour)
+            : entry.workedOutAt,
+        );
       }
     }
 
