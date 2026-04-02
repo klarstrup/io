@@ -13,7 +13,6 @@ import {
   intervalToDuration,
   isBefore,
   roundToNearestMinutes,
-  startOfDay,
 } from "date-fns";
 import { useMemo } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated";
@@ -59,15 +58,13 @@ export function DiaryAgendaDayEvent({
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
 
-  const dayStart = addHours(startOfDay(dayDate), dayStartHour);
+  const dayStart = addHours(dayDate, dayStartHour);
 
   const isPassed = isBefore(event.end, now);
 
   const duration = intervalToDuration({
     start: event.start,
-    end: roundToNearestMinutes(event.end, {
-      roundingMethod: "ceil",
-    }),
+    end: roundToNearestMinutes(event.end, { roundingMethod: "ceil" }),
   });
   const startDay = startOfDayButItRespectsDayStartHour(event.start);
   const endDay = startOfDayButItRespectsDayStartHour(event.end);

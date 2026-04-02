@@ -6,13 +6,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addHours,
   differenceInDays,
-  endOfDay,
   isBefore,
   isEqual,
   isPast,
   roundToNearestMinutes,
   startOfDay,
-  subHours,
   type Interval,
 } from "date-fns";
 import Link from "next/link";
@@ -33,6 +31,7 @@ import {
   dayStartHour,
   DEFAULT_TIMEZONE,
   emptyArray,
+  endOfDayButItRespectsDayStartHour,
   isSameDayButItRespectsDayStartHour,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
@@ -78,10 +77,7 @@ export function DiaryAgendaDayDay({
   const isSSR = useIsSSR();
   const client = useApolloClient();
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const todayStr = useMemo(
-    () => dateToString(subHours(new Date(), dayStartHour)),
-    [],
-  );
+  const todayStr = useMemo(() => dateToString(startOfDay(new Date())), []);
   const isToday = date === todayStr;
   const now = useNow(isToday ? 60 * 1000 : 60 * 60 * 1000);
   const ref = useRef<HTMLFieldSetElement>(null);
@@ -92,13 +88,10 @@ export function DiaryAgendaDayDay({
     ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
   }, [isToday, isSSR, dayJournalEntries.length]);
 
-  const dayStart = useMemo(
-    () => addHours(startOfDay(dayDate), dayStartHour),
-    [dayDate],
-  );
+  const dayStart = useMemo(() => addHours(dayDate, dayStartHour), [dayDate]);
   const dayEnd = useMemo(
-    () => addHours(endOfDay(dayDate), dayStartHour),
-    [dayDate],
+    () => endOfDayButItRespectsDayStartHour(dayStart),
+    [dayStart],
   );
   const dayName = dateToString(dayDate);
 

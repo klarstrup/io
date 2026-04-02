@@ -520,9 +520,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
         dayJournalEntriesList,
       ) => {
         const dayStart = addHours(startOfDay(dayDate), dayStartHour);
-        const dayEnd = addHours(endOfDay(dayDate), dayStartHour);
-
-        const dayName = dateToString(dayDate);
+        const dayEnd = endOfDayButItRespectsDayStartHour(dayStart);
 
         const dayJournalEntriesIncludingLocationChanges: typeof dayJournalEntries =
           [];
@@ -565,7 +563,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
             dayJournalEntriesIncludingLocationChanges.push({
               __typename: "LocationChange",
-              id: `location-change-${dayName}-${i}`,
+              id: `location-change-${targetDate.toISOString()}`,
               location: location.name,
               date: targetDate,
             });

@@ -10,7 +10,6 @@ import {
   isEqual,
   isFuture,
   startOfDay,
-  subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
 import Link from "next/link";
@@ -36,6 +35,7 @@ import {
   dateToString,
   dayStartHour,
   epoch,
+  startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
@@ -227,7 +227,9 @@ export function DiaryAgendaDayDueSet({
       // Hidden exercises cannot be manually logged
       if (exerciseInfo.isHidden) return;
 
-      const dateStr = dateToString(subHours(new Date(), dayStartHour));
+      const dateStr = dateToString(
+        startOfDayButItRespectsDayStartHour(new Date()),
+      );
       const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
       router.push(`/diary/${dateStr}/workout?${searchStr}`);
     },
@@ -402,7 +404,7 @@ export function DiaryAgendaDayDueSet({
                   const selectedExistingWorkout = select.value || null;
 
                   const dateStr = dateToString(
-                    subHours(new Date(), dayStartHour),
+                    startOfDayButItRespectsDayStartHour(new Date()),
                   );
                   const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
                   router.push(
