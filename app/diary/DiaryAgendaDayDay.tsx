@@ -199,7 +199,10 @@ export function DiaryAgendaDayDay({
               user={user}
               principalDate={principalDate}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-              key={sleep.id}
+              key={
+                sleep.id +
+                ("_this_is_the_end_of_a_sleep" in sleep ? "-end" : "")
+              }
             />
           ),
         });
