@@ -527,7 +527,7 @@ export function DiaryAgendaDayDay({
   return (
     <>
       <div
-        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 leading-normal"
+        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 leading-normal pr-2"
         style={{
           textShadow:
             "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
