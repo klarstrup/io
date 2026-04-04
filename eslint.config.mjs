@@ -4,9 +4,7 @@ import prettier from "eslint-config-prettier/flat";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 const eslintConfig = defineConfig([
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   ...nextVitals,
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   ...nextTs,
   prettier,
   {

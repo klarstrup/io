@@ -36,7 +36,7 @@ type PolymorphicComponentProp<
 
 type PolymorphicComponentPropWithRef<
   T extends ElementType,
-  Props = object,
+  Props = MasonryOwnProps<T>,
 > = PolymorphicComponentProp<T, Props> & { ref?: PolymorphicRef<T> };
 
 type PolymorphicRef<T extends ElementType> = ComponentPropsWithRef<T>["ref"];
@@ -46,20 +46,9 @@ type MasonryOwnProps<T extends ElementType> = {
   gap?: number;
   rowProps?: PolymorphicComponentPropWithRef<T>;
 };
-type MasonryProps<T extends ElementType> = PolymorphicComponentPropWithRef<
-  T,
-  MasonryOwnProps<T>
->;
+type MasonryProps<T extends ElementType> = PolymorphicComponentPropWithRef<T>;
 
-interface MasonryItemContextValues {
-  row: number;
-  position: number;
-}
-
-const MasonryItemContext = createContext<MasonryItemContextValues>({
-  row: NaN,
-  position: NaN,
-});
+const MasonryItemContext = createContext({ row: NaN, position: NaN });
 
 const isBrowser = typeof window !== "undefined";
 

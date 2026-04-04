@@ -19,10 +19,10 @@ export function useEvent<TCallback extends AnyFunction>(
   callback: TCallback,
 ): TCallback {
   // Keep track of the latest callback:
-  const latestRef = useRef<TCallback>(
-    process.env.NODE_ENV === "production"
-      ? (useEvent_shouldNotBeInvokedBeforeMount as TCallback)
-      : (undefined as unknown as TCallback),
+  const latestRef = useRef(
+    (process.env.NODE_ENV === "production"
+      ? useEvent_shouldNotBeInvokedBeforeMount
+      : (undefined as unknown)) as TCallback,
   );
   useInsertionEffect(() => {
     latestRef.current = callback;
@@ -30,7 +30,7 @@ export function useEvent<TCallback extends AnyFunction>(
 
   // Create a stable callback that always calls the latest callback:
   // using useRef instead of useCallback avoids creating and empty array on every render
-  const stableRef = useRef<TCallback>(null as unknown as TCallback);
+  const stableRef = useRef(null as unknown as TCallback);
   if (!stableRef.current) {
     // eslint-disable-next-line react-hooks/unsupported-syntax
     stableRef.current = function (this: unknown) {

@@ -629,7 +629,7 @@ export const colorNameToHTMLColor = (color?: string) =>
                   : color;
 
 const getAverage = (arr: Array<number>) =>
-  arr.reduce<number>((acc, c) => acc + c, 0) / arr.length;
+  arr.reduce((acc, c) => acc + c, 0) / arr.length;
 
 export const getSum = (arr: Array<number>) =>
   arr.reduce((acc, c) => acc + c, 0);

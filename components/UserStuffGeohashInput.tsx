@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react";
 import { encodeGeohash } from "../utils";
 
@@ -6,9 +5,9 @@ export function UserStuffGeohashInput(props: {
   geohash: string | null;
   onGeohashChange: (geohash: string) => void;
 }) {
-  const [geohash, setGeohash] = useState<string | null>(props.geohash ?? null);
+  const [geohash, setGeohash] = useState(props.geohash ?? null);
   const [isGettingCurrentPosition, setIsGettingCurrentPosition] =
-    useState<boolean>(false);
+    useState(false);
 
   return (
     <>
