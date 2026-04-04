@@ -449,6 +449,27 @@ export const useNow = (updateInterval = 500) => {
   return now;
 };
 
+const getChanges = (
+  prev: Record<string, unknown>,
+  current: Record<string, unknown>,
+) => {
+  // Get all keys from previous and current props
+  const allKeys = Object.keys({ ...prev, ...current });
+  // Use this object to keep track of changed props
+  const changesObj: Record<string, unknown> = {};
+  // Iterate through keys
+  for (const key of allKeys) {
+    // If previous is different from current
+    const previousValue = prev[key];
+    const currentValue = current[key];
+    // Add to changesObj
+    if (previousValue !== currentValue) {
+      changesObj[key] = { from: previousValue, to: currentValue };
+    }
+  }
+  return changesObj;
+};
+
 /** Performance debugging hook to help identify why a component/hook is updating. */
 export function useWhyDidYouUpdate(
   name: string,
@@ -459,19 +480,7 @@ export function useWhyDidYouUpdate(
 
   useEffect(() => {
     if (previousProps.current) {
-      // Get all keys from previous and current props
-      const allKeys = Object.keys({ ...previousProps.current, ...props });
-      // Use this object to keep track of changed props
-      const changesObj: Record<string, unknown> = {};
-      // Iterate through keys
-      for (const key of allKeys) {
-        // If previous is different from current
-        const previousValue = previousProps.current[key];
-        const currentValue = props[key];
-        // Add to changesObj
-        if (previousValue !== currentValue)
-          changesObj[key] = { from: previousValue, to: currentValue };
-      }
+      const changesObj = getChanges(previousProps.current, props);
 
       // If changesObj not empty then output to console
       if (Object.keys(changesObj).length) {
