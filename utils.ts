@@ -786,3 +786,122 @@ export function haptic(pattern: number | number[] = 50) {
 
 export const emptyArray = [];
 export const emptyObject = {};
+
+export const omitUndefined = <T extends object>(obj: T): Required<T> => {
+  const ret = {} as Required<T>;
+  for (const key in obj) {
+    const value = obj[key];
+    if (value !== undefined) ret[key] = value as NonNullable<T[typeof key]>;
+  }
+  return ret;
+};
+
+export interface DifferenceCreate {
+  type: "CREATE";
+  path: (string | number)[];
+  value: unknown;
+}
+
+export interface DifferenceRemove {
+  type: "REMOVE";
+  path: (string | number)[];
+  oldValue: unknown;
+}
+
+export interface DifferenceChange {
+  type: "CHANGE";
+  path: (string | number)[];
+  value: unknown;
+  oldValue: unknown;
+}
+
+export type Difference = DifferenceCreate | DifferenceRemove | DifferenceChange;
+
+interface Options {
+  cyclesFix: boolean;
+}
+
+const richTypes = { Date: true, RegExp: true, String: true, Number: true };
+
+export default function diff(
+  obj: Record<string, unknown> | unknown[],
+  newObj: Record<string, unknown> | unknown[],
+  options: Partial<Options> = { cyclesFix: true },
+  _stack: Record<string, unknown>[] = [],
+): Difference[] {
+  const diffs: Difference[] = [];
+  const isObjArray = Array.isArray(obj);
+
+  // eslint-disable-next-line @typescript-eslint/no-for-in-array
+  for (const key in obj) {
+    const objKey = obj[key as keyof typeof obj];
+    const path = isObjArray ? +key : key;
+    if (!(key in newObj)) {
+      diffs.push({
+        type: "REMOVE",
+        path: [path],
+        oldValue: obj[key as keyof typeof obj],
+      });
+      continue;
+    }
+    const newObjKey = newObj[key as keyof typeof newObj];
+    const areCompatibleObjects =
+      typeof objKey === "object" &&
+      typeof newObjKey === "object" &&
+      Array.isArray(objKey) === Array.isArray(newObjKey);
+    if (
+      objKey &&
+      newObjKey &&
+      areCompatibleObjects &&
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      !richTypes[Object.getPrototypeOf(objKey)?.constructor?.name] &&
+      (!options.cyclesFix ||
+        !_stack.includes(objKey as Record<string, unknown>))
+    ) {
+      diffs.push(
+        ...diff(
+          objKey as Record<string, unknown>,
+          newObjKey as Record<string, unknown>,
+          options,
+          options.cyclesFix
+            ? _stack.concat([objKey as Record<string, unknown>])
+            : [],
+        ).map((difference) => {
+          difference.path.unshift(path);
+          return difference;
+        }),
+      );
+    } else if (
+      objKey !== newObjKey &&
+      // treat NaN values as equivalent
+      !(Number.isNaN(objKey) && Number.isNaN(newObjKey)) &&
+      !(
+        areCompatibleObjects &&
+        (isNaN(objKey as unknown as number)
+          ? // eslint-disable-next-line @typescript-eslint/no-base-to-string
+            objKey?.toString() === newObjKey?.toString()
+          : Number(objKey) === Number(newObjKey))
+      )
+    ) {
+      diffs.push({
+        path: [path],
+        type: "CHANGE",
+        value: newObjKey,
+        oldValue: objKey,
+      });
+    }
+  }
+
+  const isNewObjArray = Array.isArray(newObj);
+  // eslint-disable-next-line @typescript-eslint/no-for-in-array
+  for (const key in newObj) {
+    if (!(key in obj)) {
+      diffs.push({
+        type: "CREATE",
+        path: [isNewObjArray ? +key : key],
+        value: newObj[key as keyof typeof newObj],
+      });
+    }
+  }
+  return diffs;
+}
