@@ -699,12 +699,19 @@ export const resolvers: GQResolvers<
             __typename: "Workout",
           }) satisfies GQWorkout,
       ),
-    nextSets: async (parent, _args, context) => {
+    nextSets: async (parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
-      if (!user.exerciseSchedules?.length) return [];
+      const exerciseSchedules = user.exerciseSchedules?.filter(
+        (s) =>
+          s.enabled &&
+          (args.exerciseId ? args.exerciseId === s.exerciseId : true),
+      );
+      if (!exerciseSchedules?.length) return [];
 
-      const nextSetsRaw = await getNextSets(user.id, user.exerciseSchedules);
+      const nextSetsRaw = await getNextSets(user.id, exerciseSchedules, {
+        asOf: args.asOf,
+      });
       return nextSetsRaw.map((nextSet) => ({
         ...nextSet,
         __typename: "NextSet",
@@ -1243,7 +1250,7 @@ export const typeDefs = gql`
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
-    nextSets: [NextSet!]
+    nextSets(exerciseId: Int, asOf: Date): [NextSet!]
     exerciseSchedules: [ExerciseSchedule!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]

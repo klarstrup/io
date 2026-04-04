@@ -355,6 +355,12 @@ export type GQUserJournalEntriesArgs = {
 };
 
 
+export type GQUserNextSetsArgs = {
+  asOf?: InputMaybe<Scalars['Date']['input']>;
+  exerciseId?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type GQUserSleepsArgs = {
   interval: GQIntervalInput;
 };
@@ -948,7 +954,7 @@ export type GQUserResolvers<ContextType = any, ParentType extends GQResolversPar
   journalEntries?: Resolver<Maybe<Array<GQResolversTypes['JournalEntry']>>, ParentType, ContextType, RequireFields<GQUserJournalEntriesArgs, 'interval'>>;
   locations?: Resolver<Maybe<Array<GQResolversTypes['Location']>>, ParentType, ContextType>;
   name?: Resolver<GQResolversTypes['String'], ParentType, ContextType>;
-  nextSets?: Resolver<Maybe<Array<GQResolversTypes['NextSet']>>, ParentType, ContextType>;
+  nextSets?: Resolver<Maybe<Array<GQResolversTypes['NextSet']>>, ParentType, ContextType, Partial<GQUserNextSetsArgs>>;
   pastBusynessFraction?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;
   sleepDebt?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;
   sleepDebtFraction?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;

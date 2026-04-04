@@ -284,6 +284,7 @@ interface GetNextSetsDoc {
 export const getNextSets = async (
   userId: Session["user"]["id"],
   exerciseSchedules: ExerciseSchedule[],
+  { asOf }: { asOf?: Date | null } = {},
 ): Promise<NextSetResult[]> => {
   const enabled = exerciseSchedules.filter((s) => s.enabled);
   if (enabled.length === 0) return [];
@@ -296,7 +297,10 @@ export const getNextSets = async (
     await MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
       {
         $match: {
-          workedOutAt: { $gte: addQuarters(new Date(), -1) },
+          workedOutAt: {
+            $gte: addQuarters(new Date(), -1),
+            $lte: asOf ?? new Date(),
+          },
           userId,
           "exercises.exerciseId": { $in: enabledExerciseIds },
         },
