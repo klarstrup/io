@@ -46,7 +46,7 @@ import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
-import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkoutSet";
+import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
 import { TodoSortableContext } from "./TodoDroppable";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
 
