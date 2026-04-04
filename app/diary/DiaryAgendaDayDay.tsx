@@ -553,6 +553,7 @@ export function DiaryAgendaDayDay({
               isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"
             }
           >
+            <DiaryAgendaDayCreateTodo date={dayStart} />
             {isPast(dayStart) ? (
               <>
                 <Link
@@ -566,7 +567,6 @@ export function DiaryAgendaDayDay({
                 </Link>
               </>
             ) : null}
-            <DiaryAgendaDayCreateTodo date={dayStart} />
             <span
               hidden
               className={

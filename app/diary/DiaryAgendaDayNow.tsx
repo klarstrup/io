@@ -53,6 +53,7 @@ export function DiaryAgendaDayNow({
       {...listeners}
       {...attributes}
     >
+      <DiaryAgendaDayCreateTodo date={new Date()} />
       <Link
         prefetch={false}
         href={`/diary/${date}/workout`}
@@ -62,7 +63,6 @@ export function DiaryAgendaDayNow({
       >
         <span className="text-xs">➕</span> Workout
       </Link>
-      <DiaryAgendaDayCreateTodo date={new Date()} />
       <span
         hidden
         className={
