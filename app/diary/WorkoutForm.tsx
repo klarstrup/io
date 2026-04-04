@@ -133,11 +133,11 @@ export function WorkoutForm<R extends string>({
 
   const { data: nextSetsData, client } = useQuery<GQWorkoutFormNextSetsQuery>(
     gql`
-      query WorkoutFormNextSets {
+      query WorkoutFormNextSets($asOf: Date!, $exerciseIds: [Int!]) {
         user {
           id
           timeZone
-          nextSets {
+          nextSets(asOf: $asOf, exerciseIds: $exerciseIds) {
             id
             lastWorkedOutAt
             dueOn
@@ -190,6 +190,11 @@ export function WorkoutForm<R extends string>({
         }
       }
     `,
+    {
+      variables: {
+        asOf: workout?.workedOutAt,
+      },
+    },
   );
 
   const nextSets = nextSetsData?.user?.nextSets?.filter(Boolean);

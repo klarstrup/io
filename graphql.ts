@@ -705,7 +705,7 @@ export const resolvers: GQResolvers<
       const exerciseSchedules = user.exerciseSchedules?.filter(
         (s) =>
           s.enabled &&
-          (args.exerciseId ? args.exerciseId === s.exerciseId : true),
+          (args.exerciseIds ? args.exerciseIds.includes(s.exerciseId) : true),
       );
       if (!exerciseSchedules?.length) return [];
 
@@ -1250,7 +1250,7 @@ export const typeDefs = gql`
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
-    nextSets(exerciseId: Int, asOf: Date): [NextSet!]
+    nextSets(exerciseIds: [Int!], asOf: Date): [NextSet!]
     exerciseSchedules: [ExerciseSchedule!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
