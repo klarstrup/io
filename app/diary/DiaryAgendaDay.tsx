@@ -291,7 +291,9 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const fetchingInterval = useMemo(
     () => ({
       start: dayDate
-        ? tzDate
+        ? // Slight overfetching to get all-day events that are marked as starting on midnight, regardless of dayStartHour
+          // TODO: Make this getUserIcalEventsBetween's concern. These all-day events fall withing the interval, it just isn't that simple because of the RRule logic in getUserIcalEventsBetween
+          startOfDay(tzDate)
         : addDays(startOfDayButItRespectsDayStartHour(tzDate), -8),
       end: dayDate
         ? endOfDayButItRespectsDayStartHour(tzDate)
@@ -423,7 +425,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           } else {
             addEntryToDate(
               entry,
-              entry.datetype === "date" && isUTCMidnight(entry.start)
+              entry.datetype === "date"
                 ? addHours(entry.start, dayStartHour)
                 : entry.start,
             );
