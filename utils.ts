@@ -705,8 +705,8 @@ export const isSameDayButItRespectsDayStartHour = (
     startOfDayButItRespectsDayStartHour(new Date(dateRight)),
   );
 
-export const startOfDayButItRespectsDayStartHour = (date: Date) =>
-  new Date(
+export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
+  new TZDate(
     date.getFullYear(),
     date.getMonth(),
     date.getHours() >= dayStartHour ? date.getDate() : date.getDate() - 1,
@@ -714,10 +714,11 @@ export const startOfDayButItRespectsDayStartHour = (date: Date) =>
     0,
     0,
     0,
+    "timeZone" in date ? date.timeZone : undefined,
   );
 
-export const endOfDayButItRespectsDayStartHour = (date: Date) =>
-  new Date(
+export const endOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
+  new TZDate(
     date.getFullYear(),
     date.getMonth(),
     date.getHours() >= dayStartHour ? date.getDate() + 1 : date.getDate(),
@@ -725,6 +726,7 @@ export const endOfDayButItRespectsDayStartHour = (date: Date) =>
     59,
     59,
     999,
+    "timeZone" in date ? date.timeZone : undefined,
   );
 
 export const supportsHaptic =
