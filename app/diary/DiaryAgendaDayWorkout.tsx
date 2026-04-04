@@ -4,7 +4,7 @@ import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { max, min } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { MouseEvent, useCallback, useMemo } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import type {
   GQLocation,
@@ -51,11 +51,19 @@ export function DiaryAgendaDayWorkout({
     disabled: workout.source !== WorkoutSource.Self,
   });
 
-  const handleIconClick = useCallback(() => {
-    if (workout.source === WorkoutSource.Self || !workout.source) {
-      router.push(`/diary/${workoutDateStr}/workout/${workout.id}`);
-    }
-  }, [router, workoutDateStr, workout.id, workout.source]);
+  const handleIconClick = useCallback(
+    (e: MouseEvent) => {
+      if (workout.source === WorkoutSource.Self || !workout.source) {
+        const url = `/diary/${workoutDateStr}/workout/${workout.id}` as const;
+        if (e.getModifierState("Meta")) {
+          window.open(url, "_blank");
+        } else {
+          router.push(url);
+        }
+      }
+    },
+    [router, workoutDateStr, workout.id, workout.source],
+  );
 
   const style = useMemo(
     () => ({
