@@ -192,7 +192,9 @@ export function WorkoutForm<R extends string>({
     `,
     {
       variables: {
-        asOf: workout?.workedOutAt,
+        asOf: workout?.workedOutAt
+          ? subMilliseconds<Date, Date>(workout.workedOutAt, 1)
+          : endOfDayButItRespectsDayStartHour(tzDate),
       },
     },
   );
