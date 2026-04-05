@@ -461,7 +461,9 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Workout") {
         const workout = journalEntry;
 
-        const workoutDateStr = dateToString(workout.workedOutAt);
+        const workoutDateStr = dateToString(
+          startOfDayButItRespectsDayStartHour(workout.workedOutAt),
+        );
 
         dayJournalEntryElements.push({
           id: client.cache.identify(workout) || workout.id,
