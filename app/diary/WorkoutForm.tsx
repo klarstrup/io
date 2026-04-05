@@ -3,15 +3,15 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
-  addDays,
-  addMilliseconds,
-  compareAsc,
-  compareDesc,
-  formatDistanceToNowStrict,
-  isPast,
-  isSameDay,
-  isValid,
-  subMilliseconds,
+    addDays,
+    addMilliseconds,
+    compareAsc,
+    compareDesc,
+    formatDistanceToNowStrict,
+    isPast,
+    isSameDay,
+    isValid,
+    subMilliseconds,
 } from "date-fns";
 import gql from "graphql-tag";
 import { Route } from "next";
@@ -26,46 +26,46 @@ import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
-  CreateWorkoutForWorkoutFormDocument,
-  GQBoulderCircuit,
-  GQCreateWorkoutDataInput,
-  GQExerciseStat,
-  GQLocation,
-  GQUpdateWorkoutDataInput,
-  GQWorkout,
-  UpdateWorkoutForWorkoutFormDocument,
-  type GQNextSet,
-  type GQWorkoutFormNextSetsQuery,
+    CreateWorkoutForWorkoutFormDocument,
+    GQBoulderCircuit,
+    GQCreateWorkoutDataInput,
+    GQExerciseStat,
+    GQLocation,
+    GQUpdateWorkoutDataInput,
+    GQWorkout,
+    UpdateWorkoutForWorkoutFormDocument,
+    type GQNextSet,
+    type GQWorkoutFormNextSetsQuery,
 } from "../../graphql.generated";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
 import { exercises, exercisesById } from "../../models/exercises";
 import {
-  AssistType,
-  InputType,
-  SendType,
-  Unit,
-  type ExerciseData,
+    AssistType,
+    InputType,
+    SendType,
+    Unit,
+    type ExerciseData,
 } from "../../models/exercises.types";
 import {
-  durationToMs,
-  getCircuitByLocationAndSetColor,
-  isClimbingExercise,
-  isNextSetDue,
-  WorkoutSource,
-  type WorkoutData,
-  type WorkoutExercise,
-  type WorkoutExerciseSet,
-  type WorkoutExerciseSetInput,
+    durationToMs,
+    getCircuitByLocationAndSetColor,
+    isClimbingExercise,
+    isNextSetDue,
+    WorkoutSource,
+    type WorkoutData,
+    type WorkoutExercise,
+    type WorkoutExerciseSet,
+    type WorkoutExerciseSetInput,
 } from "../../models/workout";
 import {
-  colorNameToEmoji,
-  dateToString,
-  DEFAULT_TIMEZONE,
-  endOfDayButItRespectsDayStartHour,
-  epoch,
-  isNonEmptyArray,
-  omit,
+    colorNameToEmoji,
+    dateToString,
+    DEFAULT_TIMEZONE,
+    endOfDayButItRespectsDayStartHour,
+    epoch,
+    isNonEmptyArray,
+    omit,
 } from "../../utils";
 import { deleteWorkout, snoozeUserExerciseSchedule } from "./actions";
 import { NextSets } from "./NextSets";
@@ -466,7 +466,10 @@ export function WorkoutForm<R extends string>({
 
           const newWorkout = {
             // Shit that will change
-            workedOutAt: data.workedOutAt,
+            workedOutAt: new TZDate(
+              data.workedOutAt,
+              user.timeZone ?? DEFAULT_TIMEZONE,
+            ),
             exercises: data.exercises?.map((exercise) => ({
               ...omit(exercise, "id" as "displayName"),
               sets: exercise.sets.map((set) => ({
