@@ -29,7 +29,7 @@ import {
   type GQWorkout,
   SnoozeExerciseScheduleDocument,
   UpdateTodoDocument,
-  UpdateWorkoutDocument,
+  UpdateWorkoutWorkedOutAtDocument,
 } from "../../graphql.generated";
 import {
   dateMidpoint,
@@ -62,8 +62,8 @@ const NOW_SYMBOL = Symbol("now");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
-  mutation UpdateWorkout($input: UpdateWorkoutInput!) {
-    updateWorkout(input: $input) {
+  mutation UpdateWorkoutWorkedOutAt($input: UpdateWorkoutWorkedOutAtInput!) {
+    updateWorkoutWorkedOutAt(input: $input) {
       workout {
         id
         createdAt
@@ -161,7 +161,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
   const client = useApolloClient();
   const [updateTodo] = useMutation(UpdateTodoDocument);
   const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
-  const [updateWorkout] = useMutation(UpdateWorkoutDocument);
+  const [updateWorkoutWorkedOutAt] = useMutation(UpdateWorkoutWorkedOutAtDocument);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -358,7 +358,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       const workout = activeCurrent.workout as GQWorkout;
 
       if (isPast(targetDate)) {
-        void updateWorkout({
+        void updateWorkoutWorkedOutAt({
           variables: {
             input: {
               id: workout.id,
@@ -366,7 +366,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
             },
           },
           optimisticResponse: {
-            updateWorkout: {
+            updateWorkoutWorkedOutAt: {
               __typename: "UpdateWorkoutPayload",
               workout: { ...workout, workedOutAt: targetDate },
             },

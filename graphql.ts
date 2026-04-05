@@ -5,11 +5,11 @@ import * as Ably from "ably";
 import { addWeeks, isValid, startOfDay } from "date-fns";
 import { OAuth2Client } from "google-auth-library";
 import {
-  type DocumentNode,
-  GraphQLScalarType,
-  Kind,
-  type OperationDefinitionNode,
-  print,
+    type DocumentNode,
+    GraphQLScalarType,
+    Kind,
+    type OperationDefinitionNode,
+    print,
 } from "graphql";
 import gql from "graphql-tag";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
@@ -17,36 +17,39 @@ import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
 import { auth } from "./auth";
 import type {
-  GQCreateTodoPayload,
-  GQExerciseInfo,
-  GQExerciseSchedule,
-  GQFloatTimeSeriesEntry,
-  GQFoodEntry,
-  GQNextSet,
-  GQResolvers,
-  GQSleep,
-  GQSnoozeExerciseSchedulePayload,
-  GQUnsnoozeExerciseSchedulePayload,
-  GQUpdateTodoPayload,
-  GQWorkout,
-  GQWorkoutExercise,
-  GQWorkoutSet,
-  GQWorkoutSetInput,
-  GQWorkoutSetMeta,
+    GQCreateTodoPayload,
+    GQExerciseInfo,
+    GQExerciseSchedule,
+    GQFloatTimeSeriesEntry,
+    GQFoodEntry,
+    GQNextSet,
+    GQResolvers,
+    GQSleep,
+    GQSnoozeExerciseSchedulePayload,
+    GQUnsnoozeExerciseSchedulePayload,
+    GQUpdateTodoPayload,
+    GQWorkout,
+    GQWorkoutExercise,
+    GQWorkoutSet,
+    GQWorkoutSetInput,
+    GQWorkoutSetMeta,
 } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
+import { AssistType, Unit } from "./models/exercises.types";
 import { Locations } from "./models/location.server";
 import { Accounts, Users } from "./models/user.server";
-import { WorkoutSource } from "./models/workout";
+import { type WorkoutData, WorkoutSource } from "./models/workout";
 import {
-  getNextSets,
-  MaterializedWorkoutsView,
-  Workouts,
+    getNextSets,
+    MaterializedWorkoutsView,
+    WorkoutExercisesView,
+    WorkoutLocationsView,
+    Workouts,
 } from "./models/workout.server";
 import {
-  getUserIcalEventsBetween,
-  getUserIcalTodosBetween,
+    getUserIcalEventsBetween,
+    getUserIcalTodosBetween,
 } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
@@ -54,10 +57,10 @@ import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
 import { Withings } from "./sources/withings";
 import {
-  WithingsMeasureGroup,
-  WithingsSleepSummarySeries,
+    WithingsMeasureGroup,
+    WithingsSleepSummarySeries,
 } from "./sources/withings.server";
-import { pick, rangeToQuery } from "./utils";
+import { omitUndefined, pick, rangeToQuery } from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -643,6 +646,68 @@ export const resolvers: GQResolvers<
 
       return foodEntries;
     },
+    exerciseStats: async (parent) => {
+      const exerciseStats = await WorkoutExercisesView.find({
+        userId: parent.id,
+        deletedAt: { $exists: false },
+      }).toArray();
+
+      return exerciseStats.map((exerciseStat) => ({
+        id: `${exerciseStat.userId}-${exerciseStat.exerciseId}`,
+        ...exerciseStat,
+        __typename: "ExerciseStat",
+      }));
+    },
+    workout: async (parent, args) => {
+      const workout = await MaterializedWorkoutsView.findOne({
+        userId: parent.id,
+        id: args.id,
+        deletedAt: { $exists: false },
+      });
+
+      if (!workout) return null;
+
+      return {
+        ...workout,
+        location: undefined,
+        exercises: workout.exercises.map(
+          (exercise) =>
+            ({
+              ...exercise,
+              __typename: "WorkoutExercise",
+              // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+              exerciseInfo: undefined as unknown as GQExerciseInfo,
+              sets: exercise.sets.map(
+                (set) =>
+                  ({
+                    ...set,
+                    __typename: "WorkoutSet",
+                    inputs: set.inputs.map(
+                      (input) =>
+                        ({
+                          ...input,
+                          __typename: "WorkoutSetInput",
+                        }) satisfies GQWorkoutSetInput,
+                    ),
+                    meta:
+                      set.meta &&
+                      Object.entries(set.meta || {}).map(
+                        ([key, value]) =>
+                          ({
+                            key,
+                            value: String(value),
+                            __typename: "WorkoutSetMeta",
+                          }) satisfies GQWorkoutSetMeta,
+                      ),
+                  }) satisfies GQWorkoutSet,
+              ),
+            }) satisfies GQWorkoutExercise,
+        ),
+        // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
+        id: workout.id || workout._id.toString(),
+        __typename: "Workout",
+      } satisfies GQWorkout;
+    },
     workouts: async (parent, args) =>
       (
         await MaterializedWorkoutsView.find({
@@ -944,7 +1009,208 @@ export const resolvers: GQResolvers<
         },
       } satisfies GQUnsnoozeExerciseSchedulePayload;
     },
+    createWorkout: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      const workoutData = args.input.data;
+
+      const insertResult = await Workouts.insertOne({
+        userId: user.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...workoutData,
+        workedOutAt: new Date(workoutData.workedOutAt),
+        source: workoutData.source as unknown as WorkoutData["source"],
+        exercises: workoutData.exercises?.map((exercise) => ({
+          ...omitUndefined(exercise),
+          sets: exercise.sets.map((set) => ({
+            ...omitUndefined(set),
+            inputs: set.inputs.map((input) => ({
+              ...omitUndefined(input),
+              value: input.value ?? NaN,
+              unit: input.unit as unknown as Unit,
+              assistType: input.assistType as unknown as AssistType,
+            })),
+            meta:
+              set.meta &&
+              set.meta.reduce((acc, { key, value }) => {
+                acc[key] = value;
+                return acc;
+              }, {}),
+          })),
+        })),
+      } satisfies Omit<WorkoutData, "id">);
+
+      if (!insertResult.insertedId) {
+        throw new Error("Failed to create workout");
+      }
+
+      const newWorkout = await Workouts.findOne({
+        _id: insertResult.insertedId,
+      });
+
+      if (!newWorkout) {
+        throw new Error("Failed to retrieve newly created workout");
+      }
+
+      for await (const _ of materializeIoWorkouts(user)) {
+      }
+
+      const createdWorkout = await MaterializedWorkoutsView.findOne({
+        id: newWorkout._id.toString(),
+        userId: user.id,
+      });
+ 
+      if (!createdWorkout) {
+        throw new Error("Workout not found after creation");
+      }
+
+      return {
+        __typename: "UpdateWorkoutPayload",
+        workout: {
+          __typename: "Workout",
+          ...createdWorkout,
+          location: undefined,
+          exercises: createdWorkout.exercises.map(
+            (exercise) =>
+              ({
+                ...exercise,
+                __typename: "WorkoutExercise",
+                exerciseInfo: undefined as unknown as GQExerciseInfo,
+                sets: exercise.sets.map(
+                  (set) =>
+                    ({
+                      ...set,
+                      __typename: "WorkoutSet",
+                      inputs: set.inputs.map(
+                        (input) =>
+                          ({
+                            ...input,
+                            __typename: "WorkoutSetInput",
+                          }) satisfies GQWorkoutSetInput,
+                      ),
+                      meta:
+                        set.meta &&
+                        Object.entries(set.meta || {}).map(
+                          ([key, value]) =>
+                            ({
+                              key,
+                              value: String(value),
+                              __typename: "WorkoutSetMeta",
+                            }) satisfies GQWorkoutSetMeta,
+                        ),
+                    }) satisfies GQWorkoutSet,
+                ),
+              }) satisfies GQWorkoutExercise,
+          ),
+          id: createdWorkout.id || createdWorkout._id.toString(),
+        },
+      };
+    },
     updateWorkout: async (_parent, args, context) => {
+      const user = context?.user ?? (await auth())?.user;
+      if (!user) throw new Error("Unauthorized");
+
+      const workoutId = args.input.id;
+
+      if (!workoutId) {
+        throw new Error("workoutId is required");
+      }
+
+      const inputData = omitUndefined(args.input.data);
+
+      const updateResult = await Workouts.updateOne(
+        { _id: new ObjectId(workoutId), userId: user.id },
+        {
+          $set: {
+            ...inputData,
+            updatedAt: new Date(),
+            workedOutAt: inputData.workedOutAt
+              ? new Date(inputData.workedOutAt)
+              : undefined,
+            source: inputData.source as unknown as WorkoutData["source"],
+            exercises: inputData.exercises?.map((exercise) => ({
+              ...omitUndefined(exercise),
+              sets: exercise.sets.map((set) => ({
+                ...omitUndefined(set),
+                inputs: set.inputs.map((input) => ({
+                  ...omitUndefined(input),
+                  value: input.value ?? NaN,
+                  unit: input.unit as unknown as Unit,
+                  assistType: input.assistType as unknown as AssistType,
+                })),
+                meta:
+                  set.meta &&
+                  set.meta.reduce((acc, { key, value }) => {
+                    acc[key] = value;
+                    return acc;
+                  }, {}),
+              })),
+            })),
+          } satisfies Partial<Omit<WorkoutData, "createdAt" | "userId">>,
+        },
+      );
+
+      if (updateResult.matchedCount === 0) {
+        throw new Error("Failed to update workout");
+      }
+
+      for await (const _ of materializeIoWorkouts(user)) {
+      }
+
+      const updatedWorkout = await MaterializedWorkoutsView.findOne({
+        id: workoutId,
+        userId: user.id,
+      });
+
+      if (!updatedWorkout) {
+        throw new Error("Workout not found after update");
+      }
+
+      return {
+        __typename: "UpdateWorkoutPayload",
+        workout: {
+          __typename: "Workout",
+          ...updatedWorkout,
+          location: undefined,
+          exercises: updatedWorkout.exercises.map(
+            (exercise) =>
+              ({
+                ...exercise,
+                __typename: "WorkoutExercise",
+                exerciseInfo: undefined as unknown as GQExerciseInfo,
+                sets: exercise.sets.map(
+                  (set) =>
+                    ({
+                      ...set,
+                      __typename: "WorkoutSet",
+                      inputs: set.inputs.map(
+                        (input) =>
+                          ({
+                            ...input,
+                            __typename: "WorkoutSetInput",
+                          }) satisfies GQWorkoutSetInput,
+                      ),
+                      meta:
+                        set.meta &&
+                        Object.entries(set.meta || {}).map(
+                          ([key, value]) =>
+                            ({
+                              key,
+                              value: String(value),
+                              __typename: "WorkoutSetMeta",
+                            }) satisfies GQWorkoutSetMeta,
+                        ),
+                    }) satisfies GQWorkoutSet,
+                ),
+              }) satisfies GQWorkoutExercise,
+          ),
+          id: updatedWorkout.id || updatedWorkout._id.toString(),
+        },
+      };
+    },
+    updateWorkoutWorkedOutAt: async (_parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
@@ -1029,6 +1295,30 @@ export const resolvers: GQResolvers<
       parent.gradeRange?.map((v) =>
         typeof v === "number" && !Number.isNaN(v) ? v : null,
       ) || null,
+  },
+  Location: {
+    mostRecentVisit: async (parent) => {
+      if (!parent.id) return null;
+      return (
+        (
+          await WorkoutLocationsView.findOne(
+            { "_id.locationId": parent.id },
+            { sort: { workedOutAt: -1 } },
+          )
+        )?.mostRecentVisit ?? null
+      );
+    },
+    visitCount: async (parent) => {
+      if (!parent.id) return null;
+      return (
+        (
+          await WorkoutLocationsView.findOne(
+            { "_id.locationId": parent.id },
+            { sort: { workedOutAt: -1 } },
+          )
+        )?.visitCount ?? null
+      );
+    },
   },
   Workout: {
     location: async (parent) => {
@@ -1193,6 +1483,14 @@ export const typeDefs = gql`
     exerciseSchedule: ExerciseSchedule
   }
 
+  input UpdateWorkoutWorkedOutAtInput {
+    id: ID!
+    data: UpdateWorkoutWorkedOutAtDataInput!
+  }
+  input UpdateWorkoutWorkedOutAtDataInput {
+    workedOutAt: Date!
+  }
+
   type UpdateWorkoutPayload {
     workout: Workout
   }
@@ -1205,6 +1503,67 @@ export const typeDefs = gql`
   input UpdateWorkoutDataInput {
     workedOutAt: Date
     locationId: String
+    source: String
+    exercises: [UpdateWorkoutDataExercisesInput!]!
+  }
+  input UpdateWorkoutDataExercisesInput {
+    exerciseId: Int!
+    displayName: String
+    comment: String
+    sets: [UpdateWorkoutDataWorkoutSetInput!]!
+  }
+
+  input UpdateWorkoutDataWorkoutSetInput {
+    createdAt: Date
+    updatedAt: Date
+    inputs: [UpdateWorkoutDataWorkoutSetInputInput!]!
+    meta: [UpdateWorkoutDataWorkoutSetMetaInput!]
+    comment: String
+  }
+  input UpdateWorkoutDataWorkoutSetMetaInput {
+    key: String!
+    value: String!
+  }
+  input UpdateWorkoutDataWorkoutSetInputInput {
+    unit: String
+    value: Float
+    # "weighted" or "assisted"
+    assistType: String
+  }
+
+  input CreateWorkoutInput {
+    data: CreateWorkoutDataInput!
+  }
+
+  input CreateWorkoutDataInput {
+    workedOutAt: Date!
+    locationId: String
+    source: String
+    exercises: [CreateWorkoutDataExercisesInput!]!
+  }
+  input CreateWorkoutDataExercisesInput {
+    exerciseId: Int!
+    displayName: String
+    comment: String
+    sets: [CreateWorkoutDataWorkoutSetInput!]!
+  }
+
+  input CreateWorkoutDataWorkoutSetInput {
+    createdAt: Date
+    updatedAt: Date
+    inputs: [CreateWorkoutDataWorkoutSetInputInput!]!
+    meta: [CreateWorkoutDataWorkoutSetMetaInput!]
+    comment: String
+  }
+  input CreateWorkoutDataWorkoutSetMetaInput {
+    key: String!
+    value: String!
+  }
+  input CreateWorkoutDataWorkoutSetInputInput {
+    unit: String
+    value: Float
+    # "weighted" or "assisted"
+    assistType: String
   }
 
   type Mutation {
@@ -1219,7 +1578,11 @@ export const typeDefs = gql`
       input: UnsnoozeExerciseScheduleInput!
     ): UnsnoozeExerciseSchedulePayload
 
+    createWorkout(input: CreateWorkoutInput!): UpdateWorkoutPayload
     updateWorkout(input: UpdateWorkoutInput!): UpdateWorkoutPayload
+    updateWorkoutWorkedOutAt(
+      input: UpdateWorkoutWorkedOutAtInput!
+    ): UpdateWorkoutPayload
   }
 
   input IntervalInput {
@@ -1250,8 +1613,10 @@ export const typeDefs = gql`
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
+    workout(id: ID!): Workout
     nextSets(exerciseIds: [Int!], asOf: Date): [NextSet!]
     exerciseSchedules: [ExerciseSchedule!]
+    exerciseStats: [ExerciseStat!]
     foodEntries(interval: IntervalInput!): [FoodEntry!]
     sleeps(interval: IntervalInput!): [Sleep!]
     weight: Float
@@ -1397,6 +1762,8 @@ export const typeDefs = gql`
     isFavorite: Boolean
     knownAddresses: [String!]
     boulderCircuits: [BoulderCircuit!]
+    visitCount: Int
+    mostRecentVisit: Date
   }
 
   type BoulderCircuit {
@@ -1404,6 +1771,7 @@ export const typeDefs = gql`
     name: String!
     createdAt: Date!
     updatedAt: Date!
+    deletedAt: Date
     description: String
     holdColor: String
     holdColorSecondary: String
@@ -1431,6 +1799,21 @@ export const typeDefs = gql`
     sets: [WorkoutSet!]!
     displayName: String
     comment: String
+  }
+
+  type ExerciseStat {
+    id: ID!
+    exerciseId: Int!
+    # totalVolume: Float
+    # totalReps: Float
+    # totalSets: Float
+    # maxWeight: Float
+    # maxReps: Float
+    # maxSets: Float
+    workedOutAt: Date!
+    exerciseCount: Int!
+    monthlyCount: Int!
+    quarterlyCount: Int!
   }
 
   type ExerciseInfo {
@@ -1479,3 +1862,5 @@ export const typeDefs = gql`
 `;
 
 export const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+export const dynamic = "force-dynamic";

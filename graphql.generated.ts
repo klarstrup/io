@@ -24,6 +24,7 @@ export type Scalars = {
 export type GQBoulderCircuit = {
   __typename: 'BoulderCircuit';
   createdAt: Scalars['Date']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   gradeEstimate?: Maybe<Scalars['Float']['output']>;
   gradeRange?: Maybe<Array<Maybe<Scalars['Float']['output']>>>;
@@ -49,6 +50,43 @@ export type GQCreateTodoInput = {
 export type GQCreateTodoPayload = {
   __typename: 'CreateTodoPayload';
   todo?: Maybe<GQTodo>;
+};
+
+export type GQCreateWorkoutDataExercisesInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  exerciseId: Scalars['Int']['input'];
+  sets: Array<GQCreateWorkoutDataWorkoutSetInput>;
+};
+
+export type GQCreateWorkoutDataInput = {
+  exercises: Array<GQCreateWorkoutDataExercisesInput>;
+  locationId?: InputMaybe<Scalars['String']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  workedOutAt: Scalars['Date']['input'];
+};
+
+export type GQCreateWorkoutDataWorkoutSetInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['Date']['input']>;
+  inputs: Array<GQCreateWorkoutDataWorkoutSetInputInput>;
+  meta?: InputMaybe<Array<GQCreateWorkoutDataWorkoutSetMetaInput>>;
+  updatedAt?: InputMaybe<Scalars['Date']['input']>;
+};
+
+export type GQCreateWorkoutDataWorkoutSetInputInput = {
+  assistType?: InputMaybe<Scalars['String']['input']>;
+  unit?: InputMaybe<Scalars['String']['input']>;
+  value?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type GQCreateWorkoutDataWorkoutSetMetaInput = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type GQCreateWorkoutInput = {
+  data: GQCreateWorkoutDataInput;
 };
 
 export type GQDuration = {
@@ -120,6 +158,16 @@ export type GQExerciseSchedule = {
   workingSets?: Maybe<Scalars['Int']['output']>;
 };
 
+export type GQExerciseStat = {
+  __typename: 'ExerciseStat';
+  exerciseCount: Scalars['Int']['output'];
+  exerciseId: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  monthlyCount: Scalars['Int']['output'];
+  quarterlyCount: Scalars['Int']['output'];
+  workedOutAt: Scalars['Date']['output'];
+};
+
 export type GQFloatTimeSeriesEntry = {
   __typename: 'FloatTimeSeriesEntry';
   timestamp: Scalars['Date']['output'];
@@ -163,24 +211,33 @@ export type GQLocation = {
   id: Scalars['ID']['output'];
   isFavorite?: Maybe<Scalars['Boolean']['output']>;
   knownAddresses?: Maybe<Array<Scalars['String']['output']>>;
+  mostRecentVisit?: Maybe<Scalars['Date']['output']>;
   name: Scalars['String']['output'];
   updatedAt: Scalars['Date']['output'];
   userId: Scalars['ID']['output'];
+  visitCount?: Maybe<Scalars['Int']['output']>;
 };
 
 export type GQMutation = {
   __typename: 'Mutation';
   createTodo?: Maybe<GQCreateTodoPayload>;
+  createWorkout?: Maybe<GQUpdateWorkoutPayload>;
   deleteTodo?: Maybe<Scalars['String']['output']>;
   snoozeExerciseSchedule?: Maybe<GQSnoozeExerciseSchedulePayload>;
   unsnoozeExerciseSchedule?: Maybe<GQUnsnoozeExerciseSchedulePayload>;
   updateTodo?: Maybe<GQUpdateTodoPayload>;
   updateWorkout?: Maybe<GQUpdateWorkoutPayload>;
+  updateWorkoutWorkedOutAt?: Maybe<GQUpdateWorkoutPayload>;
 };
 
 
 export type GQMutationCreateTodoArgs = {
   input: GQCreateTodoInput;
+};
+
+
+export type GQMutationCreateWorkoutArgs = {
+  input: GQCreateWorkoutInput;
 };
 
 
@@ -206,6 +263,11 @@ export type GQMutationUpdateTodoArgs = {
 
 export type GQMutationUpdateWorkoutArgs = {
   input: GQUpdateWorkoutInput;
+};
+
+
+export type GQMutationUpdateWorkoutWorkedOutAtArgs = {
+  input: GQUpdateWorkoutWorkedOutAtInput;
 };
 
 export type GQNextSet = GQJournalEntry & {
@@ -293,9 +355,37 @@ export type GQUpdateTodoPayload = {
   todo?: Maybe<GQTodo>;
 };
 
+export type GQUpdateWorkoutDataExercisesInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  exerciseId: Scalars['Int']['input'];
+  sets: Array<GQUpdateWorkoutDataWorkoutSetInput>;
+};
+
 export type GQUpdateWorkoutDataInput = {
+  exercises: Array<GQUpdateWorkoutDataExercisesInput>;
   locationId?: InputMaybe<Scalars['String']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
   workedOutAt?: InputMaybe<Scalars['Date']['input']>;
+};
+
+export type GQUpdateWorkoutDataWorkoutSetInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['Date']['input']>;
+  inputs: Array<GQUpdateWorkoutDataWorkoutSetInputInput>;
+  meta?: InputMaybe<Array<GQUpdateWorkoutDataWorkoutSetMetaInput>>;
+  updatedAt?: InputMaybe<Scalars['Date']['input']>;
+};
+
+export type GQUpdateWorkoutDataWorkoutSetInputInput = {
+  assistType?: InputMaybe<Scalars['String']['input']>;
+  unit?: InputMaybe<Scalars['String']['input']>;
+  value?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type GQUpdateWorkoutDataWorkoutSetMetaInput = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
 };
 
 export type GQUpdateWorkoutInput = {
@@ -308,6 +398,15 @@ export type GQUpdateWorkoutPayload = {
   workout?: Maybe<GQWorkout>;
 };
 
+export type GQUpdateWorkoutWorkedOutAtDataInput = {
+  workedOutAt: Scalars['Date']['input'];
+};
+
+export type GQUpdateWorkoutWorkedOutAtInput = {
+  data: GQUpdateWorkoutWorkedOutAtDataInput;
+  id: Scalars['ID']['input'];
+};
+
 export type GQUser = {
   __typename: 'User';
   availableBalance?: Maybe<Scalars['Float']['output']>;
@@ -316,6 +415,7 @@ export type GQUser = {
   emailVerified?: Maybe<Scalars['Boolean']['output']>;
   events?: Maybe<Array<GQEvent>>;
   exerciseSchedules?: Maybe<Array<GQExerciseSchedule>>;
+  exerciseStats?: Maybe<Array<GQExerciseStat>>;
   fatRatio?: Maybe<Scalars['Float']['output']>;
   fatRatioTimeSeries?: Maybe<Array<GQFloatTimeSeriesEntry>>;
   foodEntries?: Maybe<Array<GQFoodEntry>>;
@@ -336,6 +436,7 @@ export type GQUser = {
   todos?: Maybe<Array<GQTodo>>;
   weight?: Maybe<Scalars['Float']['output']>;
   weightTimeSeries?: Maybe<Array<GQFloatTimeSeriesEntry>>;
+  workout?: Maybe<GQWorkout>;
   workouts?: Maybe<Array<GQWorkout>>;
 };
 
@@ -368,6 +469,11 @@ export type GQUserSleepsArgs = {
 
 export type GQUserTodosArgs = {
   interval?: InputMaybe<GQIntervalInput>;
+};
+
+
+export type GQUserWorkoutArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -505,12 +611,26 @@ export type GQDeleteTodoMutationVariables = Exact<{
 
 export type GQDeleteTodoMutation = { deleteTodo?: string | null };
 
-export type GQUpdateWorkoutMutationVariables = Exact<{
+export type GQUpdateWorkoutWorkedOutAtMutationVariables = Exact<{
+  input: GQUpdateWorkoutWorkedOutAtInput;
+}>;
+
+
+export type GQUpdateWorkoutWorkedOutAtMutation = { updateWorkoutWorkedOutAt?: { __typename: 'UpdateWorkoutPayload', workout?: { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt?: Date | null, locationId?: string | null, source?: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName?: string | null, comment?: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment?: string | null, createdAt?: Date | null, updatedAt?: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }>, meta?: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> } | null } | null };
+
+export type GQUpdateWorkoutForWorkoutFormMutationVariables = Exact<{
   input: GQUpdateWorkoutInput;
 }>;
 
 
-export type GQUpdateWorkoutMutation = { updateWorkout?: { __typename: 'UpdateWorkoutPayload', workout?: { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt?: Date | null, locationId?: string | null, source?: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName?: string | null, comment?: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment?: string | null, createdAt?: Date | null, updatedAt?: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }>, meta?: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> } | null } | null };
+export type GQUpdateWorkoutForWorkoutFormMutation = { updateWorkout?: { __typename: 'UpdateWorkoutPayload', workout?: { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt?: Date | null, locationId?: string | null, source?: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName?: string | null, comment?: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment?: string | null, createdAt?: Date | null, updatedAt?: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }>, meta?: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> } | null } | null };
+
+export type GQCreateWorkoutForWorkoutFormMutationVariables = Exact<{
+  input: GQCreateWorkoutInput;
+}>;
+
+
+export type GQCreateWorkoutForWorkoutFormMutation = { createWorkout?: { __typename: 'UpdateWorkoutPayload', workout?: { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt?: Date | null, locationId?: string | null, source?: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName?: string | null, comment?: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment?: string | null, createdAt?: Date | null, updatedAt?: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }>, meta?: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> } | null } | null };
 
 export type GQWorkoutFormNextSetsQueryVariables = Exact<{
   asOf: Scalars['Date']['input'];
@@ -519,6 +639,18 @@ export type GQWorkoutFormNextSetsQueryVariables = Exact<{
 
 
 export type GQWorkoutFormNextSetsQuery = { user?: { __typename: 'User', id: string, timeZone?: string | null, nextSets?: Array<{ __typename: 'NextSet', id: string, lastWorkedOutAt?: Date | null, dueOn: Date, exerciseId: number, successful?: boolean | null, nextWorkingSets?: number | null, nextWorkingSetInputs?: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }> | null, exerciseSchedule: { __typename: 'ExerciseSchedule', id: string, exerciseId: number, enabled: boolean, increment?: number | null, workingSets?: number | null, workingReps?: number | null, deloadFactor?: number | null, baseWeight?: number | null, snoozedUntil?: Date | null, order?: number | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, frequency: { __typename: 'Duration', years?: number | null, months?: number | null, weeks?: number | null, days?: number | null, hours?: number | null, minutes?: number | null, seconds?: number | null } } }> | null } | null };
+
+export type GQGetUserLocationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GQGetUserLocationsQuery = { user?: { __typename: 'User', id: string, locations?: Array<{ __typename: 'Location', id: string, createdAt: Date, updatedAt: Date, name: string, userId: string, knownAddresses?: Array<string> | null, visitCount?: number | null, mostRecentVisit?: Date | null, boulderCircuits?: Array<{ __typename: 'BoulderCircuit', id: string, holdColor?: string | null, gradeEstimate?: number | null, gradeRange?: Array<number | null> | null, name: string, labelColor?: string | null, hasZones?: boolean | null, description?: string | null, createdAt: Date, updatedAt: Date }> | null }> | null, exerciseStats?: Array<{ __typename: 'ExerciseStat', id: string, exerciseId: number, workedOutAt: Date, exerciseCount: number, monthlyCount: number, quarterlyCount: number }> | null } | null };
+
+export type GQGetWorkoutQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GQGetWorkoutQuery = { user?: { __typename: 'User', id: string, workout?: { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt?: Date | null, locationId?: string | null, source?: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName?: string | null, comment?: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags?: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment?: string | null, createdAt?: Date | null, updatedAt?: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit?: string | null, value?: number | null, assistType?: string | null }>, meta?: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> } | null } | null };
 
 export type GQListPageUserQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -628,6 +760,12 @@ export type GQResolversTypes = {
   CaloriesUnit: ResolverTypeWrapper<GQCaloriesUnit>;
   CreateTodoInput: GQCreateTodoInput;
   CreateTodoPayload: ResolverTypeWrapper<GQCreateTodoPayload>;
+  CreateWorkoutDataExercisesInput: GQCreateWorkoutDataExercisesInput;
+  CreateWorkoutDataInput: GQCreateWorkoutDataInput;
+  CreateWorkoutDataWorkoutSetInput: GQCreateWorkoutDataWorkoutSetInput;
+  CreateWorkoutDataWorkoutSetInputInput: GQCreateWorkoutDataWorkoutSetInputInput;
+  CreateWorkoutDataWorkoutSetMetaInput: GQCreateWorkoutDataWorkoutSetMetaInput;
+  CreateWorkoutInput: GQCreateWorkoutInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Duration: ResolverTypeWrapper<GQDuration>;
   Event: ResolverTypeWrapper<GQEvent>;
@@ -636,6 +774,7 @@ export type GQResolversTypes = {
   ExerciseInfoInstruction: ResolverTypeWrapper<GQExerciseInfoInstruction>;
   ExerciseInfoTag: ResolverTypeWrapper<GQExerciseInfoTag>;
   ExerciseSchedule: ResolverTypeWrapper<GQExerciseSchedule>;
+  ExerciseStat: ResolverTypeWrapper<GQExerciseStat>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   FloatTimeSeriesEntry: ResolverTypeWrapper<GQFloatTimeSeriesEntry>;
   Food: ResolverTypeWrapper<GQFood>;
@@ -663,9 +802,15 @@ export type GQResolversTypes = {
   UnsnoozeExerciseSchedulePayload: ResolverTypeWrapper<GQUnsnoozeExerciseSchedulePayload>;
   UpdateTodoInput: GQUpdateTodoInput;
   UpdateTodoPayload: ResolverTypeWrapper<GQUpdateTodoPayload>;
+  UpdateWorkoutDataExercisesInput: GQUpdateWorkoutDataExercisesInput;
   UpdateWorkoutDataInput: GQUpdateWorkoutDataInput;
+  UpdateWorkoutDataWorkoutSetInput: GQUpdateWorkoutDataWorkoutSetInput;
+  UpdateWorkoutDataWorkoutSetInputInput: GQUpdateWorkoutDataWorkoutSetInputInput;
+  UpdateWorkoutDataWorkoutSetMetaInput: GQUpdateWorkoutDataWorkoutSetMetaInput;
   UpdateWorkoutInput: GQUpdateWorkoutInput;
   UpdateWorkoutPayload: ResolverTypeWrapper<GQUpdateWorkoutPayload>;
+  UpdateWorkoutWorkedOutAtDataInput: GQUpdateWorkoutWorkedOutAtDataInput;
+  UpdateWorkoutWorkedOutAtInput: GQUpdateWorkoutWorkedOutAtInput;
   User: ResolverTypeWrapper<Omit<GQUser, 'journalEntries'> & { journalEntries?: Maybe<Array<GQResolversTypes['JournalEntry']>> }>;
   UserDataSource: ResolverTypeWrapper<GQUserDataSource>;
   Workout: ResolverTypeWrapper<GQWorkout>;
@@ -682,6 +827,12 @@ export type GQResolversParentTypes = {
   CaloriesUnit: GQCaloriesUnit;
   CreateTodoInput: GQCreateTodoInput;
   CreateTodoPayload: GQCreateTodoPayload;
+  CreateWorkoutDataExercisesInput: GQCreateWorkoutDataExercisesInput;
+  CreateWorkoutDataInput: GQCreateWorkoutDataInput;
+  CreateWorkoutDataWorkoutSetInput: GQCreateWorkoutDataWorkoutSetInput;
+  CreateWorkoutDataWorkoutSetInputInput: GQCreateWorkoutDataWorkoutSetInputInput;
+  CreateWorkoutDataWorkoutSetMetaInput: GQCreateWorkoutDataWorkoutSetMetaInput;
+  CreateWorkoutInput: GQCreateWorkoutInput;
   Date: Scalars['Date']['output'];
   Duration: GQDuration;
   Event: GQEvent;
@@ -690,6 +841,7 @@ export type GQResolversParentTypes = {
   ExerciseInfoInstruction: GQExerciseInfoInstruction;
   ExerciseInfoTag: GQExerciseInfoTag;
   ExerciseSchedule: GQExerciseSchedule;
+  ExerciseStat: GQExerciseStat;
   Float: Scalars['Float']['output'];
   FloatTimeSeriesEntry: GQFloatTimeSeriesEntry;
   Food: GQFood;
@@ -717,9 +869,15 @@ export type GQResolversParentTypes = {
   UnsnoozeExerciseSchedulePayload: GQUnsnoozeExerciseSchedulePayload;
   UpdateTodoInput: GQUpdateTodoInput;
   UpdateTodoPayload: GQUpdateTodoPayload;
+  UpdateWorkoutDataExercisesInput: GQUpdateWorkoutDataExercisesInput;
   UpdateWorkoutDataInput: GQUpdateWorkoutDataInput;
+  UpdateWorkoutDataWorkoutSetInput: GQUpdateWorkoutDataWorkoutSetInput;
+  UpdateWorkoutDataWorkoutSetInputInput: GQUpdateWorkoutDataWorkoutSetInputInput;
+  UpdateWorkoutDataWorkoutSetMetaInput: GQUpdateWorkoutDataWorkoutSetMetaInput;
   UpdateWorkoutInput: GQUpdateWorkoutInput;
   UpdateWorkoutPayload: GQUpdateWorkoutPayload;
+  UpdateWorkoutWorkedOutAtDataInput: GQUpdateWorkoutWorkedOutAtDataInput;
+  UpdateWorkoutWorkedOutAtInput: GQUpdateWorkoutWorkedOutAtInput;
   User: Omit<GQUser, 'journalEntries'> & { journalEntries?: Maybe<Array<GQResolversParentTypes['JournalEntry']>> };
   UserDataSource: GQUserDataSource;
   Workout: GQWorkout;
@@ -731,6 +889,7 @@ export type GQResolversParentTypes = {
 
 export type GQBoulderCircuitResolvers<ContextType = any, ParentType extends GQResolversParentTypes['BoulderCircuit'] = GQResolversParentTypes['BoulderCircuit']> = {
   createdAt?: Resolver<GQResolversTypes['Date'], ParentType, ContextType>;
+  deletedAt?: Resolver<Maybe<GQResolversTypes['Date']>, ParentType, ContextType>;
   description?: Resolver<Maybe<GQResolversTypes['String']>, ParentType, ContextType>;
   gradeEstimate?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;
   gradeRange?: Resolver<Maybe<Array<Maybe<GQResolversTypes['Float']>>>, ParentType, ContextType>;
@@ -819,6 +978,15 @@ export type GQExerciseScheduleResolvers<ContextType = any, ParentType extends GQ
   workingSets?: Resolver<Maybe<GQResolversTypes['Int']>, ParentType, ContextType>;
 };
 
+export type GQExerciseStatResolvers<ContextType = any, ParentType extends GQResolversParentTypes['ExerciseStat'] = GQResolversParentTypes['ExerciseStat']> = {
+  exerciseCount?: Resolver<GQResolversTypes['Int'], ParentType, ContextType>;
+  exerciseId?: Resolver<GQResolversTypes['Int'], ParentType, ContextType>;
+  id?: Resolver<GQResolversTypes['ID'], ParentType, ContextType>;
+  monthlyCount?: Resolver<GQResolversTypes['Int'], ParentType, ContextType>;
+  quarterlyCount?: Resolver<GQResolversTypes['Int'], ParentType, ContextType>;
+  workedOutAt?: Resolver<GQResolversTypes['Date'], ParentType, ContextType>;
+};
+
 export type GQFloatTimeSeriesEntryResolvers<ContextType = any, ParentType extends GQResolversParentTypes['FloatTimeSeriesEntry'] = GQResolversParentTypes['FloatTimeSeriesEntry']> = {
   timestamp?: Resolver<GQResolversTypes['Date'], ParentType, ContextType>;
   value?: Resolver<GQResolversTypes['Float'], ParentType, ContextType>;
@@ -863,18 +1031,22 @@ export type GQLocationResolvers<ContextType = any, ParentType extends GQResolver
   id?: Resolver<GQResolversTypes['ID'], ParentType, ContextType>;
   isFavorite?: Resolver<Maybe<GQResolversTypes['Boolean']>, ParentType, ContextType>;
   knownAddresses?: Resolver<Maybe<Array<GQResolversTypes['String']>>, ParentType, ContextType>;
+  mostRecentVisit?: Resolver<Maybe<GQResolversTypes['Date']>, ParentType, ContextType>;
   name?: Resolver<GQResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<GQResolversTypes['Date'], ParentType, ContextType>;
   userId?: Resolver<GQResolversTypes['ID'], ParentType, ContextType>;
+  visitCount?: Resolver<Maybe<GQResolversTypes['Int']>, ParentType, ContextType>;
 };
 
 export type GQMutationResolvers<ContextType = any, ParentType extends GQResolversParentTypes['Mutation'] = GQResolversParentTypes['Mutation']> = {
   createTodo?: Resolver<Maybe<GQResolversTypes['CreateTodoPayload']>, ParentType, ContextType, RequireFields<GQMutationCreateTodoArgs, 'input'>>;
+  createWorkout?: Resolver<Maybe<GQResolversTypes['UpdateWorkoutPayload']>, ParentType, ContextType, RequireFields<GQMutationCreateWorkoutArgs, 'input'>>;
   deleteTodo?: Resolver<Maybe<GQResolversTypes['String']>, ParentType, ContextType, RequireFields<GQMutationDeleteTodoArgs, 'id'>>;
   snoozeExerciseSchedule?: Resolver<Maybe<GQResolversTypes['SnoozeExerciseSchedulePayload']>, ParentType, ContextType, RequireFields<GQMutationSnoozeExerciseScheduleArgs, 'input'>>;
   unsnoozeExerciseSchedule?: Resolver<Maybe<GQResolversTypes['UnsnoozeExerciseSchedulePayload']>, ParentType, ContextType, RequireFields<GQMutationUnsnoozeExerciseScheduleArgs, 'input'>>;
   updateTodo?: Resolver<Maybe<GQResolversTypes['UpdateTodoPayload']>, ParentType, ContextType, RequireFields<GQMutationUpdateTodoArgs, 'input'>>;
   updateWorkout?: Resolver<Maybe<GQResolversTypes['UpdateWorkoutPayload']>, ParentType, ContextType, RequireFields<GQMutationUpdateWorkoutArgs, 'input'>>;
+  updateWorkoutWorkedOutAt?: Resolver<Maybe<GQResolversTypes['UpdateWorkoutPayload']>, ParentType, ContextType, RequireFields<GQMutationUpdateWorkoutWorkedOutAtArgs, 'input'>>;
 };
 
 export type GQNextSetResolvers<ContextType = any, ParentType extends GQResolversParentTypes['NextSet'] = GQResolversParentTypes['NextSet']> = {
@@ -947,6 +1119,7 @@ export type GQUserResolvers<ContextType = any, ParentType extends GQResolversPar
   emailVerified?: Resolver<Maybe<GQResolversTypes['Boolean']>, ParentType, ContextType>;
   events?: Resolver<Maybe<Array<GQResolversTypes['Event']>>, ParentType, ContextType, RequireFields<GQUserEventsArgs, 'interval'>>;
   exerciseSchedules?: Resolver<Maybe<Array<GQResolversTypes['ExerciseSchedule']>>, ParentType, ContextType>;
+  exerciseStats?: Resolver<Maybe<Array<GQResolversTypes['ExerciseStat']>>, ParentType, ContextType>;
   fatRatio?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;
   fatRatioTimeSeries?: Resolver<Maybe<Array<GQResolversTypes['FloatTimeSeriesEntry']>>, ParentType, ContextType>;
   foodEntries?: Resolver<Maybe<Array<GQResolversTypes['FoodEntry']>>, ParentType, ContextType, RequireFields<GQUserFoodEntriesArgs, 'interval'>>;
@@ -967,6 +1140,7 @@ export type GQUserResolvers<ContextType = any, ParentType extends GQResolversPar
   todos?: Resolver<Maybe<Array<GQResolversTypes['Todo']>>, ParentType, ContextType, Partial<GQUserTodosArgs>>;
   weight?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;
   weightTimeSeries?: Resolver<Maybe<Array<GQResolversTypes['FloatTimeSeriesEntry']>>, ParentType, ContextType>;
+  workout?: Resolver<Maybe<GQResolversTypes['Workout']>, ParentType, ContextType, RequireFields<GQUserWorkoutArgs, 'id'>>;
   workouts?: Resolver<Maybe<Array<GQResolversTypes['Workout']>>, ParentType, ContextType, RequireFields<GQUserWorkoutsArgs, 'interval'>>;
 };
 
@@ -1040,6 +1214,7 @@ export type GQResolvers<ContextType = any> = {
   ExerciseInfoInstruction?: GQExerciseInfoInstructionResolvers<ContextType>;
   ExerciseInfoTag?: GQExerciseInfoTagResolvers<ContextType>;
   ExerciseSchedule?: GQExerciseScheduleResolvers<ContextType>;
+  ExerciseStat?: GQExerciseStatResolvers<ContextType>;
   FloatTimeSeriesEntry?: GQFloatTimeSeriesEntryResolvers<ContextType>;
   Food?: GQFoodResolvers<ContextType>;
   FoodEntry?: GQFoodEntryResolvers<ContextType>;
@@ -1079,7 +1254,11 @@ export const SnoozeExerciseScheduleDocument = {"kind":"Document","definitions":[
 export const UnsnoozeExerciseScheduleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnsnoozeExerciseSchedule"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UnsnoozeExerciseScheduleInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unsnoozeExerciseSchedule"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseSchedule"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"frequency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"years"}},{"kind":"Field","name":{"kind":"Name","value":"months"}},{"kind":"Field","name":{"kind":"Name","value":"weeks"}},{"kind":"Field","name":{"kind":"Name","value":"days"}},{"kind":"Field","name":{"kind":"Name","value":"hours"}},{"kind":"Field","name":{"kind":"Name","value":"minutes"}},{"kind":"Field","name":{"kind":"Name","value":"seconds"}}]}},{"kind":"Field","name":{"kind":"Name","value":"increment"}},{"kind":"Field","name":{"kind":"Name","value":"workingSets"}},{"kind":"Field","name":{"kind":"Name","value":"workingReps"}},{"kind":"Field","name":{"kind":"Name","value":"deloadFactor"}},{"kind":"Field","name":{"kind":"Name","value":"baseWeight"}},{"kind":"Field","name":{"kind":"Name","value":"snoozedUntil"}},{"kind":"Field","name":{"kind":"Name","value":"order"}},{"kind":"Field","name":{"kind":"Name","value":"nextSet"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"lastWorkedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"dueOn"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"successful"}},{"kind":"Field","name":{"kind":"Name","value":"nextWorkingSets"}},{"kind":"Field","name":{"kind":"Name","value":"nextWorkingSetInputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"exerciseSchedule"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"frequency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"years"}},{"kind":"Field","name":{"kind":"Name","value":"months"}},{"kind":"Field","name":{"kind":"Name","value":"weeks"}},{"kind":"Field","name":{"kind":"Name","value":"days"}},{"kind":"Field","name":{"kind":"Name","value":"hours"}},{"kind":"Field","name":{"kind":"Name","value":"minutes"}},{"kind":"Field","name":{"kind":"Name","value":"seconds"}}]}},{"kind":"Field","name":{"kind":"Name","value":"increment"}},{"kind":"Field","name":{"kind":"Name","value":"workingSets"}},{"kind":"Field","name":{"kind":"Name","value":"workingReps"}},{"kind":"Field","name":{"kind":"Name","value":"deloadFactor"}},{"kind":"Field","name":{"kind":"Name","value":"baseWeight"}},{"kind":"Field","name":{"kind":"Name","value":"snoozedUntil"}},{"kind":"Field","name":{"kind":"Name","value":"order"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQUnsnoozeExerciseScheduleMutation, GQUnsnoozeExerciseScheduleMutationVariables>;
 export const UpdateTodoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateTodo"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateTodoInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateTodo"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"todo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"due"}},{"kind":"Field","name":{"kind":"Name","value":"completed"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}}]}}]}}]}}]} as unknown as DocumentNode<GQUpdateTodoMutation, GQUpdateTodoMutationVariables>;
 export const DeleteTodoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteTodo"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteTodo"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<GQDeleteTodoMutation, GQDeleteTodoMutationVariables>;
-export const UpdateWorkoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWorkout"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateWorkoutInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWorkout"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"materializedAt"}},{"kind":"Field","name":{"kind":"Name","value":"locationId"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"sets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQUpdateWorkoutMutation, GQUpdateWorkoutMutationVariables>;
+export const UpdateWorkoutWorkedOutAtDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWorkoutWorkedOutAt"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateWorkoutWorkedOutAtInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWorkoutWorkedOutAt"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"materializedAt"}},{"kind":"Field","name":{"kind":"Name","value":"locationId"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"sets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQUpdateWorkoutWorkedOutAtMutation, GQUpdateWorkoutWorkedOutAtMutationVariables>;
+export const UpdateWorkoutForWorkoutFormDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWorkoutForWorkoutForm"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateWorkoutInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWorkout"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"materializedAt"}},{"kind":"Field","name":{"kind":"Name","value":"locationId"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"sets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQUpdateWorkoutForWorkoutFormMutation, GQUpdateWorkoutForWorkoutFormMutationVariables>;
+export const CreateWorkoutForWorkoutFormDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateWorkoutForWorkoutForm"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateWorkoutInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createWorkout"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"materializedAt"}},{"kind":"Field","name":{"kind":"Name","value":"locationId"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"sets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQCreateWorkoutForWorkoutFormMutation, GQCreateWorkoutForWorkoutFormMutationVariables>;
 export const WorkoutFormNextSetsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WorkoutFormNextSets"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"asOf"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Date"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"exerciseIds"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"timeZone"}},{"kind":"Field","name":{"kind":"Name","value":"nextSets"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"asOf"},"value":{"kind":"Variable","name":{"kind":"Name","value":"asOf"}}},{"kind":"Argument","name":{"kind":"Name","value":"exerciseIds"},"value":{"kind":"Variable","name":{"kind":"Name","value":"exerciseIds"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"lastWorkedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"dueOn"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"successful"}},{"kind":"Field","name":{"kind":"Name","value":"nextWorkingSets"}},{"kind":"Field","name":{"kind":"Name","value":"nextWorkingSetInputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"exerciseSchedule"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"frequency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"years"}},{"kind":"Field","name":{"kind":"Name","value":"months"}},{"kind":"Field","name":{"kind":"Name","value":"weeks"}},{"kind":"Field","name":{"kind":"Name","value":"days"}},{"kind":"Field","name":{"kind":"Name","value":"hours"}},{"kind":"Field","name":{"kind":"Name","value":"minutes"}},{"kind":"Field","name":{"kind":"Name","value":"seconds"}}]}},{"kind":"Field","name":{"kind":"Name","value":"increment"}},{"kind":"Field","name":{"kind":"Name","value":"workingSets"}},{"kind":"Field","name":{"kind":"Name","value":"workingReps"}},{"kind":"Field","name":{"kind":"Name","value":"deloadFactor"}},{"kind":"Field","name":{"kind":"Name","value":"baseWeight"}},{"kind":"Field","name":{"kind":"Name","value":"snoozedUntil"}},{"kind":"Field","name":{"kind":"Name","value":"order"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQWorkoutFormNextSetsQuery, GQWorkoutFormNextSetsQueryVariables>;
+export const GetUserLocationsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetUserLocations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"locations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"knownAddresses"}},{"kind":"Field","name":{"kind":"Name","value":"visitCount"}},{"kind":"Field","name":{"kind":"Name","value":"mostRecentVisit"}},{"kind":"Field","name":{"kind":"Name","value":"boulderCircuits"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"holdColor"}},{"kind":"Field","name":{"kind":"Name","value":"gradeEstimate"}},{"kind":"Field","name":{"kind":"Name","value":"gradeRange"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"labelColor"}},{"kind":"Field","name":{"kind":"Name","value":"hasZones"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"exerciseStats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseCount"}},{"kind":"Field","name":{"kind":"Name","value":"monthlyCount"}},{"kind":"Field","name":{"kind":"Name","value":"quarterlyCount"}}]}}]}}]}}]} as unknown as DocumentNode<GQGetUserLocationsQuery, GQGetUserLocationsQueryVariables>;
+export const GetWorkoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetWorkout"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"workout"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"workedOutAt"}},{"kind":"Field","name":{"kind":"Name","value":"materializedAt"}},{"kind":"Field","name":{"kind":"Name","value":"locationId"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"exercises"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exerciseId"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"exerciseInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"aliases"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"isHidden"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"instructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"sets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"inputs"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"assistType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GQGetWorkoutQuery, GQGetWorkoutQueryVariables>;
 export const ListPageUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListPageUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"todos"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"due"}},{"kind":"Field","name":{"kind":"Name","value":"completed"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}}]}}]}}]}}]} as unknown as DocumentNode<GQListPageUserQuery, GQListPageUserQueryVariables>;
 export const SourceWidgetDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SourceWidget"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"dataSources"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"paused"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastSyncedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastSuccessfulAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastSuccessfulRuntime"}},{"kind":"Field","name":{"kind":"Name","value":"lastResult"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailedRuntime"}},{"kind":"Field","name":{"kind":"Name","value":"lastAttemptedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastError"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"config"}}]}}]}}]}}]} as unknown as DocumentNode<GQSourceWidgetQuery, GQSourceWidgetQueryVariables>;

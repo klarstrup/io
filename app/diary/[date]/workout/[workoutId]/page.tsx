@@ -17,10 +17,12 @@ export default async function DiaryWorkoutModal(props: {
   const isToday = date === dateToString(TZDate.tz(timeZone));
   const dismissTo = isToday ? "/diary" : (`/diary/${date}` as const);
 
+  if (!user) return null;
+
   return (
     <Modal dismissTo={dismissTo}>
       <div className="h-screen max-w-3xl overflow-auto overscroll-contain rounded-xl bg-white p-2 shadow-xl shadow-black/50">
-        <DiaryWorkout date={date} workoutId={workoutId} />
+        <DiaryWorkout date={date} workoutId={workoutId} user={user} />
         <div className="opacity-0 select-none">
           afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh
           afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh afgaisdfuh

@@ -530,6 +530,8 @@ export const updateExerciseCounts = async (userId: Session["user"]["id"]) => {
   const oneMonthAgo = subMonths(now, 1);
   const oneQuarterAgo = subQuarters(now, 1);
 
+  await WorkoutExercisesView.createIndexes([{ key: { userId: 1 } }]);
+
   await MaterializedWorkoutsView.aggregate([
     { $match: { userId, deletedAt: { $exists: false } } },
     { $unwind: "$exercises" },
@@ -574,13 +576,15 @@ export const WorkoutExercisesView = proxyCollection<IWorkoutExercisesView>(
   "workout_exercises_view",
 );
 
-export const getAllWorkoutExercises = async (user: Session["user"]) => {
-  await WorkoutExercisesView.createIndexes([{ key: { userId: 1 } }]);
-
-  return (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
+export const getAllWorkoutExercises = async (user: Session["user"]) =>
+  (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
     ({ _id, ...location }) => ({ ...location, _id: _id.toString() }),
   );
-};
+
+export const getWorkoutExercise = async (
+  user: Session["user"],
+  exerciseId: number,
+) => await WorkoutExercisesView.findOne({ userId: user.id, exerciseId });
 
 export const calculate60dayTop10AverageSendGrade = (
   allBoulderingWorkouts: WithId<WorkoutData>[],

@@ -22,13 +22,13 @@ export default async function BoulderingGraph({
     userId: string;
     id: string;
     workedOutAt: Date;
-    source?: WorkoutSource | undefined;
+    source?: WorkoutSource | undefined | null;
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date | undefined;
-    location?: string | undefined;
-    locationId?: string | undefined;
-    materializedAt?: Date | undefined;
+    deletedAt?: Date | undefined | null;
+    location?: string | undefined | null;
+    locationId?: string | undefined | null;
+    materializedAt?: Date | undefined | null;
     _id: ObjectId;
   }[];
 }) {

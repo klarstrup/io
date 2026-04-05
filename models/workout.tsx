@@ -50,33 +50,33 @@ export interface WorkoutData {
   createdAt: Date;
   updatedAt: Date;
   workedOutAt: Date;
-  deletedAt?: Date;
-  source?: WorkoutSource;
+  deletedAt?: Date | null;
+  source?: WorkoutSource | null;
   /** @deprecated Only used for materialized workouts, TODO: materialize locations with predictable location IDs */
-  location?: string;
+  location?: string | null;
   // this type is maybe a string or ObjectId depending on if we're clientside or serverside
-  locationId?: string;
+  locationId?: string | null;
 }
 
 export interface WorkoutExercise {
   exerciseId: number;
-  displayName?: string;
+  displayName?: string | null;
   sets: WorkoutExerciseSet[];
-  comment?: string;
+  comment?: string | null;
 }
 
 export interface WorkoutExerciseSet {
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
   inputs: WorkoutExerciseSetInput[];
-  comment?: string;
-  meta?: Record<string, unknown>;
+  comment?: string | null;
+  meta?: Record<string, unknown> | null;
 }
 
 export interface WorkoutExerciseSetInput {
-  unit?: Unit;
+  unit?: Unit | null;
   value: number;
-  assistType?: AssistType;
+  assistType?: AssistType | null;
 }
 
 export type SetAndLocationAndWorkout = readonly [
@@ -252,12 +252,12 @@ const colorOptions = climbingExerciseInputs[1].options;
 export const getCircuitByLocationAndSetColor = (
   exercise: ExerciseData,
   set: Omit<WorkoutExerciseSet, "inputs"> & {
-    meta?: Record<string, unknown>;
+    meta?: Record<string, unknown> | null;
     inputs: (Omit<WorkoutExerciseSetInput, "value"> & {
       value: number | string;
     })[];
   },
-  location: LocationData,
+  location: GQLocation,
 ) => {
   let boulderingSetColor: string | undefined;
   if (exercise.id === 2001) {
@@ -276,18 +276,13 @@ export const getCircuitByLocationAndSetColor = (
   return boulderingCircuit;
 };
 
-const getCircuitByLocationAndColor = (
-  color: string,
-  location: LocationData | GQLocation,
-) =>
+const getCircuitByLocationAndColor = (color: string, location: GQLocation) =>
   location.boulderCircuits?.find(
     (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
   );
 
-const getGradeOfColorByLocation = (
-  color: string,
-  location: LocationData | GQLocation,
-) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
+const getGradeOfColorByLocation = (color: string, location: GQLocation) =>
+  getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
 // Utility to paint over difference in DB and GraphQL representation of set meta
 export const getSetMeta = (
@@ -337,9 +332,9 @@ export function ClimbingStats({
   setAndLocationPairs,
 }: {
   setAndLocationPairs: (readonly [
-    set: WorkoutExerciseSet | GQWorkoutSet,
+    set: GQWorkoutSet,
     location: GQLocation | undefined,
-    workout: WorkoutData | GQWorkout | undefined,
+    workout: GQWorkout | undefined,
   ])[];
 }) {
   const successfulSetAndLocationPairs = setAndLocationPairs.filter(
