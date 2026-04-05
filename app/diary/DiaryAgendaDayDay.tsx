@@ -127,9 +127,14 @@ export function DiaryAgendaDayDay({
 
     for (const journalEntry of dayJournalEntries) {
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
-      const journalEntryCotemporality = principalDate
-        ? cotemporality(principalDate as Interval<Date, Date>)
-        : null;
+      const journalEntryCotemporality =
+        principalDate &&
+        !(
+          journalEntry.__typename === "Event" &&
+          journalEntry.datetype === "date"
+        )
+          ? cotemporality(principalDate as Interval<Date, Date>)
+          : null;
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
 
@@ -527,7 +532,7 @@ export function DiaryAgendaDayDay({
   return (
     <>
       <div
-        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 leading-normal pr-2"
+        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 pr-2 leading-normal"
         style={{
           textShadow:
             "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
