@@ -132,7 +132,9 @@ export function NextSets({
                     )}
                     {successful === false ? " (failed)" : null}
                   </span>
-                  {showDueDate && exerciseSchedule?.frequency && lastWorkedOutAt ? (
+                  {showDueDate &&
+                  exerciseSchedule?.frequency &&
+                  lastWorkedOutAt ? (
                     <span className="text-xs">
                       , due{" "}
                       {formatDistanceStrict(dueSet.dueOn, now, {

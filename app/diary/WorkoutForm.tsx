@@ -3,15 +3,15 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
-    addDays,
-    addMilliseconds,
-    compareAsc,
-    compareDesc,
-    formatDistanceToNowStrict,
-    isPast,
-    isSameDay,
-    isValid,
-    subMilliseconds,
+  addDays,
+  addMilliseconds,
+  compareAsc,
+  compareDesc,
+  formatDistanceToNowStrict,
+  isPast,
+  isSameDay,
+  isValid,
+  subMilliseconds,
 } from "date-fns";
 import gql from "graphql-tag";
 import { Route } from "next";
@@ -26,46 +26,47 @@ import { FieldSetX } from "../../components/FieldSet";
 import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
-    CreateWorkoutForWorkoutFormDocument,
-    GQBoulderCircuit,
-    GQCreateWorkoutDataInput,
-    GQExerciseStat,
-    GQLocation,
-    GQUpdateWorkoutDataInput,
-    GQWorkout,
-    UpdateWorkoutForWorkoutFormDocument,
-    type GQNextSet,
-    type GQWorkoutFormNextSetsQuery,
+  CreateWorkoutForWorkoutFormDocument,
+  type GQBoulderCircuit,
+  type GQCreateWorkoutDataInput,
+  type GQExerciseStat,
+  type GQJournalEntryUnion,
+  type GQLocation,
+  type GQUpdateWorkoutDataInput,
+  type GQWorkout,
+  UpdateWorkoutForWorkoutFormDocument,
+  type GQNextSet,
+  type GQWorkoutFormNextSetsQuery,
 } from "../../graphql.generated";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
 import { exercises, exercisesById } from "../../models/exercises";
 import {
-    AssistType,
-    InputType,
-    SendType,
-    Unit,
-    type ExerciseData,
+  AssistType,
+  InputType,
+  SendType,
+  Unit,
+  type ExerciseData,
 } from "../../models/exercises.types";
 import {
-    durationToMs,
-    getCircuitByLocationAndSetColor,
-    isClimbingExercise,
-    isNextSetDue,
-    WorkoutSource,
-    type WorkoutData,
-    type WorkoutExercise,
-    type WorkoutExerciseSet,
-    type WorkoutExerciseSetInput,
+  durationToMs,
+  getCircuitByLocationAndSetColor,
+  isClimbingExercise,
+  isNextSetDue,
+  WorkoutSource,
+  type WorkoutData,
+  type WorkoutExercise,
+  type WorkoutExerciseSet,
+  type WorkoutExerciseSetInput,
 } from "../../models/workout";
 import {
-    colorNameToEmoji,
-    dateToString,
-    DEFAULT_TIMEZONE,
-    endOfDayButItRespectsDayStartHour,
-    epoch,
-    isNonEmptyArray,
-    omit,
+  colorNameToEmoji,
+  dateToString,
+  DEFAULT_TIMEZONE,
+  endOfDayButItRespectsDayStartHour,
+  epoch,
+  isNonEmptyArray,
+  omit,
 } from "../../utils";
 import { deleteWorkout, snoozeUserExerciseSchedule } from "./actions";
 import { NextSets } from "./NextSets";
@@ -305,6 +306,42 @@ export function WorkoutForm<R extends string>({
 
   const nextSets = nextSetsData?.user?.nextSets?.filter(Boolean);
 
+  const defaultValues = useMemo(
+    () =>
+      workout
+        ? {
+            ...omit(workout, "__typename"),
+            workedOutAt: dateToInputDate(
+              workout?.workedOutAt,
+              user?.timeZone ?? DEFAULT_TIMEZONE,
+            ),
+            source: workout.source as WorkoutSource | undefined,
+            exercises: workout.exercises.map((exercise) => ({
+              ...omit(exercise, "__typename", "exerciseInfo"),
+              sets: exercise.sets.map((set) => ({
+                ...omit(set, "__typename"),
+                inputs: set.inputs.map((input) => ({
+                  ...omit(input, "__typename"),
+                  unit: (input.unit ?? undefined) as Unit | undefined,
+                  assistType: input.assistType as AssistType | undefined,
+                  value:
+                    input.unit === Unit.FrenchRounded
+                      ? getValueAsFont(input.value)
+                      : getValueAs(input.value),
+                })),
+                meta: set.meta
+                  ? set.meta.reduce((acc, curr) => {
+                      acc[curr.key] = curr.value;
+                      return acc;
+                    }, {})
+                  : undefined,
+              })),
+            })),
+          }
+        : undefined,
+    [workout, user?.timeZone],
+  );
+
   const {
     handleSubmit,
     register,
@@ -312,40 +349,8 @@ export function WorkoutForm<R extends string>({
     getValues,
     setValue,
     formState: { isDirty, isSubmitting },
-  } = useForm<WorkoutDataFormData>({
-    mode: "onChange",
-    defaultValues: workout
-      ? {
-          ...omit(workout, "__typename"),
-          workedOutAt: dateToInputDate(
-            workout?.workedOutAt,
-            user?.timeZone ?? DEFAULT_TIMEZONE,
-          ),
-          source: workout.source as WorkoutSource | undefined,
-          exercises: workout.exercises.map((exercise) => ({
-            ...omit(exercise, "__typename", "exerciseInfo"),
-            sets: exercise.sets.map((set) => ({
-              ...omit(set, "__typename"),
-              inputs: set.inputs.map((input) => ({
-                ...omit(input, "__typename"),
-                unit: (input.unit ?? undefined) as Unit | undefined,
-                assistType: input.assistType as AssistType | undefined,
-                value:
-                  input.unit === Unit.FrenchRounded
-                    ? getValueAsFont(input.value)
-                    : getValueAs(input.value),
-              })),
-              meta: set.meta
-                ? set.meta.reduce((acc, curr) => {
-                    acc[curr.key] = curr.value;
-                    return acc;
-                  }, {})
-                : undefined,
-            })),
-          })),
-        }
-      : undefined,
-  });
+    reset,
+  } = useForm<WorkoutDataFormData>({ mode: "onChange", defaultValues });
 
   const { fields, append, update, remove } = useFieldArray({
     control,
@@ -496,25 +501,38 @@ export function WorkoutForm<R extends string>({
             await updateWorkout({
               variables: { input: { id: workout.id, data: newWorkout } },
             });
-            await client.refetchQueries({ include: "all" });
 
             return;
           } else {
             const { data: createWorkoutPayload } = await createWorkout({
               variables: { input: { data: newWorkout } },
+              update: (cache, { data: createWorkoutPayloadData }) => {
+                cache.modify({
+                  id: cache.identify({ __ref: "User:" + user.id }),
+                  fields: {
+                    workouts: (value = []) => [
+                      ...(value as GQWorkout[]),
+                      createWorkoutPayloadData?.createWorkout
+                        ?.workout as GQWorkout,
+                    ],
+                    journalEntries: (value = []) => [
+                      ...(value as GQJournalEntryUnion[]),
+                      createWorkoutPayloadData?.createWorkout
+                        ?.workout as GQJournalEntryUnion,
+                    ],
+                  },
+                });
+              },
             });
-            await client.refetchQueries({ include: "all" });
 
             const newWorkoutId =
               createWorkoutPayload?.createWorkout?.workout?.id;
 
             if (newWorkoutId) {
               router.push(`/diary/${date}/workout/${newWorkoutId}`);
-
-              // Wait forever, presuming this component unmounts when the above push completes. (LET ME AWAIT THIS NEXT.JS???)
-              await new Promise(() => {});
             }
 
+            reset();
             return;
           }
         })}
@@ -540,6 +558,7 @@ export function WorkoutForm<R extends string>({
               onClick={async () => {
                 if (window.confirm("Are you sure you want to delete this?")) {
                   await deleteWorkout(workout.id);
+                  client.cache.evict({ id: client.cache.identify(workout) });
                   router.push(dismissTo);
                   return;
                 }
@@ -625,6 +644,13 @@ export function WorkoutForm<R extends string>({
         </div>
         <div className="flex flex-col gap-1">
           {fields.map(({ id: fieldId, ...field }, index) => {
+            if (!field.exerciseId) {
+              console.warn(
+                `Exercise ID is missing for field with id ${fieldId}`,
+                field,
+              );
+              return null;
+            }
             const exercise = exercisesById.get(field.exerciseId);
             if (!exercise) {
               throw new Error(`Exercise with ID ${field.exerciseId} not found`);
@@ -863,7 +889,7 @@ function SetsForm({
     name: `exercises.${parentIndex}.sets`,
   });
 
-  const lastSet = watchedSets[watchedSets.length - 1];
+  const lastSet = watchedSets?.[watchedSets?.length - 1];
 
   const boulderCircuits =
     exercise.id === 2001
@@ -878,7 +904,7 @@ function SetsForm({
 
   const showAttemptsInput =
     isClimbingExercise(exercise.id) &&
-    watchedSets.some(
+    watchedSets?.some(
       (set) =>
         (set.meta &&
           "attemptCount" in set.meta &&
