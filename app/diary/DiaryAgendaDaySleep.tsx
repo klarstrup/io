@@ -1,9 +1,9 @@
 "use client";
 import { faBed, faBedPulse } from "@fortawesome/free-solid-svg-icons";
-import { Interval, intervalToDuration } from "date-fns";
+import { type Interval, intervalToDuration } from "date-fns";
 import { useCallback, useRef, useState } from "react";
 import SourceWidget from "../../components/SourceWidget";
-import { GQSleep, GQUser } from "../../graphql.generated";
+import type { GQSleep, GQUser } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
 import { formatShortDuration } from "../../models/workout";
 import { DataSource } from "../../sources/utils";
@@ -13,12 +13,12 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export default function DiaryAgendaDaySleep({
   sleep,
-  user,
+  userTimeZone,
   principalDate,
   cotemporalityOfSurroundingEvent,
 }: {
   sleep: GQSleep | (GQSleep & { _this_is_the_end_of_a_sleep: true });
-  user?: Pick<GQUser, "timeZone">;
+  userTimeZone: GQUser["timeZone"];
   principalDate?: ReturnType<typeof getJournalEntryPrincipalDate>;
   cotemporalityOfSurroundingEvent?: "current" | "past" | "future" | null;
 }) {
@@ -27,7 +27,7 @@ export default function DiaryAgendaDaySleep({
     end: sleep.totalSleepTime * 1000,
   });
 
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = userTimeZone || DEFAULT_TIMEZONE;
 
   const [isOpen, setIsOpen] = useState(false);
   const onClickOutside = () => setIsOpen(false);

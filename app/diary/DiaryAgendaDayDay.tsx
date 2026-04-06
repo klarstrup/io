@@ -10,7 +10,6 @@ import {
   isEqual,
   isPast,
   roundToNearestMinutes,
-  startOfDay,
   type Interval,
 } from "date-fns";
 import Link from "next/link";
@@ -64,20 +63,24 @@ const getJournalEntryPassed = (journalEntry: JournalEntry, now: Date) => {
 export function DiaryAgendaDayDay({
   date,
   dayDate,
-  user,
+  userTimeZone,
   dayLocations,
   dayJournalEntries,
 }: {
   date: `${number}-${number}-${number}`;
   dayDate: Date;
-  user?: Omit<GQUser, "exerciseSchedules">;
+  userTimeZone?: GQUser["timeZone"];
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
 }) {
   const isSSR = useIsSSR();
   const client = useApolloClient();
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
-  const todayStr = useMemo(() => dateToString(startOfDay(new Date())), []);
+  const timeZone = userTimeZone || DEFAULT_TIMEZONE;
+  const todayStr = useMemo(
+    () =>
+      dateToString(startOfDayButItRespectsDayStartHour(TZDate.tz(timeZone))),
+    [timeZone],
+  );
   const isToday = date === todayStr;
   const now = useNow(isToday ? 60 * 1000 : 60 * 60 * 1000);
   const ref = useRef<HTMLFieldSetElement>(null);
@@ -199,7 +202,7 @@ export function DiaryAgendaDayDay({
           element: (
             <DiaryAgendaDaySleep
               sleep={sleep}
-              user={user}
+              userTimeZone={timeZone}
               principalDate={principalDate}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
               key={
@@ -343,7 +346,7 @@ export function DiaryAgendaDayDay({
               id: "end-of-" + (client.cache.identify(event) || event.id),
               element: (
                 <DiaryAgendaDayEventEnd
-                  userTimeZone={user?.timeZone}
+                  userTimeZone={timeZone}
                   event={event}
                   key={"end-of-" + (client.cache.identify(event) || event.id)}
                   cotemporalityOfSurroundingEvent={
@@ -398,7 +401,7 @@ export function DiaryAgendaDayDay({
             element: (
               <DiaryAgendaDayEvent
                 dayDate={dayDate}
-                userTimeZone={user?.timeZone}
+                userTimeZone={timeZone}
                 event={event}
                 key={event.id}
                 isEventEnd={isEventEnd}
@@ -524,7 +527,6 @@ export function DiaryAgendaDayDay({
     isToday,
     now,
     timeZone,
-    user,
   ]);
 
   const allCompleted = dayJournalEntries.every((je) =>

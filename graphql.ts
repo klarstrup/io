@@ -2,14 +2,21 @@ import { tz } from "@date-fns/tz";
 import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
-import { addWeeks, isValid, startOfDay } from "date-fns";
+import {
+  addDays,
+  addWeeks,
+  Interval,
+  isValid,
+  startOfDay,
+  subDays,
+} from "date-fns";
 import { OAuth2Client } from "google-auth-library";
 import {
-    type DocumentNode,
-    GraphQLScalarType,
-    Kind,
-    type OperationDefinitionNode,
-    print,
+  type DocumentNode,
+  GraphQLScalarType,
+  Kind,
+  type OperationDefinitionNode,
+  print,
 } from "graphql";
 import gql from "graphql-tag";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
@@ -17,22 +24,22 @@ import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
 import { auth } from "./auth";
 import type {
-    GQCreateTodoPayload,
-    GQExerciseInfo,
-    GQExerciseSchedule,
-    GQFloatTimeSeriesEntry,
-    GQFoodEntry,
-    GQNextSet,
-    GQResolvers,
-    GQSleep,
-    GQSnoozeExerciseSchedulePayload,
-    GQUnsnoozeExerciseSchedulePayload,
-    GQUpdateTodoPayload,
-    GQWorkout,
-    GQWorkoutExercise,
-    GQWorkoutSet,
-    GQWorkoutSetInput,
-    GQWorkoutSetMeta,
+  GQCreateTodoPayload,
+  GQExerciseInfo,
+  GQExerciseSchedule,
+  GQFloatTimeSeriesEntry,
+  GQFoodEntry,
+  GQNextSet,
+  GQResolvers,
+  GQSleep,
+  GQSnoozeExerciseSchedulePayload,
+  GQUnsnoozeExerciseSchedulePayload,
+  GQUpdateTodoPayload,
+  GQWorkout,
+  GQWorkoutExercise,
+  GQWorkoutSet,
+  GQWorkoutSetInput,
+  GQWorkoutSetMeta,
 } from "./graphql.generated";
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
@@ -41,15 +48,15 @@ import { Locations } from "./models/location.server";
 import { Accounts, Users } from "./models/user.server";
 import { type WorkoutData, WorkoutSource } from "./models/workout";
 import {
-    getNextSets,
-    MaterializedWorkoutsView,
-    WorkoutExercisesView,
-    WorkoutLocationsView,
-    Workouts,
+  getNextSets,
+  MaterializedWorkoutsView,
+  WorkoutExercisesView,
+  WorkoutLocationsView,
+  Workouts,
 } from "./models/workout.server";
 import {
-    getUserIcalEventsBetween,
-    getUserIcalTodosBetween,
+  getUserIcalEventsBetween,
+  getUserIcalTodosBetween,
 } from "./sources/ical";
 import { IcalEvents } from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
@@ -57,10 +64,16 @@ import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
 import { Withings } from "./sources/withings";
 import {
-    WithingsMeasureGroup,
-    WithingsSleepSummarySeries,
+  WithingsMeasureGroup,
+  WithingsSleepSummarySeries,
 } from "./sources/withings.server";
-import { omitUndefined, pick, rangeToQuery } from "./utils";
+import {
+  dayStartHour,
+  endOfDayButItRespectsDayStartHour,
+  omitUndefined,
+  pick,
+  rangeToQuery,
+} from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -160,19 +173,29 @@ export const resolvers: GQResolvers<
     },
   },
   User: {
-    journalEntries: async (parent, args, context, info) =>
-      Promise.all([
+    journalEntries: async (parent, args, context, info) => {
+      const dayDate = new Date(args.dayDate);
+      dayDate.setHours(dayStartHour);
+      const interval = {
+        start: startOfDay(subDays(dayDate, args.daysBefore ?? 0)),
+        end: endOfDayButItRespectsDayStartHour(
+          addDays(dayDate, args.daysAfter ?? 0),
+        ),
+      } satisfies Interval;
+      console.log({ interval });
+      return Promise.all([
         typeof resolvers.User?.todos === "function" &&
-          resolvers.User.todos(parent, args, context, info),
+          resolvers.User.todos(parent, { interval }, context, info),
         typeof resolvers.User?.events === "function" &&
-          resolvers.User.events(parent, args, context, info),
+          resolvers.User.events(parent, { interval }, context, info),
         typeof resolvers.User?.sleeps === "function" &&
-          resolvers.User.sleeps(parent, args, context, info),
+          resolvers.User.sleeps(parent, { interval }, context, info),
         typeof resolvers.User?.workouts === "function" &&
-          resolvers.User.workouts(parent, args, context, info),
+          resolvers.User.workouts(parent, { interval }, context, info),
         typeof resolvers.User?.nextSets === "function" &&
           resolvers.User.nextSets(parent, {}, context, info),
-      ]).then((entries) => entries.flat().filter(Boolean)),
+      ]).then((entries) => entries.flat().filter(Boolean));
+    },
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -1061,7 +1084,7 @@ export const resolvers: GQResolvers<
         id: newWorkout._id.toString(),
         userId: user.id,
       });
- 
+
       if (!createdWorkout) {
         throw new Error("Workout not found after creation");
       }
@@ -1609,7 +1632,11 @@ export const typeDefs = gql`
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]
-    journalEntries(interval: IntervalInput!): [JournalEntry!]
+    journalEntries(
+      dayDate: String!
+      daysBefore: Int
+      daysAfter: Int
+    ): [JournalEntry!]
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]

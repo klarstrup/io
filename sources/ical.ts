@@ -216,12 +216,8 @@ export async function getUserIcalTodosBetween(
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
     $or: [
-      { start: { $gte: start, $lte: end } },
-      { end: { $gte: start, $lte: end } },
-      { start: { $lte: start }, end: { $gte: end } },
-      // VTODOs may not have an end date or a start date or a due date
-      { start: { $gte: start, $lte: end } },
-      { due: { $gte: start, $lte: end } },
+      { start: { $lte: end }, completed: { $exists: false } },
+      { due: { $lte: end }, completed: { $exists: false } },
       { completed: { $gte: start, $lte: end } },
       { completed: { $exists: false } },
       { completed: undefined },
@@ -245,11 +241,7 @@ export async function getUserIcalTodosBetween(
             : true
     ) {
       eventsThatFallWithinRange.push(
-        omit(
-          { ...todo, due: todo.due || todo.start || todo.due },
-          "_id",
-          "start",
-        ) as MongoVTodo,
+        omit({ ...todo, due: todo.due || todo.start }, "_id", "start"),
       );
     }
   }
@@ -258,8 +250,8 @@ export async function getUserIcalTodosBetween(
     if (a.completed && !b.completed) return 1;
     if (!a.completed && b.completed) return -1;
     return compareAsc(
-      a.completed || a.start || a.due || a.created!,
-      b.completed || b.start || b.due || b.created!,
+      a.completed || a.due || a.start || a.created!,
+      b.completed || b.due || b.start || b.created!,
     );
   });
 }

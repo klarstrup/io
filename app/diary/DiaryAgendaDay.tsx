@@ -14,6 +14,7 @@ import {
   min,
   setHours,
   startOfDay,
+  subDays,
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
@@ -21,7 +22,6 @@ import { useSession } from "next-auth/react";
 import { useMemo } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import {
-  DiaryAgendaDayUserDocument,
   DiaryAgendaDayUserTodosDocument,
   type GQLocation,
 } from "../../graphql.generated";
@@ -46,7 +46,11 @@ import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
-  query DiaryAgendaDayUser {
+  query DiaryAgendaDayUserTodos(
+    $dayDate: String!
+    $daysBefore: Int!
+    $daysAfter: Int!
+  ) {
     user {
       id
       name
@@ -54,52 +58,6 @@ gql`
       image
       emailVerified
       timeZone
-      dataSources {
-        id
-        name
-        paused
-        createdAt
-        updatedAt
-        lastSyncedAt
-        lastSuccessfulAt
-        lastSuccessfulRuntime
-        lastResult
-        lastFailedAt
-        lastFailedRuntime
-        lastAttemptedAt
-        lastError
-        source
-        config
-      }
-      exerciseSchedules {
-        id
-        exerciseId
-        enabled
-        frequency {
-          years
-          months
-          weeks
-          days
-          hours
-          minutes
-          seconds
-        }
-        increment
-        workingSets
-        workingReps
-        deloadFactor
-        baseWeight
-        snoozedUntil
-      }
-    }
-  }
-`;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-gql`
-  query DiaryAgendaDayUserTodos($interval: IntervalInput!) {
-    user {
-      id
       locations {
         id
         createdAt
@@ -120,7 +78,11 @@ gql`
           updatedAt
         }
       }
-      journalEntries(interval: $interval) {
+      journalEntries(
+        dayDate: $dayDate
+        daysBefore: $daysBefore
+        daysAfter: $daysAfter
+      ) {
         __typename
         ... on Sleep {
           id
@@ -251,31 +213,24 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
-  const { data: gqlUserData } = useQuery(DiaryAgendaDayUserDocument, {
-    pollInterval,
-  });
-  const gqlUser = gqlUserData?.user;
+  const variables = useMemo(
+    () => ({
+      dayDate: dayDate ? dateToString(dayDate) : dateToString(new Date()),
+      daysBefore: dayDate ? 0 : 1,
+      daysAfter: dayDate ? 0 : 1,
+    }),
+    [dayDate],
+  );
 
-  const user =
-    gqlUser ||
-    (sessionUser
-      ? {
-          ...sessionUser,
-          __typename: "User",
-          dataSources: sessionUser.dataSources?.map((ds) => ({
-            ...ds,
-            __typename: "UserDataSource",
-          })),
-          exerciseSchedules: gqlUserData?.user?.exerciseSchedules?.map(
-            (es) => ({
-              ...es,
-              __typename: "ExerciseSchedule",
-            }),
-          ),
-        }
-      : undefined);
+  const { data, variables: queryVariables } = useQuery(
+    DiaryAgendaDayUserTodosDocument,
+    {
+      variables,
+      pollInterval,
+    },
+  );
 
-  const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
+  const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const timeZoneDate = useMemo(() => TZDate.tz(timeZone), [timeZone]);
   const now = dayDate ? addHours(dayDate, dayStartHour) : timeZoneDate;
   const startOfAgendaDay = useMemo(
@@ -283,34 +238,21 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     [now],
   );
 
-  const tzDate = useMemo(
-    () => new TZDate(startOfAgendaDay, timeZone),
-    [startOfAgendaDay, timeZone],
-  );
-
   const fetchingInterval = useMemo(
     () => ({
-      start: dayDate
-        ? // Slight overfetching to get all-day events that are marked as starting on midnight, regardless of dayStartHour
-          // TODO: Make this getUserIcalEventsBetween's concern. These all-day events fall withing the interval, it just isn't that simple because of the RRule logic in getUserIcalEventsBetween
-          startOfDay(tzDate)
-        : addDays(startOfDayButItRespectsDayStartHour(tzDate), -8),
-      end: dayDate
-        ? endOfDayButItRespectsDayStartHour(tzDate)
-        : addDays(endOfDayButItRespectsDayStartHour(tzDate), 14),
+      start: startOfDay(subDays(startOfAgendaDay, queryVariables.daysBefore)),
+      end: addDays(
+        endOfDayButItRespectsDayStartHour(startOfAgendaDay),
+        queryVariables.daysAfter,
+      ),
     }),
-    [dayDate, tzDate],
+    [startOfAgendaDay, queryVariables],
   );
-
-  const { data } = useQuery(DiaryAgendaDayUserTodosDocument, {
-    variables: { interval: fetchingInterval },
-    pollInterval,
-  });
 
   const daysOfInterval = useMemo(
     () =>
       eachDayOfInterval(fetchingInterval).filter(
-        (date) => addHours(date, dayStartHour) <= fetchingInterval.end,
+        (date) => date <= fetchingInterval.end,
       ),
     [fetchingInterval],
   );
@@ -660,14 +602,16 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               <DiaryAgendaDayDay
                 date={dateToString(dayDate)}
                 dayDate={dayDate}
-                user={user}
+                userTimeZone={timeZone}
                 dayLocations={userLocations}
                 dayJournalEntries={dayJournalEntries}
               />
             </TodoDroppable>
           ),
         )}
-        {user ? <DiaryPoller userId={user.id} /> : null}
+        {sessionData?.user ? (
+          <DiaryPoller userId={sessionData.user.id} />
+        ) : null}
       </div>
     </>
   );
