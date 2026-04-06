@@ -182,7 +182,7 @@ export const resolvers: GQResolvers<
           addDays(dayDate, args.daysAfter ?? 0),
         ),
       } satisfies Interval;
-      console.log({ interval });
+
       return Promise.all([
         typeof resolvers.User?.todos === "function" &&
           resolvers.User.todos(parent, { interval }, context, info),
