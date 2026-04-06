@@ -19,8 +19,9 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
+import { ShyGuy } from "../../components/ShyGuy";
 import {
   DiaryAgendaDayUserTodosDocument,
   type GQLocation,
@@ -213,22 +214,26 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
+  const [daysBefore, setDaysBefore] = useState(dayDate ? 0 : 1);
+  const [daysAfter, setDaysAfter] = useState(dayDate ? 0 : 1);
+
   const variables = useMemo(
     () => ({
       dayDate: dayDate ? dateToString(dayDate) : dateToString(new Date()),
-      daysBefore: dayDate ? 0 : 1,
-      daysAfter: dayDate ? 0 : 1,
+      daysBefore,
+      daysAfter,
     }),
-    [dayDate],
+    [dayDate, daysBefore, daysAfter],
   );
 
-  const { data, variables: queryVariables } = useQuery(
-    DiaryAgendaDayUserTodosDocument,
-    {
-      variables,
-      pollInterval,
-    },
-  );
+  const {
+    data: currentData,
+    previousData,
+    variables: queryVariables,
+    loading,
+  } = useQuery(DiaryAgendaDayUserTodosDocument, { variables, pollInterval });
+
+  const data = loading ? previousData || currentData : currentData;
 
   const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const timeZoneDate = useMemo(() => TZDate.tz(timeZone), [timeZone]);
@@ -592,7 +597,18 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           </FieldSetY>
         </div>
       ) : null}
-      <div className="flex flex-col items-stretch justify-start">
+      <div
+        className={"flex flex-col items-stretch justify-center"}
+      >
+        <ShyGuy
+          onSeen={() => {
+            if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+            if (loading) return;
+            if (queryVariables.daysBefore !== daysBefore) return;
+            setDaysBefore((d) => d + 1);
+            window.scrollBy({ top: 10, behavior: "instant" });
+          }}
+        />
         {daysJournalEntriesIncludingLocationChanges2.map(
           ([dayDate, dayJournalEntries]) => (
             <TodoDroppable
@@ -609,6 +625,15 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             </TodoDroppable>
           ),
         )}
+        <ShyGuy
+          onSeen={() => {
+            if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+            if (loading) return;
+            if (queryVariables.daysAfter !== daysAfter) return;
+            setDaysAfter((d) => d + 1);
+            window.scrollBy({ top: -10, behavior: "instant" });
+          }}
+        />
         {sessionData?.user ? (
           <DiaryPoller userId={sessionData.user.id} />
         ) : null}

@@ -86,9 +86,12 @@ export function DiaryAgendaDayDay({
   const ref = useRef<HTMLFieldSetElement>(null);
 
   useEffect(() => {
-    if (!isToday || isSSR) return;
+    const el = ref.current;
+    if (!isToday || isSSR || !el) return;
 
-    ref.current?.scrollIntoView({ behavior: "auto", block: "center" });
+    const viewportHeight = window.innerHeight;
+    const elTop = el.offsetTop;
+    window.scrollTo(0, elTop - viewportHeight / 2);
   }, [isToday, isSSR, dayJournalEntries.length]);
 
   const dayStart = useMemo(() => addHours(dayDate, dayStartHour), [dayDate]);
