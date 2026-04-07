@@ -245,13 +245,13 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
 
   const fetchingInterval = useMemo(
     () => ({
-      start: startOfDay(subDays(startOfAgendaDay, queryVariables.daysBefore)),
+      start: startOfDay(subDays(startOfAgendaDay, daysBefore)),
       end: addDays(
         endOfDayButItRespectsDayStartHour(startOfAgendaDay),
-        queryVariables.daysAfter,
+        daysAfter,
       ),
     }),
-    [startOfAgendaDay, queryVariables],
+    [startOfAgendaDay, daysAfter, daysBefore],
   );
 
   const daysOfInterval = useMemo(
