@@ -597,16 +597,14 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           </FieldSetY>
         </div>
       ) : null}
-      <div
-        className={"flex flex-col items-stretch justify-center"}
-      >
+      <div className={"flex flex-col items-stretch justify-center"}>
         <ShyGuy
           onSeen={() => {
             if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             if (loading) return;
             if (queryVariables.daysBefore !== daysBefore) return;
             setDaysBefore((d) => d + 1);
-            window.scrollBy({ top: 10, behavior: "instant" });
+            window.scrollBy({ top: 1, behavior: "instant" });
           }}
         />
         {daysJournalEntriesIncludingLocationChanges2.map(
@@ -631,7 +629,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             if (loading) return;
             if (queryVariables.daysAfter !== daysAfter) return;
             setDaysAfter((d) => d + 1);
-            window.scrollBy({ top: -10, behavior: "instant" });
+            window.scrollBy({ top: -1, behavior: "instant" });
           }}
         />
         {sessionData?.user ? (
