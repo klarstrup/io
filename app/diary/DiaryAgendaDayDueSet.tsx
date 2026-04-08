@@ -116,7 +116,6 @@ export function DiaryAgendaDayDueSet({
           deloadFactor
           baseWeight
           snoozedUntil
-          order
           nextSet {
             id
             lastWorkedOutAt
@@ -148,7 +147,6 @@ export function DiaryAgendaDayDueSet({
               deloadFactor
               baseWeight
               snoozedUntil
-              order
             }
           }
         }
@@ -181,7 +179,6 @@ export function DiaryAgendaDayDueSet({
           deloadFactor
           baseWeight
           snoozedUntil
-          order
           nextSet {
             id
             lastWorkedOutAt
@@ -213,7 +210,6 @@ export function DiaryAgendaDayDueSet({
               deloadFactor
               baseWeight
               snoozedUntil
-              order
             }
           }
         }

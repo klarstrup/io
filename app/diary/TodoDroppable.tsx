@@ -19,7 +19,7 @@ import {
   type SortableContextProps,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { isDate, isFuture, isPast, max, min } from "date-fns";
+import { addMinutes, isDate, isFuture, isPast, max, min } from "date-fns";
 import gql from "graphql-tag";
 import type { ReactNode } from "react";
 import {
@@ -161,7 +161,9 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
   const client = useApolloClient();
   const [updateTodo] = useMutation(UpdateTodoDocument);
   const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
-  const [updateWorkoutWorkedOutAt] = useMutation(UpdateWorkoutWorkedOutAtDocument);
+  const [updateWorkoutWorkedOutAt] = useMutation(
+    UpdateWorkoutWorkedOutAtDocument,
+  );
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -297,6 +299,9 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
     if (activeCurrent.nextSet) {
       const nextSet = activeCurrent.nextSet as GQNextSet;
+
+      // Exercise schedules can only be snoozed into the future, so if the target date is in the past, we set it to now
+      targetDate = max([targetDate, addMinutes(new Date(), 2)]);
 
       void snoozeExerciseSchedule({
         variables: {

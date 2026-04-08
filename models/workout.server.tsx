@@ -4,6 +4,7 @@ import {
   addMilliseconds,
   addQuarters,
   isEqual,
+  isFuture,
   max,
   startOfDay,
   subDays,
@@ -89,6 +90,7 @@ export function computeNextSetFromWorkout(
 
   if (
     exerciseSchedule.snoozedUntil &&
+    isFuture(exerciseSchedule.snoozedUntil) &&
     (!lastSetEndedAt || lastSetEndedAt < exerciseSchedule.snoozedUntil)
   ) {
     dueOn = exerciseSchedule.snoozedUntil;

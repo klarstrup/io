@@ -289,7 +289,6 @@ export function WorkoutForm<R extends string>({
               deloadFactor
               baseWeight
               snoozedUntil
-              order
             }
           }
         }

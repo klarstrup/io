@@ -7,6 +7,7 @@ import {
   addWeeks,
   Interval,
   isValid,
+  max,
   startOfDay,
   subDays,
 } from "date-fns";
@@ -958,7 +959,8 @@ export const resolvers: GQResolvers<
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
-      const snoozedUntil = args.input.snoozedUntil;
+      const snoozedUntil =
+        args.input.snoozedUntil && max([args.input.snoozedUntil, new Date()]);
 
       const updateResult = await Users.updateOne(
         { _id: new ObjectId(user.id) },
@@ -1742,7 +1744,6 @@ export const typeDefs = gql`
     deloadFactor: Float
     baseWeight: Float
     snoozedUntil: Date
-    order: Int
     nextSet: NextSet
   }
 
@@ -1764,7 +1765,6 @@ export const typeDefs = gql`
     summary: String
     due: Date
     completed: Date
-    order: Int
   }
 
   type Event implements JournalEntry {
@@ -1777,7 +1777,6 @@ export const typeDefs = gql`
     datetype: String!
     location: String
     url: String
-    order: Int
   }
 
   type Location {
