@@ -505,7 +505,7 @@ export default function ProblemByProblem({
   return (
     <div
       className={
-        "mt-0.5 grid w-full grid-cols-[repeat(auto-fill,minmax(24px,1fr))] gap-0.5 md:grid-cols-[repeat(auto-fill,minmax(28px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(32px,1fr))]"
+        "mt-0.5 grid w-full grid-cols-[repeat(auto-fill,minmax(24px,1fr))] gap-0.5 md:grid-cols-[repeat(auto-fill,minmax(27px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(30px,1fr))]"
       }
     >
       {sortedProblems.map((problem, i) => (
