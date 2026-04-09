@@ -90,8 +90,8 @@ export function DiaryAgendaDayDay({
     if (!isToday || isSSR || !el) return;
 
     const viewportHeight = window.innerHeight;
-    const elTop = el.offsetTop;
-    window.scrollTo(0, elTop - viewportHeight / 2);
+    const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
+    window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
   }, [isToday, isSSR, dayJournalEntries.length]);
 
   const dayStart = useMemo(() => addHours(dayDate, dayStartHour), [dayDate]);
