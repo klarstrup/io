@@ -603,7 +603,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             if (loading) return;
             if (queryVariables.daysBefore !== daysBefore) return;
-            setDaysBefore((d) => d + 1);
+            setDaysBefore((d) => d + 2);
             window.scrollBy({ top: 1, behavior: "instant" });
           }}
         />
@@ -628,7 +628,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             if (loading) return;
             if (queryVariables.daysAfter !== daysAfter) return;
-            setDaysAfter((d) => d + 1);
+            setDaysAfter((d) => d + 2);
             window.scrollBy({ top: -1, behavior: "instant" });
           }}
         />
