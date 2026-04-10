@@ -5,6 +5,7 @@ import * as Ably from "ably";
 import {
   addDays,
   addWeeks,
+  differenceInHours,
   Interval,
   isValid,
   max,
@@ -481,8 +482,16 @@ export const resolvers: GQResolvers<
       if (!events.length) return null;
       const hoursWithEvents = new Set(
         events
-          // Usually all-day events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
+          // Usually all-day(datetype "date") events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
           .filter((event) => event.datetype === "date-time")
+          // Also exclude events that are longer than 24 hours, since they are likely not reflecting actual busy time slots in the calendar
+          .filter(
+            (event) =>
+              differenceInHours(new Date(event.end), new Date(event.start)) <
+              24,
+          )
+          // Transparent events are usually events that the user has marked as "free" in their calendar, so we also exclude them from the busyness calculation since they don't reflect busy time slots in the calendar
+          .filter((event) => event.transparency !== "TRANSPARENT")
           .flatMap((event) => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
