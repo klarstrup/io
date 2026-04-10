@@ -348,6 +348,10 @@ export default function DashBar() {
         >
           <BarIcon>🐝</BarIcon>
           <BarNumberContainer>
+            {data.user.futureBusynessFraction - data.user.pastBusynessFraction >
+            0
+              ? "+"
+              : ""}
             {(
               (data.user.futureBusynessFraction -
                 data.user.pastBusynessFraction) *
