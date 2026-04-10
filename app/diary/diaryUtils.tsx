@@ -146,12 +146,6 @@ export const getJournalEntryPrincipalDate = (
   if ("exerciseSchedule" in entry && entry.exerciseSchedule) {
     const nextSet = entry;
 
-    if (entry.exerciseId === 288) {
-      console.log("Calculating principal date for exercise schedule", {
-        nextSet,
-      });
-    }
-
     const effectiveDueDate = nextSet.exerciseSchedule.snoozedUntil
       ? max([nextSet.exerciseSchedule.snoozedUntil, nextSet.dueOn])
       : nextSet.dueOn;
