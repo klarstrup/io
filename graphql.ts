@@ -524,7 +524,12 @@ export const resolvers: GQResolvers<
       })),
     events: async (parent, args) =>
       (await getUserIcalEventsBetween(parent.id, args.interval)).map(
-        (event) => ({ ...event, id: event.uid, __typename: "Event" }),
+        (event) => ({
+          ...event,
+          id: event.uid,
+          __typename: "Event",
+          url: typeof event.url === "string" ? event.url : null,
+        }),
       ),
     inboxEmailCount: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;

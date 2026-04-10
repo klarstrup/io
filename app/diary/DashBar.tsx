@@ -332,13 +332,13 @@ export default function DashBar() {
           target="_blank"
           rel="noopener noreferrer"
           title={
-            `Past busyness: ${(
+            `Past 14 days busyness: ${(
               data.user.pastBusynessFraction * 100
             ).toLocaleString(undefined, {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
             })}%\n` +
-            `Future busyness: ${(
+            `Future 14 days busyness: ${(
               data.user.futureBusynessFraction * 100
             ).toLocaleString(undefined, {
               minimumFractionDigits: 0,
