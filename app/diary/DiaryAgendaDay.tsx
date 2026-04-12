@@ -152,7 +152,7 @@ gql`
           id
           created
           summary
-          start: start
+          start
           end
           datetype
           location
