@@ -916,7 +916,7 @@ function SetsForm({
 
   const showZoneAttemptsInput =
     isClimbingExercise(exercise.id) &&
-    watchedSets.some(
+    watchedSets?.some(
       (set) =>
         (set.meta &&
           "zoneAttemptCount" in set.meta &&
