@@ -877,7 +877,6 @@ export const resolvers: GQResolvers<
               id
               created
               summary
-              start
               due
               completed
             }
@@ -934,7 +933,6 @@ export const resolvers: GQResolvers<
               id
               created
               summary
-              start
               due
               completed
             }
