@@ -26,7 +26,7 @@ export function DiaryAgendaDayLocationChange({
     transform,
     transition,
   } = useSortable({
-    id: "location-change-" + locationChange.id,
+    id: locationChange.id,
     data: {
       locationChange,
       date: getJournalEntryPrincipalDate(locationChange)?.end,

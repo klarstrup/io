@@ -515,11 +515,22 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             (!previousLocation || previousLocation.name !== location.name) &&
             (!lastLocation || lastLocation.name !== location.name)
           ) {
+            const previousEntryIsEnd =
+              previousEntry &&
+              "_this_is_the_end_of_a_event" in previousEntry &&
+              previousEntry._this_is_the_end_of_a_event;
+            const entryIsEnd =
+              "_this_is_the_end_of_a_event" in entry &&
+              entry._this_is_the_end_of_a_event;
             const targetDate = dateMidpoint(
               (previousEntry &&
-                getJournalEntryPrincipalDate(previousEntry)?.end) ||
+                (previousEntryIsEnd
+                  ? getJournalEntryPrincipalDate(previousEntry)?.end
+                  : getJournalEntryPrincipalDate(previousEntry)?.start)) ||
                 dayStart,
-              getJournalEntryPrincipalDate(entry)?.start || dayEnd,
+              (entryIsEnd
+                ? getJournalEntryPrincipalDate(entry)?.end
+                : getJournalEntryPrincipalDate(entry)?.start) || dayEnd,
             );
 
             // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out

@@ -487,10 +487,10 @@ export function DiaryAgendaDayDay({
         });
       } else if (journalEntry.__typename === "LocationChange") {
         dayJournalEntryElements.push({
-          id: "location-change-" + journalEntry.id,
+          id: journalEntry.id,
           element: (
             <DiaryAgendaDayLocationChange
-              key={"location-change-" + journalEntry.id}
+              key={journalEntry.id}
               locationChange={journalEntry}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
