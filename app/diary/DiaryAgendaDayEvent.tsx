@@ -8,8 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  addHours,
-  differenceInDays,
+  differenceInHours,
   intervalToDuration,
   isBefore,
   roundToNearestMinutes,
@@ -17,12 +16,7 @@ import {
 import { useMemo } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated";
 import { formatShortDuration } from "../../models/workout";
-import {
-  cotemporality,
-  dayStartHour,
-  DEFAULT_TIMEZONE,
-  startOfDayButItRespectsDayStartHour,
-} from "../../utils";
+import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
@@ -58,19 +52,16 @@ export function DiaryAgendaDayEvent({
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
 
-  const dayStart = addHours(dayDate, dayStartHour);
-
   const isPassed = isBefore(event.end, now);
 
   const duration = intervalToDuration({
     start: event.start,
     end: roundToNearestMinutes(event.end, { roundingMethod: "ceil" }),
   });
-  const startDay = startOfDayButItRespectsDayStartHour(event.start);
-  const endDay = startOfDayButItRespectsDayStartHour(event.end);
-  const days = differenceInDays(endDay, startDay) + 1;
-  const dayNo = differenceInDays(dayStart, startDay) + 1;
-  const isLastDay = dayNo === days;
+  const dayNo = Math.ceil(differenceInHours(dayDate, event.start) / 24) + 1;
+  const numDays = Math.ceil(differenceInHours(event.end, event.start) / 24);
+  const isFirstDay = dayNo === 1;
+  const isLastDay = dayNo === numDays;
 
   const style = useMemo(
     () => ({
@@ -114,7 +105,7 @@ export function DiaryAgendaDayEvent({
         <div className="leading-tight">
           {event.summary}&nbsp;
           <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
-            {dayNo === 1 && duration ? (
+            {isFirstDay && duration ? (
               formatShortDuration(duration)
             ) : isLastDay ? (
               <>

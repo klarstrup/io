@@ -1,11 +1,12 @@
 import { useApolloClient } from "@apollo/client/react";
-import { tz, TZDate } from "@date-fns/tz";
+import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
 import { faExternalLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   addHours,
   differenceInDays,
+  differenceInHours,
   isBefore,
   isEqual,
   isPast,
@@ -32,7 +33,6 @@ import {
   emptyArray,
   endOfDayButItRespectsDayStartHour,
   isSameDayButItRespectsDayStartHour,
-  roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
@@ -47,7 +47,11 @@ import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
 import { TodoSortableContext } from "./TodoDroppable";
-import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
+import {
+  getJournalEntryPrincipalDate,
+  isEventEntireDay,
+  type JournalEntry,
+} from "./diaryUtils";
 
 interface DayJournalEntryElement {
   id: string;
@@ -137,7 +141,8 @@ export function DiaryAgendaDayDay({
         principalDate &&
         !(
           journalEntry.__typename === "Event" &&
-          journalEntry.datetype === "date"
+          (journalEntry.datetype === "date" ||
+            isEventEntireDay(journalEntry, dayDate))
         )
           ? cotemporality(principalDate as Interval<Date, Date>)
           : null;
@@ -161,6 +166,7 @@ export function DiaryAgendaDayDay({
           .filter(
             (prevEvent) =>
               prevEvent.datetype !== "date" &&
+              !isEventEntireDay(prevEvent, dayDate) &&
               !eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.includes(
                 prevEvent.id,
               ),
@@ -173,7 +179,9 @@ export function DiaryAgendaDayDay({
         dayJournalEntries
           .filter(
             (je): je is GQEvent =>
-              je.__typename === "Event" && je.datetype !== "date",
+              je.__typename === "Event" &&
+              je.datetype !== "date" &&
+              !isEventEntireDay(je, dayDate),
           )
           .find(
             (event) =>
@@ -218,9 +226,12 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Event") {
         const event = journalEntry;
 
+        const eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt =
+          isEventEntireDay(event, dayDate);
+
         const isAllDayEvent =
-          differenceInDays(event.end, event.start) >= 0 &&
-          event.datetype === "date";
+          event.datetype === "date" ||
+          eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt;
 
         if (isAllDayEvent) {
           allDayJournalEntryElements.push({
@@ -244,21 +255,11 @@ export function DiaryAgendaDayDay({
                 iconClassName="w-6 -mr-1"
               >
                 {(() => {
-                  const eventStart =
-                    event.datetype === "date"
-                      ? roundToNearestDay(event.start, {
-                          in: tz(DEFAULT_TIMEZONE),
-                        })
-                      : event.start;
-                  const eventEnd =
-                    event.datetype === "date"
-                      ? roundToNearestDay(event.end, {
-                          in: tz(DEFAULT_TIMEZONE),
-                        })
-                      : event.end;
-
-                  const dayNo = differenceInDays(dayDate, eventStart) + 1;
-                  const numDays = differenceInDays(eventEnd, eventStart);
+                  const dayNo =
+                    Math.ceil(differenceInHours(dayDate, event.start) / 24) + 1;
+                  const numDays = Math.ceil(
+                    differenceInHours(event.end, event.start) / 24,
+                  );
                   const isFirstDay = dayNo === 1;
                   const isLastDay = dayNo === numDays;
 
@@ -268,7 +269,7 @@ export function DiaryAgendaDayDay({
                         {numDays > 1 ? (
                           isFirstDay && event.datetype === "date-time" ? (
                             <>
-                              {eventStart.toLocaleTimeString("en-DK", {
+                              {event.start.toLocaleTimeString("en-DK", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                                 timeZone,
@@ -278,7 +279,7 @@ export function DiaryAgendaDayDay({
                           ) : isLastDay && event.datetype === "date-time" ? (
                             <>
                               -
-                              {eventEnd.toLocaleTimeString("en-DK", {
+                              {event.end.toLocaleTimeString("en-DK", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                                 timeZone,

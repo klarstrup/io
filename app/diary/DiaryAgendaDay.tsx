@@ -43,7 +43,11 @@ import {
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
-import { getJournalEntryPrincipalDate, JournalEntry } from "./diaryUtils";
+import {
+  getJournalEntryPrincipalDate,
+  isEventEntireDay,
+  type JournalEntry,
+} from "./diaryUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -334,11 +338,13 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           ),
         };
 
+        let insertedStart = false;
         for (const date of eachDayOfInterval(eventInterval, {
           in: tz(timeZone),
         })) {
           const dayStart = addHours(startOfDay(date), dayStartHour);
           const dayEnd = addHours(endOfDay(date), dayStartHour);
+          const eventIsAllDay = isEventEntireDay(entry, date);
 
           if (entry.datetype === "date") {
             if (
@@ -362,20 +368,23 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               !entry.start ||
               isAfter(entry.start, dayStart)
             ) {
-              addEntryToDate(entry, entry.start);
+              if (!insertedStart) {
+                addEntryToDate(entry, entry.start);
+                insertedStart = true;
+              }
             }
 
             addEntryToDate(
               { ...entry, _this_is_the_end_of_a_event: true },
-              entry.start,
+              entry.end,
             );
-          } else {
-            addEntryToDate(
-              entry,
-              entry.datetype === "date"
-                ? addHours(entry.start, dayStartHour)
-                : entry.start,
-            );
+          } else if (
+            !insertedStart ||
+            entry.datetype === "date" ||
+            eventIsAllDay
+          ) {
+            addEntryToDate(entry, addHours(date, dayStartHour));
+            insertedStart = true;
           }
         }
       }
@@ -427,12 +436,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     }
 
     return journalEntriesByDate;
-  }, [
-    userJournalEntries,
-    fetchingInterval.end,
-    fetchingInterval.start,
-    timeZone,
-  ]);
+  }, [userJournalEntries, fetchingInterval, timeZone, now]);
 
   const daysJournalEntries = useMemo(
     () =>
@@ -496,7 +500,8 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           if (
             previousEntry &&
             previousEntry.__typename === "Event" &&
-            previousEntry.datetype === "date"
+            (previousEntry.datetype === "date" ||
+              isEventEntireDay(previousEntry, dayDate))
           ) {
             previousEntry = undefined;
           }
@@ -515,6 +520,9 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
 
           if (
             location &&
+            !(
+              entry.__typename === "Event" && isEventEntireDay(entry, dayDate)
+            ) &&
             (!previousLocation || previousLocation.name !== location.name) &&
             (!lastLocation || lastLocation.name !== location.name)
           ) {
@@ -525,15 +533,27 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             const entryIsEnd =
               "_this_is_the_end_of_a_event" in entry &&
               entry._this_is_the_end_of_a_event;
+            const entryPricipalDate = getJournalEntryPrincipalDate(entry);
+            const previousEntryPrincipalDate = previousEntry
+              ? getJournalEntryPrincipalDate(previousEntry)
+              : null;
             const targetDate = dateMidpoint(
               (previousEntry &&
-                (previousEntryIsEnd
-                  ? getJournalEntryPrincipalDate(previousEntry)?.end
-                  : getJournalEntryPrincipalDate(previousEntry)?.end)) ||
+                previousEntryPrincipalDate &&
+                entryPricipalDate &&
+                min(
+                  [
+                    previousEntryIsEnd ||
+                    entryPricipalDate.start > previousEntryPrincipalDate.end
+                      ? previousEntryPrincipalDate.end
+                      : previousEntryPrincipalDate.start,
+                    entryPricipalDate.start,
+                  ].filter(Boolean),
+                )) ||
                 dayStart,
               (entryIsEnd
-                ? getJournalEntryPrincipalDate(entry)?.end
-                : getJournalEntryPrincipalDate(entry)?.start) || dayEnd,
+                ? entryPricipalDate?.end
+                : entryPricipalDate?.start) || dayEnd,
             );
 
             // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out

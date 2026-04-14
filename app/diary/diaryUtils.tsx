@@ -1,5 +1,6 @@
 import {
   addHours,
+  type ContextFn,
   endOfDay,
   getMilliseconds,
   getMinutes,
@@ -191,4 +192,14 @@ export const getJournalEntryPrincipalDate = (
   }
 
   return null;
+};
+
+export const isEventEntireDay = <DateType extends Date>(
+  event: GQEvent,
+  dayDate: Date,
+  inTZ?: ContextFn<DateType>,
+): boolean => {
+  const dayStart = addHours(startOfDay(dayDate, { in: inTZ }), dayStartHour);
+  const dayEnd = addHours(endOfDay(dayDate, { in: inTZ }), dayStartHour);
+  return event.start <= dayStart && event.end >= dayEnd;
 };
