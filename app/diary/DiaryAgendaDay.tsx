@@ -526,7 +526,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               (previousEntry &&
                 (previousEntryIsEnd
                   ? getJournalEntryPrincipalDate(previousEntry)?.end
-                  : getJournalEntryPrincipalDate(previousEntry)?.start)) ||
+                  : getJournalEntryPrincipalDate(previousEntry)?.end)) ||
                 dayStart,
               (entryIsEnd
                 ? getJournalEntryPrincipalDate(entry)?.end
