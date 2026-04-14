@@ -408,7 +408,10 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           ) {
             continue;
           }
-          addEntryToDate(entry, entry.completed || entry.due || date);
+          addEntryToDate(
+            entry,
+            entry.completed || (entry.due && max([entry.due, now])) || date,
+          );
         }
       }
 
