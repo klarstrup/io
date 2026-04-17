@@ -523,21 +523,21 @@ export const resolvers: GQResolvers<
         }),
       );
     },
-    todos: async (parent, args) =>
-      (
-        await Array.fromAsync(getUserIcalTodosBetween(parent.id, args.interval))
-      ).map((todo) => ({ ...todo, id: todo.uid, __typename: "Todo" })),
-    events: async (parent, args) =>
-      (
-        await Array.fromAsync(
-          getUserIcalEventsBetween(parent.id, args.interval),
-        )
-      ).map((event) => ({
-        ...event,
-        id: event.uid,
-        __typename: "Event",
-        url: typeof event.url === "string" ? event.url : null,
-      })),
+    todos: (parent, args) =>
+      Array.fromAsync(
+        getUserIcalTodosBetween(parent.id, args.interval),
+        (todo) => ({ ...todo, id: todo.uid, __typename: "Todo" }),
+      ),
+    events: (parent, args) =>
+      Array.fromAsync(
+        getUserIcalEventsBetween(parent.id, args.interval),
+        (event) => ({
+          ...event,
+          id: event.uid,
+          __typename: "Event",
+          url: typeof event.url === "string" ? event.url : null,
+        }),
+      ),
     inboxEmailCount: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
