@@ -21,7 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { addMinutes, isDate, isFuture, isPast, max, min } from "date-fns";
 import gql from "graphql-tag";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import {
   type GQNextSet,
   type GQTodo,
@@ -390,9 +390,11 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     }),
   );
 
+  const id = useId();
+
   return (
     <DndContext
-      id="TodoDragDropContainer"
+      id={"TodoDragDropContainer-" + id}
       sensors={sensors}
       onDragStart={() => haptic()}
       onDragEnd={handleDragEnd}
