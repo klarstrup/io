@@ -117,9 +117,10 @@ export async function getUserIcalEventsBetween(
               : false)
         ) {
           if (
-            sourceStartDate &&
-            recurrence.end &&
-            recurrence.end < sourceStartDate
+            (sourceStartDate &&
+              recurrence.end &&
+              recurrence.end < sourceStartDate) ||
+            recurrence.start.toJSON() === event.start.toJSON()
           ) {
             continue;
           }
@@ -192,16 +193,7 @@ export async function getUserIcalEventsBetween(
           }
           const rruleEventInstanceId = `${rruleDate.toLocaleDateString()}-${event.uid}`;
 
-          if (
-            eventsThatFallWithinRange.some(
-              (e) => e.uid === rruleEventInstanceId,
-            )
-          ) {
-            console.error(
-              `Duplicate event instance detected for event ${event.uid} on ${rruleDate.toLocaleDateString()}. This should not happen and indicates a bug in the recurrence processing logic. Skipping this instance to avoid duplicates.`,
-            );
-            continue;
-          }
+          if (rruleDate.toJSON() === event.start.toJSON()) continue;
 
           eventsThatFallWithinRange.push({
             ...eventWithoutId,
