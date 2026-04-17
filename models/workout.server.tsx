@@ -283,7 +283,7 @@ interface GetNextSetsDoc {
   workedOutAt: Date;
   exercise: WorkoutExercise;
 }
-export const getNextSets = async function* (
+export async function* getNextSets(
   userId: Session["user"]["id"],
   exerciseSchedules: ExerciseSchedule[],
   { asOf }: { asOf?: Date | null } = {},
@@ -320,77 +320,66 @@ export const getNextSets = async function* (
     { $project: { _id: 0, exerciseId: 1, workedOutAt: 1, exercise: 1 } },
   ]);
 
+  const firstSuccessfulByScheduleId = new Map<string, GetNextSetsDoc>();
   const mostRecentByExerciseId = new Map<number, GetNextSetsDoc>();
   for await (const doc of mostRecentDocs) {
-    mostRecentByExerciseId.set(doc.exerciseId, doc);
-  }
-
-  const climbingWithWorkingSets = enabled.filter(
-    (s) =>
-      isClimbingExercise(s.exerciseId) &&
-      s.workingSets != null &&
-      s.workingSets > 0,
-  );
-  const climbingExerciseIds =
-    climbingWithWorkingSets.length > 0
-      ? [...new Set(climbingWithWorkingSets.map((s) => s.exerciseId))]
-      : [];
-  const schedulesByClimbingExerciseId = new Map(
-    climbingWithWorkingSets.map((s) => [s.exerciseId, s]),
-  );
-
-  const firstSuccessfulByExerciseId = new Map<number, GetNextSetsDoc>();
-  if (climbingExerciseIds.length > 0) {
-    const climbingCursor = MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
-      {
-        $match: {
-          userId,
-          "exercises.exerciseId": { $in: climbingExerciseIds },
-          deletedAt: { $exists: false },
-        },
-      },
-      { $sort: { workedOutAt: -1 } },
-      { $unwind: "$exercises" },
-      { $match: { "exercises.exerciseId": { $in: climbingExerciseIds } } },
-      {
-        $project: {
-          _id: 0,
-          exerciseId: "$exercises.exerciseId",
-          workedOutAt: 1,
-          exercise: "$exercises",
-        },
-      },
-    ]);
-    for await (const doc of climbingCursor) {
-      if (firstSuccessfulByExerciseId.has(doc.exerciseId)) continue;
-      const schedule = schedulesByClimbingExerciseId.get(doc.exerciseId);
-      if (!schedule?.workingSets) continue;
-      const successfulSets = doc.exercise.sets.filter(
-        (set) =>
-          (set.inputs[2]?.value as SendType) === SendType.Flash ||
-          (set.inputs[2]?.value as SendType) === SendType.Top ||
-          (set.inputs[2]?.value as SendType) === SendType.Repeat,
-      );
-      if (successfulSets.length >= schedule.workingSets) {
-        firstSuccessfulByExerciseId.set(doc.exerciseId, {
-          exerciseId: doc.exerciseId,
-          workedOutAt: doc.workedOutAt,
-          exercise: doc.exercise,
-        });
+    for (const schedule of enabled.filter(
+      (s) => s.exerciseId === doc.exerciseId,
+    )) {
+      if (
+        isClimbingExercise(schedule.exerciseId) &&
+        !firstSuccessfulByScheduleId.has(schedule.id) &&
+        schedule.workingSets &&
+        schedule.workingSets > 0
+      ) {
+        const climbingCursor =
+          MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
+            {
+              $match: {
+                userId,
+                "exercises.exerciseId": schedule.exerciseId,
+                deletedAt: { $exists: false },
+              },
+            },
+            { $sort: { workedOutAt: -1 } },
+            { $unwind: "$exercises" },
+            { $match: { "exercises.exerciseId": schedule.exerciseId } },
+            {
+              $project: {
+                _id: 0,
+                exerciseId: "$exercises.exerciseId",
+                workedOutAt: 1,
+                exercise: "$exercises",
+              },
+            },
+          ]);
+        for await (const doc of climbingCursor) {
+          if (firstSuccessfulByScheduleId.has(schedule.id)) continue;
+          const successfulSets = doc.exercise.sets.filter(
+            (set) =>
+              (set.inputs[2]?.value as SendType) === SendType.Flash ||
+              (set.inputs[2]?.value as SendType) === SendType.Top ||
+              (set.inputs[2]?.value as SendType) === SendType.Repeat,
+          );
+          if (successfulSets.length >= schedule.workingSets) {
+            firstSuccessfulByScheduleId.set(schedule.id, doc);
+            break;
+          }
+        }
+      } else {
+        mostRecentByExerciseId.set(doc.exerciseId, doc);
       }
+
+      const workout =
+        (isClimbingExercise(schedule.exerciseId) &&
+        schedule.workingSets != null &&
+        schedule.workingSets > 0
+          ? firstSuccessfulByScheduleId.get(schedule.id)
+          : undefined) ?? mostRecentByExerciseId.get(schedule.exerciseId);
+      yield computeNextSetFromWorkout(workout ?? null, schedule);
     }
   }
-
-  for (const schedule of enabled) {
-    const workout =
-      (isClimbingExercise(schedule.exerciseId) &&
-      schedule.workingSets != null &&
-      schedule.workingSets > 0
-        ? firstSuccessfulByExerciseId.get(schedule.exerciseId)
-        : undefined) ?? mostRecentByExerciseId.get(schedule.exerciseId);
-    yield computeNextSetFromWorkout(workout ?? null, schedule);
-  }
-};
+}
 
 export const noPR = {
   allTimePR: false,
