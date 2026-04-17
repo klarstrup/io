@@ -27,14 +27,17 @@ import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializ
 import { auth } from "./auth";
 import type {
   GQCreateTodoPayload,
+  GQEvent,
   GQExerciseInfo,
   GQExerciseSchedule,
   GQFloatTimeSeriesEntry,
   GQFoodEntry,
+  GQJournalEntryUnion,
   GQNextSet,
   GQResolvers,
   GQSleep,
   GQSnoozeExerciseSchedulePayload,
+  GQTodo,
   GQUnsnoozeExerciseSchedulePayload,
   GQUpdateTodoPayload,
   GQWorkout,
@@ -71,6 +74,7 @@ import {
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
 import {
+  allPromises,
   dayStartHour,
   endOfDayButItRespectsDayStartHour,
   omitUndefined,
@@ -176,7 +180,8 @@ export const resolvers: GQResolvers<
     },
   },
   User: {
-    journalEntries: async (parent, args, context, info) => {
+    journalEntries: async (parent, args) => {
+      const userId = parent.id;
       const dayDate = new Date(args.dayDate);
       dayDate.setHours(dayStartHour);
       const interval = {
@@ -186,18 +191,116 @@ export const resolvers: GQResolvers<
         ),
       } satisfies Interval;
 
-      return Promise.all([
-        typeof resolvers.User?.todos === "function" &&
-          resolvers.User.todos(parent, { interval }, context, info),
-        typeof resolvers.User?.events === "function" &&
-          resolvers.User.events(parent, { interval }, context, info),
-        typeof resolvers.User?.sleeps === "function" &&
-          resolvers.User.sleeps(parent, { interval }, context, info),
-        typeof resolvers.User?.workouts === "function" &&
-          resolvers.User.workouts(parent, { interval }, context, info),
-        typeof resolvers.User?.nextSets === "function" &&
-          resolvers.User.nextSets(parent, {}, context, info),
-      ]).then((entries) => entries.flat().filter(Boolean));
+      const entries: GQJournalEntryUnion[] = [];
+
+      await allPromises(
+        Array.fromAsync(getUserIcalTodosBetween(userId, interval), (todo) =>
+          entries.push({
+            ...todo,
+            id: todo.uid,
+            __typename: "Todo",
+          } satisfies GQTodo),
+        ),
+        Array.fromAsync(getUserIcalEventsBetween(userId, interval), (event) =>
+          entries.push({
+            ...event,
+            id: event.uid,
+            __typename: "Event",
+            url: typeof event.url === "string" ? event.url : null,
+          } satisfies GQEvent),
+        ),
+        Array.fromAsync(
+          getUserWithingsSleepSummarySeriesBetween(userId, interval),
+          (sleep) =>
+            entries.push({
+              ...sleep,
+              deviceId: sleep.hash_deviceid,
+              id: String(sleep.id),
+              totalSleepTime: sleep.data.total_sleep_time,
+              __typename: "Sleep",
+            } satisfies GQSleep),
+        ),
+        Array.fromAsync(
+          MaterializedWorkoutsView.find({
+            userId,
+            $or: [
+              { workedOutAt: rangeToQuery(interval.start, interval.end) },
+              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+              { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
+            ],
+            deletedAt: { $exists: false },
+          }),
+          (workout) =>
+            entries.push({
+              ...workout,
+              location: undefined,
+              exercises: workout.exercises.map(
+                (exercise) =>
+                  ({
+                    ...exercise,
+                    __typename: "WorkoutExercise",
+                    // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                    exerciseInfo: undefined as unknown as GQExerciseInfo,
+                    sets: exercise.sets.map(
+                      (set) =>
+                        ({
+                          ...set,
+                          __typename: "WorkoutSet",
+                          inputs: set.inputs.map(
+                            (input) =>
+                              ({
+                                ...input,
+                                __typename: "WorkoutSetInput",
+                              }) satisfies GQWorkoutSetInput,
+                          ),
+                          meta:
+                            set.meta &&
+                            Object.entries(set.meta || {}).map(
+                              ([key, value]) =>
+                                ({
+                                  key,
+                                  value: String(value),
+                                  __typename: "WorkoutSetMeta",
+                                }) satisfies GQWorkoutSetMeta,
+                            ),
+                        }) satisfies GQWorkoutSet,
+                    ),
+                  }) satisfies GQWorkoutExercise,
+              ),
+              // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
+              id: workout.id || workout._id.toString(),
+              __typename: "Workout",
+            } satisfies GQWorkout),
+        ),
+        Array.fromAsync(
+          getNextSets(
+            userId,
+            parent.exerciseSchedules ||
+              (await auth())?.user.exerciseSchedules ||
+              [],
+          ),
+          (nextSet) =>
+            entries.push({
+              ...nextSet,
+              __typename: "NextSet",
+              nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+                (input) => ({ ...input, __typename: "WorkoutSetInput" }),
+              ),
+              exerciseSchedule: {
+                ...nextSet.exerciseSchedule,
+                __typename: "ExerciseSchedule",
+                frequency: {
+                  ...nextSet.exerciseSchedule.frequency,
+                  __typename: "Duration",
+                },
+                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                exerciseInfo: undefined as unknown as GQExerciseInfo,
+              },
+            } satisfies GQNextSet),
+        ),
+      );
+
+      return entries;
     },
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
