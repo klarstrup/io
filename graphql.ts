@@ -59,8 +59,8 @@ import {
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
-} from "./sources/ical";
-import { IcalEvents } from "./sources/ical.server";
+  IcalEvents,
+} from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
 import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
