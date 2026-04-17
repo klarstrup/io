@@ -95,7 +95,7 @@ export async function getUserIcalEventsBetween(
 
     if (dataSource?.config.url.includes("proprty.ai")) {
       // Company calendars often have no location set but they're nearly always at the office
-      if (!event.location) {
+      if (!event.location || event.location === "Big Ideas") {
         event.location = "Gammel Mønt 3, 1117 København, Denmark";
       }
     }
@@ -190,9 +190,22 @@ export async function getUserIcalEventsBetween(
           ) {
             continue;
           }
+          const rruleEventInstanceId = `${rruleDate.toLocaleDateString()}-${event.uid}`;
+
+          if (
+            eventsThatFallWithinRange.some(
+              (e) => e.uid === rruleEventInstanceId,
+            )
+          ) {
+            console.error(
+              `Duplicate event instance detected for event ${event.uid} on ${rruleDate.toLocaleDateString()}. This should not happen and indicates a bug in the recurrence processing logic. Skipping this instance to avoid duplicates.`,
+            );
+            continue;
+          }
+
           eventsThatFallWithinRange.push({
             ...eventWithoutId,
-            uid: `${rruleDate.toLocaleDateString()}-${event.uid}`,
+            uid: rruleEventInstanceId,
             start: rruleDate,
             end: rruleDateEnd,
           });
