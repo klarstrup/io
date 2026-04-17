@@ -793,27 +793,27 @@ export const resolvers: GQResolvers<
       );
       if (!exerciseSchedules?.length) return [];
 
-      const nextSetsRaw = await getNextSets(user.id, exerciseSchedules, {
-        asOf: args.asOf,
-      });
-      return nextSetsRaw.map((nextSet) => ({
-        ...nextSet,
-        __typename: "NextSet",
-        nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map((input) => ({
-          ...input,
-          __typename: "WorkoutSetInput",
-        })),
-        exerciseSchedule: {
-          ...nextSet.exerciseSchedule,
-          __typename: "ExerciseSchedule",
-          frequency: {
-            ...nextSet.exerciseSchedule.frequency,
-            __typename: "Duration",
-          },
-          // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-          exerciseInfo: undefined as unknown as GQExerciseInfo,
-        },
-      }));
+      return Array.fromAsync(
+        getNextSets(user.id, exerciseSchedules, { asOf: args.asOf }),
+        (nextSet) =>
+          ({
+            ...nextSet,
+            __typename: "NextSet",
+            nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+              (input) => ({ ...input, __typename: "WorkoutSetInput" }),
+            ),
+            exerciseSchedule: {
+              ...nextSet.exerciseSchedule,
+              __typename: "ExerciseSchedule",
+              frequency: {
+                ...nextSet.exerciseSchedule.frequency,
+                __typename: "Duration",
+              },
+              // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+              exerciseInfo: undefined as unknown as GQExerciseInfo,
+            },
+          }) satisfies GQNextSet,
+      );
     },
   },
   Mutation: {
@@ -1428,28 +1428,28 @@ export const resolvers: GQResolvers<
 
       if (!parent.enabled) return null;
 
-      const [nextSet] = await getNextSets(user.id, [parent]);
-
-      if (!nextSet) return null;
-      return {
-        ...nextSet,
-        nextWorkingSetInputs:
-          nextSet.nextWorkingSetInputs?.map((input) => ({
+      for await (const nextSet of getNextSets(user.id, [parent])) {
+        return {
+          ...nextSet,
+          __typename: "NextSet",
+          nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map((input) => ({
             ...input,
             __typename: "WorkoutSetInput",
-          })) || null,
-        exerciseSchedule: {
-          ...nextSet.exerciseSchedule,
-          __typename: "ExerciseSchedule",
-          frequency: {
-            ...nextSet.exerciseSchedule.frequency,
-            __typename: "Duration",
+          })),
+          exerciseSchedule: {
+            ...nextSet.exerciseSchedule,
+            __typename: "ExerciseSchedule",
+            frequency: {
+              ...nextSet.exerciseSchedule.frequency,
+              __typename: "Duration",
+            },
+            // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+            exerciseInfo: undefined as unknown as GQExerciseInfo,
           },
-          // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-          exerciseInfo: undefined as unknown as GQExerciseInfo,
-        },
-        __typename: "NextSet",
-      } satisfies GQNextSet;
+        } satisfies GQNextSet;
+      }
+
+      return null;
     },
   },
 };

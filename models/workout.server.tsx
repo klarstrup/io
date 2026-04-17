@@ -283,11 +283,11 @@ interface GetNextSetsDoc {
   workedOutAt: Date;
   exercise: WorkoutExercise;
 }
-export const getNextSets = async (
+export const getNextSets = async function* (
   userId: Session["user"]["id"],
   exerciseSchedules: ExerciseSchedule[],
   { asOf }: { asOf?: Date | null } = {},
-): Promise<NextSetResult[]> => {
+) {
   const enabled = exerciseSchedules.filter((s) => s.enabled);
   if (enabled.length === 0) return [];
 
@@ -295,34 +295,33 @@ export const getNextSets = async (
     new Set(enabled.map((s) => s.exerciseId)),
   );
 
-  const mostRecentDocs =
-    await MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
-      {
-        $match: {
-          workedOutAt: {
-            $gte: addQuarters(new Date(), -1),
-            $lte: asOf ?? new Date(),
-          },
-          userId,
-          "exercises.exerciseId": { $in: enabledExerciseIds },
+  const mostRecentDocs = MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
+    {
+      $match: {
+        workedOutAt: {
+          $gte: addQuarters(new Date(), -1),
+          $lte: asOf ?? new Date(),
         },
+        userId,
+        "exercises.exerciseId": { $in: enabledExerciseIds },
       },
-      { $sort: { workedOutAt: -1 } },
-      { $unwind: "$exercises" },
-      { $match: { "exercises.exerciseId": { $in: enabledExerciseIds } } },
-      {
-        $group: {
-          _id: "$exercises.exerciseId",
-          exerciseId: { $first: "$exercises.exerciseId" },
-          workedOutAt: { $first: "$workedOutAt" },
-          exercise: { $first: "$exercises" },
-        },
+    },
+    { $sort: { workedOutAt: -1 } },
+    { $unwind: "$exercises" },
+    { $match: { "exercises.exerciseId": { $in: enabledExerciseIds } } },
+    {
+      $group: {
+        _id: "$exercises.exerciseId",
+        exerciseId: { $first: "$exercises.exerciseId" },
+        workedOutAt: { $first: "$workedOutAt" },
+        exercise: { $first: "$exercises" },
       },
-      { $project: { _id: 0, exerciseId: 1, workedOutAt: 1, exercise: 1 } },
-    ]).toArray();
+    },
+    { $project: { _id: 0, exerciseId: 1, workedOutAt: 1, exercise: 1 } },
+  ]);
 
   const mostRecentByExerciseId = new Map<number, GetNextSetsDoc>();
-  for (const doc of mostRecentDocs) {
+  for await (const doc of mostRecentDocs) {
     mostRecentByExerciseId.set(doc.exerciseId, doc);
   }
 
@@ -382,7 +381,6 @@ export const getNextSets = async (
     }
   }
 
-  const results: NextSetResult[] = [];
   for (const schedule of enabled) {
     const workout =
       (isClimbingExercise(schedule.exerciseId) &&
@@ -390,9 +388,8 @@ export const getNextSets = async (
       schedule.workingSets > 0
         ? firstSuccessfulByExerciseId.get(schedule.exerciseId)
         : undefined) ?? mostRecentByExerciseId.get(schedule.exerciseId);
-    results.push(computeNextSetFromWorkout(workout ?? null, schedule));
+    yield computeNextSetFromWorkout(workout ?? null, schedule);
   }
-  return results;
 };
 
 export const noPR = {
