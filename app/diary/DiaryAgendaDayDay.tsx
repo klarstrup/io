@@ -161,7 +161,7 @@ export function DiaryAgendaDayDay({
             je._this_is_the_end_of_a_event,
         );
 
-      let eventThatSurroundsEntry =
+      const eventThatSurroundsEntry =
         previousEvents
           .filter(
             (prevEvent) =>
@@ -195,11 +195,6 @@ export function DiaryAgendaDayDay({
             (endOfEvent) =>
               principalDate && isBefore(endOfEvent.start, principalDate.start),
           );
-
-      // ???
-      if (followingJournalEntry === eventThatSurroundsEntry) {
-        eventThatSurroundsEntry = undefined;
-      }
 
       const cotemporalityOfSurroundingEvent = eventThatSurroundsEntry
         ? cotemporality(eventThatSurroundsEntry)
