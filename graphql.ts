@@ -66,6 +66,7 @@ import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
 import { Withings } from "./sources/withings";
 import {
+  getUserWithingsSleepSummarySeriesBetween,
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
@@ -611,23 +612,8 @@ export const resolvers: GQResolvers<
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
 
-      // For now, we only support Withings sleep data, so we look for a Withings data source and query the sleeps from there
-      const withingsDataSource = user.dataSources?.find(
-        (dataSource) => dataSource.source === DataSource.Withings,
-      );
-
-      const withingsUserId =
-        withingsDataSource?.config?.accessTokenResponse?.userid;
-      if (!withingsUserId) return null;
-
-      return (
-        await WithingsSleepSummarySeries.find({
-          // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
-          _withings_userId: Number(withingsUserId),
-          startedAt: { $lte: new Date(args.interval.end) },
-          endedAt: { $gte: new Date(args.interval.start) },
-        }).toArray()
-      ).map(
+      return Array.fromAsync(
+        getUserWithingsSleepSummarySeriesBetween(user.id, args.interval),
         (sleep) =>
           ({
             ...sleep,
