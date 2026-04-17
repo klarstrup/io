@@ -1,11 +1,13 @@
 import {
   type RefObject,
   useEffect,
+  useEffectEvent,
   useInsertionEffect,
   useRef,
   useState,
 } from "react";
 import useInterval from "./hooks/useInterval";
+import { emptyFunction } from "./utils";
 
 type AnyFunction = (...args: unknown[]) => unknown;
 
@@ -32,7 +34,6 @@ export function useEvent<TCallback extends AnyFunction>(
   // using useRef instead of useCallback avoids creating and empty array on every render
   const stableRef = useRef(null as unknown as TCallback);
   if (!stableRef.current) {
-    // eslint-disable-next-line react-hooks/unsupported-syntax
     stableRef.current = function (this: unknown) {
       // eslint-disable-next-line prefer-rest-params
       return latestRef.current.apply(this, arguments) as unknown;
@@ -294,15 +295,11 @@ export function useInView({
   onChange,
 }: IntersectionOptions = {}): InViewHookResponse {
   const [ref, setRef] = useState<Element | null>(null);
-  const callback = useRef<IntersectionOptions["onChange"]>(undefined);
+  const callback = useEffectEvent(onChange || emptyFunction);
   const [state, setState] = useState<State>({
     inView: Boolean(initialInView),
     entry: undefined,
   });
-
-  // Store the onChange callback in a `ref`, so we can access the latest instance
-  // inside the `useEffect`, but without triggering a rerender.
-  callback.current = onChange;
 
   useEffect(
     () => {
@@ -317,7 +314,7 @@ export function useInView({
             inView,
             entry,
           });
-          if (callback.current) callback.current(inView, entry);
+          callback?.(inView, entry);
 
           if (entry.isIntersecting && triggerOnce && unobserve) {
             // If it should only trigger once, unobserve the element after it's inView
@@ -359,18 +356,20 @@ export function useInView({
 
   const entryTarget = state.entry?.target;
   const previousEntryTarget = useRef<Element>(undefined);
-  if (
-    !ref &&
-    entryTarget &&
-    !triggerOnce &&
-    !skip &&
-    previousEntryTarget.current !== entryTarget
-  ) {
-    // If we don't have a node ref, then reset the state (unless the hook is set to only `triggerOnce` or `skip`)
-    // This ensures we correctly reflect the current state - If you aren't observing anything, then nothing is inView
-    previousEntryTarget.current = entryTarget;
-    setState({ inView: Boolean(initialInView), entry: undefined });
-  }
+  useEffect(() => {
+    if (
+      !ref &&
+      entryTarget &&
+      !triggerOnce &&
+      !skip &&
+      previousEntryTarget.current !== entryTarget
+    ) {
+      // If we don't have a node ref, then reset the state (unless the hook is set to only `triggerOnce` or `skip`)
+      // This ensures we correctly reflect the current state - If you aren't observing anything, then nothing is inView
+      previousEntryTarget.current = entryTarget;
+      setState({ inView: Boolean(initialInView), entry: undefined });
+    }
+  }, [entryTarget, triggerOnce, skip, initialInView, ref]);
 
   const result = [setRef, state.inView, state.entry] as InViewHookResponse;
 

@@ -10,7 +10,6 @@ import {
   WorkoutSource,
 } from "../../models/workout";
 import { dateToString } from "../../utils";
-import { WorkoutEntryDuplicateButton } from "./WorkoutEntryDuplicateButton";
 import { WorkoutEntryExercise } from "./WorkoutEntryExercise";
 
 export default function WorkoutEntry({
@@ -96,16 +95,6 @@ export default function WorkoutEntry({
                     >
                       Edit
                     </Link>
-                    {workoutDateStr !== dateToString(new Date()) &&
-                    // disable for now until fixed
-                    // eslint-disable-next-line react-hooks/purity
-                    Math.random() > 1 ? (
-                      <>
-                        {" "}
-                        <small>-</small>{" "}
-                        <WorkoutEntryDuplicateButton workout={workout} />
-                      </>
-                    ) : null}
                   </>
                 </>
               ) : workout.source === WorkoutSource.Fitocracy ? (
