@@ -730,20 +730,17 @@ export const resolvers: GQResolvers<
         __typename: "Workout",
       } satisfies GQWorkout;
     },
-    workouts: async (parent, args) =>
-      (
-        await MaterializedWorkoutsView.find({
+    workouts: (parent, { interval }) =>
+      Array.fromAsync(
+        MaterializedWorkoutsView.find({
           userId: parent.id,
           $or: [
-            {
-              workedOutAt: rangeToQuery(args.interval.start, args.interval.end),
-            },
+            { workedOutAt: rangeToQuery(interval.start, interval.end) },
             // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-            { workedOutAt: startOfDay(args.interval.start, { in: tz("UTC") }) },
+            { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
           ],
           deletedAt: { $exists: false },
-        }).toArray()
-      ).map(
+        }),
         (workout) =>
           ({
             ...workout,
