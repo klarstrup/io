@@ -441,10 +441,9 @@ export const resolvers: GQResolvers<
       const userId = user.id;
       const now = new Date();
       const oneWeekAgo = addWeeks(now, -2);
-      const events = await getUserIcalEventsBetween(userId, {
-        start: oneWeekAgo,
-        end: now,
-      });
+      const events = await Array.fromAsync(
+        getUserIcalEventsBetween(userId, { start: oneWeekAgo, end: now }),
+      );
       if (!events.length) return null;
       const hoursWithEvents = new Set(
         events
@@ -475,10 +474,9 @@ export const resolvers: GQResolvers<
       const userId = user.id;
       const now = new Date();
       const oneWeekFromNow = addWeeks(now, 2);
-      const events = await getUserIcalEventsBetween(userId, {
-        start: now,
-        end: oneWeekFromNow,
-      });
+      const events = await Array.fromAsync(
+        getUserIcalEventsBetween(userId, { start: now, end: oneWeekFromNow }),
+      );
       if (!events.length) return null;
       const hoursWithEvents = new Set(
         events
@@ -526,20 +524,20 @@ export const resolvers: GQResolvers<
       );
     },
     todos: async (parent, args) =>
-      (await getUserIcalTodosBetween(parent.id, args.interval)).map((todo) => ({
-        ...todo,
-        id: todo.uid,
-        __typename: "Todo",
-      })),
+      (
+        await Array.fromAsync(getUserIcalTodosBetween(parent.id, args.interval))
+      ).map((todo) => ({ ...todo, id: todo.uid, __typename: "Todo" })),
     events: async (parent, args) =>
-      (await getUserIcalEventsBetween(parent.id, args.interval)).map(
-        (event) => ({
-          ...event,
-          id: event.uid,
-          __typename: "Event",
-          url: typeof event.url === "string" ? event.url : null,
-        }),
-      ),
+      (
+        await Array.fromAsync(
+          getUserIcalEventsBetween(parent.id, args.interval),
+        )
+      ).map((event) => ({
+        ...event,
+        id: event.uid,
+        __typename: "Event",
+        url: typeof event.url === "string" ? event.url : null,
+      })),
     inboxEmailCount: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");

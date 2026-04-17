@@ -4,7 +4,6 @@ import {
   addMinutes,
   addSeconds,
   areIntervalsOverlapping,
-  compareAsc,
   differenceInSeconds,
   type Interval,
 } from "date-fns";
@@ -42,14 +41,13 @@ export function extractIcalCalendarAndEvents(data: CalendarResponse) {
   return { calendar, events };
 }
 
-export async function getUserIcalEventsBetween(
+export async function* getUserIcalEventsBetween(
   userId: string,
   { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>,
 ) {
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
-  const eventsThatFallWithinRange: MongoVEvent[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
     $or: [
@@ -124,14 +122,14 @@ export async function getUserIcalEventsBetween(
           ) {
             continue;
           }
-          eventsThatFallWithinRange.push({
+          yield {
             ...recurrence,
             uid: `${recurrence.start.toLocaleDateString()}-${event.uid}`,
             _io_icalUrlHash: event._io_icalUrlHash,
             _io_userId: event._io_userId,
             _io_scrapedAt: event._io_scrapedAt,
             _io_source: event._io_source,
-          });
+          };
         }
       }
     }
@@ -144,7 +142,7 @@ export async function getUserIcalEventsBetween(
     ) {
       if (sourceStartDate && event.end < sourceStartDate) continue;
 
-      eventsThatFallWithinRange.push(eventWithoutId);
+      yield eventWithoutId;
     }
     const rrule = event.rrule?.origOptions
       ? new RRule({ ...event.rrule.origOptions, tzid: "UTC" })
@@ -195,21 +193,19 @@ export async function getUserIcalEventsBetween(
 
           if (rruleDate.toJSON() === event.start.toJSON()) continue;
 
-          eventsThatFallWithinRange.push({
+          yield {
             ...eventWithoutId,
             uid: rruleEventInstanceId,
             start: rruleDate,
             end: rruleDateEnd,
-          });
+          };
         }
       }
     }
   }
-
-  return eventsThatFallWithinRange.sort((a, b) => compareAsc(a.start, b.start));
 }
 
-export async function getUserIcalTodosBetween(
+export async function* getUserIcalTodosBetween(
   userId: string,
   interval?: Interval<Date, Date> | Interval<TZDate, TZDate> | null,
 ) {
@@ -217,7 +213,6 @@ export async function getUserIcalTodosBetween(
   const user = (await auth())?.user;
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
-  const eventsThatFallWithinRange: MongoVTodo[] = [];
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
     $or: [
@@ -245,18 +240,7 @@ export async function getUserIcalTodosBetween(
             ? todo.completed >= start && todo.completed <= end
             : true
     ) {
-      eventsThatFallWithinRange.push(
-        omit({ ...todo, due: todo.due || todo.start }, "_id", "start"),
-      );
+      yield omit({ ...todo, due: todo.due || todo.start }, "_id", "start");
     }
   }
-
-  return eventsThatFallWithinRange.sort((a, b) => {
-    if (a.completed && !b.completed) return 1;
-    if (!a.completed && b.completed) return -1;
-    return compareAsc(
-      a.completed || a.due || a.start || a.created!,
-      b.completed || b.due || b.start || b.created!,
-    );
-  });
 }
