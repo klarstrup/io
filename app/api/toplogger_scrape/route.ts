@@ -1,4 +1,3 @@
-import { addDays, isFuture, subDays } from "date-fns";
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
 import { NextRequest } from "next/server";
@@ -8,13 +7,7 @@ import { Users } from "../../../models/user.server";
 import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import {
-  partition,
-  pick,
-  randomSliceOfSize,
-  shuffle,
-  uniqueBy,
-} from "../../../utils";
+import { randomSliceOfSize } from "../../../utils";
 import {
   fetchGraphQLQuery,
   normalizeAndUpsertQueryData,
@@ -29,14 +22,6 @@ import {
   type ClimbDaysSessionsResponse,
   climbLogsQuery,
   type ClimbLogsResponse,
-  climbsQuery,
-  type ClimbsResponse,
-  compClimbUsersForRankingClimbUserQuery,
-  type CompClimbUsersForRankingClimbUserResponse,
-  compRoundUsersForRankingQuery,
-  type CompRoundUsersForRankingResponse,
-  compsQuery,
-  type CompsResponse,
   userMeStoreQuery,
   type UserMeStoreResponse,
 } from "./queries";
@@ -207,10 +192,11 @@ export const GET = (request: NextRequest) =>
         // Aggressive materialize not to wait for the rest of the scrape to finish
         yield* materializeToploggerWorkouts(user, dataSource);
 
-        const { data: userMeStoreData } =
-          yield* fetchsert<UserMeStoreResponse>(userMeStoreQuery);
-        const gyms = userMeStoreData?.userMe?.gymUsers.map((fav) => fav.gym);
+        // const { data: userMeStoreData } =
+        yield* fetchsert<UserMeStoreResponse>(userMeStoreQuery);
 
+        /*
+        const gyms = userMeStoreData?.userMe?.gymUsers.map((fav) => fav.gym);
         const userComps: CompsResponse["comps"]["data"] = [];
         yield* deadlineLoop(
           shuffle(gyms),
@@ -337,6 +323,7 @@ export const GET = (request: NextRequest) =>
             }
           },
         );
+        */
 
         let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
           [];
