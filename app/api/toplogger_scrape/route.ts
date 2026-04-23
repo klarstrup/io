@@ -26,7 +26,7 @@ import {
   type UserMeStoreResponse,
 } from "./queries";
 
-export const maxDuration = 55;
+export const maxDuration = 50;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
