@@ -121,6 +121,7 @@ export type Reference<TypeBeingReferenced = MutableDeep<unknown>> = Branded<
 
 const makeReference = (__ref: RefString) => ({ __ref }) as Reference;
 
+/*
 const isReference = (obj: unknown): obj is Reference =>
   Boolean(
     obj &&
@@ -128,7 +129,7 @@ const isReference = (obj: unknown): obj is Reference =>
     "__ref" in obj &&
     typeof obj.__ref === "string",
   );
-
+*/
 export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
   const errors = getGraphQLErrorsFromResult(result);
   return isNonEmptyArray(errors);
@@ -325,7 +326,9 @@ const defaultGetObjectId: GetObjectId = (object: {
   readonly id: string;
   readonly __typename?: string;
 }): GetObjectToIdResult =>
-  object.id === undefined || object.__typename === undefined ? undefined : `${object.__typename}:${object.id}`;
+  object.id === undefined || object.__typename === undefined
+    ? undefined
+    : `${object.__typename}:${object.id}`;
 
 const resolveType: ResolveType = (object: {
   readonly __typename?: string;
@@ -594,6 +597,7 @@ const parseDateFields = (doc: Record<string, unknown>) => {
   return doc;
 };
 
+/*
 function denormalizeFieldOfTypeInNormMap(
   normMap: MutableNormMap,
   typename: string,
@@ -615,6 +619,7 @@ function denormalizeFieldOfTypeInNormMap(
     }
   }
 }
+  */
 
 export async function normalizeAndUpsertQueryData(
   query: DocumentNode,
@@ -623,7 +628,7 @@ export async function normalizeAndUpsertQueryData(
 ) {
   const normMap = normalize(query, variables, data) as MutableNormMap;
   // Denormalize gradeVoteStats of Climb objects, they are not discrete objects.
-  denormalizeFieldOfTypeInNormMap(normMap, "Climb", "gradeVoteStats");
+  // denormalizeFieldOfTypeInNormMap(normMap, "Climb", "gradeVoteStats");
 
   const objects = Object.values(normMap).filter((o) => o.__typename && o.id);
   const updateResults: {
