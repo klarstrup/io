@@ -26,7 +26,7 @@ import {
   type UserMeStoreResponse,
 } from "./queries";
 
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
@@ -327,10 +327,9 @@ export const GET = (request: NextRequest) =>
 
         let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
           [];
-        let page = 1;
         const climbDaysResponse = yield* fetchsert<ClimbDaysSessionsResponse>(
           climbDaysSessionsQuery,
-          { userId, pagination: { page, perPage: 100 } },
+          { userId, pagination: { page: 1, perPage: 100 } },
         );
 
         if (!climbDaysResponse.data) {
@@ -343,18 +342,23 @@ export const GET = (request: NextRequest) =>
           climbDaysResponse.data.climbDaysPaginated.pagination;
         const totalPages = Math.ceil(total / perPage);
 
-        for (page++; page <= totalPages; page++) {
-          if (totalPages === 1) break;
+        await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, i) => i + 2).map(
+            async (page) => {
+              const gen = fetchsert<ClimbDaysSessionsResponse>(
+                climbDaysSessionsQuery,
+                { userId, pagination: { page, perPage } },
+              );
 
-          const { data } = yield* fetchsert<ClimbDaysSessionsResponse>(
-            climbDaysSessionsQuery,
-            { userId, pagination: { page, perPage } },
-          );
+              let r = await gen.next();
+              while (!r.done) r = await gen.next();
+              const { data } = r.value;
+              if (!data) throw new Error("Failed to fetch climb days");
 
-          if (!data) throw new Error("Failed to fetch climb days");
-
-          climbDays = climbDays.concat(data.climbDaysPaginated.data);
-        }
+              climbDays = climbDays.concat(data.climbDaysPaginated.data);
+            },
+          ),
+        );
 
         yield* deadlineLoop(
           // Backfill a random climb days each time
