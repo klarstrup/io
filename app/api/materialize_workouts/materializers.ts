@@ -64,15 +64,6 @@ export async function* materializeToploggerWorkouts(
     },
     { $set: { climb: { $first: "$climb" } } },
     {
-      $lookup: {
-        from: "toplogger_graphql",
-        localField: "climbId",
-        foreignField: "climbId",
-        as: "climbUser",
-      },
-    },
-    { $set: { climbUser: { $first: "$climbUser" } } },
-    {
       $set: {
         climbGroupClimbId: {
           $replaceOne: {
@@ -173,9 +164,9 @@ export async function* materializeToploggerWorkouts(
         },
         _id: 0,
         userId: { $literal: user.id },
-        createdAt: { $first: "$climbLogs.climbUser.updatedAt" },
-        updatedAt: { $first: "$climbLogs.climbUser.updatedAt" },
-        workedOutAt: { $first: "$climbLogs.climbUser.updatedAt" },
+        createdAt: { $first: "$climbLogs.climbedAtDate" },
+        updatedAt: { $first: "$climbLogs.climbedAtDate" },
+        workedOutAt: { $first: "$climbLogs.climbedAtDate" },
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.TopLogger },
         location: { $first: "$climbLogs.gym.name" },
