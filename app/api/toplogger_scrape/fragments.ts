@@ -344,6 +344,7 @@ export const ClimbUserScalarsFragment = gql`
     __typename
     id
     climbId
+    userId
     grade
     rating
     project
@@ -357,6 +358,7 @@ export const ClimbUserScalarsFragment = gql`
 `;
 export interface ClimbUserScalars extends GraphQLObject<"ClimbUser"> {
   climbId: string;
+  userId: string;
   grade: number | null;
   rating: null;
   project: boolean;
