@@ -164,9 +164,28 @@ export async function* materializeToploggerWorkouts(
         },
         _id: 0,
         userId: { $literal: user.id },
-        createdAt: { $first: "$climbLogs.climbedAtDate" },
-        updatedAt: { $first: "$climbLogs.climbedAtDate" },
-        workedOutAt: { $first: "$climbLogs.climbedAtDate" },
+        // TODO: Get these times right, toplogger mostly only returns dates but we have to be able to get times somehow...
+        createdAt: {
+          $dateAdd: {
+            startDate: { $first: "$climbLogs.climbedAtDate" },
+            unit: "hour",
+            amount: 17,
+          },
+        },
+        updatedAt: {
+          $dateAdd: {
+            startDate: { $first: "$climbLogs.climbedAtDate" },
+            unit: "hour",
+            amount: 17,
+          },
+        },
+        workedOutAt: {
+          $dateAdd: {
+            startDate: { $first: "$climbLogs.climbedAtDate" },
+            unit: "hour",
+            amount: 17,
+          },
+        },
         materializedAt: "$$NOW",
         source: { $literal: WorkoutSource.TopLogger },
         location: { $first: "$climbLogs.gym.name" },
