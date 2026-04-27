@@ -125,7 +125,6 @@ export async function snoozeUserExerciseSchedule(
   userId: string,
   exerciseScheduleId: string,
   snoozedUntil: Date | null,
-  newOrder?: number,
 ) {
   const user = (await auth())?.user;
   if (!user || user.id !== userId) throw new Error("Unauthorized");
@@ -135,9 +134,7 @@ export async function snoozeUserExerciseSchedule(
     {
       $set: {
         exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
-          s.id === exerciseScheduleId
-            ? { ...s, snoozedUntil, order: newOrder }
-            : s,
+          s.id === exerciseScheduleId ? { ...s, snoozedUntil } : s,
         ),
       },
     },

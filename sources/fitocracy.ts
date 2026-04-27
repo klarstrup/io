@@ -295,8 +295,4 @@ export interface ExerciseSchedule {
   deloadFactor?: number | null;
   baseWeight?: number | null;
   snoozedUntil?: Date | null;
-
-  // if multiple exercises are due at the same time, display in this order
-  // lower number = higher priority
-  order?: number | null;
 }
