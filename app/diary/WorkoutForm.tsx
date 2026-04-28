@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
   addDays,
-  addMilliseconds,
   compareAsc,
   compareDesc,
   formatDistanceToNowStrict,
@@ -27,15 +26,15 @@ import { StealthButton } from "../../components/StealthButton";
 import { frenchRounded } from "../../grades";
 import {
   CreateWorkoutForWorkoutFormDocument,
+  UpdateWorkoutForWorkoutFormDocument,
   type GQBoulderCircuit,
   type GQCreateWorkoutDataInput,
   type GQExerciseStat,
   type GQJournalEntryUnion,
   type GQLocation,
+  type GQNextSet,
   type GQUpdateWorkoutDataInput,
   type GQWorkout,
-  UpdateWorkoutForWorkoutFormDocument,
-  type GQNextSet,
   type GQWorkoutFormNextSetsQuery,
 } from "../../graphql.generated";
 import { useEvent } from "../../hooks";
@@ -49,7 +48,7 @@ import {
   type ExerciseData,
 } from "../../models/exercises.types";
 import {
-  durationToMs,
+  addDurationToDate,
   getCircuitByLocationAndSetColor,
   isClimbingExercise,
   isNextSetDue,
@@ -383,14 +382,8 @@ export function WorkoutForm<R extends string>({
         )
         .sort((a, b) =>
           compareAsc(
-            addMilliseconds(
-              a.lastWorkedOutAt!,
-              durationToMs(a.exerciseSchedule.frequency),
-            ),
-            addMilliseconds(
-              b.lastWorkedOutAt!,
-              durationToMs(b.exerciseSchedule.frequency),
-            ),
+            addDurationToDate(a.lastWorkedOutAt!, a.exerciseSchedule.frequency),
+            addDurationToDate(b.lastWorkedOutAt!, b.exerciseSchedule.frequency),
           ),
         ),
     [nextSets, tzDate, getValues],

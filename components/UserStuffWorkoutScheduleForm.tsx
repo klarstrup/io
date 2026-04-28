@@ -17,6 +17,10 @@ import Select, { components, OnChangeValue } from "react-select";
 import { updateUserExerciseSchedule } from "../app/diary/actions";
 import { exercises, exercisesById } from "../models/exercises";
 import { InputType } from "../models/exercises.types";
+import type {
+  ITodoSchedule,
+  ITodoScheduleWithExerciseProgram,
+} from "../models/user";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
 import { epoch } from "../utils";
@@ -35,7 +39,9 @@ function dateToInputDate(date?: Date) {
   return date.toJSON().slice(0, 10) as unknown as Date;
 }
 
-const exerciseScheduleForForm = (exerciseSchedule?: ExerciseSchedule) => ({
+const exerciseScheduleForForm = (
+  exerciseSchedule?: ITodoScheduleWithExerciseProgram,
+) => ({
   ...exerciseSchedule,
   snoozedUntil:
     exerciseSchedule?.snoozedUntil && isFuture(exerciseSchedule.snoozedUntil)
@@ -49,7 +55,7 @@ function UserStuffWorkoutScheduleForm({
   onDismiss,
 }: {
   user: Session["user"];
-  exerciseSchedule: ExerciseSchedule;
+  exerciseSchedule: ITodoScheduleWithExerciseProgram;
   onDismiss: () => void;
 }) {
   const client = useApolloClient();
@@ -59,14 +65,16 @@ function UserStuffWorkoutScheduleForm({
     register,
     reset,
     formState: { isDirty, isSubmitting },
-  } = useForm<ExerciseSchedule>({
+  } = useForm<ITodoScheduleWithExerciseProgram>({
     defaultValues: exerciseScheduleForForm(exerciseSchedule),
   });
 
-  const exercise = exercisesById.get(exerciseSchedule.exerciseId);
+  const exercise = exercisesById.get(
+    exerciseSchedule.exerciseProgram.exerciseId,
+  );
   if (!exercise) {
     throw new Error(
-      `Exercise with ID ${exerciseSchedule.exerciseId} not found`,
+      `Exercise with ID ${exerciseSchedule.exerciseProgram.exerciseId} not found`,
     );
   }
   return (
@@ -83,7 +91,11 @@ function UserStuffWorkoutScheduleForm({
           newSchedule,
         });
 
-        reset(exerciseScheduleForForm(newSchedule));
+        reset(
+          exerciseScheduleForForm(
+            newSchedule as ITodoScheduleWithExerciseProgram,
+          ),
+        );
         router.refresh();
         await client.refetchQueries({ include: "all" });
         onDismiss();
@@ -160,7 +172,7 @@ function UserStuffWorkoutScheduleForm({
             Sets:
             <input
               type="number"
-              {...register(`workingSets`, {
+              {...register(`exerciseProgram.workingSets`, {
                 valueAsNumber: true,
               })}
               className="w-full"
@@ -173,7 +185,7 @@ function UserStuffWorkoutScheduleForm({
                 Reps:
                 <input
                   type="number"
-                  {...register(`workingReps`, {
+                  {...register(`exerciseProgram.workingReps`, {
                     valueAsNumber: true,
                   })}
                   className="w-full"
@@ -193,7 +205,7 @@ function UserStuffWorkoutScheduleForm({
                 Base Effort:
                 <input
                   type="number"
-                  {...register(`baseWeight`, {
+                  {...register(`exerciseProgram.baseWeight`, {
                     valueAsNumber: true,
                   })}
                   className="w-full"
@@ -213,7 +225,7 @@ function UserStuffWorkoutScheduleForm({
                 <input
                   type="number"
                   step={0.01}
-                  {...register(`increment`, {
+                  {...register(`exerciseProgram.increment`, {
                     valueAsNumber: true,
                   })}
                   className="w-full"
@@ -233,7 +245,7 @@ function UserStuffWorkoutScheduleForm({
                 <input
                   type="number"
                   step={0.01}
-                  {...register(`deloadFactor`, {
+                  {...register(`exerciseProgram.deloadFactor`, {
                     valueAsNumber: true,
                   })}
                   className="w-full"
@@ -261,7 +273,20 @@ export default function UserStuffWorkoutSchedulesForm({
   user: Session["user"];
   exercisesStats: IWorkoutExercisesView[];
 }) {
-  const exerciseSchedules = user.exerciseSchedules ?? [];
+  const exerciseSchedules =
+    user.todoSchedules?.filter(
+      (
+        schedule,
+      ): schedule is ITodoSchedule & {
+        exerciseProgram: NonNullable<ITodoSchedule["exerciseProgram"]>;
+      } =>
+        Boolean(
+          "exerciseProgram" in schedule &&
+          schedule.exerciseProgram &&
+          "exerciseId" in schedule.exerciseProgram &&
+          typeof schedule.exerciseProgram.exerciseId === "number",
+        ),
+    ) ?? [];
 
   const [exerciseScheduleBeingEditedId, setExerciseScheduleBeingEditedId] =
     useState<ExerciseSchedule["id"] | null>(null);
@@ -330,10 +355,12 @@ export default function UserStuffWorkoutSchedulesForm({
                   a.enabled === b.enabled
                     ? compareDesc(
                         exercisesStats.find(
-                          (stat) => stat.exerciseId === a.exerciseId,
+                          (stat) =>
+                            stat.exerciseId === a.exerciseProgram.exerciseId,
                         )?.workedOutAt ?? epoch,
                         exercisesStats.find(
-                          (stat) => stat.exerciseId === b.exerciseId,
+                          (stat) =>
+                            stat.exerciseId === b.exerciseProgram.exerciseId,
                         )?.workedOutAt ?? epoch,
                       )
                     : a.enabled
@@ -341,11 +368,14 @@ export default function UserStuffWorkoutSchedulesForm({
                       : 1,
                 )
                 .map((schedule) => {
-                  const exercise = exercisesById.get(schedule.exerciseId);
+                  const exercise = exercisesById.get(
+                    schedule.exerciseProgram.exerciseId,
+                  );
                   if (!exercise) return null;
 
                   const stats = exercisesStats.find(
-                    (stat) => stat.exerciseId === schedule.exerciseId,
+                    (stat) =>
+                      stat.exerciseId === schedule.exerciseProgram.exerciseId,
                   );
 
                   let effortInputIndex = exercise.inputs.findIndex(
@@ -459,7 +489,9 @@ export default function UserStuffWorkoutSchedulesForm({
                         </small>
                       </td>
                       <td className="text-xs text-gray-500">
-                        {schedule.workingSets ? schedule.workingSets : null}
+                        {schedule.exerciseProgram.workingSets
+                          ? schedule.exerciseProgram.workingSets
+                          : null}
                       </td>
                       <td className="text-xs text-gray-500">
                         {exercise.inputs.some(
@@ -469,8 +501,8 @@ export default function UserStuffWorkoutSchedulesForm({
                           (input) => input.type === InputType.Reps,
                         ) ? (
                           <>
-                            {schedule.workingReps
-                              ? `${schedule.workingReps}`
+                            {schedule.exerciseProgram.workingReps
+                              ? `${schedule.exerciseProgram.workingReps}`
                               : null}
                           </>
                         ) : null}
@@ -484,24 +516,24 @@ export default function UserStuffWorkoutSchedulesForm({
                       ) ? (
                         <>
                           <td className="text-xs text-gray-500">
-                            {schedule.baseWeight
-                              ? `${schedule.baseWeight} ${
+                            {schedule.exerciseProgram.baseWeight
+                              ? `${schedule.exerciseProgram.baseWeight} ${
                                   exercise.inputs[effortInputIndex]
                                     ?.metric_unit || ""
                                 }`
                               : null}
                           </td>
                           <td className="text-xs text-gray-500">
-                            {schedule.increment
-                              ? `+${schedule.increment} ${
+                            {schedule.exerciseProgram.increment
+                              ? `+${schedule.exerciseProgram.increment} ${
                                   exercise.inputs[effortInputIndex]
                                     ?.metric_unit || ""
                                 }`
                               : null}
                           </td>
                           <td className="text-xs text-gray-500">
-                            {schedule.deloadFactor
-                              ? `${schedule.deloadFactor * 100}%`
+                            {schedule.exerciseProgram.deloadFactor
+                              ? `${schedule.exerciseProgram.deloadFactor * 100}%`
                               : null}
                           </td>
                         </>

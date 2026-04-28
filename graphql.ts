@@ -50,6 +50,7 @@ import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
 import { AssistType, Unit } from "./models/exercises.types";
 import { Locations } from "./models/location.server";
+import type { ITodoScheduleWithExerciseProgram } from "./models/user";
 import { Accounts, Users } from "./models/user.server";
 import { type WorkoutData, WorkoutSource } from "./models/workout";
 import {
@@ -166,16 +167,22 @@ export const resolvers: GQResolvers<
           __typename: "UserDataSource",
         })),
         exerciseSchedules:
-          user.exerciseSchedules?.map(
-            (schedule) =>
-              ({
-                ...schedule,
-                __typename: "ExerciseSchedule",
-                frequency: { ...schedule.frequency, __typename: "Duration" },
-                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                exerciseInfo: undefined as unknown as GQExerciseInfo,
-              }) satisfies GQExerciseSchedule,
-          ) || null,
+          user.todoSchedules
+            ?.filter(
+              (schedule): schedule is ITodoScheduleWithExerciseProgram =>
+                schedule.exerciseProgram !== undefined,
+            )
+            ?.map(
+              (schedule) =>
+                ({
+                  ...schedule,
+                  ...schedule.exerciseProgram,
+                  __typename: "ExerciseSchedule",
+                  frequency: { ...schedule.frequency, __typename: "Duration" },
+                  // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                  exerciseInfo: undefined as unknown as GQExerciseInfo,
+                }) satisfies GQExerciseSchedule,
+            ) || null,
       };
     },
   },
@@ -275,9 +282,10 @@ export const resolvers: GQResolvers<
         Array.fromAsync(
           getNextSets(
             userId,
-            parent.exerciseSchedules ||
-              (await auth())?.user.exerciseSchedules ||
-              [],
+            ((await auth())?.user.todoSchedules || []).filter(
+              (schedule): schedule is ITodoScheduleWithExerciseProgram =>
+                Boolean(schedule.exerciseProgram),
+            ),
           ),
           (nextSet) =>
             entries.push({
@@ -288,6 +296,7 @@ export const resolvers: GQResolvers<
               ),
               exerciseSchedule: {
                 ...nextSet.exerciseSchedule,
+                ...nextSet.exerciseSchedule.exerciseProgram,
                 __typename: "ExerciseSchedule",
                 frequency: {
                   ...nextSet.exerciseSchedule.frequency,
@@ -889,10 +898,16 @@ export const resolvers: GQResolvers<
     nextSets: async (parent, args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return [];
-      const exerciseSchedules = user.exerciseSchedules?.filter(
+      const userExerciseSchedules = user.todoSchedules?.filter(
+        (schedule): schedule is ITodoScheduleWithExerciseProgram =>
+          Boolean(schedule.exerciseProgram),
+      );
+      const exerciseSchedules = userExerciseSchedules?.filter(
         (s) =>
           s.enabled &&
-          (args.exerciseIds ? args.exerciseIds.includes(s.exerciseId) : true),
+          (args.exerciseIds
+            ? args.exerciseIds.includes(s.exerciseProgram.exerciseId)
+            : true),
       );
       if (!exerciseSchedules?.length) return [];
 
@@ -907,6 +922,7 @@ export const resolvers: GQResolvers<
             ),
             exerciseSchedule: {
               ...nextSet.exerciseSchedule,
+              ...nextSet.exerciseSchedule.exerciseProgram,
               __typename: "ExerciseSchedule",
               frequency: {
                 ...nextSet.exerciseSchedule.frequency,
@@ -1062,7 +1078,7 @@ export const resolvers: GQResolvers<
         { _id: new ObjectId(user.id) },
         {
           $set: {
-            exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
+            todoSchedules: (user.todoSchedules ?? []).map((s) =>
               s.id === exerciseScheduleId ? { ...s, snoozedUntil } : s,
             ),
           },
@@ -1075,12 +1091,13 @@ export const resolvers: GQResolvers<
 
       const updatedExerciseSchedule = (await Users.findOne({
         _id: new ObjectId(user.id),
-      }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
+      }))!.todoSchedules!.find((s) => s.id === exerciseScheduleId);
 
       return {
         __typename: "SnoozeExerciseSchedulePayload",
         exerciseSchedule: {
           ...updatedExerciseSchedule!,
+          ...updatedExerciseSchedule!.exerciseProgram!,
           __typename: "ExerciseSchedule",
           frequency: {
             ...updatedExerciseSchedule!.frequency,
@@ -1101,7 +1118,7 @@ export const resolvers: GQResolvers<
         { _id: new ObjectId(user.id) },
         {
           $set: {
-            exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
+            todoSchedules: (user.todoSchedules ?? []).map((s) =>
               s.id === exerciseScheduleId ? { ...s, snoozedUntil: null } : s,
             ),
           },
@@ -1114,12 +1131,13 @@ export const resolvers: GQResolvers<
 
       const updatedExerciseSchedule = (await Users.findOne({
         _id: new ObjectId(user.id),
-      }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
+      }))!.todoSchedules!.find((s) => s.id === exerciseScheduleId);
 
       return {
         __typename: "UnsnoozeExerciseSchedulePayload",
         exerciseSchedule: {
           ...updatedExerciseSchedule!,
+          ...updatedExerciseSchedule!.exerciseProgram!,
           __typename: "ExerciseSchedule",
           frequency: {
             ...updatedExerciseSchedule!.frequency,
@@ -1531,7 +1549,18 @@ export const resolvers: GQResolvers<
 
       if (!parent.enabled) return null;
 
-      for await (const nextSet of getNextSets(user.id, [parent])) {
+      const exerciseSchedule = (await Users.findOne({
+        _id: new ObjectId(user.id),
+      }))!
+        .todoSchedules!.filter(
+          (schedule): schedule is ITodoScheduleWithExerciseProgram =>
+            Boolean(schedule.exerciseProgram),
+        )
+        .find((s) => s.id === parent.id);
+
+      if (!exerciseSchedule) throw new Error("Exercise schedule not found");
+
+      for await (const nextSet of getNextSets(user.id, [exerciseSchedule])) {
         return {
           ...nextSet,
           __typename: "NextSet",
@@ -1541,6 +1570,7 @@ export const resolvers: GQResolvers<
           })),
           exerciseSchedule: {
             ...nextSet.exerciseSchedule,
+            ...nextSet.exerciseSchedule.exerciseProgram,
             __typename: "ExerciseSchedule",
             frequency: {
               ...nextSet.exerciseSchedule.frequency,

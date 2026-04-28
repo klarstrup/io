@@ -8,6 +8,7 @@ import { v4 as uuid } from "uuid";
 import { auth } from "../../auth";
 import { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
+import type { ITodoScheduleWithExerciseProgram } from "../../models/user";
 import { Users } from "../../models/user.server";
 import { type WorkoutData } from "../../models/workout";
 import {
@@ -15,7 +16,6 @@ import {
   updateLocationCounts,
   Workouts,
 } from "../../models/workout.server";
-import type { ExerciseSchedule } from "../../sources/fitocracy";
 import type { DataSource, UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable, omit } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
@@ -133,7 +133,7 @@ export async function snoozeUserExerciseSchedule(
     { _id: new ObjectId(user.id) },
     {
       $set: {
-        exerciseSchedules: (user.exerciseSchedules ?? []).map((s) =>
+        todoSchedules: (user.todoSchedules ?? []).map((s) =>
           s.id === exerciseScheduleId ? { ...s, snoozedUntil } : s,
         ),
       },
@@ -146,13 +146,13 @@ export async function snoozeUserExerciseSchedule(
 
   return (await Users.findOne({
     _id: new ObjectId(user.id),
-  }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId);
+  }))!.todoSchedules!.find((s) => s.id === exerciseScheduleId);
 }
 
 export async function updateUserExerciseSchedule(
   userId: string,
-  exerciseScheduleId: ExerciseSchedule["id"],
-  exerciseSchedule: ExerciseSchedule,
+  exerciseScheduleId: ITodoScheduleWithExerciseProgram["id"],
+  exerciseSchedule: ITodoScheduleWithExerciseProgram,
 ) {
   const user = (await auth())?.user;
   if (!user || user.id !== userId) throw new Error("Unauthorized");
@@ -160,8 +160,8 @@ export async function updateUserExerciseSchedule(
   console.log(
     await Users.updateOne(
       { _id: new ObjectId(user.id) },
-      { $set: { "exerciseSchedules.$[exerciseSchedule]": exerciseSchedule } },
-      { arrayFilters: [{ "exerciseSchedule.id": exerciseScheduleId }] },
+      { $set: { "todoSchedules.$[todoSchedule]": exerciseSchedule } },
+      { arrayFilters: [{ "todoSchedule.id": exerciseScheduleId }] },
     ),
   );
 
@@ -169,12 +169,12 @@ export async function updateUserExerciseSchedule(
 
   return (await Users.findOne({
     _id: new ObjectId(user.id),
-  }))!.exerciseSchedules!.find((s) => s.id === exerciseScheduleId)!;
+  }))!.todoSchedules!.find((s) => s.id === exerciseScheduleId)!;
 }
 
 export async function updateUserExerciseSchedules(
   userId: string,
-  schedules: ExerciseSchedule[],
+  schedules: ITodoScheduleWithExerciseProgram[],
 ) {
   const user = (await auth())?.user;
   if (!user || user.id !== userId) throw new Error("Unauthorized");
@@ -183,17 +183,14 @@ export async function updateUserExerciseSchedules(
     { _id: new ObjectId(user.id) },
     {
       $set: {
-        exerciseSchedules: schedules.map((s) =>
-          s.id ? s : { ...s, id: uuid() },
-        ),
+        todoSchedules: schedules.map((s) => (s.id ? s : { ...s, id: uuid() })),
       },
     },
   );
 
   emitIoUpdate(user.id);
 
-  return (await Users.findOne({ _id: new ObjectId(user.id) }))!
-    .exerciseSchedules!;
+  return (await Users.findOne({ _id: new ObjectId(user.id) }))!.todoSchedules!;
 }
 
 export async function createUserDataSource<

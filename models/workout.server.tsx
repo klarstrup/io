@@ -1,7 +1,6 @@
 import { tz } from "@date-fns/tz";
 import {
   addHours,
-  addMilliseconds,
   addQuarters,
   isEqual,
   isFuture,
@@ -16,7 +15,6 @@ import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
 import type { GQLocation } from "../graphql.generated";
 import type { PRType } from "../lib";
-import type { ExerciseSchedule } from "../sources/fitocracy";
 import { dayStartHour, epoch } from "../utils";
 import { proxyCollection } from "../utils.server";
 import { exercisesById } from "./exercises";
@@ -28,8 +26,9 @@ import {
   Unit,
 } from "./exercises.types";
 import type { LocationData } from "./location";
+import type { ITodoScheduleWithExerciseProgram } from "./user";
 import {
-  durationToMs,
+  addDurationToDate,
   getSetGrade,
   isClimbingExercise,
   type WorkoutData,
@@ -52,13 +51,13 @@ export type NextSetResult = {
   successful: boolean;
   nextWorkingSets: number | null;
   nextWorkingSetInputs: WorkoutExerciseSetInput[] | null;
-  exerciseSchedule: ExerciseSchedule;
+  exerciseSchedule: ITodoScheduleWithExerciseProgram;
 };
 
 /** Pure computation: given a workout (or null) and schedule, returns the next set result. Caller must pass the correct workout (e.g. first successful for climbing). */
 export function computeNextSetFromWorkout(
   workout: { workedOutAt: Date; exercise: WorkoutExercise } | null,
-  exerciseSchedule: ExerciseSchedule,
+  exerciseSchedule: ITodoScheduleWithExerciseProgram,
 ): NextSetResult {
   const id = `next-${exerciseSchedule.id}` as const;
 
@@ -83,9 +82,9 @@ export function computeNextSetFromWorkout(
       ].filter(Boolean),
     );
 
-  let dueOn = addMilliseconds(
+  let dueOn = addDurationToDate(
     lastSetEndedAt || epoch,
-    durationToMs(exerciseSchedule.frequency),
+    exerciseSchedule.frequency,
   );
 
   if (
@@ -98,10 +97,10 @@ export function computeNextSetFromWorkout(
 
   dueOn = max([dueOn, new Date()]);
 
-  if (isClimbingExercise(exerciseSchedule.exerciseId)) {
+  if (isClimbingExercise(exerciseSchedule.exerciseProgram.exerciseId)) {
     if (
-      exerciseSchedule.workingSets &&
-      exerciseSchedule.workingSets > 0 &&
+      exerciseSchedule.exerciseProgram.workingSets &&
+      exerciseSchedule.exerciseProgram.workingSets > 0 &&
       workout
     ) {
       const successfulSets = workout.exercise.sets.filter(
@@ -110,14 +109,15 @@ export function computeNextSetFromWorkout(
           (set.inputs[2]?.value as SendType) === SendType.Top ||
           (set.inputs[2]?.value as SendType) === SendType.Repeat,
       );
-      const successful = successfulSets.length >= exerciseSchedule.workingSets;
+      const successful =
+        successfulSets.length >= exerciseSchedule.exerciseProgram.workingSets;
       return {
         id,
         lastWorkedOutAt: workout.workedOutAt,
         dueOn,
-        exerciseId: exerciseSchedule.exerciseId,
+        exerciseId: exerciseSchedule.exerciseProgram.exerciseId,
         successful,
-        nextWorkingSets: exerciseSchedule.workingSets ?? null,
+        nextWorkingSets: exerciseSchedule.exerciseProgram.workingSets ?? null,
         nextWorkingSetInputs: [],
         exerciseSchedule,
       };
@@ -127,16 +127,21 @@ export function computeNextSetFromWorkout(
       id,
       lastWorkedOutAt: workout?.workedOutAt ?? null,
       dueOn,
-      exerciseId: exerciseSchedule.exerciseId,
+      exerciseId: exerciseSchedule.exerciseProgram.exerciseId,
       successful: true,
-      nextWorkingSets: exerciseSchedule.workingSets ?? null,
+      nextWorkingSets: exerciseSchedule.exerciseProgram.workingSets ?? null,
       nextWorkingSetInputs: [],
-      exerciseSchedule,
+      exerciseSchedule: {
+        ...exerciseSchedule,
+        ...exerciseSchedule.exerciseProgram,
+      },
     };
   }
 
   const exercise = workout?.exercise;
-  const exerciseDefinition = exercisesById.get(exerciseSchedule.exerciseId)!;
+  const exerciseDefinition = exercisesById.get(
+    exerciseSchedule.exerciseProgram.exerciseId,
+  )!;
   let effortInputIndex = exerciseDefinition.inputs.findIndex(
     ({ type }) =>
       type === InputType.Weight ||
@@ -158,15 +163,16 @@ export function computeNextSetFromWorkout(
     return setWeight &&
       setReps &&
       (!accWeight || setWeight > accWeight) &&
-      (exerciseSchedule.workingReps
-        ? setReps >= exerciseSchedule.workingReps
+      (exerciseSchedule.exerciseProgram.workingReps
+        ? setReps >= exerciseSchedule.exerciseProgram.workingReps
         : true)
       ? set
       : acc;
   }, exercise?.sets?.[0]);
 
   let heaviestSetEffort =
-    heaviestSet?.inputs[effortInputIndex]?.value ?? exerciseSchedule.baseWeight;
+    heaviestSet?.inputs[effortInputIndex]?.value ??
+    exerciseSchedule.exerciseProgram.baseWeight;
 
   const workingSets =
     (heaviestSetEffort !== undefined &&
@@ -176,27 +182,28 @@ export function computeNextSetFromWorkout(
     null;
   const successful =
     workingSets &&
-    (exerciseSchedule.workingSets
-      ? workingSets.length >= exerciseSchedule.workingSets
+    (exerciseSchedule.exerciseProgram.workingSets
+      ? workingSets.length >= exerciseSchedule.exerciseProgram.workingSets
       : true) &&
-    (exerciseSchedule.workingReps
-      ? !exerciseSchedule.workingSets &&
+    (exerciseSchedule.exerciseProgram.workingReps
+      ? !exerciseSchedule.exerciseProgram.workingSets &&
         workingSets.every(
           ({ inputs }) =>
             inputs.length === 1 &&
             inputs.every(({ unit }) => unit === Unit.Reps),
         )
         ? workingSets.reduce((m, s) => m + s.inputs[0]!.value, 0) >=
-          exerciseSchedule.workingReps
+          exerciseSchedule.exerciseProgram.workingReps
         : workingSets.every(
             ({ inputs }) =>
               inputs[repsInputIndex] &&
-              inputs[repsInputIndex].value >= exerciseSchedule.workingReps!,
+              inputs[repsInputIndex].value >=
+                exerciseSchedule.exerciseProgram.workingReps!,
           )
       : true);
 
   if (
-    !exerciseSchedule.workingSets &&
+    !exerciseSchedule.exerciseProgram.workingSets &&
     workingSets?.every(
       ({ inputs }) =>
         inputs.length === 1 && inputs.every(({ unit }) => unit === Unit.Reps),
@@ -213,23 +220,24 @@ export function computeNextSetFromWorkout(
     0,
   );
 
-  const goalEffort = exerciseSchedule.increment
+  const goalEffort = exerciseSchedule.exerciseProgram.increment
     ? heaviestSetEffort !== undefined && heaviestSetEffort !== null
       ? successful
-        ? !exerciseSchedule.workingSets &&
-          !exerciseSchedule.workingReps &&
+        ? !exerciseSchedule.exerciseProgram.workingSets &&
+          !exerciseSchedule.exerciseProgram.workingReps &&
           effortInputIndex === repsInputIndex &&
           totalReps
-          ? totalReps + exerciseSchedule.increment
+          ? totalReps + exerciseSchedule.exerciseProgram.increment
           : finalWorkingSetReps &&
-              exerciseSchedule.workingReps &&
-              finalWorkingSetReps >= exerciseSchedule.workingReps * 2
-            ? exerciseSchedule.increment * 2 + heaviestSetEffort
-            : exerciseSchedule.increment + heaviestSetEffort
-        : exerciseSchedule.deloadFactor
-          ? exerciseSchedule.deloadFactor * heaviestSetEffort
-          : exerciseSchedule.baseWeight
-      : exerciseSchedule.baseWeight
+              exerciseSchedule.exerciseProgram.workingReps &&
+              finalWorkingSetReps >=
+                exerciseSchedule.exerciseProgram.workingReps * 2
+            ? exerciseSchedule.exerciseProgram.increment * 2 + heaviestSetEffort
+            : exerciseSchedule.exerciseProgram.increment + heaviestSetEffort
+        : exerciseSchedule.exerciseProgram.deloadFactor
+          ? exerciseSchedule.exerciseProgram.deloadFactor * heaviestSetEffort
+          : exerciseSchedule.exerciseProgram.baseWeight
+      : exerciseSchedule.exerciseProgram.baseWeight
     : null;
 
   const nextWorkingSetsEffort = goalEffort
@@ -248,16 +256,18 @@ export function computeNextSetFromWorkout(
               value: nextWorkingSetsEffort,
               unit: exercise?.sets[0]?.inputs[inputIndex]?.unit || metric_unit,
             }
-          : exerciseSchedule.workingReps && type === InputType.Reps
+          : exerciseSchedule.exerciseProgram.workingReps &&
+              type === InputType.Reps
             ? {
                 value:
-                  exerciseSchedule.workingReps ?? exerciseSchedule.baseWeight,
+                  exerciseSchedule.exerciseProgram.workingReps ??
+                  exerciseSchedule.exerciseProgram.baseWeight,
                 unit: Unit.Reps,
               }
             : { value: NaN },
     );
 
-  const nextWorkingSets = exerciseSchedule.workingSets ?? null;
+  const nextWorkingSets = exerciseSchedule.exerciseProgram.workingSets ?? null;
 
   if (
     nextWorkingSetInputs.every(({ value }) => Number.isNaN(value)) &&
@@ -270,7 +280,7 @@ export function computeNextSetFromWorkout(
     id,
     lastWorkedOutAt: workout?.workedOutAt ?? null,
     dueOn,
-    exerciseId: exerciseSchedule.exerciseId,
+    exerciseId: exerciseSchedule.exerciseProgram.exerciseId,
     successful: successful ?? false,
     nextWorkingSetInputs,
     nextWorkingSets,
@@ -285,14 +295,14 @@ interface GetNextSetsDoc {
 }
 export async function* getNextSets(
   userId: Session["user"]["id"],
-  exerciseSchedules: ExerciseSchedule[],
+  exerciseSchedules: ITodoScheduleWithExerciseProgram[],
   { asOf }: { asOf?: Date | null } = {},
 ) {
   const enabled = exerciseSchedules.filter((s) => s.enabled);
   if (enabled.length === 0) return [];
 
   const enabledExerciseIds = Array.from(
-    new Set(enabled.map((s) => s.exerciseId)),
+    new Set(enabled.map((s) => s.exerciseProgram.exerciseId)),
   );
 
   const mostRecentDocs = MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
@@ -324,26 +334,30 @@ export async function* getNextSets(
   const mostRecentByExerciseId = new Map<number, GetNextSetsDoc>();
   for await (const doc of mostRecentDocs) {
     for (const schedule of enabled.filter(
-      (s) => s.exerciseId === doc.exerciseId,
+      (s) => s.exerciseProgram.exerciseId === doc.exerciseId,
     )) {
       if (
-        isClimbingExercise(schedule.exerciseId) &&
+        isClimbingExercise(schedule.exerciseProgram.exerciseId) &&
         !firstSuccessfulByScheduleId.has(schedule.id) &&
-        schedule.workingSets &&
-        schedule.workingSets > 0
+        schedule.exerciseProgram.workingSets &&
+        schedule.exerciseProgram.workingSets > 0
       ) {
         const climbingCursor =
           MaterializedWorkoutsView.aggregate<GetNextSetsDoc>([
             {
               $match: {
                 userId,
-                "exercises.exerciseId": schedule.exerciseId,
+                "exercises.exerciseId": schedule.exerciseProgram.exerciseId,
                 deletedAt: { $exists: false },
               },
             },
             { $sort: { workedOutAt: -1 } },
             { $unwind: "$exercises" },
-            { $match: { "exercises.exerciseId": schedule.exerciseId } },
+            {
+              $match: {
+                "exercises.exerciseId": schedule.exerciseProgram.exerciseId,
+              },
+            },
             {
               $project: {
                 _id: 0,
@@ -361,7 +375,10 @@ export async function* getNextSets(
               (set.inputs[2]?.value as SendType) === SendType.Top ||
               (set.inputs[2]?.value as SendType) === SendType.Repeat,
           );
-          if (successfulSets.length >= schedule.workingSets) {
+          if (
+            schedule.exerciseProgram.workingSets &&
+            successfulSets.length >= schedule.exerciseProgram.workingSets
+          ) {
             firstSuccessfulByScheduleId.set(schedule.id, doc);
             break;
           }
@@ -371,11 +388,12 @@ export async function* getNextSets(
       }
 
       const workout =
-        (isClimbingExercise(schedule.exerciseId) &&
-        schedule.workingSets != null &&
-        schedule.workingSets > 0
+        (isClimbingExercise(schedule.exerciseProgram.exerciseId) &&
+        schedule.exerciseProgram.workingSets != null &&
+        schedule.exerciseProgram.workingSets > 0
           ? firstSuccessfulByScheduleId.get(schedule.id)
-          : undefined) ?? mostRecentByExerciseId.get(schedule.exerciseId);
+          : undefined) ??
+        mostRecentByExerciseId.get(schedule.exerciseProgram.exerciseId);
       yield computeNextSetFromWorkout(workout ?? null, schedule);
     }
   }

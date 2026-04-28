@@ -1,15 +1,18 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
+  add,
   addHours,
   addMilliseconds,
   endOfDay,
   isAfter,
   isBefore,
   startOfDay,
+  type Duration as DateFnsDuration,
 } from "date-fns";
 import type { WithId } from "mongodb";
 import Grade from "../grades";
 import type {
+  GQDuration,
   GQLocation,
   GQNextSet,
   GQWorkout,
@@ -140,6 +143,23 @@ export const durationToMs = (duration: Duration) =>
   (duration.hours ?? 0) * hoursInMs +
   (duration.minutes ?? 0) * minutesInMs +
   (duration.seconds ?? 0) * secondsInMs;
+
+export const coerceGQDurationToDuration = (
+  gqDuration: GQDuration | DateFnsDuration | Duration,
+): DateFnsDuration => ({
+  years: gqDuration.years ?? undefined,
+  months: gqDuration.months ?? undefined,
+  weeks: gqDuration.weeks ?? undefined,
+  days: gqDuration.days ?? undefined,
+  hours: gqDuration.hours ?? undefined,
+  minutes: gqDuration.minutes ?? undefined,
+  seconds: gqDuration.seconds ?? undefined,
+});
+
+export const addDurationToDate = (
+  date: Date,
+  duration: Duration | GQDuration | DateFnsDuration,
+) => add(date, coerceGQDurationToDuration(duration));
 
 export const formatShortDuration = (
   duration: Duration,

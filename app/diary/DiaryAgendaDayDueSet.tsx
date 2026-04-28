@@ -3,14 +3,7 @@ import { useApolloClient, useMutation } from "@apollo/client/react";
 import { tz } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import {
-  addDays,
-  addHours,
-  addMilliseconds,
-  isEqual,
-  isFuture,
-  startOfDay,
-} from "date-fns";
+import { addDays, addHours, isEqual, isFuture, startOfDay } from "date-fns";
 import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,7 +21,7 @@ import {
   GQWorkout,
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
-import { durationToMs } from "../../models/workout";
+import { addDurationToDate } from "../../models/workout";
 import { exerciseIdToDataSourceMapping } from "../../sources/utils";
 import {
   type cotemporality,
@@ -359,7 +352,7 @@ export function DiaryAgendaDayDueSet({
                               snoozedUntil: null,
                               nextSet: {
                                 ...dueSet,
-                                dueOn: addMilliseconds(
+                                dueOn: addDurationToDate(
                                   (dueSet?.lastWorkedOutAt &&
                                   isEqual(
                                     dueSet.lastWorkedOutAt,
@@ -372,9 +365,7 @@ export function DiaryAgendaDayDueSet({
                                         dayStartHour,
                                       )
                                     : dueSet.lastWorkedOutAt) || epoch,
-                                  durationToMs(
-                                    dueSet.exerciseSchedule.frequency,
-                                  ),
+                                  dueSet.exerciseSchedule.frequency,
                                 ),
                               },
                             },
