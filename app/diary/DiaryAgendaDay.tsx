@@ -19,7 +19,7 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
 import {
@@ -27,6 +27,7 @@ import {
   type GQLocation,
 } from "../../graphql.generated";
 import { useVisibilityAwarePollInterval } from "../../hooks";
+import { useIsSSR } from "../../hooks/useIsSSR";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -575,6 +576,41 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       },
     );
   }, [daysJournalEntries, userLocations]);
+
+  const lastInteractedWithPage = useRef<Date | null>(null);
+  useEffect(() => {
+    const handleInteraction = () => {
+      lastInteractedWithPage.current = new Date();
+    };
+    window.addEventListener("mousedown", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+    return () => {
+      window.removeEventListener("mousedown", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+  }, []);
+
+  const isSSR = useIsSSR();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const el = document
+      .getElementById("now-divider")
+      ?.parentElement?.closest<HTMLElement>(".diary-agenda-day-entry");
+    if (isSSR || !el) return;
+
+    if (lastInteractedWithPage.current) {
+      const timeSinceLastInteraction =
+        new Date().getTime() - lastInteractedWithPage.current.getTime();
+      if (timeSinceLastInteraction < 60000) {
+        // If the user has interacted with the page in the last minute, we assume they are looking at something specific and we don't want to scroll around on them
+        return;
+      }
+    }
+
+    const viewportHeight = window.innerHeight;
+    const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
+    window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
+  }, [isSSR, daysJournalEntriesIncludingLocationChanges2]);
 
   return (
     <>

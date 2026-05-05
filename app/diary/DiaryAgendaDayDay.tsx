@@ -14,7 +14,7 @@ import {
   type Interval,
 } from "date-fns";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, type ReactElement } from "react";
+import { useMemo, useRef, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import type {
   GQEvent,
@@ -23,7 +23,6 @@ import type {
   GQWorkout,
 } from "../../graphql.generated";
 import { useNow } from "../../hooks";
-import { useIsSSR } from "../../hooks/useIsSSR";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -77,7 +76,6 @@ export function DiaryAgendaDayDay({
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
 }) {
-  const isSSR = useIsSSR();
   const client = useApolloClient();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const todayStr = useMemo(
@@ -88,15 +86,6 @@ export function DiaryAgendaDayDay({
   const isToday = date === todayStr;
   const now = useNow(isToday ? 60 * 1000 : 60 * 60 * 1000);
   const ref = useRef<HTMLFieldSetElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!isToday || isSSR || !el) return;
-
-    const viewportHeight = window.innerHeight;
-    const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
-    window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
-  }, [isToday, isSSR, dayJournalEntries.length]);
 
   const dayStart = useMemo(() => addHours(dayDate, dayStartHour), [dayDate]);
   const dayEnd = useMemo(
@@ -597,6 +586,7 @@ export function DiaryAgendaDayDay({
         legend={null}
         ref={ref}
         className={
+          "diary-agenda-day-entry " +
           "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 " +
           ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
             ? "bg-green-50 pt-1"

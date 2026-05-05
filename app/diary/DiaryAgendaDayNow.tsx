@@ -48,6 +48,7 @@ export function DiaryAgendaDayNow({
       iconTxt={iconTxt}
       cotemporality="current"
       className="pt-0.5 pb-1.5"
+      id="now-divider"
       ref={setNodeRef}
       style={style}
       {...listeners}
