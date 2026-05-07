@@ -497,15 +497,37 @@ function UserStuffSourceForm({
       break;
     case DataSource.Spiir:
       formElements = (
-        <label className="flex flex-col gap-1">
-          Session Key:
-          <input
-            type="text"
-            {...register("config.SessionKey")}
-            placeholder="Session Key"
-            className="w-full"
-          />
-        </label>
+        <>
+          <label className="flex flex-col gap-1">
+            Session Key:
+            <input
+              type="text"
+              {...register("config.SessionKey")}
+              placeholder="Session Key"
+              className="w-full"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            Balance Cutoff (optional):
+            <input
+              type="number"
+              {...register("config.balanceCutoff", { valueAsNumber: true })}
+              placeholder="Balance Cutoff"
+              className="w-full"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            Balance Display Ceiling (optional):
+            <input
+              type="number"
+              {...register("config.balanceDisplayCeiling", {
+                valueAsNumber: true,
+              })}
+              placeholder="Balance Display Ceiling"
+              className="w-full"
+            />
+          </label>
+        </>
       );
       break;
     default:
@@ -837,7 +859,11 @@ function UserStuffSourceCreateForm({
             append({
               ...initialSourceMeta,
               source: DataSource.Spiir,
-              config: { SessionKey: "" },
+              config: {
+                SessionKey: "",
+                balanceCutoff: null,
+                balanceDisplayCeiling: null,
+              },
             });
             break;
 

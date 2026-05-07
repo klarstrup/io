@@ -74,7 +74,10 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.Spiir;
-      config: { SessionKey: string };
+      config: { SessionKey: string;
+        balanceCutoff?: number | null;
+        balanceDisplayCeiling?: number | null;
+       };
     };
 
 export interface UserDataSourceMeta {

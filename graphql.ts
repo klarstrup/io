@@ -331,7 +331,10 @@ export const resolvers: GQResolvers<
         0,
       );
 
-      return Math.min(rawBalance - 10000, 9999);
+      return Math.min(
+        rawBalance - (spiirDataSource.config.balanceCutoff ?? 0),
+        spiirDataSource.config.balanceDisplayCeiling ?? Infinity,
+      );
     },
     weight: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
