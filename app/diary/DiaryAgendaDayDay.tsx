@@ -126,17 +126,19 @@ export function DiaryAgendaDayDay({
 
     for (const journalEntry of dayJournalEntries) {
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
-      const journalEntryCotemporality =
-        principalDate &&
-        !(
-          journalEntry.__typename === "Event" &&
-          (journalEntry.datetype === "date" ||
-            isEventEntireDay(journalEntry, dayDate))
-        )
-          ? cotemporality(principalDate as Interval<Date, Date>)
-          : null;
+
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
+      const precedingJournalEntryCotemporality =
+        precedingJournalEntry &&
+        getJournalEntryPrincipalDate(precedingJournalEntry)
+          ? cotemporality(
+              getJournalEntryPrincipalDate(precedingJournalEntry) as Interval<
+                Date,
+                Date
+              >,
+            )
+          : null;
 
       const previousEvents = dayJournalEntries
         .slice(0, i)
@@ -192,15 +194,17 @@ export function DiaryAgendaDayDay({
       if (
         !pushedNow &&
         isToday &&
-        ((followingJournalEntry
-          ? getJournalEntryPrincipalDate(followingJournalEntry)!.start >= now
-          : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
-          !followingJournalEntry)
+        ((journalEntry
+          ? getJournalEntryPrincipalDate(journalEntry)!.start >= now
+          : precedingJournalEntry &&
+            getJournalEntryPrincipalDate(precedingJournalEntry)!.start >=
+              now) ||
+          !journalEntry)
       ) {
         pushNow(
           cotemporalityOfSurroundingEvent ||
-            (journalEntryCotemporality === "current" &&
-              journalEntryCotemporality) ||
+            (precedingJournalEntryCotemporality === "current" &&
+              precedingJournalEntryCotemporality) ||
             null,
         );
         pushedNow = true;
