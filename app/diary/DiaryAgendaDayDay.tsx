@@ -189,6 +189,23 @@ export function DiaryAgendaDayDay({
         ? cotemporality(eventThatSurroundsEntry)
         : null;
 
+      if (
+        !pushedNow &&
+        isToday &&
+        ((followingJournalEntry
+          ? getJournalEntryPrincipalDate(followingJournalEntry)!.start >= now
+          : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
+          !followingJournalEntry)
+      ) {
+        pushNow(
+          cotemporalityOfSurroundingEvent ||
+            (journalEntryCotemporality === "current" &&
+              journalEntryCotemporality) ||
+            null,
+        );
+        pushedNow = true;
+      }
+
       if (journalEntry.__typename === "Sleep") {
         const sleep = journalEntry;
 
@@ -481,23 +498,6 @@ export function DiaryAgendaDayDay({
             />
           ),
         });
-      }
-
-      if (
-        !pushedNow &&
-        isToday &&
-        ((followingJournalEntry
-          ? getJournalEntryPrincipalDate(followingJournalEntry)!.start >= now
-          : getJournalEntryPrincipalDate(journalEntry)!.start >= now) ||
-          !followingJournalEntry)
-      ) {
-        pushNow(
-          cotemporalityOfSurroundingEvent ||
-            (journalEntryCotemporality === "current" &&
-              journalEntryCotemporality) ||
-            null,
-        );
-        pushedNow = true;
       }
 
       i++;
