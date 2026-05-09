@@ -348,13 +348,13 @@ export default function DashBar() {
         >
           <BarIcon>🐝</BarIcon>
           <BarNumberContainer>
-            {data.user.futureBusynessFraction - data.user.pastBusynessFraction >
+            {data.user.pastBusynessFraction - data.user.futureBusynessFraction >
             0
               ? "+"
               : ""}
             {(
-              (data.user.futureBusynessFraction -
-                data.user.pastBusynessFraction) *
+              (data.user.pastBusynessFraction -
+                data.user.futureBusynessFraction) *
               100
             ).toLocaleString(undefined, {
               minimumFractionDigits: 0,
