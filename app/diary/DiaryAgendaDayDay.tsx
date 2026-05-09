@@ -250,7 +250,7 @@ export function DiaryAgendaDayDay({
                   cotemporalityOfSurroundingEvent
                 }
                 className={
-                  "rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
+                  "rounded-tl rounded-tr self-end pr-0.5 pl-0.5 text-sm " +
                   (isPast(dayEnd)
                     ? "bg-green-50"
                     : isToday
