@@ -565,20 +565,27 @@ export const resolvers: GQResolvers<
         events
           // Usually all-day events are more abstract, i.e. a holiday, a birthday, etc... so we exclude them from the busyness calculation since they don't necessarily reflect actual busy time slots in the calendar
           .filter((event) => event.datetype === "date-time")
+          // Also exclude events that are longer than 24 hours, since they are likely not reflecting actual busy time slots in the calendar
+          .filter(
+            (event) =>
+              differenceInHours(new Date(event.end), new Date(event.start)) <
+              24,
+          )
           .flatMap((event) => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
             const hours: number[] = [];
             for (
-              let hour = eventStart.getTime();
-              hour < eventEnd.getTime();
+              let hour = Math.max(eventStart.getTime(), oneWeekAgo.getTime());
+              hour < Math.min(eventEnd.getTime(), now.getTime());
               hour += 60 * 60 * 1000
             ) {
-              hours.push(hour);
+              hours.push(Math.floor(hour / (60 * 60 * 1000))); // Convert to hours and round down to get the hour slot
             }
             return hours;
           }),
       );
+      console.log({ pastHoursWithEvents: hoursWithEvents });
       const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
@@ -611,15 +618,16 @@ export const resolvers: GQResolvers<
             const eventEnd = new Date(event.end);
             const hours: number[] = [];
             for (
-              let hour = eventStart.getTime();
-              hour < eventEnd.getTime();
+              let hour = Math.max(eventStart.getTime(), now.getTime());
+              hour < Math.min(eventEnd.getTime(), oneWeekFromNow.getTime());
               hour += 60 * 60 * 1000
             ) {
-              hours.push(hour);
+              hours.push(Math.floor(hour / (60 * 60 * 1000))); // Convert to hours and round down to get the hour slot
             }
             return hours;
           }),
       );
+      console.log({ futureHoursWithEvents: hoursWithEvents });
       const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
