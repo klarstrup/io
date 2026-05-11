@@ -585,7 +585,6 @@ export const resolvers: GQResolvers<
             return hours;
           }),
       );
-      console.log({ pastHoursWithEvents: hoursWithEvents });
       const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
@@ -627,7 +626,6 @@ export const resolvers: GQResolvers<
             return hours;
           }),
       );
-      console.log({ futureHoursWithEvents: hoursWithEvents });
       const totalHours = 2 * 7 * (24 - idealDailySleepInSeconds / 3600); // Total hours in a week, subtracting ideal sleep hours
       const busyHours = hoursWithEvents.size;
       return busyHours / totalHours;
