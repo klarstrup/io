@@ -13,6 +13,10 @@ type UserDataSourceConfig =
       config: { token: string; userName: string; userId: string };
     }
   | {
+      source: DataSource.Meyers;
+      config: Record<string, never>;
+    }
+  | {
       source: DataSource.RunDouble;
       config: { id: string };
     }
@@ -74,10 +78,11 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.Spiir;
-      config: { SessionKey: string;
+      config: {
+        SessionKey: string;
         balanceCutoff?: number | null;
         balanceDisplayCeiling?: number | null;
-       };
+      };
     };
 
 export interface UserDataSourceMeta {
@@ -100,6 +105,7 @@ export type UserDataSource = UserDataSourceConfig & UserDataSourceMeta;
 export enum DataSource {
   Fitocracy = "fitocracy",
   MyFitnessPal = "myfitnesspal",
+  Meyers = "meyers",
   RunDouble = "rundouble",
   TopLogger = "toplogger",
   ICal = "ical",
@@ -129,7 +135,7 @@ export const dataSourceGroups = {
     DataSource.Onsight,
     DataSource.Sportstiming,
   ],
-  food: [DataSource.MyFitnessPal],
+  food: [DataSource.MyFitnessPal, DataSource.Meyers],
   events: [DataSource.ICal],
   weather: [DataSource.Tomorrow],
   health: [DataSource.Withings],

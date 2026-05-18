@@ -223,6 +223,9 @@ function UserStuffSourceForm({
         </>
       );
       break;
+    case DataSource.Meyers:
+      formElements = <div>Meyers does not require any configuration.</div>;
+      break;
     case DataSource.RunDouble:
       formElements = (
         <label className="flex flex-col gap-1">
@@ -728,6 +731,13 @@ function UserStuffSourceCreateForm({
               ...initialSourceMeta,
               source: DataSource.MyFitnessPal,
               config: { token: "", userName: "", userId: "" },
+            });
+            break;
+          case DataSource.Meyers:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.Meyers,
+              config: {},
             });
             break;
           case DataSource.RunDouble:

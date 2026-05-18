@@ -12,6 +12,7 @@ type ProxyCollection<TSchema extends Document> = Pick<
   | "updateMany"
   | "deleteMany"
   | "insertMany"
+  | "bulkWrite"
   | "createIndexes"
   | "aggregate"
 >;
