@@ -13,6 +13,7 @@ import {
   roundToNearestMinutes,
   type Interval,
 } from "date-fns";
+import { omit } from "next/dist/shared/lib/router/utils/omit";
 import Link from "next/link";
 import { useMemo, useRef, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
@@ -129,16 +130,6 @@ export function DiaryAgendaDayDay({
 
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
-      const precedingJournalEntryCotemporality =
-        precedingJournalEntry &&
-        getJournalEntryPrincipalDate(precedingJournalEntry)
-          ? cotemporality(
-              getJournalEntryPrincipalDate(precedingJournalEntry) as Interval<
-                Date,
-                Date
-              >,
-            )
-          : null;
 
       const previousEvents = dayJournalEntries
         .slice(0, i)
@@ -201,10 +192,32 @@ export function DiaryAgendaDayDay({
               now) ||
           !journalEntry)
       ) {
+        const precedingJournalEntryPrincipalDate = precedingJournalEntry
+          ? getJournalEntryPrincipalDate(precedingJournalEntry)
+          : null;
+        const precedingJournalEntryCotemporality =
+          precedingJournalEntryPrincipalDate
+            ? cotemporality(
+                precedingJournalEntryPrincipalDate as Interval<Date, Date>,
+              )
+            : null;
+
+        const journalEntryPrincipalDate = getJournalEntryPrincipalDate(
+          "_this_is_the_end_of_a_event" in journalEntry &&
+            journalEntry._this_is_the_end_of_a_event
+            ? omit(journalEntry, ["_this_is_the_end_of_a_event"])
+            : journalEntry,
+        );
+        const journalEntryCotemporality = cotemporality(
+          journalEntryPrincipalDate as Interval<Date, Date>,
+        );
+
         pushNow(
           cotemporalityOfSurroundingEvent ||
             (precedingJournalEntryCotemporality === "current" &&
               precedingJournalEntryCotemporality) ||
+            (journalEntryCotemporality === "current" &&
+              journalEntryCotemporality) ||
             null,
         );
         pushedNow = true;
@@ -250,7 +263,7 @@ export function DiaryAgendaDayDay({
                   cotemporalityOfSurroundingEvent
                 }
                 className={
-                  "rounded-tl rounded-tr self-end pr-0.5 pl-0.5 text-sm " +
+                  "self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
                   (isPast(dayEnd)
                     ? "bg-green-50"
                     : isToday
