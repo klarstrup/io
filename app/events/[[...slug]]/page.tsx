@@ -29,8 +29,7 @@ export default async function Home(props: {
   const { slug: [disciplinesString] = [] } = await props.params;
 
   const disciplines: string[] | undefined =
-    (disciplinesString !== "index" &&
-      (disciplinesString as string | undefined)?.split("+")) ||
+    (disciplinesString !== "index" && disciplinesString?.split("+")) ||
     undefined;
   const from = subMonths(new Date(), monthsPerPage);
   const to = undefined;

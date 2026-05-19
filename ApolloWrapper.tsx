@@ -31,7 +31,7 @@ export function ApolloWrapper({ children }: PropsWithChildren) {
         storage: new LocalStorageWrapper(window.localStorage),
       });
 
-      if (Object.keys(cache.extract() as Record<string, unknown>).length > 0) {
+      if (Object.keys(cache.extract()).length > 0) {
         cache._io_wasRestoredFromLocalStorage = true;
       }
     }

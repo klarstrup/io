@@ -792,7 +792,7 @@ export const omitUndefined = <T extends object>(obj: T): Required<T> => {
   const ret = {} as Required<T>;
   for (const key in obj) {
     const value = obj[key];
-    if (value !== undefined) ret[key] = value as NonNullable<T[typeof key]>;
+    if (value !== undefined) ret[key] = value;
   }
   return ret;
 };

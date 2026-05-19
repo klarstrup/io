@@ -24,6 +24,7 @@ export default class Cache<T> {
 
   restore(data: PersistedData<T>): void {
     if (this.serialize && typeof data === "string") {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       data = JSON.parse(data) as unknown as T; // hopefully - there's no validation mechanism
     }
 

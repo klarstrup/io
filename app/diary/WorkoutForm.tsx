@@ -1293,9 +1293,9 @@ function InputsForm({
                         const setKey =
                           `exercises.${parentIndex}.sets.${setIndex}` as const;
                         const setState = getValues(setKey);
-                        const sendType = Number(
+                        const sendType: SendType = Number(
                           setState.inputs[2]?.value ?? -1,
-                        ) as SendType;
+                        );
 
                         if (sendType === SendType.Flash) {
                           setValue(setKey, {

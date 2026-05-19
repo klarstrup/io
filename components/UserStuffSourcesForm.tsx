@@ -223,6 +223,30 @@ function UserStuffSourceForm({
         </>
       );
       break;
+    case DataSource.SnapCalorie:
+      formElements = (
+        <label className="flex flex-col gap-1">
+          Auth Tokens:
+          <input
+            type="text"
+              // eslint-disable-next-line react-hooks/incompatible-library
+            value={JSON.stringify(watch("config.authTokens"))}
+            onChange={(e) => {
+              const value = e.target.value;
+              const authTokens = JSON.parse(
+                value,
+              ) as unknown as typeof source.config.authTokens;
+
+              setValue("config.authTokens", authTokens, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }}
+            className="w-full font-mono"
+          />
+        </label>
+      );
+      break;
     case DataSource.Meyers:
       formElements = <div>Meyers does not require any configuration.</div>;
       break;
@@ -264,7 +288,6 @@ function UserStuffSourceForm({
             Auth Tokens:
             <input
               type="text"
-              // eslint-disable-next-line react-hooks/incompatible-library
               value={JSON.stringify(watch("config.authTokens"))}
               onChange={(e) => {
                 const value = e.target.value;
@@ -731,6 +754,18 @@ function UserStuffSourceCreateForm({
               ...initialSourceMeta,
               source: DataSource.MyFitnessPal,
               config: { token: "", userName: "", userId: "" },
+            });
+            break;
+          case DataSource.SnapCalorie:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.SnapCalorie,
+              config: {
+                authTokens: {
+                  accessToken: "",
+                  refreshToken: "",
+                },
+              },
             });
             break;
           case DataSource.Meyers:

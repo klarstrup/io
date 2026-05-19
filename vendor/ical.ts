@@ -488,7 +488,7 @@ const dateParameter =
       ];
       if (comps[7] === "Z") {
         // UTC
-        newDate = new Date(Date.UTC(...compsNumbers)) as DateWithTimeZone;
+        newDate = new Date(Date.UTC(...compsNumbers));
         newDate.tz = "Etc/UTC";
       } else if (
         parameters[0]?.includes("TZID=") &&
@@ -544,13 +544,13 @@ const dateParameter =
         newDate =
           found && tz
             ? parse(value, "yyyyMMdd'T'HHmmss" + offset!, TZDate.tz(tz))
-            : (new Date(...compsNumbers) as DateWithTimeZone);
+            : new Date(...compsNumbers);
         if (found && tz) newDate.tz = tz;
       } else {
         newDate =
           normalizedTzId && !Number.isNaN(tzOffset(normalizedTzId, new Date()))
             ? parse(value, "yyyyMMdd'T'HHmmss", TZDate.tz(normalizedTzId))
-            : (new Date(...compsNumbers) as DateWithTimeZone);
+            : new Date(...compsNumbers);
         if (normalizedTzId) newDate.tz = normalizedTzId;
       }
     }
@@ -675,7 +675,6 @@ const objectHandlers = {
     ) => {
       // Prevents the need to search the root of the tree for the VCALENDAR object
       if (component === "VCALENDAR") {
-        curr = curr as VCalendar;
         // Scan all high level object in curr and drop all strings
         const highLevel = {};
         for (const key of Object.keys(curr)) {
@@ -696,6 +695,7 @@ const objectHandlers = {
         }
         return curr;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       curr = curr as VEvent;
 
       const parent = stack.pop()!;
@@ -831,6 +831,7 @@ const objectHandlers = {
         component === "VALARM" &&
         (parent.type === "VEVENT" || parent.type === "VTODO")
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         curr = curr as unknown as VAlarm;
         parent.alarms ??= [];
         parent.alarms.push(curr);
@@ -854,6 +855,7 @@ const objectHandlers = {
       (value === "VEVENT" || value === "VTODO" || value === "VJOURNAL") &&
       "rrule" in curr
     ) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       curr = curr as VEvent;
       let rule = (curr.rrule as unknown as string).replace("RRULE:", "");
       // Make sure the rrule starts with FREQ=

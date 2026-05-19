@@ -377,7 +377,7 @@ export const exerciseSetsToProblemByProblem = (
   ])[],
 ): PP[] =>
   setsWithLocations.map(([set, location], i) => {
-    const sendType = Number(set.inputs[2]!.value) as SendType;
+    const sendType: SendType = Number(set.inputs[2]!.value);
 
     const boulderCircuitId = getSetMeta(set, "boulderCircuitId");
     const circuit = location?.boulderCircuits?.find(

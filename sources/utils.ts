@@ -1,6 +1,7 @@
 import type { TopLoggerAuthTokens } from "../lib";
 import { ExerciseData } from "../models/exercises.types";
 import type { Grippy } from "./grippy";
+import { SnapCalorie } from "./snapcalorie";
 import type { Withings } from "./withings";
 
 type UserDataSourceConfig =
@@ -11,6 +12,10 @@ type UserDataSourceConfig =
   | {
       source: DataSource.MyFitnessPal;
       config: { token: string; userName: string; userId: string };
+    }
+  | {
+      source: DataSource.SnapCalorie;
+      config: { authTokens: SnapCalorie.Auth };
     }
   | {
       source: DataSource.Meyers;
@@ -120,6 +125,7 @@ export enum DataSource {
   Songkick = "songkick",
   Withings = "withings",
   Spiir = "spiir",
+  SnapCalorie = "snapcalorie",
 }
 
 export const dataSourceGroups = {
@@ -135,7 +141,7 @@ export const dataSourceGroups = {
     DataSource.Onsight,
     DataSource.Sportstiming,
   ],
-  food: [DataSource.MyFitnessPal, DataSource.Meyers],
+  food: [DataSource.MyFitnessPal, DataSource.Meyers, DataSource.SnapCalorie],
   events: [DataSource.ICal],
   weather: [DataSource.Tomorrow],
   health: [DataSource.Withings],

@@ -38,19 +38,15 @@ export async function* getUserIcalEventsBetween(
 
   const dataSourceByUrlHash = user.dataSources
     ?.filter((s) => s.source === DataSource.ICal)
-    .reduce(
-      (acc, s) => {
-        const hash = createHash("sha256")
-          .update(s.config.url + user.id)
-          .digest("hex");
-        acc[hash] = s;
-        return acc;
-      },
-      {} as Record<
-        string,
-        Extract<UserDataSource, { source: DataSource.ICal }>
-      >,
-    );
+    .reduce<
+      Record<string, Extract<UserDataSource, { source: DataSource.ICal }>>
+    >((acc, s) => {
+      const hash = createHash("sha256")
+        .update(s.config.url + user.id)
+        .digest("hex");
+      acc[hash] = s;
+      return acc;
+    }, {});
 
   for await (const event of IcalEvents.find<WithId<MongoVEvent>>({
     _io_userId: userId,

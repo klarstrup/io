@@ -5,6 +5,7 @@ import type {
 } from "./graphql.generated";
 import type { WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
+import { SnapCalorie } from "./sources/snapcalorie";
 import type { DataSource } from "./sources/utils";
 import type { VCalendar, VEvent, VTodo } from "./vendor/ical";
 
@@ -192,6 +193,18 @@ export const isGrippyAuthTokens = (obj: unknown): obj is Grippy.AuthTokens =>
     "refresh_token" in obj &&
     typeof obj.refresh_token === "string",
   );
+
+export const isSnapCalorieAuthTokens = (
+  obj: unknown,
+): obj is SnapCalorie.Auth =>
+  Boolean(
+    obj &&
+    typeof obj === "object" &&
+    "accessToken" in obj &&
+    typeof obj.accessToken === "string" &&
+    "refreshToken" in obj &&
+    typeof obj.refreshToken === "string",
+  ) || false;
 
 export enum PRType {
   AllTime = "allTimePR",
