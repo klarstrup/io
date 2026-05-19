@@ -58,6 +58,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-type-json": "^0.3.2",
     "ical-generator": "^10.2.0",
+    "jsonwebtoken": "^9.0.3",
     "luxon": "^3.7.2",
     "mongodb": "^7.2.0",
     "next": "^16.2.6",
