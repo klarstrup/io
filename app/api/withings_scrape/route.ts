@@ -66,7 +66,11 @@ export const GET = async (req: NextRequest) => {
         "user.info,user.metrics,user.activity,user.sleepevents",
       );
 
-      return NextResponse.redirect(redirectUrl.toString());
+      try {
+        return NextResponse.redirect(redirectUrl.toString());
+      } finally {
+        throw new Error("OAuth2 authorization required");
+      }
     }
 
     const body = new FormData();
