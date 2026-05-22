@@ -6,7 +6,13 @@ export function ShyGuy({ onSeen }: { onSeen: () => void }) {
   const { ref, inView } = useInView();
 
   useEffect(() => {
-    if (inView) onSeen();
+    if (
+      inView &&
+      typeof document !== "undefined" &&
+      document.visibilityState === "visible"
+    ) {
+      onSeen();
+    }
   }, [inView, onSeen]);
 
   return <div ref={ref} />;
