@@ -78,7 +78,7 @@
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.0",
-    "typescript-eslint": "^8.59.4",
+    "typescript-eslint": "^8.60.0",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
@@ -88,8 +88,8 @@
     "@types/node": "^24.10.2",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
-    "@typescript-eslint/parser": "^8.59.4",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
     "dayjs": "^1.11.20",
     "esbuild": "^0.28.0",
     "eslint": "9",
