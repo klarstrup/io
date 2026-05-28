@@ -493,7 +493,11 @@ export function WorkoutForm<R extends string>({
             await updateWorkout({
               variables: { input: { id: workout.id, data: newWorkout } },
             });
-
+            // Invalidate user workout schedules so that next sets are recalculated based on the updated workout
+            client.cache.evict({
+              id: client.cache.identify({ __typename: "User", id: user.id }),
+              fieldName: "exerciseSchedules",
+            });
             return;
           } else {
             const { data: createWorkoutPayload } = await createWorkout({
@@ -515,6 +519,12 @@ export function WorkoutForm<R extends string>({
                   },
                 });
               },
+            });
+
+            // Invalidate user workout schedules so that next sets are recalculated based on the updated workout
+            client.cache.evict({
+              id: client.cache.identify({ __typename: "User", id: user.id }),
+              fieldName: "exerciseSchedules",
             });
 
             const newWorkoutId =

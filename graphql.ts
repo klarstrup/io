@@ -1214,6 +1214,29 @@ export const resolvers: GQResolvers<
         throw new Error("Workout not found after creation");
       }
 
+      // Unsnooze any exercise schedule that includes any of the exercises in the updated workout, since the user just did a workout that includes those exercises so they probably want to see the next sets for those exercises in their schedule again
+      const exerciseIdsInWorkout = createdWorkout.exercises.map(
+        (exercise) => exercise.exerciseId,
+      );
+      const userDoc = await Users.findOne({ _id: new ObjectId(user.id) });
+      let actuallyUnsnoozedAnySchedules = false;
+      const updatedTodoSchedules = userDoc?.todoSchedules?.map((schedule) => {
+        if (
+          schedule.exerciseProgram &&
+          exerciseIdsInWorkout.includes(schedule.exerciseProgram.exerciseId)
+        ) {
+          actuallyUnsnoozedAnySchedules = true;
+          return { ...schedule, snoozedUntil: null };
+        }
+        return schedule;
+      });
+      if (updatedTodoSchedules && actuallyUnsnoozedAnySchedules) {
+        await Users.updateOne(
+          { _id: new ObjectId(user.id) },
+          { $set: { todoSchedules: updatedTodoSchedules } },
+        );
+      }
+
       return {
         __typename: "UpdateWorkoutPayload",
         workout: {
@@ -1314,6 +1337,29 @@ export const resolvers: GQResolvers<
 
       if (!updatedWorkout) {
         throw new Error("Workout not found after update");
+      }
+
+      // Unsnooze any exercise schedule that includes any of the exercises in the updated workout, since the user just did a workout that includes those exercises so they probably want to see the next sets for those exercises in their schedule again
+      const exerciseIdsInWorkout = updatedWorkout.exercises.map(
+        (exercise) => exercise.exerciseId,
+      );
+      const userDoc = await Users.findOne({ _id: new ObjectId(user.id) });
+      let actuallyUnsnoozedAnySchedules = false;
+      const updatedTodoSchedules = userDoc?.todoSchedules?.map((schedule) => {
+        if (
+          schedule.exerciseProgram &&
+          exerciseIdsInWorkout.includes(schedule.exerciseProgram.exerciseId)
+        ) {
+          actuallyUnsnoozedAnySchedules = true;
+          return { ...schedule, snoozedUntil: null };
+        }
+        return schedule;
+      });
+      if (updatedTodoSchedules && actuallyUnsnoozedAnySchedules) {
+        await Users.updateOne(
+          { _id: new ObjectId(user.id) },
+          { $set: { todoSchedules: updatedTodoSchedules } },
+        );
       }
 
       return {
