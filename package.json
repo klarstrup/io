@@ -45,7 +45,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/uuid": "^10.0.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/functions": "^3.6.0",
+    "@vercel/functions": "^3.6.1",
     "ably": "^2.21.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "cheerio": "^1.2.0",
