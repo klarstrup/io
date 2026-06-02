@@ -45,7 +45,6 @@ export function DiaryPoller({ userId }: { userId: string }) {
   useInterval(
     async () => {
       await fetch("/api/cron"); // Throwaway request to trigger a random scraper
-      router.refresh();
     },
     MINUTE_IN_SECONDS * 1000 * 5,
   );
