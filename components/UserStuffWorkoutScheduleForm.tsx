@@ -423,9 +423,13 @@ export default function UserStuffWorkoutSchedulesForm({
                             </span>
                           </div>
                           <div className={"flex flex-col leading-snug"}>
-                            <div className="font-semibold">
+                            <Link
+                              prefetch={false}
+                              href={`/diary/exercises/${exercise.id}`}
+                              className="block font-semibold"
+                            >
                               <ExerciseName exerciseInfo={exercise} />
-                            </div>
+                            </Link>
                             {stats ? (
                               <div className="text-xs text-gray-500">
                                 {stats?.workedOutAt ? (
