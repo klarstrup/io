@@ -598,6 +598,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       ?.parentElement?.closest<HTMLElement>(".diary-agenda-day-entry");
     if (isSSR || !el) return;
 
+    /*
     if (lastInteractedWithPage.current) {
       const timeSinceLastInteraction =
         new Date().getTime() - lastInteractedWithPage.current.getTime();
@@ -606,11 +607,12 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
         return;
       }
     }
+    */
 
     const viewportHeight = window.innerHeight;
     const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
     window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
-  }, [isSSR, daysJournalEntriesIncludingLocationChanges2]);
+  }, [isSSR]);
 
   return (
     <>
