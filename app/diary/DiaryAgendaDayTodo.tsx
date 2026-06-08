@@ -7,7 +7,6 @@ import gql from "graphql-tag";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
   type GQDeleteTodoMutation,
   type GQDiaryAgendaDayTodoFragment,
@@ -51,30 +50,24 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     data: { todo, date: getTodoPrincipalDate(todo)?.start },
   });
 
-  const [updateTodo] = useMutation<GQUpdateTodoMutation>(
-    gql`
-      mutation UpdateTodo($input: UpdateTodoInput!) {
-        updateTodo(input: $input) {
-          todo {
-            id
-            created
-            due
-            completed
-            summary
-          }
+  const [updateTodo] = useMutation<GQUpdateTodoMutation>(gql`
+    mutation UpdateTodo($input: UpdateTodoInput!) {
+      updateTodo(input: $input) {
+        todo {
+          id
+          created
+          due
+          completed
+          summary
         }
       }
-    `,
-    { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
-  );
-  const [deleteTodo] = useMutation<GQDeleteTodoMutation>(
-    gql`
-      mutation DeleteTodo($id: String!) {
-        deleteTodo(id: $id)
-      }
-    `,
-    { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
-  );
+    }
+  `);
+  const [deleteTodo] = useMutation<GQDeleteTodoMutation>(gql`
+    mutation DeleteTodo($id: String!) {
+      deleteTodo(id: $id)
+    }
+  `);
 
   const [isActive, setIsActive] = useState(false);
   const ref2 = useRef<HTMLDivElement>(null);
