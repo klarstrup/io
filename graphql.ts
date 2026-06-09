@@ -315,9 +315,9 @@ export const resolvers: GQResolvers<
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
 
-      const spiirDataSource = user.dataSources?.find(
-        (dataSource) => dataSource.source === DataSource.Spiir,
-      );
+      const spiirDataSource = user.dataSources
+        ?.filter((dataSource) => !dataSource.paused)
+        .find((dataSource) => dataSource.source === DataSource.Spiir);
       if (!spiirDataSource) return null;
 
       const spiirAccountGroups = await SpiirAccountGroups.find({
