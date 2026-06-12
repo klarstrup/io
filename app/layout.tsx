@@ -10,10 +10,13 @@ import LoadingIndicator from "./LoadingIndicator";
 import "./page.css";
 import { SerwistProvider } from "./serwist";
 
-export const metadata: Metadata = {
-  title: "io input/output",
+export const metadata = {
+  title:
+    process.env.NODE_ENV === "production"
+      ? "io input/output"
+      : "👩🏻‍🔬 io input/output",
   description: "what i've done",
-};
+} satisfies Metadata;
 
 export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
