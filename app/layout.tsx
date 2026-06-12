@@ -32,8 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <ApolloWrapper>
               <AblyWrapper>
                 <LoadingIndicator />
-                <UserStuff />
-                <Suspense>{children}</Suspense>
+                <Suspense>
+                  <UserStuff />
+                  {children}
+                </Suspense>
                 <Analytics />
               </AblyWrapper>
             </ApolloWrapper>
