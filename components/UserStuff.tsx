@@ -1,9 +1,15 @@
+"use client";
+import { useApolloClient } from "@apollo/client/react";
+import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import DashBar from "../app/diary/DashBar";
 import { GraphQLListener } from "./GraphQLListener";
 import UserStuffLink from "./UserStuffLink";
 
 export default function UserStuff() {
+  const currentHref = usePathname();
+  const client = useApolloClient();
+
   return (
     <div
       className="fixed left-1/2 z-50 flex max-w-[calc(100%-2.5rem)] -translate-x-1/2 transform items-center gap-x-2 overflow-hidden rounded-2xl border border-[yellow]/25 bg-white/10 py-0.5 pr-0 pl-2 backdrop-blur-md sm:gap-2 pointer-coarse:bottom-2 pointer-fine:top-4"
@@ -15,7 +21,25 @@ export default function UserStuff() {
       <Suspense>
         <GraphQLListener />
       </Suspense>
-      <UserStuffLink href="/diary" prefetch={false}>
+      <UserStuffLink
+        href="/diary"
+        prefetch={false}
+        onClick={(e) => {
+          if (currentHref === "/diary") {
+            e.preventDefault();
+            void client.refetchQueries({ include: "active" });
+
+            const el = document
+              .getElementById("now-divider")
+              ?.parentElement?.closest<HTMLElement>(".diary-agenda-day-entry");
+            if (!el) return;
+
+            const viewportHeight = window.innerHeight;
+            const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
+            window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
+          }
+        }}
+      >
         📔
       </UserStuffLink>
       <UserStuffLink href="/user/settings" prefetch={false}>
