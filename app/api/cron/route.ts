@@ -42,7 +42,9 @@ export async function GET() {
       : dataSources[0];
 
   if (!leastRecentlyAttemptedOrSpiir || !mostRecentlyAttempted) {
-    return Response.json({});
+    return Response.json({
+      reason: "No data sources to scrape.",
+    });
   }
 
   const now = new Date();
@@ -56,14 +58,18 @@ export async function GET() {
     console.log(
       `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because another scrape was attempted less than 15 minutes ago.`,
     );
-    return Response.json({});
+    return Response.json({
+      reason: "Another scrape was attempted less than 15 minutes ago.",
+    });
   }
 
   if (!process.env.VERCEL) {
     console.log(
       `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because we are not on Vercel`,
     );
-    return Response.json({});
+    return Response.json({
+      reason: "We are not on Vercel.",
+    });
   }
 
   redirect(`/api/${leastRecentlyAttemptedOrSpiir.source}_scrape`);
