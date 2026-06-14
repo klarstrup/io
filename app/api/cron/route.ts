@@ -24,15 +24,15 @@ export async function GET() {
     (ds) => ds.source,
   );
 
-  const moreThanMinutesSinceWeFetchedSpiir = dataSources.every(
-    (dataSource) => {
+  const moreThanMinutesSinceWeFetchedSpiir =
+    dataSources.some((dataSource) => dataSource.source === DataSource.Spiir) &&
+    dataSources.every((dataSource) => {
       if (dataSource.source !== DataSource.Spiir) return true;
       const lastAttemptedAt = dataSource.lastAttemptedAt ?? epoch;
       const timeSinceLastAttempted =
         new Date().getTime() - new Date(lastAttemptedAt).getTime();
       return timeSinceLastAttempted > 7 * 60 * 1000;
-    },
-  );
+    });
 
   const mostRecentlyAttempted = dataSources[dataSources.length - 1];
   const leastRecentlyAttemptedOrSpiir =
