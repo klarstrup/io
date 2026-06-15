@@ -27,7 +27,6 @@ export default function UserStuff() {
         onClick={(e) => {
           if (currentHref === "/diary") {
             e.preventDefault();
-            void client.refetchQueries({ include: "active" });
 
             const el = document
               .getElementById("now-divider")
@@ -36,7 +35,13 @@ export default function UserStuff() {
 
             const viewportHeight = window.innerHeight;
             const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
+            const scrollTop = window.scrollY;
             window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
+
+            // If we are already roughly scrolled to the right place, refetch active queries
+            if (Math.abs(scrollTop - window.scrollY) < 10) {
+              void client.refetchQueries({ include: "active" });
+            }
           }
         }}
       >
