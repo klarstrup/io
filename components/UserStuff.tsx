@@ -25,7 +25,7 @@ export default function UserStuff() {
         href="/diary"
         prefetch={false}
         onClick={(e) => {
-          if (currentHref === "/diary") {
+          if (currentHref === "/diary" || currentHref === "/") {
             e.preventDefault();
 
             const el = document
