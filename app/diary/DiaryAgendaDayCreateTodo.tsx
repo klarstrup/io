@@ -1,11 +1,12 @@
 "use client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
 import gql from "graphql-tag";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
-  GQCreateTodoMutation,
   DiaryAgendaDayUserTodosDocument,
+  type GQCreateTodoMutation,
   ListPageUserDocument,
 } from "../../graphql.generated";
 import { useClickOutside, useEvent } from "../../hooks";
@@ -15,7 +16,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [createTodo, { loading }] = useMutation<GQCreateTodoMutation>(
+  const [createTodo, { loading }] = useMutation(
     gql`
       mutation CreateTodo($input: CreateTodoInput!) {
         createTodo(input: $input) {
@@ -28,7 +29,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
           }
         }
       }
-    `,
+    ` as unknown as TypedDocumentNode<GQCreateTodoMutation>,
     { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
   );
 

@@ -1,4 +1,5 @@
 "use client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import { tz } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
@@ -10,14 +11,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import SourceWidget from "../../components/SourceWidget";
-import {
+import type {
   GQExerciseInfo,
   GQLocation,
   GQNextSet,
   GQSnoozeExerciseScheduleMutation,
-  type GQSnoozeExerciseScheduleMutationVariables,
+  GQSnoozeExerciseScheduleMutationVariables,
   GQUnsnoozeExerciseScheduleMutation,
-  type GQUnsnoozeExerciseScheduleMutationVariables,
+  GQUnsnoozeExerciseScheduleMutationVariables,
   GQWorkout,
 } from "../../graphql.generated";
 import { useClickOutside } from "../../hooks";
@@ -84,131 +85,137 @@ export function DiaryAgendaDayDueSet({
   useClickOutside(ref, onClickOutside);
   const router = useRouter();
 
-  const [snoozeExerciseSchedule] = useMutation<
-    GQSnoozeExerciseScheduleMutation,
-    GQSnoozeExerciseScheduleMutationVariables
-  >(gql`
-    mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
-      snoozeExerciseSchedule(input: $input) {
-        exerciseSchedule {
-          id
-          exerciseId
-          enabled
-          frequency {
-            years
-            months
-            weeks
-            days
-            hours
-            minutes
-            seconds
-          }
-          increment
-          workingSets
-          workingReps
-          deloadFactor
-          baseWeight
-          snoozedUntil
-          nextSet {
+  const [snoozeExerciseSchedule] = useMutation(
+    gql`
+      mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
+        snoozeExerciseSchedule(input: $input) {
+          exerciseSchedule {
             id
-            lastWorkedOutAt
-            dueOn
             exerciseId
-            successful
-            nextWorkingSets
-            nextWorkingSetInputs {
-              unit
-              value
-              assistType
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
             }
-            exerciseSchedule {
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            nextSet {
               id
+              lastWorkedOutAt
+              dueOn
               exerciseId
-              enabled
-              frequency {
-                years
-                months
-                weeks
-                days
-                hours
-                minutes
-                seconds
+              successful
+              nextWorkingSets
+              nextWorkingSetInputs {
+                unit
+                value
+                assistType
               }
-              increment
-              workingSets
-              workingReps
-              deloadFactor
-              baseWeight
-              snoozedUntil
+              exerciseSchedule {
+                id
+                exerciseId
+                enabled
+                frequency {
+                  years
+                  months
+                  weeks
+                  days
+                  hours
+                  minutes
+                  seconds
+                }
+                increment
+                workingSets
+                workingReps
+                deloadFactor
+                baseWeight
+                snoozedUntil
+              }
             }
           }
         }
       }
-    }
-  `);
+    ` as unknown as TypedDocumentNode<
+      GQSnoozeExerciseScheduleMutation,
+      GQSnoozeExerciseScheduleMutationVariables
+    >,
+  );
 
-  const [unsnoozeExerciseSchedule] = useMutation<
-    GQUnsnoozeExerciseScheduleMutation,
-    GQUnsnoozeExerciseScheduleMutationVariables
-  >(gql`
-    mutation UnsnoozeExerciseSchedule($input: UnsnoozeExerciseScheduleInput!) {
-      unsnoozeExerciseSchedule(input: $input) {
-        exerciseSchedule {
-          id
-          exerciseId
-          enabled
-          frequency {
-            years
-            months
-            weeks
-            days
-            hours
-            minutes
-            seconds
-          }
-          increment
-          workingSets
-          workingReps
-          deloadFactor
-          baseWeight
-          snoozedUntil
-          nextSet {
+  const [unsnoozeExerciseSchedule] = useMutation(
+    gql`
+      mutation UnsnoozeExerciseSchedule(
+        $input: UnsnoozeExerciseScheduleInput!
+      ) {
+        unsnoozeExerciseSchedule(input: $input) {
+          exerciseSchedule {
             id
-            lastWorkedOutAt
-            dueOn
             exerciseId
-            successful
-            nextWorkingSets
-            nextWorkingSetInputs {
-              unit
-              value
-              assistType
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
             }
-            exerciseSchedule {
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+            nextSet {
               id
+              lastWorkedOutAt
+              dueOn
               exerciseId
-              enabled
-              frequency {
-                years
-                months
-                weeks
-                days
-                hours
-                minutes
-                seconds
+              successful
+              nextWorkingSets
+              nextWorkingSetInputs {
+                unit
+                value
+                assistType
               }
-              increment
-              workingSets
-              workingReps
-              deloadFactor
-              baseWeight
-              snoozedUntil
+              exerciseSchedule {
+                id
+                exerciseId
+                enabled
+                frequency {
+                  years
+                  months
+                  weeks
+                  days
+                  hours
+                  minutes
+                  seconds
+                }
+                increment
+                workingSets
+                workingReps
+                deloadFactor
+                baseWeight
+                snoozedUntil
+              }
             }
           }
         }
       }
-    }
-  `);
+    ` as unknown as TypedDocumentNode<
+      GQUnsnoozeExerciseScheduleMutation,
+      GQUnsnoozeExerciseScheduleMutationVariables
+    >,
+  );
 
   const handleIconClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {

@@ -1,4 +1,5 @@
 "use client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
@@ -50,24 +51,28 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     data: { todo, date: getTodoPrincipalDate(todo)?.start },
   });
 
-  const [updateTodo] = useMutation<GQUpdateTodoMutation>(gql`
-    mutation UpdateTodo($input: UpdateTodoInput!) {
-      updateTodo(input: $input) {
-        todo {
-          id
-          created
-          due
-          completed
-          summary
+  const [updateTodo] = useMutation(
+    gql`
+      mutation UpdateTodo($input: UpdateTodoInput!) {
+        updateTodo(input: $input) {
+          todo {
+            id
+            created
+            due
+            completed
+            summary
+          }
         }
       }
-    }
-  `);
-  const [deleteTodo] = useMutation<GQDeleteTodoMutation>(gql`
-    mutation DeleteTodo($id: String!) {
-      deleteTodo(id: $id)
-    }
-  `);
+    ` as unknown as TypedDocumentNode<GQUpdateTodoMutation>,
+  );
+  const [deleteTodo] = useMutation(
+    gql`
+      mutation DeleteTodo($id: String!) {
+        deleteTodo(id: $id)
+      }
+    ` as unknown as TypedDocumentNode<GQDeleteTodoMutation>,
+  );
 
   const [isActive, setIsActive] = useState(false);
   const ref2 = useRef<HTMLDivElement>(null);

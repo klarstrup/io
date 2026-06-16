@@ -1,3 +1,4 @@
+import type { TypedDocumentNode } from "@apollo/client";
 import { TZDate } from "@date-fns/tz";
 import { gql } from "graphql-tag";
 import { query } from "../../ApolloClient";
@@ -41,7 +42,8 @@ export async function getDiaryEntriesShallow({
     diary[dayStr] = day;
   }
 
-  const queryResult = await query<GQCalendarUserWorkoutsQuery>({
+  const queryResult = await query({
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     query: gql`
       query CalendarUserWorkouts($interval: IntervalInput!) {
         user {
@@ -136,7 +138,7 @@ export async function getDiaryEntriesShallow({
           }
         }
       }
-    `,
+    ` as unknown as TypedDocumentNode<GQCalendarUserWorkoutsQuery>,
     variables: { interval: { start: from, end: to } },
   });
 

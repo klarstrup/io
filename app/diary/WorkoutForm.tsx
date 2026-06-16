@@ -1,5 +1,6 @@
 "use client";
 
+import { TypedDocumentNode } from "@apollo/client";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
@@ -235,7 +236,7 @@ export function WorkoutForm<R extends string>({
       }
     ` as unknown as typeof CreateWorkoutForWorkoutFormDocument,
   );
-  const { data: nextSetsData, client } = useQuery<GQWorkoutFormNextSetsQuery>(
+  const { data: nextSetsData, client } = useQuery(
     gql`
       query WorkoutFormNextSets($asOf: Date!, $exerciseIds: [Int!]) {
         user {
@@ -292,7 +293,7 @@ export function WorkoutForm<R extends string>({
           }
         }
       }
-    `,
+    ` as unknown as TypedDocumentNode<GQWorkoutFormNextSetsQuery>,
     {
       variables: {
         asOf: workout?.workedOutAt
