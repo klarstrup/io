@@ -47,7 +47,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
       {id ? (
         <Link
           href={`/diary/entries/${id}`}
-          className={twMerge("absolute top-1/2 -left-4 -translate-x-1/2 -translate-y-1/2 text-2xl opacity-50")}
+          className={twMerge("absolute top-1/2 -left-2 -translate-x-1/2 -translate-y-1/2 text-2xl opacity-50")}
         >
           🇹🇱
         </Link>
