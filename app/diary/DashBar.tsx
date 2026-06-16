@@ -10,7 +10,7 @@ import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
 import { Masonry } from "../../components/Masonry";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
-import { DataSource } from "../../sources/utils";
+import { DataSource, UserDataSource } from "../../sources/utils";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -205,9 +205,10 @@ export default function DashBar() {
   const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = TZDate.tz(timeZone);
 
-  const userGeohash = sessionData?.user?.dataSources?.find(
-    (source) => source.source === DataSource.Tomorrow,
-  )?.config?.geohash;
+  const userGeohash = (
+    (data?.user?.dataSources as UserDataSource[]) ||
+    sessionData?.user?.dataSources
+  )?.find((source) => source.source === DataSource.Tomorrow)?.config?.geohash;
   const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
   const sunrise =
     userLocation &&
