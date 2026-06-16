@@ -23,7 +23,6 @@ const {
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       authorization: {
         params: {
-          approval_prompt: "force",
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
