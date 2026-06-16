@@ -687,11 +687,11 @@ export const resolvers: GQResolvers<
       });
 
       const getAccessTokenResponse = await oAuth2Client.getAccessToken();
-
       if (getAccessTokenResponse.token) {
-        const credentials = getAccessTokenResponse.res?.data as Parameters<
-          Parameters<OAuth2Client["refreshAccessToken"]>[0]
-        >[1];
+        const credentials =
+          (getAccessTokenResponse.res?.data as Parameters<
+            Parameters<OAuth2Client["refreshAccessToken"]>[0]
+          >[1]) || oAuth2Client.credentials;
 
         // This is present when it refreshes the access token using a refresh token i think
         if (credentials && "access_token" in credentials) {
