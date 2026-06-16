@@ -1,5 +1,5 @@
 import "@fortawesome/fontawesome-svg-core/styles.css";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { SessionProvider } from "next-auth/react";
 import { Suspense } from "react";
