@@ -23,6 +23,7 @@ gql`
   query GetLatestWeightEntry {
     user {
       id
+      timeZone
       weightTimeSeries {
         timestamp
         value
@@ -127,7 +128,7 @@ function BarNumberContainer({
 }) {
   return (
     <div
-      className={`relative flex items-baseline gap-px overflow-hidden rounded-xl border border-[yellow]/25 bg-white/50 py-px pr-1.5 pl-1.5 leading-tight font-semibold -tracking-wider whitespace-nowrap tabular-nums ${className || ""}`}
+      className={`relative flex items-baseline gap-px overflow-hidden rounded-xl border border-[yellow]/25 bg-white/50 py-px pr-1.5 pl-1.5 leading-tight font-semibold tracking-tighter whitespace-nowrap tabular-nums ${className || ""}`}
       style={{
         boxShadow:
           "inset 0 0 8px rgba(0, 0, 0, 0.25), inset 0 0 4px #edab00, inset 0 0 4px #edab00, inset 0 0 1px rgba(0, 0, 0, 1), inset 0 0 0.5px rgba(0, 0, 0, 1)",
@@ -202,13 +203,22 @@ export default function DashBar() {
     return <div className="min-h-12.5 min-w-xs" />;
   }
 
-  const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
+  const timeZone =
+    data?.user?.timeZone || sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
   const tzDate = TZDate.tz(timeZone);
 
-  const userGeohash = (
-    (data?.user?.dataSources as UserDataSource[]) ||
-    sessionData?.user?.dataSources
-  )?.find((source) => source.source === DataSource.Tomorrow)?.config?.geohash;
+  const userGeohash =
+    data?.user?.dataSources?.find(
+      (
+        source,
+      ): source is UserDataSource & {
+        source: DataSource.Tomorrow;
+        __typename: "UserDataSource";
+      } => source.source === DataSource.Tomorrow,
+    )?.config?.geohash ??
+    sessionData?.user?.dataSources?.find(
+      (source) => source.source === DataSource.Tomorrow,
+    )?.config?.geohash;
   const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
   const sunrise =
     userLocation &&
