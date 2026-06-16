@@ -239,6 +239,8 @@ export function DiaryAgendaDayDueSet({
         !isDragging ? cotemporalityOfSurroundingEvent : null
       }
       {...props}
+      id={dueSet.id}
+      __typename={dueSet.__typename}
       icon={faDumbbell}
       onIconClick={handleIconClick}
       className="select-none"

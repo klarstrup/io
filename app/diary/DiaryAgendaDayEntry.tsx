@@ -1,10 +1,13 @@
 import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
 import { forwardRef, ReactElement } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
   {
+    id,
+    __typename,
     icon,
     iconTxt,
     iconDisabled,
@@ -19,6 +22,8 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     isEventEnd,
     ...props
   }: {
+    id?: string;
+    __typename?: string;
     icon?: IconDefinition;
     iconTxt?: string | ReactElement;
     iconDisabled?: boolean;
@@ -39,6 +44,14 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
 
   return (
     <div ref={ref} {...props} className={twMerge("relative flex", className)}>
+      {id ? (
+        <Link
+          href={`/diary/entries/${id}`}
+          className={twMerge("absolute top-1/2 -left-4 -translate-x-1/2 -translate-y-1/2 text-2xl opacity-50")}
+        >
+          🇹🇱
+        </Link>
+      ) : null}
       <IconContainer
         disabled={iconDisabled}
         className={twMerge(

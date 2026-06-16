@@ -49,6 +49,8 @@ export default function DiaryAgendaDaySleep({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       key={sleep.id}
       ref={ref}
+      id={sleep.id}
+      __typename={sleep.__typename}
       onClick={handleOnClick}
       className={"cursor-pointer" + (isOpen ? " bg-gray-100" : "")}
     >

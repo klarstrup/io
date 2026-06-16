@@ -41,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </ApolloWrapper>
           </SerwistProvider>
         </SessionProvider>
+        <div id="modal-root" />
       </body>
     </html>
   );

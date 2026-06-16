@@ -54,6 +54,8 @@ export function DiaryAgendaDayLocationChange({
       style={style}
       {...listeners}
       {...attributes}
+      id={locationChange.id}
+      __typename={locationChange.__typename}
       key={locationChange.id}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={className}

@@ -165,6 +165,8 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       style={style}
       {...listeners}
       {...attributes}
+      id={todo.id}
+      __typename={todo.__typename}
       icon={faCircleCheck}
       onIconClick={handleIconClick}
       // this should cope with todos with deadlines when that is implemented

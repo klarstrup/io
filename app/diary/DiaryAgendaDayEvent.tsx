@@ -83,6 +83,8 @@ export function DiaryAgendaDayEvent({
       style={style}
       {...listeners}
       {...attributes}
+      id={event.id}
+      __typename={event.__typename}
       key={event.id}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventWithSeparatedEnd={isEventWithSeparatedEnd}

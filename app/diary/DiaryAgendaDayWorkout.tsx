@@ -103,6 +103,8 @@ export function DiaryAgendaDayWorkout({
       style={style}
       {...listeners}
       {...attributes}
+      id={workout.id}
+      __typename={workout.__typename}
       onIconClick={handleIconClick}
       className="select-none"
     >

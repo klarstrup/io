@@ -259,6 +259,8 @@ export function DiaryAgendaDayDay({
                 icon={faCalendarRegular}
                 cotemporality={cotemporality(event)}
                 key={event.id}
+                id={event.id}
+                __typename={event.__typename}
                 cotemporalityOfSurroundingEvent={
                   cotemporalityOfSurroundingEvent
                 }

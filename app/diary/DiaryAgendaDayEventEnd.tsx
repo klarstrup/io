@@ -51,6 +51,8 @@ export function DiaryAgendaDayEventEnd({
     <DiaryAgendaDayEntry
       ref={setNodeRef}
       style={style}
+      id={event.id}
+      __typename={event.__typename}
       {...listeners}
       {...attributes}
       icon={faArrowsDownToLine}
