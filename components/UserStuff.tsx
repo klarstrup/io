@@ -29,8 +29,8 @@ export default function UserStuff() {
             e.preventDefault();
 
             const el = document
-              .getElementById("now-divider")
-              ?.parentElement?.closest<HTMLElement>(".diary-agenda-day-entry");
+              .querySelector<HTMLElement>(".now-divider")
+              ?.closest<HTMLElement>(".diary-agenda-day-entry");
             if (!el) return;
 
             const viewportHeight = window.innerHeight;

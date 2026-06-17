@@ -47,8 +47,7 @@ export function DiaryAgendaDayNow({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       iconTxt={iconTxt}
       cotemporality="current"
-      className="pt-0.5 pb-1.5"
-      id="now-divider"
+      className="now-divider pt-0.5 pb-1.5"
       ref={setNodeRef}
       style={style}
       {...listeners}
