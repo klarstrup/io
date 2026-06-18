@@ -44,9 +44,9 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
 
   return (
     <div ref={ref} {...props} className={twMerge("relative flex", className)}>
-      {id ? (
+      {id && __typename ? (
         <Link
-          href={`/diary/entries/${id}`}
+          href={`/diary/entries/${__typename}:${id}`}
           prefetch={false}
           className={twMerge(
             "absolute top-1/2 -left-2 -translate-x-1/2 -translate-y-1/2 text-2xl opacity-50",
