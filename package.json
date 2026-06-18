@@ -56,7 +56,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "google-auth-library": "10.5.0",
     "graphql": "^16.14.2",
-    "graphql-tag": "^2.12.6",
+    "graphql-tag": "^2.12.7",
     "graphql-type-json": "^0.3.2",
     "ical-generator": "^11.0.0",
     "jsonwebtoken": "^9.0.3",
