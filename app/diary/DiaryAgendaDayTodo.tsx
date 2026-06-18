@@ -8,12 +8,13 @@ import gql from "graphql-tag";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
+  DeleteTodoMutation,
+  GQTodo,
   ListPageUserDocument,
-  type GQDeleteTodoMutation,
-  type GQDiaryAgendaDayTodoFragment,
-  type GQUpdateTodoMutation,
-} from "../../graphql.generated";
+  UpdateTodoMutation,
+} from "../../graphql.generated/graphql";
 import { useClickOutside, useEvent } from "../../hooks";
+import { omitUndefined } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getTodoPrincipalDate } from "./diaryUtils";
@@ -34,7 +35,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   cotemporalityOfSurroundingEvent,
   now,
 }: {
-  todo: GQDiaryAgendaDayTodoFragment;
+  todo: GQTodo;
   cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
   now: Date;
 }) {
@@ -64,14 +65,14 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
           }
         }
       }
-    ` as unknown as TypedDocumentNode<GQUpdateTodoMutation>,
+    ` as unknown as TypedDocumentNode<UpdateTodoMutation>,
   );
   const [deleteTodo] = useMutation(
     gql`
       mutation DeleteTodo($id: String!) {
         deleteTodo(id: $id)
       }
-    ` as unknown as TypedDocumentNode<GQDeleteTodoMutation>,
+    ` as unknown as TypedDocumentNode<DeleteTodoMutation>,
   );
 
   const [isActive, setIsActive] = useState(false);
@@ -94,7 +95,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
         optimisticResponse: {
           updateTodo: {
             __typename: "UpdateTodoPayload",
-            todo: { ...todo, summary: summary.trim() },
+            todo: { ...omitUndefined(todo), summary: summary.trim() },
           },
         },
         onError: (error) => {
@@ -126,7 +127,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
         optimisticResponse: {
           updateTodo: {
             __typename: "UpdateTodoPayload",
-            todo: { ...todo, completed: null },
+            todo: { ...omitUndefined(todo), completed: null },
           },
         },
       });
@@ -138,7 +139,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
         optimisticResponse: {
           updateTodo: {
             __typename: "UpdateTodoPayload",
-            todo: { ...todo, completed: subSeconds(now, 1) },
+            todo: { ...omitUndefined(todo), completed: subSeconds(now, 1) },
           },
         },
       });
@@ -235,9 +236,8 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                       updateTodo: {
                         __typename: "UpdateTodoPayload",
                         todo: {
-                          ...todo,
-                          summary: updatedTodo.summary,
-                          completed: updatedTodo.completed,
+                          ...omitUndefined(todo),
+                          ...omitUndefined(updatedTodo),
                         },
                       },
                     },
@@ -261,7 +261,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                     optimisticResponse: {
                       updateTodo: {
                         __typename: "UpdateTodoPayload",
-                        todo: { ...todo, completed: null },
+                        todo: { ...omitUndefined(todo), completed: null },
                       },
                     },
                   })
@@ -287,7 +287,10 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                       optimisticResponse: {
                         updateTodo: {
                           __typename: "UpdateTodoPayload",
-                          todo: { ...todo, completed: new Date() },
+                          todo: {
+                            ...omitUndefined(todo),
+                            completed: new Date(),
+                          },
                         },
                       },
                     })
@@ -313,7 +316,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                       optimisticResponse: {
                         updateTodo: {
                           __typename: "UpdateTodoPayload",
-                          todo: { ...todo, due: snoozedStart },
+                          todo: { ...omitUndefined(todo), due: snoozedStart },
                         },
                       },
                     });
@@ -334,7 +337,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                       optimisticResponse: {
                         updateTodo: {
                           __typename: "UpdateTodoPayload",
-                          todo: { ...todo, due: null },
+                          todo: { ...omitUndefined(todo), due: null },
                         },
                       },
                     })
@@ -357,7 +360,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                     optimisticResponse: {
                       updateTodo: {
                         __typename: "UpdateTodoPayload",
-                        todo: { ...todo, due: new Date() },
+                        todo: { ...omitUndefined(todo), due: new Date() },
                       },
                     },
                   })

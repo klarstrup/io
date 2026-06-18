@@ -28,6 +28,7 @@ import { frenchRounded } from "../../grades";
 import {
   CreateWorkoutForWorkoutFormDocument,
   UpdateWorkoutForWorkoutFormDocument,
+  WorkoutFormNextSetsQuery,
   type GQBoulderCircuit,
   type GQCreateWorkoutDataInput,
   type GQExerciseStat,
@@ -36,8 +37,7 @@ import {
   type GQNextSet,
   type GQUpdateWorkoutDataInput,
   type GQWorkout,
-  type GQWorkoutFormNextSetsQuery,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import { useEvent } from "../../hooks";
 import useInterval from "../../hooks/useInterval";
 import { exercises, exercisesById } from "../../models/exercises";
@@ -293,7 +293,7 @@ export function WorkoutForm<R extends string>({
           }
         }
       }
-    ` as unknown as TypedDocumentNode<GQWorkoutFormNextSetsQuery>,
+    ` as unknown as TypedDocumentNode<WorkoutFormNextSetsQuery>,
     {
       variables: {
         asOf: workout?.workedOutAt

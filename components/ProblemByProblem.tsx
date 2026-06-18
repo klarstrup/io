@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
-import { GQLocation, GQWorkout, GQWorkoutSet } from "../graphql.generated";
+import { GQLocation, GQWorkout, GQWorkoutSet } from "../graphql.generated/graphql";
 import { PP } from "../lib";
 import { SendType } from "../models/exercises.types";
 import {

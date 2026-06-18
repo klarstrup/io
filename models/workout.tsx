@@ -17,7 +17,7 @@ import type {
   GQNextSet,
   GQWorkout,
   GQWorkoutSet,
-} from "../graphql.generated";
+} from "../graphql.generated/graphql";
 import type { Duration } from "../sources/fitocracy";
 import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
 import {

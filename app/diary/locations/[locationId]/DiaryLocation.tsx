@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { auth } from "../../../../auth";
-import { GQWorkout } from "../../../../graphql.generated";
+import { GQWorkout } from "../../../../graphql.generated/graphql";
 import { Locations } from "../../../../models/location.server";
 import { MaterializedWorkoutsView } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";

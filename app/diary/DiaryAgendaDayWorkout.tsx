@@ -11,7 +11,7 @@ import type {
   GQWorkout,
   GQWorkoutExercise,
   GQWorkoutSet,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import {
   ClimbingStats,
   isClimbingExercise,

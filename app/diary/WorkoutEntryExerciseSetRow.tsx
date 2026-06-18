@@ -4,7 +4,7 @@ import type {
   GQExerciseInfo,
   GQWorkoutSet,
   GQWorkoutSetInput,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import { PRType } from "../../lib";
 import {
   AssistType,

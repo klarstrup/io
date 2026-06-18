@@ -1,7 +1,7 @@
 import { startOfYear, subMonths, subYears } from "date-fns";
 import { Fragment, Suspense } from "react";
 import { auth } from "../../../../auth";
-import { GQWorkout } from "../../../../graphql.generated";
+import { GQWorkout } from "../../../../graphql.generated/graphql";
 import { ExerciseHistoryTimeframe, PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
 import { Locations } from "../../../../models/location.server";

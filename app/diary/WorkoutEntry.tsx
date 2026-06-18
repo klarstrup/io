@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ExerciseName } from "../../components/ExerciseName";
 import { FieldSetX } from "../../components/FieldSet";
-import { GQWorkout } from "../../graphql.generated";
+import { GQWorkout } from "../../graphql.generated/graphql";
 import { PRType } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import {

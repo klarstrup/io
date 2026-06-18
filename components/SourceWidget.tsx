@@ -1,7 +1,7 @@
 import { useApolloClient, useQuery } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { SourceWidgetDocument } from "../graphql.generated";
+import { SourceWidgetDocument } from "../graphql.generated/graphql";
 import { useNow } from "../hooks";
 import { DataSource, UserDataSource } from "../sources/utils";
 import { DistanceToNowStrict } from "./DistanceToNowStrict";

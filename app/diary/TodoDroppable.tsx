@@ -30,12 +30,13 @@ import {
   SnoozeExerciseScheduleDocument,
   UpdateTodoDocument,
   UpdateWorkoutWorkedOutAtDocument,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import {
   dateMidpoint,
   endOfDayButItRespectsDayStartHour,
   haptic,
   isSameDayButItRespectsDayStartHour,
+  omitUndefined,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
@@ -314,9 +315,10 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           snoozeExerciseSchedule: {
             __typename: "SnoozeExerciseSchedulePayload",
             exerciseSchedule: {
-              ...nextSet.exerciseSchedule,
+              ...omitUndefined(nextSet.exerciseSchedule),
               snoozedUntil: targetDate,
-              nextSet: { ...nextSet, dueOn: targetDate },
+              // @ts-expect-error -- I don't fucking care, deep required is a pain to type.
+              nextSet: { ...omitUndefined(nextSet), dueOn: targetDate },
             },
           },
         },
@@ -338,7 +340,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           optimisticResponse: {
             updateTodo: {
               __typename: "UpdateTodoPayload",
-              todo: { ...todo, ...updatedTodo },
+              todo: { ...omitUndefined(todo), ...updatedTodo },
             },
           },
         });
@@ -354,7 +356,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           optimisticResponse: {
             updateTodo: {
               __typename: "UpdateTodoPayload",
-              todo: { ...todo, ...updatedTodo },
+              todo: { ...omitUndefined(todo), ...updatedTodo },
             },
           },
         });
@@ -373,7 +375,8 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           optimisticResponse: {
             updateWorkoutWorkedOutAt: {
               __typename: "UpdateWorkoutPayload",
-              workout: { ...workout, workedOutAt: targetDate },
+              // @ts-expect-error -- I don't fucking care, deep required is a pain to type.
+              workout: { ...omitUndefined(workout), workedOutAt: targetDate },
             },
           },
         });

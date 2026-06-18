@@ -1,13 +1,109 @@
-import type { TypedDocumentNode } from "@apollo/client";
 import { TZDate } from "@date-fns/tz";
 import { gql } from "graphql-tag";
 import { query } from "../../ApolloClient";
 import { auth } from "../../auth";
-import type { GQCalendarUserWorkoutsQuery } from "../../graphql.generated";
+import { CalendarUserWorkoutsDocument } from "../../graphql.generated/graphql";
 import type { DiaryEntry } from "../../lib";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
 
 type DayStr = `${number}-${number}-${number}`;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+gql`
+  query CalendarUserWorkouts($interval: IntervalInput!) {
+    user {
+      id
+      workouts(interval: $interval) {
+        id
+        createdAt
+        updatedAt
+        workedOutAt
+        location {
+          id
+          createdAt
+          updatedAt
+          name
+          userId
+          boulderCircuits {
+            id
+            holdColor
+            gradeEstimate
+            gradeRange
+            name
+            labelColor
+            hasZones
+            description
+            createdAt
+            updatedAt
+          }
+        }
+        exercises {
+          exerciseId
+          exerciseInfo {
+            id
+            aliases
+            name
+            isHidden
+            inputs {
+              type
+            }
+            instructions {
+              value
+            }
+            tags {
+              name
+              type
+            }
+          }
+          displayName
+          comment
+          sets {
+            comment
+            createdAt
+            updatedAt
+            inputs {
+              unit
+              value
+              assistType
+            }
+            meta {
+              key
+              value
+            }
+          }
+        }
+      }
+      foodEntries(interval: $interval) {
+        id
+        datetime
+        type
+        food {
+          id
+          description
+          servingSizes {
+            value
+            unit
+            nutritionMultiplier
+          }
+        }
+        mealName
+        servings
+        servingSize {
+          value
+          unit
+          nutritionMultiplier
+        }
+        nutritionalContents {
+          energy {
+            value
+            unit
+          }
+          protein
+        }
+      }
+    }
+  }
+`;
 
 export async function getDiaryEntriesShallow({
   from,
@@ -43,103 +139,8 @@ export async function getDiaryEntriesShallow({
   }
 
   const queryResult = await query({
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    query: gql`
-      query CalendarUserWorkouts($interval: IntervalInput!) {
-        user {
-          id
-          workouts(interval: $interval) {
-            id
-            createdAt
-            updatedAt
-            workedOutAt
-            location {
-              id
-              createdAt
-              updatedAt
-              name
-              userId
-              boulderCircuits {
-                id
-                holdColor
-                gradeEstimate
-                gradeRange
-                name
-                labelColor
-                hasZones
-                description
-                createdAt
-                updatedAt
-              }
-            }
-            exercises {
-              exerciseId
-              exerciseInfo {
-                id
-                aliases
-                name
-                isHidden
-                inputs {
-                  type
-                }
-                instructions {
-                  value
-                }
-                tags {
-                  name
-                  type
-                }
-              }
-              displayName
-              comment
-              sets {
-                comment
-                createdAt
-                updatedAt
-                inputs {
-                  unit
-                  value
-                  assistType
-                }
-                meta {
-                  key
-                  value
-                }
-              }
-            }
-          }
-          foodEntries(interval: $interval) {
-            id
-            datetime
-            type
-            food {
-              id
-              description
-              servingSizes {
-                value
-                unit
-                nutritionMultiplier
-              }
-            }
-            mealName
-            servings
-            servingSize {
-              value
-              unit
-              nutritionMultiplier
-            }
-            nutritionalContents {
-              energy {
-                value
-                unit
-              }
-              protein
-            }
-          }
-        }
-      }
-    ` as unknown as TypedDocumentNode<GQCalendarUserWorkoutsQuery>,
-    variables: { interval: { start: from, end: to } },
+    query: CalendarUserWorkoutsDocument,
+    variables: { interval: { start: from, end: to! } },
   });
 
   for (const foodEntry of queryResult.data?.user?.foodEntries || []) {

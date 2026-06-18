@@ -12,13 +12,13 @@ const config: CodegenConfig = {
   // Don't exit with non-zero status when there are no documents
   ignoreNoDocuments: true,
   generates: {
-    "./graphql.generated.ts": {
+    "./graphql.generated/": {
+      preset: "client",
       plugins: [
-        "typescript",
-        "typescript-operations",
-        "typescript-resolvers",
-        "typed-document-node",
-      ],
+        { typescript: { typesPrefix: "GQ" } },
+        { "typescript-resolvers": { typesPrefix: "GQ" } },
+//        { "typescript-operations": { typesPrefix: "GQ" } },
+      ], // Generate both schema types and operation types
       config: {
         useTypeImports: true,
         typesPrefix: "GQ",

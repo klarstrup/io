@@ -2,7 +2,7 @@
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { FieldSetY } from "../../components/FieldSet";
-import { ListPageUserDocument } from "../../graphql.generated";
+import { ListPageUserDocument } from "../../graphql.generated/graphql";
 import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";

@@ -2,7 +2,7 @@ import type {
   GQBoulderCircuit,
   GQFoodEntry,
   GQWorkout,
-} from "./graphql.generated";
+} from "./graphql.generated/graphql";
 import type { WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
 import { SnapCalorie } from "./sources/snapcalorie";

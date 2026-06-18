@@ -5,12 +5,12 @@ import { TZDate } from "@date-fns/tz";
 import { addDays, isFuture } from "date-fns";
 import gql from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { SVGProps, useMemo } from "react";
+import { type SVGProps, useMemo } from "react";
 import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
 import { Masonry } from "../../components/Masonry";
-import { GetLatestWeightEntryDocument } from "../../graphql.generated";
+import { GetLatestWeightEntryDocument } from "../../graphql.generated/graphql";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
-import { DataSource, UserDataSource } from "../../sources/utils";
+import { DataSource, type UserDataSource } from "../../sources/utils";
 import {
   decodeGeohash,
   DEFAULT_TIMEZONE,
@@ -208,13 +208,15 @@ export default function DashBar() {
   const tzDate = TZDate.tz(timeZone);
 
   const userGeohash =
-    data?.user?.dataSources?.find(
-      (
-        source,
-      ): source is UserDataSource & {
-        source: DataSource.Tomorrow;
-        __typename: "UserDataSource";
-      } => source.source === DataSource.Tomorrow,
+    (
+      data?.user?.dataSources?.find(
+        (source) => source.source === DataSource.Tomorrow,
+      ) as
+        | (UserDataSource & {
+            source: DataSource.Tomorrow;
+            __typename: "UserDataSource";
+          })
+        | undefined
     )?.config?.geohash ??
     sessionData?.user?.dataSources?.find(
       (source) => source.source === DataSource.Tomorrow,

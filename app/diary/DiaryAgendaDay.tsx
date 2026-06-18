@@ -25,7 +25,7 @@ import { ShyGuy } from "../../components/ShyGuy";
 import {
   DiaryAgendaDayUserTodosDocument,
   type GQLocation,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import { useVisibilityAwarePollInterval } from "../../hooks";
 import { useIsSSR } from "../../hooks/useIsSSR";
 import { WorkoutSource } from "../../models/workout";

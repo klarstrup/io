@@ -1,5 +1,4 @@
 "use client";
-import type { TypedDocumentNode } from "@apollo/client";
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import { tz } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
@@ -11,16 +10,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import SourceWidget from "../../components/SourceWidget";
-import type {
-  GQExerciseInfo,
-  GQLocation,
-  GQNextSet,
-  GQSnoozeExerciseScheduleMutation,
-  GQSnoozeExerciseScheduleMutationVariables,
-  GQUnsnoozeExerciseScheduleMutation,
-  GQUnsnoozeExerciseScheduleMutationVariables,
-  GQWorkout,
-} from "../../graphql.generated";
+import {
+  type GQExerciseInfo,
+  type GQLocation,
+  type GQNextSet,
+  type GQWorkout,
+  SnoozeExerciseScheduleDocument,
+  UnsnoozeExerciseScheduleDocument,
+} from "../../graphql.generated/graphql";
 import { useClickOutside } from "../../hooks";
 import { addDurationToDate } from "../../models/workout";
 import { exerciseIdToDataSourceMapping } from "../../sources/utils";
@@ -29,11 +26,134 @@ import {
   dateToString,
   dayStartHour,
   epoch,
+  omitUndefined,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+gql`
+  mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
+    snoozeExerciseSchedule(input: $input) {
+      exerciseSchedule {
+        id
+        exerciseId
+        enabled
+        frequency {
+          years
+          months
+          weeks
+          days
+          hours
+          minutes
+          seconds
+        }
+        increment
+        workingSets
+        workingReps
+        deloadFactor
+        baseWeight
+        snoozedUntil
+        nextSet {
+          id
+          lastWorkedOutAt
+          dueOn
+          exerciseId
+          successful
+          nextWorkingSets
+          nextWorkingSetInputs {
+            unit
+            value
+            assistType
+          }
+          exerciseSchedule {
+            id
+            exerciseId
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+          }
+        }
+      }
+    }
+  }
+`;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+gql`
+  mutation UnsnoozeExerciseSchedule($input: UnsnoozeExerciseScheduleInput!) {
+    unsnoozeExerciseSchedule(input: $input) {
+      exerciseSchedule {
+        id
+        exerciseId
+        enabled
+        frequency {
+          years
+          months
+          weeks
+          days
+          hours
+          minutes
+          seconds
+        }
+        increment
+        workingSets
+        workingReps
+        deloadFactor
+        baseWeight
+        snoozedUntil
+        nextSet {
+          id
+          lastWorkedOutAt
+          dueOn
+          exerciseId
+          successful
+          nextWorkingSets
+          nextWorkingSetInputs {
+            unit
+            value
+            assistType
+          }
+          exerciseSchedule {
+            id
+            exerciseId
+            enabled
+            frequency {
+              years
+              months
+              weeks
+              days
+              hours
+              minutes
+              seconds
+            }
+            increment
+            workingSets
+            workingReps
+            deloadFactor
+            baseWeight
+            snoozedUntil
+          }
+        }
+      }
+    }
+  }
+`;
 
 export function DiaryAgendaDayDueSet({
   dueSet,
@@ -85,136 +205,10 @@ export function DiaryAgendaDayDueSet({
   useClickOutside(ref, onClickOutside);
   const router = useRouter();
 
-  const [snoozeExerciseSchedule] = useMutation(
-    gql`
-      mutation SnoozeExerciseSchedule($input: SnoozeExerciseScheduleInput!) {
-        snoozeExerciseSchedule(input: $input) {
-          exerciseSchedule {
-            id
-            exerciseId
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            nextSet {
-              id
-              lastWorkedOutAt
-              dueOn
-              exerciseId
-              successful
-              nextWorkingSets
-              nextWorkingSetInputs {
-                unit
-                value
-                assistType
-              }
-              exerciseSchedule {
-                id
-                exerciseId
-                enabled
-                frequency {
-                  years
-                  months
-                  weeks
-                  days
-                  hours
-                  minutes
-                  seconds
-                }
-                increment
-                workingSets
-                workingReps
-                deloadFactor
-                baseWeight
-                snoozedUntil
-              }
-            }
-          }
-        }
-      }
-    ` as unknown as TypedDocumentNode<
-      GQSnoozeExerciseScheduleMutation,
-      GQSnoozeExerciseScheduleMutationVariables
-    >,
-  );
+  const [snoozeExerciseSchedule] = useMutation(SnoozeExerciseScheduleDocument);
 
   const [unsnoozeExerciseSchedule] = useMutation(
-    gql`
-      mutation UnsnoozeExerciseSchedule(
-        $input: UnsnoozeExerciseScheduleInput!
-      ) {
-        unsnoozeExerciseSchedule(input: $input) {
-          exerciseSchedule {
-            id
-            exerciseId
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
-            nextSet {
-              id
-              lastWorkedOutAt
-              dueOn
-              exerciseId
-              successful
-              nextWorkingSets
-              nextWorkingSetInputs {
-                unit
-                value
-                assistType
-              }
-              exerciseSchedule {
-                id
-                exerciseId
-                enabled
-                frequency {
-                  years
-                  months
-                  weeks
-                  days
-                  hours
-                  minutes
-                  seconds
-                }
-                increment
-                workingSets
-                workingReps
-                deloadFactor
-                baseWeight
-                snoozedUntil
-              }
-            }
-          }
-        }
-      }
-    ` as unknown as TypedDocumentNode<
-      GQUnsnoozeExerciseScheduleMutation,
-      GQUnsnoozeExerciseScheduleMutationVariables
-    >,
+    UnsnoozeExerciseScheduleDocument,
   );
 
   const handleIconClick = useCallback(
@@ -319,8 +313,9 @@ export function DiaryAgendaDayDueSet({
                       exerciseSchedule: {
                         ...dueSet.exerciseSchedule,
                         snoozedUntil: addDays(dueSet.dueOn, 1),
+                        // @ts-expect-error -- I don't fucking care, deep required is a pain to type.
                         nextSet: {
-                          ...dueSet,
+                          ...omitUndefined(dueSet),
                           dueOn: addDays(dueSet.dueOn, 1),
                         },
                       },
@@ -359,8 +354,9 @@ export function DiaryAgendaDayDueSet({
                             exerciseSchedule: {
                               ...dueSet.exerciseSchedule,
                               snoozedUntil: null,
+                              // @ts-expect-error -- I don't fucking care, deep required is a pain to type.
                               nextSet: {
-                                ...dueSet,
+                                ...omitUndefined(dueSet),
                                 dueOn: addDurationToDate(
                                   (dueSet?.lastWorkedOutAt &&
                                   isEqual(

@@ -1,4 +1,4 @@
-import { GQExerciseInfo } from "../graphql.generated";
+import { GQExerciseInfo } from "../graphql.generated/graphql";
 import { ExerciseData } from "../models/exercises.types";
 
 export function ExerciseName({

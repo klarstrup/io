@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import { StealthButton } from "../../components/StealthButton";
-import { GQNextSet } from "../../graphql.generated";
+import { GQNextSet } from "../../graphql.generated/graphql";
 import { exercisesById } from "../../models/exercises";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";

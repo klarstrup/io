@@ -8,7 +8,7 @@ import {
   GQLocation,
   GQWorkout,
   GQWorkoutSet,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import { PRType } from "../../lib";
 import { type ExerciseData } from "../../models/exercises.types";
 import {

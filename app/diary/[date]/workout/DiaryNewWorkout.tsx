@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { gql } from "graphql-tag";
 import { auth } from "../../../../auth";
-import { GetUserLocationsDocument } from "../../../../graphql.generated";
+import { GetUserLocationsDocument } from "../../../../graphql.generated/graphql";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../utils";
 import { WorkoutForm } from "../../WorkoutForm";
 

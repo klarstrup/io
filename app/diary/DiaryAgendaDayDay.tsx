@@ -22,7 +22,7 @@ import type {
   GQLocation,
   GQUser,
   GQWorkout,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import { useNow } from "../../hooks";
 import { WorkoutSource } from "../../models/workout";
 import {

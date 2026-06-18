@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
 import type { Session } from "next-auth";
-import type { GQLocation } from "../graphql.generated";
+import type { GQLocation } from "../graphql.generated/graphql";
 import type { PRType } from "../lib";
 import { dayStartHour, epoch } from "../utils";
 import { proxyCollection } from "../utils.server";

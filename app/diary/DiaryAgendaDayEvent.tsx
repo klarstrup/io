@@ -14,7 +14,7 @@ import {
   roundToNearestMinutes,
 } from "date-fns";
 import { useMemo } from "react";
-import type { GQEvent, GQUser } from "../../graphql.generated";
+import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";

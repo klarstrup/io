@@ -45,7 +45,7 @@ import type {
   GQWorkoutSet,
   GQWorkoutSetInput,
   GQWorkoutSetMeta,
-} from "./graphql.generated";
+} from "./graphql.generated/graphql";
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
 import { AssistType, Unit } from "./models/exercises.types";

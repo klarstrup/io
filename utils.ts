@@ -792,7 +792,11 @@ export const omitUndefined = <T extends object>(obj: T): Required<T> => {
   const ret = {} as Required<T>;
   for (const key in obj) {
     const value = obj[key];
-    if (value !== undefined) ret[key] = value;
+    if (value !== undefined) {
+      ret[key] = isPlainObject(value)
+        ? (omitUndefined(value) as typeof value)
+        : value;
+    }
   }
   return ret;
 };

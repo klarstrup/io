@@ -3,7 +3,7 @@ import { faBed, faBedPulse } from "@fortawesome/free-solid-svg-icons";
 import { type Interval, intervalToDuration } from "date-fns";
 import { useCallback, useRef, useState } from "react";
 import SourceWidget from "../../components/SourceWidget";
-import type { GQSleep, GQUser } from "../../graphql.generated";
+import type { GQSleep, GQUser } from "../../graphql.generated/graphql";
 import { useClickOutside } from "../../hooks";
 import { formatShortDuration } from "../../models/workout";
 import { DataSource } from "../../sources/utils";

@@ -7,7 +7,7 @@ import { auth } from "../../../../../auth";
 import {
   GetUserLocationsDocument,
   GetWorkoutDocument,
-} from "../../../../../graphql.generated";
+} from "../../../../../graphql.generated/graphql";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../../utils";
 import { WorkoutForm } from "../../../WorkoutForm";
 

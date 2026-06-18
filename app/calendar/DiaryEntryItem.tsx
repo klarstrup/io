@@ -3,7 +3,7 @@ import { TZDate } from "@date-fns/tz";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import type { JSX } from "react";
-import type { GQWorkout } from "../../graphql.generated";
+import type { GQWorkout } from "../../graphql.generated/graphql";
 import type { DiaryEntry } from "../../lib";
 import { exercisesById } from "../../models/exercises";
 import { TagType } from "../../models/exercises.types";

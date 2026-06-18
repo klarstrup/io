@@ -3,7 +3,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { faArrowsDownToLine } from "@fortawesome/free-solid-svg-icons";
 import { roundToNearestMinutes } from "date-fns";
 import { useMemo } from "react";
-import { GQEvent, GQUser } from "../../graphql.generated";
+import { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";

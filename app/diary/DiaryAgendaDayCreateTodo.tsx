@@ -1,37 +1,38 @@
 "use client";
-import type { TypedDocumentNode } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
 import gql from "graphql-tag";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
+  CreateTodoDocument,
   DiaryAgendaDayUserTodosDocument,
-  type GQCreateTodoMutation,
   ListPageUserDocument,
-} from "../../graphql.generated";
+} from "../../graphql.generated/graphql";
 import { useClickOutside, useEvent } from "../../hooks";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+gql`
+  mutation CreateTodo($input: CreateTodoInput!) {
+    createTodo(input: $input) {
+      todo {
+        id
+        created
+        summary
+        due
+        completed
+      }
+    }
+  }
+`;
 
 export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [createTodo, { loading }] = useMutation(
-    gql`
-      mutation CreateTodo($input: CreateTodoInput!) {
-        createTodo(input: $input) {
-          todo {
-            id
-            created
-            summary
-            due
-            completed
-          }
-        }
-      }
-    ` as unknown as TypedDocumentNode<GQCreateTodoMutation>,
-    { refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument] },
-  );
+  const [createTodo, { loading }] = useMutation(CreateTodoDocument, {
+    refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
+  });
 
   const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
     const formData = new FormData(formElement);

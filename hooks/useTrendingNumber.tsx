@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { GQFloatTimeSeriesEntry } from "../graphql.generated";
+import type { GQFloatTimeSeriesEntry } from "../graphql.generated/graphql";
 import { useNow } from "../hooks";
 
 const getAvg = (arr: number[]) =>

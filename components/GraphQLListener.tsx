@@ -2,7 +2,7 @@
 
 import { useApolloClient } from "@apollo/client/react";
 import { parse } from "graphql";
-import { ListPageUserDocument } from "../graphql.generated";
+import { ListPageUserDocument } from "../graphql.generated/graphql";
 import { useChannel } from "../hooks/useChannel";
 import { uniqueBy } from "../utils";
 import { useSession } from "next-auth/react";
