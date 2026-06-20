@@ -32,7 +32,7 @@
         "@types/uuid": "^10.0.0",
         "@vercel/analytics": "^2.0.1",
         "@vercel/functions": "^3.7.1",
-        "ably": "^2.22.1",
+        "ably": "^2.23.0",
         "babel-plugin-react-compiler": "^1.0.0",
         "cheerio": "^1.2.0",
         "date-fns": "^4.4.0",
@@ -832,7 +832,7 @@
 
     "@wry/trie": ["@wry/trie@0.5.0", "", { "dependencies": { "tslib": "^2.3.0" } }, "sha512-FNoYzHawTMk/6KMQoEG5O4PuioX19UbwdQKF44yw0nLfOypfQdjtfZzo/UIJWAJ23sNIFbD1Ug9lbaDGMwbqQA=="],
 
-    "ably": ["ably@2.22.1", "", { "dependencies": { "@ably/msgpack-js": "^0.4.0", "dequal": "^2.0.3", "fastestsmallesttextencoderdecoder": "^1.0.22", "got": "^11.8.5", "ulid": "^2.3.0", "ws": "^8.17.1" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" }, "optionalPeers": ["react", "react-dom"] }, "sha512-ZiVeP9LsgDCuBDmUyWiYaWVERdXWRSxBLuKYTL06v8FxiCvHy+ic7iqOv/Xe45mhdyEuniE56rmyxIN58IcCUQ=="],
+    "ably": ["ably@2.23.0", "", { "dependencies": { "@ably/msgpack-js": "^0.4.0", "dequal": "^2.0.3", "fastestsmallesttextencoderdecoder": "^1.0.22", "got": "^11.8.5", "ulid": "^2.3.0", "ws": "^8.17.1" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" }, "optionalPeers": ["react", "react-dom"] }, "sha512-hDmCmNNS/XS/+1g00kVmuFkNW2PPPgeerX7bAp2ALMBsH7nTesvJwvZs/x9VEljBpB8mS0oWDDrLkitJDkUyRg=="],
 
     "acorn": ["acorn@8.16.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw=="],
 
