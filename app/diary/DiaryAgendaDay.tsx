@@ -706,7 +706,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       ) : null}
       <div
         className={
-          "flex flex-col items-stretch justify-center xl:flex-row xl:gap-5 xl:self-start xl:justify-self-center"
+          "flex flex-col items-stretch justify-center xl:flex-row xl:gap-5 xl:self-start xl:justify-self-center px-2 xl:px-0"
         }
       >
         <ShyGuy
