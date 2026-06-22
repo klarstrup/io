@@ -30,6 +30,7 @@ import { useVisibilityAwarePollInterval } from "../../hooks";
 import { useIdle } from "../../hooks/useIdle";
 import useInterval from "../../hooks/useInterval";
 import { useIsSSR } from "../../hooks/useIsSSR";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -600,8 +601,13 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     if (!el) return;
 
     const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
     const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
-    window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
+    const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
+    window.scrollTo(
+      elHorizontalCenter - viewportWidth / 2,
+      elVerticalCenter - viewportHeight / 2,
+    );
   }, []);
 
   const isSSR = useIsSSR();
@@ -613,6 +619,35 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   useInterval(() => {
     if (isIdle) scrollToNow();
   }, 5000);
+
+  const isPointerFine = useMediaQuery("(pointer: fine)");
+  const isXL = useMediaQuery("(min-width: 80rem)");
+
+  useEffect(() => {
+    const element = document.scrollingElement || document.documentElement;
+    if (!(element instanceof HTMLElement)) return;
+
+    const transformScroll = (event: Event) => {
+      if (
+        !isPointerFine ||
+        !isXL ||
+        !(event instanceof WheelEvent) ||
+        !event.deltaY ||
+        !(event.currentTarget instanceof HTMLElement)
+      ) {
+        return;
+      }
+      event.preventDefault();
+
+      event.currentTarget.scrollLeft += event.deltaY;
+      event.preventDefault();
+    };
+
+    element.addEventListener("wheel", transformScroll);
+    return () => {
+      element.removeEventListener("wheel", transformScroll);
+    };
+  }, [isPointerFine, isXL]);
 
   return (
     <>
@@ -669,14 +704,18 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           </FieldSetY>
         </div>
       ) : null}
-      <div className={"flex flex-col items-stretch justify-center"}>
+      <div
+        className={
+          "flex flex-col items-stretch justify-center xl:justify-self-center xl:flex-row xl:gap-5 xl:self-start"
+        }
+      >
         <ShyGuy
           onSeen={() => {
             if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             if (loading) return;
             if (queryVariables.daysBefore !== daysBefore) return;
             setDaysBefore((d) => d + 2);
-            window.scrollBy({ top: 1, behavior: "instant" });
+            window.scrollBy({ top: 1, left: 1, behavior: "instant" });
           }}
         />
         {daysJournalEntriesIncludingLocationChanges2.map(
@@ -701,7 +740,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             if (loading) return;
             if (queryVariables.daysAfter !== daysAfter) return;
             setDaysAfter((d) => d + 2);
-            window.scrollBy({ top: -1, behavior: "instant" });
+            window.scrollBy({ top: -1, left: -1, behavior: "instant" });
           }}
         />
         {sessionData?.user ? (

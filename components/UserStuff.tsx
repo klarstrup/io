@@ -34,12 +34,21 @@ export default function UserStuff() {
             if (!el) return;
 
             const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
             const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
+            const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
             const scrollTop = window.scrollY;
-            window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
+            const scrollLeft = window.scrollX;
+            window.scrollTo(
+              elHorizontalCenter - viewportWidth / 2,
+              elVerticalCenter - viewportHeight / 2,
+            );
 
             // If we are already roughly scrolled to the right place, refetch active queries
-            if (Math.abs(scrollTop - window.scrollY) < 10) {
+            if (
+              Math.abs(scrollTop - window.scrollY) < 10 &&
+              Math.abs(scrollLeft - window.scrollX) < 10
+            ) {
               void client.refetchQueries({ include: "active" });
             }
           }

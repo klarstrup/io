@@ -15,9 +15,10 @@
   box-shadow: rgba(28, 28, 30, 0.9) 0px 0px 20px !important;
 }
 
-html {
-  overflow-y: scroll;
+html{
+  min-height: 100%;
 }
+
 /* Set a background color */
 body {
   background-color: #edab00;
@@ -36,6 +37,7 @@ body {
     arial,
     sans-serif;
   margin-top: 80px;
+  min-height: calc(100vh - 64px);
 }
 @media (pointer: coarse) {
   body {

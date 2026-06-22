@@ -543,7 +543,7 @@ export function DiaryAgendaDayDay({
   return (
     <>
       <div
-        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 pr-2 leading-normal"
+        className="mx-auto mt-1 -mb-px flex max-w-lg xl:w-md items-center gap-1 pr-2 leading-normal"
         style={{
           textShadow:
             "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
@@ -606,7 +606,7 @@ export function DiaryAgendaDayDay({
         ref={ref}
         className={
           "diary-agenda-day-entry " +
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 " +
+          "mx-auto mb-1 flex max-w-lg xl:w-md flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 " +
           ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
             ? "bg-green-50 pt-1"
             : todayStr === dayName
