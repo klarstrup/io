@@ -40,7 +40,7 @@ export default function UserStuff() {
             const scrollTop = window.scrollY;
             const scrollLeft = window.scrollX;
             window.scrollTo(
-              elHorizontalCenter - viewportWidth / 2,
+              elHorizontalCenter - viewportWidth / 2 + el.offsetWidth / 2,
               elVerticalCenter - viewportHeight / 2,
             );
 

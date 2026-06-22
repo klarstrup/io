@@ -605,7 +605,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
     const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
     window.scrollTo(
-      elHorizontalCenter - viewportWidth / 2,
+      elHorizontalCenter - viewportWidth / 2 + el.offsetWidth / 2,
       elVerticalCenter - viewportHeight / 2,
     );
   }, []);
@@ -706,7 +706,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       ) : null}
       <div
         className={
-          "flex flex-col items-stretch justify-center xl:justify-self-center xl:flex-row xl:gap-5 xl:self-start"
+          "flex flex-col items-stretch justify-center xl:flex-row xl:gap-5 xl:self-start xl:justify-self-center"
         }
       >
         <ShyGuy
