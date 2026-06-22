@@ -19,7 +19,7 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
 import {
@@ -27,6 +27,8 @@ import {
   type GQLocation,
 } from "../../graphql.generated/graphql";
 import { useVisibilityAwarePollInterval } from "../../hooks";
+import { useIdle } from "../../hooks/useIdle";
+import useInterval from "../../hooks/useInterval";
 import { useIsSSR } from "../../hooks/useIsSSR";
 import { WorkoutSource } from "../../models/workout";
 import {
@@ -590,29 +592,27 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     };
   }, []);
 
-  const isSSR = useIsSSR();
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const scrollToNow = useCallback(() => {
+    if (typeof document === "undefined") return;
     const el = document
-      .getElementById("now-divider")
-      ?.parentElement?.closest<HTMLElement>(".diary-agenda-day-entry");
-    if (isSSR || !el) return;
-
-    /*
-    if (lastInteractedWithPage.current) {
-      const timeSinceLastInteraction =
-        new Date().getTime() - lastInteractedWithPage.current.getTime();
-      if (timeSinceLastInteraction < 60000) {
-        // If the user has interacted with the page in the last minute, we assume they are looking at something specific and we don't want to scroll around on them
-        return;
-      }
-    }
-    */
+      .querySelector<HTMLElement>(".now-divider")
+      ?.closest<HTMLElement>(".diary-agenda-day-entry");
+    if (!el) return;
 
     const viewportHeight = window.innerHeight;
     const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
     window.scrollTo(0, elVerticalCenter - viewportHeight / 2);
-  }, [isSSR]);
+  }, []);
+
+  const isSSR = useIsSSR();
+  const isIdle = useIdle();
+  useEffect(() => {
+    if (!isSSR) scrollToNow();
+  }, [isSSR, scrollToNow]);
+
+  useInterval(() => {
+    if (isIdle) scrollToNow();
+  }, 5000);
 
   return (
     <>
