@@ -637,10 +637,8 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       ) {
         return;
       }
-      event.preventDefault();
 
       event.currentTarget.scrollLeft += event.deltaY;
-      event.preventDefault();
     };
 
     element.addEventListener("wheel", transformScroll);
@@ -706,7 +704,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       ) : null}
       <div
         className={
-          "flex flex-col items-stretch justify-center xl:flex-row xl:gap-5 xl:self-start xl:justify-self-center px-2 xl:px-0"
+          "flex flex-col items-stretch justify-center px-2 xl:flex-row xl:gap-5 xl:self-start xl:justify-self-center xl:px-0"
         }
       >
         <ShyGuy
