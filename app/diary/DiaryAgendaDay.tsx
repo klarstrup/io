@@ -219,8 +219,8 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
-  const [daysBefore, setDaysBefore] = useState(dayDate ? 0 : 1);
-  const [daysAfter, setDaysAfter] = useState(dayDate ? 0 : 1);
+  const [daysBefore, setDaysBefore] = useState(dayDate ? 0 : 3);
+  const [daysAfter, setDaysAfter] = useState(dayDate ? 0 : 3);
 
   const variables = useMemo(
     () => ({
