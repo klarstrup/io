@@ -181,6 +181,7 @@ export const GET = async (req: NextRequest) => {
         await WithingsMeasureGroup.createIndexes([
           { key: { grpid: 1 }, unique: true },
           { key: { _withings_userId: 1, createdAt: -1 } },
+          { key: { _withings_userId: 1, measuredAt: -1 } },
         ]);
 
         let getMeasureGroupsOffset = 0;
