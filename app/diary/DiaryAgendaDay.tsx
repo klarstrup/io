@@ -12,13 +12,13 @@ import {
   isPast,
   max,
   min,
-  setHours,
   startOfDay,
   subDays,
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
@@ -26,7 +26,7 @@ import {
   DiaryAgendaDayUserTodosDocument,
   type GQLocation,
 } from "../../graphql.generated/graphql";
-import { useVisibilityAwarePollInterval } from "../../hooks";
+import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
 import { useIdle } from "../../hooks/useIdle";
 import useInterval from "../../hooks/useInterval";
 import { useIsSSR } from "../../hooks/useIsSSR";
@@ -40,6 +40,7 @@ import {
   DEFAULT_TIMEZONE,
   emptyArray,
   endOfDayButItRespectsDayStartHour,
+  isSameDayButItRespectsDayStartHour,
   isUTCMidnight,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
@@ -217,6 +218,7 @@ gql`
 
 export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
+  const router = useRouter();
 
   const { data: sessionData, status: sessionStatus } = useSession();
   const sessionDataLoading = sessionStatus === "loading";
@@ -250,6 +252,16 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     () => startOfDayButItRespectsDayStartHour(now),
     [now],
   );
+
+  const now2 = useNow(60 * 1000);
+
+  const isSameDayAsLoaded = useMemo(
+    () => isSameDayButItRespectsDayStartHour(now2, now),
+    [now, now2],
+  );
+  useEffect(() => {
+    if (!dayDate && !isSameDayAsLoaded) location.reload();
+  }, [dayDate, isSameDayAsLoaded, timeZoneDate, timeZone, router]);
 
   const fetchingInterval = useMemo(
     () => ({
@@ -720,7 +732,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           ([dayDate, dayJournalEntries]) => (
             <TodoDroppable
               key={dateToString(dayDate)}
-              date={setHours(dayDate, dayStartHour)}
+              date={startOfDayButItRespectsDayStartHour(dayDate)}
             >
               <DiaryAgendaDayDay
                 date={dateToString(dayDate)}

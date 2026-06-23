@@ -1,6 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import {
   addDays,
+  addHours,
   type ContextOptions,
   type DateArg,
   differenceInDays,
@@ -11,9 +12,15 @@ import {
   type RoundingMethod,
   type RoundingOptions,
   startOfDay,
+  subMilliseconds,
 } from "date-fns";
 import type { DateInterval } from "./lib";
 
+export const currentHour =
+  ((new Date().valueOf() % (1000 * 60 * 60 * 24)) +
+    (new Date().getTimezoneOffset() / -1) * 60 * 1000) /
+  (1000 * 60 * 60);
+export const shortlyAfterCurrentHour = currentHour + 0.005;
 export const dayStartHour = 5;
 
 export const dateToString = (date: Date): `${number}-${number}-${number}` => {
@@ -706,28 +713,27 @@ export const isSameDayButItRespectsDayStartHour = (
   );
 
 export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
-  new TZDate(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getHours() >= dayStartHour ? date.getDate() : date.getDate() - 1,
+  addHours(
+    new TZDate(
+      date.getFullYear(),
+      date.getMonth(),
+      ((date.valueOf() % (1000 * 60 * 60 * 24)) +
+        (date.getTimezoneOffset() / -1) * 60 * 1000) /
+        (1000 * 60 * 60) >=
+        dayStartHour
+        ? date.getDate()
+        : date.getDate() - 1,
+      0,
+      0,
+      0,
+      0,
+      "timeZone" in date ? date.timeZone : undefined,
+    ),
     dayStartHour,
-    0,
-    0,
-    0,
-    "timeZone" in date ? date.timeZone : undefined,
   );
 
 export const endOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
-  new TZDate(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getHours() >= dayStartHour ? date.getDate() + 1 : date.getDate(),
-    dayStartHour - 1,
-    59,
-    59,
-    999,
-    "timeZone" in date ? date.timeZone : undefined,
-  );
+  subMilliseconds(addDays(startOfDayButItRespectsDayStartHour(date), 1), 1);
 
 export const supportsHaptic =
   typeof window !== "undefined"
