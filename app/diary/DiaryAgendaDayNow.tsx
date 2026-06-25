@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import Link from "next/link";
 import { useMemo } from "react";
+import { useIsSSR } from "../../hooks/useIsSSR";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -14,6 +15,7 @@ export function DiaryAgendaDayNow({
   cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
   now: Date;
 }) {
+  const isSSR = useIsSSR();
   const {
     isDragging,
     attributes,
@@ -48,6 +50,7 @@ export function DiaryAgendaDayNow({
       iconTxt={iconTxt}
       cotemporality="current"
       className="now-divider pt-0.5 pb-1.5"
+      contentClassName="gap-2"
       ref={setNodeRef}
       style={style}
       {...listeners}
@@ -58,7 +61,7 @@ export function DiaryAgendaDayNow({
         prefetch={false}
         href={`/diary/${date}/workout`}
         className={
-          "ml-2 cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
         }
       >
         <span className="text-xs">➕</span> Workout
@@ -71,6 +74,14 @@ export function DiaryAgendaDayNow({
       >
         <span className="text-xs">➕</span> Event
       </span>
+      {!isSSR ? (
+        <span>
+          {now.toLocaleTimeString("en-DK", {
+            hour: "numeric",
+            minute: "2-digit",
+          })}
+        </span>
+      ) : null}
     </DiaryAgendaDayEntry>
   );
 }

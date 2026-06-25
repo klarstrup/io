@@ -17,6 +17,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     cotemporality,
     className,
     iconClassName,
+    contentClassName,
     cotemporalityOfSurroundingEvent,
     isEventWithSeparatedEnd,
     isEventEnd,
@@ -28,6 +29,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
     iconTxt?: string | ReactElement;
     iconDisabled?: boolean;
     iconClassName?: string;
+    contentClassName?: string;
     children: React.ReactNode;
     onContentClick?: () => void;
     onIconClick?: (
@@ -125,7 +127,7 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
       </IconContainer>
       <div
         className={
-          "relative flex flex-1 items-start justify-start " + (className || "")
+          "relative flex flex-1 items-start justify-start " + (contentClassName || "")
         }
         onClick={onContentClick}
       >
