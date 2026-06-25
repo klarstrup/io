@@ -20,7 +20,7 @@ export const currentHour =
   ((new Date().valueOf() % (1000 * 60 * 60 * 24)) +
     (new Date().getTimezoneOffset() / -1) * 60 * 1000) /
   (1000 * 60 * 60);
-export const shortlyAfterCurrentHour = currentHour + 0.005;
+export const shortlyAfterCurrentHour = currentHour + 0.0025;
 export const dayStartHour = 5;
 
 export const dateToString = (date: Date): `${number}-${number}-${number}` => {

@@ -7,7 +7,8 @@ import {
   useState,
 } from "react";
 import useInterval from "./hooks/useInterval";
-import { emptyFunction } from "./utils";
+import { DEFAULT_TIMEZONE, emptyFunction } from "./utils";
+import { TZDate } from "@date-fns/tz";
 
 type AnyFunction = (...args: unknown[]) => unknown;
 
@@ -437,11 +438,14 @@ export const useVisibilityAwarePollInterval = (pollInterval: number) => {
   return isPageVisible ? pollInterval : undefined;
 };
 
-export const useNow = (updateInterval = 500) => {
+export const useNow = (
+  updateInterval = 500,
+  timeZone: string = DEFAULT_TIMEZONE,
+) => {
   const [now, setNow] = useState(() => new Date());
 
   useInterval(
-    () => setNow(new Date()),
+    () => setNow(TZDate.tz(timeZone)),
     useVisibilityAwarePollInterval(updateInterval),
   );
 

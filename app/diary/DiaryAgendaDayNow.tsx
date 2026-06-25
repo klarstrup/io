@@ -79,6 +79,7 @@ export function DiaryAgendaDayNow({
           {now.toLocaleTimeString("en-DK", {
             hour: "numeric",
             minute: "2-digit",
+            second: "2-digit",
           })}
         </span>
       ) : null}

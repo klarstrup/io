@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from "@apollo/client/react";
-import { tz, TZDate } from "@date-fns/tz";
+import { tz } from "@date-fns/tz";
 import {
   addDays,
   addHours,
@@ -18,7 +18,6 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
@@ -40,7 +39,6 @@ import {
   DEFAULT_TIMEZONE,
   emptyArray,
   endOfDayButItRespectsDayStartHour,
-  isSameDayButItRespectsDayStartHour,
   isUTCMidnight,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
@@ -218,7 +216,6 @@ gql`
 
 export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
-  const router = useRouter();
 
   const { data: sessionData, status: sessionStatus } = useSession();
   const sessionDataLoading = sessionStatus === "loading";
@@ -246,22 +243,14 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const data = loading ? previousData || currentData : currentData;
 
   const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
-  const timeZoneDate = useMemo(() => TZDate.tz(timeZone), [timeZone]);
-  const now = dayDate ? addHours(dayDate, dayStartHour) : timeZoneDate;
+  const now = useNow(1000, timeZone);
   const startOfAgendaDay = useMemo(
-    () => startOfDayButItRespectsDayStartHour(now),
-    [now],
+    () =>
+      dayDate
+        ? addHours(dayDate, dayStartHour)
+        : startOfDayButItRespectsDayStartHour(now),
+    [dayDate, now],
   );
-
-  const now2 = useNow(60 * 1000);
-
-  const isSameDayAsLoaded = useMemo(
-    () => isSameDayButItRespectsDayStartHour(now2, now),
-    [now, now2],
-  );
-  useEffect(() => {
-    if (!dayDate && !isSameDayAsLoaded) location.reload();
-  }, [dayDate, isSameDayAsLoaded, timeZoneDate, timeZone, router]);
 
   const fetchingInterval = useMemo(
     () => ({
@@ -286,7 +275,11 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const userJournalEntries = data?.user?.journalEntries || emptyArray;
 
   const journalEntriesByDate2 = useMemo(() => {
-    const journalEntriesByDate: Record<string, JournalEntry[]> = {};
+    const journalEntriesByDate: Record<string, JournalEntry[]> = {
+      [dateToString(startOfDayButItRespectsDayStartHour(now))]: [
+        { __typename: "NowDivider", id: "now-divider", start: now, end: now },
+      ],
+    };
     const addEntryToDate = (entry: JournalEntry, date: Date) => {
       const calName = dateToString(startOfDayButItRespectsDayStartHour(date));
       if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
@@ -294,7 +287,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     };
     for (const entry of userJournalEntries) {
       if (entry.__typename === "NextSet") {
-        addEntryToDate(entry, entry.dueOn);
+        addEntryToDate(entry, max([entry.dueOn, now]));
       }
 
       if (entry.__typename === "Sleep") {
@@ -315,9 +308,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
                 max(
                   [
                     "datetype" in entry && entry.datetype === "date"
-                      ? roundToNearestDay(entry.start, {
-                          in: tz(DEFAULT_TIMEZONE),
-                        })
+                      ? roundToNearestDay(entry.start, { in: tz(timeZone) })
                       : null,
 
                     "completed" in entry ? entry.completed : null,
@@ -337,9 +328,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
                 min(
                   [
                     "datetype" in entry && entry.datetype === "date"
-                      ? roundToNearestDay(entry.end, {
-                          in: tz(DEFAULT_TIMEZONE),
-                        })
+                      ? roundToNearestDay(entry.end, { in: tz(timeZone) })
                       : null,
                     "completed" in entry ? entry.completed : null,
                     "due" in entry ? entry.due : null,
@@ -462,6 +451,25 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           const dayName = dateToString(dayDate);
 
           const dayJournalEntries = (journalEntriesByDate2[dayName] || [])
+            .sort((a, b) => a.id.localeCompare(b.id)) // Sort by ID to ensure consistent order for entries with the same start time
+            .sort((a, b) => {
+              const aText =
+                "summary" in a
+                  ? a.summary
+                  : "exerciseSchedule" in a &&
+                    "exerciseInfo" in a.exerciseSchedule &&
+                    a.exerciseSchedule.exerciseInfo.name;
+              const bText =
+                "summary" in b
+                  ? b.summary
+                  : "exerciseSchedule" in b &&
+                    "exerciseInfo" in b.exerciseSchedule &&
+                    b.exerciseSchedule.exerciseInfo.name;
+              if (aText && bText) {
+                return aText.localeCompare(bText);
+              }
+              return 0;
+            })
             .sort((a, b) =>
               compareAsc(
                 getJournalEntryPrincipalDate(b)?.end || new Date(0),
@@ -735,6 +743,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
               date={startOfDayButItRespectsDayStartHour(dayDate)}
             >
               <DiaryAgendaDayDay
+                now={now}
                 date={dateToString(dayDate)}
                 dayDate={dayDate}
                 userTimeZone={timeZone}
