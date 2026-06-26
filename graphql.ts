@@ -192,6 +192,7 @@ export const resolvers: GQResolvers<
       const dayDate = new Date(args.dayDate);
       dayDate.setHours(dayStartHour);
       const interval = {
+        // Overfetch to midnight to include legacy workouts and all-day events that are stored with start
         start: startOfDay(subDays(dayDate, args.daysBefore ?? 0)),
         end: endOfDayButItRespectsDayStartHour(
           addDays(dayDate, args.daysAfter ?? 0),
