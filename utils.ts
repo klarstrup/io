@@ -713,14 +713,11 @@ export const isSameDayButItRespectsDayStartHour = (
   );
 
 export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) => {
-  const hoursPastMidnight =
-    (date.valueOf() % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
-
   const dayStart = addHours(
     new TZDate(
       date.getFullYear(),
       date.getMonth(),
-      hoursPastMidnight >= dayStartHour ? date.getDate() : date.getDate() - 1,
+      date.getDate(),
       0,
       0,
       0,
