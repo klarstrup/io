@@ -76,9 +76,8 @@ export function DiaryAgendaDayDay({
   const client = useApolloClient();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const todayStr = useMemo(
-    () =>
-      dateToString(startOfDayButItRespectsDayStartHour(TZDate.tz(timeZone))),
-    [timeZone],
+    () => dateToString(startOfDayButItRespectsDayStartHour(now)),
+    [now],
   );
   const isToday = date === todayStr;
   const ref = useRef<HTMLFieldSetElement>(null);
@@ -553,7 +552,7 @@ export function DiaryAgendaDayDay({
           "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:w-lg " +
           ((isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
             ? "bg-green-50 pt-1"
-            : todayStr === dayName
+            : isToday
               ? "bg-yellow-50 pt-1"
               : "bg-slate-50 pt-1")
         }
