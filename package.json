@@ -84,6 +84,7 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@serwist/turbopack": "^9.5.11",
+    "@types/bun": "^1.3.14",
     "@types/luxon": "^3.7.2",
     "@types/node": "^24.10.2",
     "@types/react": "^19.2.17",
