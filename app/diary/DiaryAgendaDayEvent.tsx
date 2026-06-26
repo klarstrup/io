@@ -15,7 +15,7 @@ import {
 } from "date-fns";
 import { useMemo } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
-import { formatShortDuration } from "../../models/workout";
+import { durationToMs, formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
@@ -59,7 +59,7 @@ export function DiaryAgendaDayEvent({
     end: roundToNearestMinutes(event.end, { roundingMethod: "ceil" }),
   });
   const dayNo =
-    Math.floor(differenceInHours(dayRange.start, event.start) / 24) + 1;
+    Math.floor(differenceInHours(event.start, dayRange.start) / 24) + 1;
   const numDays = Math.ceil(differenceInHours(event.end, event.start) / 24);
   const isFirstDay = dayNo === 1;
   const isLastDay = dayNo === numDays;
@@ -105,8 +105,17 @@ export function DiaryAgendaDayEvent({
             <>Day {dayNo}</>
           )}
         </div>
-        <div className="leading-tight">
-          {event.summary}&nbsp;
+        <div>
+          <span
+            style={{
+              fontSize: !isEventWithSeparatedEnd
+                ? `${16 + (durationToMs(duration) / 1000 / 60 / 60) * 1.25}px`
+                : undefined,
+            }}
+          >
+            {event.summary}
+          </span>
+          &nbsp;
           <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
             {isFirstDay && duration ? (
               formatShortDuration(duration)
