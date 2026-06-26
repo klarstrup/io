@@ -1,18 +1,18 @@
 import { TZDate } from "@date-fns/tz";
 import {
-    addDays,
-    addHours,
-    type ContextOptions,
-    type DateArg,
-    differenceInDays,
-    type Interval,
-    isDate,
-    isSameDay,
-    isWithinInterval,
-    type RoundingMethod,
-    type RoundingOptions,
-    startOfDay,
-    subMilliseconds,
+  addDays,
+  addHours,
+  type ContextOptions,
+  type DateArg,
+  differenceInDays,
+  type Interval,
+  isDate,
+  isSameDay,
+  isWithinInterval,
+  type RoundingMethod,
+  type RoundingOptions,
+  startOfDay,
+  subMilliseconds,
 } from "date-fns";
 import type { DateInterval } from "./lib";
 
@@ -20,7 +20,7 @@ export const currentHour =
   ((new Date().valueOf() % (1000 * 60 * 60 * 24)) +
     (new Date().getTimezoneOffset() / -1) * 60 * 1000) /
   (1000 * 60 * 60);
-export const shortlyAfterCurrentHour = currentHour + 0.0025;
+export const shortlyAfterCurrentHour = currentHour + 0.00125;
 export const dayStartHour = 5;
 
 export const dateToString = (date: Date): `${number}-${number}-${number}` => {
