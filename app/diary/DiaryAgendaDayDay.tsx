@@ -4,7 +4,6 @@ import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-i
 import { faExternalLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  addHours,
   differenceInDays,
   differenceInHours,
   isBefore,
@@ -25,10 +24,8 @@ import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
   dateToString,
-  dayStartHour,
   DEFAULT_TIMEZONE,
   emptyArray,
-  endOfDayButItRespectsDayStartHour,
   isSameDayButItRespectsDayStartHour,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -64,14 +61,14 @@ const getJournalEntryPassed = (journalEntry: JournalEntry, now: Date) => {
 export function DiaryAgendaDayDay({
   now,
   date,
-  dayDate,
+  dayRange,
   userTimeZone,
   dayLocations,
   dayJournalEntries,
 }: {
   now: Date;
   date: `${number}-${number}-${number}`;
-  dayDate: Date;
+  dayRange: { start: Date; end: Date };
   userTimeZone?: GQUser["timeZone"];
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
@@ -86,12 +83,7 @@ export function DiaryAgendaDayDay({
   const isToday = date === todayStr;
   const ref = useRef<HTMLFieldSetElement>(null);
 
-  const dayStart = useMemo(() => addHours(dayDate, dayStartHour), [dayDate]);
-  const dayEnd = useMemo(
-    () => endOfDayButItRespectsDayStartHour(dayStart),
-    [dayStart],
-  );
-  const dayName = dateToString(dayDate);
+  const dayName = dateToString(dayRange.start);
 
   const [dayJournalItems, allDayJournalItems] = useMemo(() => {
     const dayJournalEntryElements: DayJournalEntryElement[] = [];
@@ -129,7 +121,7 @@ export function DiaryAgendaDayDay({
           .filter(
             (prevEvent) =>
               prevEvent.datetype !== "date" &&
-              !isEventEntireDay(prevEvent, dayDate) &&
+              !isEventEntireDay(prevEvent, dayRange.start) &&
               !eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.includes(
                 prevEvent.id,
               ),
@@ -144,7 +136,7 @@ export function DiaryAgendaDayDay({
             (je): je is GQEvent =>
               je.__typename === "Event" &&
               je.datetype !== "date" &&
-              !isEventEntireDay(je, dayDate),
+              !isEventEntireDay(je, dayRange.start),
           )
           .find(
             (event) =>
@@ -197,7 +189,7 @@ export function DiaryAgendaDayDay({
         const event = journalEntry;
 
         const eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt =
-          isEventEntireDay(event, dayDate);
+          isEventEntireDay(event, dayRange.start);
 
         const isAllDayEvent =
           event.datetype === "date" ||
@@ -218,7 +210,7 @@ export function DiaryAgendaDayDay({
                 }
                 className={
                   "self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
-                  (isPast(dayEnd)
+                  (isPast(dayRange.end)
                     ? "bg-green-50"
                     : isToday
                       ? "bg-yellow-50"
@@ -228,7 +220,9 @@ export function DiaryAgendaDayDay({
               >
                 {(() => {
                   const dayNo =
-                    Math.ceil(differenceInHours(dayDate, event.start) / 24) + 1;
+                    Math.floor(
+                      differenceInHours(dayRange.start, event.start) / 24,
+                    ) + 1;
                   const numDays = Math.ceil(
                     differenceInHours(event.end, event.start) / 24,
                   );
@@ -353,7 +347,7 @@ export function DiaryAgendaDayDay({
           const startDay = startOfDayButItRespectsDayStartHour(event.start);
           const endDay = startOfDayButItRespectsDayStartHour(event.end);
           const days = differenceInDays(endDay, startDay) + 1;
-          const dayNo = differenceInDays(dayStart, startDay) + 1;
+          const dayNo = differenceInDays(dayRange.start, startDay);
           const isLastDay = dayNo === days;
 
           // If the preceding journal entry is the end of an event and it ends exactly when the current event starts, then we can treat them as a single continuous event instead of two separate events for the purpose of drawing the little bracket
@@ -376,7 +370,7 @@ export function DiaryAgendaDayDay({
             id: client.cache.identify(event) || event.id,
             element: (
               <DiaryAgendaDayEvent
-                dayDate={dayDate}
+                dayRange={dayRange}
                 userTimeZone={timeZone}
                 event={event}
                 key={event.id}
@@ -386,7 +380,7 @@ export function DiaryAgendaDayDay({
                     (endOfEvent) => endOfEvent.id === event.id,
                   ) &&
                     isEqual(
-                      startOfDayButItRespectsDayStartHour(dayStart),
+                      startOfDayButItRespectsDayStartHour(dayRange.start),
                       startOfDayButItRespectsDayStartHour(event.start),
                     )) ||
                   (!isSameDayButItRespectsDayStartHour(
@@ -394,7 +388,7 @@ export function DiaryAgendaDayDay({
                     event.end,
                   ) &&
                     isEqual(
-                      startOfDayButItRespectsDayStartHour(dayStart),
+                      startOfDayButItRespectsDayStartHour(dayRange.start),
                       startOfDayButItRespectsDayStartHour(event.start),
                     ))
                 }
@@ -478,11 +472,9 @@ export function DiaryAgendaDayDay({
   }, [
     client.cache,
     date,
-    dayDate,
-    dayEnd,
     dayJournalEntries,
     dayLocations,
-    dayStart,
+    dayRange,
     isToday,
     now,
     timeZone,
@@ -523,11 +515,11 @@ export function DiaryAgendaDayDay({
         {todayStr === dayName ? null : (
           <DiaryAgendaDayCreateExpander
             inactiveButtonClassName={
-              isPast(dayEnd) ? "bg-green-200" : "bg-yellow-200"
+              isPast(dayRange.end) ? "bg-green-200" : "bg-yellow-200"
             }
           >
-            <DiaryAgendaDayCreateTodo date={dayStart} />
-            {isPast(dayStart) ? (
+            <DiaryAgendaDayCreateTodo date={dayRange.start} />
+            {isPast(dayRange.start) ? (
               <>
                 <Link
                   prefetch={false}
@@ -559,7 +551,7 @@ export function DiaryAgendaDayDay({
         className={
           "diary-agenda-day-entry " +
           "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:w-lg " +
-          ((isPast(dayStart) && allCompleted) || isPast(dayEnd)
+          ((isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
             ? "bg-green-50 pt-1"
             : todayStr === dayName
               ? "bg-yellow-50 pt-1"
@@ -572,7 +564,7 @@ export function DiaryAgendaDayDay({
           </TodoSortableContext>
         ) : (
           <DiaryAgendaDayEntry className="text-gray-400/50 italic">
-            {isPast(dayEnd) ? "Nothing logged" : "Nothing planned"}
+            {isPast(dayRange.end) ? "Nothing logged" : "Nothing planned"}
           </DiaryAgendaDayEntry>
         )}
       </FieldSetX>

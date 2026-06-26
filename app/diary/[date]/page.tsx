@@ -1,4 +1,5 @@
 import { Modal } from "../../../components/Modal";
+import { dayStartHour } from "../../../utils";
 import { DiaryAgendaDay } from "../DiaryAgendaDay";
 
 export default async function DiaryDayModal(props: {
@@ -6,9 +7,12 @@ export default async function DiaryDayModal(props: {
 }) {
   const { date } = await props.params;
 
+  const dayStart = new Date(date);
+  dayStart.setHours(dayStartHour);
+
   return (
     <Modal dismissTo={`/diary`}>
-      <DiaryAgendaDay dayDate={new Date(date)} />
+      <DiaryAgendaDay selectedDayStart={dayStart} />
     </Modal>
   );
 }

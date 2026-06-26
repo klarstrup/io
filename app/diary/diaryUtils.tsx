@@ -1,7 +1,5 @@
 import {
-  addHours,
   type ContextFn,
-  endOfDay,
   getMilliseconds,
   getMinutes,
   getSeconds,
@@ -9,7 +7,6 @@ import {
   isWithinInterval,
   max,
   min,
-  startOfDay,
 } from "date-fns";
 import type {
   GQEvent,
@@ -26,7 +23,10 @@ import type {
   WorkoutExercise,
   WorkoutExerciseSet,
 } from "../../models/workout";
-import { dayStartHour } from "../../utils";
+import {
+  endOfDayButItRespectsDayStartHour,
+  startOfDayButItRespectsDayStartHour,
+} from "../../utils";
 
 export type JournalEntry =
   | GQEvent
@@ -46,14 +46,8 @@ const getWorkoutPrincipalDate = (
 ): Interval => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
-    start: addHours(
-      startOfDay(addHours(workout.workedOutAt, -dayStartHour)),
-      dayStartHour,
-    ),
-    end: addHours(
-      endOfDay(addHours(workout.workedOutAt, -dayStartHour)),
-      dayStartHour,
-    ),
+    start: startOfDayButItRespectsDayStartHour(workout.workedOutAt),
+    end: endOfDayButItRespectsDayStartHour(workout.workedOutAt),
   };
 
   const start = max([
@@ -197,9 +191,9 @@ export const getJournalEntryPrincipalDate = (
 export const isEventEntireDay = <DateType extends Date>(
   event: GQEvent,
   dayDate: Date,
-  inTZ?: ContextFn<DateType>,
+  _inTZ?: ContextFn<DateType>,
 ): boolean => {
-  const dayStart = addHours(startOfDay(dayDate, { in: inTZ }), dayStartHour);
-  const dayEnd = addHours(endOfDay(dayDate, { in: inTZ }), dayStartHour);
+  const dayStart = startOfDayButItRespectsDayStartHour(dayDate);
+  const dayEnd = endOfDayButItRespectsDayStartHour(dayDate);
   return event.start <= dayStart && event.end >= dayEnd;
 };

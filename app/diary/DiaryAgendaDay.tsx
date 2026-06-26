@@ -214,23 +214,29 @@ gql`
   }
 `;
 
-export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
+export function DiaryAgendaDay({
+  selectedDayStart,
+}: {
+  selectedDayStart?: Date;
+}) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
   const { data: sessionData, status: sessionStatus } = useSession();
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
-  const [daysBefore, setDaysBefore] = useState(dayDate ? 0 : 3);
-  const [daysAfter, setDaysAfter] = useState(dayDate ? 0 : 3);
+  const [daysBefore, setDaysBefore] = useState(selectedDayStart ? 0 : 3);
+  const [daysAfter, setDaysAfter] = useState(selectedDayStart ? 0 : 3);
 
   const variables = useMemo(
     () => ({
-      dayDate: dayDate ? dateToString(dayDate) : dateToString(new Date()),
+      dayDate: selectedDayStart
+        ? dateToString(selectedDayStart)
+        : dateToString(new Date()),
       daysBefore,
       daysAfter,
     }),
-    [dayDate, daysBefore, daysAfter],
+    [selectedDayStart, daysBefore, daysAfter],
   );
 
   const {
@@ -246,10 +252,10 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
   const now = useNow(1000, timeZone);
   const startOfAgendaDay = useMemo(
     () =>
-      dayDate
-        ? addHours(dayDate, dayStartHour)
+      selectedDayStart
+        ? addHours(selectedDayStart, dayStartHour)
         : startOfDayButItRespectsDayStartHour(now),
-    [dayDate, now],
+    [selectedDayStart, now],
   );
 
   const fetchingInterval = useMemo(
@@ -448,6 +454,13 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       daysOfInterval
         .filter((date) => addHours(date, dayStartHour) <= fetchingInterval.end)
         .map((dayDate) => {
+          const dayStart = addHours(startOfDay(dayDate), dayStartHour);
+
+          const dayRange = {
+            start: dayStart,
+            end: endOfDayButItRespectsDayStartHour(dayStart),
+          };
+
           const dayName = dateToString(dayDate);
 
           const dayJournalEntries = (journalEntriesByDate2[dayName] || [])
@@ -499,7 +512,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
                 ),
             );
 
-          return [dayDate, dayJournalEntries] as const;
+          return [dayRange, dayJournalEntries] as const;
         }),
     [daysOfInterval, fetchingInterval.end, journalEntriesByDate2],
   );
@@ -508,13 +521,10 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
     let lastLocation: ReturnType<typeof getLocationFromJournalEntry> = null;
     return daysJournalEntries.map(
       (
-        [dayDate, dayJournalEntries],
+        [dayRange, dayJournalEntries],
         dayJournalEntriesIndex,
         dayJournalEntriesList,
       ) => {
-        const dayStart = addHours(startOfDay(dayDate), dayStartHour);
-        const dayEnd = endOfDayButItRespectsDayStartHour(dayStart);
-
         const dayJournalEntriesIncludingLocationChanges: typeof dayJournalEntries =
           [];
 
@@ -525,7 +535,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
             previousEntry &&
             previousEntry.__typename === "Event" &&
             (previousEntry.datetype === "date" ||
-              isEventEntireDay(previousEntry, dayDate))
+              isEventEntireDay(previousEntry, dayRange.start))
           ) {
             previousEntry = undefined;
           }
@@ -545,7 +555,8 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           if (
             location &&
             !(
-              entry.__typename === "Event" && isEventEntireDay(entry, dayDate)
+              entry.__typename === "Event" &&
+              isEventEntireDay(entry, dayRange.start)
             ) &&
             (!previousLocation || previousLocation.name !== location.name) &&
             (!lastLocation || lastLocation.name !== location.name)
@@ -574,10 +585,10 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
                     entryPricipalDate.start,
                   ].filter(Boolean),
                 )) ||
-                dayStart,
+                dayRange.start,
               (entryIsEnd
                 ? entryPricipalDate?.end
-                : entryPricipalDate?.start) || dayEnd,
+                : entryPricipalDate?.start) || dayRange.end,
             );
 
             // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
@@ -595,7 +606,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           dayJournalEntriesIncludingLocationChanges.push(entry);
         }
 
-        return [dayDate, dayJournalEntriesIncludingLocationChanges] as const;
+        return [dayRange, dayJournalEntriesIncludingLocationChanges] as const;
       },
     );
   }, [daysJournalEntries, userLocations]);
@@ -729,7 +740,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
       >
         <ShyGuy
           onSeen={() => {
-            if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+            if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             if (loading) return;
             if (queryVariables.daysBefore !== daysBefore) return;
             setDaysBefore((d) => d + 2);
@@ -737,15 +748,15 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
           }}
         />
         {daysJournalEntriesIncludingLocationChanges2.map(
-          ([dayDate, dayJournalEntries]) => (
+          ([dayRange, dayJournalEntries]) => (
             <TodoDroppable
-              key={dateToString(dayDate)}
-              date={startOfDayButItRespectsDayStartHour(dayDate)}
+              key={dateToString(dayRange.start)}
+              date={startOfDayButItRespectsDayStartHour(dayRange.start)}
             >
               <DiaryAgendaDayDay
                 now={now}
-                date={dateToString(dayDate)}
-                dayDate={dayDate}
+                date={dateToString(dayRange.start)}
+                dayRange={dayRange}
                 userTimeZone={timeZone}
                 dayLocations={userLocations}
                 dayJournalEntries={dayJournalEntries}
@@ -755,7 +766,7 @@ export function DiaryAgendaDay({ dayDate }: { dayDate?: Date }) {
         )}
         <ShyGuy
           onSeen={() => {
-            if (dayDate) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+            if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             if (loading) return;
             if (queryVariables.daysAfter !== daysAfter) return;
             setDaysAfter((d) => d + 2);

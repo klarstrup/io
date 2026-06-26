@@ -1,12 +1,10 @@
 import { tz, TZDate } from "@date-fns/tz";
 import {
   add,
-  addHours,
   addMilliseconds,
   endOfDay,
   isAfter,
   isBefore,
-  startOfDay,
   type Duration as DateFnsDuration,
 } from "date-fns";
 import type { WithId } from "mongodb";
@@ -19,7 +17,11 @@ import type {
   GQWorkoutSet,
 } from "../graphql.generated/graphql";
 import type { Duration } from "../sources/fitocracy";
-import { dayStartHour, DEFAULT_TIMEZONE } from "../utils";
+import {
+  DEFAULT_TIMEZONE,
+  endOfDayButItRespectsDayStartHour,
+  startOfDayButItRespectsDayStartHour,
+} from "../utils";
 import {
   InputType,
   SendType,
@@ -199,8 +201,8 @@ export const isNextSetDue = (tzDate: Date | TZDate, nextSet: GQNextSet) => {
   const timeZone =
     ("timeZone" in tzDate && tzDate.timeZone) || DEFAULT_TIMEZONE;
   const inn = tz(timeZone);
-  const dayStart = addHours(startOfDay(tzDate, { in: inn }), dayStartHour);
-  const dayEnd = addHours(endOfDay(tzDate, { in: inn }), dayStartHour);
+  const dayStart = startOfDayButItRespectsDayStartHour(tzDate);
+  const dayEnd = endOfDayButItRespectsDayStartHour(tzDate);
 
   const effectiveDueDate =
     nextSet.exerciseSchedule.snoozedUntil &&

@@ -1,9 +1,8 @@
 "use client";
 import { useApolloClient, useMutation } from "@apollo/client/react";
-import { tz } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { addDays, addHours, isEqual, isFuture, startOfDay } from "date-fns";
+import { addDays, addHours, isFuture } from "date-fns";
 import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +25,7 @@ import {
   dateToString,
   dayStartHour,
   epoch,
+  isUTCMidnight,
   omitUndefined,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -359,12 +359,7 @@ export function DiaryAgendaDayDueSet({
                                 ...omitUndefined(dueSet),
                                 dueOn: addDurationToDate(
                                   (dueSet?.lastWorkedOutAt &&
-                                  isEqual(
-                                    dueSet.lastWorkedOutAt,
-                                    startOfDay(dueSet.lastWorkedOutAt, {
-                                      in: tz("UTC"),
-                                    }),
-                                  )
+                                  isUTCMidnight(dueSet.lastWorkedOutAt)
                                     ? addHours(
                                         dueSet.lastWorkedOutAt,
                                         dayStartHour,
