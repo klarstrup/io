@@ -78,6 +78,8 @@ export function DiaryAgendaDayEvent({
     [isDragging, transform, transition],
   );
 
+  const durationInHours = durationToMs(duration) / 1000 / 60 / 60;
+
   return (
     <DiaryAgendaDayEntry
       ref={setNodeRef}
@@ -93,7 +95,7 @@ export function DiaryAgendaDayEvent({
       icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
     >
-      <div className="flex items-center gap-1.5 leading-snug">
+      <div className="flex items-center gap-1.5">
         <div className="text-center font-semibold tabular-nums">
           {event.datetype === "date-time" && dayNo <= 1 ? (
             new Date(event.start).toLocaleTimeString("en-DK", {
@@ -109,7 +111,20 @@ export function DiaryAgendaDayEvent({
           <span
             style={{
               fontSize: !isEventWithSeparatedEnd
-                ? `${16 + (durationToMs(duration) / 1000 / 60 / 60) * 1.25}px`
+                ? `${16 + durationInHours * 1.25}px`
+                : undefined,
+              fontWeight: !isEventWithSeparatedEnd
+                ? durationInHours >= 18
+                  ? 800
+                  : durationInHours >= 14
+                    ? 700
+                    : durationInHours >= 10
+                      ? 600
+                      : durationInHours >= 6
+                        ? 500
+                        : durationInHours >= 2
+                          ? 400
+                          : 300
                 : undefined,
             }}
           >
