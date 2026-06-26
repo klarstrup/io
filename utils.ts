@@ -712,17 +712,15 @@ export const isSameDayButItRespectsDayStartHour = (
     startOfDayButItRespectsDayStartHour(new Date(dateRight)),
   );
 
-export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
-  addHours(
+export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) => {
+  const hoursPastMidnight =
+    (date.valueOf() % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
+
+  const dayStart = addHours(
     new TZDate(
       date.getFullYear(),
       date.getMonth(),
-      ((date.valueOf() % (1000 * 60 * 60 * 24)) +
-        (date.getTimezoneOffset() / -1) * 60 * 1000) /
-        (1000 * 60 * 60) >=
-        dayStartHour
-        ? date.getDate()
-        : date.getDate() - 1,
+      hoursPastMidnight >= dayStartHour ? date.getDate() : date.getDate() - 1,
       0,
       0,
       0,
@@ -731,6 +729,13 @@ export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
     ),
     dayStartHour,
   );
+
+  if (dayStart.valueOf() > date.valueOf()) {
+    dayStart.setDate(dayStart.getDate() - 1);
+  }
+
+  return dayStart;
+};
 
 export const endOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
   subMilliseconds(addDays(startOfDayButItRespectsDayStartHour(date), 1), 1);
