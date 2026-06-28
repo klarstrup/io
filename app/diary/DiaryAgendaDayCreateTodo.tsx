@@ -34,29 +34,43 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
     refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
   });
 
-  const handleFormSubmit = useEvent(async (formElement: HTMLFormElement) => {
-    const formData = new FormData(formElement);
-    const summary = formData.get("summary");
-    if (typeof summary === "string" && summary.trim().length > 0) {
-      await createTodo({
-        variables: {
-          input: {
-            data: {
-              summary: summary
-                .trim()
-                .split("\n")
-                .map((line) =>
-                  line.startsWith("▢") ? line.replace(/^(▢)/, "- [ ]") : line,
-                )
-                .join("\n"),
-              due: date,
+  const handleFormSubmit = useEvent(
+    async (formElement: HTMLFormElement, goAgain?: boolean) => {
+      const formData = new FormData(formElement);
+      const summary = formData.get("summary");
+      if (typeof summary === "string" && summary.trim().length > 0) {
+        await createTodo({
+          variables: {
+            input: {
+              data: {
+                summary: summary
+                  .trim()
+                  .split("\n")
+                  .map((line) =>
+                    line.startsWith("▢") ? line.replace(/^(▢)/, "- [ ]") : line,
+                  )
+                  .join("\n"),
+                due: date,
+              },
             },
           },
-        },
-      });
-      setIsActive(false);
-    }
-  });
+        });
+        if (goAgain) {
+          setIsActive(true);
+          formElement.reset();
+          const summaryInput = formElement.elements.namedItem("summary");
+          if (summaryInput instanceof HTMLTextAreaElement) {
+            summaryInput.value = "";
+            summaryInput.setSelectionRange(0, 0);
+            summaryInput.disabled = false;
+            summaryInput.focus();
+          }
+        } else {
+          setIsActive(false);
+        }
+      }
+    },
+  );
 
   const onClickOutside = () => {
     const formData = formRef.current && new FormData(formRef.current);
@@ -114,6 +128,14 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
                   if (!el) return;
                   const length = el.value.length;
                   el.setSelectionRange(length, length);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+
+                    if (formRef.current)
+                      void handleFormSubmit(formRef.current, true);
+                  }
                 }}
               />
               <button type="submit" className="hidden" />

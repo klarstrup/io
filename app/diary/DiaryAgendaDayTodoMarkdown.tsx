@@ -172,7 +172,7 @@ export function DiaryAgendaDayTodoMarkdown({
           },
         }}
       >
-        {todo.summary}
+        {todo.summary?.replaceAll("\n", "\n\n")}
       </Markdown>
     </div>
   );

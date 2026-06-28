@@ -217,6 +217,12 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                   const length = el.value.length;
                   el.setSelectionRange(length, length);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    if (formRef.current) handleFormSubmit(formRef.current);
+                  }
+                }}
               />
             ) : (
               <DiaryAgendaDayTodoMarkdown
