@@ -95,7 +95,7 @@
     "esbuild": "^0.28.1",
     "eslint": "9",
     "partykit": "0.0.115",
-    "prettier": "^3.8.5",
+    "prettier": "^3.9.1",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "serwist": "^9.5.11",
     "typescript": "^6.0.3"
