@@ -313,10 +313,9 @@ Z"
     height={UpTransShonkTrans.height}
     style={{ minWidth: "1em", height: "auto", transform: "scale(1)" }}
   />,
-];
+]; //.slice(0, 1);
 
 // shuffle the background elements on startup to create a more dynamic effect
-
 for (let i = backgroundElements.length - 1; i > 0; i--) {
   const j = Math.floor(Math.random() * (i + 1));
   [backgroundElements[i], backgroundElements[j]] = [
@@ -333,7 +332,7 @@ export default function Backdrop() {
           key={i}
           className={
             "flex flex-1 items-center justify-evenly gap-[1.2em] " +
-            (i % 2 ? "ml-[-3.3em]" : "")
+            (i % 2 ? "ml-[-3.29em]" : "")
           }
         >
           {Array.from({ length: 24 }).map((_, j) => (
@@ -341,7 +340,11 @@ export default function Backdrop() {
               key={j}
               className={"flex flex-1 items-center justify-center text-center"}
             >
-              {backgroundElements[(i + j) % backgroundElements.length]}
+              {
+                backgroundElements[
+                  ((i % 2 ? i + 1 : i) + j) % backgroundElements.length
+                ]
+              }
             </span>
           ))}
         </div>
