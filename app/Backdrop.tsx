@@ -326,7 +326,7 @@ for (let i = backgroundElements.length - 1; i > 0; i--) {
 
 export default function Backdrop() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[10vmin] leading-[1.2em] whitespace-nowrap select-none">
+    <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[128px] leading-[1.2em] whitespace-nowrap select-none">
       {Array.from({ length: 24 }).map((_, i) => (
         <div
           key={i}
