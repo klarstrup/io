@@ -16,7 +16,7 @@ export default function UserStuffLink({
     <Link
       href={href}
       {...linkProps}
-      className={twMerge("relative text-3xl xl:text-4xl", linkProps.className)}
+      className={twMerge("relative text-4xl", linkProps.className)}
     >
       <Suspense>
         <UserStuffLinkActiveness href={href}>

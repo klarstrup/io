@@ -489,7 +489,7 @@ export function DiaryAgendaDayDay({
   return (
     <>
       <div
-        className="relative z-5 mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 pr-2 leading-normal xl:w-lg"
+        className="relative z-5 mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 pr-2 leading-normal xl:max-w-none"
         style={{
           textShadow:
             "0 0 1px rgba(255,255,255,0.5),0 0 2px rgba(255,255,255,0.5),0 0 3px rgba(255,255,255,0.5),0 0 4px rgba(255,255,255,0.5),0 0 5px rgba(255,255,255,0.5),0 0 6px rgba(255,255,255,0.5)",
@@ -552,7 +552,7 @@ export function DiaryAgendaDayDay({
         ref={ref}
         className={
           "diary-agenda-day-entry border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:w-lg " +
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:max-w-none " +
           ((isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
             ? "bg-green-100/75 pt-1"
             : isToday
@@ -562,7 +562,7 @@ export function DiaryAgendaDayDay({
 
         style={{
           boxShadow:
-            "0 0 16px #edab00, 0 0 8px #edab00, 0 0 4px #edab00, 0 0 4px #edab00, 0 0 24vmin rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 0, 0, 1)",
+            "0 0 16px #edab00, 0 0 8px #edab00, 0 0 4px #edab00, 0 0 4px #edab00, 0 0 20vmax rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 1)",
         }}
       >
         {dayJournalItems.length ? (

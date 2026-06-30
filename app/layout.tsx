@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className="overflow-y-scroll xl:overflow-x-scroll xl:overflow-y-hidden"
+      className="overflow-y-scroll lg:overflow-x-scroll lg:overflow-y-hidden"
     >
       <body className="flex flex-col">
         <SessionProvider>
