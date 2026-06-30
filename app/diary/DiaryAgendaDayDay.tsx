@@ -562,7 +562,7 @@ export function DiaryAgendaDayDay({
 
         style={{
           boxShadow:
-            "0 0 16px #edab00, 0 0 8px #edab00, 0 0 4px #edab00, 0 0 4px #edab00, 0 0 24px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 1)",
+            "0 0 16px #edab00, 0 0 8px #edab00, 0 0 4px #edab00, 0 0 4px #edab00, 0 0 24vmin rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 0, 0, 1)",
         }}
       >
         {dayJournalItems.length ? (
