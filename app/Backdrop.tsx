@@ -1,4 +1,5 @@
 import vulvaLogo from "../public/vulvatorious_logo.png";
+import muscleFemme from "../public/io_muscle_femme.png";
 
 const backgroundElements = [
   "🤘",
@@ -281,6 +282,15 @@ Z"
     alt="Vulvatorious Logo"
     width={vulvaLogo.width}
     height={vulvaLogo.height}
+    style={{ minWidth: "1em", height: "auto", transform: "scale(1.5)" }}
+  />,
+  // eslint-disable-next-line @next/next/no-img-element
+  <img
+    key="image2"
+    src={muscleFemme.src}
+    alt="Vulvatorious Logo"
+    width={muscleFemme.width}
+    height={muscleFemme.height}
     style={{ minWidth: "1em", height: "auto", transform: "scale(1.5)" }}
   />,
 ];
