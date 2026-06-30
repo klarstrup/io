@@ -3,8 +3,18 @@ import muscleFemme from "../public/io_muscle_femme_io.png";
 import UpTransShonkTrans from "../public/UpTransShonkTrans.png";
 
 const backgroundElements = [
-  "🏳️‍⚧️",
-  "io",
+  <span
+    key="trans"
+    className="flex w-[1em] items-center justify-center text-center"
+  >
+    🏳️‍⚧️
+  </span>,
+  <span
+    key="io"
+    className="flex w-[1em] items-center justify-center text-center"
+  >
+    io
+  </span>,
   <svg
     key="io"
     xmlns="http://www.w3.org/2000/svg"
@@ -306,6 +316,7 @@ Z"
 ];
 
 // shuffle the background elements on startup to create a more dynamic effect
+
 for (let i = backgroundElements.length - 1; i > 0; i--) {
   const j = Math.floor(Math.random() * (i + 1));
   [backgroundElements[i], backgroundElements[j]] = [
@@ -316,16 +327,19 @@ for (let i = backgroundElements.length - 1; i > 0; i--) {
 
 export default function Backdrop() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[10vmin] leading-[2.1] whitespace-nowrap select-none">
+    <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[10vmin] leading-[1.2em] whitespace-nowrap select-none">
       {Array.from({ length: 24 }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-1 flex-row flex-nowrap items-center justify-center even:ml-[-3.75em]"
+          className={
+            "flex flex-1 items-center justify-evenly gap-[1.2em] " +
+            (i % 2 ? "ml-[-3.3em]" : "")
+          }
         >
-          {Array.from({ length: i % 2 ? 24 : 16 }).map((_, j) => (
+          {Array.from({ length: 24 }).map((_, j) => (
             <span
               key={j}
-              className="mx-[1em] flex flex-1 flex-row flex-nowrap items-center justify-center"
+              className={"flex flex-1 items-center justify-center text-center"}
             >
               {backgroundElements[(i + j) % backgroundElements.length]}
             </span>
