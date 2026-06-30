@@ -1,12 +1,10 @@
 import vulvaLogo from "../public/vulvatorious_logo.png";
-import muscleFemme from "../public/io_muscle_femme.png";
+import muscleFemme from "../public/io_muscle_femme_io.png";
+import UpTransShonkTrans from "../public/UpTransShonkTrans.png";
 
 const backgroundElements = [
-  "🤘",
   "🏳️‍⚧️",
-  "💪",
   "io",
-  "🧗‍♀️",
   <svg
     key="io"
     xmlns="http://www.w3.org/2000/svg"
@@ -62,6 +60,9 @@ Z"
     width="1em"
     height="0.5em"
     viewBox="250 350 4200 1700"
+    style={{
+      transform: "scale(1.5)",
+    }}
   >
     <path
       d="M427.93,673.31c-1.18,101.73,0.22,166.35,4.21,193.86l2.24,15.37c4.64,17.29,31.72,26.21,81.25,26.78
@@ -282,7 +283,7 @@ Z"
     alt="Vulvatorious Logo"
     width={vulvaLogo.width}
     height={vulvaLogo.height}
-    style={{ minWidth: "1em", height: "auto", transform: "scale(1.5)" }}
+    style={{ minWidth: "1em", height: "auto", transform: "scale(2)" }}
   />,
   // eslint-disable-next-line @next/next/no-img-element
   <img
@@ -291,7 +292,16 @@ Z"
     alt="Vulvatorious Logo"
     width={muscleFemme.width}
     height={muscleFemme.height}
-    style={{ minWidth: "1em", height: "auto", transform: "scale(1.5)" }}
+    style={{ minWidth: "1em", height: "auto", transform: "scale(2)" }}
+  />,
+  // eslint-disable-next-line @next/next/no-img-element
+  <img
+    key="image3"
+    src={UpTransShonkTrans.src}
+    alt="Vulvatorious Logo"
+    width={UpTransShonkTrans.width}
+    height={UpTransShonkTrans.height}
+    style={{ minWidth: "1em", height: "auto", transform: "scale(1)" }}
   />,
 ];
 
