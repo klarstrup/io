@@ -1,3 +1,4 @@
+"use client";
 import { useApolloClient, useQuery } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
