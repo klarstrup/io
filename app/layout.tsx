@@ -9,6 +9,7 @@ import UserStuff from "../components/UserStuff";
 import LoadingIndicator from "./LoadingIndicator";
 import "./page.css";
 import { SerwistProvider } from "./serwist";
+import Backdrop from "./Backdrop";
 
 export const metadata = {
   title:
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Suspense>
                   <UserStuff />
                   {children}
+                  <Backdrop />
                 </Suspense>
                 <Analytics />
               </AblyWrapper>

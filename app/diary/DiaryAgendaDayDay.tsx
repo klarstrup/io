@@ -486,10 +486,10 @@ export function DiaryAgendaDayDay({
   return (
     <>
       <div
-        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 pr-2 leading-normal xl:w-lg"
+        className="mx-auto mt-1 -mb-px flex max-w-lg items-center gap-1 pr-2 leading-normal xl:w-lg z-5 relative"
         style={{
           textShadow:
-            "0 0 1px rgba(255,255,255,1),0 0 2px rgba(255,255,255,1),0 0 3px rgba(255,255,255,1),0 0 4px rgba(255,255,255,1),0 0 5px rgba(255,255,255,1),0 0 6px rgba(255,255,255,1)",
+            "0 0 1px rgba(255,255,255,0.5),0 0 2px rgba(255,255,255,0.5),0 0 3px rgba(255,255,255,0.5),0 0 4px rgba(255,255,255,0.5),0 0 5px rgba(255,255,255,0.5),0 0 6px rgba(255,255,255,0.5)",
         }}
       >
         <Link
@@ -548,14 +548,19 @@ export function DiaryAgendaDayDay({
         legend={null}
         ref={ref}
         className={
-          "diary-agenda-day-entry " +
+          "diary-agenda-day-entry border border-[yellow]/25 bg-white/10 backdrop-blur-md " +
           "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:w-lg " +
           ((isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
-            ? "bg-green-50 pt-1"
+            ? "bg-green-100/50 pt-1"
             : isToday
-              ? "bg-yellow-50 pt-1"
-              : "bg-slate-50 pt-1")
+              ? "bg-yellow-200/50 pt-1"
+              : "bg-slate-200/50 pt-1")
         }
+
+        style={{
+          boxShadow:
+            "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
+        }}
       >
         {dayJournalItems.length ? (
           <TodoSortableContext items={dayJournalItems}>
