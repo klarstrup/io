@@ -1,9 +1,5 @@
 {
   "ignore": {
-    "@types/node": {
-      "versions": "^25",
-      "reason": ""
-    },
     "eslint": {
       "versions": "^10",
       "reason": ""
