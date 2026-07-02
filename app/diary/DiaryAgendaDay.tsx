@@ -628,7 +628,7 @@ export function DiaryAgendaDay({
     if (typeof document === "undefined") return;
     const el = document
       .querySelector<HTMLElement>(".now-divider")
-      ?.closest<HTMLElement>(".diary-agenda-day-entry");
+      ?.closest<HTMLElement>(".diary-agenda-day-entry")?.parentElement;
     if (!el) return;
 
     const viewportHeight = window.innerHeight;
@@ -652,7 +652,7 @@ export function DiaryAgendaDay({
   }, 5000);
 
   const isPointerFine = useMediaQuery("(pointer: fine)");
-  const isXL = useMediaQuery("(min-width: 80rem)");
+  const isXL = useMediaQuery("(min-width: 64rem)");
 
   useEffect(() => {
     const element = document.scrollingElement || document.documentElement;

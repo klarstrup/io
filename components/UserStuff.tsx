@@ -30,7 +30,7 @@ export default function UserStuff() {
 
             const el = document
               .querySelector<HTMLElement>(".now-divider")
-              ?.closest<HTMLElement>(".diary-agenda-day-entry");
+              ?.closest<HTMLElement>(".diary-agenda-day-entry")?.parentElement;
             if (!el) return;
 
             const viewportHeight = window.innerHeight;
