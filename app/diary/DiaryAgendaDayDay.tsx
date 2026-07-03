@@ -478,6 +478,18 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Trip") {
         const trip = journalEntry;
 
+        const fromText = journalEntry.legs[0]?.from
+          .replace(/\(.+\)/, "")
+          .trim();
+        const fromParanthetical =
+          journalEntry.legs[0]?.from.match(/\((.+)\)/)?.[1];
+        const toText = journalEntry.legs[journalEntry.legs.length - 1]?.to
+          .replace(/\(.+\)/, "")
+          .trim();
+        const toParanthetical =
+          journalEntry.legs[journalEntry.legs.length - 1]?.to.match(
+            /\((.+)\)/,
+          )?.[1];
         dayJournalEntryElements.push({
           id: client.cache.identify(trip) || trip.id,
           element: (
@@ -499,14 +511,19 @@ export function DiaryAgendaDayDay({
               }
               iconClassName="w-9"
             >
-              <div className="flex flex-row items-baseline justify-start gap-1 py-0.5">
-                <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
-                  {journalEntry.legs[0]?.from}
-                </span>
+              <div className="flex flex-row items-center justify-start gap-1 py-0.5">
+                <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
+                  <span>{fromText}</span>
+                  {fromParanthetical ? (
+                    <span className="-mt-1 text-[0.555rem] text-gray-400">
+                      {fromParanthetical}
+                    </span>
+                  ) : null}
+                </div>
                 {journalEntry.legs.map((leg, index, legs) => (
                   <div
                     key={index}
-                    className="flex items-center justify-start text-[0.666rem] text-gray-500"
+                    className="flex items-center justify-start text-[0.666rem] -mt-2.5 text-gray-500"
                   >
                     {leg.mode === "BUS" || leg.mode === "A_BUS" ? (
                       <FontAwesomeIcon icon={faBus} />
@@ -528,9 +545,14 @@ export function DiaryAgendaDayDay({
                     null}
                   </div>
                 ))}
-                <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
-                  {journalEntry.legs[journalEntry.legs.length - 1]?.to}
-                </span>
+                <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
+                  <span>{toText}</span>
+                  {toParanthetical ? (
+                    <span className="-mt-1 text-[0.555rem] text-gray-400">
+                      {toParanthetical}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </DiaryAgendaDayEntry>
           ),
