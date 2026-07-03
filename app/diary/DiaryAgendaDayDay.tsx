@@ -1,7 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
-import { faExternalLink } from "@fortawesome/free-solid-svg-icons";
+import { faBus, faExternalLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   differenceInDays,
@@ -27,6 +27,7 @@ import {
   DEFAULT_TIMEZONE,
   emptyArray,
   isSameDayButItRespectsDayStartHour,
+  omit,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
@@ -466,6 +467,41 @@ export function DiaryAgendaDayDay({
               locationChange={journalEntry}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
+          ),
+        });
+      } else if (journalEntry.__typename === "Trip") {
+        const trip = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: client.cache.identify(trip) || trip.id,
+          element: (
+            <DiaryAgendaDayEntry
+              icon={faBus}
+              cotemporality={cotemporality(trip)}
+              key={trip.id}
+              id={trip.id}
+              __typename={trip.__typename}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+              className={
+                "rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
+                "backdrop-blur-sm " +
+                ((isPast(dayRange.start) && allCompleted) ||
+                isPast(dayRange.end)
+                  ? "bg-green-100/75 pt-1"
+                  : isToday
+                    ? "bg-yellow-200/75 pt-1"
+                    : "bg-slate-100/75 pt-1")
+              }
+              iconClassName="w-6 -mr-1"
+            >
+              <pre>
+                {JSON.stringify(
+                  omit(journalEntry, "__typename", "id"),
+                  null,
+                  2,
+                )}
+              </pre>
+            </DiaryAgendaDayEntry>
           ),
         });
       }

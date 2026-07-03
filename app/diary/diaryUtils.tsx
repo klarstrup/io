@@ -14,6 +14,7 @@ import type {
   GQNextSet,
   GQSleep,
   GQTodo,
+  GQTrip,
   GQWorkout,
   GQWorkoutExercise,
   GQWorkoutSet,
@@ -36,6 +37,7 @@ export type JournalEntry =
   | GQWorkout
   | GQExerciseSchedule
   | GQSleep
+  | GQTrip
   | (GQSleep & { _this_is_the_end_of_a_sleep: true })
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | { __typename: "LocationChange"; id: string; location: string; date: Date }

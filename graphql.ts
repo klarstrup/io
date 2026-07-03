@@ -60,6 +60,7 @@ import {
   WorkoutLocationsView,
   Workouts,
 } from "./models/workout.server";
+import { DSBProductSummaries } from "./sources/dsb.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
@@ -307,6 +308,29 @@ export const resolvers: GQResolvers<
                 exerciseInfo: undefined as unknown as GQExerciseInfo,
               },
             } satisfies GQNextSet),
+        ),
+        Array.fromAsync(
+          DSBProductSummaries.find({
+            _io_userId: userId,
+            timestamp: rangeToQuery(interval.start, interval.end),
+          }),
+          (productSummary) =>
+            productSummary.productSummary.trips.map((trip) =>
+              entries.push({
+                __typename: "Trip",
+                id: trip.id,
+                start: trip.tripLegs[0]!.startDateTime,
+                end: trip.tripLegs[trip.tripLegs.length - 1]!.endDateTime,
+                legs: trip.tripLegs.map((leg) => ({
+                  __typename: "TripLeg",
+                  start: leg.startDateTime,
+                  end: leg.endDateTime,
+                  from: leg.stops[0]!.location.name,
+                  to: leg.stops[leg.stops.length - 1]!.location.name,
+                  mode: leg.transports[0]?.meansOfTransportation || "unknown",
+                })),
+              }),
+            ),
         ),
       );
 
@@ -704,9 +728,7 @@ export const resolvers: GQResolvers<
                 refresh_token: credentials.refresh_token ?? undefined,
                 token_type:
                   (credentials.token_type as
-                    | Lowercase<string>
-                    | null
-                    | undefined) ?? undefined,
+                    Lowercase<string> | null | undefined) ?? undefined,
                 scope: credentials.scope ?? undefined,
                 expires_at: credentials.expiry_date ?? undefined,
                 id_token: credentials.id_token ?? undefined,
@@ -1806,7 +1828,7 @@ export const typeDefs = gql`
     id: ID!
   }
 
-  union JournalEntryUnion = Todo | Event | Workout | Sleep | NextSet
+  union JournalEntryUnion = Todo | Event | Workout | Sleep | NextSet | Trip
 
   type User {
     id: ID!
@@ -1842,6 +1864,7 @@ export const typeDefs = gql`
     futureBusynessFraction: Float
     inboxEmailCount: Int
     dataSources: [UserDataSource!]
+    trips: [Trip!]
   }
 
   type UserDataSource {
@@ -1912,6 +1935,21 @@ export const typeDefs = gql`
     hours: Float
     minutes: Float
     seconds: Float
+  }
+
+  type Trip implements JournalEntry {
+    id: ID!
+    start: Date!
+    end: Date!
+    legs: [TripLeg!]!
+  }
+
+  type TripLeg {
+    start: Date!
+    end: Date!
+    from: String!
+    to: String!
+    mode: String!
   }
 
   type ExerciseSchedule {

@@ -16,6 +16,18 @@ export const typePolicies: TypePolicies = {
       completed: { read: readDate },
     },
   },
+  Trip: {
+    fields: {
+      start: { read: readDate },
+      end: { read: readDate },
+    },
+  },
+  TripLeg: {
+    fields: {
+      start: { read: readDate },
+      end: { read: readDate },
+    },
+  },
   Event: {
     fields: {
       created: { read: readDate },

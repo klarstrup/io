@@ -155,6 +155,18 @@ gql`
           due
           completed
         }
+        ... on Trip {
+          id
+          start
+          end
+          legs {
+            start
+            end
+            from
+            to
+            mode
+          }
+        }
         ... on Event {
           id
           created
@@ -294,9 +306,7 @@ export function DiaryAgendaDay({
     for (const entry of userJournalEntries) {
       if (entry.__typename === "NextSet") {
         addEntryToDate(entry, max([entry.dueOn, now]));
-      }
-
-      if (entry.__typename === "Sleep") {
+      } else if (entry.__typename === "Sleep") {
         addEntryToDate(entry, entry.startedAt);
 
         // Hack for sleep ends as separate entries
@@ -304,9 +314,7 @@ export function DiaryAgendaDay({
           { ...entry, _this_is_the_end_of_a_sleep: true },
           entry.endedAt,
         );
-      }
-
-      if (entry.__typename === "Event") {
+      } else if (entry.__typename === "Event") {
         const eventInterval = {
           start: max(
             [
@@ -398,9 +406,7 @@ export function DiaryAgendaDay({
             insertedStart = true;
           }
         }
-      }
-
-      if (entry.__typename === "Todo") {
+      } else if (entry.__typename === "Todo") {
         // If not done and no due date, this is a backlog item, we don't show in the diary
         if (!entry.due && !entry.completed) continue;
 
@@ -433,9 +439,7 @@ export function DiaryAgendaDay({
             entry.completed || (entry.due && max([entry.due, now])) || date,
           );
         }
-      }
-
-      if (entry.__typename === "Workout") {
+      } else if (entry.__typename === "Workout") {
         addEntryToDate(
           entry,
           entry.source === WorkoutSource.Self &&
@@ -443,6 +447,10 @@ export function DiaryAgendaDay({
             ? addHours(entry.workedOutAt, dayStartHour)
             : entry.workedOutAt,
         );
+      } else if (entry.__typename === "Trip") {
+        addEntryToDate(entry, entry.start);
+      } else {
+        entry satisfies never;
       }
     }
 
