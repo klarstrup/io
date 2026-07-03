@@ -16,6 +16,7 @@ export default async function UserStuffSources() {
         ...dataSourceGroups.weather,
         ...dataSourceGroups.health,
         ...dataSourceGroups.finance,
+        ...dataSourceGroups.travel,
         DataSource.Songkick,
       ]}
     />

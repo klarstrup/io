@@ -229,7 +229,7 @@ function UserStuffSourceForm({
           Auth Tokens:
           <input
             type="text"
-              // eslint-disable-next-line react-hooks/incompatible-library
+            // eslint-disable-next-line react-hooks/incompatible-library
             value={JSON.stringify(watch("config.authTokens"))}
             onChange={(e) => {
               const value = e.target.value;
@@ -554,6 +554,26 @@ function UserStuffSourceForm({
             />
           </label>
         </>
+      );
+      break;
+    case DataSource.DSB:
+      formElements = (
+        <label className="flex flex-col gap-1">
+          Auth Tokens:
+          <input
+            type="text"
+            value={JSON.stringify(watch("config.authTokens"))}
+            onChange={(e) => {
+              const value = e.target.value;
+              const authTokens = JSON.parse(
+                value,
+              ) as unknown as typeof source.config.authTokens;
+              setValue("config.authTokens", authTokens);
+            }}
+            placeholder="Auth Tokens"
+            className="w-full"
+          />
+        </label>
       );
       break;
     default:
@@ -908,6 +928,21 @@ function UserStuffSourceCreateForm({
                 SessionKey: "",
                 balanceCutoff: null,
                 balanceDisplayCeiling: null,
+              },
+            });
+            break;
+          case DataSource.DSB:
+            append({
+              ...initialSourceMeta,
+              source: DataSource.DSB,
+              config: {
+                authTokens: {
+                  access_token: "",
+                  refresh_token: "",
+                  expires_in: 0,
+                  token_type: "",
+                  scope: "",
+                },
               },
             });
             break;

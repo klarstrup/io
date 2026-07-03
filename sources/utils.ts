@@ -1,7 +1,8 @@
 import type { TopLoggerAuthTokens } from "../lib";
-import { ExerciseData } from "../models/exercises.types";
+import type { ExerciseData } from "../models/exercises.types";
+import type { DSB } from "./dsb";
 import type { Grippy } from "./grippy";
-import { SnapCalorie } from "./snapcalorie";
+import type { SnapCalorie } from "./snapcalorie";
 import type { Withings } from "./withings";
 
 type UserDataSourceConfig =
@@ -88,6 +89,10 @@ type UserDataSourceConfig =
         balanceCutoff?: number | null;
         balanceDisplayCeiling?: number | null;
       };
+    }
+  | {
+      source: DataSource.DSB;
+      config: { authTokens: DSB.AuthTokens };
     };
 
 export interface UserDataSourceMeta {
@@ -126,6 +131,7 @@ export enum DataSource {
   Withings = "withings",
   Spiir = "spiir",
   SnapCalorie = "snapcalorie",
+  DSB = "dsb",
 }
 
 export const dataSourceGroups = {
@@ -146,6 +152,7 @@ export const dataSourceGroups = {
   weather: [DataSource.Tomorrow],
   health: [DataSource.Withings],
   finance: [DataSource.Spiir],
+  travel: [DataSource.DSB],
 };
 
 export const exerciseIdToDataSourceMapping: Partial<
