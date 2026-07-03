@@ -1,7 +1,14 @@
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
-import { faBus, faExternalLink } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBus,
+  faExternalLink,
+  faPersonWalking,
+  faRoute,
+  faSubway,
+  faTrainTram,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   differenceInDays,
@@ -27,7 +34,6 @@ import {
   DEFAULT_TIMEZONE,
   emptyArray,
   isSameDayButItRespectsDayStartHour,
-  omit,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
@@ -476,31 +482,56 @@ export function DiaryAgendaDayDay({
           id: client.cache.identify(trip) || trip.id,
           element: (
             <DiaryAgendaDayEntry
-              icon={faBus}
+              icon={faRoute}
               cotemporality={cotemporality(trip)}
               key={trip.id}
               id={trip.id}
               __typename={trip.__typename}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
               className={
-                "rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
-                "backdrop-blur-sm " +
+                "rounded-tl rounded-tr pr-0.5 pb-1 pl-0.5 text-sm " +
                 ((isPast(dayRange.start) && allCompleted) ||
                 isPast(dayRange.end)
-                  ? "bg-green-100/75 pt-1"
+                  ? "bg-green-100/25 pt-1"
                   : isToday
-                    ? "bg-yellow-200/75 pt-1"
-                    : "bg-slate-100/75 pt-1")
+                    ? "bg-yellow-200/25 pt-1"
+                    : "bg-slate-100/25 pt-1")
               }
-              iconClassName="w-6 -mr-1"
+              iconClassName="w-9"
             >
-              <pre>
-                {JSON.stringify(
-                  omit(journalEntry, "__typename", "id"),
-                  null,
-                  2,
-                )}
-              </pre>
+              <div className="flex flex-row items-baseline justify-start gap-1 py-0.5">
+                <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
+                  {journalEntry.legs[0]?.from}
+                </span>
+                {journalEntry.legs.map((leg, index, legs) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-start text-[0.666rem] text-gray-500"
+                  >
+                    {leg.mode === "BUS" || leg.mode === "A_BUS" ? (
+                      <FontAwesomeIcon icon={faBus} />
+                    ) : leg.mode === "S_TRAIN" ? (
+                      <FontAwesomeIcon icon={faTrainTram} />
+                    ) : leg.mode === "METRO" ? (
+                      <FontAwesomeIcon icon={faSubway} />
+                    ) : null}
+                    {index < legs.length - 1 ? (
+                      <FontAwesomeIcon
+                        icon={faPersonWalking}
+                        className="-mr-1.5 -ml-0.5 text-[0.5rem] text-gray-500"
+                      />
+                    ) : /* || (
+                          <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
+                            {leg.to}
+                          </span>
+                        )*/
+                    null}
+                  </div>
+                ))}
+                <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
+                  {journalEntry.legs[journalEntry.legs.length - 1]?.to}
+                </span>
+              </div>
             </DiaryAgendaDayEntry>
           ),
         });
