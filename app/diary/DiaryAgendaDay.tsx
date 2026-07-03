@@ -377,7 +377,7 @@ export function DiaryAgendaDay({
             if (
               !("start" in entry) ||
               !entry.start ||
-              isAfter(entry.start, dayStart)
+              !isBefore(entry.start, dayStart)
             ) {
               if (!insertedStart) {
                 addEntryToDate(entry, entry.start);
