@@ -479,17 +479,23 @@ export function DiaryAgendaDayDay({
         const trip = journalEntry;
 
         const fromText = journalEntry.legs[0]?.from
+          .replace("(Metro)", "")
           .replace(/\(.+\)/, "")
           .trim();
-        const fromParanthetical =
-          journalEntry.legs[0]?.from.match(/\((.+)\)/)?.[1];
+        const fromParanthetical = journalEntry.legs[0]?.from
+          .replace("(Metro)", "")
+          .match(/\((.+)\)/)?.[1]
+          ?.trim();
         const toText = journalEntry.legs[journalEntry.legs.length - 1]?.to
+          .replace("(Metro)", "")
           .replace(/\(.+\)/, "")
           .trim();
-        const toParanthetical =
-          journalEntry.legs[journalEntry.legs.length - 1]?.to.match(
-            /\((.+)\)/,
-          )?.[1];
+        const toParanthetical = journalEntry.legs[
+          journalEntry.legs.length - 1
+        ]?.to
+          .replace("(Metro)", "")
+          .match(/\((.+)\)/)?.[1]
+          ?.trim();
         dayJournalEntryElements.push({
           id: client.cache.identify(trip) || trip.id,
           element: (
@@ -523,7 +529,10 @@ export function DiaryAgendaDayDay({
                 {journalEntry.legs.map((leg, index, legs) => (
                   <div
                     key={index}
-                    className="flex items-center justify-start text-[0.666rem] -mt-2.5 text-gray-500"
+                    className={
+                      "flex items-center justify-start text-[0.666rem] text-gray-500 " +
+                      (fromParanthetical && toParanthetical ? "-mt-2.5" : "")
+                    }
                   >
                     {leg.mode === "BUS" || leg.mode === "A_BUS" ? (
                       <FontAwesomeIcon icon={faBus} />
