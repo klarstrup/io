@@ -261,7 +261,7 @@ export function DiaryAgendaDay({
   const data = loading ? previousData || currentData : currentData;
 
   const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
-  const now = useNow(1000, timeZone);
+  const now = useNow(60 * 1000, timeZone);
   const startOfAgendaDay = useMemo(
     () =>
       selectedDayStart
