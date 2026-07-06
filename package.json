@@ -70,7 +70,7 @@
     "react": "^19.2.7",
     "react-apollo-network-status": "^6.0.0",
     "react-dom": "^19.2.7",
-    "react-hook-form": "^7.80.0",
+    "react-hook-form": "^7.81.0",
     "react-markdown": "^10.1.0",
     "react-select": "^5.10.2",
     "remark-gfm": "^4.0.1",
