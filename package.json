@@ -19,7 +19,7 @@
     "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
-    "@apollo/client": "^4.2.5",
+    "@apollo/client": "^4.2.6",
     "@apollo/client-integration-nextjs": "^0.14.5",
     "@apollo/server": "^5.5.1",
     "@as-integrations/next": "^4.1.0",
@@ -55,7 +55,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "google-auth-library": "10.5.0",
-    "graphql": "^16.14.2",
+    "graphql": "^17.0.2",
     "graphql-tag": "^2.12.7",
     "graphql-type-json": "^0.3.2",
     "ical-generator": "^11.0.0",
