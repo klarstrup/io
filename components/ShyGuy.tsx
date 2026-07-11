@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useInView } from "../hooks";
 
 export function ShyGuy({ onSeen }: { onSeen: () => void }) {
-  const { ref, inView } = useInView();
+  const { ref, inView } = useInView({ rootMargin: "24px" });
 
   useEffect(() => {
     if (
