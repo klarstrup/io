@@ -15,16 +15,7 @@ const backgroundElements = [
   >
     io
   </span>,
-  <svg
-    key="io"
-    xmlns="http://www.w3.org/2000/svg"
-    version="1.1"
-    x="0px"
-    y="0px"
-    width="1em"
-    height="1em"
-    viewBox="260 0 360 500"
-  >
+  <svg key="xlr8" width="1em" height="1em" viewBox="260 0 360 500">
     <path
       fill="currentColor"
       stroke="none"
@@ -63,16 +54,10 @@ Z"
   </svg>,
   <svg
     key="EK"
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
-    x="0px"
-    y="0px"
     width="1em"
     height="0.5em"
     viewBox="250 350 4200 1700"
-    style={{
-      transform: "scale(1.5)",
-    }}
+    style={{ transform: "scale(1.5)" }}
   >
     <path
       d="M427.93,673.31c-1.18,101.73,0.22,166.35,4.21,193.86l2.24,15.37c4.64,17.29,31.72,26.21,81.25,26.78
@@ -286,6 +271,20 @@ Z"
     <path d="M2809.64,1091.7" />
     <path d="M2812.39,1095.71" />
   </svg>,
+  <svg key="bh" width="1em" height="1em" viewBox="0 0 283.5 283.5">
+    <g>
+      <path
+        fill="currentColor"
+        d="M179.4,25.6l-48.5,145l9-3.3l9.7,27l-13.5,3.5l-7.4-20.6l-2.6,7.9l5,14l-10.7,2.8l-3.6,10.9l19.5,54.6h131.2
+		L179.4,25.6z M239.9,216.4l-22.9,3.2l-11.8-32.3l22.2-5.3L239.9,216.4z M179.8,193.3l18.3-4.3l11.4,31.6l-18.9,2.6L179.8,193.3z
+		 M183.6,224.1l-16.3,2.2l-10-27.8l15.7-3.7L183.6,224.1z M212.3,140.3l12.4,34.3l-22,5.7L191,148.2L212.3,140.3z M184.3,150.7
+		l11.4,31.5l-18.1,4.7l-10.7-29.7L184.3,150.7z M145.3,165.2l15.1-5.6l10.5,29.1l-15.6,4.1L145.3,165.2z M151.6,200l9.8,27.2
+		l-14.2,2l-9.3-25.9L151.6,200z M120.9,207.3l12.1-2.9l9.1,25.5l-12.4,1.7L120.9,207.3z M140.3,261.3l-8.8-24.5l12.5-1.5l9.2,25.6
+		L140.3,261.3z M158.6,260.8l-9.4-26.1l62.7-7.3l11.5,31.8L158.6,260.8z M219.5,226.5l23.1-2.7l12.5,34.5l-23.8,0.6L219.5,226.5z"
+      />
+      <path d="M78.2,97.5l-62,169.8c22.5,0,50.5,0,76.3,0l84.2-249C134.7,62.3,114.5,78.2,78.2,97.5z" />
+    </g>
+  </svg>,
   // eslint-disable-next-line @next/next/no-img-element
   <img
     key="image"
@@ -293,7 +292,12 @@ Z"
     alt="Vulvatorious Logo"
     width={vulvaLogo.width}
     height={vulvaLogo.height}
-    style={{ minWidth: "1em", height: "auto", transform: "scale(2)" }}
+    style={{
+      minWidth: "1em",
+      height: "auto",
+      transform: "scale(2)",
+      filter: "invert(1)",
+    }}
   />,
   // eslint-disable-next-line @next/next/no-img-element
   <img
