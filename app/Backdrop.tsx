@@ -3,21 +3,20 @@ import muscleFemme from "../public/io_muscle_femme_io.png";
 import UpTransShonkTrans from "../public/UpTransShonkTrans.png";
 
 const backgroundElements = [
-  <span
-    key="trans"
-    className="flex w-[1em] items-center justify-center text-center"
-  >
-    🏳️‍⚧️
-  </span>,
+  <svg key="trans" height="0.8em" viewBox="0 0 800 480">
+    <rect fill="#5BCEFA" width="800" height="480" />
+    <rect fill="#F5A9B8" width="800" height="288" y="96" />
+    <rect fill="#FFF" width="800" height="96" y="192" />
+  </svg>,
   <span
     key="io"
-    className="flex w-[1em] items-center justify-center text-center"
+    className="flex w-[1em] items-center justify-center text-center leading-0 text-black"
   >
     io
   </span>,
-  <svg key="xlr8" width="1em" height="1em" viewBox="260 0 360 500">
+  <svg key="xlr8" height="1em" viewBox="280 0 320 500">
     <path
-      fill="currentColor"
+      fill="black"
       stroke="none"
       d="
 M 561.15 207
@@ -52,13 +51,7 @@ Q 445.3 301.6 450.4 287.05 490.05 271.2 534.05 275 535.9 287.7 530.25 300.2 524.
 Z"
     />
   </svg>,
-  <svg
-    key="EK"
-    width="1em"
-    height="0.5em"
-    viewBox="250 350 4200 1700"
-    style={{ transform: "scale(1.5)" }}
-  >
+  <svg key="EK" width="2em" viewBox="250 350 4200 1700" fill="black">
     <path
       d="M427.93,673.31c-1.18,101.73,0.22,166.35,4.21,193.86l2.24,15.37c4.64,17.29,31.72,26.21,81.25,26.78
 		c24.75,0.29,44.55-0.42,59.38-2.14c14.82-1.71,30.62-5.97,47.39-12.77c31.35-12.01,55.41-42.69,72.13-92.03l21.69,9.94
@@ -271,10 +264,9 @@ Z"
     <path d="M2809.64,1091.7" />
     <path d="M2812.39,1095.71" />
   </svg>,
-  <svg key="bh" width="1em" height="1em" viewBox="0 0 283.5 283.5">
+  <svg key="bh" width="1em" viewBox="0 0 283.5 283.5" fill="black">
     <g>
       <path
-        fill="currentColor"
         d="M179.4,25.6l-48.5,145l9-3.3l9.7,27l-13.5,3.5l-7.4-20.6l-2.6,7.9l5,14l-10.7,2.8l-3.6,10.9l19.5,54.6h131.2
 		L179.4,25.6z M239.9,216.4l-22.9,3.2l-11.8-32.3l22.2-5.3L239.9,216.4z M179.8,193.3l18.3-4.3l11.4,31.6l-18.9,2.6L179.8,193.3z
 		 M183.6,224.1l-16.3,2.2l-10-27.8l15.7-3.7L183.6,224.1z M212.3,140.3l12.4,34.3l-22,5.7L191,148.2L212.3,140.3z M184.3,150.7
@@ -293,9 +285,12 @@ Z"
     width={vulvaLogo.width}
     height={vulvaLogo.height}
     style={{
-      minWidth: "1em",
+      minWidth: "3em",
       height: "auto",
-      transform: "scale(2)",
+      marginLeft: "-0.125em",
+      marginRight: "-0.125em",
+      marginTop: "-0.27em",
+      marginBottom: "-0.24em",
       filter: "invert(1)",
     }}
   />,
@@ -306,7 +301,7 @@ Z"
     alt="Vulvatorious Logo"
     width={muscleFemme.width}
     height={muscleFemme.height}
-    style={{ minWidth: "1em", height: "auto", transform: "scale(2)" }}
+    style={{ minWidth: "2em", height: "auto" }}
   />,
   // eslint-disable-next-line @next/next/no-img-element
   <img
@@ -315,7 +310,7 @@ Z"
     alt="Vulvatorious Logo"
     width={UpTransShonkTrans.width}
     height={UpTransShonkTrans.height}
-    style={{ minWidth: "1em", height: "auto", transform: "scale(1)" }}
+    style={{ minWidth: "0.9em", height: "auto" }}
   />,
 ]; //.slice(0, 1);
 
@@ -330,12 +325,12 @@ for (let i = backgroundElements.length - 1; i > 0; i--) {
 
 export default function Backdrop() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[96px] leading-[1.2em] whitespace-nowrap select-none">
+    <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[96px] leading-[1.2em] whitespace-nowrap opacity-25 select-none">
       {Array.from({ length: 24 }).map((_, i) => (
         <div
           key={i}
           className={
-            "flex flex-1 items-center justify-evenly gap-[1.2em] " +
+            "flex flex-1 items-center justify-evenly gap-2 " +
             (i % 2 ? "ml-[-3.29em]" : "")
           }
         >
