@@ -1,13 +1,15 @@
 import vulvaLogo from "../public/vulvatorious_logo.png";
-import muscleFemme from "../public/io_muscle_femme_io.png";
+import muscleFemme from "../public/io_muscle_femme_black_outline.png";
 import UpTransShonkTrans from "../public/UpTransShonkTrans.png";
 
 const backgroundElements = [
+  /*
   <svg key="trans" height="0.8em" viewBox="0 0 800 480">
     <rect fill="#5BCEFA" width="800" height="480" />
     <rect fill="#F5A9B8" width="800" height="288" y="96" />
     <rect fill="#FFF" width="800" height="96" y="192" />
   </svg>,
+  */
   <span
     key="io"
     className="flex w-[1em] items-center justify-center text-center leading-0 text-black"
@@ -301,7 +303,11 @@ Z"
     alt="Vulvatorious Logo"
     width={muscleFemme.width}
     height={muscleFemme.height}
-    style={{ minWidth: "2em", height: "auto" }}
+    style={{
+      minWidth: "2em",
+      height: "auto",
+      mixBlendMode: "difference",
+    }}
   />,
   // eslint-disable-next-line @next/next/no-img-element
   <img
