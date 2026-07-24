@@ -304,7 +304,7 @@ Z"
     width={muscleFemme.width}
     height={muscleFemme.height}
     style={{
-      minWidth: "2em",
+      minWidth: "2.5em",
       height: "auto",
       mixBlendMode: "difference",
     }}
