@@ -1,6 +1,7 @@
 import vulvaLogo from "../public/vulvatorious_logo.png";
 import muscleFemme from "../public/io_muscle_femme_black_outline.png";
 import UpTransShonkTrans from "../public/UpTransShonkTrans.png";
+import StarAndAntlers from "../public/DE_Communist_Flag_crop_free.png";
 
 const backgroundElements = [
   /*
@@ -12,7 +13,7 @@ const backgroundElements = [
   */
   <span
     key="io"
-    className="flex w-[1em] items-center justify-center text-center leading-0 text-black"
+    className="flex items-center justify-center text-center leading-0 text-black"
   >
     io
   </span>,
@@ -317,6 +318,15 @@ Z"
     width={UpTransShonkTrans.width}
     height={UpTransShonkTrans.height}
     style={{ minWidth: "0.9em", height: "auto" }}
+  />,
+  // eslint-disable-next-line @next/next/no-img-element
+  <img
+    key="image4"
+    src={StarAndAntlers.src}
+    alt="StarAndAntlers"
+    width={StarAndAntlers.width}
+    height={StarAndAntlers.height}
+    style={{ minWidth: "1em", height: "auto" }}
   />,
 ]; //.slice(0, 1);
 
