@@ -49,7 +49,7 @@ import type {
 import type { MongoVTodo } from "./lib";
 import { exercisesById } from "./models/exercises";
 import { AssistType, Unit } from "./models/exercises.types";
-import { Locations } from "./models/location.server";
+import { ensureLocation, Locations } from "./models/location.server";
 import type { ITodoScheduleWithExerciseProgram } from "./models/user";
 import { Accounts, Users } from "./models/user.server";
 import { type WorkoutData, WorkoutSource } from "./models/workout";
@@ -1206,11 +1206,19 @@ export const resolvers: GQResolvers<
 
       const workoutData = args.input.data;
 
+      // Check if locationId is provided and if no such location exists with that
+      // locationId as its name or its _id, create it with that as the name and
+      // use it as the locationId in the workout document
+      const locationId = workoutData.locationId
+        ? await ensureLocation(user.id, workoutData.locationId)
+        : undefined;
+
       const insertResult = await Workouts.insertOne({
         userId: user.id,
         createdAt: new Date(),
         updatedAt: new Date(),
         ...workoutData,
+        locationId,
         workedOutAt: new Date(workoutData.workedOutAt),
         source: workoutData.source as unknown as WorkoutData["source"],
         exercises: workoutData.exercises?.map((exercise) => ({
@@ -1334,11 +1342,19 @@ export const resolvers: GQResolvers<
 
       const inputData = omitUndefined(args.input.data);
 
+      // Check if locationId is provided and if no such location exists with that
+      // locationId as its name or its _id, create it with that as the name and
+      // use it as the locationId in the workout document
+      const locationId = inputData.locationId
+        ? await ensureLocation(user.id, inputData.locationId)
+        : undefined;
+
       const updateResult = await Workouts.updateOne(
         { _id: new ObjectId(workoutId), userId: user.id },
         {
           $set: {
             ...inputData,
+            locationId,
             updatedAt: new Date(),
             workedOutAt: inputData.workedOutAt
               ? new Date(inputData.workedOutAt)
@@ -1560,6 +1576,12 @@ export const resolvers: GQResolvers<
   Workout: {
     location: async (parent) => {
       if (!parent.locationId) return null;
+
+      console.log(
+        "Fetching location for workout",
+        parent.id,
+        parent.locationId,
+      );
 
       const location = await Locations.findOne({
         _id: new ObjectId(parent.locationId),
