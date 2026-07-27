@@ -336,8 +336,14 @@ export const resolvers: GQResolvers<
                   const lastStop = leg.stops[leg.stops.length - 1];
                   return {
                     __typename: "TripLeg",
-                    start: leg.startDateTime,
-                    end: leg.endDateTime,
+                    start:
+                      firstStop!.actualTimeAndTrackInfo?.departureTime ||
+                      firstStop!.plannedTimeAndTrackInfo?.departureTime ||
+                      leg.startDateTime,
+                    end:
+                      lastStop!.actualTimeAndTrackInfo?.arrivalTime ||
+                      lastStop!.plannedTimeAndTrackInfo?.arrivalTime ||
+                      leg.endDateTime,
                     from: firstStop!.location.name,
                     to: lastStop!.location.name,
                     mode: leg.transports[0]?.meansOfTransportation || "unknown",
