@@ -1294,6 +1294,7 @@ export const resolvers: GQResolvers<
           __typename: "Workout",
           ...createdWorkout,
           location: undefined,
+          locationId,
           exercises: createdWorkout.exercises.map(
             (exercise) =>
               ({
@@ -1427,6 +1428,7 @@ export const resolvers: GQResolvers<
           __typename: "Workout",
           ...updatedWorkout,
           location: undefined,
+          locationId,
           exercises: updatedWorkout.exercises.map(
             (exercise) =>
               ({
