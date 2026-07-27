@@ -5,10 +5,10 @@ import {
   faBus,
   faExternalLink,
   faPersonWalking,
-  faRoute,
   faSubway,
   faTrainTram,
 } from "@fortawesome/free-solid-svg-icons";
+import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   differenceInDays,
@@ -500,27 +500,21 @@ export function DiaryAgendaDayDay({
           id: client.cache.identify(trip) || trip.id,
           element: (
             <DiaryAgendaDayEntry
-              icon={faRoute}
+              icon={faRoad}
               cotemporality={cotemporality(trip)}
               key={trip.id}
               id={trip.id}
               __typename={trip.__typename}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
               className={
-                "rounded-tl rounded-tr pr-0.5 pb-1 pl-0.5 text-sm " +
-                ((isPast(dayRange.start) && allCompleted) ||
-                isPast(dayRange.end)
-                  ? "bg-green-100/25 pt-1"
-                  : isToday
-                    ? "bg-yellow-200/25 pt-1"
-                    : "bg-slate-100/25 pt-1")
+                "rounded-tl rounded-tr pt-px pr-0.5 pb-px pl-0.5 text-sm"
               }
-              iconClassName="w-9"
+              iconClassName="w-10 text-[0.666rem]"
             >
-              <div className="flex flex-row items-center justify-start gap-1 py-0.5">
+              <div className="flex flex-row items-center justify-start gap-1">
                 <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
                   <span>{fromText}</span>
-                  {fromParanthetical ? (
+                  {fromParanthetical && "" ? (
                     <span className="-mt-1 text-[0.555rem] text-gray-400">
                       {fromParanthetical}
                     </span>
@@ -531,7 +525,9 @@ export function DiaryAgendaDayDay({
                     key={index}
                     className={
                       "flex items-center justify-start text-[0.666rem] text-gray-500 " +
-                      (fromParanthetical && toParanthetical ? "-mt-2.5" : "")
+                      (fromParanthetical && toParanthetical && ""
+                        ? "-mt-2.5"
+                        : "")
                     }
                   >
                     {leg.mode === "BUS" || leg.mode === "A_BUS" ? (
@@ -556,7 +552,7 @@ export function DiaryAgendaDayDay({
                 ))}
                 <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
                   <span>{toText}</span>
-                  {toParanthetical ? (
+                  {toParanthetical && "" ? (
                     <span className="-mt-1 text-[0.555rem] text-gray-400">
                       {toParanthetical}
                     </span>
