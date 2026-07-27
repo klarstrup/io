@@ -315,22 +315,36 @@ export const resolvers: GQResolvers<
             timestamp: rangeToQuery(interval.start, interval.end),
           }),
           (productSummary) =>
-            productSummary.productSummary.trips.map((trip) =>
+            productSummary.productSummary.trips.map((trip) => {
+              const firstLeg = trip.tripLegs[0];
+              const firstLegFirstStop = firstLeg?.stops[0];
+              const lastLeg = trip.tripLegs[trip.tripLegs.length - 1];
+              const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
               entries.push({
                 __typename: "Trip",
                 id: trip.id,
-                start: trip.tripLegs[0]!.startDateTime,
-                end: trip.tripLegs[trip.tripLegs.length - 1]!.endDateTime,
-                legs: trip.tripLegs.map((leg) => ({
-                  __typename: "TripLeg",
-                  start: leg.startDateTime,
-                  end: leg.endDateTime,
-                  from: leg.stops[0]!.location.name,
-                  to: leg.stops[leg.stops.length - 1]!.location.name,
-                  mode: leg.transports[0]?.meansOfTransportation || "unknown",
-                })),
-              }),
-            ),
+                start:
+                  firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
+                  firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
+                  firstLeg!.startDateTime,
+                end:
+                  lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
+                  lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
+                  lastLeg!.endDateTime,
+                legs: trip.tripLegs.map((leg) => {
+                  const firstStop = leg.stops[0];
+                  const lastStop = leg.stops[leg.stops.length - 1];
+                  return {
+                    __typename: "TripLeg",
+                    start: leg.startDateTime,
+                    end: leg.endDateTime,
+                    from: firstStop!.location.name,
+                    to: lastStop!.location.name,
+                    mode: leg.transports[0]?.meansOfTransportation || "unknown",
+                  };
+                }),
+              });
+            }),
         ),
       );
 
