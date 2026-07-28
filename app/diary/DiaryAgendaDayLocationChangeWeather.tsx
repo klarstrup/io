@@ -76,7 +76,7 @@ export function DiaryAgendaDayLocationChangeWeather({
           alt={prettyPrintWeatherCode(extendedWeatherCode)}
           title={prettyPrintWeatherCode(extendedWeatherCode) + " " + memoDate}
           width={20}
-          className="align-middle"
+          className="align-middle -my-1"
         />
       ) : (
         extendedWeatherCode
