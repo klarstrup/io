@@ -1,7 +1,7 @@
 "use server";
 
 import { waitUntil } from "@vercel/functions";
-import { ObjectId } from "mongodb";
+import { ObjectId, type WithId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import PartySocket from "partysocket";
 import { v4 as uuid } from "uuid";
@@ -15,6 +15,8 @@ import {
   updateLocationCounts,
   Workouts,
 } from "../../models/workout.server";
+import type { MongoTomorrowInterval } from "../../sources/tomorrow";
+import { TomorrowIntervals } from "../../sources/tomorrow.server";
 import type { DataSource, UserDataSource } from "../../sources/utils";
 import { arrayFromAsyncIterable, omit } from "../../utils";
 import { materializeIoWorkouts } from "../api/materialize_workouts/materializers";
@@ -231,3 +233,30 @@ export async function updateLocation(
 
   return { ...omit(newLocation, "_id"), id: newLocation._id.toString() };
 }
+
+export const getClosestTomorrowInterval = async (
+  date: Date,
+  point: { latitude: number; longitude: number },
+) =>
+  TomorrowIntervals.aggregate<
+    WithId<MongoTomorrowInterval> & { diffTime: number; distance: number }
+  >([
+    {
+      $geoNear: {
+        distanceField: "distance",
+        near: { type: "Point", coordinates: [point.longitude, point.latitude] },
+      },
+    },
+    { $addFields: { diffTime: { $abs: { $subtract: ["$startTime", date] } } } },
+    { $sort: { diffTime: 1, distance: 1 } },
+    { $limit: 1 },
+  ])
+    .toArray()
+    .then((results) => results[0] || null)
+    .then(
+      (result) =>
+        result && {
+          ...result,
+          _id: result._id.toString(),
+        },
+    );

@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { useMemo } from "react";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
+import { DiaryAgendaDayLocationChangeWeather } from "./DiaryAgendaDayLocationChangeWeather";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayLocationChange({
@@ -62,9 +63,10 @@ export function DiaryAgendaDayLocationChange({
     >
       <center
         key={locationChange.id}
-        className="-ml-6 w-full text-xs leading-none font-medium opacity-75 [font-variant:small-caps]"
+        className="-ml-6 w-full text-xs items-center gap-1 justify-center flex leading-none font-medium opacity-75 [font-variant:small-caps]"
       >
-        {locationChange.location.replace(/\d\d\d\d (.+), Denmark/g, "$1")}
+        {locationChange.location.replace(/\d\d\d\d (.+), Denmark/g, "$1")}{" "}
+        <DiaryAgendaDayLocationChangeWeather date={locationChange.date} />
       </center>
     </DiaryAgendaDayEntry>
   );
