@@ -576,6 +576,7 @@ export function DiaryAgendaDay({
             const entryIsEnd =
               "_this_is_the_end_of_a_event" in entry &&
               entry._this_is_the_end_of_a_event;
+
             const entryPricipalDate = getJournalEntryPrincipalDate(entry);
             const previousEntryPrincipalDate = previousEntry
               ? getJournalEntryPrincipalDate(previousEntry)
@@ -599,16 +600,18 @@ export function DiaryAgendaDay({
                 : entryPricipalDate?.start) || dayRange.end,
             );
 
-            // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
-            dayJournalEntriesIncludingLocationChanges.push({
-              __typename: "LocationChange",
-              id: `location-change-${targetDate.toISOString()}`,
-              location: location.name,
-              date: targetDate,
-            });
+            if (!entryIsEnd) {
+              // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
+              dayJournalEntriesIncludingLocationChanges.push({
+                __typename: "LocationChange",
+                id: `location-change-${targetDate.toISOString()}`,
+                location: location.name,
+                date: targetDate,
+              });
 
-            // eslint-disable-next-line react-hooks/immutability
-            lastLocation = location;
+              // eslint-disable-next-line react-hooks/immutability
+              lastLocation = location;
+            }
           }
 
           dayJournalEntriesIncludingLocationChanges.push(entry);
