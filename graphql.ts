@@ -12,7 +12,6 @@ import {
   startOfDay,
   subDays,
 } from "date-fns";
-import { OAuth2Client } from "google-auth-library";
 import {
   type DocumentNode,
   GraphQLScalarType,
@@ -24,7 +23,7 @@ import gql from "graphql-tag";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
-import { auth } from "./auth";
+import { auth, ensureGoogleAuth } from "./auth";
 import type {
   GQCreateTodoPayload,
   GQEvent,
@@ -51,7 +50,7 @@ import { exercisesById } from "./models/exercises";
 import { AssistType, Unit } from "./models/exercises.types";
 import { ensureLocation, Locations } from "./models/location.server";
 import type { ITodoScheduleWithExerciseProgram } from "./models/user";
-import { Accounts, Users } from "./models/user.server";
+import { Users } from "./models/user.server";
 import { type WorkoutData, WorkoutSource } from "./models/workout";
 import {
   getNextSets,
@@ -709,63 +708,11 @@ export const resolvers: GQResolvers<
       const user = context?.user ?? (await auth())?.user;
       if (!user) throw new Error("Unauthorized");
 
-      const userGoogleAccount = await Accounts.findOne({
-        userId: new ObjectId(user.id) as unknown as string,
-        provider: "google",
-      });
-      if (!userGoogleAccount)
-        throw new Error("Google account not found for user");
-
-      // Authenticate with Google and get an authorized client.
-
-      const oAuth2Client = new OAuth2Client({
-        clientId: process.env.AUTH_GOOGLE_ID!,
-        clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-      });
-      oAuth2Client.setCredentials({
-        access_token: userGoogleAccount.access_token,
-        refresh_token: userGoogleAccount.refresh_token,
-        token_type: userGoogleAccount.token_type,
-        scope: userGoogleAccount.scope,
-        expiry_date: userGoogleAccount.expires_at,
-        id_token: userGoogleAccount.id_token,
-      });
-
-      const getAccessTokenResponse = await oAuth2Client.getAccessToken();
-      if (getAccessTokenResponse.token) {
-        const credentials =
-          (getAccessTokenResponse.res?.data as Parameters<
-            Parameters<OAuth2Client["refreshAccessToken"]>[0]
-          >[1]) || oAuth2Client.credentials;
-
-        // This is present when it refreshes the access token using a refresh token i think
-        if (credentials && "access_token" in credentials) {
-          await Accounts.updateOne(
-            { providerAccountId: userGoogleAccount.providerAccountId },
-            {
-              $set: {
-                access_token: credentials.access_token ?? undefined,
-                refresh_token: credentials.refresh_token ?? undefined,
-                token_type:
-                  (credentials.token_type as
-                    Lowercase<string> | null | undefined) ?? undefined,
-                scope: credentials.scope ?? undefined,
-                expires_at: credentials.expiry_date ?? undefined,
-                id_token: credentials.id_token ?? undefined,
-              },
-            },
-          );
-        } else {
-          await Accounts.updateOne(
-            { providerAccountId: userGoogleAccount.providerAccountId },
-            { $set: { access_token: getAccessTokenResponse.token } },
-          );
-        }
-      }
+      const oAuth2Client = await ensureGoogleAuth(user.id);
 
       const gm = gmail({ version: "v1", auth: oAuth2Client });
 
-      const { data } = await gm.users.messages.list({
+      const { data } = await gm.users.threads.list({
         userId: "me",
         q: "in:inbox",
       });
