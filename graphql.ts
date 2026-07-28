@@ -710,7 +710,8 @@ export const resolvers: GQResolvers<
 
       const oAuth2Client = await ensureGoogleAuth(user.id);
 
-      // @ts-expect-error: The types for the gmail API are not correct, the auth property should be of type OAuth2Client, but it is typed as string | OAuth2Client | JWT | Compute | UserRefreshClient
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore-error: The types for the gmail API are not correct, the auth property should be of type OAuth2Client, but it is typed as string | OAuth2Client | JWT | Compute | UserRefreshClient
       const gm = gmail({ version: "v1", auth: oAuth2Client });
 
       const { data } = await gm.users.threads.list({
