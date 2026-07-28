@@ -60,6 +60,7 @@ export const GET = () =>
 
     await TomorrowIntervals.createIndexes([
       { key: { _io_geohash: 1, startTime: 1 } },
+      { key: { _io_point: "2dsphere" } },
     ]);
 
     yield* wrapSources(
