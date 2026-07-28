@@ -312,6 +312,7 @@ export const resolvers: GQResolvers<
           DSBProductSummaries.find({
             _io_userId: userId,
             timestamp: rangeToQuery(interval.start, interval.end),
+            "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
           }),
           (productSummary) =>
             productSummary.productSummary.trips.map((trip) => {
