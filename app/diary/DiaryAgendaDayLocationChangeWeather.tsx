@@ -56,10 +56,7 @@ export function DiaryAgendaDayLocationChangeWeather({
   if (!weather) return null;
 
   const extendedWeatherCode = `${weather.values.weatherCode}${Number(
-    !isWithinInterval(weather.startTime, {
-      start: sunrise,
-      end: sunset,
-    }),
+    !isWithinInterval(date, { start: sunrise, end: sunset }),
   )}`;
 
   const dayWeatherCode = extendedWeatherCode.substring(0, 4) + "0";
@@ -86,7 +83,7 @@ export function DiaryAgendaDayLocationChangeWeather({
       )}{" "}
       <span>
         {Math.floor(weather.values?.temperatureApparent ?? 0)}
-        <span className="text-[0.444rem] align-super">℃</span>
+        <span className="align-super text-[0.444rem]">℃</span>
       </span>
       {weather.values.precipitationProbability > 0 &&
       weather.values.precipitationIntensity >= 0.2 ? (
