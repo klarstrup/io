@@ -84,7 +84,10 @@ export function DiaryAgendaDayLocationChangeWeather({
       ) : (
         extendedWeatherCode
       )}{" "}
-      {Math.floor(weather.values?.temperatureApparent ?? 0)}℃
+      <span>
+        {Math.floor(weather.values?.temperatureApparent ?? 0)}
+        <span className="text-[0.444rem] align-super">℃</span>
+      </span>
       {weather.values.precipitationProbability > 0 &&
       weather.values.precipitationIntensity >= 0.2 ? (
         <div>
