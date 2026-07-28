@@ -3,6 +3,10 @@ import { TomorrowIntervals } from "./tomorrow.server";
 
 export interface TomorrowIoMeta {
   _io_geohash: string;
+  _io_point?: {
+    type: "Point";
+    coordinates: [longitude: number, latitude: number];
+  };
 }
 
 export interface TomorrowResponseTimelineInterval {
@@ -33,7 +37,8 @@ export interface TomorrowResponse {
   };
 }
 export interface MongoTomorrowInterval
-  extends Omit<TomorrowResponseTimelineInterval, "startTime">,
+  extends
+    Omit<TomorrowResponseTimelineInterval, "startTime">,
     ScrapedAt,
     TomorrowIoMeta {
   startTime: Date;

@@ -69,6 +69,7 @@ export const GET = () =>
         setUpdated(false);
 
         const truncatedGeohash = geohash.slice(0, 4);
+        const point = decodeGeohash(geohash);
         const intervals = await fetchTomorrowTimelineIntervals({
           geohash: truncatedGeohash,
         });
@@ -82,6 +83,10 @@ export const GET = () =>
                 ...interval,
                 startTime,
                 _io_geohash: truncatedGeohash,
+                _io_point: {
+                  type: "Point",
+                  coordinates: [point.longitude, point.latitude],
+                },
               },
               $setOnInsert: { _io_scrapedAt: new Date() },
             },
