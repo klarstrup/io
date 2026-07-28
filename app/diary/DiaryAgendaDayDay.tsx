@@ -1,14 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
-import {
-  faBus,
-  faExternalLink,
-  faPersonWalking,
-  faSubway,
-  faTrainTram,
-} from "@fortawesome/free-solid-svg-icons";
-import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
+import { faExternalLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   differenceInDays,
@@ -46,6 +39,7 @@ import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
+import { DiaryAgendaDayTrip } from "./DiaryAgendaDayTrip";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
 import { TodoSortableContext } from "./TodoDroppable";
 import {
@@ -478,88 +472,13 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Trip") {
         const trip = journalEntry;
 
-        const fromText = journalEntry.legs[0]?.from
-          .replace("(Metro)", "")
-          .replace(/\(.+\)/, "")
-          .trim();
-        const fromParanthetical = journalEntry.legs[0]?.from
-          .replace("(Metro)", "")
-          .match(/\((.+)\)/)?.[1]
-          ?.trim();
-        const toText = journalEntry.legs[journalEntry.legs.length - 1]?.to
-          .replace("(Metro)", "")
-          .replace(/\(.+\)/, "")
-          .trim();
-        const toParanthetical = journalEntry.legs[
-          journalEntry.legs.length - 1
-        ]?.to
-          .replace("(Metro)", "")
-          .match(/\((.+)\)/)?.[1]
-          ?.trim();
         dayJournalEntryElements.push({
           id: client.cache.identify(trip) || trip.id,
           element: (
-            <DiaryAgendaDayEntry
-              icon={faRoad}
-              cotemporality={cotemporality(trip)}
-              key={trip.id}
-              id={trip.id}
-              __typename={trip.__typename}
+            <DiaryAgendaDayTrip
+              trip={trip}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-              className={
-                "rounded-tl rounded-tr pt-px pr-0.5 pb-px pl-0.5 text-sm"
-              }
-              iconClassName="w-10 text-[0.666rem]"
-            >
-              <div className="flex flex-row items-center justify-start gap-1">
-                <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
-                  <span>{fromText}</span>
-                  {fromParanthetical && "" ? (
-                    <span className="-mt-1 text-[0.555rem] text-gray-400">
-                      {fromParanthetical}
-                    </span>
-                  ) : null}
-                </div>
-                {journalEntry.legs.map((leg, index, legs) => (
-                  <div
-                    key={index}
-                    className={
-                      "flex items-center justify-start text-[0.666rem] text-gray-500 " +
-                      (fromParanthetical && toParanthetical && ""
-                        ? "-mt-2.5"
-                        : "")
-                    }
-                  >
-                    {leg.mode === "BUS" || leg.mode === "A_BUS" ? (
-                      <FontAwesomeIcon icon={faBus} />
-                    ) : leg.mode === "S_TRAIN" ? (
-                      <FontAwesomeIcon icon={faTrainTram} />
-                    ) : leg.mode === "METRO" ? (
-                      <FontAwesomeIcon icon={faSubway} />
-                    ) : null}
-                    {index < legs.length - 1 ? (
-                      <FontAwesomeIcon
-                        icon={faPersonWalking}
-                        className="-mr-1.5 -ml-0.5 text-[0.5rem] text-gray-500"
-                      />
-                    ) : /* || (
-                          <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
-                            {leg.to}
-                          </span>
-                        )*/
-                    null}
-                  </div>
-                ))}
-                <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
-                  <span>{toText}</span>
-                  {toParanthetical && "" ? (
-                    <span className="-mt-1 text-[0.555rem] text-gray-400">
-                      {toParanthetical}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            </DiaryAgendaDayEntry>
+            />
           ),
         });
       }
