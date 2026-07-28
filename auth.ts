@@ -108,6 +108,5 @@ export const ensureGoogleAuth = async (userId: string) => {
   }
 
   // Diverging private 'redirectUri' fields
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-  return oAuth2Client as unknown as import("/Users/io/code/io/node_modules/googleapis-common/node_modules/google-auth-library/build/src/auth/oauth2client").OAuth2Client;
+  return oAuth2Client;
 };
