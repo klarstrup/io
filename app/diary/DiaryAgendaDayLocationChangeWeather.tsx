@@ -53,14 +53,15 @@ export function DiaryAgendaDayLocationChangeWeather({
       });
   }, [memoDate, finalGeohash]);
 
-  const extendedWeatherCode = weather
-    ? `${weather.values.weatherCode}${Number(
-        !isWithinInterval(weather.startTime, {
-          start: sunrise,
-          end: sunset,
-        }),
-      )}`
-    : "0000";
+  if (!weather) return null;
+
+  const extendedWeatherCode = `${weather.values.weatherCode}${Number(
+    !isWithinInterval(weather.startTime, {
+      start: sunrise,
+      end: sunset,
+    }),
+  )}`;
+
   const dayWeatherCode = extendedWeatherCode.substring(0, 4) + "0";
   const weatherIcon =
     (extendedWeatherCode in weatherIconsByCode &&
@@ -83,17 +84,16 @@ export function DiaryAgendaDayLocationChangeWeather({
       ) : (
         extendedWeatherCode
       )}{" "}
-      {Math.floor(weather?.values?.temperatureApparent ?? 0)}℃
-      {weather &&
-      weather?.values.precipitationProbability > 0 &&
-      weather?.values.precipitationIntensity >= 0.2 ? (
+      {Math.floor(weather.values?.temperatureApparent ?? 0)}℃
+      {weather.values.precipitationProbability > 0 &&
+      weather.values.precipitationIntensity >= 0.2 ? (
         <div>
           <span className="align-middle text-lg">
-            {weather?.values.precipitationIntensity.toFixed(2)}
+            {weather.values.precipitationIntensity.toFixed(2)}
           </span>
           <sup className="text-sm">mm</sup>
           <sub className="-ml-2 text-sm" title="Precipitation Probability">
-            {weather?.values.precipitationProbability.toFixed(0)}%
+            {weather.values.precipitationProbability.toFixed(0)}%
           </sub>
         </div>
       ) : null}
