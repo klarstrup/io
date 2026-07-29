@@ -1,6 +1,6 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
-import { isWithinInterval } from "date-fns";
+import { addMilliseconds, isWithinInterval } from "date-fns";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -42,7 +42,7 @@ export function DiaryAgendaDayLocationChangeWeather({
 
   useEffect(() => {
     void getClosestTomorrowInterval(
-      new Date(memoDate),
+      addMilliseconds(new Date(memoDate), 1),
       decodeGeohash(finalGeohash || "u4pruyd"),
     )
       .then((interval) => {
@@ -76,7 +76,7 @@ export function DiaryAgendaDayLocationChangeWeather({
           alt={prettyPrintWeatherCode(extendedWeatherCode)}
           title={prettyPrintWeatherCode(extendedWeatherCode) + " " + memoDate}
           width={20}
-          className="align-middle -my-1"
+          className="-my-1 align-middle"
         />
       ) : (
         extendedWeatherCode

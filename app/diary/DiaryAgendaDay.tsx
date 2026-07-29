@@ -15,6 +15,7 @@ import {
   startOfDay,
   subDays,
   subHours,
+  subMilliseconds,
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
@@ -581,7 +582,7 @@ export function DiaryAgendaDay({
             const previousEntryPrincipalDate = previousEntry
               ? getJournalEntryPrincipalDate(previousEntry)
               : null;
-            const targetDate = dateMidpoint(
+            const targetDateFrom =
               (previousEntry &&
                 previousEntryPrincipalDate &&
                 entryPricipalDate &&
@@ -594,11 +595,12 @@ export function DiaryAgendaDay({
                     entryPricipalDate.start,
                   ].filter(Boolean),
                 )) ||
-                dayRange.start,
+              dayRange.start;
+            const targetDateTo =
               (entryIsEnd
                 ? entryPricipalDate?.end
-                : entryPricipalDate?.start) || dayRange.end,
-            );
+                : entryPricipalDate?.start) || dayRange.end;
+            const targetDate = dateMidpoint(targetDateFrom, targetDateTo);
 
             if (!entryIsEnd) {
               // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
@@ -606,7 +608,8 @@ export function DiaryAgendaDay({
                 __typename: "LocationChange",
                 id: `location-change-${targetDate.toISOString()}`,
                 location: location.name,
-                date: targetDate,
+                start: targetDate,
+                end: subMilliseconds(targetDateTo, 1),
               });
 
               // eslint-disable-next-line react-hooks/immutability

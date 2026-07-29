@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayLocationChangeWeather } from "./DiaryAgendaDayLocationChangeWeather";
+import type { LocationChange } from "./diaryUtils";
 import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 export function DiaryAgendaDayLocationChange({
@@ -10,12 +11,7 @@ export function DiaryAgendaDayLocationChange({
   cotemporalityOfSurroundingEvent,
   className,
 }: {
-  locationChange: {
-    __typename: "LocationChange";
-    id: string;
-    location: string;
-    date: Date;
-  };
+  locationChange: LocationChange;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   className?: string;
 }) {
@@ -30,7 +26,7 @@ export function DiaryAgendaDayLocationChange({
     id: locationChange.id,
     data: {
       locationChange,
-      date: getJournalEntryPrincipalDate(locationChange)?.end,
+      date: getJournalEntryPrincipalDate(locationChange)?.start,
     },
     disabled: true,
   });
@@ -63,10 +59,10 @@ export function DiaryAgendaDayLocationChange({
     >
       <center
         key={locationChange.id}
-        className="-ml-6 w-full text-xs items-center gap-1 justify-center flex leading-none font-medium opacity-75 [font-variant:small-caps]"
+        className="-ml-6 flex w-full items-center justify-center gap-1 text-xs leading-none font-medium opacity-75 [font-variant:small-caps]"
       >
         {locationChange.location.replace(/\d\d\d\d (.+), Denmark/g, "$1")}{" "}
-        <DiaryAgendaDayLocationChangeWeather date={locationChange.date} />
+        <DiaryAgendaDayLocationChangeWeather date={locationChange.end} />
       </center>
     </DiaryAgendaDayEntry>
   );

@@ -40,7 +40,7 @@ export type JournalEntry =
   | GQTrip
   | (GQSleep & { _this_is_the_end_of_a_sleep: true })
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
-  | { __typename: "LocationChange"; id: string; location: string; date: Date }
+  | LocationChange
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
 
 const getWorkoutPrincipalDate = (
@@ -109,6 +109,17 @@ export const getTodoPrincipalDate = (
   }
   return { start: slightlyIntoTheFuture, end: slightlyIntoTheFuture };
 };
+
+// Fake client-only type for location changes, which are not stored in the database but are generated on the fly when rendering the diary agenda
+export interface LocationChange {
+  __typename: "LocationChange";
+  id: string;
+  location: string;
+  /** Represents halfway between the precending and following entries */
+  start: Date;
+  /** Represents immediately before the entry this is location change for */
+  end: Date;
+}
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
@@ -184,7 +195,7 @@ export const getJournalEntryPrincipalDate = (
   }
 
   if (entry.__typename === "LocationChange") {
-    return { start: entry.date, end: entry.date };
+    return { start: entry.start, end: entry.end };
   }
 
   return null;
