@@ -14,7 +14,7 @@ if (!uri) {
     "Please define the MONGODB_URI environment variable inside .env.local",
   );
 }
-const options: MongoClientOptions = {};
+const options: MongoClientOptions = { appName: "io" };
 
 let client: MongoClient;
 if (process.env.NODE_ENV === "development") {
