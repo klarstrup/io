@@ -82,7 +82,7 @@ export default function UserStuff() {
         </Suspense>
       </div>
       {isSettingsBarOpen && (
-        <div className="absolute top-full left-1/2 z-100 w-[95%] -translate-x-1/2 transform">
+        <div className="absolute left-1/2 z-100 w-[95%] -translate-x-1/2 transform pointer-coarse:bottom-full pointer-fine:top-full">
           <UserLayoutLinks className="m-0" />
         </div>
       )}

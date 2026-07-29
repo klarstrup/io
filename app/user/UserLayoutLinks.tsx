@@ -5,7 +5,7 @@ export function UserLayoutLinks({ className }: { className?: string }) {
   return (
     <div
       className={twMerge(
-        `mx-2 mb-4 flex items-center justify-evenly gap-x-1 overflow-hidden rounded-b-2xl border border-t-0 border-black/25 bg-[#edab00] px-1 py-2 backdrop-blur-lg`,
+        `mx-2 mb-4 flex items-center justify-evenly gap-x-1 overflow-hidden border border-black/25 bg-[#edab00] px-1 py-2 backdrop-blur-lg pointer-coarse:rounded-t-2xl pointer-coarse:border-b-0 pointer-fine:rounded-b-2xl pointer-fine:border-t-0`,
         className,
       )}
     >
