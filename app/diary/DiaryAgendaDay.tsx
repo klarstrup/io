@@ -9,6 +9,7 @@ import {
   endOfDay,
   isAfter,
   isBefore,
+  isEqual,
   isPast,
   max,
   min,
@@ -519,7 +520,25 @@ export function DiaryAgendaDay({
                   entries[i - 1]?.id === entry.id &&
                   cotemporality(entry) !== "current"
                 ),
-            );
+            )
+            // If the previous entry a fully coincident event, we skip the end entry
+            .filter((entry, i, entries) => {
+              const previousEntry = entries[i - 1];
+              if (
+                entry.__typename === "Event" &&
+                previousEntry?.__typename === "Event"
+              ) {
+                if (
+                  "_this_is_the_end_of_a_event" in entry &&
+                  entry._this_is_the_end_of_a_event &&
+                  isEqual(entry.start, previousEntry.start) &&
+                  isEqual(entry.end, previousEntry.end)
+                ) {
+                  return false;
+                }
+              }
+              return true;
+            });
 
           return [dayRange, dayJournalEntries] as const;
         }),
