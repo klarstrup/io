@@ -18,6 +18,7 @@ import { omitUndefined } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
 import { getTodoPrincipalDate } from "./diaryUtils";
+import { twMerge } from "tailwind-merge";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -34,10 +35,14 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   todo,
   cotemporalityOfSurroundingEvent,
   now,
+  className,
+  backlog,
 }: {
   todo: GQTodo;
   cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
   now: Date;
+  className?: string;
+  backlog?: boolean;
 }) {
   const client = useApolloClient();
   const {
@@ -50,6 +55,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   } = useSortable({
     id: client.cache.identify(todo) || todo.id,
     data: { todo, date: getTodoPrincipalDate(todo)?.start },
+    disabled: backlog,
   });
 
   const [updateTodo] = useMutation(
@@ -168,7 +174,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       {...attributes}
       id={todo.id}
       __typename={todo.__typename}
-      icon={faCircleCheck}
+      icon={backlog ? undefined : faCircleCheck}
       onIconClick={handleIconClick}
       // this should cope with todos with deadlines when that is implemented
       cotemporality={
@@ -181,7 +187,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       cotemporalityOfSurroundingEvent={
         !isDragging ? cotemporalityOfSurroundingEvent : undefined
       }
-      className={"select-none"}
+      className={twMerge("select-none", className)}
     >
       <div
         ref={ref2}
@@ -189,6 +195,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
         className={
           (isActive ? "flex rounded-b-none" : "inline-flex cursor-pointer") +
           " group relative break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +
+          (backlog ? " bg-white/50 " : " bg-white ") +
           (todo.completed ? " flex-col-reverse" : "")
         }
         onClick={() => setIsActive(true)}
@@ -349,7 +356,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                     })
                   }
                   className={
-                    "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                    "text-md cursor-pointer rounded-xl bg-blue-300/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                   }
                 >
                   Put in Backlog
@@ -372,7 +379,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                   })
                 }
                 className={
-                  "text-md cursor-pointer rounded-xl bg-blue-500/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+                  "text-md cursor-pointer rounded-xl bg-blue-300/80 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
                 }
               >
                 Put on Agenda

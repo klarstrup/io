@@ -1,16 +1,25 @@
 import { forwardRef, type HTMLProps } from "react";
 import { twMerge } from "tailwind-merge";
 
-export const FieldSetY = ({
-  children,
-  legend,
-  className,
-  ...props
-}: HTMLProps<HTMLFieldSetElement> & {
-  legend: HTMLProps<HTMLFieldSetElement>["children"];
-}) => {
+export const FieldSetY = forwardRef<
+  HTMLFieldSetElement,
+  HTMLProps<HTMLFieldSetElement> & {
+    legend: HTMLProps<HTMLFieldSetElement>["children"];
+  }
+>(function FieldSetY(
+  {
+    children,
+    legend,
+    className,
+    ...props
+  }: HTMLProps<HTMLFieldSetElement> & {
+    legend: HTMLProps<HTMLFieldSetElement>["children"];
+  },
+  ref,
+) {
   return (
     <fieldset
+      ref={ref}
       {...props}
       className={twMerge(
         "flex-1 rounded-lg border-x-0 border-y-3 border-gray-900/20 px-1 pt-1 pb-2",
@@ -21,7 +30,7 @@ export const FieldSetY = ({
       {children}
     </fieldset>
   );
-};
+});
 
 export const FieldSetX = forwardRef<
   HTMLFieldSetElement,

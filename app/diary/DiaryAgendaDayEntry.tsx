@@ -45,74 +45,76 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
 
   return (
     <div ref={ref} {...props} className={twMerge("relative flex", className)}>
-      <IconContainer
-        disabled={iconDisabled}
-        className={twMerge(
-          "text-md flex w-10 items-center justify-center",
-          cotemporality
-            ? cotemporality === "past"
-              ? "text-green-400"
-              : cotemporality === "current"
-                ? "text-[#EDAB00]"
-                : cotemporality === "backlog"
-                  ? "text-blue-400"
-                  : "text-gray-500"
-            : "text-gray-500",
-          onIconClick ? "cursor-pointer" : "",
-          iconClassName ?? "",
-        )}
-        onClick={onIconClick}
-      >
-        {cotemporalityOfSurroundingEvent ? (
-          <div
-            className={
-              "absolute -top-1 -bottom-1 left-0.5 w-2 border-l-2 " +
-              (cotemporalityOfSurroundingEvent === "past"
-                ? " border-green-400"
-                : cotemporalityOfSurroundingEvent === "current"
-                  ? " border-[#EDAB00]"
+      {icon || iconTxt ? (
+        <IconContainer
+          disabled={iconDisabled}
+          className={twMerge(
+            "text-md flex w-10 items-center justify-center",
+            cotemporality
+              ? cotemporality === "past"
+                ? "text-green-400"
+                : cotemporality === "current"
+                  ? "text-[#EDAB00]"
+                  : cotemporality === "backlog"
+                    ? "text-white"
+                    : "text-gray-500"
+              : "text-gray-500",
+            onIconClick ? "cursor-pointer" : "",
+            iconClassName ?? "",
+          )}
+          onClick={onIconClick}
+        >
+          {cotemporalityOfSurroundingEvent ? (
+            <div
+              className={
+                "absolute -top-1 -bottom-1 left-0.5 w-2 border-l-2 " +
+                (cotemporalityOfSurroundingEvent === "past"
+                  ? " border-green-400"
+                  : cotemporalityOfSurroundingEvent === "current"
+                    ? " border-[#EDAB00]"
+                    : " border-gray-500")
+              }
+            />
+          ) : null}
+          {isEventWithSeparatedEnd ? (
+            <div
+              className={
+                "absolute top-1/2 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
+                (cotemporality
+                  ? cotemporality === "past"
+                    ? " border-green-400"
+                    : cotemporality === "current"
+                      ? " border-[#EDAB00]"
+                      : " border-gray-500"
                   : " border-gray-500")
-            }
-          />
-        ) : null}
-        {isEventWithSeparatedEnd ? (
-          <div
-            className={
-              "absolute top-1/2 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
-              (cotemporality
-                ? cotemporality === "past"
-                  ? " border-green-400"
-                  : cotemporality === "current"
-                    ? " border-[#EDAB00]"
-                    : " border-gray-500"
-                : " border-gray-500")
-            }
-          />
-        ) : null}
-        {isEventEnd ? (
-          <div
-            className={
-              "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
-              (cotemporality
-                ? cotemporality === "past"
-                  ? " border-green-400"
-                  : cotemporality === "current"
-                    ? " border-[#EDAB00]"
-                    : " border-gray-500"
-                : " border-gray-500")
-            }
-          />
-        ) : null}
-        {icon ? (
-          <FontAwesomeIcon
-            icon={icon}
-            size="lg"
-            className={onIconClick ? "cursor-pointer" : ""}
-          />
-        ) : iconTxt ? (
-          iconTxt
-        ) : null}
-      </IconContainer>
+              }
+            />
+          ) : null}
+          {isEventEnd ? (
+            <div
+              className={
+                "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
+                (cotemporality
+                  ? cotemporality === "past"
+                    ? " border-green-400"
+                    : cotemporality === "current"
+                      ? " border-[#EDAB00]"
+                      : " border-gray-500"
+                  : " border-gray-500")
+              }
+            />
+          ) : null}
+          {icon ? (
+            <FontAwesomeIcon
+              icon={icon}
+              size="lg"
+              className={onIconClick ? "cursor-pointer" : ""}
+            />
+          ) : iconTxt ? (
+            iconTxt
+          ) : null}
+        </IconContainer>
+      ) : null}
       <div
         className={
           "relative flex flex-1 items-start justify-start " +

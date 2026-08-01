@@ -768,7 +768,7 @@ export function DiaryAgendaDay({
       ) : null}
       <div
         className={
-          "flex flex-col items-stretch justify-center px-2 lg:flex-row lg:gap-5 lg:self-start lg:justify-self-center lg:px-0 lg:py-2"
+          "flex flex-col items-stretch justify-center px-2 lg:flex-1 lg:flex-row lg:gap-5 lg:self-start lg:justify-self-center lg:px-0 lg:py-2"
         }
       >
         <ShyGuy

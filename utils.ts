@@ -154,14 +154,23 @@ export function jsonReadableStreamFromAsyncIterable<T>(
   return responseStream.readable;
 }
 
-export const shuffle = <A>(arrRaw?: A[]): A[] => {
+export const shuffle = <A>(arrRaw?: A[], seed?: number): A[] => {
   if (!arrRaw?.length) return [];
   const arr = [...arrRaw];
   return arr.reduceRight<A[]>((acc) => {
-    acc.push(arr.splice(0 | (Math.random() * arr.length), 1)[0]!);
+    acc.push(
+      arr.splice(
+        0 | ((seed !== undefined ? seededRandom(seed) : Math.random()) * arr.length),
+        1,
+      )[0]!,
+    );
     return acc;
   }, []);
 };
+function seededRandom(seed: number) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
 
 export const getMaxAgeFactor = (eventInterval: Interval, now = Date.now()) =>
   isWithinInterval(new Date(), eventInterval)

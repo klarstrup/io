@@ -51,7 +51,10 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
     <div
       ref={setNodeRef}
       className={
-        "lg:w-[40vw] lg:max-w-xl "+(isOver ? "rounded-lg outline-4 outline-offset-4 outline-purple-500" : "")
+        "flex lg:h-full lg:w-[40vw] lg:max-w-xl flex-col items-center lg:items-stretch " +
+        (isOver
+          ? "rounded-lg outline-4 outline-offset-4 outline-purple-500"
+          : "")
       }
     >
       {props.children}
