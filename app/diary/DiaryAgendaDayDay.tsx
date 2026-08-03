@@ -591,7 +591,7 @@ export function DiaryAgendaDayDay({
             {dayJournalItems.map(({ element }) => element)}
           </TodoSortableContext>
         ) : (
-          <DiaryAgendaDayEntry className="text-gray-400/50 italic">
+          <DiaryAgendaDayEntry className="text-gray-400/50 italic pl-10">
             {isPast(dayRange.end) ? "Nothing logged" : "Nothing planned"}
           </DiaryAgendaDayEntry>
         )}
