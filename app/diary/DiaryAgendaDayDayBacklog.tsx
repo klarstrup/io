@@ -60,7 +60,7 @@ export default function DiaryAgendaDayDayBacklog({
   return (
     backlogTodos.length > 0 && (
       <FieldSetY
-        className="mt-2 mb-4 flex w-full max-w-lg flex-wrap justify-evenly gap-1 bg-[#edab00]/10 p-0 backdrop-blur-sm lg:max-w-none"
+        className="mt-2 mb-4 flex w-full max-w-lg flex-wrap justify-evenly gap-1 bg-[#edab00]/10 p-0 pt-1 backdrop-blur-sm lg:max-w-none"
         legend={null}
       >
         {todosToShow.map((todo) => (
