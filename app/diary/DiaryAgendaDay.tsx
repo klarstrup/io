@@ -258,9 +258,11 @@ export function DiaryAgendaDay({
     previousData,
     variables: queryVariables,
     loading,
+    networkStatus,
   } = useQuery(DiaryAgendaDayUserTodosDocument, { variables, pollInterval });
 
-  const data = loading ? previousData || currentData : currentData;
+  const data =
+    loading && networkStatus === 1 ? previousData || currentData : currentData;
 
   const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const now = useNow(60 * 1000, timeZone);
