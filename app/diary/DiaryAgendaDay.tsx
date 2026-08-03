@@ -628,7 +628,7 @@ export function DiaryAgendaDay({
                 id: `location-change-${location.id}-${entry.id}`,
                 location: location.name,
                 start: targetDate,
-                end: subMilliseconds(targetDateTo, 1),
+                end: max([subMilliseconds(targetDateTo, 1), targetDate]),
               });
 
               // eslint-disable-next-line react-hooks/immutability
