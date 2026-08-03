@@ -2,7 +2,7 @@
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { getDate } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { DiaryAgendaDayDayBacklogTodosDocument } from "../../graphql.generated/graphql";
 import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
@@ -30,6 +30,7 @@ export default function DiaryAgendaDayDayBacklog({
 }: {
   dayRange: { start: Date; end: Date };
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const pollInterval = useVisibilityAwarePollInterval(300000);
   const { data } = useQuery(DiaryAgendaDayDayBacklogTodosDocument, {
     pollInterval,
@@ -48,17 +49,21 @@ export default function DiaryAgendaDayDayBacklog({
               new Date(b.created!).getTime() - new Date(a.created!).getTime(),
           ),
         startDay,
-      ).slice(0, 4),
+      ),
     [calendarTodos, startDay],
+  );
+  const todosToShow = useMemo(
+    () => (isExpanded ? backlogTodos : backlogTodos.slice(0, 4)),
+    [backlogTodos, isExpanded],
   );
 
   return (
     backlogTodos.length > 0 && (
       <FieldSetY
-        className="mb-4 mt-2 flex w-full max-w-lg flex-wrap justify-evenly gap-1 bg-[#edab00]/10 p-0 backdrop-blur-sm lg:max-w-none"
+        className="mt-2 mb-4 flex w-full max-w-lg flex-wrap justify-evenly gap-1 bg-[#edab00]/10 p-0 backdrop-blur-sm lg:max-w-none"
         legend={null}
       >
-        {backlogTodos.map((todo) => (
+        {todosToShow.map((todo) => (
           <DiaryAgendaDayTodo
             todo={todo}
             key={todo.id}
@@ -67,6 +72,14 @@ export default function DiaryAgendaDayDayBacklog({
             backlog
           />
         ))}
+        {backlogTodos.length > 3 ? (
+          <button
+            className="flex w-full max-w-md cursor-pointer items-center justify-center rounded-t-md bg-amber-800/20 p-1 text-xs font-bold text-[#edab00] hover:bg-amber-800/30"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {isExpanded ? "Show fewer" : "Show more"}
+          </button>
+        ) : null}
       </FieldSetY>
     )
   );
