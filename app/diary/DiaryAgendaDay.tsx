@@ -625,7 +625,7 @@ export function DiaryAgendaDay({
               // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
               dayJournalEntriesIncludingLocationChanges.push({
                 __typename: "LocationChange",
-                id: `location-change-${targetDate.toISOString()}`,
+                id: `location-change-${location.id}-${entry.id}`,
                 location: location.name,
                 start: targetDate,
                 end: subMilliseconds(targetDateTo, 1),
