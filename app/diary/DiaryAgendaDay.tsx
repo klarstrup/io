@@ -521,7 +521,7 @@ export function DiaryAgendaDay({
                   cotemporality(entry) !== "current"
                 ),
             )
-            // If the previous entry a fully coincident event, we skip the end entry
+            // If the previous entry is a fully coincident event, we skip the end entry
             .filter((entry, i, entries) => {
               const previousEntry = entries[i - 1];
               if (
