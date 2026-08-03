@@ -68,6 +68,7 @@ export function DiaryAgendaDayDay({
   dayLocations,
   dayJournalEntries,
   isSelectedDay,
+  isLoadingEntries,
 }: {
   now: Date;
   date: `${number}-${number}-${number}`;
@@ -76,6 +77,7 @@ export function DiaryAgendaDayDay({
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
   isSelectedDay?: boolean;
+  isLoadingEntries?: boolean;
 }) {
   const client = useApolloClient();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
@@ -509,7 +511,10 @@ export function DiaryAgendaDayDay({
   return (
     <>
       <div
-        className="relative z-5 mx-auto mt-1 -mb-px flex w-full max-w-lg items-center gap-1 pr-2 leading-normal xl:max-w-none"
+        className={
+          "relative z-5 mx-auto mt-1 -mb-px flex w-full max-w-lg items-center gap-1 pr-2 leading-normal transition-colors xl:max-w-none" +
+          (isLoadingEntries ? " animate-pulse bg-blue-300!" : "")
+        }
         style={{
           textShadow:
             "0 0 1px rgba(255,255,255,0.5),0 0 2px rgba(255,255,255,0.5),0 0 3px rgba(255,255,255,0.5),0 0 4px rgba(255,255,255,0.5),0 0 5px rgba(255,255,255,0.5),0 0 6px rgba(255,255,255,0.5)",
@@ -572,14 +577,15 @@ export function DiaryAgendaDayDay({
         ref={ref}
         className={
           "diary-agenda-day-entry w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:max-w-none " +
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 transition-colors xl:max-w-none " +
           (isSelectedDay
             ? "bg-white/90"
             : (isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
               ? "bg-green-100/75 pt-1"
               : isToday
                 ? "bg-yellow-200/75 pt-1"
-                : "bg-slate-100/75 pt-1")
+                : "bg-slate-100/75 pt-1") +
+          (isLoadingEntries ? " animate-pulse bg-blue-300!" : "")
         }
         style={{
           boxShadow:
@@ -591,8 +597,12 @@ export function DiaryAgendaDayDay({
             {dayJournalItems.map(({ element }) => element)}
           </TodoSortableContext>
         ) : (
-          <DiaryAgendaDayEntry className="text-gray-400/50 italic pl-10">
-            {isPast(dayRange.end) ? "Nothing logged" : "Nothing planned"}
+          <DiaryAgendaDayEntry className={"pl-10 text-gray-400/50 italic"}>
+            {isLoadingEntries
+              ? "Loading..."
+              : isPast(dayRange.end)
+                ? "Nothing logged"
+                : "Nothing planned"}
           </DiaryAgendaDayEntry>
         )}
       </FieldSetX>

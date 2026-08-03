@@ -11,6 +11,7 @@ import {
   isBefore,
   isEqual,
   isPast,
+  isWithinInterval,
   max,
   min,
   startOfDay,
@@ -260,9 +261,12 @@ export function DiaryAgendaDay({
     loading,
     networkStatus,
   } = useQuery(DiaryAgendaDayUserTodosDocument, { variables, pollInterval });
-
-  const data =
-    loading && networkStatus === 1 ? previousData || currentData : currentData;
+  console.log({ loading, networkStatus });
+  const data = loading
+    ? networkStatus === 2
+      ? previousData
+      : previousData || currentData
+    : currentData;
 
   const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const now = useNow(60 * 1000, timeZone);
@@ -283,6 +287,16 @@ export function DiaryAgendaDay({
       ),
     }),
     [startOfAgendaDay, daysAfter, daysBefore],
+  );
+  const queryFetchingInterval = useMemo(
+    () => ({
+      start: startOfDay(subDays(startOfAgendaDay, queryVariables.daysBefore)),
+      end: addDays(
+        endOfDayButItRespectsDayStartHour(startOfAgendaDay),
+        queryVariables.daysAfter,
+      ),
+    }),
+    [startOfAgendaDay, queryVariables.daysAfter, queryVariables.daysBefore],
   );
 
   const daysOfInterval = useMemo(
@@ -773,42 +787,61 @@ export function DiaryAgendaDay({
           "flex flex-col items-stretch justify-center px-2 lg:flex-1 lg:flex-row lg:gap-5 lg:self-start lg:justify-self-center lg:px-0 lg:py-2"
         }
       >
-        <ShyGuy
-          onSeen={() => {
-            if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
-            if (loading) return;
-            if (queryVariables.daysBefore !== daysBefore) return;
-            setDaysBefore((d) => d + 2);
-            window.scrollBy({ top: 1, left: 1, behavior: "instant" });
-          }}
-        />
-        {daysJournalEntriesIncludingLocationChanges2.map(
-          ([dayRange, dayJournalEntries]) => (
-            <TodoDroppable
-              key={dateToString(dayRange.start)}
-              date={startOfDayButItRespectsDayStartHour(dayRange.start)}
-            >
-              <DiaryAgendaDayDay
-                now={now}
-                date={dateToString(dayRange.start)}
-                dayRange={dayRange}
-                userTimeZone={timeZone}
-                dayLocations={userLocations}
-                dayJournalEntries={dayJournalEntries}
-                isSelectedDay={Boolean(selectedDayStart)}
-              />
-            </TodoDroppable>
-          ),
+        {loading ? null : (
+          <ShyGuy
+            onSeen={() => {
+              if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+              if (loading) return;
+              if (queryVariables.daysBefore !== daysBefore) return;
+              setDaysBefore((d) => d + 2);
+              window.scrollBy({ top: 1, left: 1, behavior: "instant" });
+            }}
+          />
         )}
-        <ShyGuy
-          onSeen={() => {
-            if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
-            if (loading) return;
-            if (queryVariables.daysAfter !== daysAfter) return;
-            setDaysAfter((d) => d + 2);
-            window.scrollBy({ top: -1, left: -1, behavior: "instant" });
-          }}
-        />
+        {daysJournalEntriesIncludingLocationChanges2.map(
+          ([dayRange, dayJournalEntries]) => {
+            const dayStart = startOfDayButItRespectsDayStartHour(
+              dayRange.start,
+            );
+            return (
+              <TodoDroppable key={dateToString(dayRange.start)} date={dayStart}>
+                <DiaryAgendaDayDay
+                  now={now}
+                  date={dateToString(dayRange.start)}
+                  dayRange={dayRange}
+                  userTimeZone={timeZone}
+                  dayLocations={userLocations}
+                  dayJournalEntries={dayJournalEntries}
+                  isSelectedDay={Boolean(selectedDayStart)}
+                  isLoadingEntries={
+                    loading &&
+                    networkStatus !== 4 &&
+                    networkStatus !== 1 &&
+                    (isWithinInterval(dayStart, {
+                      start: queryFetchingInterval.start,
+                      end: fetchingInterval.start,
+                    }) ||
+                      isWithinInterval(dayRange.end, {
+                        start: fetchingInterval.end,
+                        end: queryFetchingInterval.end,
+                      }))
+                  }
+                />
+              </TodoDroppable>
+            );
+          },
+        )}
+        {loading ? null : (
+          <ShyGuy
+            onSeen={() => {
+              if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+              if (loading) return;
+              if (queryVariables.daysAfter !== daysAfter) return;
+              setDaysAfter((d) => d + 2);
+              window.scrollBy({ top: -1, left: -1, behavior: "instant" });
+            }}
+          />
+        )}
         {sessionData?.user ? (
           <DiaryPoller userId={sessionData.user.id} />
         ) : null}
