@@ -67,6 +67,7 @@ export function DiaryAgendaDayDay({
   userTimeZone,
   dayLocations,
   dayJournalEntries,
+  isSelectedDay,
 }: {
   now: Date;
   date: `${number}-${number}-${number}`;
@@ -74,6 +75,7 @@ export function DiaryAgendaDayDay({
   userTimeZone?: GQUser["timeZone"];
   dayLocations: GQLocation[];
   dayJournalEntries: JournalEntry[];
+  isSelectedDay?: boolean;
 }) {
   const client = useApolloClient();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
@@ -214,14 +216,16 @@ export function DiaryAgendaDayDay({
                   cotemporalityOfSurroundingEvent
                 }
                 className={
-                  "self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
+                  "self-end z-5 relative rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
                   "backdrop-blur-sm " +
-                  ((isPast(dayRange.start) && allCompleted) ||
-                  isPast(dayRange.end)
-                    ? "bg-green-100/75 pt-1"
-                    : isToday
-                      ? "bg-yellow-200/75 pt-1"
-                      : "bg-slate-100/75 pt-1")
+                  (isSelectedDay
+                    ? "bg-white/90"
+                    : (isPast(dayRange.start) && allCompleted) ||
+                        isPast(dayRange.end)
+                      ? "bg-green-100/75 pt-1"
+                      : isToday
+                        ? "bg-yellow-200/75 pt-1"
+                        : "bg-slate-100/75 pt-1")
                 }
                 iconClassName="w-6 -mr-1"
               >
@@ -567,11 +571,13 @@ export function DiaryAgendaDayDay({
         className={
           "diary-agenda-day-entry w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
           "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 xl:max-w-none " +
-          ((isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
-            ? "bg-green-100/75 pt-1"
-            : isToday
-              ? "bg-yellow-200/75 pt-1"
-              : "bg-slate-100/75 pt-1")
+          (isSelectedDay
+            ? "bg-white/90"
+            : (isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
+              ? "bg-green-100/75 pt-1"
+              : isToday
+                ? "bg-yellow-200/75 pt-1"
+                : "bg-slate-100/75 pt-1")
         }
         style={{
           boxShadow:

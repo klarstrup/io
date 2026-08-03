@@ -793,6 +793,7 @@ export function DiaryAgendaDay({
                 userTimeZone={timeZone}
                 dayLocations={userLocations}
                 dayJournalEntries={dayJournalEntries}
+                isSelectedDay={Boolean(selectedDayStart)}
               />
             </TodoDroppable>
           ),
