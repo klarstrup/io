@@ -51,7 +51,7 @@ export function DiaryEntryItem({
       prefetch={false}
       href={`/diary/${date}`}
       style={{
-        background: getSchemeCategory10Color(Number(date.split("-")[1])) + "50",
+        background: getSchemeCategory10Color(Number(date.split("-")[1])) + "DD",
       }}
       className={
         "diary-entry flex flex-1 flex-col rounded-xs border-b-[0.5px] border-l-[0.5px] border-black/50 p-1"
