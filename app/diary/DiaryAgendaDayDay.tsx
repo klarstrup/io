@@ -31,6 +31,7 @@ import {
 } from "../../utils";
 import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
+import DiaryAgendaDayDayBacklog from "./DiaryAgendaDayDayBacklog";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
@@ -47,7 +48,6 @@ import {
   isEventEntireDay,
   type JournalEntry,
 } from "./diaryUtils";
-import DiaryAgendaDayDayBacklog from "./DiaryAgendaDayDayBacklog";
 
 interface DayJournalEntryElement {
   id: string;
@@ -216,7 +216,7 @@ export function DiaryAgendaDayDay({
                   cotemporalityOfSurroundingEvent
                 }
                 className={
-                  "self-end z-5 relative rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
+                  "relative z-5 self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
                   "backdrop-blur-sm " +
                   (isSelectedDay
                     ? "bg-white/90"
@@ -481,6 +481,7 @@ export function DiaryAgendaDayDay({
           id: client.cache.identify(trip) || trip.id,
           element: (
             <DiaryAgendaDayTrip
+              key={trip.id}
               trip={trip}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
@@ -499,6 +500,7 @@ export function DiaryAgendaDayDay({
     dayJournalEntries,
     dayLocations,
     dayRange,
+    isSelectedDay,
     isToday,
     now,
     timeZone,
