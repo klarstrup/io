@@ -26,10 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className="overflow-y-scroll lg:overflow-x-scroll lg:overflow-y-hidden"
-    >
+    <html lang="en">
       <body className="flex flex-col">
         <SessionProvider>
           <SerwistProvider swUrl="/serwist/sw.js">

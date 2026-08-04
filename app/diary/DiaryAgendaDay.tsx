@@ -704,6 +704,7 @@ export function DiaryAgendaDay({
   const isXL = useMediaQuery("(min-width: 64rem)");
 
   useEffect(() => {
+    if (typeof document === "undefined") return;
     const element = document.scrollingElement || document.documentElement;
     if (!(element instanceof HTMLElement)) return;
 
@@ -722,8 +723,16 @@ export function DiaryAgendaDay({
     };
 
     element.addEventListener("wheel", transformScroll);
+    if (isPointerFine && isXL) {
+      element.style.overflowY = "hidden";
+      element.style.overflowX = "scroll";
+    }
     return () => {
       element.removeEventListener("wheel", transformScroll);
+      if (isPointerFine && isXL) {
+        element.style.overflowY = "";
+        element.style.overflowX = "";
+      }
     };
   }, [isPointerFine, isXL]);
 
