@@ -796,10 +796,9 @@ export function DiaryAgendaDay({
           "flex flex-col items-stretch justify-center px-2 lg:flex-1 lg:flex-row lg:gap-5 lg:self-start lg:justify-self-center lg:px-0 lg:py-2"
         }
       >
-        {loading ? null : (
+        {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
             onSeen={() => {
-              if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
               if (loading) return;
               if (queryVariables.daysBefore !== daysBefore) return;
               setDaysBefore((d) => d + 2);
@@ -840,10 +839,9 @@ export function DiaryAgendaDay({
             );
           },
         )}
-        {loading ? null : (
+        {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
             onSeen={() => {
-              if (selectedDayStart) return; // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
               if (loading) return;
               if (queryVariables.daysAfter !== daysAfter) return;
               setDaysAfter((d) => d + 2);
