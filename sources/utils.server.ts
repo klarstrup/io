@@ -2,6 +2,7 @@ import { DeleteResult, ObjectId, UpdateResult } from "mongodb";
 import type { Session } from "next-auth";
 import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
+import { Scrapes } from "../models/scrapes.server";
 import { Users } from "../models/user.server";
 import {
   updateExerciseCounts,
@@ -37,16 +38,30 @@ export async function* wrapSources<S extends DataSource, T>(
   );
 
   for (const dataSource of dataSources) {
+    const scrapeId = new ObjectId().toString();
+
     const filter = { _id: new ObjectId(user.id) };
     const updateOptions = { arrayFilters: [{ "source.id": dataSource.id }] };
 
     const attemptedAt = new Date();
-    let updatedDatabase: boolean | null | undefined = null;
+    let updatedDatabase: boolean | null = null;
     await Users.updateOne(
       filter,
       { $set: { "dataSources.$[source].lastAttemptedAt": attemptedAt } },
       updateOptions,
     );
+    await Scrapes.insertOne({
+      scrapeId,
+      attemptedAt,
+      settledAt: null,
+      source: dataSource.source,
+      userId: user.id,
+      userDataSourceId: dataSource.id,
+      success: null,
+      updatedDatabase: null,
+      error: null,
+      runtime: null,
+    });
     try {
       yield* fn(dataSource, (updated) => {
         if (typeof updated !== "boolean") {
@@ -76,6 +91,17 @@ export async function* wrapSources<S extends DataSource, T>(
         },
         updateOptions,
       );
+      await Scrapes.updateOne(
+        { scrapeId },
+        {
+          $set: {
+            settledAt: successfulAt,
+            success: true,
+            updatedDatabase,
+            runtime: successfulAt.valueOf() - attemptedAt.valueOf(),
+          },
+        },
+      );
     } catch (e) {
       const failedAt = new Date();
       await Users.updateOne(
@@ -90,6 +116,18 @@ export async function* wrapSources<S extends DataSource, T>(
           },
         },
         updateOptions,
+      );
+      await Scrapes.updateOne(
+        { scrapeId },
+        {
+          $set: {
+            settledAt: failedAt,
+            success: false,
+            updatedDatabase,
+            error: String(e),
+            runtime: failedAt.valueOf() - attemptedAt.valueOf(),
+          },
+        },
       );
       throw e;
     } finally {
