@@ -261,7 +261,7 @@ export function DiaryAgendaDay({
     loading,
     networkStatus,
   } = useQuery(DiaryAgendaDayUserTodosDocument, { variables, pollInterval });
-  console.log({ loading, networkStatus });
+
   const data = loading
     ? networkStatus === 2
       ? previousData
