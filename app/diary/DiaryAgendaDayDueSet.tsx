@@ -253,7 +253,7 @@ export function DiaryAgendaDayDueSet({
       >
         <div
           className={
-            "h-full self-stretch px-1.5 py-0.5 text-left text-sm " +
+            "h-full self-stretch px-1.5 py-0.5 text-left text-[1rem] font-medium " +
             (isActive
               ? "rounded-l-[5px] rounded-b-none "
               : "rounded-l-[5px] ") +
