@@ -576,7 +576,7 @@ export function DiaryAgendaDayDay({
         legend={null}
         ref={ref}
         className={
-          "diary-agenda-day-entry w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
+          "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
           "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1.5 pr-1 pb-1 pl-0 transition-colors xl:max-w-none " +
           (isSelectedDay
             ? "bg-white/90"
