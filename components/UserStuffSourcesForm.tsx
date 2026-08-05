@@ -94,7 +94,7 @@ function UserStuffSourceForm({
                         new Date(source.lastFailedAt)),
                   ) ||
                   wasFetchedRecently ||
-                  source.paused ||
+                  source.paused === true ||
                   source.source === DataSource.Fitocracy
                 }
                 className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
@@ -116,7 +116,8 @@ function UserStuffSourceForm({
               ) : null}
               <div className="text-sm font-semibold">{source.name}</div>
               <div>
-                {source.paused || source.source === DataSource.Fitocracy ? (
+                {source.paused === true ||
+                source.source === DataSource.Fitocracy ? (
                   <>
                     <small>Paused</small>{" "}
                     <span title="This data source is paused and will not be automatically fetched.">
@@ -662,7 +663,7 @@ export default function UserStuffSourcesForm({
             {user.dataSources
               .filter(
                 (source) =>
-                  sourceOptions.includes(source.source) && !source.paused,
+                  sourceOptions.includes(source.source) && source.paused !== true,
               )
               .sort((a, b) => a.source.localeCompare(b.source))
               .map((source) => (
@@ -676,14 +677,14 @@ export default function UserStuffSourcesForm({
           {[...user.dataSources]
             .sort((a, b) => a.source.localeCompare(b.source))
             .filter((source) => sourceOptions.includes(source.source))
-            .filter((source) => source.paused).length ? (
+            .filter((source) => source.paused === true).length ? (
             <hr className={"my-2 border-gray-300"} />
           ) : null}
           <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1">
             {[...user.dataSources]
               .sort((a, b) => a.source.localeCompare(b.source))
               .filter((source) => sourceOptions.includes(source.source))
-              .filter((source) => source.paused)
+              .filter((source) => source.paused === true)
               .map((source) => (
                 <UserStuffSourceForm
                   key={source.id}

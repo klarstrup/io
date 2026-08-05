@@ -1,6 +1,7 @@
 import { compareAsc } from "date-fns";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { auth } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
 import { epoch, uniqueBy } from "../../../utils";
@@ -8,13 +9,15 @@ import { epoch, uniqueBy } from "../../../utils";
 export async function GET() {
   await connection();
 
-  const users = await Users.find({}).toArray();
+  const user = (await auth())?.user;
+  if (!user) return new Response("Unauthorized", { status: 401 });
+  const users = await Users.find({ id: user.id }).toArray();
 
   const dataSources = uniqueBy(
     users
       .flatMap((user) => user.dataSources)
       .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
-      .filter((dataSource) => !dataSource.paused)
+      .filter((dataSource) => dataSource.paused !== true)
       .filter(
         (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
       )

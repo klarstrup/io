@@ -361,7 +361,7 @@ export const resolvers: GQResolvers<
       if (!user) return null;
 
       const spiirDataSource = user.dataSources
-        ?.filter((dataSource) => !dataSource.paused)
+        ?.filter((dataSource) => dataSource.paused !== true)
         .find((dataSource) => dataSource.source === DataSource.Spiir);
       if (!spiirDataSource) return null;
 

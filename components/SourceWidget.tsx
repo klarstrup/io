@@ -38,7 +38,7 @@ export default function SourceWidget({
   }
 
   const sources = data.user.dataSources.filter(
-    (ds) => ds.source === dataSource && !ds.paused,
+    (ds) => ds.source === dataSource && ds.paused !== true,
   );
 
   return sources.map((source) => (
@@ -67,7 +67,7 @@ export default function SourceWidget({
                   new Date(source.lastAttemptedAt) >
                     new Date(now.valueOf() - 1000 * 60 * 5),
                 ) ||
-                source.paused ||
+                source.paused !== true ||
                 source.source === DataSource.Fitocracy ||
                 isScraping
               }
@@ -83,7 +83,8 @@ export default function SourceWidget({
             ) : null}
             <div className="text-sm font-semibold">{source.name}</div>
             <div className="whitespace-nowrap">
-              {source.paused || source.source === DataSource.Fitocracy ? (
+              {source.paused !== true ||
+              source.source === DataSource.Fitocracy ? (
                 <>
                   <small>Paused</small>{" "}
                   <span title="This data source is paused and will not be automatically fetched.">

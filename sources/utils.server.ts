@@ -34,7 +34,7 @@ export async function* wrapSources<S extends DataSource, T>(
       .filter(
         (ds): ds is UserDataSource & { source: S } => ds.source === source,
       )
-      .filter((dataSource) => !dataSource.paused),
+      .filter((dataSource) => dataSource.paused !== true),
   );
 
   for (const dataSource of dataSources) {
