@@ -17204,10 +17204,10 @@ export const exercises = [
       },
       {
         display_name: "Options",
-        hidden_by_default: false,
+        hidden_by_default: true,
         id: 1,
         input_ordinal: 4,
-        default_value: 1,
+        default_value: null,
         options: [
           { value: "just for fun" },
           { value: "practice" },
@@ -23317,7 +23317,7 @@ export const exercises = [
         hidden_by_default: true,
         id: 1,
         input_ordinal: 4,
-        default_value: 1,
+        default_value: null,
         options: [
           { value: "intense" },
           { value: "easy" },
