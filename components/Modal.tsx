@@ -21,11 +21,7 @@ export function Modal<R extends string>({
         {children}
       </div>
       {dismissTo ? (
-        <Link
-          prefetch={false}
-          href={dismissTo}
-          className="absolute inset-0 bg-black/50"
-        />
+        <Link href={dismissTo} className="absolute inset-0 bg-black/50" />
       ) : (
         <BackButton className="absolute inset-0 bg-black/50" />
       )}

@@ -266,7 +266,6 @@ export function DiaryAgendaDayDueSet({
             <ExerciseName exerciseInfo={exerciseInfo} />
           ) : (
             <Link
-              prefetch={false}
               href={`/diary/exercises/${exerciseInfo.id}`}
               className="hover:underline"
             >

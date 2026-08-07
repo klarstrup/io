@@ -419,19 +419,17 @@ export function WorkoutForm<R extends string>({
       }
     }
 
-    const sets = setEfforts.reverse().map(
-      (setEffort): WorkoutExerciseSet => ({
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        inputs: exerciseDefinition.inputs.map(
-          (input, i): WorkoutExerciseSetInput => ({
-            value:
-              i === effortInputIndex ? setEffort : (input.default_value ?? NaN),
-            unit: input.metric_unit,
-          }),
-        ),
-      }),
-    );
+    const sets = setEfforts.reverse().map((setEffort): WorkoutExerciseSet => ({
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      inputs: exerciseDefinition.inputs.map(
+        (input, i): WorkoutExerciseSetInput => ({
+          value:
+            i === effortInputIndex ? setEffort : (input.default_value ?? NaN),
+          unit: input.metric_unit,
+        }),
+      ),
+    }));
 
     append({ exerciseId: dueSet.exerciseId, sets });
   });
@@ -669,7 +667,6 @@ export function WorkoutForm<R extends string>({
                 legend={
                   <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
                     <Link
-                      prefetch={false}
                       href={`/diary/exercises/${exercise.id}`}
                       style={{ color: "#edab00" }}
                     >
@@ -724,7 +721,6 @@ export function WorkoutForm<R extends string>({
                         {" "}
                         based on{" "}
                         <Link
-                          prefetch={false}
                           href={`/diary/${dateToString(nextExerciseSet.lastWorkedOutAt)}`}
                           style={{ color: "#edab00" }}
                         >

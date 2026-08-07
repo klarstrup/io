@@ -44,7 +44,6 @@ export default function WorkoutEntry({
           {showDate ? (
             <div className="block text-xs font-semibold">
               <Link
-                prefetch={false}
                 href={`/diary/${workoutDateStr}`}
                 style={{ color: "#edab00" }}
               >
@@ -55,7 +54,6 @@ export default function WorkoutEntry({
                   {" "}
                   -{" "}
                   <Link
-                    prefetch={false}
                     href={`/diary/locations/${location.id}`}
                     className="font-bold"
                     style={{ color: "#edab00" }}
@@ -69,7 +67,6 @@ export default function WorkoutEntry({
             <div>
               <small>
                 <Link
-                  prefetch={false}
                   href={`/diary/locations/${location.id}`}
                   className="font-bold"
                   style={{ color: "#edab00" }}
@@ -88,7 +85,6 @@ export default function WorkoutEntry({
                     {" "}
                     <small>-</small>{" "}
                     <Link
-                      prefetch={false}
                       href={`/diary/${workoutDateStr}/workout/${workout.id}`}
                       style={{ color: "#edab00" }}
                       className="text-xs font-semibold"
@@ -126,7 +122,6 @@ export default function WorkoutEntry({
       {!(showExerciseName && showLocation && showSource) &&
       (workout.source === WorkoutSource.Self || !workout.source) ? (
         <Link
-          prefetch={false}
           href={`/diary/${workoutDateStr}/workout/${workout.id}`}
           style={{ color: "#edab00" }}
           className="absolute top-1 right-2 text-xs font-semibold"
@@ -152,7 +147,6 @@ export default function WorkoutEntry({
               <div className="flex flex-wrap gap-1">
                 {showExerciseName || workoutExercise.displayName ? (
                   <Link
-                    prefetch={false}
                     href={`/diary/exercises/${exercise.id}`}
                     style={{ color: "#edab00" }}
                     className="block text-sm leading-none font-bold"

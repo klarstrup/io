@@ -4,6 +4,7 @@ import { withSerwist } from "@serwist/turbopack";
 const nextConfig = withSerwist({
   experimental: {},
   cacheComponents: true,
+  partialPrefetching: true,
   logging: { fetches: { fullUrl: true } },
   reactStrictMode: true,
   typedRoutes: true,

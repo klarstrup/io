@@ -522,7 +522,6 @@ export function DiaryAgendaDayDay({
       >
         <Link
           href="/calendar"
-          prefetch={false}
           className={
             "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums"
           }
@@ -549,7 +548,6 @@ export function DiaryAgendaDayDay({
             {isPast(dayRange.start) ? (
               <>
                 <Link
-                  prefetch={false}
                   href={`/diary/${date}/workout`}
                   className={
                     "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"

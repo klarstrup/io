@@ -48,7 +48,6 @@ export function DiaryEntryItem({
   return (
     <Link
       key={date}
-      prefetch={false}
       href={`/diary/${date}`}
       style={{
         background: getSchemeCategory10Color(Number(date.split("-")[1])) + "DD",

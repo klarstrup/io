@@ -88,7 +88,6 @@ export function NextSets({
             </div>
             <div className="leading-tight">
               <Link
-                prefetch={false}
                 href={`/diary/exercises/${exercise.id}`}
                 style={{ color: "#edab00" }}
                 className="font-semibold whitespace-nowrap"
@@ -119,7 +118,6 @@ export function NextSets({
                     Last set{" "}
                     {lastWorkedOutAt ? (
                       <Link
-                        prefetch={false}
                         href={`/diary/${new Date(lastWorkedOutAt).toISOString().slice(0, 10)}`}
                         style={{ color: "#edab00" }}
                       >

@@ -58,7 +58,6 @@ export function DiaryAgendaDayNow({
     >
       <DiaryAgendaDayCreateTodo date={new Date()} />
       <Link
-        prefetch={false}
         href={`/diary/${date}/workout`}
         className={
           "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"

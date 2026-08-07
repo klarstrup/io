@@ -33,7 +33,6 @@ export default function UserStuff() {
       </Suspense>
       <UserStuffLink
         href="/diary"
-        prefetch={false}
         onClick={(e) => {
           if (currentHref === "/diary" || currentHref === "/") {
             e.preventDefault();
@@ -68,7 +67,7 @@ export default function UserStuff() {
       </UserStuffLink>
       <UserStuffLink
         href="/user/settings"
-        prefetch={false}
+
         onClick={(e) => {
           e.preventDefault();
           setIsSettingsBarOpen((s) => !s);

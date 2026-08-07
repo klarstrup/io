@@ -116,7 +116,6 @@ function UserStuffWorkoutScheduleForm({
               Cancel
             </button>
             <Link
-              prefetch={false}
               href={`/diary/exercises/${exercise.id}`}
               style={{ color: "#edab00" }}
             >
@@ -312,11 +311,9 @@ export default function UserStuffWorkoutSchedulesForm({
         {exerciseScheduleBeingEditedId ? (
           <UserStuffWorkoutScheduleForm
             user={user}
-            exerciseSchedule={
-              exerciseSchedules.find(
-                (schedule) => schedule.id === exerciseScheduleBeingEditedId,
-              )!
-            }
+            exerciseSchedule={exerciseSchedules.find(
+              (schedule) => schedule.id === exerciseScheduleBeingEditedId,
+            )!}
             onDismiss={() => setExerciseScheduleBeingEditedId(null)}
           />
         ) : exerciseSchedules.length > 0 ? (
@@ -424,7 +421,6 @@ export default function UserStuffWorkoutSchedulesForm({
                           </div>
                           <div className={"flex flex-col leading-snug"}>
                             <Link
-                              prefetch={false}
                               href={`/diary/exercises/${exercise.id}`}
                               className="block font-semibold"
                             >

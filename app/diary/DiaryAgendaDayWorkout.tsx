@@ -203,7 +203,7 @@ export function DiaryAgendaDayWorkoutSet({
               : " justify-center")
           }
         >
-          <Link prefetch={false} href={`/diary/exercises/${exerciseInfo.id}`}>
+          <Link href={`/diary/exercises/${exerciseInfo.id}`}>
             {workoutExercise.displayName || (
               <ExerciseName exerciseInfo={exerciseInfo} />
             )}

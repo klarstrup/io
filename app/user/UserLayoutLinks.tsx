@@ -9,25 +9,14 @@ export function UserLayoutLinks({ className }: { className?: string }) {
         className,
       )}
     >
-      <UserStuffLink href="/user/workout-schedules" prefetch={false}>
-        ⚙️
-      </UserStuffLink>
-      <UserStuffLink href="/user/sources" prefetch={false}>
-        📡
-      </UserStuffLink>
-      <UserStuffLink href="/user/locations" prefetch={false}>
-        📍
-      </UserStuffLink>
+      <UserStuffLink href="/user/workout-schedules">⚙️</UserStuffLink>
+      <UserStuffLink href="/user/sources">📡</UserStuffLink>
+      <UserStuffLink href="/user/locations">📍</UserStuffLink>
       <div className="h-7 w-[0.5px] rounded-full bg-[yellow]/50" />
-      <UserStuffLink href="/lists" prefetch={false}>
-        ✅
-      </UserStuffLink>
-      <UserStuffLink href="/calendar" prefetch={false}>
-        🗓️
-      </UserStuffLink>
+      <UserStuffLink href="/lists">✅</UserStuffLink>
+      <UserStuffLink href="/calendar">🗓️</UserStuffLink>
       <UserStuffLink
         href={"/events" as __next_route_internal_types__.RouteImpl<"/events">}
-        prefetch={false}
       >
         🏅
       </UserStuffLink>
