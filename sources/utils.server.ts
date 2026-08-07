@@ -11,16 +11,14 @@ import {
 import { shuffle } from "../utils";
 import type { DataSource, UserDataSource } from "./utils";
 
-export type SetUpdatedFn = (
-  updated:
-    | boolean
-    | {
-        insertedCount?: number;
-        modifiedCount?: number;
-        upsertedCount?: number;
-        deletedCount?: number;
-      },
-) => void;
+interface UpdateResult {
+  insertedCount?: number;
+  modifiedCount?: number;
+  upsertedCount?: number;
+  deletedCount?: number;
+}
+
+export type SetUpdatedFn = (updated: boolean | UpdateResult) => void;
 
 // TODO: Allow this to run in parallel for certain data sources, for example iCal feeds, wh
 export async function* wrapSources<S extends DataSource, T>(
@@ -49,6 +47,12 @@ export async function* wrapSources<S extends DataSource, T>(
 
     const attemptedAt = new Date();
     let updatedDatabase: boolean | null = null;
+    const handleResult = (result: UpdateResult) => {
+      updatedDatabase ||= Boolean(result.modifiedCount);
+      updatedDatabase ||= Boolean(result.deletedCount);
+      updatedDatabase ||= Boolean(result.insertedCount);
+      updatedDatabase ||= Boolean(result.upsertedCount);
+    };
     await Users.updateOne(
       filter,
       { $set: { "dataSources.$[source].lastAttemptedAt": attemptedAt } },
@@ -62,21 +66,40 @@ export async function* wrapSources<S extends DataSource, T>(
       userId: user.id,
       userDataSourceId: dataSource.id,
       success: null,
-      updatedDatabase: null,
+      updatedDatabase,
       error: null,
       runtime: null,
     });
     try {
-      yield* fn(dataSource, (updated) => {
+      for await (const payload of fn(dataSource, (updated): void => {
         if (typeof updated !== "boolean") {
-          updatedDatabase ||= Boolean(updated.modifiedCount);
-          updatedDatabase ||= Boolean(updated.deletedCount);
-          updatedDatabase ||= Boolean(updated.insertedCount);
-          updatedDatabase ||= Boolean(updated.upsertedCount);
+          handleResult(updated);
+        } else {
+          updatedDatabase ||= updated;
+        }
+      })) {
+        if (payload && typeof payload === "object" && payload !== null) {
+          if (
+            // Trust that payload is a MongoDB BulkWriteResult or similar if it has any of these properties
+            ("insertedCount" in payload &&
+              typeof payload.insertedCount === "number" &&
+              payload.insertedCount >= 0) ||
+            ("modifiedCount" in payload &&
+              typeof payload.modifiedCount === "number" &&
+              payload.modifiedCount >= 0) ||
+            ("upsertedCount" in payload &&
+              typeof payload.upsertedCount === "number" &&
+              payload.upsertedCount >= 0) ||
+            ("deletedCount" in payload &&
+              typeof payload.deletedCount === "number" &&
+              payload.deletedCount >= 0)
+          ) {
+            handleResult(payload as UpdateResult);
+          }
         }
 
-        return updatedDatabase;
-      });
+        yield payload;
+      }
 
       const successfulAt = new Date();
       await Users.updateOne(
