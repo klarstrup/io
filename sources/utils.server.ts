@@ -1,4 +1,4 @@
-import { DeleteResult, ObjectId, UpdateResult } from "mongodb";
+import { ObjectId } from "mongodb";
 import type { Session } from "next-auth";
 import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
@@ -14,8 +14,12 @@ import type { DataSource, UserDataSource } from "./utils";
 export type SetUpdatedFn = (
   updated:
     | boolean
-    | Pick<UpdateResult, "matchedCount" | "modifiedCount" | "upsertedCount">
-    | Pick<DeleteResult, "deletedCount">,
+    | {
+        insertedCount?: number;
+        modifiedCount?: number;
+        upsertedCount?: number;
+        deletedCount?: number;
+      },
 ) => void;
 
 // TODO: Allow this to run in parallel for certain data sources, for example iCal feeds, wh
@@ -65,14 +69,10 @@ export async function* wrapSources<S extends DataSource, T>(
     try {
       yield* fn(dataSource, (updated) => {
         if (typeof updated !== "boolean") {
-          if ("modifiedCount" in updated) {
-            updatedDatabase ||=
-              updated.modifiedCount > 0 || updated.upsertedCount > 0;
-          } else {
-            updatedDatabase ||= updated.deletedCount > 0;
-          }
-        } else {
-          updatedDatabase ||= updated;
+          updatedDatabase ||= Boolean(updated.modifiedCount);
+          updatedDatabase ||= Boolean(updated.deletedCount);
+          updatedDatabase ||= Boolean(updated.insertedCount);
+          updatedDatabase ||= Boolean(updated.upsertedCount);
         }
 
         return updatedDatabase;
