@@ -22,7 +22,7 @@ export const GET = () =>
       async function* ({ config: { url } }, setUpdated) {
         setUpdated(false);
 
-        if (!url) return;
+        if (!url) throw new Error("No URL provided for iCal data source");
 
         await IcalEvents.createIndexes([
           { key: { _io_userId: 1, _io_icalUrlHash: 1, uid: 1 }, unique: true },
