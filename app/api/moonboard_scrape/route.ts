@@ -59,42 +59,43 @@ export const GET = () =>
               "UTC",
             );
 
-          for (const entry of logbookEntries.Data) {
-            const updateResult = await MoonBoardLogbookEntries.updateOne(
-              { Id: entry.Id },
-              {
-                $set: {
-                  ...entry,
-                  DateClimbed: roundToNearestDay(
-                    dateFromASPNet(entry.DateClimbed),
-                    { in: tz("UTC") },
-                  ),
-                  DateInserted: entry.DateInserted
-                    ? dateFromASPNet(entry.DateInserted)
-                    : null,
-                  GradeNumber:
-                    entry.Grade && moonboardGradeStringToNumber[entry.Grade],
-                  Problem: {
-                    ...entry.Problem,
-                    DateInserted: entry.Problem.DateInserted
-                      ? dateFromASPNet(entry.Problem.DateInserted)
-                      : null,
-                    DateUpdated: entry.Problem.DateUpdated
-                      ? dateFromASPNet(entry.Problem.DateUpdated)
+          yield MoonBoardLogbookEntries.bulkWrite(
+            logbookEntries.Data.map((entry) => ({
+              updateOne: {
+                filter: { Id: entry.Id },
+                update: {
+                  $set: {
+                    ...entry,
+                    DateClimbed: roundToNearestDay(
+                      dateFromASPNet(entry.DateClimbed),
+                      { in: tz("UTC") },
+                    ),
+                    DateInserted: entry.DateInserted
+                      ? dateFromASPNet(entry.DateInserted)
                       : null,
                     GradeNumber:
-                      entry.Problem.Grade &&
-                      moonboardGradeStringToNumber[entry.Problem.Grade],
-                    UserGradeNumber:
-                      entry.Problem.UserGrade &&
-                      moonboardGradeStringToNumber[entry.Problem.UserGrade],
+                      entry.Grade && moonboardGradeStringToNumber[entry.Grade],
+                    Problem: {
+                      ...entry.Problem,
+                      DateInserted: entry.Problem.DateInserted
+                        ? dateFromASPNet(entry.Problem.DateInserted)
+                        : null,
+                      DateUpdated: entry.Problem.DateUpdated
+                        ? dateFromASPNet(entry.Problem.DateUpdated)
+                        : null,
+                      GradeNumber:
+                        entry.Problem.Grade &&
+                        moonboardGradeStringToNumber[entry.Problem.Grade],
+                      UserGradeNumber:
+                        entry.Problem.UserGrade &&
+                        moonboardGradeStringToNumber[entry.Problem.UserGrade],
+                    },
                   },
                 },
+                upsert: true,
               },
-              { upsert: true },
-            );
-            setUpdated(updateResult);
-          }
+            })),
+          );
 
           yield { logbookEntries };
         }
