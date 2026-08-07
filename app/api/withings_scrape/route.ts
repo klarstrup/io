@@ -118,6 +118,8 @@ export const GET = async (req: NextRequest) => {
         },
         setUpdated,
       ) {
+        setUpdated(false);
+
         const refreshTokenUrl = new URL(
           "https://wbsapi.withings.net/v2/oauth2",
         );
@@ -215,24 +217,25 @@ export const GET = async (req: NextRequest) => {
             })
           ).json()) as Withings.MeasureResponse;
 
-          for (const measureGroup of measureResponse.body.measuregrps) {
-            const updateResult = await WithingsMeasureGroup.updateOne(
-              { grpid: measureGroup.grpid },
-              {
-                $set: {
-                  ...measureGroup,
-                  measuredAt: new Date(measureGroup.date * 1000),
-                  createdAt: new Date(measureGroup.created * 1000),
-                  modifiedAt: new Date(measureGroup.modified * 1000),
-                  _withings_userId: Number(accessTokenResponse.userid),
-                  _io_userId: user.id,
+          yield WithingsMeasureGroup.bulkWrite(
+            measureResponse.body.measuregrps.map((measureGroup) => ({
+              updateOne: {
+                filter: { grpid: measureGroup.grpid },
+                update: {
+                  $set: {
+                    ...measureGroup,
+                    measuredAt: new Date(measureGroup.date * 1000),
+                    createdAt: new Date(measureGroup.created * 1000),
+                    modifiedAt: new Date(measureGroup.modified * 1000),
+                    _withings_userId: Number(accessTokenResponse.userid),
+                    _io_userId: user.id,
+                  },
                 },
+                upsert: true,
               },
-              { upsert: true },
-            );
+            })),
+          );
 
-            setUpdated(updateResult);
-          }
           yield `Fetched and upserted ${measureResponse.body.measuregrps.length} measure groups`;
 
           if (!backfilledMeasureGroups) {
@@ -284,26 +287,26 @@ export const GET = async (req: NextRequest) => {
             })
           ).json()) as Withings.SleepSummaryResponse;
 
-          for (const sleepSeries of sleepSummaryResponse.body.series) {
-            const updateResult = await WithingsSleepSummarySeries.updateOne(
-              { id: sleepSeries.id },
-              {
-                $set: {
-                  ...sleepSeries,
-                  startedAt: new Date(sleepSeries.startdate * 1000),
-                  endedAt: new Date(sleepSeries.enddate * 1000),
-                  createdAt: new Date(sleepSeries.created * 1000),
-                  modifiedAt: new Date(sleepSeries.modified * 1000),
-                  // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
-                  _withings_userId: Number(accessTokenResponse.userid),
-                  _io_userId: user.id,
+          yield WithingsSleepSummarySeries.bulkWrite(
+            sleepSummaryResponse.body.series.map((sleepSeries) => ({
+              updateOne: {
+                filter: { id: sleepSeries.id },
+                update: {
+                  $set: {
+                    ...sleepSeries,
+                    startedAt: new Date(sleepSeries.startdate * 1000),
+                    endedAt: new Date(sleepSeries.enddate * 1000),
+                    createdAt: new Date(sleepSeries.created * 1000),
+                    modifiedAt: new Date(sleepSeries.modified * 1000),
+                    // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
+                    _withings_userId: Number(accessTokenResponse.userid),
+                    _io_userId: user.id,
+                  },
                 },
+                upsert: true,
               },
-              { upsert: true },
-            );
-
-            setUpdated(updateResult);
-          }
+            })),
+          );
 
           yield `Fetched and upserted ${sleepSummaryResponse.body.series.length} sleep summary series`;
 
