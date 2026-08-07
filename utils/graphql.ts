@@ -57,8 +57,7 @@ class ApolloError extends Error {
     | ({
         readonly message: string;
         extensions?:
-          | GraphQLErrorExtensions[]
-          | GraphQLFormattedError["extensions"];
+          GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
       } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">)
     | null;
 
@@ -390,11 +389,7 @@ export interface ResponseObject2 {
 }
 
 export type ResponseObjectFieldValue =
-  | string
-  | number
-  | boolean
-  | ResponseObject2
-  | ResponseObjectArray;
+  string | number | boolean | ResponseObject2 | ResponseObjectArray;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ResponseObjectArray extends ReadonlyArray<ResponseObjectFieldValue> {}
@@ -639,27 +634,29 @@ export async function normalizeAndUpsertQueryData(
   } = {};
   const _io_scrapedAt = new Date();
 
-  for (const object of objects) {
-    const __typename = object.__typename as string;
-    const updateResult = await TopLoggerGraphQL.updateOne(
-      { __typename, id: object.id as string },
-      {
-        $set: parseDateFields(object),
-        $setOnInsert: { _io_scrapedAt },
-      },
-      { upsert: true },
-    );
+  const objectsByType = objects.reduce(
+    (acc: { [key: string]: typeof objects }, obj) => {
+      const typeName = obj.__typename as string;
+      if (!acc[typeName]) acc[typeName] = [];
 
-    if (typeof updateResults[__typename] !== "object") {
-      updateResults[__typename] = {
-        matchedCount: 0,
-        modifiedCount: 0,
-        upsertedCount: 0,
-      };
-    }
-    updateResults[__typename].matchedCount += updateResult.matchedCount;
-    updateResults[__typename].modifiedCount += updateResult.modifiedCount;
-    updateResults[__typename].upsertedCount += updateResult.upsertedCount;
+      acc[typeName].push(obj);
+      return acc;
+    },
+    {},
+  );
+  for (const [__typename, objects] of Object.entries(objectsByType)) {
+    updateResults[__typename] = await TopLoggerGraphQL.bulkWrite(
+      objects.map((object) => ({
+        updateOne: {
+          filter: { __typename, id: object.id as string },
+          update: {
+            $set: parseDateFields(object),
+            $setOnInsert: { _io_scrapedAt },
+          },
+          upsert: true,
+        },
+      })),
+    );
   }
 
   return updateResults;
