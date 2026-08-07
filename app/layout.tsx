@@ -6,10 +6,9 @@ import { Suspense } from "react";
 import AblyWrapper from "../AblyWrapper";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
+import Backdrop from "./Backdrop";
 import LoadingIndicator from "./LoadingIndicator";
 import "./page.css";
-import { SerwistProvider } from "./serwist";
-import Backdrop from "./Backdrop";
 
 export const metadata = {
   title:
@@ -29,19 +28,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en">
       <body className="flex flex-col">
         <SessionProvider>
-          <SerwistProvider swUrl="/serwist/sw.js">
-            <ApolloWrapper>
-              <AblyWrapper>
-                <LoadingIndicator />
-                <Suspense>
-                  <UserStuff />
-                  {children}
-                  <Backdrop />
-                </Suspense>
-                <Analytics />
-              </AblyWrapper>
-            </ApolloWrapper>
-          </SerwistProvider>
+          <ApolloWrapper>
+            <AblyWrapper>
+              <LoadingIndicator />
+              <Suspense>
+                <UserStuff />
+                {children}
+                <Backdrop />
+              </Suspense>
+              <Analytics />
+            </AblyWrapper>
+          </ApolloWrapper>
         </SessionProvider>
         <div id="modal-root" />
       </body>
