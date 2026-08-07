@@ -66,39 +66,34 @@ export const GET = () =>
       async function* ({ config: { artistId } }, setUpdated) {
         setUpdated(false);
 
-        const [pastEvents, futureEvents] = await Promise.all([
-          getPastEvents(artistId),
-          getFutureEvents(artistId),
-        ]);
-
-        let updatedSongkickEvents = false;
-        for (const event of [...pastEvents, ...futureEvents]) {
-          const { upsertedCount, modifiedCount } =
-            await SongkickEvents.updateOne(
-              { id: event.id },
-              {
-                $set: {
-                  ...event,
-                  startDate: event.start.datetime
-                    ? new TZDate(event.start.datetime, "Etc/UTC")
-                    : dateStringToDate(event.start.date),
-                  endDate:
-                    event.end &&
-                    (event.end.datetime
-                      ? new TZDate(event.end.datetime, "Etc/UTC")
-                      : dateStringToDate(event.end.date)),
+        yield SongkickEvents.bulkWrite(
+          (
+            await Promise.all([
+              getPastEvents(artistId),
+              getFutureEvents(artistId),
+            ])
+          )
+            .flat()
+            .map((event) => ({
+              updateOne: {
+                filter: { id: event.id },
+                update: {
+                  $set: {
+                    ...event,
+                    startDate: event.start.datetime
+                      ? new TZDate(event.start.datetime, "Etc/UTC")
+                      : dateStringToDate(event.start.date),
+                    endDate:
+                      event.end &&
+                      (event.end.datetime
+                        ? new TZDate(event.end.datetime, "Etc/UTC")
+                        : dateStringToDate(event.end.date)),
+                  },
                 },
+                upsert: true,
               },
-              { upsert: true },
-            );
-
-          updatedSongkickEvents ||= upsertedCount > 0 || modifiedCount > 0;
-          yield event;
-        }
-
-        const updateResult = pastEvents.length + futureEvents.length > 0;
-
-        setUpdated(updatedSongkickEvents || updateResult);
+            })),
+        );
       },
     );
   });
