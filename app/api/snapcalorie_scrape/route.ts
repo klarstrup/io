@@ -60,21 +60,17 @@ export const GET = () =>
             yield authSigninRefreshTokenResponse;
           }
 
-          setUpdated(false);
           throw new Error("Failed to refresh token");
         }
 
         const jwtPayload = decode(authTokens.accessToken) as
-          | SnapCalorie.JWT
-          | null
-          | string;
+          SnapCalorie.JWT | null | string;
 
         if (
           !jwtPayload ||
           typeof jwtPayload === "string" ||
           !("id" in jwtPayload)
         ) {
-          setUpdated(false);
           throw new Error("Invalid JWT payload");
         }
 
