@@ -34,8 +34,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Suspense>
                 <UserStuff />
                 {children}
-                <Backdrop />
               </Suspense>
+              <Backdrop />
               <Analytics />
             </AblyWrapper>
           </ApolloWrapper>
