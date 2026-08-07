@@ -18,12 +18,13 @@ export async function jsonStreamResponse(generator: () => AsyncGenerator) {
   const encoder = new TextEncoder();
   let first = true;
   const flushJSON = async (data: unknown) => {
+    const json = JSON.stringify(data);
     if (first) {
       first = false;
-    } else {
+    } else if (json !== undefined) {
       await writer.write(encoder.encode(",\n"));
     }
-    await writer.write(encoder.encode(JSON.stringify(data)));
+    await writer.write(encoder.encode(json));
   };
   (async () => {
     await writer.write(encoder.encode("[\n"));
