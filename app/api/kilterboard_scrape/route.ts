@@ -12,7 +12,7 @@ import {
   KilterBoardClimbStats,
 } from "../../../sources/kilterboard.server";
 import { DataSource } from "../../../sources/utils";
-import { SetUpdatedFn, wrapSources } from "../../../sources/utils.server";
+import { wrapSources } from "../../../sources/utils.server";
 import { shuffle } from "../../../utils";
 import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
@@ -20,7 +20,6 @@ export const maxDuration = 60;
 
 async function* fetchSertAscents(
   token: string,
-  setUpdated: SetUpdatedFn,
   user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
 ) {
   const newestAscentInDatabase = await KilterBoardAscents.findOne(
@@ -48,7 +47,7 @@ async function* fetchSertAscents(
       user.timeZone ?? "Europe/Copenhagen",
       new TZDate(ascent.climbed_at, "UTC"),
     );
-    const updateResult = await KilterBoardAscents.updateOne(
+    yield KilterBoardAscents.updateOne(
       { uuid: ascent.uuid },
       {
         $set: {
@@ -65,14 +64,12 @@ async function* fetchSertAscents(
       },
       { upsert: true },
     );
-    setUpdated(updateResult);
   }
 
   yield { ascents };
 }
 async function* fetchSertBids(
   token: string,
-  setUpdated: SetUpdatedFn,
   user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
 ) {
   const newestBidInDatabase = await KilterBoardBids.findOne(
@@ -101,7 +98,7 @@ async function* fetchSertBids(
       user.timeZone ?? "Europe/Copenhagen",
       new TZDate(bid.climbed_at, "UTC"),
     );
-    const updateResult = await KilterBoardBids.updateOne(
+    yield KilterBoardBids.updateOne(
       { uuid: bid.uuid },
       {
         $set: {
@@ -114,13 +111,12 @@ async function* fetchSertBids(
       },
       { upsert: true },
     );
-    setUpdated(updateResult);
   }
 
   yield { bids };
 }
 
-async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
+async function* fetchSertClimbs(token: string) {
   await KilterBoardClimbs.createIndexes([{ key: { created_at: -1 } }]);
   const newestClimbInDatabase = await KilterBoardClimbs.findOne(
     {},
@@ -146,7 +142,7 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
 
     yield { [`climbs${syncDateString}`]: `inserting ${climbs.length}` };
     for (const climb of climbs) {
-      const updateResult = await KilterBoardClimbs.updateOne(
+      yield KilterBoardClimbs.updateOne(
         { uuid: climb.uuid },
         {
           $set: {
@@ -157,7 +153,6 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
         },
         { upsert: true },
       );
-      setUpdated(updateResult);
     }
     yield { [`climbs${syncDateString}`]: `inserted ${climbs.length}` };
 
@@ -170,7 +165,7 @@ async function* fetchSertClimbs(token: string, setUpdated: SetUpdatedFn) {
   }
 }
 
-async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
+async function* fetchSertClimbStats(token: string) {
   await KilterBoardClimbStats.createIndexes([
     { key: { climb_uuid: 1, angle: 1 }, unique: true },
     { key: { created_at: -1 } },
@@ -203,7 +198,7 @@ async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
       [`climb_stats${syncDateString}`]: `inserting ${climb_stats.length}`,
     };
     for (const climb_stat of climb_stats) {
-      const updateResult = await KilterBoardClimbStats.updateOne(
+      yield KilterBoardClimbStats.updateOne(
         { climb_uuid: climb_stat.climb_uuid, angle: climb_stat.angle },
         {
           $set: {
@@ -223,7 +218,6 @@ async function* fetchSertClimbStats(token: string, setUpdated: SetUpdatedFn) {
         },
         { upsert: true },
       );
-      setUpdated(updateResult);
     }
     yield {
       [`climb_stats${syncDateString}`]: `inserted ${climb_stats.length}`,
@@ -256,9 +250,7 @@ export const GET = () =>
       async function* ({ config: { token } }, setUpdated) {
         setUpdated(false);
 
-        for (const fetcher of shuffle(fetchers)) {
-          yield* fetcher(token, setUpdated, user);
-        }
+        for (const fetcher of shuffle(fetchers)) yield* fetcher(token, user);
       },
     );
   });
