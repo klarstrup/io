@@ -59,7 +59,6 @@ export const GET = () =>
         // This accounts for a situation where we ingest an empty or otherwise malformed iCal feed
         if (existingEventIds.length * 0.25 > events.length) {
           yield `Existing events count(${existingEventIds.length}) is much greater than new events count(${events.length}) for icalUrlHash: ${icalUrlHash}, skipping`;
-          setUpdated(false);
           return;
         }
 
@@ -69,13 +68,10 @@ export const GET = () =>
             !events.some((event) => event.uid === existingEvent.uid),
         );
 
-        const now2 = new Date();
-        const deleteResult = await IcalEvents.deleteMany({
+        yield await IcalEvents.deleteMany({
           ...ioIcalMeta,
           uid: { $in: eventsToDelete.map((event) => event.uid) },
         });
-        setUpdated(deleteResult);
-        yield `Deleted ${deleteResult.deletedCount} existing events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now2.getTime()) / 1000).toFixed(2)} seconds`;
 
         yield `Most recently modified event for icalUrlHash: ${icalUrlHash} is ${String(mostRecentlyModifiedEvent?.lastmodified) || "none"}`;
 
@@ -87,17 +83,10 @@ export const GET = () =>
             event.lastmodified > mostRecentlyModifiedEvent.lastmodified,
         );
 
-        let upsertResult = {
-          insertedCount: NaN,
-          upsertedCount: NaN,
-          matchedCount: NaN,
-          modifiedCount: NaN,
-        };
         if (eventsUpdatedSinceMostRecentlyModifiedEvent.length) {
           yield `Upserting ${eventsUpdatedSinceMostRecentlyModifiedEvent.length} events(of ${events.length} scraped) updated since most recently modified event for icalUrlHash: ${icalUrlHash}`;
 
-          const now3 = new Date();
-          upsertResult = await IcalEvents.bulkWrite(
+          yield await IcalEvents.bulkWrite(
             eventsUpdatedSinceMostRecentlyModifiedEvent.map(
               (event) =>
                 ({
@@ -123,8 +112,6 @@ export const GET = () =>
                 }) as const,
             ),
           );
-          setUpdated(upsertResult);
-          yield `Upserted ${eventsUpdatedSinceMostRecentlyModifiedEvent.length} events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now3.getTime()) / 1000).toFixed(2)} seconds`;
         } else {
           yield `No events updated since most recently modified event for icalUrlHash: ${icalUrlHash}, skipping insert`;
         }
@@ -133,8 +120,6 @@ export const GET = () =>
           icalUrlHash,
           fetchedEventsCount: events.length,
           existingEventsCount: existingEventIds.length,
-          deletedCount: deleteResult.deletedCount,
-          upsertResult,
           duration: ((new Date().getTime() - now0.getTime()) / 1000).toFixed(2),
         };
       },
