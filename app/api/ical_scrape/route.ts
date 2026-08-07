@@ -74,6 +74,7 @@ export const GET = () =>
           ...ioIcalMeta,
           uid: { $in: eventsToDelete.map((event) => event.uid) },
         });
+        setUpdated(deleteResult);
         yield `Deleted ${deleteResult.deletedCount} existing events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now2.getTime()) / 1000).toFixed(2)} seconds`;
 
         yield `Most recently modified event for icalUrlHash: ${icalUrlHash} is ${String(mostRecentlyModifiedEvent?.lastmodified) || "none"}`;
@@ -122,6 +123,7 @@ export const GET = () =>
                 }) as const,
             ),
           );
+          setUpdated(upsertResult);
           yield `Upserted ${eventsUpdatedSinceMostRecentlyModifiedEvent.length} events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now3.getTime()) / 1000).toFixed(2)} seconds`;
         } else {
           yield `No events updated since most recently modified event for icalUrlHash: ${icalUrlHash}, skipping insert`;
