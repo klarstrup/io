@@ -1,7 +1,7 @@
 "use client";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { getDate } from "date-fns";
+import { getDayOfYear } from "date-fns";
 import { useMemo, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { DiaryAgendaDayDayBacklogTodosDocument } from "../../graphql.generated/graphql";
@@ -36,7 +36,7 @@ export default function DiaryAgendaDayDayBacklog({
     pollInterval,
   });
   const now = useNow(60 * 1000);
-  const startDay = getDate(dayRange.start);
+  const startDay = getDayOfYear(dayRange.start);
 
   const calendarTodos = data?.user?.todos;
   const backlogTodos = useMemo(
