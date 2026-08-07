@@ -97,7 +97,7 @@ export const GET = () =>
           productSummariesResponse,
         };
 
-        await DSBProductSummaries.bulkWrite(
+        const bulkWriteResult = await DSBProductSummaries.bulkWrite(
           productSummariesResponse.productSummaries.map((productSummary) => ({
             updateOne: {
               filter: { checkInId: productSummary.checkInId },
@@ -159,7 +159,7 @@ export const GET = () =>
           })),
         );
 
-        setUpdated(true);
+        setUpdated(bulkWriteResult);
       },
     );
   });
