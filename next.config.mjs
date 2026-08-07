@@ -2,9 +2,7 @@ import { withSerwist } from "@serwist/turbopack";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = withSerwist({
-  experimental: {
-    viewTransition: true,
-  },
+  experimental: {},
   cacheComponents: true,
   logging: { fetches: { fullUrl: true } },
   reactStrictMode: true,
