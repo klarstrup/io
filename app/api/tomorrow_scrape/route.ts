@@ -75,28 +75,29 @@ export const GET = () =>
           geohash: truncatedGeohash,
         });
 
-        for (const interval of intervals) {
-          const startTime = new Date(interval.startTime);
-          const updateResult = await TomorrowIntervals.updateOne(
-            { _io_geohash: truncatedGeohash, startTime },
-            {
-              $set: {
-                ...interval,
-                startTime,
+        yield TomorrowIntervals.bulkWrite(
+          intervals.map((interval) => ({
+            updateOne: {
+              filter: {
                 _io_geohash: truncatedGeohash,
-                _io_point: {
-                  type: "Point",
-                  coordinates: [point.longitude, point.latitude],
-                },
+                startTime: new Date(interval.startTime),
               },
-              $setOnInsert: { _io_scrapedAt: new Date() },
+              update: {
+                $set: {
+                  ...interval,
+                  startTime: new Date(interval.startTime),
+                  _io_geohash: truncatedGeohash,
+                  _io_point: {
+                    type: "Point",
+                    coordinates: [point.longitude, point.latitude],
+                  },
+                },
+                $setOnInsert: { _io_scrapedAt: new Date() },
+              },
+              upsert: true,
             },
-            { upsert: true },
-          );
-          setUpdated(updateResult);
-
-          yield [interval.startTime, updateResult] as const;
-        }
+          })),
+        );
       },
     );
   });
