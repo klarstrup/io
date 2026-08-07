@@ -326,7 +326,7 @@ Z"
     alt="StarAndAntlers"
     width={StarAndAntlers.width}
     height={StarAndAntlers.height}
-    style={{ minWidth: "1em", height: "auto" }}
+    style={{ minWidth: "1.2em", height: "auto", marginTop: "-0.025em" }}
   />,
 ]; //.slice(0, 1);
 
