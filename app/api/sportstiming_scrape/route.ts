@@ -50,22 +50,23 @@ export const GET = () =>
     );
 
     let updatedSportstimingEvents = false;
-    for (const event of events) {
-      const { upsertedCount, modifiedCount } =
-        await SportstimingEvents.updateOne(
-          { EventId: event.EventId },
-          {
+    const bulkWriteResult = await SportstimingEvents.bulkWrite(
+      events.map((event) => ({
+        updateOne: {
+          filter: { EventId: event.EventId },
+          update: {
             $set: {
               ...event,
               RawDate: new Date(event.RawDate),
               EntryEndDate: new Date(event.EntryEndDate),
             },
           },
-          { upsert: true },
-        );
-
-      updatedSportstimingEvents ||= upsertedCount > 0 || modifiedCount > 0;
-    }
+          upsert: true,
+        },
+      })),
+    );
+    updatedSportstimingEvents ||=
+      bulkWriteResult.upsertedCount > 0 || bulkWriteResult.modifiedCount > 0;
 
     yield* wrapSources(
       user,
