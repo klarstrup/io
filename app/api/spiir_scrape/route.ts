@@ -79,33 +79,34 @@ export const GET = () =>
           { key: { _io_userId: 1 } },
         ]);
 
-        for (const accountGroup of accountGroups) {
-          const updateResult = await SpiirAccountGroups.updateOne(
-            { id: accountGroup.id },
-            {
-              $set: {
-                _io_userId: user.id,
-                ...accountGroup,
-                startDate:
-                  accountGroup.startDate && new Date(accountGroup.startDate),
-                endDate: accountGroup.endDate && new Date(accountGroup.endDate),
-                lastUpdated:
-                  accountGroup.lastUpdated &&
-                  new Date(accountGroup.lastUpdated),
-                periods: accountGroup.periods.map((period) => ({
-                  ...period,
-                  startDate: period.startDate && new Date(period.startDate),
-                  endDate: period.endDate && new Date(period.endDate),
-                })),
+        yield SpiirAccountGroups.bulkWrite(
+          accountGroups.map((accountGroup) => ({
+            updateOne: {
+              filter: { id: accountGroup.id },
+              update: {
+                $set: {
+                  _io_userId: user.id,
+                  ...accountGroup,
+                  startDate:
+                    accountGroup.startDate && new Date(accountGroup.startDate),
+                  endDate:
+                    accountGroup.endDate && new Date(accountGroup.endDate),
+                  lastUpdated:
+                    accountGroup.lastUpdated &&
+                    new Date(accountGroup.lastUpdated),
+                  periods: accountGroup.periods.map((period) => ({
+                    ...period,
+                    startDate: period.startDate && new Date(period.startDate),
+                    endDate: period.endDate && new Date(period.endDate),
+                  })),
+                },
               },
+              upsert: true,
             },
-            { upsert: true },
-          );
+          })),
+        );
 
-          yield accountGroup.id;
-
-          setUpdated(updateResult);
-        }
+        for (const accountGroup of accountGroups) yield accountGroup.id;
       },
     );
   });
