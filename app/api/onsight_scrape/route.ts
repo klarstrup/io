@@ -31,29 +31,33 @@ export const GET = () =>
           { headers },
         );
 
-        for (const competition of competitions) {
-          const updateResult = await OnsightCompetitions.updateOne(
-            { _id: competition._id },
-            {
-              $set: {
-                ...competition,
-                _createdAt: new Date(competition._createdAt),
-                _updatedAt: new Date(competition._updatedAt),
-                startAt: new TZDate(
-                  `${competition.Date} ${competition.Start.split(" - ")[0]!}`,
-                  "Europe/Copenhagen",
-                ),
-                endAt: new TZDate(
-                  `${competition.Date} ${competition.Start.split(" - ")[1]!}`,
-                  "Europe/Copenhagen",
-                ),
+        yield OnsightCompetitions.bulkWrite(
+          competitions.map((competition) => ({
+            updateOne: {
+              filter: { _id: competition._id },
+              update: {
+                $set: {
+                  ...competition,
+                  _createdAt: new Date(competition._createdAt),
+                  _updatedAt: new Date(competition._updatedAt),
+                  startAt: new TZDate(
+                    `${competition.Date} ${competition.Start.split(" - ")[0]!}`,
+                    "Europe/Copenhagen",
+                  ),
+                  endAt: new TZDate(
+                    `${competition.Date} ${competition.Start.split(" - ")[1]!}`,
+                    "Europe/Copenhagen",
+                  ),
+                },
               },
+              upsert: true,
             },
-            { upsert: true },
-          );
-          yield competition;
-          setUpdated(updateResult);
+          })),
+        );
 
+        yield competitions;
+
+        for (const competition of competitions) {
           const competitionScoreURL = new URL(
             "https://api.appery.io/rest/1/db/collections/Competition_score",
           );
@@ -68,21 +72,23 @@ export const GET = () =>
             { headers },
           );
 
-          for (const competitionScore of competitionScores) {
-            const updateResult = await OnsightCompetitionScores.updateOne(
-              { _id: competitionScore._id },
-              {
-                $set: {
-                  ...competitionScore,
-                  _createdAt: new Date(competitionScore._createdAt),
-                  _updatedAt: new Date(competitionScore._updatedAt),
+          yield OnsightCompetitionScores.bulkWrite(
+            competitionScores.map((competitionScore) => ({
+              updateOne: {
+                filter: { _id: competitionScore._id },
+                update: {
+                  $set: {
+                    ...competitionScore,
+                    _createdAt: new Date(competitionScore._createdAt),
+                    _updatedAt: new Date(competitionScore._updatedAt),
+                  },
                 },
+                upsert: true,
               },
-              { upsert: true },
-            );
-            yield competitionScore;
-            setUpdated(updateResult);
-          }
+            })),
+          );
+
+          yield competitionScores;
         }
       },
     );
