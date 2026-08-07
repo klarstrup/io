@@ -23,23 +23,23 @@ export const GET = () =>
             { headers: { Authorization: `Bearer ${token}` } },
           );
 
-        for (const workoutLog of workoutLogs) {
-          const updateResult = await CrimpdWorkoutLogs.updateOne(
-            { _id: workoutLog._id },
-            {
-              $set: {
-                ...workoutLog,
-                logDate: new Date(workoutLog.logDate),
-                dateCreated: new Date(workoutLog.dateCreated),
-                lastUpdated: new Date(workoutLog.lastUpdated),
-                _io_userId: user.id,
+        yield CrimpdWorkoutLogs.bulkWrite(
+          workoutLogs.map((workoutLog) => ({
+            updateOne: {
+              filter: { _id: workoutLog._id },
+              update: {
+                $set: {
+                  ...workoutLog,
+                  logDate: new Date(workoutLog.logDate),
+                  dateCreated: new Date(workoutLog.dateCreated),
+                  lastUpdated: new Date(workoutLog.lastUpdated),
+                  _io_userId: user.id,
+                },
               },
+              upsert: true,
             },
-            { upsert: true },
-          );
-
-          setUpdated(updateResult);
-        }
+          })),
+        );
 
         yield { workoutLogs };
       },
