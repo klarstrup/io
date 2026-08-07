@@ -43,7 +43,6 @@ export const GET = () =>
           { headers: { Authorization: `Bearer ${token}` } },
         );
         if (!res.ok) {
-          setUpdated(false);
           throw new Error(
             `Failed to fetch user competitions: ${res.status} ${res.statusText}`,
           );

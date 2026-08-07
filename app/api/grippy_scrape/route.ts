@@ -113,7 +113,6 @@ export const GET = () =>
             yield authSigninRefreshTokenResponse;
           }
 
-          setUpdated(false);
           throw new Error("Failed to refresh token");
         }
 
