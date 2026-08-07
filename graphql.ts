@@ -6,9 +6,11 @@ import {
   addDays,
   addWeeks,
   differenceInHours,
+  getDay,
   Interval,
   isValid,
   max,
+  setHours,
   startOfDay,
   subDays,
 } from "date-fns";
@@ -65,6 +67,8 @@ import {
   getUserIcalTodosBetween,
   IcalEvents,
 } from "./sources/ical.server";
+import { Meyers } from "./sources/meyers";
+import { MeyersMenus } from "./sources/meyers.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
 import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
@@ -81,6 +85,7 @@ import {
   omitUndefined,
   pick,
   rangeToQuery,
+  unique,
 } from "./utils";
 
 const emitGraphQLUpdate = async (
@@ -216,6 +221,69 @@ export const resolvers: GQResolvers<
             __typename: "Event",
             url: typeof event.url === "string" ? event.url : null,
           } satisfies GQEvent),
+        ),
+        Array.fromAsync(
+          (
+            await Users.findOne({ _id: new ObjectId(userId) })
+          )?.dataSources?.some(
+            (dataSource) =>
+              dataSource.source === DataSource.Meyers &&
+              dataSource.paused !== true,
+          )
+            ? MeyersMenus.find({
+                date_time: rangeToQuery(interval.start, interval.end),
+                "names.da": "Almanak",
+              })
+            : [],
+          (menu) => {
+            if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
+
+            const formatMeyersMenuSummary = (menu: Meyers.MongoMenu) => {
+              const dishes = unique(
+                menu.menu_sections
+                  .filter(
+                    (section) =>
+                      !section.names.da?.includes("halal") &&
+                      !section.names.da?.includes("vegansk") &&
+                      !section.names.da?.includes("vegetar") &&
+                      (section.names.da?.includes("Varm ret") ||
+                        section.names.da?.includes("Delikatesse") ||
+                        section.names.da?.includes("Torsdagssødt")),
+                  )
+                  .flatMap((section) =>
+                    section.menu_dishes
+                      .map((dish) => dish.names.da)
+                      .filter(Boolean)
+                      .map((name) =>
+                        / med /.test(name)
+                          ? name.split(/ med /)[0]
+                          : / af /.test(name)
+                            ? name.split(/ af /)[0]
+                            : /, /.test(name)
+                              ? name.split(/, /)[0]
+                              : name,
+                      ),
+                  )
+                  .filter(Boolean),
+              );
+
+              return new Intl.ListFormat("da", {
+                style: "long",
+                type: "conjunction",
+              }).format(dishes);
+            };
+
+            entries.push({
+              __typename: "Event",
+              datetype: "date-time",
+              id: menu._id.toString(),
+              start: setHours(menu.date_time, 10),
+              end: setHours(menu.date_time, 10),
+              summary: formatMeyersMenuSummary(menu),
+              location: "Proprty.ai Office",
+              url: "https://meyers.dk/frokost/almanak",
+            } satisfies GQEvent);
+          },
         ),
         Array.fromAsync(
           getUserWithingsSleepSummarySeriesBetween(userId, interval),

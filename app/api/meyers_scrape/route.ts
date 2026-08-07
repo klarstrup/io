@@ -3,6 +3,7 @@ import { Meyers } from "../../../sources/meyers";
 import { MeyersMenus } from "../../../sources/meyers.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
+import { dayStartHour } from "../../../utils";
 import { jsonStreamResponse } from "../scraper-utils";
 
 export const maxDuration = 45;
@@ -35,7 +36,10 @@ export const GET = () =>
               update: {
                 $set: {
                   ...menu,
-                  date_time: new Date(menu.date),
+                  date_time: new Date(
+                    menu.date +
+                      `T${dayStartHour.toString().padStart(2, "0")}:00:00Z`,
+                  ),
                   external_id: menuResponse.external_id,
                   subsidiary_name: menuResponse.subsidiary_name,
                 } satisfies Omit<Meyers.MongoMenu, "_id">,
