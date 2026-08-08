@@ -24,24 +24,10 @@ export async function GET() {
       compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
     );
 
-  const moreThanMinutesSinceWeFetchedSpiir =
-    dataSources.some((dataSource) => dataSource.source === DataSource.Spiir) &&
-    dataSources.every((dataSource) => {
-      if (dataSource.source !== DataSource.Spiir) return true;
-      const lastAttemptedAt = dataSource.lastAttemptedAt ?? epoch;
-      const timeSinceLastAttempted =
-        new Date().getTime() - new Date(lastAttemptedAt).getTime();
-      return timeSinceLastAttempted > 7 * 60 * 1000;
-    });
-
   const mostRecentlyAttempted = dataSources[dataSources.length - 1];
-  const leastRecentlyAttemptedOrSpiir =
-    moreThanMinutesSinceWeFetchedSpiir &&
-    mostRecentlyAttempted?.source !== DataSource.Spiir
-      ? dataSources.find((source) => source.source === DataSource.Spiir)
-      : dataSources[0];
+  const leastRecentlyAttempted = dataSources[0];
 
-  if (!leastRecentlyAttemptedOrSpiir || !mostRecentlyAttempted) {
+  if (!leastRecentlyAttempted || !mostRecentlyAttempted) {
     return Response.json({
       reason: "No data sources to scrape.",
     });
@@ -56,16 +42,16 @@ export async function GET() {
   // If the most recently attempted scrape was less than 15 minutes ago, skip.
   if (timeSinceMostRecentlyAttempted < 5 * 60 * 1000) {
     console.log(
-      `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because another scrape was attempted less than 15 minutes ago.`,
+      `Skipping /cron /${leastRecentlyAttempted.source}_scrape scrape because another scrape was attempted less than 5 minutes ago.`,
     );
     return Response.json({
-      reason: "Another scrape was attempted less than 15 minutes ago.",
+      reason: "Another scrape was attempted less than 5 minutes ago.",
     });
   }
 
   if (!process.env.VERCEL) {
     console.log(
-      `Skipping /cron /${leastRecentlyAttemptedOrSpiir.source}_scrape scrape because we are not on Vercel`,
+      `Skipping /cron /${leastRecentlyAttempted.source}_scrape scrape because we are not on Vercel`,
     );
     return Response.json({
       reason: "We are not on Vercel.",
@@ -73,6 +59,6 @@ export async function GET() {
   }
 
   redirect(
-    `/api/${leastRecentlyAttemptedOrSpiir.source}_scrape?userDataSourceId=${leastRecentlyAttemptedOrSpiir.id}`,
+    `/api/${leastRecentlyAttempted.source}_scrape?userDataSourceId=${leastRecentlyAttempted.id}`,
   );
 }
