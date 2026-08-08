@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { auth } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
-import { epoch, uniqueBy } from "../../../utils";
+import { epoch } from "../../../utils";
 
 export async function GET() {
   await connection();
@@ -13,19 +13,16 @@ export async function GET() {
   if (!user) return new Response("Unauthorized", { status: 401 });
   const users = await Users.find({ id: user.id }).toArray();
 
-  const dataSources = uniqueBy(
-    users
-      .flatMap((user) => user.dataSources)
-      .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
-      .filter((dataSource) => dataSource.paused !== true)
-      .filter(
-        (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
-      )
-      .sort((a, b) =>
-        compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
-      ),
-    (ds) => ds.source,
-  );
+  const dataSources = users
+    .flatMap((user) => user.dataSources)
+    .filter((dataSource): dataSource is UserDataSource => Boolean(dataSource))
+    .filter((dataSource) => dataSource.paused !== true)
+    .filter(
+      (dataSource) => dataSource.source !== DataSource.Fitocracy, // Fitocracy is read-only
+    )
+    .sort((a, b) =>
+      compareAsc(a.lastAttemptedAt ?? epoch, b.lastAttemptedAt ?? epoch),
+    );
 
   const moreThanMinutesSinceWeFetchedSpiir =
     dataSources.some((dataSource) => dataSource.source === DataSource.Spiir) &&
@@ -75,5 +72,7 @@ export async function GET() {
     });
   }
 
-  redirect(`/api/${leastRecentlyAttemptedOrSpiir.source}_scrape`);
+  redirect(
+    `/api/${leastRecentlyAttemptedOrSpiir.source}_scrape?userDataSourceId=${leastRecentlyAttemptedOrSpiir.id}`,
+  );
 }
