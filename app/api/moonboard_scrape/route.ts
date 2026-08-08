@@ -1,4 +1,5 @@
 import { tz, TZDate } from "@date-fns/tz";
+import { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import {
   MoonBoard,
@@ -12,7 +13,7 @@ import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const maxDuration = 45;
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -100,5 +101,6 @@ export const GET = () =>
           yield { logbookEntries };
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

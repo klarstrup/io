@@ -6,6 +6,7 @@ import {
   startOfMonth,
 } from "date-fns";
 import { DateTime } from "luxon";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import {
   getMyFitnessPalReport,
@@ -36,7 +37,7 @@ const years = [
 
 export const maxDuration = 45;
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -127,5 +128,6 @@ export const GET = () =>
           }
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { Crimpd, CrimpdWorkoutLogs } from "../../../sources/crimpd";
 import { DataSource } from "../../../sources/utils";
@@ -6,7 +7,7 @@ import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const maxDuration = 45;
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -43,5 +44,6 @@ export const GET = () =>
 
         yield { workoutLogs };
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

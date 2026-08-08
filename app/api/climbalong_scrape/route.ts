@@ -1,4 +1,5 @@
 import { addDays } from "date-fns";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { Climbalong } from "../../../sources/climbalong";
 import {
@@ -23,7 +24,7 @@ export const maxDuration = 45;
 const fetchCA = <T>(path: string, init?: RequestInit) =>
   fetchJson<T>(new URL(path, `https://comp.climbalong.com/api/`), init);
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const startedAt = Date.now();
     const getTimeRemaining = () =>
@@ -211,5 +212,6 @@ export const GET = () =>
           },
         );
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

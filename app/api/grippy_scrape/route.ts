@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { connection } from "next/server";
+import { connection, NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isGrippyAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -55,7 +55,7 @@ async function fetchGrippyWorkoutDetailsByUuid(
   return (await res.json()) as Grippy.WorkoutDetails;
 }
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     await connection();
 
@@ -243,5 +243,6 @@ export const GET = () =>
           );
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

@@ -26,7 +26,7 @@ export const maxDuration = 60;
 const clientId = process.env.WITHINGS_CLIENT_ID!;
 const clientSecret = process.env.WITHINGS_CLIENT_SECRET!;
 
-export const GET = async (req: NextRequest) => {
+export const GET = async (request: NextRequest) => {
   if (!clientId || !clientSecret) {
     return new Response("Withings client ID or secret not set", {
       status: 500,
@@ -38,7 +38,7 @@ export const GET = async (req: NextRequest) => {
   const user = (await auth())?.user;
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const searchParams = req.nextUrl.searchParams;
+  const searchParams = request.nextUrl.searchParams;
 
   const userWithingsSources = (user.dataSources ?? []).find(
     (ds) => ds.source === DataSource.Withings,
@@ -331,6 +331,7 @@ export const GET = async (req: NextRequest) => {
           }
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });
 };

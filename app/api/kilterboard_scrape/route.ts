@@ -1,5 +1,6 @@
 import { TZDate, tzOffset } from "@date-fns/tz";
 import { addMinutes } from "date-fns";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import {
   difficultyToGradeMap,
@@ -239,7 +240,7 @@ const fetchers = [
   fetchSertClimbStats,
 ];
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -252,5 +253,6 @@ export const GET = () =>
 
         for (const fetcher of shuffle(fetchers)) yield* fetcher(token, user);
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

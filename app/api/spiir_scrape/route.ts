@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { Spiir } from "../../../sources/spiir";
 import { SpiirAccountGroups } from "../../../sources/spiir.server";
@@ -44,7 +45,7 @@ const startAutosync = async (SessionKey: string) => {
 const getAccountGroups = (init?: RequestInit) =>
   fetchSpiir<Spiir.AccountGroup[]>("Account/GetAccountGroups", init);
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -108,5 +109,6 @@ export const GET = () =>
 
         for (const accountGroup of accountGroups) yield accountGroup.id;
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

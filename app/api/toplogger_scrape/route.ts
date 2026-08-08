@@ -1,6 +1,6 @@
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -372,5 +372,6 @@ export const GET = (request: NextRequest) =>
           },
         );
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

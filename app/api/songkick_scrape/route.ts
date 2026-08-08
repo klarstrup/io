@@ -1,4 +1,5 @@
 import { TZDate } from "@date-fns/tz";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { Songkick } from "../../../sources/songkick";
 import { SongkickEvents } from "../../../sources/songkick.server";
@@ -49,7 +50,7 @@ const dateStringToDate = (dateString: `${string}-${string}-${string}`) => {
   return new TZDate(year!, month! - 1, day!, "Etc/UTC");
 };
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     if (!process.env.SONGKICK_APIKEY) {
       console.error("Missing SONGKICK_APIKEY");
@@ -95,5 +96,6 @@ export const GET = () =>
             })),
         );
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

@@ -1,4 +1,5 @@
 import { TZDate } from "@date-fns/tz";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { Onsight } from "../../../sources/onsight";
 import {
@@ -11,7 +12,7 @@ import { fetchJson, jsonStreamResponse } from "../scraper-utils";
 
 export const maxDuration = 45;
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -91,5 +92,6 @@ export const GET = () =>
           yield competitionScores;
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

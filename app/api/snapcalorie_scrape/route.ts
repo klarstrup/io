@@ -1,6 +1,6 @@
 import { decode } from "jsonwebtoken";
 import { ObjectId } from "mongodb";
-import { connection } from "next/server";
+import { connection, NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { isSnapCalorieAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
@@ -12,7 +12,7 @@ import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
 export const maxDuration = 45;
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     await connection();
 
@@ -118,5 +118,6 @@ export const GET = () =>
 
         yield bulkWriteResult;
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

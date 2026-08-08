@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { RunDouble } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
@@ -21,7 +22,7 @@ async function* getRuns(userId: string) {
   } while (cursor);
 }
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -52,5 +53,6 @@ export const GET = () =>
           if (!updateResult.upsertedCount) break;
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

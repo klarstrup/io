@@ -1,5 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, endOfDay, startOfDay, subSeconds } from "date-fns";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import type { TomorrowResponse } from "../../../sources/tomorrow";
 import { TomorrowIntervals } from "../../../sources/tomorrow.server";
@@ -53,7 +54,7 @@ async function fetchTomorrowTimelineIntervals({
   return tomorrowResponse.data?.timelines[0]?.intervals ?? [];
 }
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -99,5 +100,6 @@ export const GET = () =>
           })),
         );
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

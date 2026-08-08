@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { connection } from "next/server";
+import { NextRequest, connection } from "next/server";
 import { auth } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import { DSB, isDSBAuthTokens } from "../../../sources/dsb";
@@ -27,7 +27,7 @@ async function fetchDSBProductSummaries(authTokens: DSB.AuthTokens) {
   return (await res.json()) as DSB.ProductSummariesResponse;
 }
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     await connection();
 
@@ -160,5 +160,6 @@ export const GET = () =>
 
         setUpdated(bulkWriteResult);
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

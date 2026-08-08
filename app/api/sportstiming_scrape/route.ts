@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { SportsTiming } from "../../../sources/sportstiming";
 import {
@@ -18,7 +19,7 @@ const sportstimingHeaders: HeadersInit = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
 };
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -176,5 +177,6 @@ export const GET = () =>
           yield event;
         }
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });
