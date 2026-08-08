@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { isDate, subMilliseconds } from "date-fns";
+import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
 import { extractIcalCalendarAndEvents } from "../../../sources/ical";
@@ -11,7 +12,7 @@ import { fetchText, jsonStreamResponse } from "../scraper-utils";
 
 export const maxDuration = 60;
 
-export const GET = () =>
+export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
@@ -123,5 +124,6 @@ export const GET = () =>
           duration: ((new Date().getTime() - now0.getTime()) / 1000).toFixed(2),
         };
       },
+      request.nextUrl.searchParams.get("userDataSourceId"),
     );
   });

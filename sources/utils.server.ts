@@ -28,6 +28,7 @@ export async function* wrapSources<S extends DataSource, T>(
     dataSource: UserDataSource & { source: S },
     setUpdated: SetUpdatedFn,
   ) => AsyncGenerator<T>,
+  userDataSourceId?: string | null,
 ) {
   // Randomize the order of data sources to improve scraping coverage for users with many data sources
   // TODO: Let a source be prioritized, for example if it hasn't been scraped in a while, maybe by URL
@@ -36,8 +37,15 @@ export async function* wrapSources<S extends DataSource, T>(
       .filter(
         (ds): ds is UserDataSource & { source: S } => ds.source === source,
       )
+      .filter((ds) => !userDataSourceId || ds.id === userDataSourceId)
       .filter((dataSource) => dataSource.paused !== true),
   );
+
+  if (userDataSourceId && dataSources.length === 0) {
+    throw new Error(
+      `No data source found for userDataSourceId ${userDataSourceId} on user ${user.id} with source ${source}`,
+    );
+  }
 
   for (const dataSource of dataSources) {
     const scrapeId = new ObjectId().toString();
