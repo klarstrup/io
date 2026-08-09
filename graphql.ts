@@ -253,17 +253,43 @@ export const resolvers: GQResolvers<
                   .flatMap((section) =>
                     section.menu_dishes
                       .map((dish) => {
+                        const sectionName = section.names.da || "";
+                        const dishName = dish.names.da || "";
                         let prefix = "";
 
-                        if (section.names.da?.includes("Varm ret")) {
-                          prefix = "🥘";
-                        } else if (section.names.da?.includes("Delikatesse")) {
-                          prefix = "🥪";
-                        } else if (section.names.da?.includes("Torsdagssødt")) {
+                        if (sectionName.includes("Varm ret")) {
+                          if (dishName.includes("Burrito")) {
+                            prefix = "🌯";
+                          } else if (dishName.includes("Burger")) {
+                            prefix = "🍔";
+                          } else if (dishName.includes("Pasta")) {
+                            prefix = "🍝";
+                          } else if (dishName.includes("Pizza")) {
+                            prefix = "🍕";
+                          } else if (dishName.includes("Suppe")) {
+                            prefix = "🍲";
+                          } else if (dishName.includes("Taco")) {
+                            prefix = "🌮";
+                          } else if (dishName.includes("Pita")) {
+                            prefix = "🥙";
+                          } else if (dishName.includes("karry")) {
+                            prefix = "🍛";
+                          } else if (dishName.includes("kalkun")) {
+                            prefix = "🦃";
+                          } else {
+                            prefix = "🥘";
+                          }
+                        } else if (sectionName.includes("Delikatesse")) {
+                          if (dishName.includes("salat")) {
+                            prefix = "🥗";
+                          } else {
+                            prefix = "🥪";
+                          }
+                        } else if (sectionName.includes("Torsdagssødt")) {
                           prefix = "🍰";
                         }
 
-                        return `${prefix} ${dish.names.da || ""}`;
+                        return `${prefix} ${dishName || ""}`;
                       })
                       .filter(Boolean)
                       .map((name) =>
