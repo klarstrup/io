@@ -255,13 +255,15 @@ export const resolvers: GQResolvers<
                       .map((dish) => dish.names.da)
                       .filter(Boolean)
                       .map((name) =>
-                        / med /.test(name)
-                          ? name.split(/ med /)[0]
-                          : / af /.test(name)
-                            ? name.split(/ af /)[0]
-                            : /, /.test(name)
-                              ? name.split(/, /)[0]
-                              : name,
+                        / - /.test(name)
+                          ? name.split(/ - /)[0]
+                          : / med /.test(name)
+                            ? name.split(/ med /)[0]
+                            : / af /.test(name)
+                              ? name.split(/ af /)[0]
+                              : /, /.test(name)
+                                ? name.split(/, /)[0]
+                                : name,
                       ),
                   )
                   .filter(Boolean),
