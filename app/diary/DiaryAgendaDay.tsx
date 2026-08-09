@@ -396,7 +396,8 @@ export function DiaryAgendaDay({
             entry.datetype !== "date" &&
             "end" in entry &&
             entry.end &&
-            isBefore(entry.end, dayEnd)
+            isBefore(entry.end, dayEnd) &&
+            !isEqual(entry.start, entry.end) // Don't insert an end for 0 duration events
           ) {
             // Do not insert event start event if the event started on a previous day, but insert an event end event, so that the event appears as ongoing until the end time, but not as starting at the start time
 

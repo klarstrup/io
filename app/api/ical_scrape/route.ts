@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { isDate, subMilliseconds } from "date-fns";
+import { isDate, max, subMilliseconds } from "date-fns";
 import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
@@ -98,7 +98,7 @@ export const GET = (request: NextRequest) =>
                         ...event,
                         // iCal DTEND is exclusive, so we subtract 1ms to make it inclusive
                         end: isDate(event.end)
-                          ? subMilliseconds(event.end, 1)
+                          ? max([subMilliseconds(event.end, 1), event.start])
                           : event.end,
                         recurrences:
                           event.recurrences && Object.values(event.recurrences),
