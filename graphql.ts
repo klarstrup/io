@@ -252,7 +252,19 @@ export const resolvers: GQResolvers<
                   )
                   .flatMap((section) =>
                     section.menu_dishes
-                      .map((dish) => dish.names.da)
+                      .map((dish) => {
+                        let prefix = "";
+
+                        if (section.names.da?.includes("Varm ret")) {
+                          prefix = "🥘";
+                        } else if (section.names.da?.includes("Delikatesse")) {
+                          prefix = "🥪";
+                        } else if (section.names.da?.includes("Torsdagssødt")) {
+                          prefix = "🍰";
+                        }
+
+                        return `${prefix} ${dish.names.da || ""}`;
+                      })
                       .filter(Boolean)
                       .map((name) =>
                         / - /.test(name)
