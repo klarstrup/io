@@ -1,3 +1,4 @@
+import { addWeeks } from "date-fns";
 import type { NextRequest } from "next/server";
 import { auth } from "../../../auth";
 import { Meyers } from "../../../sources/meyers";
@@ -20,40 +21,45 @@ export const GET = (request: NextRequest) =>
       async function* (_, setUpdated) {
         setUpdated(false);
 
-        const res = await fetch(
-          "https://meyers.dk/api/foodop/menus?external_ids=28101",
-        );
-        if (!res.ok) {
-          throw new Error(
-            `Failed to fetch Meyer menus: ${res.status} ${res.statusText}`,
+        for (let i = 0; i < 3; i++) {
+          const res = await fetch(
+            `https://meyers.dk/api/foodop/menus?external_ids=28101&end_date=${
+              addWeeks(new Date(), i).toISOString().split("T")[0]!
+            }`,
           );
-        }
-        const menusResponses = (await res.json()) as Meyers.MenusResponse[];
+          console.log(res.url);
+          if (!res.ok) {
+            throw new Error(
+              `Failed to fetch Meyer menus: ${res.status} ${res.statusText}`,
+            );
+          }
+          const menusResponses = (await res.json()) as Meyers.MenusResponse[];
 
-        for (const menuResponse of menusResponses) {
-          yield await MeyersMenus.bulkWrite(
-            menuResponse.menus.map((menu) => ({
-              updateOne: {
-                filter: {
-                  external_id: menuResponse.external_id,
-                  date: menu.date,
-                  names: menu.names,
-                },
-                update: {
-                  $set: {
-                    ...menu,
-                    date_time: new Date(
-                      menu.date +
-                        `T${dayStartHour.toString().padStart(2, "0")}:00:00Z`,
-                    ),
+          for (const menuResponse of menusResponses) {
+            yield await MeyersMenus.bulkWrite(
+              menuResponse.menus.map((menu) => ({
+                updateOne: {
+                  filter: {
                     external_id: menuResponse.external_id,
-                    subsidiary_name: menuResponse.subsidiary_name,
-                  } satisfies Omit<Meyers.MongoMenu, "_id">,
+                    date: menu.date,
+                    names: menu.names,
+                  },
+                  update: {
+                    $set: {
+                      ...menu,
+                      date_time: new Date(
+                        menu.date +
+                          `T${dayStartHour.toString().padStart(2, "0")}:00:00Z`,
+                      ),
+                      external_id: menuResponse.external_id,
+                      subsidiary_name: menuResponse.subsidiary_name,
+                    } satisfies Omit<Meyers.MongoMenu, "_id">,
+                  },
+                  upsert: true,
                 },
-                upsert: true,
-              },
-            })),
-          );
+              })),
+            );
+          }
         }
       },
       request.nextUrl.searchParams.get("userDataSourceId"),
