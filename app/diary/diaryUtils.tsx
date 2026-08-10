@@ -45,7 +45,7 @@ export type JournalEntry =
 
 const getWorkoutPrincipalDate = (
   workout: WorkoutData | GQWorkout,
-): Interval => {
+): Interval<Date, Date> => {
   // Cursed offsetting to get the correct day's start and end when workout is after midnight but before dayStartHour
   const dayInterval: Interval = {
     start: startOfDayButItRespectsDayStartHour(workout.workedOutAt),
@@ -94,7 +94,7 @@ const getWorkoutPrincipalDate = (
 
 export const getTodoPrincipalDate = (
   todo: Partial<Pick<GQTodo, "completed" | "due">>,
-): Interval | null => {
+): Interval<Date, Date> | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (todo.completed)
     return {
@@ -123,7 +123,7 @@ export interface LocationChange {
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
-): Interval | null => {
+): Interval<Date, Date> | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (entry.__typename === "Todo") {
     return getTodoPrincipalDate(entry);
