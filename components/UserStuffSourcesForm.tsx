@@ -99,7 +99,9 @@ function UserStuffSourceForm({
                 }
                 className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={async () => {
-                  const promise = fetch(`/api/${source.source}_scrape`);
+                  const promise = fetch(
+                    `/api/${source.source}_scrape?userDataSourceId=${source.id}`,
+                  );
                   await new Promise((resolve) => setTimeout(resolve, 1000));
                   router.refresh();
                   await promise;
@@ -663,7 +665,8 @@ export default function UserStuffSourcesForm({
             {user.dataSources
               .filter(
                 (source) =>
-                  sourceOptions.includes(source.source) && source.paused !== true,
+                  sourceOptions.includes(source.source) &&
+                  source.paused !== true,
               )
               .sort((a, b) => a.source.localeCompare(b.source))
               .map((source) => (
