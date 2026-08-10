@@ -253,39 +253,43 @@ export const resolvers: GQResolvers<
                   .flatMap((section) =>
                     section.menu_dishes
                       .map((dish) => {
-                        const sectionName = section.names.da || "";
-                        const dishName = dish.names.da || "";
+                        const sectionName = section.names.en || "";
+                        const dishName = dish.names.en || "";
                         let prefix = "";
-
-                        if (sectionName.includes("Varm ret")) {
-                          if (dishName.includes("Burrito")) {
+                        console.log(sectionName, dishName);
+                        const lDish = dishName.toLowerCase();
+                        const lSection = sectionName.toLowerCase();
+                        if (lSection.includes("hot dish")) {
+                          if (lDish.includes("burrito")) {
                             prefix = "🌯";
-                          } else if (dishName.includes("Burger")) {
+                          } else if (lDish.includes("burger")) {
                             prefix = "🍔";
-                          } else if (dishName.includes("Pasta")) {
+                          } else if (lDish.includes("pasta")) {
                             prefix = "🍝";
-                          } else if (dishName.includes("Pizza")) {
+                          } else if (lDish.includes("pizza")) {
                             prefix = "🍕";
-                          } else if (dishName.includes("Suppe")) {
+                          } else if (lDish.includes("soup")) {
                             prefix = "🍲";
-                          } else if (dishName.includes("Taco")) {
+                          } else if (lDish.includes("taco")) {
                             prefix = "🌮";
-                          } else if (dishName.includes("Pita")) {
+                          } else if (lDish.includes("pita")) {
                             prefix = "🥙";
-                          } else if (dishName.includes("karry")) {
+                          } else if (
+                            lDish.includes("curry") ||
+                            lDish.includes("korma") ||
+                            lDish.includes("masala")
+                          ) {
                             prefix = "🍛";
-                          } else if (dishName.includes("kalkun")) {
-                            prefix = "🦃";
                           } else {
                             prefix = "🥘";
                           }
-                        } else if (sectionName.includes("Delikatesse")) {
-                          if (dishName.includes("salat")) {
+                        } else if (lSection.includes("delicacy")) {
+                          if (lDish.includes("salad")) {
                             prefix = "🥗";
                           } else {
                             prefix = "🥪";
                           }
-                        } else if (sectionName.includes("Torsdagssødt")) {
+                        } else if (lSection.includes("thursday sweet")) {
                           prefix = "🍰";
                         }
 
@@ -295,10 +299,10 @@ export const resolvers: GQResolvers<
                       .map((name) =>
                         / - /.test(name)
                           ? name.split(/ - /)[0]
-                          : / med /.test(name)
-                            ? name.split(/ med /)[0]
-                            : / af /.test(name)
-                              ? name.split(/ af /)[0]
+                          : / with /.test(name)
+                            ? name.split(/ with /)[0]
+                            : / of /.test(name)
+                              ? name.split(/ of /)[0]
                               : /, /.test(name)
                                 ? name.split(/, /)[0]
                                 : name,
@@ -307,10 +311,13 @@ export const resolvers: GQResolvers<
                   .filter(Boolean),
               );
 
-              return new Intl.ListFormat("da", {
-                style: "long",
-                type: "conjunction",
-              }).format(dishes);
+              return (
+                "Lunch: " +
+                new Intl.ListFormat("en", {
+                  style: "long",
+                  type: "conjunction",
+                }).format(dishes)
+              );
             };
 
             entries.push({
