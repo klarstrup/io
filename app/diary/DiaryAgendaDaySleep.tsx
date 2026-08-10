@@ -15,7 +15,7 @@ export default function DiaryAgendaDaySleep({
   principalDate,
   cotemporalityOfSurroundingEvent,
 }: {
-  sleep: GQSleep | (GQSleep & { _this_is_the_end_of_a_sleep: true });
+  sleep: GQSleep | (GQSleep & { _is_separated_end: true });
   userTimeZone: GQUser["timeZone"];
   principalDate?: ReturnType<typeof getJournalEntryPrincipalDate>;
   cotemporalityOfSurroundingEvent?: "current" | "past" | "future" | null;
@@ -32,8 +32,7 @@ export default function DiaryAgendaDaySleep({
     router.push(`/diary/entries/${sleep.__typename}:${sleep.id}`);
   }, [router, sleep.__typename, sleep.id]);
 
-  const isSleepEnd =
-    "_this_is_the_end_of_a_sleep" in sleep && sleep._this_is_the_end_of_a_sleep;
+  const isSleepEnd = "_is_separated_end" in sleep && sleep._is_separated_end;
 
   return (
     <DiaryAgendaDayEntry

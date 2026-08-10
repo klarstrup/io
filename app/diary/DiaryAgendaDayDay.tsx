@@ -120,9 +120,7 @@ export function DiaryAgendaDayDay({
         .slice(i + 1)
         .filter(
           (je): je is GQEvent =>
-            je.__typename === "Event" &&
-            "_this_is_the_end_of_a_event" in je &&
-            je._this_is_the_end_of_a_event,
+            "_is_separated_end" in je && je._is_separated_end,
         );
 
       const eventThatSurroundsEntry =
@@ -187,10 +185,7 @@ export function DiaryAgendaDayDay({
               userTimeZone={timeZone}
               principalDate={principalDate}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-              key={
-                sleep.id +
-                ("_this_is_the_end_of_a_sleep" in sleep ? "-end" : "")
-              }
+              key={sleep.id + ("_is_separated_end" in sleep ? "-end" : "")}
             />
           ),
         });
@@ -293,10 +288,7 @@ export function DiaryAgendaDayDay({
               </DiaryAgendaDayEntry>
             ),
           });
-        } else if (
-          "_this_is_the_end_of_a_event" in event &&
-          event._this_is_the_end_of_a_event
-        ) {
+        } else if ("_is_separated_end" in event && event._is_separated_end) {
           const followingEvent =
             followingJournalEntry &&
             followingJournalEntry.__typename === "Event"
@@ -309,9 +301,8 @@ export function DiaryAgendaDayDay({
               .slice(i + 2)
               .some(
                 (je): je is GQEvent =>
-                  je.__typename === "Event" &&
-                  "_this_is_the_end_of_a_event" in je &&
-                  je._this_is_the_end_of_a_event &&
+                  "_is_separated_end" in je &&
+                  je._is_separated_end &&
                   je.id === followingEvent.id,
               );
 
@@ -342,8 +333,9 @@ export function DiaryAgendaDayDay({
         } else {
           const precedingEndOfEvent =
             precedingJournalEntry &&
-            "_this_is_the_end_of_a_event" in precedingJournalEntry &&
-            precedingJournalEntry._this_is_the_end_of_a_event
+            precedingJournalEntry.__typename === "Event" &&
+            "_is_separated_end" in precedingJournalEntry &&
+            precedingJournalEntry._is_separated_end
               ? precedingJournalEntry
               : null;
 
@@ -352,8 +344,8 @@ export function DiaryAgendaDayDay({
             .some(
               (je): je is GQEvent =>
                 je.__typename === "Event" &&
-                "_this_is_the_end_of_a_event" in je &&
-                je._this_is_the_end_of_a_event &&
+                "_is_separated_end" in je &&
+                je._is_separated_end &&
                 je.id === event.id,
             );
 

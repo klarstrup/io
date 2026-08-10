@@ -328,10 +328,7 @@ export function DiaryAgendaDay({
         addEntryToDate(entry, entry.startedAt);
 
         // Hack for sleep ends as separate entries
-        addEntryToDate(
-          { ...entry, _this_is_the_end_of_a_sleep: true },
-          entry.endedAt,
-        );
+        addEntryToDate({ ...entry, _is_separated_end: true }, entry.endedAt);
       } else if (entry.__typename === "Event") {
         const eventInterval = {
           start: max(
@@ -412,10 +409,7 @@ export function DiaryAgendaDay({
               }
             }
 
-            addEntryToDate(
-              { ...entry, _this_is_the_end_of_a_event: true },
-              entry.end,
-            );
+            addEntryToDate({ ...entry, _is_separated_end: true }, entry.end);
           } else if (
             !insertedStart ||
             entry.datetype === "date" ||
@@ -535,8 +529,8 @@ export function DiaryAgendaDay({
               (entry, i, entries) =>
                 !(
                   entry.__typename === "Event" &&
-                  "_this_is_the_end_of_a_event" in entry &&
-                  entry._this_is_the_end_of_a_event &&
+                  "_is_separated_end" in entry &&
+                  entry._is_separated_end &&
                   entries[i - 1]?.id === entry.id &&
                   cotemporality(entry) !== "current"
                 ),
@@ -549,8 +543,8 @@ export function DiaryAgendaDay({
                 previousEntry?.__typename === "Event"
               ) {
                 if (
-                  "_this_is_the_end_of_a_event" in entry &&
-                  entry._this_is_the_end_of_a_event &&
+                  "_is_separated_end" in entry &&
+                  entry._is_separated_end &&
                   isEqual(entry.start, previousEntry.start) &&
                   isEqual(entry.end, previousEntry.end)
                 ) {
@@ -611,11 +605,10 @@ export function DiaryAgendaDay({
           ) {
             const previousEntryIsEnd =
               previousEntry &&
-              "_this_is_the_end_of_a_event" in previousEntry &&
-              previousEntry._this_is_the_end_of_a_event;
+              "_is_separated_end" in previousEntry &&
+              previousEntry._is_separated_end;
             const entryIsEnd =
-              "_this_is_the_end_of_a_event" in entry &&
-              entry._this_is_the_end_of_a_event;
+              "_is_separated_end" in entry && entry._is_separated_end;
 
             const entryPricipalDate = getJournalEntryPrincipalDate(entry);
             const previousEntryPrincipalDate = previousEntry

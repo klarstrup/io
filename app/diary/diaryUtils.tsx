@@ -31,14 +31,14 @@ import {
 
 export type JournalEntry =
   | GQEvent
-  | (GQEvent & { _this_is_the_end_of_a_event: true })
+  | (GQEvent & { _is_separated_end: true })
   | GQTodo
   | GQNextSet
   | GQWorkout
   | GQExerciseSchedule
   | GQSleep
+  | (GQSleep & { _is_separated_end: true })
   | GQTrip
-  | (GQSleep & { _this_is_the_end_of_a_sleep: true })
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
@@ -131,10 +131,7 @@ export const getJournalEntryPrincipalDate = (
   if (entry.__typename === "Sleep") {
     return { start: entry.startedAt, end: entry.endedAt };
   }
-  if (
-    "_this_is_the_end_of_a_event" in entry &&
-    entry._this_is_the_end_of_a_event
-  ) {
+  if ("_is_separated_end" in entry && entry._is_separated_end) {
     if ("end" in entry && entry.end) {
       return {
         start: new Date(entry.end),
