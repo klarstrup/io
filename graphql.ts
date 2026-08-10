@@ -256,7 +256,7 @@ export const resolvers: GQResolvers<
                         const sectionName = section.names.en || "";
                         const dishName = dish.names.en || "";
                         let prefix = "";
-                        console.log(sectionName, dishName);
+
                         const lDish = dishName.toLowerCase();
                         const lSection = sectionName.toLowerCase();
                         if (lSection.includes("hot dish")) {
@@ -1643,12 +1643,6 @@ export const resolvers: GQResolvers<
   Workout: {
     location: async (parent) => {
       if (!parent.locationId) return null;
-
-      console.log(
-        "Fetching location for workout",
-        parent.id,
-        parent.locationId,
-      );
 
       const location = await Locations.findOne({
         _id: new ObjectId(parent.locationId),
