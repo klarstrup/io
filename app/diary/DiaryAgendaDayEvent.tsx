@@ -144,7 +144,8 @@ export function DiaryAgendaDayEvent({
                 })}
               </>
             ) : null}
-          </span>{" "}
+          </span>
+          &nbsp;
           {event.url ? (
             <a
               href={event.url}
