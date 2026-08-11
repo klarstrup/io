@@ -3,16 +3,11 @@ import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
 import {
-  addDays,
   addWeeks,
   differenceInHours,
-  getDay,
-  Interval,
   isValid,
   max,
-  setHours,
   startOfDay,
-  subDays,
 } from "date-fns";
 import {
   type DocumentNode,
@@ -28,17 +23,14 @@ import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializ
 import { auth, ensureGoogleAuth } from "./auth";
 import type {
   GQCreateTodoPayload,
-  GQEvent,
   GQExerciseInfo,
   GQExerciseSchedule,
   GQFloatTimeSeriesEntry,
   GQFoodEntry,
-  GQJournalEntryUnion,
   GQNextSet,
   GQResolvers,
   GQSleep,
   GQSnoozeExerciseSchedulePayload,
-  GQTodo,
   GQUnsnoozeExerciseSchedulePayload,
   GQUpdateTodoPayload,
   GQWorkout,
@@ -52,7 +44,7 @@ import { exercisesById } from "./models/exercises";
 import { AssistType, Unit } from "./models/exercises.types";
 import { ensureLocation, Locations } from "./models/location.server";
 import type { ITodoScheduleWithExerciseProgram } from "./models/user";
-import { Users } from "./models/user.server";
+import { getUserJournalEntries, Users } from "./models/user.server";
 import { type WorkoutData, WorkoutSource } from "./models/workout";
 import {
   getNextSets,
@@ -61,14 +53,11 @@ import {
   WorkoutLocationsView,
   Workouts,
 } from "./models/workout.server";
-import { DSBProductSummaries } from "./sources/dsb.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
   IcalEvents,
 } from "./sources/ical.server";
-import { Meyers } from "./sources/meyers";
-import { MeyersMenus } from "./sources/meyers.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
 import { SpiirAccountGroups } from "./sources/spiir.server";
 import { DataSource } from "./sources/utils";
@@ -78,15 +67,7 @@ import {
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
-import {
-  allPromises,
-  dayStartHour,
-  endOfDayButItRespectsDayStartHour,
-  omitUndefined,
-  pick,
-  rangeToQuery,
-  unique,
-} from "./utils";
+import { omitUndefined, pick, rangeToQuery } from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -193,283 +174,12 @@ export const resolvers: GQResolvers<
   },
   User: {
     journalEntries: async (parent, args) => {
-      const userId = parent.id;
-      const dayDate = new Date(args.dayDate);
-      dayDate.setHours(dayStartHour);
-      const interval = {
-        // Overfetch to midnight to include legacy workouts and all-day events that are stored with start
-        start: startOfDay(subDays(dayDate, args.daysBefore ?? 0)),
-        end: endOfDayButItRespectsDayStartHour(
-          addDays(dayDate, args.daysAfter ?? 0),
-        ),
-      } satisfies Interval;
-
-      const entries: GQJournalEntryUnion[] = [];
-
-      await allPromises(
-        Array.fromAsync(getUserIcalTodosBetween(userId, interval), (todo) =>
-          entries.push({
-            ...todo,
-            id: todo.uid,
-            __typename: "Todo",
-          } satisfies GQTodo),
-        ),
-        Array.fromAsync(getUserIcalEventsBetween(userId, interval), (event) =>
-          entries.push({
-            ...event,
-            id: event.uid,
-            __typename: "Event",
-            url: typeof event.url === "string" ? event.url : null,
-          } satisfies GQEvent),
-        ),
-        Array.fromAsync(
-          (
-            await Users.findOne({ _id: new ObjectId(userId) })
-          )?.dataSources?.some(
-            (dataSource) =>
-              dataSource.source === DataSource.Meyers &&
-              dataSource.paused !== true,
-          )
-            ? MeyersMenus.find({
-                date_time: rangeToQuery(interval.start, interval.end),
-                "names.da": "Almanak",
-              })
-            : [],
-          (menu) => {
-            if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
-
-            const formatMeyersMenuSummary = (menu: Meyers.MongoMenu) => {
-              const dishes = unique(
-                menu.menu_sections
-                  .filter(
-                    (section) =>
-                      !section.names.da?.includes("halal") &&
-                      !section.names.da?.includes("vegansk") &&
-                      !section.names.da?.includes("vegetar") &&
-                      (section.names.da?.includes("Varm ret") ||
-                        section.names.da?.includes("Delikatesse") ||
-                        section.names.da?.includes("Torsdagssødt")),
-                  )
-                  .flatMap((section) =>
-                    section.menu_dishes
-                      .map((dish) => {
-                        const sectionName = section.names.en || "";
-                        const dishName = dish.names.en || "";
-                        let prefix = "";
-
-                        const lDish = dishName.toLowerCase();
-                        const lSection = sectionName.toLowerCase();
-                        if (lSection.includes("hot dish")) {
-                          if (lDish.includes("burrito")) {
-                            prefix = "🌯";
-                          } else if (lDish.includes("burger")) {
-                            prefix = "🍔";
-                          } else if (lDish.includes("pasta")) {
-                            prefix = "🍝";
-                          } else if (lDish.includes("pizza")) {
-                            prefix = "🍕";
-                          } else if (lDish.includes("soup")) {
-                            prefix = "🍲";
-                          } else if (lDish.includes("taco")) {
-                            prefix = "🌮";
-                          } else if (lDish.includes("pita")) {
-                            prefix = "🥙";
-                          } else if (
-                            lDish.includes("curry") ||
-                            lDish.includes("korma") ||
-                            lDish.includes("masala")
-                          ) {
-                            prefix = "🍛";
-                          } else {
-                            prefix = "🥘";
-                          }
-                        } else if (lSection.includes("delicacy")) {
-                          if (lDish.includes("salad")) {
-                            prefix = "🥗";
-                          } else {
-                            prefix = "🥪";
-                          }
-                        } else if (lSection.includes("thursday sweet")) {
-                          prefix = "🍰";
-                        }
-
-                        return `${prefix} ${dishName || ""}`;
-                      })
-                      .filter(Boolean)
-                      .map((name) =>
-                        / - /.test(name)
-                          ? name.split(/ - /)[0]
-                          : / with /.test(name)
-                            ? name.split(/ with /)[0]
-                            : / of /.test(name)
-                              ? name.split(/ of /)[0]
-                              : /, /.test(name)
-                                ? name.split(/, /)[0]
-                                : name,
-                      ),
-                  )
-                  .filter(Boolean),
-              );
-
-              return (
-                "Lunch: " +
-                new Intl.ListFormat("en", {
-                  style: "long",
-                  type: "conjunction",
-                }).format(dishes)
-              );
-            };
-
-            entries.push({
-              __typename: "Event",
-              datetype: "date-time",
-              id: menu._id.toString(),
-              start: setHours(menu.date_time, 10),
-              end: setHours(menu.date_time, 10),
-              summary: formatMeyersMenuSummary(menu),
-              location: "Proprty.ai Office",
-              url: "https://meyers.dk/frokost/almanak",
-            } satisfies GQEvent);
-          },
-        ),
-        Array.fromAsync(
-          getUserWithingsSleepSummarySeriesBetween(userId, interval),
-          (sleep) =>
-            entries.push({
-              ...sleep,
-              deviceId: sleep.hash_deviceid,
-              id: String(sleep.id),
-              totalSleepTime: sleep.data.total_sleep_time,
-              __typename: "Sleep",
-            } satisfies GQSleep),
-        ),
-        Array.fromAsync(
-          MaterializedWorkoutsView.find({
-            userId,
-            $or: [
-              { workedOutAt: rangeToQuery(interval.start, interval.end) },
-              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-              { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
-            ],
-            deletedAt: { $exists: false },
-          }),
-          (workout) =>
-            entries.push({
-              ...workout,
-              location: undefined,
-              exercises: workout.exercises.map(
-                (exercise) =>
-                  ({
-                    ...exercise,
-                    __typename: "WorkoutExercise",
-                    // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                    exerciseInfo: undefined as unknown as GQExerciseInfo,
-                    sets: exercise.sets.map(
-                      (set) =>
-                        ({
-                          ...set,
-                          __typename: "WorkoutSet",
-                          inputs: set.inputs.map(
-                            (input) =>
-                              ({
-                                ...input,
-                                __typename: "WorkoutSetInput",
-                              }) satisfies GQWorkoutSetInput,
-                          ),
-                          meta:
-                            set.meta &&
-                            Object.entries(set.meta || {}).map(
-                              ([key, value]) =>
-                                ({
-                                  key,
-                                  value: String(value),
-                                  __typename: "WorkoutSetMeta",
-                                }) satisfies GQWorkoutSetMeta,
-                            ),
-                        }) satisfies GQWorkoutSet,
-                    ),
-                  }) satisfies GQWorkoutExercise,
-              ),
-              // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
-              id: workout.id || workout._id.toString(),
-              __typename: "Workout",
-            } satisfies GQWorkout),
-        ),
-        Array.fromAsync(
-          getNextSets(
-            userId,
-            ((await auth())?.user.todoSchedules || []).filter(
-              (schedule): schedule is ITodoScheduleWithExerciseProgram =>
-                Boolean(schedule.exerciseProgram),
-            ),
-          ),
-          (nextSet) =>
-            entries.push({
-              ...nextSet,
-              __typename: "NextSet",
-              nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
-                (input) => ({ ...input, __typename: "WorkoutSetInput" }),
-              ),
-              exerciseSchedule: {
-                ...nextSet.exerciseSchedule,
-                ...nextSet.exerciseSchedule.exerciseProgram,
-                __typename: "ExerciseSchedule",
-                frequency: {
-                  ...nextSet.exerciseSchedule.frequency,
-                  __typename: "Duration",
-                },
-                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                exerciseInfo: undefined as unknown as GQExerciseInfo,
-              },
-            } satisfies GQNextSet),
-        ),
-        Array.fromAsync(
-          DSBProductSummaries.find({
-            _io_userId: userId,
-            timestamp: rangeToQuery(interval.start, interval.end),
-            "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
-          }),
-          (productSummary) =>
-            productSummary.productSummary.trips.map((trip) => {
-              const firstLeg = trip.tripLegs[0];
-              const firstLegFirstStop = firstLeg?.stops[0];
-              const lastLeg = trip.tripLegs[trip.tripLegs.length - 1];
-              const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
-              entries.push({
-                __typename: "Trip",
-                id: trip.id,
-                start:
-                  firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
-                  firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
-                  firstLeg!.startDateTime,
-                end:
-                  lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
-                  lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
-                  lastLeg!.endDateTime,
-                legs: trip.tripLegs.map((leg) => {
-                  const firstStop = leg.stops[0];
-                  const lastStop = leg.stops[leg.stops.length - 1];
-                  return {
-                    __typename: "TripLeg",
-                    start:
-                      firstStop!.actualTimeAndTrackInfo?.departureTime ||
-                      firstStop!.plannedTimeAndTrackInfo?.departureTime ||
-                      leg.startDateTime,
-                    end:
-                      lastStop!.actualTimeAndTrackInfo?.arrivalTime ||
-                      lastStop!.plannedTimeAndTrackInfo?.arrivalTime ||
-                      leg.endDateTime,
-                    from: firstStop!.location.name,
-                    to: lastStop!.location.name,
-                    mode: leg.transports[0]?.meansOfTransportation || "unknown",
-                  };
-                }),
-              });
-            }),
-        ),
+      return getUserJournalEntries(
+        parent.id,
+        new Date(args.dayDate),
+        args.daysBefore,
+        args.daysAfter,
       );
-
-      return entries;
     },
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
