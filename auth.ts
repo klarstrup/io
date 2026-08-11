@@ -30,7 +30,7 @@ const {
           access_type: "offline",
           response_type: "code",
           scope:
-            "openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify",
+            "openid email profile https://www.googleapis.com/auth/gmail.readonly",
         },
       },
     }),
