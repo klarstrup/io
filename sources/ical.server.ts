@@ -152,9 +152,6 @@ export async function* getUserIcalEventsBetween(
         .between(start, end, true)
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
 
-      if (event.summary === "Ideal Sleep")
-        console.log(rruleSet._exdate, rruleDates);
-
       const recurrenceIdDates = new Set(
         event.recurrences
           ?.map((r) => r.recurrenceid?.toLocaleDateString())
