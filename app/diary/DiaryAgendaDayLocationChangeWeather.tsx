@@ -3,7 +3,8 @@ import { TZDate } from "@date-fns/tz";
 import { addMilliseconds, isWithinInterval } from "date-fns";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffectEvent, useState } from "react";
+import { ShyGuy } from "../../components/ShyGuy";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { decodeGeohash, getSunrise, getSunset } from "../../utils";
 import { getClosestTomorrowInterval } from "./actions";
@@ -40,7 +41,9 @@ export function DiaryAgendaDayLocationChangeWeather({
     date as TZDate,
   );
 
-  useEffect(() => {
+  const handleSeen = useEffectEvent(() => {
+    if (weather) return;
+
     void getClosestTomorrowInterval(
       addMilliseconds(new Date(memoDate), 1),
       decodeGeohash(finalGeohash || "u4pruyd"),
@@ -51,51 +54,61 @@ export function DiaryAgendaDayLocationChangeWeather({
       .catch((err: unknown) => {
         console.error("Error fetching weather:", err);
       });
-  }, [memoDate, finalGeohash]);
+  });
 
-  if (!weather) return null;
+  const extendedWeatherCode =
+    weather &&
+    `${weather.values.weatherCode}${Number(
+      !isWithinInterval(date, { start: sunrise, end: sunset }),
+    )}`;
 
-  const extendedWeatherCode = `${weather.values.weatherCode}${Number(
-    !isWithinInterval(date, { start: sunrise, end: sunset }),
-  )}`;
-
-  const dayWeatherCode = extendedWeatherCode.substring(0, 4) + "0";
+  const dayWeatherCode =
+    extendedWeatherCode && extendedWeatherCode.substring(0, 4) + "0";
   const weatherIcon =
-    (extendedWeatherCode in weatherIconsByCode &&
+    (extendedWeatherCode &&
+      extendedWeatherCode in weatherIconsByCode &&
       weatherIconsByCode[
         extendedWeatherCode as keyof typeof weatherIconsByCode
       ]) ||
-    (dayWeatherCode in weatherIconsByCode &&
+    (dayWeatherCode &&
+      dayWeatherCode in weatherIconsByCode &&
       weatherIconsByCode[dayWeatherCode as keyof typeof weatherIconsByCode]);
 
   return (
     <span className="inline-flex items-center gap-1">
-      {weatherIcon ? (
-        <Image
-          src={weatherIcon}
-          alt={prettyPrintWeatherCode(extendedWeatherCode)}
-          title={prettyPrintWeatherCode(extendedWeatherCode) + " " + memoDate}
-          width={20}
-          className="-my-1 align-middle"
-        />
-      ) : (
-        extendedWeatherCode
-      )}{" "}
-      <span>
-        {Math.floor(weather.values?.temperatureApparent ?? 0)}
-        <span className="align-super text-[0.444rem]">℃</span>
-      </span>
-      {weather.values.precipitationProbability > 0 &&
-      weather.values.precipitationIntensity >= 0.2 ? (
-        <div>
-          <span className="align-middle text-lg">
-            {weather.values.precipitationIntensity.toFixed(2)}
+      <ShyGuy onSeen={handleSeen} />
+      {weather ? (
+        <>
+          {weatherIcon ? (
+            <Image
+              src={weatherIcon}
+              alt={prettyPrintWeatherCode(extendedWeatherCode)}
+              title={
+                prettyPrintWeatherCode(extendedWeatherCode) + " " + memoDate
+              }
+              width={20}
+              className="-my-1 align-middle"
+            />
+          ) : (
+            extendedWeatherCode
+          )}{" "}
+          <span>
+            {Math.floor(weather.values?.temperatureApparent ?? 0)}
+            <span className="align-super text-[0.444rem]">℃</span>
           </span>
-          <sup className="text-sm">mm</sup>
-          <sub className="-ml-2 text-sm" title="Precipitation Probability">
-            {weather.values.precipitationProbability.toFixed(0)}%
-          </sub>
-        </div>
+          {weather.values.precipitationProbability > 0 &&
+          weather.values.precipitationIntensity >= 0.2 ? (
+            <div>
+              <span className="align-middle text-lg">
+                {weather.values.precipitationIntensity.toFixed(2)}
+              </span>
+              <sup className="text-sm">mm</sup>
+              <sub className="-ml-2 text-sm" title="Precipitation Probability">
+                {weather.values.precipitationProbability.toFixed(0)}%
+              </sub>
+            </div>
+          ) : null}
+        </>
       ) : null}
     </span>
   );
