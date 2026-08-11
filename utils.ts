@@ -29,6 +29,11 @@ export const dateToString = (date: Date): `${number}-${number}-${number}` => {
 
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
+export const stringToDate = (date: string): Date => {
+  const [year, month, day] = date.split("-").map(Number);
+
+  return new Date(year!, month! - 1, day!);
+};
 
 export const dateMidpoint = (
   date1: DateArg<Date>,
@@ -160,7 +165,9 @@ export const shuffle = <A>(arrRaw?: A[], seed?: number): A[] => {
   return arr.reduceRight<A[]>((acc) => {
     acc.push(
       arr.splice(
-        0 | ((seed !== undefined ? seededRandom(seed) : Math.random()) * arr.length),
+        0 |
+          ((seed !== undefined ? seededRandom(seed) : Math.random()) *
+            arr.length),
         1,
       )[0]!,
     );

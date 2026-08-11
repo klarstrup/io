@@ -27,6 +27,8 @@ import type {
   GQExerciseSchedule,
   GQFloatTimeSeriesEntry,
   GQFoodEntry,
+  GQJournalEntriesConnection,
+  GQJournalEntryUnion,
   GQNextSet,
   GQResolvers,
   GQSleep,
@@ -67,7 +69,7 @@ import {
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
-import { omitUndefined, pick, rangeToQuery } from "./utils";
+import { omitUndefined, pick, rangeToQuery, stringToDate } from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -147,6 +149,8 @@ export const resolvers: GQResolvers<
       return {
         ...user,
         __typename: "User",
+        // zzz
+        journalEntries: undefined as unknown as GQJournalEntriesConnection,
         dataSources: user.dataSources?.map((dataSource) => ({
           ...dataSource,
           config: JSON.stringify(dataSource.config),
@@ -173,12 +177,23 @@ export const resolvers: GQResolvers<
     },
   },
   User: {
-    journalEntries: async (parent, args) =>
-      getUserJournalEntries(
-        parent.id,
-        new Date(args.fromDay),
-        new Date(args.toDay),
-      ),
+    journalEntries: async (parent, args) => {
+      return {
+        __typename: "JournalEntriesConnection",
+        nodes: (await getUserJournalEntries(
+          parent.id,
+          stringToDate(args.after),
+          stringToDate(args.before),
+        )) as GQJournalEntryUnion[],
+        pageInfo: {
+          __typename: "PageInfo",
+          hasNextPage: true,
+          hasPreviousPage: true,
+          startCursor: args.after,
+          endCursor: args.before,
+        },
+      };
+    },
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -1641,6 +1656,18 @@ export const typeDefs = gql`
 
   union JournalEntryUnion = Todo | Event | Workout | Sleep | NextSet | Trip
 
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+  }
+
+  type JournalEntriesConnection {
+    nodes: [JournalEntryUnion!]!
+    pageInfo: PageInfo!
+  }
+
   type User {
     id: ID!
     name: String!
@@ -1649,7 +1676,7 @@ export const typeDefs = gql`
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]
-    journalEntries(fromDay: String!, toDay: String!): [JournalEntry!]
+    journalEntries(after: String!, before: String!): JournalEntriesConnection!
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]

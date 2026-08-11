@@ -1,5 +1,6 @@
 import { TypePolicies } from "@apollo/client";
-import { isDate } from "date-fns";
+import { isDate, max, min } from "date-fns";
+import { dateToString, stringToDate, uniqueBy } from "./utils";
 
 const readDate = (d: unknown) =>
   typeof d === "string" || typeof d === "number"
@@ -87,6 +88,47 @@ export const typePolicies: TypePolicies = {
       config: {
         read: (v: unknown) =>
           typeof v === "string" ? (JSON.parse(v) as unknown) : null,
+      },
+    },
+  },
+  User: {
+    fields: {
+      journalEntries: {
+        keyArgs: false,
+        merge(existing, incoming) {
+          if (!existing) return incoming;
+          if (!incoming) return existing;
+
+          const mergedNodes = uniqueBy(
+            [...existing.nodes, ...incoming.nodes],
+            (node) => node.__ref,
+          );
+
+          return {
+            ...incoming,
+            pageInfo: {
+              ...incoming.pageInfo,
+              hasPreviousPage:
+                existing.pageInfo.hasPreviousPage &&
+                incoming.pageInfo.hasPreviousPage,
+              hasNextPage:
+                existing.pageInfo.hasNextPage && incoming.pageInfo.hasNextPage,
+              startCursor: dateToString(
+                min([
+                  stringToDate(existing.pageInfo.startCursor ?? ""),
+                  stringToDate(incoming.pageInfo.startCursor ?? ""),
+                ]),
+              ),
+              endCursor: dateToString(
+                max([
+                  stringToDate(existing.pageInfo.endCursor ?? ""),
+                  stringToDate(incoming.pageInfo.endCursor ?? ""),
+                ]),
+              ),
+            },
+            nodes: mergedNodes,
+          };
+        },
       },
     },
   },

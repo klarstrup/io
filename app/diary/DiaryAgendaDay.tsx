@@ -11,7 +11,6 @@ import {
   isBefore,
   isEqual,
   isPast,
-  isWithinInterval,
   max,
   min,
   startOfDay,
@@ -21,7 +20,7 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
 import {
@@ -45,6 +44,7 @@ import {
   isUTCMidnight,
   roundToNearestDay,
   startOfDayButItRespectsDayStartHour,
+  stringToDate,
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { DiaryPoller } from "./DiaryPoller";
@@ -57,7 +57,7 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
-  query DiaryAgendaDayUserTodos($fromDay: String!, $toDay: String!) {
+  query DiaryAgendaDayUserTodos($after: String!, $before: String!) {
     user {
       id
       name
@@ -85,133 +85,142 @@ gql`
           updatedAt
         }
       }
-      journalEntries(fromDay: $fromDay, toDay: $toDay) {
+      journalEntries(after: $after, before: $before) {
         __typename
-        ... on Sleep {
-          id
-          startedAt
-          endedAt
-          totalSleepTime
-          deviceId
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
         }
-        ... on NextSet {
-          id
-          lastWorkedOutAt
-          dueOn
-          exerciseId
-          successful
-          nextWorkingSets
-          nextWorkingSetInputs {
-            unit
-            value
-            assistType
-          }
-          exerciseSchedule {
+        nodes {
+          __typename
+          ... on Sleep {
             id
-            exerciseId
-            exerciseInfo {
-              id
-              aliases
-              name
-              isHidden
-              inputs {
-                type
-              }
-              instructions {
-                value
-              }
-              tags {
-                name
-                type
-              }
-            }
-            enabled
-            frequency {
-              years
-              months
-              weeks
-              days
-              hours
-              minutes
-              seconds
-            }
-            increment
-            workingSets
-            workingReps
-            deloadFactor
-            baseWeight
-            snoozedUntil
+            startedAt
+            endedAt
+            totalSleepTime
+            deviceId
           }
-        }
-        ... on Todo {
-          id
-          created
-          summary
-          due
-          completed
-        }
-        ... on Trip {
-          id
-          start
-          end
-          legs {
+          ... on NextSet {
+            id
+            lastWorkedOutAt
+            dueOn
+            exerciseId
+            successful
+            nextWorkingSets
+            nextWorkingSetInputs {
+              unit
+              value
+              assistType
+            }
+            exerciseSchedule {
+              id
+              exerciseId
+              exerciseInfo {
+                id
+                aliases
+                name
+                isHidden
+                inputs {
+                  type
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
+              }
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
+              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+            }
+          }
+          ... on Todo {
+            id
+            created
+            summary
+            due
+            completed
+          }
+          ... on Trip {
+            id
             start
             end
-            from
-            to
-            mode
-          }
-        }
-        ... on Event {
-          id
-          created
-          summary
-          start
-          end
-          datetype
-          location
-          url
-        }
-        ... on Workout {
-          id
-          createdAt
-          updatedAt
-          workedOutAt
-          materializedAt
-          locationId
-          source
-          exercises {
-            exerciseId
-            displayName
-            comment
-            exerciseInfo {
-              id
-              aliases
-              name
-              isHidden
-              inputs {
-                type
-              }
-              instructions {
-                value
-              }
-              tags {
-                name
-                type
-              }
+            legs {
+              start
+              end
+              from
+              to
+              mode
             }
-            sets {
+          }
+          ... on Event {
+            id
+            created
+            summary
+            start
+            end
+            datetype
+            location
+            url
+          }
+          ... on Workout {
+            id
+            createdAt
+            updatedAt
+            workedOutAt
+            materializedAt
+            locationId
+            source
+            exercises {
+              exerciseId
+              displayName
               comment
-              createdAt
-              updatedAt
-              inputs {
-                unit
-                value
-                assistType
+              exerciseInfo {
+                id
+                aliases
+                name
+                isHidden
+                inputs {
+                  type
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
               }
-              meta {
-                key
-                value
+              sets {
+                comment
+                createdAt
+                updatedAt
+                inputs {
+                  unit
+                  value
+                  assistType
+                }
+                meta {
+                  key
+                  value
+                }
               }
             }
           }
@@ -232,37 +241,26 @@ export function DiaryAgendaDay({
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
-  const [daysBefore, setDaysBefore] = useState(selectedDayStart ? 0 : 3);
-  const [daysAfter, setDaysAfter] = useState(selectedDayStart ? 0 : 3);
-
   const variables = useMemo(
     () => ({
-      fromDay: dateToString(
-        startOfDay(subDays(selectedDayStart || new Date(), daysBefore)),
+      after: dateToString(
+        startOfDay(subDays(selectedDayStart || new Date(), 3)),
       ),
-      toDay: dateToString(
+      before: dateToString(
         endOfDayButItRespectsDayStartHour(
-          addDays(selectedDayStart || new Date(), daysAfter),
+          addDays(selectedDayStart || new Date(), 3),
         ),
       ),
     }),
-    [selectedDayStart, daysBefore, daysAfter],
+    [selectedDayStart],
   );
 
-  const {
-    data: currentData,
-    previousData,
-    variables: queryVariables,
-    loading,
-    networkStatus,
-  } = useQuery(DiaryAgendaDayUserTodosDocument, { variables, pollInterval });
-
-  const data = loading
-    ? networkStatus === 2
-      ? previousData
-      : previousData || currentData
-    : currentData;
-
+  const { data, loading, networkStatus, fetchMore } = useQuery(
+    DiaryAgendaDayUserTodosDocument,
+    { variables, pollInterval },
+  );
+  const startCursor = data?.user?.journalEntries?.pageInfo?.startCursor;
+  const endCursor = data?.user?.journalEntries?.pageInfo?.endCursor;
   const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const now = useNow(60 * 1000, timeZone);
   const startOfAgendaDay = useMemo(
@@ -275,20 +273,14 @@ export function DiaryAgendaDay({
 
   const fetchingInterval = useMemo(
     () => ({
-      start: startOfDay(subDays(startOfAgendaDay, daysBefore)),
-      end: addDays(
-        endOfDayButItRespectsDayStartHour(startOfAgendaDay),
-        daysAfter,
-      ),
+      start: startCursor
+        ? stringToDate(startCursor)
+        : startOfDay(subDays(startOfAgendaDay, 3)),
+      end: endCursor
+        ? stringToDate(endCursor)
+        : addDays(endOfDayButItRespectsDayStartHour(startOfAgendaDay), 3),
     }),
-    [startOfAgendaDay, daysAfter, daysBefore],
-  );
-  const queryFetchingInterval = useMemo(
-    () => ({
-      start: new Date(queryVariables.fromDay),
-      end: new Date(queryVariables.toDay),
-    }),
-    [startOfAgendaDay, queryVariables.toDay, queryVariables.fromDay],
+    [startCursor, endCursor, startOfAgendaDay],
   );
 
   const daysOfInterval = useMemo(
@@ -300,7 +292,7 @@ export function DiaryAgendaDay({
   );
 
   const userLocations = data?.user?.locations || emptyArray;
-  const userJournalEntries = data?.user?.journalEntries || emptyArray;
+  const userJournalEntries = data?.user?.journalEntries.nodes || emptyArray;
 
   const journalEntriesByDate2 = useMemo(() => {
     const journalEntriesByDate: Record<string, JournalEntry[]> = {
@@ -789,8 +781,71 @@ export function DiaryAgendaDay({
           <ShyGuy
             onSeen={() => {
               if (loading) return;
-              if (queryVariables.fromDay !== variables.fromDay) return;
-              setDaysBefore((d) => d + 2);
+
+              const firstDay =
+                daysJournalEntriesIncludingLocationChanges2[0]?.[0];
+
+              if (!firstDay) return;
+
+              return fetchMore({
+                variables: {
+                  after: dateToString(
+                    startOfDay(
+                      subDays(
+                        stringToDate(
+                          data?.user?.journalEntries.pageInfo.startCursor ||
+                            dateToString(new Date()),
+                        ),
+                        3,
+                      ),
+                    ),
+                  ),
+                  before:
+                    data?.user?.journalEntries.pageInfo.startCursor ||
+                    undefined,
+                },
+                updateQuery(previousData, { fetchMoreResult }) {
+                  if (!fetchMoreResult?.user?.journalEntries)
+                    return previousData;
+
+                  const previousNodes =
+                    previousData.user?.journalEntries.nodes || [];
+                  const fetchMoreNodes =
+                    fetchMoreResult.user?.journalEntries.nodes || [];
+                  const previousPageInfo =
+                    previousData.user?.journalEntries.pageInfo;
+                  const fetchMorePageInfo =
+                    fetchMoreResult.user?.journalEntries.pageInfo;
+                  return {
+                    user: {
+                      ...previousData.user!,
+                      journalEntries: {
+                        __typename: "JournalEntriesConnection",
+                        pageInfo: {
+                          __typename: "PageInfo",
+                          hasNextPage:
+                            fetchMorePageInfo?.hasNextPage ??
+                            previousPageInfo?.hasNextPage ??
+                            true,
+                          hasPreviousPage:
+                            previousPageInfo?.hasPreviousPage ??
+                            fetchMorePageInfo?.hasPreviousPage ??
+                            true,
+                          startCursor:
+                            fetchMorePageInfo?.startCursor ||
+                            previousPageInfo?.startCursor ||
+                            null,
+                          endCursor:
+                            previousPageInfo?.endCursor ||
+                            fetchMorePageInfo?.endCursor ||
+                            null,
+                        },
+                        nodes: [...fetchMoreNodes, ...previousNodes],
+                      },
+                    },
+                  };
+                },
+              });
             }}
           />
         )}
@@ -810,17 +865,7 @@ export function DiaryAgendaDay({
                   dayJournalEntries={dayJournalEntries}
                   isSelectedDay={Boolean(selectedDayStart)}
                   isLoadingEntries={
-                    loading &&
-                    networkStatus !== 4 &&
-                    networkStatus !== 1 &&
-                    (isWithinInterval(dayStart, {
-                      start: queryFetchingInterval.start,
-                      end: fetchingInterval.start,
-                    }) ||
-                      isWithinInterval(dayRange.end, {
-                        start: fetchingInterval.end,
-                        end: queryFetchingInterval.end,
-                      }))
+                    loading && networkStatus !== 4 && networkStatus !== 1
                   }
                 />
               </TodoDroppable>
@@ -831,8 +876,79 @@ export function DiaryAgendaDay({
           <ShyGuy
             onSeen={() => {
               if (loading) return;
-              if (queryVariables.toDay !== variables.toDay) return;
-              setDaysAfter((d) => d + 2);
+
+              const lastDay =
+                daysJournalEntriesIncludingLocationChanges2.slice(-1)[0]?.[0];
+
+              if (!lastDay) return;
+
+              return fetchMore({
+                variables: {
+                  after: dateToString(
+                    new Date(
+                      data?.user?.journalEntries.pageInfo.endCursor
+                        ? stringToDate(
+                            data.user.journalEntries.pageInfo.endCursor,
+                          )
+                        : new Date(),
+                    ),
+                  ),
+                  before: dateToString(
+                    endOfDayButItRespectsDayStartHour(
+                      addDays(
+                        data?.user?.journalEntries.pageInfo.endCursor
+                          ? stringToDate(
+                              data.user.journalEntries.pageInfo.endCursor,
+                            )
+                          : new Date(),
+                        3,
+                      ),
+                    ),
+                  ),
+                },
+                updateQuery(previousData, { fetchMoreResult }) {
+                  if (!fetchMoreResult?.user?.journalEntries)
+                    return previousData;
+
+                  const previousNodes =
+                    previousData.user?.journalEntries.nodes || [];
+                  const fetchMoreNodes =
+                    fetchMoreResult.user?.journalEntries.nodes || [];
+                  const previousPageInfo =
+                    previousData.user?.journalEntries.pageInfo;
+                  const fetchMorePageInfo =
+                    fetchMoreResult.user?.journalEntries.pageInfo;
+
+                  return {
+                    user: {
+                      ...previousData.user!,
+                      journalEntries: {
+                        __typename: "JournalEntriesConnection",
+                        pageInfo: {
+                          __typename: "PageInfo",
+                          hasNextPage:
+                            fetchMorePageInfo?.hasNextPage ??
+                            previousPageInfo?.hasNextPage ??
+                            true,
+                          hasPreviousPage:
+                            previousPageInfo?.hasPreviousPage ??
+                            fetchMorePageInfo?.hasPreviousPage ??
+                            true,
+                          startCursor:
+                            previousPageInfo?.startCursor ||
+                            fetchMorePageInfo?.startCursor ||
+                            null,
+                          endCursor:
+                            fetchMorePageInfo?.endCursor ||
+                            previousPageInfo?.endCursor ||
+                            null,
+                        },
+                        nodes: [...previousNodes, ...fetchMoreNodes],
+                      },
+                    },
+                  };
+                },
+              });
             }}
           />
         )}
