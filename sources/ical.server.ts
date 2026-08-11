@@ -117,7 +117,13 @@ export async function* getUserIcalEventsBetween(
     ) {
       if (sourceStartDate && event.end < sourceStartDate) continue;
 
-      yield eventWithoutId;
+      if (
+        !event.exdate?.some(
+          (exdate) => exdate.toJSON() === event.start.toJSON(),
+        )
+      ) {
+        yield eventWithoutId;
+      }
     }
     const rrule = event.rrule?.origOptions
       ? new RRule({ ...event.rrule.origOptions, tzid: "UTC" })
@@ -145,6 +151,10 @@ export async function* getUserIcalEventsBetween(
       const rruleDates = rruleSet
         .between(start, end, true)
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
+
+      if (event.summary === "Ideal Sleep")
+        console.log(rruleSet._exdate, rruleDates);
+
       const recurrenceIdDates = new Set(
         event.recurrences
           ?.map((r) => r.recurrenceid?.toLocaleDateString())
