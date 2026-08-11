@@ -1,12 +1,5 @@
 import { tz } from "@date-fns/tz";
-import {
-  addDays,
-  getDay,
-  type Interval,
-  setHours,
-  startOfDay,
-  subDays,
-} from "date-fns";
+import { getDay, type Interval, setHours, startOfDay } from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Account } from "next-auth";
 import { auth } from "../auth";
@@ -34,7 +27,6 @@ import { DataSource } from "../sources/utils";
 import { getUserWithingsSleepSummarySeriesBetween } from "../sources/withings.server";
 import {
   allPromises,
-  dayStartHour,
   endOfDayButItRespectsDayStartHour,
   rangeToQuery,
   unique,
@@ -49,16 +41,13 @@ export const Accounts = proxyCollection<Account>("accounts");
 
 export const getUserJournalEntries = async (
   userId: string,
-
-  dayDate: Date,
-  daysBefore?: number | null,
-  daysAfter?: number | null,
+  fromDay: Date,
+  toDay: Date,
 ) => {
-  dayDate.setHours(dayStartHour);
   const interval = {
     // Overfetch to midnight to include legacy workouts and all-day events that are stored with start
-    start: startOfDay(subDays(dayDate, daysBefore ?? 0)),
-    end: endOfDayButItRespectsDayStartHour(addDays(dayDate, daysAfter ?? 0)),
+    start: startOfDay(fromDay),
+    end: endOfDayButItRespectsDayStartHour(toDay),
   } satisfies Interval;
 
   const entries: GQJournalEntryUnion[] = [];

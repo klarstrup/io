@@ -57,11 +57,7 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
-  query DiaryAgendaDayUserTodos(
-    $dayDate: String!
-    $daysBefore: Int!
-    $daysAfter: Int!
-  ) {
+  query DiaryAgendaDayUserTodos($fromDay: String!, $toDay: String!) {
     user {
       id
       name
@@ -89,11 +85,7 @@ gql`
           updatedAt
         }
       }
-      journalEntries(
-        dayDate: $dayDate
-        daysBefore: $daysBefore
-        daysAfter: $daysAfter
-      ) {
+      journalEntries(fromDay: $fromDay, toDay: $toDay) {
         __typename
         ... on Sleep {
           id
@@ -245,11 +237,14 @@ export function DiaryAgendaDay({
 
   const variables = useMemo(
     () => ({
-      dayDate: selectedDayStart
-        ? dateToString(selectedDayStart)
-        : dateToString(new Date()),
-      daysBefore,
-      daysAfter,
+      fromDay: dateToString(
+        startOfDay(subDays(selectedDayStart || new Date(), daysBefore)),
+      ),
+      toDay: dateToString(
+        endOfDayButItRespectsDayStartHour(
+          addDays(selectedDayStart || new Date(), daysAfter),
+        ),
+      ),
     }),
     [selectedDayStart, daysBefore, daysAfter],
   );
@@ -290,13 +285,10 @@ export function DiaryAgendaDay({
   );
   const queryFetchingInterval = useMemo(
     () => ({
-      start: startOfDay(subDays(startOfAgendaDay, queryVariables.daysBefore)),
-      end: addDays(
-        endOfDayButItRespectsDayStartHour(startOfAgendaDay),
-        queryVariables.daysAfter,
-      ),
+      start: new Date(queryVariables.fromDay),
+      end: new Date(queryVariables.toDay),
     }),
-    [startOfAgendaDay, queryVariables.daysAfter, queryVariables.daysBefore],
+    [startOfAgendaDay, queryVariables.toDay, queryVariables.fromDay],
   );
 
   const daysOfInterval = useMemo(
@@ -797,9 +789,8 @@ export function DiaryAgendaDay({
           <ShyGuy
             onSeen={() => {
               if (loading) return;
-              if (queryVariables.daysBefore !== daysBefore) return;
+              if (queryVariables.fromDay !== variables.fromDay) return;
               setDaysBefore((d) => d + 2);
-              window.scrollBy({ top: 1, left: 1, behavior: "instant" });
             }}
           />
         )}
@@ -840,9 +831,8 @@ export function DiaryAgendaDay({
           <ShyGuy
             onSeen={() => {
               if (loading) return;
-              if (queryVariables.daysAfter !== daysAfter) return;
+              if (queryVariables.toDay !== variables.toDay) return;
               setDaysAfter((d) => d + 2);
-              window.scrollBy({ top: -1, left: -1, behavior: "instant" });
             }}
           />
         )}

@@ -173,14 +173,12 @@ export const resolvers: GQResolvers<
     },
   },
   User: {
-    journalEntries: async (parent, args) => {
-      return getUserJournalEntries(
+    journalEntries: async (parent, args) =>
+      getUserJournalEntries(
         parent.id,
-        new Date(args.dayDate),
-        args.daysBefore,
-        args.daysAfter,
-      );
-    },
+        new Date(args.fromDay),
+        new Date(args.toDay),
+      ),
     availableBalance: async (_parent, _args, context) => {
       const user = context?.user ?? (await auth())?.user;
       if (!user) return null;
@@ -1651,11 +1649,7 @@ export const typeDefs = gql`
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]
-    journalEntries(
-      dayDate: String!
-      daysBefore: Int
-      daysAfter: Int
-    ): [JournalEntry!]
+    journalEntries(fromDay: String!, toDay: String!): [JournalEntry!]
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]
