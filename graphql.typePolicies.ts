@@ -80,6 +80,16 @@ export const typePolicies: TypePolicies = {
       endedAt: { read: readDate },
     },
   },
+  Meal: {
+    fields: {
+      datetime: { read: readDate },
+    },
+  },
+  FoodEntry: {
+    fields: {
+      datetime: { read: readDate },
+    },
+  },
   FloatTimeSeriesEntry: {
     fields: { timestamp: { read: readDate } },
   },

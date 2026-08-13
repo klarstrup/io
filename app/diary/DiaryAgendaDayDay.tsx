@@ -37,6 +37,7 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
 import { DiaryAgendaDayEventEnd } from "./DiaryAgendaDayEventEnd";
 import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
+import { DiaryAgendaDayMeal } from "./DiaryAgendaDayMeal";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
 import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
@@ -481,6 +482,21 @@ export function DiaryAgendaDayDay({
             />
           ),
         });
+      } else if (journalEntry.__typename === "Meal") {
+        const meal = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: client.cache.identify(meal) || meal.id,
+          element: (
+            <DiaryAgendaDayMeal
+              key={meal.id}
+              meal={meal}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+            />
+          ),
+        });
+      } else {
+        journalEntry satisfies never;
       }
 
       i++;

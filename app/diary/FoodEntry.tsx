@@ -39,14 +39,14 @@ export function FoodEntry({
                 ?.filter((foodEntry) => foodEntry.mealName === mealName)
                 .reduce(
                   (acc, foodEntry) =>
-                    acc + foodEntry.nutritionalContents.energy.value,
+                    acc + (foodEntry.nutritionalContents?.energy.value || 0),
                   0,
                 );
               const mealTotalProtein = foodEntries
                 ?.filter((foodEntry) => foodEntry.mealName === mealName)
                 .reduce(
                   (acc, foodEntry) =>
-                    acc + (foodEntry.nutritionalContents.protein || 0),
+                    acc + (foodEntry.nutritionalContents?.protein || 0),
                   0,
                 );
 
@@ -68,7 +68,7 @@ export function FoodEntry({
                       ?.filter((foodEntry) => foodEntry.mealName === mealName)
                       .map((foodEntry) => {
                         const unit =
-                          foodEntry.food.servingSizes[0]!.unit.replace(
+                          foodEntry.food.servingSizes?.[0]!.unit.replace(
                             "grams",
                             "g",
                           ).replace("gram", "g");
@@ -77,10 +77,11 @@ export function FoodEntry({
                           <li key={foodEntry.id}>
                             {foodEntry.food.description.replace(/\s+/g, " ")}{" "}
                             <small className="whitespace-nowrap">
-                              {foodEntry.servings *
-                                foodEntry.servingSize.nutritionMultiplier *
-                                foodEntry.food.servingSizes[0]!.value}
-                              {unit.length <= 2 ? unit : <> {unit}</>}
+                              {(foodEntry.servings || 0) *
+                                (foodEntry.servingSize?.nutritionMultiplier ||
+                                  0) *
+                                (foodEntry.food.servingSizes?.[0]!.value || 0)}
+                              {unit && unit.length <= 2 ? unit : <> {unit}</>}
                             </small>
                           </li>
                         );

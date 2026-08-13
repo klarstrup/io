@@ -1654,7 +1654,14 @@ export const typeDefs = gql`
     id: ID!
   }
 
-  union JournalEntryUnion = Todo | Event | Workout | Sleep | NextSet | Trip
+  union JournalEntryUnion =
+    | Todo
+    | Event
+    | Workout
+    | Sleep
+    | NextSet
+    | Trip
+    | Meal
 
   type PageInfo {
     hasNextPage: Boolean!
@@ -1728,21 +1735,30 @@ export const typeDefs = gql`
     totalSleepTime: Float!
   }
 
+  type Meal implements JournalEntry {
+    id: ID!
+    type: String
+    mealName: String
+    datetime: Date!
+    foodEntries: [FoodEntry!]!
+    url: String
+  }
+
   type FoodEntry {
     id: ID!
-    type: String!
+    type: String
     datetime: Date!
-    nutritionalContents: NutritionalContents!
-    mealName: String!
+    nutritionalContents: NutritionalContents
+    mealName: String
     food: Food!
-    servings: Float!
-    servingSize: ServingSize!
+    servings: Float
+    servingSize: ServingSize
   }
 
   type Food {
     id: ID!
     description: String!
-    servingSizes: [ServingSize!]!
+    servingSizes: [ServingSize!]
   }
 
   type ServingSize {

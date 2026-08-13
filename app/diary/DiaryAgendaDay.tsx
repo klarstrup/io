@@ -95,6 +95,18 @@ gql`
         }
         nodes {
           __typename
+          ... on Meal {
+            id
+            datetime
+            foodEntries {
+              id
+              datetime
+              food {
+                id
+                description
+              }
+            }
+          }
           ... on Sleep {
             id
             startedAt
@@ -446,6 +458,8 @@ export function DiaryAgendaDay({
         );
       } else if (entry.__typename === "Trip") {
         addEntryToDate(entry, entry.start);
+      } else if (entry.__typename === "Meal") {
+        addEntryToDate(entry, entry.datetime);
       } else {
         entry satisfies never;
       }

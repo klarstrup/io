@@ -10,7 +10,7 @@ import {
 } from "date-fns";
 import type {
   GQEvent,
-  GQExerciseSchedule,
+  GQMeal,
   GQNextSet,
   GQSleep,
   GQTodo,
@@ -35,9 +35,9 @@ export type JournalEntry =
   | GQTodo
   | GQNextSet
   | GQWorkout
-  | GQExerciseSchedule
   | GQSleep
   | (GQSleep & { _is_separated_end: true })
+  | GQMeal
   | GQTrip
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
@@ -160,19 +160,6 @@ export const getJournalEntryPrincipalDate = (
       end: max([effectiveDueDate, slightlyIntoTheFuture]),
     };
   }
-  if ("nextSet" in entry && entry.nextSet) {
-    const exerciseSchedule = entry;
-    const nextSet = entry.nextSet;
-
-    const effectiveDueDate = exerciseSchedule.snoozedUntil
-      ? max([exerciseSchedule.snoozedUntil, nextSet.dueOn])
-      : nextSet.dueOn;
-
-    return {
-      start: max([effectiveDueDate, slightlyIntoTheFuture]),
-      end: max([effectiveDueDate, slightlyIntoTheFuture]),
-    };
-  }
   if ("exercises" in entry) {
     const workout = entry;
 
@@ -194,6 +181,12 @@ export const getJournalEntryPrincipalDate = (
   if (entry.__typename === "LocationChange") {
     return { start: entry.start, end: entry.end };
   }
+
+  if (entry.__typename === "Meal") {
+    return { start: entry.datetime, end: entry.datetime };
+  }
+
+  //entry satisfies never;
 
   return null;
 };

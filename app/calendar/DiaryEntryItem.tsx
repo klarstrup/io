@@ -28,11 +28,12 @@ export function DiaryEntryItem({
   const { food, workouts } = diaryEntry || {};
 
   const dayTotalEnergy = food?.reduce(
-    (acc, foodEntry) => acc + foodEntry.nutritionalContents.energy.value,
+    (acc, foodEntry) =>
+      acc + (foodEntry.nutritionalContents?.energy.value || 0),
     0,
   );
   const dayTotalProtein = food?.reduce(
-    (acc, foodEntry) => acc + (foodEntry.nutritionalContents.protein || 0),
+    (acc, foodEntry) => acc + (foodEntry.nutritionalContents?.protein || 0),
     0,
   );
 

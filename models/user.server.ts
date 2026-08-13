@@ -7,6 +7,7 @@ import type {
   GQEvent,
   GQExerciseInfo,
   GQJournalEntryUnion,
+  GQMeal,
   GQNextSet,
   GQSleep,
   GQTodo,
@@ -154,25 +155,32 @@ export const getUserJournalEntries = async (
               .filter(Boolean),
           );
 
-          return (
-            "Lunch: " +
-            new Intl.ListFormat("en", {
-              style: "long",
-              type: "conjunction",
-            }).format(dishes)
-          );
+          return dishes.map((dish): GQMeal["foodEntries"][number] => ({
+            id: dish,
+            type: "FOOD_ENTRY",
+            datetime: setHours(menu.date_time, 10),
+            nutritionalContents: null,
+            mealName: "Lunch",
+            food: {
+              id: dish,
+              description: dish,
+              __typename: "Food",
+            },
+            servings: null,
+            servingSize: null,
+            __typename: "FoodEntry",
+          }));
         };
 
         entries.push({
-          __typename: "Event",
-          datetype: "date-time",
+          __typename: "Meal",
           id: menu._id.toString(),
-          start: setHours(menu.date_time, 10),
-          end: setHours(menu.date_time, 10),
-          summary: formatMeyersMenuSummary(menu),
-          location: "Proprty.ai Office",
+          datetime: setHours(menu.date_time, 10),
+          type: "LUNCH",
+          mealName: "Lunch",
+          foodEntries: formatMeyersMenuSummary(menu),
           url: "https://meyers.dk/frokost/almanak",
-        } satisfies GQEvent);
+        } satisfies GQMeal);
       },
     ),
     Array.fromAsync(
