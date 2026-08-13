@@ -196,33 +196,29 @@ export async function* getUserIcalTodosBetween(
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
   // Sadly we can't select the date range from the database because of recurrence logic
-  const dateSelector = {
-    $or: [
-      { start: { $lte: end }, completed: { $exists: false } },
-      { due: { $lte: end }, completed: { $exists: false } },
-      { completed: { $gte: start, $lte: end } },
-      { completed: { $exists: false } },
-      { completed: undefined },
-      { start: { $exists: false } },
-      { start: undefined },
-    ],
-  } satisfies FilterOperators<Omit<VTodo, "recurrences">>;
+  const dateSelector =
+    start && end
+      ? {
+          $or: [
+            { start: { $lte: end }, completed: { $exists: false } },
+            { start: { $lte: end }, completed: null },
+            { due: { $lte: end }, completed: { $exists: false } },
+            { due: { $lte: end }, completed: null },
+            { completed: { $gte: start, $lte: end } },
+          ],
+        }
+      : ({
+          $and: [
+            { $or: [{ due: { $exists: false } }, { due: null }] },
+            { $or: [{ completed: { $exists: false } }, { completed: null }] },
+          ],
+        } satisfies FilterOperators<Omit<VTodo, "recurrences">>);
 
   for await (const todo of IcalEvents.find<WithId<MongoVTodo>>({
     _io_userId: userId,
     type: "VTODO",
     ...dateSelector,
   })) {
-    if (
-      todo.start && end
-        ? todo.start <= end
-        : todo.due && end
-          ? todo.due <= end
-          : todo.completed && start && end
-            ? todo.completed >= start && todo.completed <= end
-            : true
-    ) {
-      yield omit({ ...todo, due: todo.due || todo.start }, "_id", "start");
-    }
+    yield omit({ ...todo, due: todo.due || todo.start }, "_id", "start");
   }
 }
