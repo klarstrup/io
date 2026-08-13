@@ -1,5 +1,11 @@
 import { tz } from "@date-fns/tz";
-import { getDay, type Interval, setHours, startOfDay } from "date-fns";
+import {
+  getDay,
+  type Interval,
+  isWithinInterval,
+  setHours,
+  startOfDay,
+} from "date-fns";
 import { ObjectId } from "mongodb";
 import type { Account } from "next-auth";
 import { auth } from "../auth";
@@ -254,7 +260,10 @@ export const getUserJournalEntries = async (
             Boolean(schedule.exerciseProgram),
         ),
       ),
-      (nextSet) =>
+      (nextSet) => {
+        // Todo: Bake this into getNextSets instead of filtering here
+        if (!isWithinInterval(nextSet.dueOn, interval)) return;
+
         entries.push({
           ...nextSet,
           __typename: "NextSet",
@@ -273,7 +282,8 @@ export const getUserJournalEntries = async (
             // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
             exerciseInfo: undefined as unknown as GQExerciseInfo,
           },
-        } satisfies GQNextSet),
+        } satisfies GQNextSet);
+      },
     ),
     Array.fromAsync(
       DSBProductSummaries.find({
