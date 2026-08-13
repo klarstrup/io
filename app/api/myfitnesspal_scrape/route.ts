@@ -80,27 +80,27 @@ export const GET = (request: NextRequest) =>
               month,
             );
 
-            for (const reportEntry of reportEntries) {
-              for (const foodEntry of reportEntry.food_entries) {
-                const updateResult = await MyFitnessPalFoodEntries.updateOne(
-                  { id: foodEntry.id },
-                  {
-                    $set: {
-                      ...foodEntry,
-                      user_id: userId,
-                      datetime: DateTime.fromISO(foodEntry.date, {
-                        zone: "utc",
-                      }).toJSDate(),
+            yield MyFitnessPalFoodEntries.bulkWrite(
+              reportEntries.flatMap((reportEntry) =>
+                reportEntry.food_entries.map((foodEntry) => ({
+                  updateOne: {
+                    filter: { id: foodEntry.id },
+                    update: {
+                      $set: {
+                        ...foodEntry,
+                        user_id: userId,
+                        datetime: DateTime.fromISO(foodEntry.date, {
+                          zone: "utc",
+                        }).toJSDate(),
+                      },
                     },
+                    upsert: true,
                   },
-                  { upsert: true },
-                );
+                })),
+              ),
+            );
 
-                setUpdated(updateResult);
-              }
-
-              yield reportEntry.date;
-            }
+            for (const reportEntry of reportEntries) yield reportEntry.date;
 
             const foodEntryIdsToBeDeleted = (
               await MyFitnessPalFoodEntries.find({
