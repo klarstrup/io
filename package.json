@@ -19,7 +19,7 @@
     "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
-    "@apollo/client": "^4.2.10",
+    "@apollo/client": "^4.2.11",
     "@apollo/client-integration-nextjs": "^0.14.5",
     "@apollo/server": "^5.5.1",
     "@as-integrations/next": "^4.1.0",
@@ -37,7 +37,7 @@
     "@graphql-codegen/typed-document-node": "^7.1.0",
     "@graphql-codegen/typescript": "^6.1.0",
     "@graphql-codegen/typescript-resolvers": "^6.1.0",
-    "@graphql-tools/schema": "^10.0.38",
+    "@graphql-tools/schema": "^10.1.0",
     "@nivo/line": "^0.99.0",
     "@parcel/watcher": "^2.6.0",
     "@tailwindcss/postcss": "^4.3.3",
@@ -46,7 +46,7 @@
     "@types/lodash": "^4.17.25",
     "@types/uuid": "^10.0.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/functions": "^3.9.1",
+    "@vercel/functions": "^3.9.3",
     "ably": "^2.27.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "cheerio": "^1.2.0",
