@@ -83,7 +83,7 @@ export default function SourceWidget({
             ) : null}
             <div className="text-sm font-semibold">{source.name}</div>
             <div className="whitespace-nowrap">
-              {source.paused !== true ||
+              {source.paused === true ||
               source.source === DataSource.Fitocracy ? (
                 <>
                   <small>Paused</small>{" "}
