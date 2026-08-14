@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 export default function Layout({
   children,
   entry,
@@ -8,7 +10,7 @@ export default function Layout({
   return (
     <>
       {children}
-      {entry}
+      <Suspense>{entry}</Suspense>
     </>
   );
 }
