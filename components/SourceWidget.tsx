@@ -67,7 +67,7 @@ export default function SourceWidget({
                   new Date(source.lastAttemptedAt) >
                     new Date(now.valueOf() - 1000 * 60 * 5),
                 ) ||
-                source.paused !== true ||
+                source.paused === true ||
                 source.source === DataSource.Fitocracy ||
                 isScraping
               }
