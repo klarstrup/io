@@ -11,7 +11,13 @@ export function Modal({ children }: { children: React.ReactNode }) {
   const dialogRef = useRef<ComponentRef<"dialog">>(null);
 
   useEffect(() => {
-    if (!dialogRef.current?.open) dialogRef.current?.showModal();
+    if (dialogRef.current && !dialogRef.current?.open) {
+      // check that dialog is sitll attached to the document before calling showModal, otherwise it will throw an error
+      if (!document.body.contains(dialogRef.current)) return;
+
+      // show
+      dialogRef.current?.showModal();
+    }
   }, []);
 
   function onDismiss() {
