@@ -13,11 +13,24 @@ export function DiaryAgendaDayTodoMarkdown({
   return (
     <div
       data-markdown-wrapper
-      className="prose prose-sm [&_h1]:text-[1rem] [&_h1]:font-medium [&_h1]:leading-relaxed prose-ul:m-0 prose-p:m-0 prose-li:m-0 prose-headings:mb-0 max-w-full wrap-break-word text-black select-none [&_.contains-task-list]:flex [&_.contains-task-list]:list-none [&_.contains-task-list]:flex-col [&_.contains-task-list]:gap-1 [&_.contains-task-list]:p-0 [&_.task-list-item]:flex [&_.task-list-item]:items-center [&_.task-list-item]:gap-1.5 [&_.task-list-item]:pl-0 [&_.task-list-item]:leading-tight [&_.task-list-item-contents]:border-b [&_.task-list-item-contents]:border-dashed [&_.task-list-item-contents]:border-amber-600/25"
+      className="prose prose-sm prose-ul:m-0 prose-p:m-0 prose-li:m-0 prose-headings:mb-0 max-w-full wrap-break-word text-black select-none [&_.contains-task-list]:flex [&_.contains-task-list]:list-none [&_.contains-task-list]:flex-col [&_.contains-task-list]:gap-1 [&_.contains-task-list]:p-0 [&_.task-list-item]:flex [&_.task-list-item]:items-center [&_.task-list-item]:gap-1.5 [&_.task-list-item]:pl-0 [&_.task-list-item]:leading-tight [&_.task-list-item-contents]:border-b [&_.task-list-item-contents]:border-dashed [&_.task-list-item-contents]:border-amber-600/25 [&_h1]:text-[1rem] [&_h1]:leading-relaxed [&_h1]:font-medium"
     >
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
+          a({ node: _node, ...props }) {
+            return (
+              <a
+                {...props}
+                className="text-amber-600 hover:text-amber-700"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              />
+            );
+          },
           ul({ node: _node, ...props }) {
             if (props.className?.includes("contains-task-list")) {
               return (
