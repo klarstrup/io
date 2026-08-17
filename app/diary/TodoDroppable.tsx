@@ -51,7 +51,7 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
     <div
       ref={setNodeRef}
       className={
-        "flex lg:h-full lg:w-[40vw] lg:max-w-xl flex-col items-center lg:items-stretch " +
+        "flex flex-col items-center lg:h-full lg:w-[40vw] lg:max-w-xl lg:items-stretch " +
         (isOver
           ? "rounded-lg outline-4 outline-offset-4 outline-purple-500"
           : "")
@@ -299,7 +299,6 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
     // Ensure targetDate is within the day boundaries
     targetDate = min([max([targetDate, dayStart]), dayEnd]);
-    console.log({ targetDate, precedingDate, followingDate, dayStart, dayEnd });
 
     if (activeCurrent.nextSet) {
       const nextSet = activeCurrent.nextSet as GQNextSet;

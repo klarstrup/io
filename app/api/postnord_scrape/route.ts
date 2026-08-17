@@ -14,14 +14,13 @@ async function fetchPostNordShipmentInformation(
   locale: string,
   timeZone: string,
 ) {
-  console.log({ shipmentId, locale, timeZone });
   const shipmentInformationUrl = new URL(
     "https://api2.postnord.com/rest/shipment/v1/trackingweb/shipmentInformation",
   );
   shipmentInformationUrl.searchParams.set("shipmentId", shipmentId);
   shipmentInformationUrl.searchParams.set("locale", locale);
   shipmentInformationUrl.searchParams.set("timeZone", timeZone);
-  console.log(shipmentInformationUrl);
+
   const res = await fetch(shipmentInformationUrl, {
     headers: {
       accept: "*/*",

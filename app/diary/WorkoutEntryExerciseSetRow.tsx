@@ -74,8 +74,6 @@ export function WorkoutEntryExerciseSetRow({
 
                 const inputType = inputDefinition.type;
 
-                console.log(inputDefinition,exercise);
-
                 return {
                   input,
                   index,

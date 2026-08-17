@@ -27,7 +27,7 @@ export const GET = (request: NextRequest) =>
               addWeeks(new Date(), i).toISOString().split("T")[0]!
             }`,
           );
-          console.log(res.url);
+
           if (!res.ok) {
             throw new Error(
               `Failed to fetch Meyer menus: ${res.status} ${res.statusText}`,

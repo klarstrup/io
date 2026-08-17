@@ -719,7 +719,6 @@ const objectHandlers = {
             [durationUnits[r.slice(-1) as keyof typeof durationUnits]]:
               Number.parseInt(r, 10) * indicator,
           });
-          console.log("Duration applied, new end:", curr.end);
         }
       }
 
