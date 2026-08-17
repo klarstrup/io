@@ -409,6 +409,9 @@ function calculate(
   zenith: number,
   date: TZDate,
 ): Date {
+  // TODO: should be a date in the first place, something is wrong upstream
+  date = isDate(date) ? date : new TZDate(date);
+
   const dayOfYear = getDayOfYear(date);
   const hoursFromMeridian = longitude / DEGREES_PER_HOUR;
   const approxTimeOfEventInDays = isSunrise
