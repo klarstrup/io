@@ -219,6 +219,9 @@ gql`
                 isHidden
                 inputs {
                   type
+                  options {
+                    value
+                  }
                 }
                 instructions {
                   value
@@ -264,11 +267,13 @@ export function DiaryAgendaDay({
   const variables = useMemo(
     () => ({
       after: dateToString(
-        startOfDay(subDays(selectedDayStart || new Date(), 3)),
+        startOfDay(
+          selectedDayStart ? selectedDayStart : subDays(new Date(), 3),
+        ),
       ),
       before: dateToString(
         endOfDayButItRespectsDayStartHour(
-          addDays(selectedDayStart || new Date(), 3),
+          selectedDayStart ? selectedDayStart : addDays(new Date(), 3),
         ),
       ),
     }),
@@ -295,10 +300,14 @@ export function DiaryAgendaDay({
     () => ({
       start: startCursor
         ? stringToDate(startCursor)
-        : startOfDay(subDays(startOfAgendaDay, 3)),
+        : selectedDayStart
+          ? selectedDayStart
+          : startOfDay(subDays(startOfAgendaDay, 3)),
       end: endCursor
         ? stringToDate(endCursor)
-        : addDays(endOfDayButItRespectsDayStartHour(startOfAgendaDay), 3),
+        : selectedDayStart
+          ? selectedDayStart
+          : addDays(endOfDayButItRespectsDayStartHour(startOfAgendaDay), 3),
     }),
     [startCursor, endCursor, startOfAgendaDay],
   );

@@ -1400,6 +1400,10 @@ export const resolvers: GQResolvers<
         __typename: "ExerciseInfo",
         inputs: exerciseInfo.inputs.map((input) => ({
           ...input,
+          options: input.options?.map((option) => ({
+            ...option,
+            __typename: "WorkoutSetInputOption",
+          })),
           __typename: "ExerciseInfoInput",
         })),
         instructions: exerciseInfo.instructions.map((instruction) => ({
@@ -1435,6 +1439,10 @@ export const resolvers: GQResolvers<
         __typename: "ExerciseInfo",
         inputs: exerciseInfo.inputs.map((input) => ({
           ...input,
+          options: input.options?.map((option) => ({
+            ...option,
+            __typename: "WorkoutSetInputOption",
+          })),
           __typename: "ExerciseInfoInput",
         })),
         instructions: exerciseInfo.instructions.map((instruction) => ({
@@ -1934,6 +1942,7 @@ export const typeDefs = gql`
   type ExerciseInfoInput {
     # populate this when migrating workoutform to use ExerciseInfo instead of ExerciseData
     type: String!
+    options: [WorkoutSetInputOption!]
   }
 
   type ExerciseInfoInstruction {
@@ -1963,6 +1972,10 @@ export const typeDefs = gql`
     value: Float
     # "weighted" or "assisted"
     assistType: String
+  }
+
+  type WorkoutSetInputOption {
+    value: String
   }
 `;
 
