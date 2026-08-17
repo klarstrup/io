@@ -85,6 +85,11 @@ export const typePolicies: TypePolicies = {
       datetime: { read: readDate },
     },
   },
+  Delivery: {
+    fields: {
+      timestamp: { read: readDate },
+    },
+  },
   FoodEntry: {
     fields: {
       datetime: { read: readDate },

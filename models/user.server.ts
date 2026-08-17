@@ -23,13 +23,13 @@ import type {
   GQWorkoutSetInput,
   GQWorkoutSetMeta,
 } from "../graphql.generated/graphql";
-import { DSBProductSummaries } from "../sources/dsb.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
 } from "../sources/ical.server";
 import type { Meyers } from "../sources/meyers";
 import { MeyersMenus } from "../sources/meyers.server";
+import { PostNordShipmentInformation } from "../sources/postnord.server";
 import { DataSource } from "../sources/utils";
 import { getUserWithingsSleepSummarySeriesBetween } from "../sources/withings.server";
 import {
@@ -286,48 +286,22 @@ export const getUserJournalEntries = async (
       },
     ),
     Array.fromAsync(
-      DSBProductSummaries.find({
-        _io_userId: userId,
-        timestamp: rangeToQuery(interval.start, interval.end),
-        "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
-      }),
-      (productSummary) =>
-        productSummary.productSummary.trips.map((trip) => {
-          const firstLeg = trip.tripLegs[0];
-          const firstLegFirstStop = firstLeg?.stops[0];
-          const lastLeg = trip.tripLegs[trip.tripLegs.length - 1];
-          const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
-          entries.push({
-            __typename: "Trip",
-            id: trip.id,
-            start:
-              firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
-              firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
-              firstLeg!.startDateTime,
-            end:
-              lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
-              lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
-              lastLeg!.endDateTime,
-            legs: trip.tripLegs.map((leg) => {
-              const firstStop = leg.stops[0];
-              const lastStop = leg.stops[leg.stops.length - 1];
-              return {
-                __typename: "TripLeg",
-                start:
-                  firstStop!.actualTimeAndTrackInfo?.departureTime ||
-                  firstStop!.plannedTimeAndTrackInfo?.departureTime ||
-                  leg.startDateTime,
-                end:
-                  lastStop!.actualTimeAndTrackInfo?.arrivalTime ||
-                  lastStop!.plannedTimeAndTrackInfo?.arrivalTime ||
-                  leg.endDateTime,
-                from: firstStop!.location.name,
-                to: lastStop!.location.name,
-                mode: leg.transports[0]?.meansOfTransportation || "unknown",
-              };
-            }),
-          });
-        }),
+      PostNordShipmentInformation.find({ _io_userId: userId }),
+      (postNordShipmentInformation) => {
+        const firstItem = postNordShipmentInformation.items[0];
+        if (!firstItem) return;
+        const lastEvent = firstItem.events[firstItem.events.length - 1];
+        if (!lastEvent) return;
+
+        entries.push({
+          id: postNordShipmentInformation.shipmentId,
+          url: `https://tracking.postnord.com/dk/tracking?id=${postNordShipmentInformation.shipmentId}`,
+          timestamp: lastEvent.eventTime,
+          status: lastEvent.status,
+          from: postNordShipmentInformation.sender.name,
+          __typename: "Delivery",
+        } satisfies GQJournalEntryUnion);
+      },
     ),
   );
 

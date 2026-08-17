@@ -58,7 +58,7 @@ export function DiaryAgendaDayMeal({
       {...listeners}
       {...attributes}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-      className={"rounded-tl rounded-tr pr-0.5 pl-0.5 text-xs"}
+      className={"pr-0.5 pl-0.5 text-xs"}
       iconClassName="w-10 text-[0.666rem]"
     >
       <div className="text-gray-700 dark:text-gray-400">

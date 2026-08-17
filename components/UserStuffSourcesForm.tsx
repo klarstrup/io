@@ -579,6 +579,9 @@ function UserStuffSourceForm({
         </label>
       );
       break;
+    case DataSource.PostNord:
+      formElements = null;
+      break;
     default:
       return dataSource satisfies never;
   }
@@ -737,9 +740,9 @@ function UserStuffSourceCreateForm({
       ) => {
         if (!selected) return;
 
-        const value = selected.value;
+        const source = selected.value;
         const initialSourceMeta: Pick<UserDataSourceMeta, "name"> = {
-          name: value,
+          name: source,
         };
 
         function append(newSource: Pick<UserDataSource, "source" | "config">) {
@@ -767,11 +770,11 @@ function UserStuffSourceCreateForm({
             });
         }
 
-        switch (value) {
+        switch (source) {
           case DataSource.Fitocracy:
             append({
               ...initialSourceMeta,
-              source: DataSource.Fitocracy,
+              source,
               config: { userId: NaN },
             });
             break;
@@ -785,7 +788,7 @@ function UserStuffSourceCreateForm({
           case DataSource.SnapCalorie:
             append({
               ...initialSourceMeta,
-              source: DataSource.SnapCalorie,
+              source,
               config: {
                 authTokens: {
                   accessToken: "",
@@ -797,21 +800,21 @@ function UserStuffSourceCreateForm({
           case DataSource.Meyers:
             append({
               ...initialSourceMeta,
-              source: DataSource.Meyers,
+              source,
               config: {},
             });
             break;
           case DataSource.RunDouble:
             append({
               ...initialSourceMeta,
-              source: DataSource.RunDouble,
+              source,
               config: { id: "" },
             });
             break;
           case DataSource.TopLogger:
             append({
               ...initialSourceMeta,
-              source: DataSource.TopLogger,
+              source,
               config: {
                 id: NaN,
                 graphQLId: "",
@@ -834,28 +837,28 @@ function UserStuffSourceCreateForm({
           case DataSource.ICal:
             append({
               ...initialSourceMeta,
-              source: DataSource.ICal,
+              source,
               config: { url: "", startDate: undefined },
             });
             break;
           case DataSource.KilterBoard:
             append({
               ...initialSourceMeta,
-              source: DataSource.KilterBoard,
+              source,
               config: { token: "", user_id: "" },
             });
             break;
           case DataSource.MoonBoard:
             append({
               ...initialSourceMeta,
-              source: DataSource.MoonBoard,
+              source,
               config: { token: "", user_id: "" },
             });
             break;
           case DataSource.Grippy:
             append({
               ...initialSourceMeta,
-              source: DataSource.Grippy,
+              source,
               config: {
                 authTokens: {
                   access_token: "",
@@ -870,49 +873,49 @@ function UserStuffSourceCreateForm({
           case DataSource.Crimpd:
             append({
               ...initialSourceMeta,
-              source: DataSource.Crimpd,
+              source,
               config: { token: "" },
             });
             break;
           case DataSource.ClimbAlong:
             append({
               ...initialSourceMeta,
-              source: DataSource.ClimbAlong,
+              source,
               config: { token: "", userId: "" },
             });
             break;
           case DataSource.Tomorrow:
             append({
               ...initialSourceMeta,
-              source: DataSource.Tomorrow,
+              source,
               config: { geohash: "" },
             });
             break;
           case DataSource.Onsight:
             append({
               ...initialSourceMeta,
-              source: DataSource.Onsight,
+              source,
               config: { token: "", username: "" },
             });
             break;
           case DataSource.Sportstiming:
             append({
               ...initialSourceMeta,
-              source: DataSource.Sportstiming,
+              source,
               config: { name: "" },
             });
             break;
           case DataSource.Songkick:
             append({
               ...initialSourceMeta,
-              source: DataSource.Songkick,
+              source,
               config: { artistId: NaN },
             });
             break;
           case DataSource.Withings:
             append({
               ...initialSourceMeta,
-              source: DataSource.Withings,
+              source,
               config: {
                 accessTokenResponse: {
                   userid: NaN,
@@ -929,7 +932,7 @@ function UserStuffSourceCreateForm({
           case DataSource.Spiir:
             append({
               ...initialSourceMeta,
-              source: DataSource.Spiir,
+              source,
               config: {
                 SessionKey: "",
                 balanceCutoff: null,
@@ -940,7 +943,7 @@ function UserStuffSourceCreateForm({
           case DataSource.DSB:
             append({
               ...initialSourceMeta,
-              source: DataSource.DSB,
+              source,
               config: {
                 authTokens: {
                   access_token: "",
@@ -953,8 +956,16 @@ function UserStuffSourceCreateForm({
             });
             break;
 
+          case DataSource.PostNord:
+            append({
+              ...initialSourceMeta,
+              source,
+              config: {},
+            });
+            break;
+
           default:
-            return value satisfies never;
+            return source satisfies never;
         }
       }}
     />

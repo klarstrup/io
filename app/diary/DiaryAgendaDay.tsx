@@ -95,6 +95,13 @@ gql`
         }
         nodes {
           __typename
+          ... on Delivery {
+            id
+            timestamp
+            status
+            from
+            url
+          }
           ... on Meal {
             id
             datetime
@@ -461,6 +468,8 @@ export function DiaryAgendaDay({
         addEntryToDate(entry, entry.start);
       } else if (entry.__typename === "Meal") {
         addEntryToDate(entry, entry.datetime);
+      } else if (entry.__typename === "Delivery") {
+        addEntryToDate(entry, entry.timestamp);
       } else {
         entry satisfies never;
       }

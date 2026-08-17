@@ -93,7 +93,8 @@ type UserDataSourceConfig =
   | {
       source: DataSource.DSB;
       config: { authTokens: DSB.AuthTokens };
-    };
+    }
+  | { source: DataSource.PostNord; config: {} };
 
 export interface UserDataSourceMeta {
   id: string;
@@ -132,6 +133,7 @@ export enum DataSource {
   Spiir = "spiir",
   SnapCalorie = "snapcalorie",
   DSB = "dsb",
+  PostNord = "postnord",
 }
 
 export const dataSourceGroups = {
@@ -153,6 +155,7 @@ export const dataSourceGroups = {
   health: [DataSource.Withings],
   finance: [DataSource.Spiir],
   travel: [DataSource.DSB],
+  delivery: [DataSource.PostNord],
 };
 
 export const exerciseIdToDataSourceMapping: Partial<

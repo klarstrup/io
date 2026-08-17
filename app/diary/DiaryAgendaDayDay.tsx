@@ -1,7 +1,10 @@
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
-import { faExternalLink } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBoxesPacking,
+  faExternalLink,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   differenceInDays,
@@ -493,6 +496,48 @@ export function DiaryAgendaDayDay({
               meal={meal}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
             />
+          ),
+        });
+      } else if (journalEntry.__typename === "Delivery") {
+        const delivery = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: client.cache.identify(delivery) || delivery.id,
+          element: (
+            <DiaryAgendaDayEntry
+              icon={faBoxesPacking}
+              cotemporality={cotemporality({
+                start: delivery.timestamp,
+                end: delivery.timestamp,
+              })}
+              key={delivery.id}
+              id={delivery.id}
+              __typename={delivery.__typename}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+              className={"pr-0.5 pl-0.5 text-xs"}
+              iconClassName="w-10 text-[0.666rem]"
+            >
+              <span className="flex items-stretch leading-snug">
+                <div className="flex items-baseline gap-1 py-0.5">
+                  <span>{delivery.status}</span>
+                  {delivery.from ? (
+                    <span className="text-[0.666rem] opacity-50">
+                      from {delivery.from}
+                    </span>
+                  ) : null}
+                  {delivery.url ? (
+                    <a
+                      href={delivery.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                    >
+                      <FontAwesomeIcon icon={faExternalLink} />
+                    </a>
+                  ) : null}{" "}
+                </div>
+              </span>
+            </DiaryAgendaDayEntry>
           ),
         });
       } else {

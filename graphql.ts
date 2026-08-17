@@ -1662,6 +1662,7 @@ export const typeDefs = gql`
     | NextSet
     | Trip
     | Meal
+    | Delivery
 
   type PageInfo {
     hasNextPage: Boolean!
@@ -1741,6 +1742,14 @@ export const typeDefs = gql`
     mealName: String
     datetime: Date!
     foodEntries: [FoodEntry!]!
+    url: String
+  }
+
+  type Delivery implements JournalEntry {
+    id: ID!
+    status: String!
+    from: String!
+    timestamp: Date!
     url: String
   }
 

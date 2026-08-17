@@ -9,6 +9,7 @@ import {
   min,
 } from "date-fns";
 import type {
+  GQDelivery,
   GQEvent,
   GQMeal,
   GQNextSet,
@@ -39,6 +40,7 @@ export type JournalEntry =
   | (GQSleep & { _is_separated_end: true })
   | GQMeal
   | GQTrip
+  | GQDelivery
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
@@ -184,6 +186,10 @@ export const getJournalEntryPrincipalDate = (
 
   if (entry.__typename === "Meal") {
     return { start: entry.datetime, end: entry.datetime };
+  }
+
+  if (entry.__typename === "Delivery") {
+    return { start: entry.timestamp, end: entry.timestamp };
   }
 
   //entry satisfies never;
