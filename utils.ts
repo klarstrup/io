@@ -736,6 +736,9 @@ export const isSameDayButItRespectsDayStartHour = (
   );
 
 export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) => {
+  // TODO: should be a date in the first place, something is wrong upstream
+  date = date instanceof TZDate || isDate(date) ? date : new TZDate(date);
+
   const dayStart = addHours(
     new TZDate(
       date.getFullYear(),
@@ -745,7 +748,9 @@ export const startOfDayButItRespectsDayStartHour = (date: Date | TZDate) => {
       0,
       0,
       0,
-      "timeZone" in date ? date.timeZone : undefined,
+      "timeZone" in date && typeof date.timeZone === "string"
+        ? date.timeZone
+        : undefined,
     ),
     dayStartHour,
   );
