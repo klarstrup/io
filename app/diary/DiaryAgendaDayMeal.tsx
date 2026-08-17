@@ -1,6 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
-import { faUtensils } from "@fortawesome/free-solid-svg-icons";
+import { faExternalLink, faUtensils } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMemo } from "react";
 import { GQMeal } from "../../graphql.generated/graphql";
 import { cotemporality } from "../../utils";
@@ -63,6 +64,17 @@ export function DiaryAgendaDayMeal({
       <div className="text-gray-700 dark:text-gray-400">
         {meal.foodEntries.map((fe) => fe.food.description).join(", ")}
       </div>
+      &nbsp;
+      {meal.url ? (
+        <a
+          href={meal.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+        >
+          <FontAwesomeIcon icon={faExternalLink} />
+        </a>
+      ) : null}
     </DiaryAgendaDayEntry>
   );
 }

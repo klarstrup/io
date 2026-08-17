@@ -155,7 +155,7 @@ export function DiaryAgendaDayEvent({
             >
               <FontAwesomeIcon icon={faExternalLink} />
             </a>
-          ) : null}{" "}
+          ) : null}
         </div>
       </div>
     </DiaryAgendaDayEntry>

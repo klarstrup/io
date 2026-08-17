@@ -98,6 +98,7 @@ gql`
           ... on Meal {
             id
             datetime
+            url
             foodEntries {
               id
               datetime
