@@ -10,6 +10,7 @@ import {
   differenceInDays,
   differenceInHours,
   isBefore,
+  isDate,
   isEqual,
   isPast,
   roundToNearestMinutes,
@@ -314,7 +315,10 @@ export function DiaryAgendaDayDay({
             followingEvent &&
             followingEventHasSeparateEndEvent &&
             roundToNearestMinutes(event.end).getTime() ===
-              followingEvent.start.getTime()
+              (isDate(followingEvent.start)
+                ? followingEvent.start
+                : new Date(followingEvent.start)
+              ).getTime()
           ) {
             eventIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
               followingEvent.id,
@@ -365,7 +369,10 @@ export function DiaryAgendaDayDay({
               eventHasSeparateEndEvent &&
               precedingEndOfEvent &&
               roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
-                event.start.getTime(),
+                (isDate(event.start)
+                  ? event.start
+                  : new Date(event.start)
+                ).getTime(),
             ) ||
             (dayNo > 1 && days > 1 && isLastDay && !eventHasSeparateEndEvent);
 

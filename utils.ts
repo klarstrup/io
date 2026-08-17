@@ -766,7 +766,7 @@ export const endOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
   subMilliseconds(addDays(startOfDayButItRespectsDayStartHour(date), 1), 1);
 
 export const supportsHaptic =
-  typeof window !== "undefined"
+    typeof window !== "undefined"
     ? window.matchMedia("(pointer: coarse)").matches
     : false;
 
