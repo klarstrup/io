@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { TZDate, tzOffset } from "@date-fns/tz";
 import { add, addDays, addMinutes, parse } from "date-fns";
+import isObject from "lodash/isObject";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
-import { isNonEmptyArray } from "../utils";
+import { DEFAULT_TIMEZONE, isNonEmptyArray } from "../utils";
 import zoneTable from "./windowsZones.json" with { type: "json" };
 
 /** **************
@@ -179,22 +180,11 @@ export type Attendee = Property<{
 }>;
 
 export type AttendeeCUType =
-  | "INDIVIDUAL"
-  | "UNKNOWN"
-  | "GROUP"
-  | "ROOM"
-  | string;
+  "INDIVIDUAL" | "UNKNOWN" | "GROUP" | "ROOM" | string;
 export type AttendeeRole =
-  | "CHAIR"
-  | "REQ-PARTICIPANT"
-  | "NON-PARTICIPANT"
-  | string;
+  "CHAIR" | "REQ-PARTICIPANT" | "NON-PARTICIPANT" | string;
 export type AttendeePartStat =
-  | "NEEDS-ACTION"
-  | "ACCEPTED"
-  | "DECLINED"
-  | "TENTATIVE"
-  | "DELEGATED";
+  "NEEDS-ACTION" | "ACCEPTED" | "DECLINED" | "TENTATIVE" | "DELEGATED";
 
 export type DateWithTimeZone = Date & { tz?: string };
 export type DateType = "date-time" | "date";
@@ -905,6 +895,42 @@ const objectHandlers = {
           curr.rrule.origOptions.dtstart?.getUTCDate();
 
         curr.rrule = new RRule(curr.rrule.origOptions);
+      }
+
+      const weekdays = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+      const weekdayToIndex = (weekday: string | number) => {
+        if (typeof weekday === "number") return weekday;
+
+        const weekdayIndex = weekdays.indexOf(weekday);
+        if (weekdayIndex === -1) throw new Error(`Invalid weekday: ${weekday}`);
+
+        return weekdayIndex;
+      };
+
+      // Hack to fix BYWEEKDAY if it doesn't match the start date because
+      // the dtstart was shifted into a different weekday due to UTC time
+      // If the timezone difference causes the start date to be on a different day of the week than the original start date, we need to adjust the BYWEEKDAY rule to match the new start date's weekday. This ensures that the recurrence rule generates occurrences on the correct days of the week.
+      if (curr.rrule.origOptions.byweekday) {
+        const dayUtc = new TZDate(curr.start, "UTC").getDay();
+        const tz = curr.start.tz && getTimeZone(curr.start.tz);
+        const dayTz = new TZDate(curr.start, tz ?? DEFAULT_TIMEZONE).getDay();
+
+        const diff = (dayUtc - dayTz + 7) % 7;
+
+        if (diff && Array.isArray(curr.rrule.origOptions.byweekday)) {
+          curr.rrule.origOptions.byweekday =
+            curr.rrule.origOptions.byweekday.map((weekday) => {
+              if (isObject(weekday) && "weekday" in weekday) {
+                weekday = weekday.weekday;
+              } else if (typeof weekday === "string") {
+                weekday = weekdayToIndex(weekday);
+              }
+              const newWeekdayIndex = (weekday + diff) % 7;
+              return newWeekdayIndex;
+            });
+
+          curr.rrule = new RRule(curr.rrule.origOptions);
+        }
       }
     }
 
