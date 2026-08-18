@@ -52,6 +52,7 @@ import { TodoDroppable } from "./TodoDroppable";
 import {
   getJournalEntryPrincipalDate,
   isEventEntireDay,
+  isSeparatedEnd,
   type JournalEntry,
 } from "./diaryUtils";
 
@@ -546,8 +547,7 @@ export function DiaryAgendaDay({
               (entry, i, entries) =>
                 !(
                   entry.__typename === "Event" &&
-                  "_is_separated_end" in entry &&
-                  entry._is_separated_end &&
+                  isSeparatedEnd(entry) &&
                   entries[i - 1]?.id === entry.id &&
                   cotemporality(entry) !== "current"
                 ),
@@ -560,8 +560,7 @@ export function DiaryAgendaDay({
                 previousEntry?.__typename === "Event"
               ) {
                 if (
-                  "_is_separated_end" in entry &&
-                  entry._is_separated_end &&
+                  isSeparatedEnd(entry) &&
                   isEqual(entry.start, previousEntry.start) &&
                   isEqual(entry.end, previousEntry.end)
                 ) {
@@ -621,11 +620,8 @@ export function DiaryAgendaDay({
             (!lastLocation || lastLocation.name !== location.name)
           ) {
             const previousEntryIsEnd =
-              previousEntry &&
-              "_is_separated_end" in previousEntry &&
-              previousEntry._is_separated_end;
-            const entryIsEnd =
-              "_is_separated_end" in entry && entry._is_separated_end;
+              previousEntry && isSeparatedEnd(previousEntry);
+            const entryIsEnd = isSeparatedEnd(entry);
 
             const entryPricipalDate = getJournalEntryPrincipalDate(entry);
             const previousEntryPrincipalDate = previousEntry

@@ -30,20 +30,28 @@ import {
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 
+export type SeparatedEnd = { _is_separated_end: true };
+export type WithSeparatedEnd<T> = T & SeparatedEnd;
+export type WithOrWithoutSeparatedEnd<T> = T | WithSeparatedEnd<T>;
+
 export type JournalEntry =
-  | GQEvent
-  | (GQEvent & { _is_separated_end: true })
+  | WithOrWithoutSeparatedEnd<GQEvent>
   | GQTodo
   | GQNextSet
   | GQWorkout
   | GQSleep
-  | (GQSleep & { _is_separated_end: true })
+  | WithOrWithoutSeparatedEnd<GQSleep>
   | GQMeal
   | GQTrip
   | GQDelivery
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
   | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
+
+export const isSeparatedEnd = <T extends JournalEntry>(
+  entry: T,
+): entry is WithSeparatedEnd<T> =>
+  Boolean("_is_separated_end" in entry && entry._is_separated_end);
 
 const getWorkoutPrincipalDate = (
   workout: WorkoutData | GQWorkout,
@@ -133,12 +141,9 @@ export const getJournalEntryPrincipalDate = (
   if (entry.__typename === "Sleep") {
     return { start: entry.startedAt, end: entry.endedAt };
   }
-  if ("_is_separated_end" in entry && entry._is_separated_end) {
+  if (isSeparatedEnd(entry)) {
     if ("end" in entry && entry.end) {
-      return {
-        start: new Date(entry.end),
-        end: new Date(entry.end),
-      };
+      return { start: new Date(entry.end), end: new Date(entry.end) };
     }
   }
   if ("start" in entry && entry.start) {

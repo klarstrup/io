@@ -7,7 +7,8 @@ import type { GQSleep, GQUser } from "../../graphql.generated/graphql";
 import { formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
-import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import type { WithOrWithoutSeparatedEnd } from "./diaryUtils";
+import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
 export default function DiaryAgendaDaySleep({
   sleep,
@@ -15,7 +16,7 @@ export default function DiaryAgendaDaySleep({
   principalDate,
   cotemporalityOfSurroundingEvent,
 }: {
-  sleep: GQSleep | (GQSleep & { _is_separated_end: true });
+  sleep: WithOrWithoutSeparatedEnd<GQSleep>;
   userTimeZone: GQUser["timeZone"];
   principalDate?: ReturnType<typeof getJournalEntryPrincipalDate>;
   cotemporalityOfSurroundingEvent?: "current" | "past" | "future" | null;
@@ -32,7 +33,7 @@ export default function DiaryAgendaDaySleep({
     router.push(`/diary/entries/${sleep.__typename}:${sleep.id}`);
   }, [router, sleep.__typename, sleep.id]);
 
-  const isSleepEnd = "_is_separated_end" in sleep && sleep._is_separated_end;
+  const isSleepEnd = isSeparatedEnd(sleep);
 
   return (
     <DiaryAgendaDayEntry
