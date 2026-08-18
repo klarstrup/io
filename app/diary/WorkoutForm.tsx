@@ -510,11 +510,13 @@ export function WorkoutForm<R extends string>({
                       createWorkoutPayloadData?.createWorkout
                         ?.workout as GQWorkout,
                     ],
+                    /*
                     journalEntries: (value = []) => [
                       ...(value as GQJournalEntryUnion[]),
                       createWorkoutPayloadData?.createWorkout
                         ?.workout as GQJournalEntryUnion,
                     ],
+                    */
                   },
                 });
               },
