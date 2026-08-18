@@ -229,7 +229,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         ): readonly [string, JournalEntry | typeof NOW_SYMBOL] | null => {
           let item: JournalEntry | typeof NOW_SYMBOL | undefined;
 
-          if (sortableId.startsWith("end-of-Event:")) {
+          if (sortableId.startsWith("end-of-")) {
             item = sortableItemsFromCache?.find(
               ([key]) => key === sortableId.replace("end-of-", ""),
             )?.[1];
@@ -269,8 +269,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       precedingEntry &&
       (precedingEntry[1] === NOW_SYMBOL
         ? new Date()
-        : precedingEntry[0].startsWith("end-of-") ||
-            precedingEntry[0].startsWith("Sleep:")
+        : precedingEntry[0].startsWith("end-of-")
           ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
           : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
 

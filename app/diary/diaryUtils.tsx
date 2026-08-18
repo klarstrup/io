@@ -102,24 +102,6 @@ const getWorkoutPrincipalDate = (
   return { start, end };
 };
 
-export const getTodoPrincipalDate = (
-  todo: Partial<Pick<GQTodo, "completed" | "due">>,
-): Interval<Date, Date> | null => {
-  const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
-  if (todo.completed)
-    return {
-      start: todo.completed,
-      end: todo.completed,
-    };
-  if (todo.due) {
-    return {
-      start: max([todo.due, slightlyIntoTheFuture]),
-      end: max([todo.due, slightlyIntoTheFuture]),
-    };
-  }
-  return { start: slightlyIntoTheFuture, end: slightlyIntoTheFuture };
-};
-
 // Fake client-only type for location changes, which are not stored in the database but are generated on the fly when rendering the diary agenda
 export interface LocationChange {
   __typename: "LocationChange";
@@ -135,16 +117,31 @@ export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Interval<Date, Date> | null => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
+  if (isSeparatedEnd(entry)) {
+    const principalDate = getJournalEntryPrincipalDate({
+      ...entry,
+      _is_separated_end: undefined,
+    } as JournalEntry);
+    if (!principalDate) return null;
+    return {
+      start: principalDate.end,
+      end: principalDate.end,
+    };
+  }
   if (entry.__typename === "Todo") {
-    return getTodoPrincipalDate(entry);
+    const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
+    if (entry.completed)
+      return { start: entry.completed, end: entry.completed };
+    if (entry.due) {
+      return {
+        start: max([entry.due, slightlyIntoTheFuture]),
+        end: max([entry.due, slightlyIntoTheFuture]),
+      };
+    }
+    return { start: slightlyIntoTheFuture, end: slightlyIntoTheFuture };
   }
   if (entry.__typename === "Sleep") {
     return { start: entry.startedAt, end: entry.endedAt };
-  }
-  if (isSeparatedEnd(entry)) {
-    if ("end" in entry && entry.end) {
-      return { start: new Date(entry.end), end: new Date(entry.end) };
-    }
   }
   if ("start" in entry && entry.start) {
     return {

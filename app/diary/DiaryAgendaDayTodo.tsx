@@ -6,6 +6,7 @@ import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { addDays, subSeconds } from "date-fns";
 import gql from "graphql-tag";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { twMerge } from "tailwind-merge";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   DeleteTodoMutation,
@@ -17,8 +18,7 @@ import { useClickOutside, useEvent } from "../../hooks";
 import { omitUndefined } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayTodoMarkdown } from "./DiaryAgendaDayTodoMarkdown";
-import { getTodoPrincipalDate } from "./diaryUtils";
-import { twMerge } from "tailwind-merge";
+import { getJournalEntryPrincipalDate } from "./diaryUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -54,7 +54,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     transition,
   } = useSortable({
     id: client.cache.identify(todo) || todo.id,
-    data: { todo, date: getTodoPrincipalDate(todo)?.start },
+    data: { todo, date: getJournalEntryPrincipalDate(todo)?.start },
     disabled: backlog,
   });
 
