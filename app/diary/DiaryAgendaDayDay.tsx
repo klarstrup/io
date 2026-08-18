@@ -124,7 +124,10 @@ export function DiaryAgendaDayDay({
         .filter((je): je is GQEvent => je.__typename === "Event");
       const followingEndOfEvents = dayJournalEntries
         .slice(i + 1)
-        .filter((je): je is GQEvent => isSeparatedEnd(je));
+        .filter(
+          (je): je is GQEvent =>
+            je.__typename === "Event" && isSeparatedEnd(je),
+        );
 
       const eventThatSurroundsEntry =
         previousEvents
