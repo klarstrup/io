@@ -34,6 +34,13 @@ export type SeparatedEnd = { _is_separated_end: true };
 export type WithSeparatedEnd<T> = T & SeparatedEnd;
 export type WithOrWithoutSeparatedEnd<T> = T | WithSeparatedEnd<T>;
 
+export interface NowDividerEntry {
+  __typename: "NowDivider";
+  id: "now-divider";
+  start: Date;
+  end: Date;
+}
+
 export type JournalEntry =
   | WithOrWithoutSeparatedEnd<GQEvent>
   | GQTodo
@@ -46,7 +53,7 @@ export type JournalEntry =
   | GQDelivery
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
-  | { __typename: "NowDivider"; id: "now-divider"; start: Date; end: Date };
+  | NowDividerEntry;
 
 export const isSeparatedEnd = <T extends JournalEntry>(
   entry: T,

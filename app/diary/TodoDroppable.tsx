@@ -39,7 +39,11 @@ import {
   omitUndefined,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
-import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
+import {
+  getJournalEntryPrincipalDate,
+  type JournalEntry,
+  NowDividerEntry,
+} from "./diaryUtils";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -61,8 +65,6 @@ export function TodoDroppable(props: { children: ReactNode; date: Date }) {
     </div>
   );
 }
-
-const NOW_SYMBOL = Symbol("now");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -194,19 +196,35 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       client.cache.extract() as Record<string, Record<string, unknown>>,
     );
 
+    let nowItemDate = event.collisions?.find(
+      (collision) => collision.id === "now-divider",
+    )?.data?.droppableContainer?.data?.current?.date as Date | undefined;
+    nowItemDate ||= new Date();
+
     const sortableItemsFromCache = sortableItems
       ?.map((sortableId) => {
-        const a = cacheObjectEntries.find(([key]) =>
-          sortableId === "now-divider"
-            ? key === "now-divider"
-            : sortableId.startsWith(key) ||
-              key === sortableId ||
-              (sortableId.startsWith("end-of-") &&
-                key === sortableId.replace("end-of-", "")),
+        if (sortableId === "now-divider") {
+          return [
+            sortableId,
+            {
+              __typename: "NowDivider",
+              id: "now-divider",
+              start: nowItemDate,
+              end: nowItemDate,
+            } satisfies NowDividerEntry,
+          ] as const;
+        }
+
+        const a = cacheObjectEntries.find(
+          ([key]) =>
+            sortableId.startsWith(key) ||
+            key === sortableId ||
+            (sortableId.startsWith("end-of-") &&
+              key === sortableId.replace("end-of-", "")),
         ) as [string, JournalEntry] | undefined;
         if (!a) return null;
 
-        return [sortableId, a[1] as GQWorkout] as const;
+        return [sortableId, a[1]] as const;
       })
       .filter(Boolean);
 
@@ -223,29 +241,23 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         : undefined;
 
     const newSortableCacheEntries = newSortableItems
-      ?.map(
-        (
-          sortableId,
-        ): readonly [string, JournalEntry | typeof NOW_SYMBOL] | null => {
-          let item: JournalEntry | typeof NOW_SYMBOL | undefined;
+      ?.map((sortableId): readonly [string, JournalEntry] | null => {
+        let item: JournalEntry | undefined;
 
-          if (sortableId.startsWith("end-of-")) {
-            item = sortableItemsFromCache?.find(
-              ([key]) => key === sortableId.replace("end-of-", ""),
-            )?.[1];
-          }
-
+        if (sortableId.startsWith("end-of-")) {
+          item = sortableItemsFromCache?.find(
+            ([key]) => key === sortableId.replace("end-of-", ""),
+          )?.[1];
+        } else {
           item = sortableItemsFromCache?.find(
             ([key]) => sortableId.startsWith(key) || key === sortableId,
           )?.[1];
+        }
 
-          if (sortableId === "now-divider") item = NOW_SYMBOL;
+        if (!item) return null;
 
-          if (!item) return null;
-
-          return [sortableId, item] as const;
-        },
-      )
+        return [sortableId, item] as const;
+      })
       .filter(Boolean);
 
     console.log(newSortableCacheEntries);
@@ -267,19 +279,15 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
     const precedingDate =
       precedingEntry &&
-      (precedingEntry[1] === NOW_SYMBOL
-        ? new Date()
-        : precedingEntry[0].startsWith("end-of-")
-          ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
-          : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
+      (precedingEntry[0].startsWith("end-of-")
+        ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
+        : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
 
     const followingDate =
       followingEntry &&
-      (followingEntry[1] === NOW_SYMBOL
-        ? new Date()
-        : followingEntry[0].startsWith("end-of-")
-          ? getJournalEntryPrincipalDate(followingEntry[1])?.end
-          : getJournalEntryPrincipalDate(followingEntry[1])?.start);
+      (followingEntry[0].startsWith("end-of-")
+        ? getJournalEntryPrincipalDate(followingEntry[1])?.end
+        : getJournalEntryPrincipalDate(followingEntry[1])?.start);
 
     const overStart =
       overCurrent.date &&
