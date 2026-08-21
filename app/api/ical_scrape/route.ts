@@ -101,7 +101,18 @@ export const GET = (request: NextRequest) =>
                           ? max([subMilliseconds(event.end, 1), event.start])
                           : event.end,
                         recurrences:
-                          event.recurrences && Object.values(event.recurrences),
+                          event.recurrences &&
+                          Object.values(event.recurrences).map(
+                            (recurrence) => ({
+                              ...recurrence,
+                              end: isDate(recurrence.end)
+                                ? max([
+                                    subMilliseconds(recurrence.end, 1),
+                                    recurrence.start,
+                                  ])
+                                : recurrence.end,
+                            }),
+                          ),
                         exdate: event.exdate && Object.values(event.exdate),
                         calendar,
                         _io_scrapedAt,
