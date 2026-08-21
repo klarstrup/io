@@ -317,9 +317,14 @@ function UserStuffSourceCreateForm({
   const router = useRouter();
   const client = useApolloClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [value, setValue] = useState<null | {
+    label: DataSource;
+    value: DataSource;
+  }>(null);
 
   return (
     <Select
+      value={value}
       components={{
         Input: (props) => (
           <components.Input {...props} aria-activedescendant={undefined} />
@@ -345,36 +350,33 @@ function UserStuffSourceCreateForm({
           name: source,
         };
 
-        function append(newSource: Pick<UserDataSource, "source" | "config">) {
-          if (!user) return;
-          setIsSubmitting(true);
-          createUserDataSource(user.id, newSource.source, {
-            ...initialSourceMeta,
-            ...newSource,
-          })
-            .then(() => {
-              setIsSubmitting(false);
-              router.refresh();
-              void client.refetchQueries({ include: "all" });
-            })
-            .catch((err: unknown) => {
-              setIsSubmitting(false);
-
-              alert(
-                String(
-                  typeof err === "object" && err !== null && "message" in err
-                    ? err.message
-                    : err,
-                ),
-              );
-            });
-        }
-
-        append({
+        if (!user) return;
+        setIsSubmitting(true);
+        createUserDataSource(user.id, source, {
           ...initialSourceMeta,
           source,
           config: getDefaultsForSchema(dataSources[source].configSchema),
-        });
+        })
+          .then(() => {
+            setValue(null);
+            setIsSubmitting(false);
+            router.refresh();
+            void client.refetchQueries({ include: "all" });
+            location.reload();
+          })
+          .catch((err: unknown) => {
+            setValue(null);
+            setIsSubmitting(false);
+            location.reload();
+
+            alert(
+              String(
+                typeof err === "object" && err !== null && "message" in err
+                  ? err.message
+                  : err,
+              ),
+            );
+          });
       }}
     />
   );
