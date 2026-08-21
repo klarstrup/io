@@ -176,9 +176,6 @@ function UserStuffSourceForm({
     );
   }
 
-  const sourceId = userDataSource.source;
-  const dataSource = dataSources[userDataSource.source];
-
   return (
     <form
       onSubmit={handleSubmit(async (newDataSource) => {
@@ -224,7 +221,11 @@ function UserStuffSourceForm({
         <label>
           <input type="checkbox" {...register("paused")} /> Paused
         </label>
-        {dataSource.getFormElements({ register, watch, setValue })}
+        {dataSources[userDataSource.source].getFormElements({
+          register,
+          watch,
+          setValue,
+        })}
         <button
           type="submit"
           disabled={isSubmitting}
