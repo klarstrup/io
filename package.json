@@ -82,7 +82,9 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "typescript-eslint": "^8.67.0",
-    "uuid": "^14.0.2"
+    "uuid": "^14.0.2",
+    "zod": "^4.4.3",
+    "zod-defaults": "^0.2.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

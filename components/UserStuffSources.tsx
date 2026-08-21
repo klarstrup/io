@@ -1,5 +1,5 @@
 import { auth } from "../auth";
-import { DataSource, dataSourceGroups } from "../sources/utils";
+import { dataSources } from "../sources/utils";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
 
 export default async function UserStuffSources() {
@@ -9,17 +9,7 @@ export default async function UserStuffSources() {
 
   return (
     <UserStuffSourcesForm
-      sourceOptions={[
-        ...dataSourceGroups.workouts,
-        ...dataSourceGroups.events,
-        ...dataSourceGroups.food,
-        ...dataSourceGroups.weather,
-        ...dataSourceGroups.health,
-        ...dataSourceGroups.finance,
-        ...dataSourceGroups.travel,
-        ...dataSourceGroups.delivery,
-        DataSource.Songkick,
-      ]}
+      sourceOptions={Object.values(dataSources).map((ds) => ds.source)}
     />
   );
 }

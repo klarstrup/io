@@ -4,29 +4,29 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useState, type ReactElement } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
+import { getDefaultsForSchema } from "zod-defaults";
 import {
   createUserDataSource,
   updateUserDataSource,
 } from "../app/diary/actions";
-import type { TopLoggerAuthTokens } from "../lib";
 import {
   DataSource,
+  dataSources,
   UserDataSourceMeta,
   type UserDataSource,
 } from "../sources/utils";
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
-import { UserStuffGeohashInput } from "./UserStuffGeohashInput";
 
 function UserStuffSourceForm({
   sourceOptions,
-  source,
+  userDataSource,
 }: {
   sourceOptions: DataSource[];
-  source: UserDataSource;
+  userDataSource: UserDataSource;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const { data: sessionData, update } = useSession();
@@ -34,7 +34,7 @@ function UserStuffSourceForm({
   const router = useRouter();
   const client = useApolloClient();
 
-  const defaultValues = useMemo(() => source, [source]);
+  const defaultValues = useMemo(() => userDataSource, [userDataSource]);
   const {
     handleSubmit,
     register,
@@ -48,23 +48,22 @@ function UserStuffSourceForm({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  let formElements: Element | ReactElement | null = null;
-
-  if (!sourceOptions.includes(source.source)) return null;
+  if (!sourceOptions.includes(userDataSource.source)) return null;
 
   if (!isEditing) {
     const wasFetchedRecently = Boolean(
-      source.lastAttemptedAt &&
-      new Date(source.lastAttemptedAt) > new Date(Date.now() - 1000 * 60 * 5),
+      userDataSource.lastAttemptedAt &&
+      new Date(userDataSource.lastAttemptedAt) >
+        new Date(Date.now() - 1000 * 60 * 5),
     );
 
-    if (!sourceOptions.includes(source.source)) {
+    if (!sourceOptions.includes(userDataSource.source)) {
       return null;
     }
 
     return (
       <div
-        key={source.id}
+        key={userDataSource.id}
         className="flex items-start justify-between gap-1 rounded-md border border-gray-300 bg-white/75 p-1"
       >
         <div className="flex items-stretch">
@@ -85,22 +84,22 @@ function UserStuffSourceForm({
                 type="button"
                 disabled={
                   Boolean(
-                    source.lastAttemptedAt &&
-                    (!source.lastSuccessfulAt ||
-                      new Date(source.lastAttemptedAt) >
-                        new Date(source.lastSuccessfulAt)) &&
-                    (!source.lastFailedAt ||
-                      new Date(source.lastAttemptedAt) >
-                        new Date(source.lastFailedAt)),
+                    userDataSource.lastAttemptedAt &&
+                    (!userDataSource.lastSuccessfulAt ||
+                      new Date(userDataSource.lastAttemptedAt) >
+                        new Date(userDataSource.lastSuccessfulAt)) &&
+                    (!userDataSource.lastFailedAt ||
+                      new Date(userDataSource.lastAttemptedAt) >
+                        new Date(userDataSource.lastFailedAt)),
                   ) ||
                   wasFetchedRecently ||
-                  source.paused === true ||
-                  source.source === DataSource.Fitocracy
+                  userDataSource.paused === true ||
+                  userDataSource.source === DataSource.Fitocracy
                 }
                 className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={async () => {
                   const promise = fetch(
-                    `/api/${source.source}_scrape?userDataSourceId=${source.id}`,
+                    `/api/${userDataSource.source}_scrape?userDataSourceId=${userDataSource.id}`,
                   );
                   await new Promise((resolve) => setTimeout(resolve, 1000));
                   router.refresh();
@@ -113,56 +112,58 @@ function UserStuffSourceForm({
               </button>
             </div>
             <div className="flex flex-1 flex-col justify-between leading-snug">
-              {source.name !== source.source ? (
-                <small>{source.source}</small>
+              {userDataSource.name !== userDataSource.source ? (
+                <small>{userDataSource.source}</small>
               ) : null}
-              <div className="text-sm font-semibold">{source.name}</div>
+              <div className="text-sm font-semibold">{userDataSource.name}</div>
               <div>
-                {source.paused === true ||
-                source.source === DataSource.Fitocracy ? (
+                {userDataSource.paused === true ||
+                userDataSource.source === DataSource.Fitocracy ? (
                   <>
                     <small>Paused</small>{" "}
                     <span title="This data source is paused and will not be automatically fetched.">
                       ⏸️
                     </span>
                   </>
-                ) : source.lastAttemptedAt &&
-                  (!source.lastSuccessfulAt ||
-                    new Date(source.lastAttemptedAt) >
-                      new Date(source.lastSuccessfulAt)) &&
-                  (!source.lastFailedAt ||
-                    new Date(source.lastAttemptedAt) >
-                      new Date(source.lastFailedAt)) ? (
+                ) : userDataSource.lastAttemptedAt &&
+                  (!userDataSource.lastSuccessfulAt ||
+                    new Date(userDataSource.lastAttemptedAt) >
+                      new Date(userDataSource.lastSuccessfulAt)) &&
+                  (!userDataSource.lastFailedAt ||
+                    new Date(userDataSource.lastAttemptedAt) >
+                      new Date(userDataSource.lastFailedAt)) ? (
                   <>
                     <small>
                       <DistanceToNowStrict
-                        date={new Date(source.lastAttemptedAt)}
+                        date={new Date(userDataSource.lastAttemptedAt)}
                       />
                     </small>{" "}
                     <div className="inline-block animate-spin text-lg leading-0">
                       ↻
                     </div>
                   </>
-                ) : source.lastSuccessfulAt &&
-                  (!source.lastFailedAt ||
-                    new Date(source.lastSuccessfulAt) >
-                      new Date(source.lastFailedAt)) ? (
+                ) : userDataSource.lastSuccessfulAt &&
+                  (!userDataSource.lastFailedAt ||
+                    new Date(userDataSource.lastSuccessfulAt) >
+                      new Date(userDataSource.lastFailedAt)) ? (
                   <>
                     <small>
                       <DistanceToNowStrict
-                        date={new Date(source.lastSuccessfulAt)}
+                        date={new Date(userDataSource.lastSuccessfulAt)}
                       />
                     </small>{" "}
                     ✅
                   </>
-                ) : source.lastFailedAt ? (
+                ) : userDataSource.lastFailedAt ? (
                   <>
                     <small>
                       <DistanceToNowStrict
-                        date={new Date(source.lastFailedAt)}
+                        date={new Date(userDataSource.lastFailedAt)}
                       />
                     </small>{" "}
-                    <span title={source.lastError || "Unknown error"}>⚠️</span>
+                    <span title={userDataSource.lastError || "Unknown error"}>
+                      ⚠️
+                    </span>
                   </>
                 ) : (
                   "☑️"
@@ -175,416 +176,8 @@ function UserStuffSourceForm({
     );
   }
 
-  const dataSource = source.source;
-  switch (dataSource) {
-    case DataSource.Fitocracy:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          User ID:
-          <input
-            type="number"
-            {...register("config.userId", {
-              required: true,
-              valueAsNumber: true,
-            })}
-            placeholder="User ID"
-            className="w-full"
-          />
-        </label>
-      );
-      break;
-    case DataSource.MyFitnessPal:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Token:
-            <input
-              type="text"
-              {...register("config.token", { required: true })}
-              placeholder="Token"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Username:
-            <input
-              type="text"
-              {...register("config.userName", { required: true })}
-              placeholder="User Name"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            User ID:
-            <input
-              type="text"
-              {...register("config.userId", { required: true })}
-              placeholder="User ID"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.SnapCalorie:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Auth Tokens:
-          <input
-            type="text"
-            // eslint-disable-next-line react-hooks/incompatible-library
-            value={JSON.stringify(watch("config.authTokens"))}
-            onChange={(e) => {
-              const value = e.target.value;
-              const authTokens = JSON.parse(
-                value,
-              ) as unknown as typeof source.config.authTokens;
-
-              setValue("config.authTokens", authTokens, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
-            }}
-            className="w-full font-mono"
-          />
-        </label>
-      );
-      break;
-    case DataSource.Meyers:
-      formElements = <div>Meyers does not require any configuration.</div>;
-      break;
-    case DataSource.RunDouble:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          ID:
-          <input
-            type="text"
-            {...register("config.id", { required: true })}
-            placeholder="ID"
-            className="w-full"
-          />
-        </label>
-      );
-      break;
-    case DataSource.TopLogger:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            ID:
-            <input
-              type="number"
-              {...register("config.id", { required: true })}
-              placeholder="ID"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            GraphQL ID:
-            <input
-              type="text"
-              {...register("config.graphQLId", { required: true })}
-              placeholder="GraphQL ID"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Auth Tokens:
-            <input
-              type="text"
-              value={JSON.stringify(watch("config.authTokens"))}
-              onChange={(e) => {
-                const value = e.target.value;
-                const authTokens = JSON.parse(
-                  value,
-                ) as unknown as TopLoggerAuthTokens;
-
-                setValue("config.authTokens", authTokens, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-              }}
-              className="w-full font-mono"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.ICal:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            iCal URL:{" "}
-            <input
-              type="text"
-              {...register("config.url")}
-              placeholder="URL"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Start Date (optional):{" "}
-            <input
-              type="datetime-local"
-              {...register("config.startDate", { valueAsDate: true })}
-              placeholder="Start Date"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.KilterBoard:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Token:
-            <input
-              type="text"
-              {...register("config.token", { required: true })}
-              placeholder="Token"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            User ID:
-            <input
-              type="text"
-              {...register("config.user_id", { required: true })}
-              placeholder="User ID"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.MoonBoard:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Token:
-            <input
-              type="text"
-              {...register("config.token", { required: true })}
-              placeholder="Token"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            User ID:
-            <input
-              type="text"
-              {...register("config.user_id", { required: true })}
-              placeholder="User ID"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.Grippy:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Auth Tokens:
-            <input
-              type="text"
-              value={JSON.stringify(watch("config.authTokens"))}
-              onChange={(e) => {
-                const value = e.target.value;
-                const authTokens = JSON.parse(
-                  value,
-                ) as unknown as typeof source.config.authTokens;
-
-                setValue("config.authTokens", authTokens, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-              }}
-              className="w-full font-mono"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.Crimpd:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Token:{" "}
-          <input
-            type="text"
-            {...register("config.token")}
-            placeholder="Token"
-            className="w-full"
-          />
-        </label>
-      );
-      break;
-    case DataSource.ClimbAlong:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Token:{" "}
-            <input
-              type="text"
-              {...register("config.token")}
-              placeholder="Token"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            User ID:{" "}
-            <input
-              type="text"
-              {...register("config.userId")}
-              placeholder="User ID"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.Tomorrow:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Geohash:{" "}
-          <UserStuffGeohashInput
-            geohash={source.config.geohash}
-            onGeohashChange={(geohash) => {
-              setValue("config.geohash", geohash, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
-            }}
-          />
-        </label>
-      );
-      break;
-    case DataSource.Onsight:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Token:{" "}
-            <input
-              type="text"
-              {...register("config.token")}
-              placeholder="Token"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Username (Email):{" "}
-            <input
-              type="text"
-              {...register("config.username")}
-              placeholder="Username (Email)"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.Sportstiming:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Name:
-          <input
-            type="text"
-            {...register("config.name", {
-              required: true,
-            })}
-            placeholder="Name"
-            className="w-full"
-          />
-        </label>
-      );
-      break;
-    case DataSource.Songkick:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Artist ID:
-          <input
-            type="number"
-            {...register("config.artistId", {
-              required: true,
-              valueAsNumber: true,
-            })}
-            placeholder="Artist ID"
-            className="w-full"
-          />
-        </label>
-      );
-      break;
-    case DataSource.Withings:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Access Token Response:
-          <code>
-            {JSON.stringify(source.config.accessTokenResponse, null, 2)}
-          </code>
-        </label>
-      );
-      break;
-    case DataSource.Spiir:
-      formElements = (
-        <>
-          <label className="flex flex-col gap-1">
-            Session Key:
-            <input
-              type="text"
-              {...register("config.SessionKey")}
-              placeholder="Session Key"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Balance Cutoff (optional):
-            <input
-              type="number"
-              {...register("config.balanceCutoff", { valueAsNumber: true })}
-              placeholder="Balance Cutoff"
-              className="w-full"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            Balance Display Ceiling (optional):
-            <input
-              type="number"
-              {...register("config.balanceDisplayCeiling", {
-                valueAsNumber: true,
-              })}
-              placeholder="Balance Display Ceiling"
-              className="w-full"
-            />
-          </label>
-        </>
-      );
-      break;
-    case DataSource.DSB:
-      formElements = (
-        <label className="flex flex-col gap-1">
-          Auth Tokens:
-          <input
-            type="text"
-            value={JSON.stringify(watch("config.authTokens"))}
-            onChange={(e) => {
-              const value = e.target.value;
-              const authTokens = JSON.parse(
-                value,
-              ) as unknown as typeof source.config.authTokens;
-              setValue("config.authTokens", authTokens);
-            }}
-            placeholder="Auth Tokens"
-            className="w-full"
-          />
-        </label>
-      );
-      break;
-    case DataSource.PostNord:
-      formElements = null;
-      break;
-    default:
-      return dataSource satisfies never;
-  }
+  const sourceId = userDataSource.source;
+  const dataSource = dataSources[userDataSource.source];
 
   return (
     <form
@@ -593,7 +186,7 @@ function UserStuffSourceForm({
 
         const updatedSource = await updateUserDataSource(
           user.id,
-          source.id,
+          userDataSource.id,
           newDataSource,
         );
 
@@ -615,7 +208,7 @@ function UserStuffSourceForm({
             >
               <FontAwesomeIcon icon={faTimes} />
             </button>
-            {source.source}
+            {userDataSource.source}
           </div>
         }
         className="flex w-full max-w-full flex-col items-stretch gap-1 overflow-hidden px-2"
@@ -631,7 +224,7 @@ function UserStuffSourceForm({
         <label>
           <input type="checkbox" {...register("paused")} /> Paused
         </label>
-        {formElements}
+        {dataSource.getFormElements({ register, watch, setValue })}
         <button
           type="submit"
           disabled={isSubmitting}
@@ -672,13 +265,16 @@ export default function UserStuffSourcesForm({
                   source.paused !== true,
               )
               .sort((a, b) => a.source.localeCompare(b.source))
-              .map((source) => (
+              .map((userDataSource) => (
                 <UserStuffSourceForm
-                  key={source.id}
+                  key={userDataSource.id}
                   sourceOptions={sourceOptions}
-                  source={source}
+                  userDataSource={userDataSource}
                 />
               ))}
+            <div />
+            <div />
+            <div />
           </div>
           {[...user.dataSources]
             .sort((a, b) => a.source.localeCompare(b.source))
@@ -691,13 +287,16 @@ export default function UserStuffSourcesForm({
               .sort((a, b) => a.source.localeCompare(b.source))
               .filter((source) => sourceOptions.includes(source.source))
               .filter((source) => source.paused === true)
-              .map((source) => (
+              .map((userDataSource) => (
                 <UserStuffSourceForm
-                  key={source.id}
+                  key={userDataSource.id}
                   sourceOptions={sourceOptions}
-                  source={source}
+                  userDataSource={userDataSource}
                 />
               ))}
+            <div />
+            <div />
+            <div />
           </div>
         </>
       ) : null}
@@ -770,203 +369,11 @@ function UserStuffSourceCreateForm({
             });
         }
 
-        switch (source) {
-          case DataSource.Fitocracy:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { userId: NaN },
-            });
-            break;
-          case DataSource.MyFitnessPal:
-            append({
-              ...initialSourceMeta,
-              source: DataSource.MyFitnessPal,
-              config: { token: "", userName: "", userId: "" },
-            });
-            break;
-          case DataSource.SnapCalorie:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {
-                authTokens: {
-                  accessToken: "",
-                  refreshToken: "",
-                },
-              },
-            });
-            break;
-          case DataSource.Meyers:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {},
-            });
-            break;
-          case DataSource.RunDouble:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { id: "" },
-            });
-            break;
-          case DataSource.TopLogger:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {
-                id: NaN,
-                graphQLId: "",
-                authTokens: {
-                  access: {
-                    token: "",
-                    expiresAt: "",
-                    __typename: "AuthToken",
-                  },
-                  refresh: {
-                    token: "",
-                    expiresAt: "",
-                    __typename: "AuthToken",
-                  },
-                  __typename: "AuthTokens",
-                },
-              },
-            });
-            break;
-          case DataSource.ICal:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { url: "", startDate: undefined },
-            });
-            break;
-          case DataSource.KilterBoard:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { token: "", user_id: "" },
-            });
-            break;
-          case DataSource.MoonBoard:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { token: "", user_id: "" },
-            });
-            break;
-          case DataSource.Grippy:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {
-                authTokens: {
-                  access_token: "",
-                  expires_in: NaN,
-                  token_type: "",
-                  scope: "",
-                  refresh_token: "",
-                },
-              },
-            });
-            break;
-          case DataSource.Crimpd:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { token: "" },
-            });
-            break;
-          case DataSource.ClimbAlong:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { token: "", userId: "" },
-            });
-            break;
-          case DataSource.Tomorrow:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { geohash: "" },
-            });
-            break;
-          case DataSource.Onsight:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { token: "", username: "" },
-            });
-            break;
-          case DataSource.Sportstiming:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { name: "" },
-            });
-            break;
-          case DataSource.Songkick:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: { artistId: NaN },
-            });
-            break;
-          case DataSource.Withings:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {
-                accessTokenResponse: {
-                  userid: NaN,
-                  access_token: "",
-                  refresh_token: "",
-                  expires_in: 0,
-                  scope: "",
-                  csrf_token: "",
-                  token_type: "",
-                },
-              },
-            });
-            break;
-          case DataSource.Spiir:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {
-                SessionKey: "",
-                balanceCutoff: null,
-                balanceDisplayCeiling: null,
-              },
-            });
-            break;
-          case DataSource.DSB:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {
-                authTokens: {
-                  access_token: "",
-                  refresh_token: "",
-                  expires_in: 0,
-                  token_type: "",
-                  scope: "",
-                },
-              },
-            });
-            break;
-
-          case DataSource.PostNord:
-            append({
-              ...initialSourceMeta,
-              source,
-              config: {},
-            });
-            break;
-
-          default:
-            return source satisfies never;
-        }
+        append({
+          ...initialSourceMeta,
+          source,
+          config: getDefaultsForSchema(dataSources[source].configSchema),
+        });
       }}
     />
   );
