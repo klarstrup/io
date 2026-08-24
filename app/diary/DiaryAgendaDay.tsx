@@ -269,12 +269,12 @@ export function DiaryAgendaDay({
     () => ({
       after: dateToString(
         startOfDay(
-          selectedDayStart ? selectedDayStart : subDays(new Date(), 3),
+          selectedDayStart ? selectedDayStart : subDays(new Date(), 4),
         ),
       ),
       before: dateToString(
         endOfDayButItRespectsDayStartHour(
-          selectedDayStart ? selectedDayStart : addDays(new Date(), 3),
+          selectedDayStart ? selectedDayStart : addDays(new Date(), 4),
         ),
       ),
     }),
@@ -303,12 +303,12 @@ export function DiaryAgendaDay({
         ? stringToDate(startCursor)
         : selectedDayStart
           ? selectedDayStart
-          : startOfDay(subDays(startOfAgendaDay, 3)),
+          : startOfDay(subDays(startOfAgendaDay, 4)),
       end: endCursor
         ? stringToDate(endCursor)
         : selectedDayStart
           ? selectedDayStart
-          : addDays(endOfDayButItRespectsDayStartHour(startOfAgendaDay), 3),
+          : addDays(endOfDayButItRespectsDayStartHour(startOfAgendaDay), 4),
     }),
     [startCursor, endCursor, startOfAgendaDay],
   );
@@ -825,7 +825,7 @@ export function DiaryAgendaDay({
                           data?.user?.journalEntries.pageInfo.startCursor ||
                             dateToString(new Date()),
                         ),
-                        3,
+                        4,
                       ),
                     ),
                   ),
@@ -930,7 +930,7 @@ export function DiaryAgendaDay({
                               data.user.journalEntries.pageInfo.endCursor,
                             )
                           : new Date(),
-                        3,
+                        4,
                       ),
                     ),
                   ),
