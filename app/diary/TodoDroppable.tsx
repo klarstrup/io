@@ -388,6 +388,19 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
               workout: { ...omitUndefined(workout), workedOutAt: targetDate },
             },
           },
+          refetchQueries: ["DiaryAgendaDayUserTodos"],
+          update(cache, { data }) {
+            if (!data?.updateWorkoutWorkedOutAt?.workout) return;
+
+            cache.modify({
+              id: cache.identify(data.updateWorkoutWorkedOutAt.workout),
+              fields: {
+                workedOutAt(d) {
+                  return targetDate;
+                },
+              },
+            });
+          },
         });
       }
     }
