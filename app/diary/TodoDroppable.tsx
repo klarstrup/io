@@ -42,7 +42,7 @@ import {
 import {
   getJournalEntryPrincipalDate,
   type JournalEntry,
-  NowDividerEntry,
+  type NowDividerEntry,
 } from "./diaryUtils";
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
@@ -166,33 +166,6 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     )?.data?.droppableContainer?.data?.current?.date as Date | undefined;
     nowItemDate ||= new Date();
 
-    const sortableItemsFromCache = sortableItems
-      ?.map((sortableId) => {
-        if (sortableId === "now-divider") {
-          return [
-            sortableId,
-            {
-              __typename: "NowDivider",
-              id: "now-divider",
-              start: nowItemDate,
-              end: nowItemDate,
-            } satisfies NowDividerEntry,
-          ] as const;
-        }
-
-        const a = cacheObjectEntries.find(
-          ([key]) =>
-            sortableId.startsWith(key) ||
-            key === sortableId ||
-            (sortableId.startsWith("end-of-") &&
-              key === sortableId.replace("end-of-", "")),
-        ) as [string, JournalEntry] | undefined;
-        if (!a) return null;
-
-        return [sortableId, a[1]] as const;
-      })
-      .filter(Boolean);
-
     const oldIndex = sortableItems?.indexOf(active.id.toString());
     const newIndex = sortableItems?.indexOf(over.id.toString());
 
@@ -206,22 +179,28 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         : undefined;
 
     const newSortableCacheEntries = newSortableItems
-      ?.map((sortableId): readonly [string, JournalEntry] | null => {
-        let item: JournalEntry | undefined;
+      ?.map((sortableId): [string, JournalEntry] | undefined => {
+        const sortableIdWithoutEndOfPrefix = sortableId.startsWith("end-of-")
+          ? sortableId.replace("end-of-", "")
+          : sortableId;
 
-        if (sortableId.startsWith("end-of-")) {
-          item = sortableItemsFromCache?.find(
-            ([key]) => key === sortableId.replace("end-of-", ""),
-          )?.[1];
-        } else {
-          item = sortableItemsFromCache?.find(
-            ([key]) => sortableId.startsWith(key) || key === sortableId,
-          )?.[1];
+        if (sortableId === "now-divider") {
+          return [
+            sortableId,
+            {
+              __typename: "NowDivider",
+              id: "now-divider",
+              start: nowItemDate,
+              end: nowItemDate,
+            } satisfies NowDividerEntry,
+          ] satisfies [string, JournalEntry];
         }
 
-        if (!item) return null;
+        const entry = cacheObjectEntries?.find(
+          ([key]) => key === sortableIdWithoutEndOfPrefix,
+        ) as JournalEntry | undefined;
 
-        return [sortableId, item] as const;
+        return entry && ([sortableId, entry[1]] as const);
       })
       .filter(Boolean);
 
