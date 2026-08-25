@@ -31,6 +31,7 @@ import {
   UpdateTodoDocument,
   UpdateWorkoutWorkedOutAtDocument,
 } from "../../graphql.generated/graphql";
+import { useEvent } from "../../hooks";
 import {
   dateMidpoint,
   endOfDayButItRespectsDayStartHour,
@@ -136,7 +137,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     UpdateWorkoutWorkedOutAtDocument,
   );
 
-  function handleDragEnd(event: DragEndEvent) {
+  const handleDragEnd = useEvent((event: DragEndEvent) => {
     const { active, over } = event;
     if (!active.data.current || !over?.data.current) return;
 
@@ -349,7 +350,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     }
 
     haptic();
-  }
+  });
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
