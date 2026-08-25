@@ -78,41 +78,6 @@ gql`
         materializedAt
         locationId
         source
-        exercises {
-          exerciseId
-          displayName
-          comment
-          exerciseInfo {
-            id
-            aliases
-            name
-            isHidden
-            inputs {
-              type
-            }
-            instructions {
-              value
-            }
-            tags {
-              name
-              type
-            }
-          }
-          sets {
-            comment
-            createdAt
-            updatedAt
-            inputs {
-              unit
-              value
-              assistType
-            }
-            meta {
-              key
-              value
-            }
-          }
-        }
       }
     }
   }
@@ -384,7 +349,6 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           optimisticResponse: {
             updateWorkoutWorkedOutAt: {
               __typename: "UpdateWorkoutPayload",
-              // @ts-expect-error -- I don't fucking care, deep required is a pain to type.
               workout: { ...omitUndefined(workout), workedOutAt: targetDate },
             },
           },
