@@ -94,69 +94,68 @@ export function DiaryAgendaDayEvent({
       isEventEnd={isEventEnd}
       icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
+      contentClassName="flex items-center gap-1.5 leading-none"
     >
-      <div className="flex items-center gap-1.5">
-        <div className="text-center font-semibold tabular-nums">
-          {event.datetype === "date-time" && dayNo <= 1 ? (
-            new Date(event.start).toLocaleTimeString("en-DK", {
-              hour: "2-digit",
-              minute: "2-digit",
-              timeZone,
-            })
-          ) : (
-            <>Day {dayNo}</>
-          )}
-        </div>
-        <div>
-          <span
-            style={{
-              fontSize: !isEventWithSeparatedEnd
-                ? `${16 + durationInHours * 1.25}px`
-                : undefined,
-              fontWeight: !isEventWithSeparatedEnd
-                ? durationInHours >= 18
-                  ? 800
-                  : durationInHours >= 14
-                    ? 700
-                    : durationInHours >= 10
-                      ? 600
-                      : durationInHours >= 6
-                        ? 500
-                        : durationInHours >= 2
-                          ? 400
-                          : 300
-                : undefined,
-            }}
-          >
-            {event.summary}
-          </span>
-          &nbsp;
-          <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
-            {isFirstDay && duration ? (
-              formatShortDuration(duration)
-            ) : isLastDay ? (
-              <>
-                -
-                {new Date(event.end).toLocaleTimeString("en-DK", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone,
-                })}
-              </>
-            ) : null}
-          </span>
-          &nbsp;
-          {event.url ? (
-            <a
-              href={event.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
-            >
-              <FontAwesomeIcon icon={faExternalLink} />
-            </a>
+      <div className="text-center font-semibold tabular-nums leading-none">
+        {event.datetype === "date-time" && dayNo <= 1 ? (
+          new Date(event.start).toLocaleTimeString("en-DK", {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone,
+          })
+        ) : (
+          <>Day {dayNo}</>
+        )}
+      </div>
+      <div>
+        <span
+          style={{
+            fontSize: !isEventWithSeparatedEnd
+              ? `${16 + durationInHours * 1.25}px`
+              : undefined,
+            fontWeight: !isEventWithSeparatedEnd
+              ? durationInHours >= 18
+                ? 800
+                : durationInHours >= 14
+                  ? 700
+                  : durationInHours >= 10
+                    ? 600
+                    : durationInHours >= 6
+                      ? 500
+                      : durationInHours >= 2
+                        ? 400
+                        : 300
+              : undefined,
+          }}
+        >
+          {event.summary}
+        </span>
+        &nbsp;
+        <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
+          {isFirstDay && duration ? (
+            formatShortDuration(duration)
+          ) : isLastDay ? (
+            <>
+              -
+              {new Date(event.end).toLocaleTimeString("en-DK", {
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone,
+              })}
+            </>
           ) : null}
-        </div>
+        </span>
+        &nbsp;
+        {event.url ? (
+          <a
+            href={event.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+          >
+            <FontAwesomeIcon icon={faExternalLink} />
+          </a>
+        ) : null}
       </div>
     </DiaryAgendaDayEntry>
   );

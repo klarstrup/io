@@ -116,10 +116,10 @@ export const DiaryAgendaDayEntry = forwardRef(function DiaryAgendaDayEntry(
         </IconContainer>
       ) : null}
       <div
-        className={
-          "relative flex flex-1 items-start justify-start " +
-          (contentClassName || "")
-        }
+        className={twMerge(
+          "relative flex flex-1 items-start justify-start",
+          contentClassName,
+        )}
         onClick={onContentClick}
       >
         {children}
