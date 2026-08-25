@@ -10,7 +10,6 @@ import {
   isAfter,
   isBefore,
   isEqual,
-  isPast,
   max,
   min,
   startOfDay,
@@ -437,35 +436,17 @@ export function DiaryAgendaDay({
         // If not done and no due date, this is a backlog item, we don't show in the diary
         if (!entry.due && !entry.completed) continue;
 
-        for (const date of eachDayOfInterval(
-          {
-            start: subHours(
-              max(
-                [entry.completed || entry.due, fetchingInterval.start].filter(
-                  Boolean,
-                ),
-              ),
-              dayStartHour,
-            ),
-            end: subHours(fetchingInterval.end, dayStartHour),
-          },
-          { in: tz(timeZone) },
-        )) {
-          const dayEnd = endOfDayButItRespectsDayStartHour(date);
-
-          if (
-            (isPast(dayEnd) && !entry.completed) ||
-            Object.values(journalEntriesByDate)
-              .flat()
-              .some((e) => e.id === entry.id)
-          ) {
-            continue;
-          }
-          addEntryToDate(
-            entry,
-            entry.completed || (entry.due && max([entry.due, now])) || date,
-          );
+        if (
+          Object.values(journalEntriesByDate)
+            .flat()
+            .some((e) => e.id === entry.id)
+        ) {
+          continue;
         }
+        addEntryToDate(
+          entry,
+          entry.completed || max([entry.due, now].filter(Boolean)),
+        );
       } else if (entry.__typename === "Workout") {
         addEntryToDate(
           entry,
