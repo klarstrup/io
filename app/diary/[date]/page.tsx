@@ -1,6 +1,7 @@
 import { Modal } from "../../../components/Modal";
 import { dayStartHour } from "../../../utils";
 import { DiaryAgendaDay } from "../DiaryAgendaDay";
+import { TodoDragDropContainer } from "../TodoDroppable";
 
 export default async function DiaryDayModal(props: {
   params: Promise<{ date: `${number}-${number}-${number}` }>;
@@ -12,7 +13,9 @@ export default async function DiaryDayModal(props: {
 
   return (
     <Modal dismissTo={`/diary`}>
-      <DiaryAgendaDay selectedDayStart={dayStart} />
+      <TodoDragDropContainer>
+        <DiaryAgendaDay selectedDayStart={dayStart} />
+      </TodoDragDropContainer>
     </Modal>
   );
 }
