@@ -5,11 +5,11 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
   addDays,
+  addHours,
   compareAsc,
   compareDesc,
   formatDistanceToNowStrict,
   isPast,
-  isSameDay,
   isValid,
   subMilliseconds,
 } from "date-fns";
@@ -32,7 +32,6 @@ import {
   type GQBoulderCircuit,
   type GQCreateWorkoutDataInput,
   type GQExerciseStat,
-  type GQJournalEntryUnion,
   type GQLocation,
   type GQNextSet,
   type GQUpdateWorkoutDataInput,
@@ -62,10 +61,12 @@ import {
 import {
   colorNameToEmoji,
   dateToString,
+  dayStartHour,
   DEFAULT_TIMEZONE,
   endOfDayButItRespectsDayStartHour,
   epoch,
   isNonEmptyArray,
+  isSameDayButItRespectsDayStartHour,
   omit,
 } from "../../utils";
 import { deleteWorkout, snoozeUserExerciseSchedule } from "./actions";
@@ -127,10 +128,15 @@ export function WorkoutForm<R extends string>({
 }) {
   const router = useRouter();
   const tzDate = useMemo(
-    () => new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE),
+    () =>
+      addHours(
+        new TZDate(date, user?.timeZone || DEFAULT_TIMEZONE),
+        dayStartHour,
+      ),
     [date, user?.timeZone],
   );
   const now = useMemo(() => new Date(), []);
+  console.log({ tzDate, now });
 
   const [updateWorkout] = useMutation(
     gql`
@@ -636,7 +642,9 @@ export function WorkoutForm<R extends string>({
               defaultValue={String(
                 dateToInputDate(
                   workout?.workedOutAt ??
-                    (isSameDay(tzDate, now) ? now : tzDate),
+                    (isSameDayButItRespectsDayStartHour(tzDate, now)
+                      ? now
+                      : tzDate),
                   user?.timeZone ?? DEFAULT_TIMEZONE,
                 ),
               )}
