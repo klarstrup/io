@@ -1,4 +1,5 @@
 import { useApolloClient } from "@apollo/client/react";
+import { useRouter } from "next/navigation";
 import { TZDate } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
 import {
@@ -13,7 +14,7 @@ import {
   isBefore,
   roundToNearestMinutes,
 } from "date-fns";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { durationToMs, formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
@@ -36,6 +37,7 @@ export function DiaryAgendaDayEvent({
   isEventEnd?: boolean;
 }) {
   const client = useApolloClient();
+  const router = useRouter();
   const {
     isDragging,
     attributes,
@@ -80,6 +82,10 @@ export function DiaryAgendaDayEvent({
 
   const durationInHours = durationToMs(duration) / 1000 / 60 / 60;
 
+  const handleOnClick = useCallback(() => {
+    router.push(`/diary/entries/${event.__typename}:${event.id}`);
+  }, [router, event.__typename, event.id]);
+
   return (
     <DiaryAgendaDayEntry
       ref={setNodeRef}
@@ -94,8 +100,10 @@ export function DiaryAgendaDayEvent({
       icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
+      onClick={handleOnClick}
+      className={"cursor-pointer"}
     >
-      <div className="text-center font-semibold tabular-nums leading-none">
+      <div className="text-center leading-none font-semibold tabular-nums">
         {event.datetype === "date-time" && dayNo <= 1 ? (
           new Date(event.start).toLocaleTimeString("en-DK", {
             hour: "2-digit",

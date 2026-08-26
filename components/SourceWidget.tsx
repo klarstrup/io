@@ -42,7 +42,7 @@ export default function SourceWidget({
   );
 
   return sources.map((source) => (
-    <div key={source.id} className="flex items-start justify-between gap-1">
+    <div key={source.id} className="flex flex-1 items-start justify-between gap-1">
       <div className="flex items-stretch">
         <div className="flex gap-2">
           <div
