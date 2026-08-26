@@ -144,6 +144,9 @@ gql`
                 isHidden
                 inputs {
                   type
+                  options {
+                    value
+                  }
                 }
                 instructions {
                   value
@@ -268,12 +271,12 @@ export function DiaryAgendaDay({
     () => ({
       after: dateToString(
         startOfDay(
-          selectedDayStart ? selectedDayStart : subDays(new Date(), 4),
+          selectedDayStart ? selectedDayStart : subDays(new Date(), 1),
         ),
       ),
       before: dateToString(
         endOfDayButItRespectsDayStartHour(
-          selectedDayStart ? selectedDayStart : addDays(new Date(), 4),
+          selectedDayStart ? selectedDayStart : addDays(new Date(), 1),
         ),
       ),
     }),

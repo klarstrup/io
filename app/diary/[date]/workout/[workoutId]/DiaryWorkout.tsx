@@ -45,6 +45,9 @@ export default function DiaryWorkout(props: {
                 isHidden
                 inputs {
                   type
+                  options {
+                    value
+                  }
                 }
                 instructions {
                   value

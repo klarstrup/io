@@ -46,6 +46,9 @@ gql`
             isHidden
             inputs {
               type
+              options {
+                value
+              }
             }
             instructions {
               value

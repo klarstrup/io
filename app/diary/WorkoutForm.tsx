@@ -161,6 +161,9 @@ export function WorkoutForm<R extends string>({
                 isHidden
                 inputs {
                   type
+                  options {
+                    value
+                  }
                 }
                 instructions {
                   value
@@ -213,6 +216,9 @@ export function WorkoutForm<R extends string>({
                 isHidden
                 inputs {
                   type
+                  options {
+                    value
+                  }
                 }
                 instructions {
                   value
@@ -270,6 +276,9 @@ export function WorkoutForm<R extends string>({
                 isHidden
                 inputs {
                   type
+                  options {
+                    value
+                  }
                 }
                 instructions {
                   value
