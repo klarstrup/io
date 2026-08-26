@@ -1,5 +1,6 @@
 "use client";
 import { useMutation } from "@apollo/client/react";
+import { isPast } from "date-fns";
 import gql from "graphql-tag";
 import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
@@ -51,6 +52,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
                   )
                   .join("\n"),
                 due: date,
+                completed: date && isPast(date) ? date : undefined,
               },
             },
           },
