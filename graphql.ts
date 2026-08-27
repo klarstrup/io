@@ -192,7 +192,6 @@ export const resolvers: GQResolvers<
         const on = addHours(stringToDate(args.on), dayStartHour);
         after = startOfDay(on);
         before = endOfDayButItRespectsDayStartHour(on);
-        console.log({ on, after, before });
       }
 
       if (!before || !after) {
