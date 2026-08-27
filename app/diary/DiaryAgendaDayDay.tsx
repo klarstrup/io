@@ -225,9 +225,6 @@ export function DiaryAgendaDayDay({
                 key={event.id}
                 id={event.id}
                 __typename={event.__typename}
-                cotemporalityOfSurroundingEvent={
-                  cotemporalityOfSurroundingEntry
-                }
                 className={
                   "relative z-5 self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
                   "backdrop-blur-sm " +
