@@ -47,6 +47,16 @@ export const Users = proxyCollection<IUser>("users");
 
 export const Accounts = proxyCollection<Account>("accounts");
 
+const getURLsFromString = (str: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return (
+    str
+      .match(urlRegex)
+      ?.slice(1)
+      .map((url) => url.replace(/<\/a>$/, "")) || []
+  );
+};
+
 export const getUserJournalEntries = async (
   userId: string,
   fromDay: Date,
@@ -73,7 +83,12 @@ export const getUserJournalEntries = async (
         ...event,
         id: event.uid,
         __typename: "Event",
-        url: typeof event.url === "string" ? event.url : null,
+        url:
+          typeof event.url === "string"
+            ? event.url
+            : (event.description &&
+                getURLsFromString(event.description)?.[0]) ||
+              null,
       } satisfies GQEvent),
     ),
     Array.fromAsync(
