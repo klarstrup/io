@@ -149,7 +149,8 @@ export async function* getUserIcalEventsBetween(
 
       const eventDurationSeconds = differenceInSeconds(event.end, event.start);
       const rruleDates = rruleSet
-        .between(start, end, true)
+        // Subtract the event duration from the start of the interval to ensure we include events that start before the interval but end within it
+        .between(addSeconds(start, -eventDurationSeconds), end, true)
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
 
       const recurrenceIdDates = new Set(

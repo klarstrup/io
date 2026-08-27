@@ -57,7 +57,7 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
-  query DiaryAgendaDayUserTodos($after: String!, $before: String!) {
+  query DiaryAgendaDayUserTodos($after: String, $before: String, $on: String) {
     user {
       id
       name
@@ -85,7 +85,7 @@ gql`
           updatedAt
         }
       }
-      journalEntries(after: $after, before: $before) {
+      journalEntries(after: $after, before: $before, on: $on) {
         __typename
         pageInfo {
           hasNextPage
@@ -267,19 +267,19 @@ export function DiaryAgendaDay({
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
 
+  const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
+  const now = useNow(60 * 1000, timeZone);
+
   const variables = useMemo(
-    () => ({
-      after: dateToString(
-        startOfDay(
-          selectedDayStart ? selectedDayStart : subDays(new Date(), 1),
-        ),
-      ),
-      before: dateToString(
-        endOfDayButItRespectsDayStartHour(
-          selectedDayStart ? selectedDayStart : addDays(new Date(), 1),
-        ),
-      ),
-    }),
+    () =>
+      selectedDayStart
+        ? { on: dateToString(startOfDay(selectedDayStart)) }
+        : {
+            after: dateToString(startOfDay(subDays(now, 3))),
+            before: dateToString(
+              endOfDayButItRespectsDayStartHour(addDays(now, 3)),
+            ),
+          },
     [selectedDayStart],
   );
 
@@ -289,30 +289,21 @@ export function DiaryAgendaDay({
   );
   const startCursor = data?.user?.journalEntries?.pageInfo?.startCursor;
   const endCursor = data?.user?.journalEntries?.pageInfo?.endCursor;
-  const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
-  const now = useNow(60 * 1000, timeZone);
-  const startOfAgendaDay = useMemo(
-    () =>
-      selectedDayStart
-        ? addHours(selectedDayStart, dayStartHour)
-        : startOfDayButItRespectsDayStartHour(now),
-    [selectedDayStart, now],
-  );
 
   const fetchingInterval = useMemo(
     () => ({
       start: startCursor
         ? stringToDate(startCursor)
         : selectedDayStart
-          ? selectedDayStart
-          : startOfDay(subDays(startOfAgendaDay, 4)),
+          ? startOfDay(selectedDayStart)
+          : startOfDay(subDays(now, 3)),
       end: endCursor
         ? stringToDate(endCursor)
         : selectedDayStart
-          ? selectedDayStart
-          : addDays(endOfDayButItRespectsDayStartHour(startOfAgendaDay), 4),
+          ? endOfDayButItRespectsDayStartHour(selectedDayStart)
+          : endOfDayButItRespectsDayStartHour(addDays(now, 3)),
     }),
-    [startCursor, endCursor, startOfAgendaDay],
+    [selectedDayStart, startCursor, endCursor, now],
   );
 
   const daysOfInterval = useMemo(

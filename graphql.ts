@@ -3,6 +3,7 @@ import { gmail } from "@googleapis/gmail";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as Ably from "ably";
 import {
+  addHours,
   addWeeks,
   differenceInHours,
   isValid,
@@ -28,7 +29,6 @@ import type {
   GQFloatTimeSeriesEntry,
   GQFoodEntry,
   GQJournalEntriesConnection,
-  GQJournalEntryUnion,
   GQNextSet,
   GQResolvers,
   GQSleep,
@@ -69,7 +69,14 @@ import {
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
 } from "./sources/withings.server";
-import { omitUndefined, pick, rangeToQuery, stringToDate } from "./utils";
+import {
+  dayStartHour,
+  endOfDayButItRespectsDayStartHour,
+  omitUndefined,
+  pick,
+  rangeToQuery,
+  stringToDate,
+} from "./utils";
 
 const emitGraphQLUpdate = async (
   userId: string,
@@ -178,17 +185,29 @@ export const resolvers: GQResolvers<
   },
   User: {
     journalEntries: async (parent, args) => {
+      let after = args.after ? stringToDate(args.after) : undefined;
+      let before = args.before ? stringToDate(args.before) : undefined;
+
+      if (args.on) {
+        const on = addHours(stringToDate(args.on), dayStartHour);
+        after = startOfDay(on);
+        before = endOfDayButItRespectsDayStartHour(on);
+        console.log({ on, after, before });
+      }
+
+      if (!before || !after) {
+        throw new Error(
+          "Both 'before' and 'after' arguments must be provided, or the 'on' argument must be provided.",
+        );
+      }
+
       return {
         __typename: "JournalEntriesConnection",
-        nodes: (await getUserJournalEntries(
-          parent.id,
-          stringToDate(args.after),
-          stringToDate(args.before),
-        )) as GQJournalEntryUnion[],
+        nodes: await getUserJournalEntries(parent.id, after, before),
         pageInfo: {
           __typename: "PageInfo",
-          hasNextPage: true,
-          hasPreviousPage: true,
+          hasNextPage: args.before ? true : false,
+          hasPreviousPage: args.after ? true : false,
           startCursor: args.after,
           endCursor: args.before,
         },
@@ -1692,7 +1711,11 @@ export const typeDefs = gql`
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]
-    journalEntries(after: String!, before: String!): JournalEntriesConnection!
+    journalEntries(
+      after: String
+      before: String
+      on: String
+    ): JournalEntriesConnection!
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]
     workouts(interval: IntervalInput!): [Workout!]

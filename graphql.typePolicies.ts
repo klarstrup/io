@@ -109,7 +109,7 @@ export const typePolicies: TypePolicies = {
   User: {
     fields: {
       journalEntries: {
-        keyArgs: false,
+        keyArgs: ["on"],
         merge(existing, incoming) {
           if (!existing) return incoming;
           if (!incoming) return existing;
