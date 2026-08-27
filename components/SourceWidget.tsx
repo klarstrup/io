@@ -23,15 +23,20 @@ export default function SourceWidget({
     pollInterval: isScraping ? 1000 : 5000,
   });
 
-  const refreshDataSource = useCallback(() => {
-    setIsScraping(true);
-    return fetch(`/api/${dataSource}_scrape`).finally(async () => {
-      await client.refetchQueries({ include: "all" });
-      router.refresh();
-      setIsScraping(false);
-      await refetch();
-    });
-  }, [client, dataSource, router, refetch]);
+  const refreshDataSource = useCallback(
+    (userDataSourceId: string) => {
+      setIsScraping(true);
+      return fetch(
+        `/api/${dataSource}_scrape?userDataSourceId=${userDataSourceId}`,
+      ).finally(async () => {
+        await client.refetchQueries({ include: "all" });
+        router.refresh();
+        setIsScraping(false);
+        await refetch();
+      });
+    },
+    [client, dataSource, router, refetch],
+  );
 
   if (!data || !data?.user?.dataSources) {
     return <div>Loading...</div>;
@@ -42,7 +47,10 @@ export default function SourceWidget({
   );
 
   return sources.map((source) => (
-    <div key={source.id} className="flex flex-1 items-start justify-between gap-1">
+    <div
+      key={source.id}
+      className="flex flex-1 items-start justify-between gap-1"
+    >
       <div className="flex items-stretch">
         <div className="flex gap-2">
           <div
@@ -72,7 +80,7 @@ export default function SourceWidget({
                 isScraping
               }
               className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={refreshDataSource}
+              onClick={() => refreshDataSource(source.id)}
             >
               🔄
             </button>
