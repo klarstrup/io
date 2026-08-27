@@ -1,5 +1,4 @@
 import { useApolloClient } from "@apollo/client/react";
-import { useRouter } from "next/navigation";
 import { TZDate } from "@date-fns/tz";
 import { useSortable } from "@dnd-kit/sortable";
 import {
@@ -14,6 +13,7 @@ import {
   isBefore,
   roundToNearestMinutes,
 } from "date-fns";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { durationToMs, formatShortDuration } from "../../models/workout";
@@ -159,6 +159,9 @@ export function DiaryAgendaDayEvent({
             target="_blank"
             rel="noopener noreferrer"
             className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent the click from propagating to the parent div and triggering the onClick handler
+            }}
           >
             <FontAwesomeIcon icon={faExternalLink} />
           </a>
