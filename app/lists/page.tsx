@@ -3,10 +3,9 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ListPageUserDocument } from "../../graphql.generated/graphql";
-import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
-import { DiaryAgendaDayEntry } from "../diary/DiaryAgendaDayEntry";
-import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
+import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
+import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -75,9 +74,7 @@ export default function ListPage() {
           <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
         ))}
         {dataState !== "complete" ? (
-          <DiaryAgendaDayEntry iconTxt="⏳" className="min-h-8">
-            Loading...
-          </DiaryAgendaDayEntry>
+          <div className="min-h-8">Loading...</div>
         ) : null}
       </FieldSetY>
       {backlogTodos.length > 0 && (

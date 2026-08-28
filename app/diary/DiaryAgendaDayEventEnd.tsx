@@ -1,8 +1,5 @@
-import { useApolloClient } from "@apollo/client/react";
-import { useSortable } from "@dnd-kit/sortable";
 import { faArrowsDownToLine } from "@fortawesome/free-solid-svg-icons";
 import { roundToNearestMinutes } from "date-fns";
-import { useMemo } from "react";
 import { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -17,44 +14,12 @@ export function DiaryAgendaDayEventEnd({
   event: GQEvent;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: "end-of-" + (client.cache.identify(event) || event.id),
-    data: { event, date: getJournalEntryPrincipalDate(event)?.end },
-    disabled: true,
-  });
-
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
-
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
 
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      style={style}
-      id={event.id}
-      __typename={event.__typename}
-      {...listeners}
-      {...attributes}
+      date={getJournalEntryPrincipalDate(event)!.end}
+      entry={event}
       icon={faArrowsDownToLine}
       cotemporality={cotemporality(event)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}

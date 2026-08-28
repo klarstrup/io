@@ -1,5 +1,3 @@
-import { useApolloClient } from "@apollo/client/react";
-import { useSortable } from "@dnd-kit/sortable";
 import {
   faBus,
   faPersonWalking,
@@ -8,7 +6,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo } from "react";
 import { GQTrip } from "../../graphql.generated/graphql";
 import { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -21,34 +18,6 @@ export function DiaryAgendaDayTrip({
   trip: GQTrip;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: client.cache.identify(trip) || trip.id,
-    data: { trip, date: getJournalEntryPrincipalDate(trip)?.end },
-    disabled: true,
-  });
-
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   const fromText = trip.legs[0]?.from
     .replace("(Metro)", "")
     .replace(/\(.+\)/, "")
@@ -68,15 +37,10 @@ export function DiaryAgendaDayTrip({
 
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      style={style}
+      date={getJournalEntryPrincipalDate(trip)!.end}
+      entry={trip}
       icon={faRoad}
       cotemporality={cotemporality(trip)}
-      key={trip.id}
-      id={trip.id}
-      __typename={trip.__typename}
-      {...listeners}
-      {...attributes}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={"rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm"}
       iconClassName="w-10 text-[0.666rem]"

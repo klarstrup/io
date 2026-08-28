@@ -1,12 +1,11 @@
 "use client";
-import { useApolloClient, useMutation } from "@apollo/client/react";
-import { useSortable } from "@dnd-kit/sortable";
+import { useMutation } from "@apollo/client/react";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { addDays, addHours, isFuture } from "date-fns";
 import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import SourceWidget from "../../components/SourceWidget";
 import {
@@ -169,36 +168,6 @@ export function DiaryAgendaDayDueSet({
   locations?: GQLocation[];
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 } & React.HTMLAttributes<HTMLDivElement>) {
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: client.cache.identify(dueSet) || dueSet.id,
-    data: {
-      nextSet: dueSet,
-      date: getJournalEntryPrincipalDate(dueSet)?.start || dueSet.dueOn,
-    },
-  });
-
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const onClickOutside = () => setIsActive(false);
@@ -228,23 +197,16 @@ export function DiaryAgendaDayDueSet({
 
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      cotemporalityOfSurroundingEvent={
-        !isDragging ? cotemporalityOfSurroundingEvent : null
-      }
+      isDraggable
+      date={getJournalEntryPrincipalDate(dueSet)!.start}
+      entry={dueSet}
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       {...props}
-      id={dueSet.id}
-      __typename={dueSet.__typename}
       icon={faDumbbell}
       onIconClick={handleIconClick}
-      className="select-none"
-      style={style}
-      {...listeners}
-      {...attributes}
     >
       <div
         ref={ref}
-        style={isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}}
         className={
           "relative flex items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +
           (isActive ? "rounded-b-none" : "cursor-pointer")

@@ -220,11 +220,11 @@ export function DiaryAgendaDayDay({
             id: client.cache.identify(event) || event.id,
             element: (
               <DiaryAgendaDayEntry
+                key={event.id}
+                date={getJournalEntryPrincipalDate(event)!.start}
+                entry={event}
                 icon={faCalendarRegular}
                 cotemporality={cotemporality(event)}
-                key={event.id}
-                id={event.id}
-                __typename={event.__typename}
                 className={
                   "relative z-5 self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
                   "backdrop-blur-sm " +
@@ -515,14 +515,14 @@ export function DiaryAgendaDayDay({
           id: client.cache.identify(delivery) || delivery.id,
           element: (
             <DiaryAgendaDayEntry
+              date={getJournalEntryPrincipalDate(delivery)!.start}
+              entry={delivery}
               icon={faBoxesPacking}
               cotemporality={cotemporality({
                 start: delivery.timestamp,
                 end: delivery.timestamp,
               })}
               key={delivery.id}
-              id={delivery.id}
-              __typename={delivery.__typename}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               className={"pr-0.5 pl-0.5 text-xs"}
               iconClassName="w-10 text-[0.666rem]"
@@ -658,13 +658,13 @@ export function DiaryAgendaDayDay({
             {dayJournalItems.map(({ element }) => element)}
           </TodoSortableContext>
         ) : (
-          <DiaryAgendaDayEntry className={"pl-10 text-gray-400/50 italic"}>
+          <div className={"pl-10 text-gray-400/50 italic"}>
             {isLoadingEntries
               ? "Loading..."
               : isPast(dayRange.end)
                 ? "Nothing logged"
                 : "Nothing planned"}
-          </DiaryAgendaDayEntry>
+          </div>
         )}
       </FieldSetX>
       {isToday ? <DiaryAgendaDayDayBacklog dayRange={dayRange} /> : null}

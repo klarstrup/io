@@ -1,10 +1,8 @@
-import { useApolloClient } from "@apollo/client/react";
-import { useSortable } from "@dnd-kit/sortable";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { max, min } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MouseEvent, useCallback, useMemo } from "react";
+import { MouseEvent, useCallback } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import type {
   GQLocation,
@@ -34,22 +32,6 @@ export function DiaryAgendaDayWorkout({
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const router = useRouter();
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: client.cache.identify(workout) || workout.id,
-    data: {
-      date: getJournalEntryPrincipalDate(workout)!.start,
-      workout,
-    },
-    disabled: workout.source !== WorkoutSource.Self,
-  });
 
   const handleIconClick = useCallback(
     (e: MouseEvent) => {
@@ -65,26 +47,13 @@ export function DiaryAgendaDayWorkout({
     [router, workoutDateStr, workout.id, workout.source],
   );
 
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   return (
     <DiaryAgendaDayEntry
+      isDraggable
+      date={getJournalEntryPrincipalDate(workout)!.start}
+      entry={workout}
       icon={faDumbbell}
-      cotemporalityOfSurroundingEvent={
-        !isDragging ? cotemporalityOfSurroundingEvent : null
-      }
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       cotemporality={cotemporality({
         start: min([
           workout.workedOutAt,
@@ -99,14 +68,7 @@ export function DiaryAgendaDayWorkout({
             .filter(Boolean),
         ]),
       })}
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      id={workout.id}
-      __typename={workout.__typename}
       onIconClick={handleIconClick}
-      className="select-none"
     >
       <div
         className={

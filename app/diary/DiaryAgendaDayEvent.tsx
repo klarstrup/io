@@ -1,6 +1,4 @@
-import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
-import { useSortable } from "@dnd-kit/sortable";
 import {
   faCalendar,
   faCalendarCheck,
@@ -14,7 +12,7 @@ import {
   roundToNearestMinutes,
 } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { durationToMs, formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
@@ -36,21 +34,7 @@ export function DiaryAgendaDayEvent({
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   isEventEnd?: boolean;
 }) {
-  const client = useApolloClient();
   const router = useRouter();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: client.cache.identify(event) || event.id,
-    data: { event, date: getJournalEntryPrincipalDate(event)?.start },
-    disabled: true,
-  });
-
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);
 
@@ -66,20 +50,6 @@ export function DiaryAgendaDayEvent({
   const isFirstDay = dayNo === 1;
   const isLastDay = dayNo === numDays;
 
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   const durationInHours = durationToMs(duration) / 1000 / 60 / 60;
 
   const handleOnClick = useCallback(() => {
@@ -88,12 +58,8 @@ export function DiaryAgendaDayEvent({
 
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      id={event.id}
-      __typename={event.__typename}
+      date={getJournalEntryPrincipalDate(event)!.start}
+      entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventWithSeparatedEnd={isEventWithSeparatedEnd}
       isEventEnd={isEventEnd}

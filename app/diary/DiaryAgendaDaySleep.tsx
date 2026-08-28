@@ -1,11 +1,9 @@
 "use client";
-import { useApolloClient } from "@apollo/client/react";
-import { useSortable } from "@dnd-kit/sortable";
 import { faBed, faBedPulse } from "@fortawesome/free-solid-svg-icons";
 import type { Interval } from "date-fns";
 import { intervalToDuration } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { GQSleep, GQUser } from "../../graphql.generated/graphql";
 import { formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
@@ -26,25 +24,6 @@ export default function DiaryAgendaDaySleep({
   cotemporalityOfSurroundingEvent?: "current" | "past" | "future" | null;
   hasSeparatedEnd?: boolean;
 }) {
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id:
-      (isSeparatedEnd(sleep) ? "end-of-" : "") +
-      (client.cache.identify(sleep) || sleep.id),
-    data: {
-      event: sleep,
-      date: isSeparatedEnd(sleep) ? sleep.endedAt : sleep.startedAt,
-    },
-    disabled: true,
-  });
-
   const router = useRouter();
   const duration = intervalToDuration({
     start: 0,
@@ -59,35 +38,15 @@ export default function DiaryAgendaDaySleep({
 
   const isSleepEnd = isSeparatedEnd(sleep);
 
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      // TODO: smarter way of determining if it's waking up or going to sleep
+      date={getJournalEntryPrincipalDate(sleep)!.start}
+      entry={sleep}
       icon={isSleepEnd ? faBedPulse : faBed}
       cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEventWithSeparatedEnd={hasSeparatedEnd}
       isEventEnd={isSleepEnd}
-      key={sleep.id}
-      id={sleep.id}
-      __typename={sleep.__typename}
       onClick={handleOnClick}
       className={"cursor-pointer"}
     >

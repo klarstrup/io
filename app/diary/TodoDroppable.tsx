@@ -252,8 +252,13 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     // Ensure targetDate is within the day boundaries
     targetDate = min([max([targetDate, dayStart]), dayEnd]);
 
-    if (activeCurrent.nextSet) {
-      const nextSet = activeCurrent.nextSet as GQNextSet;
+    if (
+      typeof activeCurrent.entry === "object" &&
+      activeCurrent.entry &&
+      "__typename" in activeCurrent.entry &&
+      activeCurrent.entry.__typename === "NextSet"
+    ) {
+      const nextSet = activeCurrent.entry as GQNextSet;
 
       // Exercise schedules can only be snoozed into the future, so if the target date is in the past, we set it to now
       targetDate = max([targetDate, addMinutes(new Date(), 2)]);
@@ -278,8 +283,13 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
         },
       });
       return;
-    } else if (activeCurrent.todo) {
-      const todo = activeCurrent.todo as GQTodo;
+    } else if (
+      typeof activeCurrent.entry === "object" &&
+      activeCurrent.entry &&
+      "__typename" in activeCurrent.entry &&
+      activeCurrent.entry.__typename === "Todo"
+    ) {
+      const todo = activeCurrent.entry as GQTodo;
 
       if (isFuture(targetDate)) {
         const updatedTodo = {
@@ -315,8 +325,13 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           },
         });
       }
-    } else if (activeCurrent.workout) {
-      const workout = activeCurrent.workout as GQWorkout;
+    } else if (
+      typeof activeCurrent.entry === "object" &&
+      activeCurrent.entry &&
+      "__typename" in activeCurrent.entry &&
+      activeCurrent.entry.__typename === "Workout"
+    ) {
+      const workout = activeCurrent.entry as GQWorkout;
 
       if (isPast(targetDate)) {
         void updateWorkoutWorkedOutAt({

@@ -1,5 +1,3 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { useMemo } from "react";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayLocationChangeWeather } from "./DiaryAgendaDayLocationChangeWeather";
@@ -15,45 +13,10 @@ export function DiaryAgendaDayLocationChange({
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   className?: string;
 }) {
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: locationChange.id,
-    data: {
-      locationChange,
-      date: getJournalEntryPrincipalDate(locationChange)?.start,
-    },
-    disabled: true,
-  });
-
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      id={locationChange.id}
-      __typename={locationChange.__typename}
-      key={locationChange.id}
+      date={getJournalEntryPrincipalDate(locationChange)!.start}
+      entry={locationChange}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={className}
     >

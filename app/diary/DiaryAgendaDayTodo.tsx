@@ -1,12 +1,10 @@
 "use client";
 import type { TypedDocumentNode } from "@apollo/client";
-import { useApolloClient, useMutation } from "@apollo/client/react";
-import { useSortable } from "@dnd-kit/sortable";
+import { useMutation } from "@apollo/client/react";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { addDays, subSeconds } from "date-fns";
 import gql from "graphql-tag";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { twMerge } from "tailwind-merge";
+import { useCallback, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   DeleteTodoMutation,
@@ -44,20 +42,6 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   className?: string;
   backlog?: boolean;
 }) {
-  const client = useApolloClient();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: client.cache.identify(todo) || todo.id,
-    data: { todo, date: getJournalEntryPrincipalDate(todo)?.start },
-    disabled: backlog,
-  });
-
   const [updateTodo] = useMutation(
     gql`
       mutation UpdateTodo($input: UpdateTodoInput!) {
@@ -152,28 +136,11 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     }
   }, [todo, updateTodo, now]);
 
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
-  );
-
   return (
     <DiaryAgendaDayEntry
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      id={todo.id}
-      __typename={todo.__typename}
+      isDraggable
+      date={getJournalEntryPrincipalDate(todo)!.start}
+      entry={todo}
       icon={backlog ? undefined : faCircleCheck}
       onIconClick={handleIconClick}
       // this should cope with todos with deadlines when that is implemented
@@ -184,14 +151,11 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
             ? "past"
             : "future"
       }
-      cotemporalityOfSurroundingEvent={
-        !isDragging ? cotemporalityOfSurroundingEvent : undefined
-      }
-      className={twMerge("select-none", className)}
+      cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
+      className={className}
     >
       <div
         ref={ref2}
-        style={isDragging ? { boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)" } : {}}
         className={
           (isActive ? "flex rounded-b-none" : "inline-flex cursor-pointer") +
           " group relative break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +

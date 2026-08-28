@@ -1,10 +1,10 @@
-import { useSortable } from "@dnd-kit/sortable";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useIsSSR } from "../../hooks/useIsSSR";
 import type { cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
+import { NowDividerEntry } from "./diaryUtils";
 
 export function DiaryAgendaDayNow({
   date,
@@ -16,45 +16,32 @@ export function DiaryAgendaDayNow({
   now: Date;
 }) {
   const isSSR = useIsSSR();
-  const {
-    isDragging,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: "now-divider", data: { date: now }, disabled: true });
 
   const iconTxt = useMemo(
     () => <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>,
     [],
   );
 
-  const style = useMemo(
-    () => ({
-      transition,
-      ...(transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-            zIndex: 5,
-          }
-        : undefined),
-      ...(isDragging ? { zIndex: 10 } : {}),
-    }),
-    [isDragging, transform, transition],
+  const entry = useMemo(
+    () =>
+      ({
+        __typename: "NowDivider",
+        id: "now-divider",
+        start: now,
+        end: now,
+      }) satisfies NowDividerEntry,
+    [now],
   );
 
   return (
     <DiaryAgendaDayEntry
+      date={now}
+      entry={entry}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       iconTxt={iconTxt}
       cotemporality="current"
       className="now-divider pt-0.5 pb-1.5"
       contentClassName="gap-2"
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
     >
       <DiaryAgendaDayCreateTodo date={new Date()} />
       <Link
