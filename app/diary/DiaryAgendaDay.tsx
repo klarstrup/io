@@ -783,6 +783,7 @@ export function DiaryAgendaDay({
       >
         {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
+            requireScroll
             onSeen={() => {
               if (loading) return;
 
@@ -878,6 +879,7 @@ export function DiaryAgendaDay({
         )}
         {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
+            requireScroll
             onSeen={() => {
               if (loading) return;
 
