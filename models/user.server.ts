@@ -91,117 +91,110 @@ export const getUserJournalEntries = async (
               null,
       } satisfies GQEvent),
     ),
-    async () => {
-      return Array.fromAsync(
-        (await Users.findOne({ _id: new ObjectId(userId) }))?.dataSources?.some(
-          (dataSource) =>
-            dataSource.source === DataSource.Meyers &&
-            dataSource.paused !== true,
-        )
-          ? MeyersMenus.find(
-              { date_time: intervalQuery, "names.da": "Almanak" },
-              { projection: { date_time: 1, menu_sections: 1 } },
-            )
-          : [],
-        (menu) => {
-          if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
+    Array.fromAsync(
+      (await Users.findOne({ _id: new ObjectId(userId) }))?.dataSources?.some(
+        (dataSource) =>
+          dataSource.source === DataSource.Meyers && dataSource.paused !== true,
+      )
+        ? MeyersMenus.find(
+            { date_time: intervalQuery, "names.da": "Almanak" },
+            { projection: { date_time: 1, menu_sections: 1 } },
+          )
+        : [],
+      (menu) => {
+        if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
 
-          entries.push({
-            __typename: "Meal",
-            id: menu._id.toString(),
-            datetime: setHours(menu.date_time, 10),
-            type: "LUNCH",
-            mealName: "Lunch",
-            foodEntries: unique(
-              menu.menu_sections
-                .filter(
-                  (section) =>
-                    !section.names.da?.includes("halal") &&
-                    !section.names.da?.includes("vegansk") &&
-                    !section.names.da?.includes("vegetar") &&
-                    (section.names.da?.includes("Varm ret") ||
-                      section.names.da?.includes("Delikatesse") ||
-                      section.names.da?.includes("Torsdagssødt")),
-                )
-                .flatMap((section) =>
-                  section.menu_dishes
-                    .map((dish) => {
-                      const sectionName = section.names.en || "";
-                      const dishName = dish.names.en || "";
-                      let prefix = "";
+        entries.push({
+          __typename: "Meal",
+          id: menu._id.toString(),
+          datetime: setHours(menu.date_time, 10),
+          type: "LUNCH",
+          mealName: "Lunch",
+          foodEntries: unique(
+            menu.menu_sections
+              .filter(
+                (section) =>
+                  !section.names.da?.includes("halal") &&
+                  !section.names.da?.includes("vegansk") &&
+                  !section.names.da?.includes("vegetar") &&
+                  (section.names.da?.includes("Varm ret") ||
+                    section.names.da?.includes("Delikatesse") ||
+                    section.names.da?.includes("Torsdagssødt")),
+              )
+              .flatMap((section) =>
+                section.menu_dishes
+                  .map((dish) => {
+                    const sectionName = section.names.en || "";
+                    const dishName = dish.names.en || "";
+                    let prefix = "";
 
-                      const lDish = dishName.toLowerCase();
-                      const lSection = sectionName.toLowerCase();
-                      if (lSection.includes("hot dish")) {
-                        if (lDish.includes("burrito")) {
-                          prefix = "🌯";
-                        } else if (lDish.includes("burger")) {
-                          prefix = "🍔";
-                        } else if (lDish.includes("pasta")) {
-                          prefix = "🍝";
-                        } else if (lDish.includes("pizza")) {
-                          prefix = "🍕";
-                        } else if (lDish.includes("soup")) {
-                          prefix = "🍲";
-                        } else if (lDish.includes("taco")) {
-                          prefix = "🌮";
-                        } else if (lDish.includes("pita")) {
-                          prefix = "🥙";
-                        } else if (
-                          lDish.includes("curry") ||
-                          lDish.includes("korma") ||
-                          lDish.includes("masala")
-                        ) {
-                          prefix = "🍛";
-                        } else {
-                          prefix = "🥘";
-                        }
-                      } else if (lSection.includes("delicacy")) {
-                        if (lDish.includes("salad")) {
-                          prefix = "🥗";
-                        } else {
-                          prefix = "🥪";
-                        }
-                      } else if (lSection.includes("thursday sweet")) {
-                        prefix = "🍰";
+                    const lDish = dishName.toLowerCase();
+                    const lSection = sectionName.toLowerCase();
+                    if (lSection.includes("hot dish")) {
+                      if (lDish.includes("burrito")) {
+                        prefix = "🌯";
+                      } else if (lDish.includes("burger")) {
+                        prefix = "🍔";
+                      } else if (lDish.includes("pasta")) {
+                        prefix = "🍝";
+                      } else if (lDish.includes("pizza")) {
+                        prefix = "🍕";
+                      } else if (lDish.includes("soup")) {
+                        prefix = "🍲";
+                      } else if (lDish.includes("taco")) {
+                        prefix = "🌮";
+                      } else if (lDish.includes("pita")) {
+                        prefix = "🥙";
+                      } else if (
+                        lDish.includes("curry") ||
+                        lDish.includes("korma") ||
+                        lDish.includes("masala")
+                      ) {
+                        prefix = "🍛";
+                      } else {
+                        prefix = "🥘";
                       }
+                    } else if (lSection.includes("delicacy")) {
+                      if (lDish.includes("salad")) {
+                        prefix = "🥗";
+                      } else {
+                        prefix = "🥪";
+                      }
+                    } else if (lSection.includes("thursday sweet")) {
+                      prefix = "🍰";
+                    }
 
-                      return `${prefix} ${dishName || ""}`;
-                    })
-                    .filter(Boolean)
-                    .map((name) =>
-                      / - /.test(name)
-                        ? name.split(/ - /)[0]
-                        : / with /.test(name)
-                          ? name.split(/ with /)[0]
-                          : / of /.test(name)
-                            ? name.split(/ of /)[0]
-                            : /, /.test(name)
-                              ? name.split(/, /)[0]
-                              : name,
-                    ),
-                )
-                .filter(Boolean),
-            ).map((dish) => ({
-              id: dish,
-              type: "FOOD_ENTRY",
-              datetime: setHours(menu.date_time, 10),
-              nutritionalContents: null,
-              mealName: "Lunch",
-              food: {
-                id: dish,
-                description: dish,
-                __typename: "Food",
-              },
-              servings: null,
-              servingSize: null,
-              __typename: "FoodEntry",
-            })),
-            url: "https://meyers.dk/frokost/almanak",
-          } satisfies GQMeal);
-        },
-      );
-    },
+                    return `${prefix} ${dishName || ""}`;
+                  })
+                  .filter(Boolean)
+                  .map((name) =>
+                    / - /.test(name)
+                      ? name.split(/ - /)[0]
+                      : / with /.test(name)
+                        ? name.split(/ with /)[0]
+                        : / of /.test(name)
+                          ? name.split(/ of /)[0]
+                          : /, /.test(name)
+                            ? name.split(/, /)[0]
+                            : name,
+                  ),
+              )
+              .filter(Boolean),
+          ).map((dish) => ({
+            id: dish,
+            type: "FOOD_ENTRY",
+            datetime: setHours(menu.date_time, 10),
+            nutritionalContents: null,
+            mealName: "Lunch",
+            food: { id: dish, description: dish, __typename: "Food" },
+            servings: null,
+            servingSize: null,
+            __typename: "FoodEntry",
+          })),
+          url: "https://meyers.dk/frokost/almanak",
+        } satisfies GQMeal);
+      },
+    ),
     Array.fromAsync(
       getUserWithingsSleepSummarySeriesBetween(userId, interval),
       (sleep) =>
