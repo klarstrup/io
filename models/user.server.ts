@@ -207,15 +207,28 @@ export const getUserJournalEntries = async (
         } satisfies GQSleep),
     ),
     Array.fromAsync(
-      MaterializedWorkoutsView.find({
-        userId,
-        $or: [
-          { workedOutAt: intervalQuery },
-          // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-          { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
-        ],
-        deletedAt: { $exists: false },
-      }),
+      MaterializedWorkoutsView.find(
+        {
+          userId,
+          $or: [
+            { workedOutAt: intervalQuery },
+            // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+            { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
+          ],
+          deletedAt: { $exists: false },
+        },
+        {
+          projection: {
+            id: 1,
+            userId: 1,
+            workedOutAt: 1,
+            exercises: 1,
+            location: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+      ),
       (workout) =>
         entries.push({
           ...workout,
@@ -292,11 +305,14 @@ export const getUserJournalEntries = async (
       },
     ),
     Array.fromAsync(
-      DSBProductSummaries.find({
-        _io_userId: userId,
-        timestamp: intervalQuery,
-        "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
-      }),
+      DSBProductSummaries.find(
+        {
+          _io_userId: userId,
+          timestamp: intervalQuery,
+          "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
+        },
+        { projection: { productSummary: 1, timestamp: 1 } },
+      ),
       (productSummary) =>
         productSummary.productSummary.trips.map((trip) => {
           const firstLeg = trip.tripLegs[0];
@@ -336,7 +352,10 @@ export const getUserJournalEntries = async (
         }),
     ),
     Array.fromAsync(
-      PostNordShipmentInformation.find({ _io_userId: userId }),
+      PostNordShipmentInformation.find(
+        { _io_userId: userId },
+        { projection: { shipmentId: 1, sender: 1, items: 1 } },
+      ),
       (postNordShipmentInformation) => {
         const firstItem = postNordShipmentInformation.items[0];
         if (!firstItem) return;

@@ -109,9 +109,14 @@ const getData = async (
             if (!(noDisciplines || disciplines?.includes("bouldering"))) break;
 
             await ClimbAlongAthletes.createIndexes([{ key: { userId: 1 } }]);
-            for await (const athlete of ClimbAlongAthletes.find({
-              userId: config.userId,
-            })) {
+            for await (const athlete of ClimbAlongAthletes.find(
+              {
+                userId: config.userId,
+              },
+              {
+                projection: { competitionId: 1, athleteId: 1 },
+              },
+            )) {
               eventsPromises.push(
                 getIoClimbAlongCompetitionEventEntry(
                   athlete.competitionId,

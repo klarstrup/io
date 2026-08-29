@@ -1,5 +1,4 @@
 import type { ScrapedAt } from "../lib";
-import { TomorrowIntervals } from "./tomorrow.server";
 
 export interface TomorrowIoMeta {
   _io_geohash: string;
@@ -42,25 +41,4 @@ export interface MongoTomorrowInterval
     ScrapedAt,
     TomorrowIoMeta {
   startTime: Date;
-}
-
-export async function getTomorrowForecasts({
-  geohash,
-  start,
-  end,
-}: {
-  geohash?: string | null;
-  start: Date;
-  end: Date;
-}) {
-  if (!geohash) return;
-
-  return (
-    await TomorrowIntervals.find({
-      _io_geohash: geohash.slice(0, 4),
-      startTime: { $gte: start, $lt: end },
-    })
-
-      .toArray()
-  ).map((document) => ({ ...document, _id: document._id.toString() }));
 }

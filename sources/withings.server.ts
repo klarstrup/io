@@ -39,10 +39,21 @@ export async function* getUserWithingsSleepSummarySeriesBetween(
     withingsDataSource?.config?.accessTokenResponse?.userid;
   if (!withingsUserId) return null;
 
-  yield* WithingsSleepSummarySeries.find({
-    // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
-    _withings_userId: Number(withingsUserId),
-    startedAt: { $lte: new Date(end) },
-    endedAt: { $gte: new Date(start) },
-  });
+  yield* WithingsSleepSummarySeries.find(
+    {
+      // Sometimes the token response has this as a string, sometimes as a number, so we convert it to a number here to be safe
+      _withings_userId: Number(withingsUserId),
+      startedAt: { $lte: new Date(end) },
+      endedAt: { $gte: new Date(start) },
+    },
+    {
+      projection: {
+        hash_deviceid: 1,
+        id: 1,
+        data: 1,
+        endedAt: 1,
+        startedAt: 1,
+      },
+    },
+  );
 }

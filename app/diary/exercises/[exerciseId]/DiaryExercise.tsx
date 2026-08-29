@@ -147,7 +147,10 @@ async function DiaryExerciseList({
       }))
     : [];
   const locations = userId
-    ? await Locations.find({ userId }, { sort: { name: 1 } }).toArray()
+    ? await Locations.find(
+        { userId },
+        { sort: { name: 1 }, projection: { id: 1, name: 1 } },
+      ).toArray()
     : [];
 
   if (userId && mergeWorkouts) {

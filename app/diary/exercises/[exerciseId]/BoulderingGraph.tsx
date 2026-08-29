@@ -42,12 +42,28 @@ export default async function BoulderingGraph({
   );
 
   const [locations, workouts] = await Promise.all([
-    Locations.find({ userId }).toArray(),
-    MaterializedWorkoutsView.find({
-      userId,
-      "exercises.exerciseId": 2001,
-      deletedAt: { $exists: false },
-    }).toArray(),
+    Locations.find(
+      { userId },
+      { projection: { boulderCircuits: 1 } },
+    ).toArray(),
+    MaterializedWorkoutsView.find(
+      {
+        userId,
+        "exercises.exerciseId": 2001,
+        deletedAt: { $exists: false },
+      },
+      {
+        projection: {
+          id: 1,
+          exercises: 1,
+          workedOutAt: 1,
+          locationId: 1,
+          userId: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ).toArray(),
   ]);
 
   const top10sendGradeData: { x: Date; y: number }[] = [];

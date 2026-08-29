@@ -257,7 +257,7 @@ export const resolvers: GQResolvers<
             _withings_userId: Number(withingsUserId),
             measures: { $elemMatch: { type: Withings.MeasureType.Weight } },
           },
-          { sort: { createdAt: -1 } },
+          { sort: { createdAt: -1 }, projection: { measures: 1 } },
         )
       )?.measures.find(
         (measure) => measure.type === Withings.MeasureType.Weight,
@@ -283,7 +283,11 @@ export const resolvers: GQResolvers<
           _withings_userId: Number(withingsUserId),
           measures: { $elemMatch: { type: Withings.MeasureType.Weight } },
         },
-        { sort: { measuredAt: -1 }, limit: 14 },
+        {
+          sort: { measuredAt: -1 },
+          limit: 14,
+          projection: { measures: 1, measuredAt: 1 },
+        },
       ).toArray();
 
       return weightMeasureGroups
@@ -345,7 +349,11 @@ export const resolvers: GQResolvers<
             $elemMatch: { type: Withings.MeasureType.FatRatio },
           },
         },
-        { sort: { measuredAt: -1 }, limit: 14 },
+        {
+          sort: { measuredAt: -1 },
+          limit: 14,
+          projection: { measures: 1, measuredAt: 1 },
+        },
       ).toArray();
       return bodyFatMeasureGroups
         .map((group) => {
@@ -371,10 +379,13 @@ export const resolvers: GQResolvers<
       )?.config?.accessTokenResponse?.userid;
       if (!withingsUserId) return null;
 
-      const sleepEntries = await WithingsSleepSummarySeries.find({
-        _withings_userId: Number(withingsUserId),
-        endedAt: { $gte: addWeeks(new Date(), -1) }, // Past week
-      }).toArray();
+      const sleepEntries = await WithingsSleepSummarySeries.find(
+        {
+          _withings_userId: Number(withingsUserId),
+          endedAt: { $gte: addWeeks(new Date(), -1) }, // Past week
+        },
+        { projection: { data: 1 } },
+      ).toArray();
 
       const totalSleepTime = sleepEntries.reduce(
         (total, entry) => total + entry.data.total_sleep_time,
@@ -400,7 +411,7 @@ export const resolvers: GQResolvers<
           _withings_userId: Number(withingsUserId),
           endedAt: { $gte: addWeeks(new Date(), -2) }, // Past week
         },
-        { sort: { endedAt: -1 }, limit: 7 },
+        { sort: { endedAt: -1 }, limit: 7, projection: { data: 1 } },
       ).toArray();
 
       const totalSleepTime = sleepEntries.reduce(
@@ -428,7 +439,11 @@ export const resolvers: GQResolvers<
             _withings_userId: Number(withingsUserId),
             endedAt: { $gte: addWeeks(new Date(), -4) },
           },
-          { sort: { startedAt: -1 }, limit: 28 },
+          {
+            sort: { startedAt: -1 },
+            limit: 28,
+            projection: { data: 1, endedAt: 1 },
+          },
         ).toArray()
       ).reverse();
 
@@ -534,17 +549,28 @@ export const resolvers: GQResolvers<
     locations: async (parent) => {
       if (!parent.id) return [];
 
-      return (await Locations.find({ userId: parent.id }).toArray()).map(
-        (location) => ({
-          ...location,
-          boulderCircuits: location.boulderCircuits?.map((circuit) => ({
-            ...circuit,
-            __typename: "BoulderCircuit",
-          })),
-          __typename: "Location",
-          id: String(location._id),
-        }),
-      );
+      return (
+        await Locations.find(
+          { userId: parent.id },
+          {
+            projection: {
+              name: 1,
+              boulderCircuits: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              userId: 1,
+            },
+          },
+        ).toArray()
+      ).map((location) => ({
+        ...location,
+        boulderCircuits: location.boulderCircuits?.map((circuit) => ({
+          ...circuit,
+          __typename: "BoulderCircuit",
+        })),
+        __typename: "Location",
+        id: String(location._id),
+      }));
     },
     todos: (parent, args) =>
       Array.fromAsync(
@@ -602,10 +628,22 @@ export const resolvers: GQResolvers<
 
       for (const dataSource of user.dataSources || []) {
         if (dataSource.source !== DataSource.MyFitnessPal) continue;
-        for await (const document of MyFitnessPalFoodEntries.find({
-          user_id: dataSource.config.userId,
-          datetime: rangeToQuery(args.interval.start, args.interval.end),
-        })) {
+        for await (const document of MyFitnessPalFoodEntries.find(
+          {
+            user_id: dataSource.config.userId,
+            datetime: rangeToQuery(args.interval.start, args.interval.end),
+          },
+          {
+            projection: {
+              id: 1,
+              meal_name: 1,
+              food: 1,
+              serving_size: 1,
+              nutritional_contents: 1,
+              datetime: 1,
+            },
+          },
+        )) {
           foodEntries.push({
             ...document,
             mealName: document.meal_name,
@@ -702,15 +740,26 @@ export const resolvers: GQResolvers<
     },
     workouts: (parent, { interval }) =>
       Array.fromAsync(
-        MaterializedWorkoutsView.find({
-          userId: parent.id,
-          $or: [
-            { workedOutAt: rangeToQuery(interval.start, interval.end) },
-            // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-            { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
-          ],
-          deletedAt: { $exists: false },
-        }),
+        MaterializedWorkoutsView.find(
+          {
+            userId: parent.id,
+            $or: [
+              { workedOutAt: rangeToQuery(interval.start, interval.end) },
+              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+              { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
+            ],
+            deletedAt: { $exists: false },
+          },
+          {
+            projection: {
+              id: 1,
+              exercises: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              workedOutAt: 1,
+            },
+          },
+        ),
         (workout) =>
           ({
             ...workout,

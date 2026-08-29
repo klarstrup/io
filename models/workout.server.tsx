@@ -588,7 +588,7 @@ export const getWorkoutExercise = async (
 
 export const calculate60dayTop10AverageSendGrade = (
   allBoulderingWorkouts: WithId<WorkoutData>[],
-  locations: WithId<LocationData>[],
+  locations: WithId<Pick<LocationData, "boulderCircuits">>[],
   date: Date,
 ) => {
   const workouts = allBoulderingWorkouts.filter(
@@ -606,7 +606,12 @@ export const calculate60dayTop10AverageSendGrade = (
                 (s.inputs[2]?.value as SendType) === SendType.Top ||
                 (s.inputs[2]?.value as SendType) === SendType.Flash,
             )
-            .map((set) => getSetGrade(set, location as unknown as GQLocation)),
+            .map((set) =>
+              getSetGrade(
+                set,
+                location as unknown as Pick<GQLocation, "boulderCircuits">,
+              ),
+            ),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -619,7 +624,7 @@ export const calculate60dayTop10AverageSendGrade = (
 
 export const calculate60dayTop10AverageFlashGrade = (
   allBoulderingWorkouts: WithId<WorkoutData>[],
-  locations: WithId<LocationData>[],
+  locations: WithId<Pick<LocationData, "boulderCircuits">>[],
   date: Date,
 ) => {
   const workouts = allBoulderingWorkouts.filter(
@@ -647,7 +652,7 @@ export const calculate60dayTop10AverageFlashGrade = (
 
 export const calculate60dayTop10AverageAttemptGrade = (
   allBoulderingWorkouts: WithId<WorkoutData>[],
-  locations: WithId<LocationData>[],
+  locations: WithId<Pick<LocationData, "boulderCircuits">>[],
   date: Date,
 ) => {
   const workouts = allBoulderingWorkouts.filter(
@@ -678,9 +683,9 @@ export const calculate60dayTop10AverageAttemptGrade = (
 export function mergeWorkoutsOfExercise(
   workouts: WithId<WorkoutData>[],
   userId: string,
-  locations?: WithId<LocationData>[] | null,
+  locations?: WithId<Pick<LocationData, "boulderCircuits" | "name">>[] | null,
 ) {
-  return workouts.reduce<WithId<WorkoutData>>(
+  return workouts.reduce<(typeof workouts)[number]>(
     (acc, workout) => {
       const location = workout.locationId
         ? locations?.find((l) => l._id.toString() === workout.locationId)

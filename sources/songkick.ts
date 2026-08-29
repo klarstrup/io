@@ -88,9 +88,22 @@ export namespace Songkick {
 }
 
 export const getEvents = (artistId: number) =>
-  SongkickEvents.find({
-    "performance.artist.id": artistId,
-  }).toArray();
+  SongkickEvents.find(
+    {
+      "performance.artist.id": artistId,
+    },
+    {
+      projection: {
+        performance: 1,
+        start: 1,
+        end: 1,
+        venue: 1,
+        series: 1,
+        id: 1,
+        uri: 1,
+      },
+    },
+  ).toArray();
 
 const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;

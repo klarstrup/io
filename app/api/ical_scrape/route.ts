@@ -42,9 +42,7 @@ export const GET = (request: NextRequest) =>
         const [ics, existingEventIds, mostRecentlyModifiedEvent] =
           await Promise.all([
             fetchText(url),
-            IcalEvents.find(ioIcalMeta, {
-              projection: { _id: 1, uid: 1 },
-            }).toArray(),
+            IcalEvents.find(ioIcalMeta, { projection: { uid: 1 } }).toArray(),
             IcalEvents.findOne(ioIcalMeta, {
               sort: { lastmodified: -1 },
               projection: { lastmodified: 1 },

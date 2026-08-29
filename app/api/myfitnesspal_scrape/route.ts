@@ -103,13 +103,16 @@ export const GET = (request: NextRequest) =>
             for (const reportEntry of reportEntries) yield reportEntry.date;
 
             const foodEntryIdsToBeDeleted = (
-              await MyFitnessPalFoodEntries.find({
-                user_id: userId,
-                datetime: {
-                  $gte: startOfMonth(monthDate, { in: tz("UTC") }),
-                  $lte: endOfMonth(monthDate, { in: tz("UTC") }),
+              await MyFitnessPalFoodEntries.find(
+                {
+                  user_id: userId,
+                  datetime: {
+                    $gte: startOfMonth(monthDate, { in: tz("UTC") }),
+                    $lte: endOfMonth(monthDate, { in: tz("UTC") }),
+                  },
                 },
-              }).toArray()
+                { projection: { id: 1 } },
+              ).toArray()
             )
               .filter(
                 (entry) =>

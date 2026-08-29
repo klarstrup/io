@@ -298,13 +298,18 @@ export const getCircuitByLocationAndSetColor = (
   return boulderingCircuit;
 };
 
-const getCircuitByLocationAndColor = (color: string, location: GQLocation) =>
+const getCircuitByLocationAndColor = (
+  color: string,
+  location: Pick<GQLocation, "boulderCircuits">,
+) =>
   location.boulderCircuits?.find(
     (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
   );
 
-const getGradeOfColorByLocation = (color: string, location: GQLocation) =>
-  getCircuitByLocationAndColor(color, location)?.gradeEstimate;
+const getGradeOfColorByLocation = (
+  color: string,
+  location: Pick<GQLocation, "boulderCircuits">,
+) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
 
 // Utility to paint over difference in DB and GraphQL representation of set meta
 export const getSetMeta = (
@@ -325,7 +330,7 @@ export const getSetMeta = (
 
 export function getSetGrade(
   set: GQWorkoutSet | WorkoutExerciseSet,
-  location: GQLocation | undefined | null,
+  location: Pick<GQLocation, "boulderCircuits"> | undefined | null,
 ) {
   const inputGrade = set.inputs[0]!.value;
   if (inputGrade) return inputGrade;

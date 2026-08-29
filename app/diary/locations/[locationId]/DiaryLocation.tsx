@@ -21,11 +21,7 @@ export default async function DiaryExercise({
 
   const allWorkoutsOfLocation = user
     ? await MaterializedWorkoutsView.find(
-        {
-          userId: user.id,
-          locationId,
-          deletedAt: { $exists: false },
-        },
+        { userId: user.id, locationId, deletedAt: { $exists: false } },
         { sort: { workedOutAt: -1 } },
       ).toArray()
     : [];

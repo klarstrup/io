@@ -174,9 +174,12 @@ export async function getSportsTimingEventResults(
 
 export async function getSportsTimingEventEntries(ioName: string) {
   await SportstimingFavorites.createIndexes([{ key: { Name: 1 } }]);
-  const results = await SportstimingFavorites.find({
-    Name: new RegExp(ioName, "i"),
-  }).toArray();
+  const results = await SportstimingFavorites.find(
+    {
+      Name: new RegExp(ioName, "i"),
+    },
+    { projection: { Name: 1, _io_EventId: 1, Id: 1 } },
+  ).toArray();
 
   await SportstimingEvents.createIndexes([{ key: { EventId: 1 } }]);
   return Promise.all(
