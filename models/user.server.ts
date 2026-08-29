@@ -6,7 +6,7 @@ import {
   setHours,
   startOfDay,
 } from "date-fns";
-import { ObjectId } from "mongodb";
+import { type Document, ObjectId, type WithId } from "mongodb";
 import type { Account } from "next-auth";
 import { auth } from "../auth";
 import type {
@@ -28,7 +28,6 @@ import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
 } from "../sources/ical.server";
-import type { Meyers } from "../sources/meyers";
 import { MeyersMenus } from "../sources/meyers.server";
 import { PostNordShipmentInformation } from "../sources/postnord.server";
 import { DataSource } from "../sources/utils";
@@ -39,7 +38,7 @@ import {
   rangeToQuery,
   unique,
 } from "../utils";
-import { proxyCollection } from "../utils.server";
+import { type ProxyCollection, proxyCollection } from "../utils.server";
 import type { ITodoScheduleWithExerciseProgram, IUser } from "./user";
 import { getNextSets, MaterializedWorkoutsView } from "./workout.server";
 
@@ -56,6 +55,21 @@ const getURLsFromString = (str: string) => {
       .map((url) => url.replace(/<\/a>$/, "")) || []
   );
 };
+
+const meyersProjection = {
+  _id: 1,
+  date_time: 1,
+  menu_sections: 1,
+} as const;
+
+type ExtractProxyCollectionDocument<T extends Document> =
+  T extends ProxyCollection<infer Doc> ? Doc : never;
+
+// TODO: Build this into the proxyCollection types
+type PickProjection<
+  C extends ProxyCollection<any>,
+  K extends keyof WithId<ExtractProxyCollectionDocument<C>>,
+> = { [P in K]: WithId<ExtractProxyCollectionDocument<C>>[P] };
 
 export const getUserJournalEntries = async (
   userId: string,
@@ -96,16 +110,26 @@ export const getUserJournalEntries = async (
         (dataSource) =>
           dataSource.source === DataSource.Meyers && dataSource.paused !== true,
       )
-        ? MeyersMenus.find({
-            date_time: rangeToQuery(interval.start, interval.end),
-            "names.da": "Almanak",
-          })
+        ? MeyersMenus.find<
+            PickProjection<typeof MeyersMenus, keyof typeof meyersProjection>
+          >(
+            {
+              date_time: rangeToQuery(interval.start, interval.end),
+              "names.da": "Almanak",
+            },
+            { projection: meyersProjection },
+          )
         : [],
       (menu) => {
         if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
 
-        const formatMeyersMenuSummary = (menu: Meyers.MongoMenu) => {
-          const dishes = unique(
+        entries.push({
+          __typename: "Meal",
+          id: menu._id.toString(),
+          datetime: setHours(menu.date_time, 10),
+          type: "LUNCH",
+          mealName: "Lunch",
+          foodEntries: unique(
             menu.menu_sections
               .filter(
                 (section) =>
@@ -175,9 +199,7 @@ export const getUserJournalEntries = async (
                   ),
               )
               .filter(Boolean),
-          );
-
-          return dishes.map((dish): GQMeal["foodEntries"][number] => ({
+          ).map((dish) => ({
             id: dish,
             type: "FOOD_ENTRY",
             datetime: setHours(menu.date_time, 10),
@@ -191,16 +213,7 @@ export const getUserJournalEntries = async (
             servings: null,
             servingSize: null,
             __typename: "FoodEntry",
-          }));
-        };
-
-        entries.push({
-          __typename: "Meal",
-          id: menu._id.toString(),
-          datetime: setHours(menu.date_time, 10),
-          type: "LUNCH",
-          mealName: "Lunch",
-          foodEntries: formatMeyersMenuSummary(menu),
+          })),
           url: "https://meyers.dk/frokost/almanak",
         } satisfies GQMeal);
       },
