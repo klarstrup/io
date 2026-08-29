@@ -6,7 +6,7 @@ import {
   setHours,
   startOfDay,
 } from "date-fns";
-import { type Document, ObjectId, type WithId } from "mongodb";
+import { ObjectId } from "mongodb";
 import type { Account } from "next-auth";
 import { auth } from "../auth";
 import type {
@@ -38,7 +38,7 @@ import {
   rangeToQuery,
   unique,
 } from "../utils";
-import { type ProxyCollection, proxyCollection } from "../utils.server";
+import { proxyCollection } from "../utils.server";
 import type { ITodoScheduleWithExerciseProgram, IUser } from "./user";
 import { getNextSets, MaterializedWorkoutsView } from "./workout.server";
 
@@ -55,15 +55,6 @@ const getURLsFromString = (str: string) => {
       .map((url) => url.replace(/<\/a>$/, "")) || []
   );
 };
-
-type ExtractProxyCollectionDocument<T extends Document> =
-  T extends ProxyCollection<infer Doc> ? Doc : never;
-
-// TODO: Build this into the proxyCollection types
-type PickProjection<
-  C extends ProxyCollection<any>,
-  K extends keyof WithId<ExtractProxyCollectionDocument<C>>,
-> = { [P in K]: WithId<ExtractProxyCollectionDocument<C>>[P] };
 
 export const getUserJournalEntries = async (
   userId: string,
@@ -101,23 +92,15 @@ export const getUserJournalEntries = async (
       } satisfies GQEvent),
     ),
     async () => {
-      const projection = {
-        _id: 1,
-        date_time: 1,
-        menu_sections: 1,
-      } as const;
-
       return Array.fromAsync(
         (await Users.findOne({ _id: new ObjectId(userId) }))?.dataSources?.some(
           (dataSource) =>
             dataSource.source === DataSource.Meyers &&
             dataSource.paused !== true,
         )
-          ? MeyersMenus.find<
-              PickProjection<typeof MeyersMenus, keyof typeof projection>
-            >(
+          ? MeyersMenus.find(
               { date_time: intervalQuery, "names.da": "Almanak" },
-              { projection },
+              { projection: { date_time: 1, menu_sections: 1 } },
             )
           : [],
         (menu) => {
