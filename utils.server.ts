@@ -1,7 +1,7 @@
 import { AggregateOptions, Collection, Document } from "mongodb";
 import { getDB } from "./dbConnect";
 
-type ProxyCollection<TSchema extends Document> = Pick<
+export type ProxyCollection<TSchema extends Document> = Pick<
   Collection<TSchema>,
   | "distinct"
   | "find"
@@ -24,22 +24,19 @@ export function proxyCollection<TSchema extends Document>(name: string) {
     ) {
       if (property === "find") {
         return function (
-          ...args: Parameters<ProxyCollection<TSchema>["find"]>
+          filter: Parameters<ProxyCollection<TSchema>["find"]>[0],
+          options?: Parameters<ProxyCollection<TSchema>["find"]>[1],
         ) {
           return {
             async *[Symbol.asyncIterator]() {
               const DB = await getDB();
 
-              for await (const document of DB.collection(name).find(...args)) {
-                yield document;
-              }
+              yield* DB.collection(name).find(filter, options);
             },
             async toArray() {
               const DB = await getDB();
 
-              return DB.collection(name)
-                .find(...args)
-                .toArray();
+              return DB.collection(name).find(filter, options).toArray();
             },
           };
         };
