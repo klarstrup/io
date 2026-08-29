@@ -589,8 +589,10 @@ export const isPlainObject = (
   return false;
 };
 
-export const rangeToQuery = (from: Date, to?: Date) =>
-  to ? { $gte: from, $lte: to } : { $gte: from };
+export const rangeToQuery = (from: Date, to: Date) => ({
+  $gte: from,
+  $lte: to,
+});
 
 export function countBy<T extends { [K in keyof T]: T[K] }, K extends keyof T>(
   list: T[],
@@ -766,7 +768,7 @@ export const endOfDayButItRespectsDayStartHour = (date: Date | TZDate) =>
   subMilliseconds(addDays(startOfDayButItRespectsDayStartHour(date), 1), 1);
 
 export const supportsHaptic =
-    typeof window !== "undefined"
+  typeof window !== "undefined"
     ? window.matchMedia("(pointer: coarse)").matches
     : false;
 
