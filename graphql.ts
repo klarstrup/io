@@ -554,11 +554,14 @@ export const resolvers: GQResolvers<
           { userId: parent.id },
           {
             projection: {
+              id: 1,
+              userId: 1,
               name: 1,
-              boulderCircuits: 1,
               createdAt: 1,
               updatedAt: 1,
-              userId: 1,
+              isFavorite: 1,
+              knownAddresses: 1,
+              boulderCircuits: 1,
             },
           },
         ).toArray()
