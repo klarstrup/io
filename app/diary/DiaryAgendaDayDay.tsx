@@ -16,7 +16,7 @@ import {
   roundToNearestMinutes,
 } from "date-fns";
 import Link from "next/link";
-import { useMemo, useRef, type ReactElement } from "react";
+import { useMemo, type ReactElement } from "react";
 import { FieldSetX } from "../../components/FieldSet";
 import type {
   GQEvent,
@@ -92,7 +92,6 @@ export function DiaryAgendaDayDay({
     [now],
   );
   const isToday = date === todayStr;
-  const ref = useRef<HTMLFieldSetElement>(null);
 
   const dayName = dateToString(dayRange.start);
 
@@ -635,10 +634,9 @@ export function DiaryAgendaDayDay({
       </div>
       <FieldSetX
         legend={null}
-        ref={ref}
         className={
           "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors xl:max-w-none " +
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors lg:max-h-[calc(80vh-80px)] lg:overflow-x-hidden lg:overflow-y-auto xl:max-w-none " +
           (isSelectedDay
             ? "bg-white/90"
             : (isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)

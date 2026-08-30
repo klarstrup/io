@@ -694,12 +694,21 @@ export function DiaryAgendaDay({
     if (!(element instanceof HTMLElement)) return;
 
     const transformScroll = (event: Event) => {
+      const closestDayEntry =
+        event.target instanceof HTMLElement
+          ? event.target.closest(".diary-agenda-day-entry")
+          : null;
       if (
         !isPointerFine ||
         !isXL ||
         !(event instanceof WheelEvent) ||
         !event.deltaY ||
-        !(event.currentTarget instanceof HTMLElement)
+        !(event.currentTarget instanceof HTMLElement) ||
+        (closestDayEntry &&
+          !(event.deltaY > 0
+            ? closestDayEntry.scrollTop + closestDayEntry.clientHeight >=
+              closestDayEntry.scrollHeight
+            : closestDayEntry.scrollTop <= 0))
       ) {
         return;
       }
