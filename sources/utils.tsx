@@ -113,6 +113,7 @@ export interface UserDataSourceMeta {
   paused?: boolean;
   updatedAt: Date;
   createdAt: Date;
+  lastMaterializedAt: Date | null;
   lastAttemptedAt: Date | null;
   lastSuccessfulAt: Date | null;
   lastSuccessfulRuntime: number | null;

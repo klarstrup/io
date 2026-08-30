@@ -5,6 +5,7 @@ interface MongoScrape {
   scrapeId: string;
   attemptedAt: Date;
   settledAt: Date | null;
+  materializedAt: Date | null;
   source: DataSource;
   userId: string;
   userDataSourceId: string;

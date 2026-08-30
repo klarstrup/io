@@ -1,5 +1,7 @@
+import { ObjectId } from "mongodb";
 import PartySocket from "partysocket";
 import { auth } from "../../../auth";
+import { Users } from "../../../models/user.server";
 import {
   MaterializedWorkoutsView,
   updateExerciseCounts,
@@ -42,11 +44,29 @@ export const GET = async () => {
           sourceToMaterializer[source as keyof typeof sourceToMaterializer];
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore - some runtimes think this is too complex
-        if (materializer) generators.push(materializer(user, dataSource));
+        if (materializer)
+          generators.push(
+            (async function* () {
+              yield* materializer(user, dataSource);
+
+              const materializedAt = new Date();
+              await Users.updateOne(
+                { _id: new ObjectId(user.id) },
+                {
+                  $set: {
+                    "dataSources.$[source].lastMaterializedAt": materializedAt,
+                  },
+                },
+                { arrayFilters: [{ "source.id": dataSource.id }] },
+              );
+            })(),
+          );
       }
     }
 
-    yield* mergeGenerators(generators);
+    for await (const value of mergeGenerators(generators)) {
+      yield value;
+    }
 
     yield `materializeAllWorkouts: done in ${Date.now() - t}ms`;
 
