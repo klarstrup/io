@@ -147,6 +147,7 @@ export async function createUserDataSource<
     id: uuid(),
     updatedAt: new Date(),
     createdAt: new Date(),
+    lastMaterializedAt: null,
     lastAttemptedAt: null,
     lastSuccessfulAt: null,
     lastSuccessfulRuntime: null,
