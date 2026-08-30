@@ -660,15 +660,17 @@ export function DiaryAgendaDay({
 
   const scrollToNow = useCallback(() => {
     if (typeof document === "undefined") return;
-    const el = document
-      .querySelector<HTMLElement>(".now-divider")
-      ?.closest<HTMLElement>(".diary-agenda-day-entry")?.parentElement;
+    const nowDivider = document.querySelector<HTMLElement>(".now-divider");
+    const el = nowDivider?.closest<HTMLElement>(
+      ".diary-agenda-day-entry",
+    )?.parentElement;
     if (!el) return;
 
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
     const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
+    nowDivider.scrollIntoView();
     window.scrollTo(
       elHorizontalCenter - viewportWidth / 2 + el.offsetWidth / 2,
       elVerticalCenter - viewportHeight / 2,

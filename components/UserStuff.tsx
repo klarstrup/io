@@ -37,9 +37,11 @@ export default function UserStuff() {
           if (currentHref === "/diary" || currentHref === "/") {
             e.preventDefault();
 
-            const el = document
-              .querySelector<HTMLElement>(".now-divider")
-              ?.closest<HTMLElement>(".diary-agenda-day-entry")?.parentElement;
+            const nowDivider =
+              document.querySelector<HTMLElement>(".now-divider");
+            const el = nowDivider?.closest<HTMLElement>(
+              ".diary-agenda-day-entry",
+            )?.parentElement;
             if (!el) return;
 
             const viewportHeight = window.innerHeight;
@@ -48,6 +50,7 @@ export default function UserStuff() {
             const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
             const scrollTop = window.scrollY;
             const scrollLeft = window.scrollX;
+            nowDivider.scrollIntoView();
             window.scrollTo(
               elHorizontalCenter - viewportWidth / 2 + el.offsetWidth / 2,
               elVerticalCenter - viewportHeight / 2,
