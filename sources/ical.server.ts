@@ -7,11 +7,12 @@ import {
   differenceInSeconds,
   type Interval,
 } from "date-fns";
-import type { FilterOperators, WithId } from "mongodb";
+import type { FilterOperators } from "mongodb";
 import { RRule, RRuleSet } from "rrule";
 import { auth } from "../auth";
 import type { MongoVEvent, MongoVTodo } from "../lib";
 import { omit } from "../utils";
+import type { ProxyCollection } from "../utils.server";
 import { proxyCollection } from "../utils.server";
 import type { VEvent, VTodo } from "../vendor/ical";
 import { DataSource, type UserDataSource } from "./utils";
@@ -48,22 +49,45 @@ export async function* getUserIcalEventsBetween(
       return acc;
     }, {});
 
-  for await (const event of IcalEvents.find<WithId<MongoVEvent>>({
-    _io_userId: userId,
-    type: "VEVENT",
-    $or: [
-      dateSelector,
-      { recurrences: { $elemMatch: dateSelector } },
-      {
-        "rrule.options.dtstart": { $lte: end },
-        "rrule.options.until": { $gte: start },
+  for await (const event of (IcalEvents as ProxyCollection<MongoVEvent>).find(
+    {
+      _io_userId: userId,
+      type: "VEVENT",
+      $or: [
+        dateSelector,
+        { recurrences: { $elemMatch: dateSelector } },
+        {
+          "rrule.options.dtstart": { $lte: end },
+          "rrule.options.until": { $gte: start },
+        },
+        {
+          "rrule.options.dtstart": { $lte: end },
+          "rrule.options.until": null,
+        },
+      ],
+    },
+    {
+      projection: {
+        summary: 1,
+        description: 1,
+        transparency: 1,
+        datetype: 1,
+        type: 1,
+        url: 1,
+        recurrences: 1,
+        rrule: 1,
+        exdate: 1,
+        start: 1,
+        end: 1,
+        uid: 1,
+        location: 1,
+        _io_icalUrlHash: 1,
+        _io_userId: 1,
+        _io_scrapedAt: 1,
+        _io_source: 1,
       },
-      {
-        "rrule.options.dtstart": { $lte: end },
-        "rrule.options.until": null,
-      },
-    ],
-  })) {
+    },
+  )) {
     const dataSource = dataSourceByUrlHash?.[event._io_icalUrlHash!];
 
     if (dataSource?.config.url.includes("proprty.ai")) {
@@ -215,11 +239,23 @@ export async function* getUserIcalTodosBetween(
           ],
         } satisfies FilterOperators<Omit<VTodo, "recurrences">>);
 
-  for await (const todo of IcalEvents.find<WithId<MongoVTodo>>({
-    _io_userId: userId,
-    type: "VTODO",
-    ...dateSelector,
-  })) {
+  for await (const todo of (IcalEvents as ProxyCollection<MongoVTodo>).find(
+    {
+      _io_userId: userId,
+      type: "VTODO",
+      ...dateSelector,
+    },
+    {
+      projection: {
+        uid: 1,
+        due: 1,
+        created: 1,
+        start: 1,
+        completed: 1,
+        summary: 1,
+      },
+    },
+  )) {
     yield omit({ ...todo, due: todo.due || todo.start }, "_id", "start");
   }
 }
