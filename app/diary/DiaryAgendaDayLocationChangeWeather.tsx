@@ -98,14 +98,19 @@ export function DiaryAgendaDayLocationChangeWeather({
           </span>
           {weather.values.precipitationProbability > 0 &&
           weather.values.precipitationIntensity >= 0.2 ? (
-            <div>
-              <span className="align-middle text-lg">
+            <div className="flex items-center gap-px">
+              <span className="align-middle">
                 {weather.values.precipitationIntensity.toFixed(2)}
               </span>
-              <sup className="text-sm">mm</sup>
-              <sub className="-ml-2 text-sm" title="Precipitation Probability">
-                {weather.values.precipitationProbability.toFixed(0)}%
-              </sub>
+              <div className="flex flex-col items-baseline">
+                <sup className="block text-[0.444rem]">mm</sup>
+                <sub
+                  className="text-[0.444rem]"
+                  title="Precipitation Probability"
+                >
+                  {weather.values.precipitationProbability.toFixed(0)}%
+                </sub>
+              </div>
             </div>
           ) : null}
         </>
