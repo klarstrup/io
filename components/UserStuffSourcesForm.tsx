@@ -147,27 +147,38 @@ function UserStuffSourceForm({
                     new Date(userDataSource.lastSuccessfulAt) >
                       new Date(userDataSource.lastFailedAt)) ? (
                   <>
+                    ✅{" "}
                     <small>
                       <DistanceToNowStrict
                         date={new Date(userDataSource.lastSuccessfulAt)}
                       />
-                    </small>{" "}
-                    ✅
+                    </small>
                   </>
                 ) : userDataSource.lastFailedAt ? (
                   <>
+                    <span title={userDataSource.lastError || "Unknown error"}>
+                      ⚠️
+                    </span>{" "}
                     <small>
                       <DistanceToNowStrict
                         date={new Date(userDataSource.lastFailedAt)}
                       />
-                    </small>{" "}
-                    <span title={userDataSource.lastError || "Unknown error"}>
-                      ⚠️
-                    </span>
+                    </small>
                   </>
                 ) : (
                   "☑️"
                 )}
+                {userDataSource.lastMaterializedAt ? (
+                  <>
+                    <br />
+                    🚰🏋️‍♀️{" "}
+                    <small>
+                      <DistanceToNowStrict
+                        date={new Date(userDataSource.lastMaterializedAt)}
+                      />
+                    </small>{" "}
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
