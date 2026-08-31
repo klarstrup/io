@@ -163,35 +163,35 @@ export async function* wrapSources<S extends DataSource, T>(
       );
       throw e;
     } finally {
-      const materializer =
-        sourceToMaterializer[
-          dataSource.source as keyof typeof sourceToMaterializer
-        ];
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - some runtimes think this is too complex
-      if (materializer) {
+      if (updatedDatabase !== false) {
+        const materializer =
+          sourceToMaterializer[
+            dataSource.source as keyof typeof sourceToMaterializer
+          ];
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore - some runtimes think this is too complex
-        yield* materializer?.(user, dataSource, scrapeId);
+        if (materializer) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - some runtimes think this is too complex
+          yield* materializer?.(user, dataSource, scrapeId);
 
-        const materializedAt = new Date();
-        await Promise.all([
-          Users.updateOne(
-            { _id: new ObjectId(user.id) },
-            {
-              $set: {
-                "dataSources.$[source].lastMaterializedAt": materializedAt,
+          const materializedAt = new Date();
+          await Promise.all([
+            Users.updateOne(
+              { _id: new ObjectId(user.id) },
+              {
+                $set: {
+                  "dataSources.$[source].lastMaterializedAt": materializedAt,
+                },
               },
-            },
-            { arrayFilters: [{ "source.id": dataSource.id }] },
-          ),
-          Scrapes.updateOne({ scrapeId }, { $set: { materializedAt } }),
-          updateLocationCounts(user.id),
-          updateExerciseCounts(user.id),
-        ]);
-      }
+              { arrayFilters: [{ "source.id": dataSource.id }] },
+            ),
+            Scrapes.updateOne({ scrapeId }, { $set: { materializedAt } }),
+            updateLocationCounts(user.id),
+            updateExerciseCounts(user.id),
+          ]);
+        }
 
-      if (updatedDatabase !== false) {
         try {
           await new Promise((y, n) => {
             const socket = new PartySocket({
