@@ -1,33 +1,33 @@
 import {
-  type ContextFn,
-  getMilliseconds,
-  getMinutes,
-  getSeconds,
-  type Interval,
-  isWithinInterval,
-  max,
-  min,
+    type ContextFn,
+    getMilliseconds,
+    getMinutes,
+    getSeconds,
+    type Interval,
+    isWithinInterval,
+    max,
+    min,
 } from "date-fns";
 import type {
-  GQDelivery,
-  GQEvent,
-  GQMeal,
-  GQNextSet,
-  GQSleep,
-  GQTodo,
-  GQTrip,
-  GQWorkout,
-  GQWorkoutExercise,
-  GQWorkoutSet,
+    GQDelivery,
+    GQEvent,
+    GQMeal,
+    GQNextSet,
+    GQSleep,
+    GQTodo,
+    GQTrip,
+    GQWorkout,
+    GQWorkoutExercise,
+    GQWorkoutSet,
 } from "../../graphql.generated/graphql";
 import type {
-  WorkoutData,
-  WorkoutExercise,
-  WorkoutExerciseSet,
+    WorkoutData,
+    WorkoutExercise,
+    WorkoutExerciseSet,
 } from "../../models/workout";
 import {
-  endOfDayButItRespectsDayStartHour,
-  startOfDayButItRespectsDayStartHour,
+    endOfDayButItRespectsDayStartHour,
+    startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 
 export type SeparatedEnd = { _is_separated_end: true };
@@ -134,13 +134,6 @@ function hasEndDate<T extends JournalEntry>(
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Interval<Date, Date> => {
-  if (hasStartDate(entry)) {
-    if (hasEndDate(entry)) {
-      return { start: entry.start, end: entry.end };
-    }
-    return { start: entry.start, end: entry.start };
-  }
-
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (isSeparatedEnd(entry)) {
     const principalDate = getJournalEntryPrincipalDate({
@@ -208,6 +201,12 @@ export const getJournalEntryPrincipalDate = (
 
   if (entry.__typename === "Delivery") {
     return { start: entry.timestamp, end: entry.timestamp };
+  }
+
+  if (hasStartDate(entry)) {
+    if (hasEndDate(entry)) {
+      return { start: entry.start, end: entry.end };
+    }
   }
 
   throw new Error(
