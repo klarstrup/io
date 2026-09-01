@@ -120,9 +120,27 @@ export interface LocationChange {
   end: Date;
 }
 
+function hasStartDate<T extends JournalEntry>(
+  entry: T,
+): entry is T & { start: Date } {
+  return "start" in entry && entry.start instanceof Date;
+}
+function hasEndDate<T extends JournalEntry>(
+  entry: T,
+): entry is T & { end: Date } {
+  return "end" in entry && entry.end instanceof Date;
+}
+
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
 ): Interval<Date, Date> => {
+  if (hasStartDate(entry)) {
+    if (hasEndDate(entry)) {
+      return { start: entry.start, end: entry.end };
+    }
+    return { start: entry.start, end: entry.start };
+  }
+
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (isSeparatedEnd(entry)) {
     const principalDate = getJournalEntryPrincipalDate({
@@ -154,16 +172,7 @@ export const getJournalEntryPrincipalDate = (
   if (entry.__typename === "Sleep") {
     return { start: entry.startedAt, end: entry.endedAt };
   }
-  if ("start" in entry && entry.start) {
-    return {
-      start: new Date(entry.start),
-      end:
-        "end" in entry && entry.end
-          ? new Date(entry.end)
-          : new Date(entry.start),
-    };
-  }
-  if ("exerciseSchedule" in entry && entry.exerciseSchedule) {
+  if (entry.__typename === "NextSet") {
     const nextSet = entry;
 
     const effectiveDueDate = nextSet.exerciseSchedule.snoozedUntil
@@ -193,10 +202,6 @@ export const getJournalEntryPrincipalDate = (
     };
   }
 
-  if (entry.__typename === "LocationChange") {
-    return { start: entry.start, end: entry.end };
-  }
-
   if (entry.__typename === "Meal") {
     return { start: entry.datetime, end: entry.datetime };
   }
@@ -205,9 +210,9 @@ export const getJournalEntryPrincipalDate = (
     return { start: entry.timestamp, end: entry.timestamp };
   }
 
-  //entry satisfies never;
-
-  throw new Error(`Unknown entry type: ${JSON.stringify(entry)}`);
+  throw new Error(
+    `Unknown entry type: ${JSON.stringify(entry satisfies never)}`,
+  );
 };
 
 export const isEventEntireDay = <DateType extends Date>(
