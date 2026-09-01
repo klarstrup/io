@@ -123,7 +123,7 @@ export function DiaryAgendaDayDay({
         .slice(i + 1)
         .filter((je) => isSeparatedEnd(je));
 
-      const entryThatSurroundsEntry =
+      let entryThatSurroundsEntry =
         previousEntries
           .filter(
             (prevJE) =>
@@ -165,7 +165,16 @@ export function DiaryAgendaDayDay({
               endPrincipalDate &&
               isBefore(endPrincipalDate.start, principalDate.start)
             );
-          });
+          }) ||
+        null;
+
+      if (
+        entryThatSurroundsEntry &&
+        entryThatSurroundsEntry.__typename === "Trip"
+      ) {
+        // TODO: Allow trips to have separated ends and surround other entries
+        entryThatSurroundsEntry = null;
+      }
 
       const surroundingPrincipalDate = entryThatSurroundsEntry
         ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)
