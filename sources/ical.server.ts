@@ -1,10 +1,10 @@
 import { TZDate, tzOffset } from "@date-fns/tz";
 import { createHash } from "crypto";
 import {
+  addMilliseconds,
   addMinutes,
-  addSeconds,
   areIntervalsOverlapping,
-  differenceInSeconds,
+  differenceInMilliseconds,
   type Interval,
 } from "date-fns";
 import type { FilterOperators } from "mongodb";
@@ -171,10 +171,10 @@ export async function* getUserIcalEventsBetween(
       // Avoid adding reccurences of the original event instance
       rruleSet.exdate(dtstart);
 
-      const eventDurationSeconds = differenceInSeconds(event.end, event.start);
+      const eventDurationMS = differenceInMilliseconds(event.end, event.start);
       const rruleDates = rruleSet
         // Subtract the event duration from the start of the interval to ensure we include events that start before the interval but end within it
-        .between(addSeconds(start, -eventDurationSeconds), end, true)
+        .between(addMilliseconds(start, -eventDurationMS), end, true)
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
 
       const recurrenceIdDates = new Set(
@@ -188,7 +188,7 @@ export async function* getUserIcalEventsBetween(
           if (recurrenceIdDates.has(rruleDate.toLocaleDateString())) {
             continue;
           }
-          const rruleDateEnd = addSeconds(rruleDate, eventDurationSeconds);
+          const rruleDateEnd = addMilliseconds(rruleDate, eventDurationMS);
           if (
             sourceStartDate &&
             rruleDateEnd &&
