@@ -698,6 +698,7 @@ export function DiaryAgendaDay({
     if (typeof document === "undefined") return;
     const element = document.scrollingElement || document.documentElement;
     if (!(element instanceof HTMLElement)) return;
+    if (selectedDayStart) return;
 
     const transformScroll = (event: Event) => {
       const closestDayEntry =
