@@ -31,6 +31,7 @@ import {
   UpdateTodoDocument,
   UpdateWorkoutWorkedOutAtDocument,
 } from "../../graphql.generated/graphql";
+import { typePolicies } from "../../graphql.typePolicies";
 import { useEvent } from "../../hooks";
 import {
   dateMidpoint,
@@ -159,7 +160,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
     const sortableItems = items?.map((id) => String(id));
     const cacheObjectEntries = Object.entries(
-      client.cache.extract() as Record<string, Record<string, unknown>>,
+      client.cache.extract() as Record<string, JournalEntry>,
     );
 
     let nowItemDate = event.collisions?.find(
@@ -199,13 +200,31 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
         const entry = cacheObjectEntries?.find(
           ([key]) => key === sortableIdWithoutEndOfPrefix,
-        ) as JournalEntry | undefined;
+        );
 
-        return entry && ([sortableId, entry[1]] as const);
+        if (!entry) return undefined;
+
+        let object = { ...entry[1] };
+        const __typename = object.__typename;
+        for (const [key, value] of Object.entries(object)) {
+          if (key === "__typename") continue;
+          const fieldPolicy = typePolicies[__typename]?.fields?.[key];
+          if (!fieldPolicy) continue;
+          if (typeof fieldPolicy === "function") {
+            // @ts-expect-error -- I know my read policies don't need the second argument, but the type signature says they do.
+            object[key] = fieldPolicy(value);
+          } else if (
+            "read" in fieldPolicy &&
+            typeof fieldPolicy.read === "function"
+          ) {
+            // @ts-expect-error -- I know my read policies don't need the second argument, but the type signature says they do.
+            object[key] = fieldPolicy.read(value);
+          }
+        }
+
+        return [sortableId, object] as const;
       })
       .filter(Boolean);
-
-    console.log(newSortableCacheEntries);
 
     const activeEntry = newSortableCacheEntries?.find(
       ([key]) => key === active.id.toString(),

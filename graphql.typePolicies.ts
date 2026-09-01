@@ -1,4 +1,4 @@
-import { TypePolicies } from "@apollo/client";
+import type { TypePolicies } from "@apollo/client";
 import { isDate, max, min } from "date-fns";
 import { dateToString, stringToDate, uniqueBy } from "./utils";
 
