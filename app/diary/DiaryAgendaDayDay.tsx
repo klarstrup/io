@@ -593,13 +593,13 @@ export function DiaryAgendaDayDay({
             day: "numeric",
           })}
         </Link>
-        <b>
+        <Link href={`/diary/${dayName}`} className="font-bold">
           {isToday
             ? "Today"
             : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
                 weekday: "long",
               })}
-        </b>
+        </Link>
         {todayStr === dayName ? null : (
           <DiaryAgendaDayCreateExpander
             inactiveButtonClassName={
