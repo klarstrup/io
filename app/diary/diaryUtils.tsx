@@ -122,14 +122,18 @@ export interface LocationChange {
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,
-): Interval<Date, Date> | null => {
+): Interval<Date, Date> => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (isSeparatedEnd(entry)) {
     const principalDate = getJournalEntryPrincipalDate({
       ...entry,
       _is_separated_end: undefined,
     } as JournalEntry);
-    if (!principalDate) return null;
+    if (!principalDate) {
+      throw new Error(
+        `Could not get principal date for entry: ${JSON.stringify(entry)}`,
+      );
+    }
     return {
       start: principalDate.end,
       end: principalDate.end,
@@ -203,7 +207,7 @@ export const getJournalEntryPrincipalDate = (
 
   //entry satisfies never;
 
-  return null;
+  throw new Error(`Unknown entry type: ${JSON.stringify(entry)}`);
 };
 
 export const isEventEntireDay = <DateType extends Date>(
