@@ -256,6 +256,18 @@ gql`
   }
 `;
 
+function isVisuallyIdenticalEvent(a: JournalEntry, b: JournalEntry) {
+  if (a.__typename !== "Event" || b.__typename !== "Event") return false;
+  if (a.summary !== b.summary) return false;
+  if (a.datetype !== b.datetype) return false;
+  if (a.location !== b.location) return false;
+  if (a.start.getTime() !== b.start.getTime()) return false;
+  if (a.end.getTime() !== b.end.getTime()) return false;
+  if (isSeparatedEnd(a) !== isSeparatedEnd(b)) return false;
+
+  return true;
+}
+
 export function DiaryAgendaDay({
   selectedDayStart,
 }: {
@@ -330,6 +342,14 @@ export function DiaryAgendaDay({
     const addEntryToDate = (entry: JournalEntry, date: Date) => {
       const calName = dateToString(startOfDayButItRespectsDayStartHour(date));
       if (!journalEntriesByDate[calName]) journalEntriesByDate[calName] = [];
+      if (
+        journalEntriesByDate[calName].some((e) =>
+          isVisuallyIdenticalEvent(e, entry),
+        )
+      ) {
+        // TODO: Find a better way of merging events that are duplicated between calendars, for now we just skip them if they are visually identical
+        return;
+      }
       journalEntriesByDate[calName].push(entry);
     };
     for (const entry of userJournalEntries) {
