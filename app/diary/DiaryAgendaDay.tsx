@@ -370,9 +370,6 @@ export function DiaryAgendaDay({
                     "datetype" in entry && entry.datetype === "date"
                       ? roundToNearestDay(entry.start, { in: tz(timeZone) })
                       : null,
-
-                    "completed" in entry ? entry.completed : null,
-                    "due" in entry ? entry.due : null,
                     "start" in entry ? entry.start : null,
                     fetchingInterval.start,
                   ].filter(Boolean),
@@ -390,8 +387,6 @@ export function DiaryAgendaDay({
                     "datetype" in entry && entry.datetype === "date"
                       ? roundToNearestDay(entry.end, { in: tz(timeZone) })
                       : null,
-                    "completed" in entry ? entry.completed : null,
-                    "due" in entry ? entry.due : null,
                     "end" in entry ? entry.end : null,
                     fetchingInterval.end,
                   ].filter(Boolean),
