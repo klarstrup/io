@@ -44,10 +44,7 @@ export default function DiaryAgendaDayDayBacklog({
       shuffle(
         (calendarTodos || [])
           .filter((todo) => !todo.due && !todo.completed)
-          .sort(
-            (a, b) =>
-              new Date(b.created!).getTime() - new Date(a.created!).getTime(),
-          ),
+          .sort((a, b) => b.created!.getTime() - a.created!.getTime()),
         startDay,
       ),
     [calendarTodos, startDay],

@@ -49,7 +49,7 @@ import {
 
 export function TodoDroppable(props: { children: ReactNode; date: Date }) {
   const { isOver, setNodeRef } = useDroppable({
-    id: "droppable-day-" + new Date(props.date).toISOString().split("T")[0]!,
+    id: "droppable-day-" + props.date.toISOString().split("T")[0]!,
     data: { date: props.date },
   });
 
@@ -163,10 +163,10 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       client.cache.extract() as Record<string, JournalEntry>,
     );
 
-    let nowItemDate = event.collisions?.find(
-      (collision) => collision.id === "now-divider",
-    )?.data?.droppableContainer?.data?.current?.date as Date | undefined;
-    nowItemDate ||= new Date();
+    let nowItemDate =
+      (event.collisions?.find((collision) => collision.id === "now-divider")
+        ?.data?.droppableContainer?.data?.current?.date as Date | undefined) ||
+      new Date();
 
     const oldIndex = sortableItems?.indexOf(active.id.toString());
     const newIndex = sortableItems?.indexOf(over.id.toString());

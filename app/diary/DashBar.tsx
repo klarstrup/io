@@ -287,7 +287,7 @@ export default function DashBar() {
           <BarNumberContainer
             sparklineData={data.user.sleepDebtFractionTimeSeries.map(
               (point) => ({
-                x: new Date(point.timestamp).getTime(),
+                x: point.timestamp.getTime(),
                 y: point.value,
               }),
             )}
@@ -413,7 +413,7 @@ export default function DashBar() {
           <BarIcon>⚖️</BarIcon>
           <BarNumberContainer
             sparklineData={data.user.weightTimeSeries.map((point) => ({
-              x: new Date(point.timestamp).getTime(),
+              x: point.timestamp.getTime(),
               y: point.value,
             }))}
           >
@@ -451,7 +451,7 @@ export default function DashBar() {
           <BarIcon>🤰</BarIcon>
           <BarNumberContainer
             sparklineData={data.user.fatRatioTimeSeries.map((point) => ({
-              x: new Date(point.timestamp).getTime(),
+              x: point.timestamp.getTime(),
               y: point.value,
             }))}
           >

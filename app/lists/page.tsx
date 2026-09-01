@@ -32,8 +32,8 @@ export default function ListPage() {
   const todos = calendarTodos
     .filter((todo) => !todo.completed && todo.due)
     .sort((a, b) => {
-      const aDate = a.due ? new Date(a.due) : null;
-      const bDate = b.due ? new Date(b.due) : null;
+      const aDate = a.due;
+      const bDate = b.due;
 
       if (aDate && bDate) {
         return bDate.getTime() - aDate.getTime();
@@ -47,15 +47,10 @@ export default function ListPage() {
     });
   const todones = calendarTodos
     .filter((todo) => todo.completed)
-    .sort(
-      (a, b) =>
-        new Date(b.completed!).getTime() - new Date(a.completed!).getTime(),
-    );
+    .sort((a, b) => b.completed!.getTime() - a.completed!.getTime());
   const backlogTodos = calendarTodos
     .filter((todo) => !todo.due && !todo.completed)
-    .sort(
-      (a, b) => new Date(b.created!).getTime() - new Date(a.created!).getTime(),
-    );
+    .sort((a, b) => b.created!.getTime() - a.created!.getTime());
 
   return (
     <div className="mx-auto max-w-2xl self-stretch border-black/25 px-2">

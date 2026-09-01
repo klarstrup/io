@@ -19,20 +19,22 @@ export function DiaryPoller({ userId }: { userId: string }) {
         const data = JSON.parse(event.data as string) as unknown;
         console.log(data);
 
-        const loadedAtDate = new Date(loadedAt);
+        const loadedAtDate = loadedAt;
 
         if (
           data &&
           typeof data === "object" &&
           "scrapedAt" in data &&
-          typeof data.scrapedAt === "number" &&
-          new Date(data.scrapedAt) > loadedAtDate
+          typeof data.scrapedAt === "number"
         ) {
-          console.info(
-            `Refreshing diary because scrapedAt ${new Date(data.scrapedAt).toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
-          );
-          router.refresh();
-          void client.refetchObservableQueries();
+          const scrapedAtDate = new Date(data.scrapedAt);
+          if (scrapedAtDate > loadedAtDate) {
+            console.info(
+              `Refreshing diary because scrapedAt ${scrapedAtDate.toLocaleString()} > loadedAt ${loadedAtDate.toLocaleString()}`,
+            );
+            router.refresh();
+            void client.refetchObservableQueries();
+          }
         }
       } catch (error) {
         console.error(error);

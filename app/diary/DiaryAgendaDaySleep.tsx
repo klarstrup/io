@@ -53,12 +53,12 @@ export default function DiaryAgendaDaySleep({
       <div className="relative flex items-center gap-1.5 leading-snug">
         <div className="text-center font-semibold tabular-nums">
           {!isSleepEnd
-            ? new Date(sleep.startedAt).toLocaleTimeString("en-DK", {
+            ? sleep.startedAt.toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",
                 timeZone,
               })
-            : new Date(sleep.endedAt).toLocaleTimeString("en-DK", {
+            : sleep.endedAt.toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",
                 timeZone,

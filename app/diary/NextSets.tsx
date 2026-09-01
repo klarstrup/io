@@ -118,7 +118,7 @@ export function NextSets({
                     Last set{" "}
                     {lastWorkedOutAt ? (
                       <Link
-                        href={`/diary/${new Date(lastWorkedOutAt).toISOString().slice(0, 10)}`}
+                        href={`/diary/${lastWorkedOutAt.toISOString().slice(0, 10)}`}
                         style={{ color: "#edab00" }}
                       >
                         {formatDistanceStrict(lastWorkedOutAt, now, {

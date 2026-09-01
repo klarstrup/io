@@ -149,8 +149,8 @@ export function DiaryAgendaDayDay({
             return (
               principalDate &&
               jePrincipalDate &&
-              isBefore(jePrincipalDate.start, new Date(principalDate.start)) &&
-              isBefore(new Date(principalDate.end), jePrincipalDate.end)
+              isBefore(jePrincipalDate.start, principalDate.start) &&
+              isBefore(principalDate.end, jePrincipalDate.end)
             );
           }) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
         followingEndOfEntries
@@ -167,14 +167,6 @@ export function DiaryAgendaDayDay({
             );
           }) ||
         null;
-
-      if (
-        entryThatSurroundsEntry &&
-        entryThatSurroundsEntry.__typename === "Trip"
-      ) {
-        // TODO: Allow trips to have separated ends and surround other entries
-        entryThatSurroundsEntry = null;
-      }
 
       const surroundingPrincipalDate = entryThatSurroundsEntry
         ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)
@@ -331,10 +323,7 @@ export function DiaryAgendaDayDay({
             followingEvent &&
             followingEventHasSeparateEndEvent &&
             roundToNearestMinutes(event.end).getTime() ===
-              (isDate(followingEvent.start)
-                ? followingEvent.start
-                : new Date(followingEvent.start)
-              ).getTime()
+              followingEvent.start.getTime()
           ) {
             entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
               followingEvent.id,
@@ -380,10 +369,7 @@ export function DiaryAgendaDayDay({
               eventHasSeparateEndEntry &&
               precedingEndOfEvent &&
               roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
-                (isDate(event.start)
-                  ? event.start
-                  : new Date(event.start)
-                ).getTime(),
+                event.start.getTime(),
             ) ||
             (dayNo > 1 && days > 1 && isLastDay && !eventHasSeparateEndEntry);
 

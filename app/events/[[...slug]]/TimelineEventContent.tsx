@@ -222,7 +222,7 @@ export default async function TimelineEventContent({
             {eventName
               .replace(
                 new RegExp(
-                  `#${new Date(start).toLocaleDateString("da-DK", {
+                  `#${start.toLocaleDateString("da-DK", {
                     month: "long",
                   })}`,
                   "i",
@@ -231,7 +231,7 @@ export default async function TimelineEventContent({
               )
               .replace(
                 new RegExp(
-                  `#(\\d+) ${new Date(start).toLocaleDateString("da-DK", {
+                  `#(\\d+) ${start.toLocaleDateString("da-DK", {
                     month: "long",
                   })}`,
                   "i",
@@ -239,7 +239,7 @@ export default async function TimelineEventContent({
                 "",
               )
               .replace(
-                new Date(start).toLocaleDateString("da-DK", {
+                start.toLocaleDateString("da-DK", {
                   year: "numeric",
                 }),
                 "",

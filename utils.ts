@@ -119,9 +119,8 @@ export function seconds2time(seconds: number) {
 }
 
 export const cotemporality = (interval: DateInterval, now = Date.now()) =>
-  // TODO: These MUST be dates, this casting should not be necessary
-  new Date(interval.start).getTime() < now
-    ? now < new Date(interval.end).getTime()
+  interval.start.getTime() < now
+    ? now < interval.end.getTime()
       ? "current"
       : "past"
     : "future";
