@@ -168,6 +168,14 @@ export function DiaryAgendaDayDay({
           }) ||
         null;
 
+      if (
+        entryThatSurroundsEntry &&
+        entryThatSurroundsEntry.__typename === "Trip"
+      ) {
+        // TODO: Allow trips to have separated ends and surround other entries
+        entryThatSurroundsEntry = null;
+      }
+
       const surroundingPrincipalDate = entryThatSurroundsEntry
         ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)
         : null;
