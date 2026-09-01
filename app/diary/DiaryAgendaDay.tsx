@@ -285,7 +285,11 @@ export function DiaryAgendaDay({
 
   const { data, loading, networkStatus, fetchMore } = useQuery(
     DiaryAgendaDayUserTodosDocument,
-    { variables, pollInterval },
+    {
+      variables,
+      pollInterval,
+      fetchPolicy: selectedDayStart ? "cache-and-network" : "cache-first",
+    },
   );
   const startCursor = data?.user?.journalEntries?.pageInfo?.startCursor;
   const endCursor = data?.user?.journalEntries?.pageInfo?.endCursor;
