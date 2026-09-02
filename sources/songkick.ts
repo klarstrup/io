@@ -161,7 +161,10 @@ export async function getSongkickEvents(): Promise<EventDetails[]> {
         team:
           event.performance.find(
             ({ artist }) =>
-              artist.id === EXELERATE_ID || artist.id === ETHEREAL_KINGDOMS_ID,
+              artist.id === EXELERATE_ID ||
+              artist.id === ETHEREAL_KINGDOMS_ID ||
+              artist.id === VULVATORIOUS_ID ||
+              artist.id === DODNAVN_ID,
           )?.displayName || null,
         start:
           event.id === 41027597
