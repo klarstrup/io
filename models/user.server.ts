@@ -207,28 +207,15 @@ export const getUserJournalEntries = async (
         } satisfies GQSleep),
     ),
     Array.fromAsync(
-      MaterializedWorkoutsView.find(
-        {
-          userId,
-          $or: [
-            { workedOutAt: intervalQuery },
-            // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-            { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
-          ],
-          deletedAt: { $exists: false },
-        },
-        {
-          projection: {
-            id: 1,
-            userId: 1,
-            workedOutAt: 1,
-            exercises: 1,
-            location: 1,
-            createdAt: 1,
-            updatedAt: 1,
-          },
-        },
-      ),
+      MaterializedWorkoutsView.find({
+        userId,
+        $or: [
+          { workedOutAt: intervalQuery },
+          // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+          { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
+        ],
+        deletedAt: { $exists: false },
+      }),
       (workout) =>
         entries.push({
           ...workout,

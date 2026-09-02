@@ -743,26 +743,15 @@ export const resolvers: GQResolvers<
     },
     workouts: (parent, { interval }) =>
       Array.fromAsync(
-        MaterializedWorkoutsView.find(
-          {
-            userId: parent.id,
-            $or: [
-              { workedOutAt: rangeToQuery(interval.start, interval.end) },
-              // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-              { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
-            ],
-            deletedAt: { $exists: false },
-          },
-          {
-            projection: {
-              id: 1,
-              exercises: 1,
-              createdAt: 1,
-              updatedAt: 1,
-              workedOutAt: 1,
-            },
-          },
-        ),
+        MaterializedWorkoutsView.find({
+          userId: parent.id,
+          $or: [
+            { workedOutAt: rangeToQuery(interval.start, interval.end) },
+            // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+            { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
+          ],
+          deletedAt: { $exists: false },
+        }),
         (workout) =>
           ({
             ...workout,
