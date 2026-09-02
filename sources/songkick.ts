@@ -105,6 +105,7 @@ export const getEvents = (artistId: number) =>
     },
   ).toArray();
 
+// TODO get this shit from user data source config instead of hardcoding it here
 const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
 const VULVATORIOUS_ID = 10189431;
