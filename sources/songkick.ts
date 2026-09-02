@@ -107,6 +107,8 @@ export const getEvents = (artistId: number) =>
 
 const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
+const VULVATORIOUS_ID = 10189431;
+const DODNAVN_ID = 10413608;
 
 export async function getSongkickEvents(): Promise<EventDetails[]> {
   const events = (
@@ -117,6 +119,22 @@ export async function getSongkickEvents(): Promise<EventDetails[]> {
           isAfter(
             new Date(event.start.datetime || event.start.date),
             new Date(2021, 0),
+          ),
+        ),
+      ),
+      getEvents(VULVATORIOUS_ID).then((evts) =>
+        evts.filter((event) =>
+          isAfter(
+            new Date(event.start.datetime || event.start.date),
+            new Date(2025, 4),
+          ),
+        ),
+      ),
+      getEvents(DODNAVN_ID).then((evts) =>
+        evts.filter((event) =>
+          isAfter(
+            new Date(event.start.datetime || event.start.date),
+            new Date(2025, 4),
           ),
         ),
       ),
