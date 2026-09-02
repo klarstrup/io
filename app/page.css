@@ -103,7 +103,7 @@ body {
   margin-bottom: 10px;
 }
 #timeline article div.content.future {
-  opacity: 0.5;
+  opacity: 0.75;
 }
 #timeline article div.content.current {
   box-shadow: rgba(28, 28, 30, 0.75) 0px 0px 20px;
