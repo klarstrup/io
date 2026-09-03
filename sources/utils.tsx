@@ -47,7 +47,7 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.ICal;
-      config: { url: string; startDate?: Date };
+      config: { url: string; startDate?: Date; endDate?: Date };
     }
   | {
       source: DataSource.KilterBoard;
@@ -83,7 +83,7 @@ type UserDataSourceConfig =
     }
   | {
       source: DataSource.Songkick;
-      config: { artistId: number };
+      config: { artistId: number; startDate?: Date; endDate?: Date };
     }
   | {
       source: DataSource.Withings;
@@ -342,6 +342,7 @@ export const dataSources = {
     configSchema: z.object({
       url: z.string().default(""),
       startDate: z.date().optional(),
+      endDate: z.date().optional(),
     }),
     getFormElements: ({ register }) => (
       <>
@@ -360,6 +361,15 @@ export const dataSources = {
             type="datetime-local"
             {...register("config.startDate", { valueAsDate: true })}
             placeholder="Start Date"
+            className="w-full"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          End Date (optional):{" "}
+          <input
+            type="datetime-local"
+            {...register("config.endDate", { valueAsDate: true })}
+            placeholder="End Date"
             className="w-full"
           />
         </label>
@@ -584,20 +594,42 @@ export const dataSources = {
     isDeprecated: false,
     configSchema: z.object({
       artistId: z.number().default(NaN),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
     }),
     getFormElements: ({ register }) => (
-      <label className="flex flex-col gap-1">
-        Artist ID:
-        <input
-          type="number"
-          {...register("config.artistId", {
-            required: true,
-            valueAsNumber: true,
-          })}
-          placeholder="Artist ID"
-          className="w-full"
-        />
-      </label>
+      <>
+        <label className="flex flex-col gap-1">
+          Artist ID:
+          <input
+            type="number"
+            {...register("config.artistId", {
+              required: true,
+              valueAsNumber: true,
+            })}
+            placeholder="Artist ID"
+            className="w-full"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          Start Date (optional):{" "}
+          <input
+            type="datetime-local"
+            {...register("config.startDate", { valueAsDate: true })}
+            placeholder="Start Date"
+            className="w-full"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          End Date (optional):{" "}
+          <input
+            type="datetime-local"
+            {...register("config.endDate", { valueAsDate: true })}
+            placeholder="End Date"
+            className="w-full"
+          />
+        </label>
+      </>
     ),
   },
   [DataSource.Withings]: {
