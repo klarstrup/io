@@ -137,6 +137,11 @@ export function DiaryAgendaDayEntry({
       {icon || iconTxt ? (
         <IconContainer
           disabled={iconDisabled}
+          title={date.toLocaleTimeString(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })}
           className={twMerge(
             "text-md flex w-10 items-center justify-center",
             cotemporality
