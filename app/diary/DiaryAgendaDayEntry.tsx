@@ -1,6 +1,9 @@
 import { useApolloClient } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
-import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowsDownToLine,
+  IconDefinition,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ReactElement, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
@@ -76,6 +79,8 @@ export function DiaryAgendaDayEntry({
     [isDragging, transform, transition],
   );
 
+  const isEntryEnd = isSeparatedEnd(entry);
+
   return (
     <div
       {...props}
@@ -115,7 +120,7 @@ export function DiaryAgendaDayEntry({
           }
         />
       ) : null}
-      {isSeparatedEnd(entry) ? (
+      {isEntryEnd ? (
         <div
           className={
             "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
@@ -150,13 +155,13 @@ export function DiaryAgendaDayEntry({
         >
           {icon ? (
             <FontAwesomeIcon
-              icon={icon}
+              icon={isEntryEnd ? faArrowsDownToLine : icon}
               size="lg"
               className={onIconClick ? "cursor-pointer" : ""}
             />
-          ) : iconTxt ? (
+          ) : (
             iconTxt
-          ) : null}
+          )}
         </IconContainer>
       ) : null}
       <div

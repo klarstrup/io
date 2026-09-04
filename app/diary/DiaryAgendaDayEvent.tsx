@@ -67,13 +67,7 @@ export function DiaryAgendaDayEvent({
       entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
-      icon={
-        isEntryEnd
-          ? faArrowsDownToLine
-          : isPassed
-            ? faCalendarCheck
-            : faCalendar
-      }
+      icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
       onClick={handleOnClick}
