@@ -25,14 +25,12 @@ export function DiaryAgendaDayEvent({
   event,
   isEntryWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
-  isEntryEnd,
 }: {
   dayRange: { start: Date; end: Date };
   userTimeZone?: GQUser["timeZone"];
   event: GQEvent;
   isEntryWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
-  isEntryEnd?: boolean;
 }) {
   const router = useRouter();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;

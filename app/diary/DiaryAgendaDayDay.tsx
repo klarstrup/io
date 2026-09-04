@@ -394,7 +394,6 @@ export function DiaryAgendaDayDay({
                 userTimeZone={timeZone}
                 event={event}
                 key={event.id}
-                isEntryEnd={isEntryEnd}
                 isEntryWithSeparatedEnd={
                   (followingEndOfEntries.some(
                     (endOfEntry) => endOfEntry.id === event.id,
