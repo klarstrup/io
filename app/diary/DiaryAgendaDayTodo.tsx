@@ -7,7 +7,9 @@ import gql from "graphql-tag";
 import { useCallback, useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
+  CreateTodoDocument,
   DeleteTodoMutation,
+  DiaryAgendaDayUserTodosDocument,
   GQTodo,
   ListPageUserDocument,
   UpdateTodoMutation,
@@ -64,6 +66,9 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       }
     ` as unknown as TypedDocumentNode<DeleteTodoMutation>,
   );
+  const [createTodo] = useMutation(CreateTodoDocument, {
+    refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
+  });
 
   const [isActive, setIsActive] = useState(false);
   const ref2 = useRef<HTMLDivElement>(null);
@@ -349,6 +354,38 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                 Put on Agenda
               </button>
             )}
+            <button
+              type="button"
+              onClick={() =>
+                void createTodo({
+                  variables: {
+                    input: {
+                      data: { summary: todo.summary, due: new Date() },
+                    },
+                  },
+                  optimisticResponse: {
+                    createTodo: {
+                      __typename: "CreateTodoPayload",
+                      todo: {
+                        id:
+                          "temp-id-" +
+                          Math.random().toString(36).substring(2, 15),
+                        __typename: "Todo",
+                        summary: todo.summary!,
+                        created: new Date(),
+                        due: new Date(),
+                        completed: null,
+                      },
+                    },
+                  },
+                })
+              }
+              className={
+                "text-md cursor-pointer rounded-xl bg-green-300 px-3 py-1 leading-none font-semibold text-white disabled:bg-gray-200 disabled:opacity-50"
+              }
+            >
+              Copy to Today
+            </button>
             <button
               type="button"
               onClick={() =>
