@@ -23,16 +23,16 @@ export function DiaryAgendaDayEvent({
   dayRange,
   userTimeZone,
   event,
-  isEventWithSeparatedEnd,
+  isEntryWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
-  isEventEnd,
+  isEntryEnd,
 }: {
   dayRange: { start: Date; end: Date };
   userTimeZone?: GQUser["timeZone"];
   event: GQEvent;
-  isEventWithSeparatedEnd?: boolean;
+  isEntryWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
-  isEventEnd?: boolean;
+  isEntryEnd?: boolean;
 }) {
   const router = useRouter();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
@@ -61,8 +61,8 @@ export function DiaryAgendaDayEvent({
       date={getJournalEntryPrincipalDate(event)!.start}
       entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-      isEventWithSeparatedEnd={isEventWithSeparatedEnd}
-      isEventEnd={isEventEnd}
+      isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
+      isEntryEnd={isEntryEnd}
       icon={isPassed ? faCalendarCheck : faCalendar}
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
@@ -83,10 +83,10 @@ export function DiaryAgendaDayEvent({
       <div>
         <span
           style={{
-            fontSize: !isEventWithSeparatedEnd
+            fontSize: !isEntryWithSeparatedEnd
               ? `${16 + durationInHours * 1.25}px`
               : undefined,
-            fontWeight: !isEventWithSeparatedEnd
+            fontWeight: !isEntryWithSeparatedEnd
               ? durationInHours >= 18
                 ? 800
                 : durationInHours >= 14

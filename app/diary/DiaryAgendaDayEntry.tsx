@@ -21,8 +21,8 @@ export function DiaryAgendaDayEntry({
   iconClassName,
   contentClassName,
   cotemporalityOfSurroundingEvent,
-  isEventWithSeparatedEnd,
-  isEventEnd,
+  isEntryWithSeparatedEnd,
+  isEntryEnd,
   ...props
 }: {
   isDraggable?: boolean;
@@ -38,8 +38,8 @@ export function DiaryAgendaDayEntry({
   ) => void;
   cotemporality?: "past" | "current" | "future" | "backlog";
   cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
-  isEventWithSeparatedEnd?: boolean;
-  isEventEnd?: boolean;
+  isEntryWithSeparatedEnd?: boolean;
+  isEntryEnd?: boolean;
   entry: JournalEntry;
   date: Date;
 } & React.HTMLAttributes<HTMLDivElement>) {
@@ -103,7 +103,7 @@ export function DiaryAgendaDayEntry({
           }
         />
       ) : null}
-      {isEventWithSeparatedEnd ? (
+      {isEntryWithSeparatedEnd ? (
         <div
           className={
             "absolute top-1/2 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
@@ -117,7 +117,7 @@ export function DiaryAgendaDayEntry({
           }
         />
       ) : null}
-      {isEventEnd ? (
+      {isEntryEnd ? (
         <div
           className={
             "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +

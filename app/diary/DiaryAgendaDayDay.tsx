@@ -10,7 +10,6 @@ import {
   differenceInDays,
   differenceInHours,
   isBefore,
-  isDate,
   isEqual,
   isPast,
   roundToNearestMinutes,
@@ -359,7 +358,7 @@ export function DiaryAgendaDayDay({
               ? precedingJournalEntry
               : null;
 
-          const eventHasSeparateEndEntry = dayJournalEntries
+          const entryHasSeparateEnd = dayJournalEntries
             .slice(i + 1)
             .some(
               (je): je is GQEvent => isSeparatedEnd(je) && je.id === event.id,
@@ -372,16 +371,16 @@ export function DiaryAgendaDayDay({
           const isLastDay = dayNo === days;
 
           // If the preceding journal entry is the end of an event and it ends exactly when the current event starts, then we can treat them as a single continuous event instead of two separate events for the purpose of drawing the little bracket
-          const isEventEnd =
+          const isEntryEnd =
             Boolean(
-              eventHasSeparateEndEntry &&
+              entryHasSeparateEnd &&
               precedingEndOfEvent &&
               roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
                 event.start.getTime(),
             ) ||
-            (dayNo > 1 && days > 1 && isLastDay && !eventHasSeparateEndEntry);
+            (dayNo > 1 && days > 1 && isLastDay && !entryHasSeparateEnd);
 
-          if (precedingEndOfEvent && isEventEnd) {
+          if (precedingEndOfEvent && isEntryEnd) {
             entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
               precedingEndOfEvent.id,
             );
@@ -395,8 +394,8 @@ export function DiaryAgendaDayDay({
                 userTimeZone={timeZone}
                 event={event}
                 key={event.id}
-                isEventEnd={isEventEnd}
-                isEventWithSeparatedEnd={
+                isEntryEnd={isEntryEnd}
+                isEntryWithSeparatedEnd={
                   (followingEndOfEntries.some(
                     (endOfEntry) => endOfEntry.id === event.id,
                   ) &&
@@ -415,7 +414,7 @@ export function DiaryAgendaDayDay({
                 }
                 cotemporalityOfSurroundingEvent={
                   cotemporalityOfSurroundingEntry ||
-                  (dayNo > 1 && days > 1 && eventHasSeparateEndEntry
+                  (dayNo > 1 && days > 1 && entryHasSeparateEnd
                     ? cotemporality(event)
                     : null)
                 }
