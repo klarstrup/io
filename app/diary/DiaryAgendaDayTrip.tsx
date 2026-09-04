@@ -1,9 +1,9 @@
 import {
-  faBus,
-  faPersonWalking,
-  faSubway,
-  faTrain,
-  faTrainTram,
+    faBus,
+    faPersonWalking,
+    faSubway,
+    faTrain,
+    faTrainTram,
 } from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -70,7 +70,7 @@ export function DiaryAgendaDayTrip({
             leg.mode === "A_BUS" ||
             leg.mode === "S_BUS" ? (
               <FontAwesomeIcon icon={faBus} />
-            ) : leg.mode === "S_TRAIN" ? (
+            ) : leg.mode === "S_TRAIN" || leg.mode === "LIGHT_RAIL_COPENHAGEN" ? (
               <FontAwesomeIcon icon={faTrainTram} />
             ) : leg.mode === "METRO" ? (
               <FontAwesomeIcon icon={faSubway} />
