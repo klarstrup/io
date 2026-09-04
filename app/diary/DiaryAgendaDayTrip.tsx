@@ -2,6 +2,7 @@ import {
   faBus,
   faPersonWalking,
   faSubway,
+  faTrain,
   faTrainTram,
 } from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
@@ -62,13 +63,21 @@ export function DiaryAgendaDayTrip({
               (fromParanthetical && toParanthetical && "" ? "-mt-2.5" : "")
             }
           >
-            {leg.mode === "BUS" || leg.mode === "A_BUS" ? (
+            {leg.mode === "BUS" ||
+            leg.mode === "A_BUS" ||
+            leg.mode === "S_BUS" ? (
               <FontAwesomeIcon icon={faBus} />
             ) : leg.mode === "S_TRAIN" ? (
               <FontAwesomeIcon icon={faTrainTram} />
             ) : leg.mode === "METRO" ? (
               <FontAwesomeIcon icon={faSubway} />
-            ) : null}
+            ) : leg.mode === "REGIONAL_TRAIN" ||
+              leg.mode === "INTERCITY" ||
+              leg.mode === "INTERCITY_LYN" ? (
+              <FontAwesomeIcon icon={faTrain} />
+            ) : (
+              (console.warn(`missing icon for leg mode: ${leg.mode}`), null)
+            )}
             {index < legs.length - 1 ? (
               <FontAwesomeIcon
                 icon={faPersonWalking}
