@@ -1,5 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import {
+  faArrowsDownToLine,
   faCalendar,
   faCalendarCheck,
   faExternalLink,
@@ -17,7 +18,7 @@ import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { durationToMs, formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
-import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
 export function DiaryAgendaDayEvent({
   dayRange,
@@ -27,10 +28,10 @@ export function DiaryAgendaDayEvent({
   cotemporalityOfSurroundingEvent,
 }: {
   dayRange: { start: Date; end: Date };
-  userTimeZone?: GQUser["timeZone"];
+  userTimeZone: GQUser["timeZone"];
   event: GQEvent;
-  isEntryWithSeparatedEnd?: boolean;
-  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  isEntryWithSeparatedEnd: boolean;
+  cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
 }) {
   const router = useRouter();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
@@ -54,82 +55,109 @@ export function DiaryAgendaDayEvent({
     router.push(`/diary/entries/${event.__typename}:${event.id}`);
   }, [router, event.__typename, event.id]);
 
+  const isEntryEnd = isSeparatedEnd(event);
+
   return (
     <DiaryAgendaDayEntry
-      date={getJournalEntryPrincipalDate(event)!.start}
+      date={
+        isEntryEnd
+          ? getJournalEntryPrincipalDate(event)!.end
+          : getJournalEntryPrincipalDate(event)!.start
+      }
       entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
-      icon={isPassed ? faCalendarCheck : faCalendar}
+      icon={
+        isEntryEnd
+          ? faArrowsDownToLine
+          : isPassed
+            ? faCalendarCheck
+            : faCalendar
+      }
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
       onClick={handleOnClick}
       className={"cursor-pointer"}
     >
-      <div className="text-center leading-none font-semibold tabular-nums">
-        {event.datetype === "date-time" && dayNo <= 1 ? (
-          event.start.toLocaleTimeString("en-DK", {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone,
-          })
-        ) : (
-          <>Day {dayNo}</>
-        )}
-      </div>
-      <div>
-        <span
-          style={{
-            fontSize: !isEntryWithSeparatedEnd
-              ? `${16 + durationInHours * 1.25}px`
-              : undefined,
-            fontWeight: !isEntryWithSeparatedEnd
-              ? durationInHours >= 18
-                ? 800
-                : durationInHours >= 14
-                  ? 700
-                  : durationInHours >= 10
-                    ? 600
-                    : durationInHours >= 6
-                      ? 500
-                      : durationInHours >= 2
-                        ? 400
-                        : 300
-              : undefined,
-          }}
-        >
-          {event.summary}
-        </span>
-        &nbsp;
-        <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
-          {isFirstDay && duration ? (
-            formatShortDuration(duration)
-          ) : isLastDay ? (
-            <>
-              -
-              {event.end.toLocaleTimeString("en-DK", {
+      {isEntryEnd ? (
+        <>
+          <div className="text-center font-semibold tabular-nums">
+            {roundToNearestMinutes(event.end).toLocaleTimeString("en-DK", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone,
+            })}
+          </div>
+          <div className="leading-tight">{event.summary}</div>
+        </>
+      ) : (
+        <>
+          <div className="text-center leading-none font-semibold tabular-nums">
+            {event.datetype === "date-time" && dayNo <= 1 ? (
+              event.start.toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",
                 timeZone,
-              })}
-            </>
-          ) : null}
-        </span>
-        &nbsp;
-        {event.url ? (
-          <a
-            href={event.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent the click from propagating to the parent div and triggering the onClick handler
-            }}
-          >
-            <FontAwesomeIcon icon={faExternalLink} />
-          </a>
-        ) : null}
-      </div>
+              })
+            ) : (
+              <>Day {dayNo}</>
+            )}
+          </div>
+          <div>
+            <span
+              style={{
+                fontSize: !isEntryWithSeparatedEnd
+                  ? `${16 + durationInHours * 1.25}px`
+                  : undefined,
+                fontWeight: !isEntryWithSeparatedEnd
+                  ? durationInHours >= 18
+                    ? 800
+                    : durationInHours >= 14
+                      ? 700
+                      : durationInHours >= 10
+                        ? 600
+                        : durationInHours >= 6
+                          ? 500
+                          : durationInHours >= 2
+                            ? 400
+                            : 300
+                  : undefined,
+              }}
+            >
+              {event.summary}
+            </span>
+            &nbsp;
+            <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
+              {isFirstDay && duration ? (
+                formatShortDuration(duration)
+              ) : isLastDay ? (
+                <>
+                  -
+                  {event.end.toLocaleTimeString("en-DK", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone,
+                  })}
+                </>
+              ) : null}
+            </span>
+            &nbsp;
+            {event.url ? (
+              <a
+                href={event.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent the click from propagating to the parent div and triggering the onClick handler
+                }}
+              >
+                <FontAwesomeIcon icon={faExternalLink} />
+              </a>
+            ) : null}
+          </div>
+        </>
+      )}
     </DiaryAgendaDayEntry>
   );
 }

@@ -38,7 +38,6 @@ import DiaryAgendaDayDayBacklog from "./DiaryAgendaDayDayBacklog";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
-import { DiaryAgendaDayEventEnd } from "./DiaryAgendaDayEventEnd";
 import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
 import { DiaryAgendaDayMeal } from "./DiaryAgendaDayMeal";
 import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
@@ -339,13 +338,15 @@ export function DiaryAgendaDayDay({
             dayJournalEntryElements.push({
               id: "end-of-" + (client.cache.identify(event) || event.id),
               element: (
-                <DiaryAgendaDayEventEnd
+                <DiaryAgendaDayEvent
+                  dayRange={dayRange}
                   userTimeZone={timeZone}
                   event={event}
                   key={"end-of-" + (client.cache.identify(event) || event.id)}
                   cotemporalityOfSurroundingEvent={
                     cotemporalityOfSurroundingEntry
                   }
+                  isEntryWithSeparatedEnd={false}
                 />
               ),
             });
