@@ -46,7 +46,6 @@ export default function DiaryAgendaDaySleep({
       cotemporality={cotemporality(principalDate as Interval<Date, Date>)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={hasSeparatedEnd}
-      isEntryEnd={isSleepEnd}
       onClick={handleOnClick}
       className={"cursor-pointer"}
     >

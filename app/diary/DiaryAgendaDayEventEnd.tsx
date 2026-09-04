@@ -23,7 +23,6 @@ export function DiaryAgendaDayEventEnd({
       icon={faArrowsDownToLine}
       cotemporality={cotemporality(event)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-      isEntryEnd
     >
       <div key={event.id} className="flex items-center gap-1.5 leading-tight">
         <div className="text-center font-semibold tabular-nums">
