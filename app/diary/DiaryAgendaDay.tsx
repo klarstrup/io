@@ -470,6 +470,8 @@ export function DiaryAgendaDay({
         );
       } else if (entry.__typename === "Trip") {
         addEntryToDate(entry, entry.start);
+        // Hack for sleep ends as separate entries
+        addEntryToDate({ ...entry, _is_separated_end: true }, entry.end);
       } else if (entry.__typename === "Meal") {
         addEntryToDate(entry, entry.datetime);
       } else if (entry.__typename === "Delivery") {

@@ -1,3 +1,4 @@
+import type { StoreObject } from "@apollo/client";
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
@@ -111,6 +112,11 @@ export function DiaryAgendaDayDay({
     if (!ownWorkouts.length) ownWorkouts = emptyArray;
 
     for (const journalEntry of dayJournalEntries) {
+      const entryId =
+        (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
+        (client.cache.identify(
+          journalEntry as StoreObject /* this can also be a synthetic LocationChange or NowDivider, but it's fine if that doesn't work */,
+        ) || journalEntry.id);
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
 
       const precedingJournalEntry = dayJournalEntries[i - 1];
@@ -166,14 +172,6 @@ export function DiaryAgendaDayDay({
           }) ||
         null;
 
-      if (
-        entryThatSurroundsEntry &&
-        entryThatSurroundsEntry.__typename === "Trip"
-      ) {
-        // TODO: Allow trips to have separated ends and surround other entries
-        entryThatSurroundsEntry = null;
-      }
-
       const surroundingPrincipalDate = entryThatSurroundsEntry
         ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)
         : null;
@@ -183,10 +181,10 @@ export function DiaryAgendaDayDay({
 
       if (journalEntry.__typename === "NowDivider") {
         dayJournalEntryElements.push({
-          id: "now-divider",
+          id: entryId,
           element: (
             <DiaryAgendaDayNow
-              key="now-divider"
+              key={entryId}
               date={date}
               now={journalEntry.start}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
@@ -197,17 +195,15 @@ export function DiaryAgendaDayDay({
         const sleep = journalEntry;
 
         dayJournalEntryElements.push({
-          id:
-            (isSeparatedEnd(sleep) ? "end-of-" : "") +
-            (client.cache.identify(sleep) || sleep.id),
+          id: entryId,
           element: (
             <DiaryAgendaDaySleep
+              key={entryId}
               sleep={sleep}
               userTimeZone={timeZone}
               principalDate={principalDate}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               hasSeparatedEnd={!isSeparatedEnd(sleep)}
-              key={sleep.id + (isSeparatedEnd(sleep) ? "-end" : "")}
             />
           ),
         });
@@ -223,10 +219,10 @@ export function DiaryAgendaDayDay({
 
         if (isAllDayEvent) {
           allDayJournalEntryElements.push({
-            id: client.cache.identify(event) || event.id,
+            id: entryId,
             element: (
               <DiaryAgendaDayEntry
-                key={event.id}
+                key={entryId}
                 date={getJournalEntryPrincipalDate(event)!.start}
                 entry={event}
                 icon={faCalendarRegular}
@@ -336,13 +332,13 @@ export function DiaryAgendaDayDay({
             );
           } else {
             dayJournalEntryElements.push({
-              id: "end-of-" + (client.cache.identify(event) || event.id),
+              id: entryId,
               element: (
                 <DiaryAgendaDayEvent
+                  key={entryId}
                   dayRange={dayRange}
                   userTimeZone={timeZone}
                   event={event}
-                  key={"end-of-" + (client.cache.identify(event) || event.id)}
                   cotemporalityOfSurroundingEvent={
                     cotemporalityOfSurroundingEntry
                   }
@@ -388,13 +384,13 @@ export function DiaryAgendaDayDay({
           }
 
           dayJournalEntryElements.push({
-            id: client.cache.identify(event) || event.id,
+            id: entryId,
             element: (
               <DiaryAgendaDayEvent
+                key={entryId}
                 dayRange={dayRange}
                 userTimeZone={timeZone}
                 event={event}
-                key={event.id}
                 isEntryWithSeparatedEnd={
                   (followingEndOfEntries.some(
                     (endOfEntry) => endOfEntry.id === event.id,
@@ -425,11 +421,11 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Todo") {
         const todo = journalEntry;
         dayJournalEntryElements.push({
-          id: client.cache.identify(todo) || todo.id,
+          id: entryId,
           element: (
             <DiaryAgendaDayTodo
               todo={todo}
-              key={todo.id}
+              key={entryId}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               now={now}
             />
@@ -439,10 +435,10 @@ export function DiaryAgendaDayDay({
         const dueSet = journalEntry;
 
         dayJournalEntryElements.push({
-          id: client.cache.identify(dueSet) || dueSet.id,
+          id: entryId,
           element: (
             <DiaryAgendaDayDueSet
-              key={dueSet.id}
+              key={entryId}
               dueSet={dueSet}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
@@ -459,10 +455,10 @@ export function DiaryAgendaDayDay({
         );
 
         dayJournalEntryElements.push({
-          id: client.cache.identify(workout) || workout.id,
+          id: entryId,
           element: (
             <DiaryAgendaDayWorkout
-              key={workout.id}
+              key={entryId}
               location={dayLocations.find(
                 (loc) => loc.id === workout.locationId,
               )}
@@ -474,10 +470,10 @@ export function DiaryAgendaDayDay({
         });
       } else if (journalEntry.__typename === "LocationChange") {
         dayJournalEntryElements.push({
-          id: journalEntry.id,
+          id: entryId,
           element: (
             <DiaryAgendaDayLocationChange
-              key={journalEntry.id}
+              key={entryId}
               locationChange={journalEntry}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
             />
@@ -485,25 +481,45 @@ export function DiaryAgendaDayDay({
         });
       } else if (journalEntry.__typename === "Trip") {
         const trip = journalEntry;
+        const isEndOfTrip = isSeparatedEnd(trip);
 
-        dayJournalEntryElements.push({
-          id: client.cache.identify(trip) || trip.id,
-          element: (
-            <DiaryAgendaDayTrip
-              key={trip.id}
-              trip={trip}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-            />
-          ),
-        });
+        const followingEntryIsEndOfTrip =
+          followingJournalEntry &&
+          followingJournalEntry.__typename === "Trip" &&
+          isSeparatedEnd(followingJournalEntry) &&
+          followingJournalEntry.id === trip.id;
+
+        if (
+          isEndOfTrip &&
+          precedingJournalEntry?.__typename === "Trip" &&
+          precedingJournalEntry.id === trip.id
+        ) {
+          // Skip rendering the separated end of the trip as it will be represented by the preceding entry
+        } else {
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayTrip
+                key={entryId}
+                trip={trip}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry
+                }
+                isEntryWithSeparatedEnd={
+                  !followingEntryIsEndOfTrip && !isEndOfTrip
+                }
+              />
+            ),
+          });
+        }
       } else if (journalEntry.__typename === "Meal") {
         const meal = journalEntry;
 
         dayJournalEntryElements.push({
-          id: client.cache.identify(meal) || meal.id,
+          id: entryId,
           element: (
             <DiaryAgendaDayMeal
-              key={meal.id}
+              key={entryId}
               meal={meal}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
             />
@@ -513,9 +529,10 @@ export function DiaryAgendaDayDay({
         const delivery = journalEntry;
 
         dayJournalEntryElements.push({
-          id: client.cache.identify(delivery) || delivery.id,
+          id: entryId,
           element: (
             <DiaryAgendaDayEntry
+              key={entryId}
               date={getJournalEntryPrincipalDate(delivery)!.start}
               entry={delivery}
               icon={faBoxesPacking}
@@ -523,7 +540,6 @@ export function DiaryAgendaDayDay({
                 start: delivery.timestamp,
                 end: delivery.timestamp,
               })}
-              key={delivery.id}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               className={"pr-0.5 pl-0.5 text-xs"}
               iconClassName="w-10 text-[0.666rem]"

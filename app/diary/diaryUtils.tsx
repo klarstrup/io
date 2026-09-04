@@ -1,33 +1,33 @@
 import {
-    type ContextFn,
-    getMilliseconds,
-    getMinutes,
-    getSeconds,
-    type Interval,
-    isWithinInterval,
-    max,
-    min,
+  type ContextFn,
+  getMilliseconds,
+  getMinutes,
+  getSeconds,
+  type Interval,
+  isWithinInterval,
+  max,
+  min,
 } from "date-fns";
 import type {
-    GQDelivery,
-    GQEvent,
-    GQMeal,
-    GQNextSet,
-    GQSleep,
-    GQTodo,
-    GQTrip,
-    GQWorkout,
-    GQWorkoutExercise,
-    GQWorkoutSet,
+  GQDelivery,
+  GQEvent,
+  GQMeal,
+  GQNextSet,
+  GQSleep,
+  GQTodo,
+  GQTrip,
+  GQWorkout,
+  GQWorkoutExercise,
+  GQWorkoutSet,
 } from "../../graphql.generated/graphql";
 import type {
-    WorkoutData,
-    WorkoutExercise,
-    WorkoutExerciseSet,
+  WorkoutData,
+  WorkoutExercise,
+  WorkoutExerciseSet,
 } from "../../models/workout";
 import {
-    endOfDayButItRespectsDayStartHour,
-    startOfDayButItRespectsDayStartHour,
+  endOfDayButItRespectsDayStartHour,
+  startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 
 export type SeparatedEnd = { _is_separated_end: true };
@@ -46,10 +46,9 @@ export type JournalEntry =
   | GQTodo
   | GQNextSet
   | GQWorkout
-  | GQSleep
   | WithOrWithoutSeparatedEnd<GQSleep>
   | GQMeal
-  | GQTrip
+  | WithOrWithoutSeparatedEnd<GQTrip>
   | GQDelivery
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange

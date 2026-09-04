@@ -15,9 +15,11 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 export function DiaryAgendaDayTrip({
   trip,
   cotemporalityOfSurroundingEvent,
+  isEntryWithSeparatedEnd,
 }: {
   trip: GQTrip;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  isEntryWithSeparatedEnd: boolean;
 }) {
   const fromText = trip.legs[0]?.from
     .replace("(Metro)", "")
@@ -45,6 +47,7 @@ export function DiaryAgendaDayTrip({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={"rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm"}
       iconClassName="w-10 text-[0.666rem]"
+      isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
     >
       <div className="flex flex-row items-center justify-start gap-1">
         <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
