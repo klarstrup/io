@@ -263,7 +263,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                       variables: {
                         input: {
                           id: todo.id,
-                          data: { completed: new Date() },
+                          data: { completed: now },
                         },
                       },
                       optimisticResponse: {
@@ -271,7 +271,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                           __typename: "UpdateTodoPayload",
                           todo: {
                             ...omitUndefined(todo),
-                            completed: new Date(),
+                            completed: now,
                           },
                         },
                       },
@@ -286,7 +286,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                 <button
                   type="button"
                   onClick={() => {
-                    const snoozedStart = addDays(todo.due ?? new Date(), 1);
+                    const snoozedStart = addDays(todo.due ?? now, 1);
 
                     void updateTodo({
                       variables: {
@@ -337,12 +337,12 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                 onClick={() =>
                   void updateTodo({
                     variables: {
-                      input: { id: todo.id, data: { due: new Date() } },
+                      input: { id: todo.id, data: { due: now } },
                     },
                     optimisticResponse: {
                       updateTodo: {
                         __typename: "UpdateTodoPayload",
-                        todo: { ...omitUndefined(todo), due: new Date() },
+                        todo: { ...omitUndefined(todo), due: now },
                       },
                     },
                   })
@@ -360,7 +360,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                 void createTodo({
                   variables: {
                     input: {
-                      data: { summary: todo.summary, due: new Date() },
+                      data: { summary: todo.summary, due: now },
                     },
                   },
                   optimisticResponse: {
@@ -372,8 +372,8 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
                           Math.random().toString(36).substring(2, 15),
                         __typename: "Todo",
                         summary: todo.summary!,
-                        created: new Date(),
-                        due: new Date(),
+                        created: now,
+                        due: now,
                         completed: null,
                       },
                     },
