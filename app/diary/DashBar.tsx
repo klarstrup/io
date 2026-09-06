@@ -9,6 +9,7 @@ import { type SVGProps, useMemo } from "react";
 import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
 import { Masonry } from "../../components/Masonry";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated/graphql";
+import { useIsSSR } from "../../hooks/useIsSSR";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
 import { DataSource, type UserDataSource } from "../../sources/utils";
 import {
@@ -175,6 +176,7 @@ function BarIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashBar() {
+  const isSSR = useIsSSR();
   const { data: sessionData, status: sessionStatus } = useSession();
   const { data } = useQuery(GetLatestWeightEntryDocument, {
     errorPolicy: "all",
@@ -224,12 +226,15 @@ export default function DashBar() {
   const userLocation = userGeohash ? decodeGeohash(userGeohash) : null;
   const sunrise =
     userLocation &&
+    !isSSR &&
     getSunrise(userLocation.latitude, userLocation.longitude, tzDate);
   const sunset =
     userLocation &&
+    !isSSR &&
     getSunset(userLocation.latitude, userLocation.longitude, tzDate);
   const sunriseTomorrow =
     userLocation &&
+    !isSSR &&
     getSunrise(
       userLocation.latitude,
       userLocation.longitude,
