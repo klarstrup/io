@@ -232,7 +232,11 @@ export async function* getUserIcalTodosBetween(
             { completed: { $gte: start, $lte: end } },
           ],
         }
-      : {};
+      : ({
+          $and: [
+            { $or: [{ completed: { $exists: false } }, { completed: null }] },
+          ],
+        } satisfies FilterOperators<Omit<VTodo, "recurrences">>);
 
   for await (const todo of (IcalEvents as ProxyCollection<MongoVTodo>).find(
     {
