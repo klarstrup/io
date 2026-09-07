@@ -171,8 +171,8 @@ export function DiaryAgendaDayDay({
         null;
 
       if (
-        journalEntry.__typename === "LocationChange" &&
-        journalEntry.location === "Rock Island"
+        journalEntry.__typename === "Event" &&
+        journalEntry.summary === "Hackday 🐎"
       ) {
         console.log({ journalEntry, entryThatSurroundsEntry });
       }
