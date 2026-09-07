@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GQTrip } from "../../graphql.generated/graphql";
 import { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
-import { getJournalEntryPrincipalDate } from "./diaryUtils";
+import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
 export function DiaryAgendaDayTrip({
   trip,
@@ -44,7 +44,11 @@ export function DiaryAgendaDayTrip({
 
   return (
     <DiaryAgendaDayEntry
-      date={getJournalEntryPrincipalDate(trip).end}
+      date={
+        isSeparatedEnd(trip)
+          ? getJournalEntryPrincipalDate(trip).end
+          : getJournalEntryPrincipalDate(trip).start
+      }
       entry={trip}
       icon={faRoad}
       cotemporality={cotemporality(trip)}
