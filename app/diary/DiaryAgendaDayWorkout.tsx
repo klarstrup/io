@@ -50,7 +50,7 @@ export function DiaryAgendaDayWorkout({
   return (
     <DiaryAgendaDayEntry
       isDraggable
-      date={getJournalEntryPrincipalDate(workout)!.start}
+      date={getJournalEntryPrincipalDate(workout).start}
       entry={workout}
       icon={faDumbbell}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}

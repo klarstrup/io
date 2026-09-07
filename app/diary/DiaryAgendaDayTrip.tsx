@@ -44,7 +44,7 @@ export function DiaryAgendaDayTrip({
 
   return (
     <DiaryAgendaDayEntry
-      date={getJournalEntryPrincipalDate(trip)!.end}
+      date={getJournalEntryPrincipalDate(trip).end}
       entry={trip}
       icon={faRoad}
       cotemporality={cotemporality(trip)}

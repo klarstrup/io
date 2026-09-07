@@ -198,7 +198,7 @@ export function DiaryAgendaDayDueSet({
   return (
     <DiaryAgendaDayEntry
       isDraggable
-      date={getJournalEntryPrincipalDate(dueSet)!.start}
+      date={getJournalEntryPrincipalDate(dueSet).start}
       entry={dueSet}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       {...props}

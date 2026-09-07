@@ -15,7 +15,7 @@ export function DiaryAgendaDayMeal({
   return (
     <DiaryAgendaDayEntry
       entry={meal}
-      date={getJournalEntryPrincipalDate(meal)!.start}
+      date={getJournalEntryPrincipalDate(meal).start}
       icon={faUtensils}
       cotemporality={cotemporality({
         start: meal.datetime,

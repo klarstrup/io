@@ -144,7 +144,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   return (
     <DiaryAgendaDayEntry
       isDraggable={!backlog && !isActive}
-      date={getJournalEntryPrincipalDate(todo)!.start}
+      date={getJournalEntryPrincipalDate(todo).start}
       entry={todo}
       icon={backlog ? undefined : faCircleCheck}
       onIconClick={handleIconClick}

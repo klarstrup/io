@@ -15,7 +15,7 @@ export function DiaryAgendaDayLocationChange({
 }) {
   return (
     <DiaryAgendaDayEntry
-      date={getJournalEntryPrincipalDate(locationChange)!.start}
+      date={getJournalEntryPrincipalDate(locationChange).start}
       entry={locationChange}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={className}

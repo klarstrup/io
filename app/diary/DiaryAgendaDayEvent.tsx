@@ -61,8 +61,8 @@ export function DiaryAgendaDayEvent({
     <DiaryAgendaDayEntry
       date={
         isEntryEnd
-          ? getJournalEntryPrincipalDate(event)!.end
-          : getJournalEntryPrincipalDate(event)!.start
+          ? getJournalEntryPrincipalDate(event).end
+          : getJournalEntryPrincipalDate(event).start
       }
       entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}

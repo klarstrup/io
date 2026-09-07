@@ -146,15 +146,8 @@ export const getJournalEntryPrincipalDate = (
       ...entry,
       _is_separated_end: undefined,
     } as JournalEntry);
-    if (!principalDate) {
-      throw new Error(
-        `Could not get principal date for entry: ${JSON.stringify(entry)}`,
-      );
-    }
-    return {
-      start: principalDate.end,
-      end: principalDate.end,
-    };
+
+    return { start: principalDate.end, end: principalDate.end };
   }
   if (entry.__typename === "Todo") {
     const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);

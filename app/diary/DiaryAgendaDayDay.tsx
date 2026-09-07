@@ -63,7 +63,6 @@ interface DayJournalEntryElement {
 
 const getJournalEntryPassed = (journalEntry: JournalEntry, now: Date) => {
   const principalDate = getJournalEntryPrincipalDate(journalEntry);
-  if (!principalDate) return false;
   return isBefore(principalDate.end, now);
 };
 
@@ -156,8 +155,6 @@ export function DiaryAgendaDayDay({
           .find((je) => {
             const jePrincipalDate = getJournalEntryPrincipalDate(je);
             return (
-              principalDate &&
-              jePrincipalDate &&
               isBeforeOrEqual(jePrincipalDate.start, principalDate.start) &&
               isBeforeOrEqual(principalDate.end, jePrincipalDate.end)
             );
@@ -197,7 +194,7 @@ export function DiaryAgendaDayDay({
               now={journalEntry.start}
               nextEntryDate={
                 (followingJournalEntry &&
-                  getJournalEntryPrincipalDate(followingJournalEntry)?.start) ||
+                  getJournalEntryPrincipalDate(followingJournalEntry).start) ||
                 null
               }
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
@@ -236,7 +233,7 @@ export function DiaryAgendaDayDay({
             element: (
               <DiaryAgendaDayEntry
                 key={entryId}
-                date={getJournalEntryPrincipalDate(event)!.start}
+                date={getJournalEntryPrincipalDate(event).start}
                 entry={event}
                 icon={faCalendarRegular}
                 cotemporality={cotemporality(event)}
@@ -546,7 +543,7 @@ export function DiaryAgendaDayDay({
           element: (
             <DiaryAgendaDayEntry
               key={entryId}
-              date={getJournalEntryPrincipalDate(delivery)!.start}
+              date={getJournalEntryPrincipalDate(delivery).start}
               entry={delivery}
               icon={faBoxesPacking}
               cotemporality={cotemporality({

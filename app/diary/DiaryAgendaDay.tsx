@@ -531,10 +531,10 @@ export function DiaryAgendaDay({
               if (aAllDay && !bAllDay) return -1;
               if (!aAllDay && bAllDay) return 1;
 
-              const aPrincipalDate = getJournalEntryPrincipalDate(a);
-              const bPrincipalDate = getJournalEntryPrincipalDate(b);
-
-              return compareAsc(aPrincipalDate.start, bPrincipalDate.start);
+              return compareAsc(
+                getJournalEntryPrincipalDate(a).start,
+                getJournalEntryPrincipalDate(b).start,
+              );
             })
             // If the previous entry is the same event and we aren't in the middle of it, we skip the end entry
             .filter(

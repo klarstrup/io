@@ -40,7 +40,7 @@ export default function DiaryAgendaDaySleep({
 
   return (
     <DiaryAgendaDayEntry
-      date={getJournalEntryPrincipalDate(sleep)!.start}
+      date={getJournalEntryPrincipalDate(sleep).start}
       entry={sleep}
       icon={isSleepEnd ? faBedPulse : faBed}
       cotemporality={cotemporality(principalDate as Interval<Date, Date>)}

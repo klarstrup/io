@@ -244,14 +244,14 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
     const precedingDate =
       precedingEntry &&
       (precedingEntry[0].startsWith("end-of-")
-        ? getJournalEntryPrincipalDate(precedingEntry[1])?.end
-        : getJournalEntryPrincipalDate(precedingEntry[1])?.start);
+        ? getJournalEntryPrincipalDate(precedingEntry[1]).end
+        : getJournalEntryPrincipalDate(precedingEntry[1]).start);
 
     const followingDate =
       followingEntry &&
       (followingEntry[0].startsWith("end-of-")
-        ? getJournalEntryPrincipalDate(followingEntry[1])?.end
-        : getJournalEntryPrincipalDate(followingEntry[1])?.start);
+        ? getJournalEntryPrincipalDate(followingEntry[1]).end
+        : getJournalEntryPrincipalDate(followingEntry[1]).start);
 
     const overStart =
       overCurrent.date &&
