@@ -298,45 +298,48 @@ export const getUserJournalEntries = async (
           timestamp: intervalQuery,
           "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
         },
-        { projection: { productSummary: 1, timestamp: 1 } },
+        { projection: { productSummary: 1, timestamp: 1, checkInId: 1 } },
       ),
-      (productSummary) =>
-        productSummary.productSummary.trips.map((trip) => {
-          const firstLeg = trip.tripLegs[0];
-          const firstLegFirstStop = firstLeg?.stops[0];
-          const lastLeg = trip.tripLegs[trip.tripLegs.length - 1];
-          const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
-          entries.push({
-            __typename: "Trip",
-            id: trip.id,
-            start:
-              firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
-              firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
-              firstLeg!.startDateTime,
-            end:
-              lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
-              lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
-              lastLeg!.endDateTime,
-            legs: trip.tripLegs.map((leg) => {
-              const firstStop = leg.stops[0];
-              const lastStop = leg.stops[leg.stops.length - 1];
-              return {
-                __typename: "TripLeg",
-                start:
-                  firstStop!.actualTimeAndTrackInfo?.departureTime ||
-                  firstStop!.plannedTimeAndTrackInfo?.departureTime ||
-                  leg.startDateTime,
-                end:
-                  lastStop!.actualTimeAndTrackInfo?.arrivalTime ||
-                  lastStop!.plannedTimeAndTrackInfo?.arrivalTime ||
-                  leg.endDateTime,
-                from: firstStop!.location.name,
-                to: lastStop!.location.name,
-                mode: leg.transports[0]?.meansOfTransportation || "unknown",
-              };
-            }),
-          });
-        }),
+      (productSummary) => {
+        const tripLegs = productSummary.productSummary.trips.flatMap(
+          (trip) => trip.tripLegs,
+        );
+
+        const firstLeg = tripLegs[0];
+        const firstLegFirstStop = firstLeg?.stops[0];
+        const lastLeg = tripLegs[tripLegs.length - 1];
+        const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
+        entries.push({
+          __typename: "Trip",
+          id: productSummary.checkInId,
+          start:
+            firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
+            firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
+            firstLeg!.startDateTime,
+          end:
+            lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
+            lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
+            lastLeg!.endDateTime,
+          legs: tripLegs.map((leg) => {
+            const firstStop = leg.stops[0]!;
+            const lastStop = leg.stops[leg.stops.length - 1]!;
+            return {
+              __typename: "TripLeg",
+              start:
+                firstStop.actualTimeAndTrackInfo?.departureTime ||
+                firstStop.plannedTimeAndTrackInfo?.departureTime ||
+                leg.startDateTime,
+              end:
+                lastStop.actualTimeAndTrackInfo?.arrivalTime ||
+                lastStop.plannedTimeAndTrackInfo?.arrivalTime ||
+                leg.endDateTime,
+              from: firstStop.location.name,
+              to: lastStop.location.name,
+              mode: leg.transports[0]?.meansOfTransportation || "unknown",
+            };
+          }),
+        });
+      },
     ),
     Array.fromAsync(
       PostNordShipmentInformation.find(
