@@ -24,6 +24,8 @@ export function DiaryAgendaDayTrip({
   const fromText = trip.legs[0]?.from
     .replace("(Metro)", "")
     .replace(/\(.+\)/, "")
+    .trim()
+    .replace(/st\.$/gi, "")
     .trim();
   const fromParanthetical = trip.legs[0]?.from
     .replace("(Metro)", "")
@@ -32,6 +34,8 @@ export function DiaryAgendaDayTrip({
   const toText = trip.legs[trip.legs.length - 1]?.to
     .replace("(Metro)", "")
     .replace(/\(.+\)/, "")
+    .trim()
+    .replace(/st\.$/gi, "")
     .trim();
   const toParanthetical = trip.legs[trip.legs.length - 1]?.to
     .replace("(Metro)", "")
@@ -58,7 +62,7 @@ export function DiaryAgendaDayTrip({
             </span>
           ) : null}
         </div>
-        <div className="flex">
+        <div className="-mt-0.5 flex">
           {trip.legs.map((leg, index, legs) => (
             <div
               key={index}
