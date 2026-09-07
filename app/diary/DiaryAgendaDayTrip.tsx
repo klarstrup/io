@@ -1,9 +1,9 @@
 import {
-    faBus,
-    faPersonWalking,
-    faSubway,
-    faTrain,
-    faTrainTram,
+  faBus,
+  faPersonWalking,
+  faSubway,
+  faTrain,
+  faTrainTram,
 } from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -49,7 +49,7 @@ export function DiaryAgendaDayTrip({
       iconClassName="w-10 text-[0.666rem]"
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
     >
-      <div className="flex flex-row items-center justify-start gap-1">
+      <div className="flex flex-row flex-wrap items-center justify-start gap-1">
         <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
           <span>{fromText}</span>
           {fromParanthetical && "" ? (
@@ -58,42 +58,45 @@ export function DiaryAgendaDayTrip({
             </span>
           ) : null}
         </div>
-        {trip.legs.map((leg, index, legs) => (
-          <div
-            key={index}
-            className={
-              "flex items-center justify-start text-[0.666rem] text-gray-500 " +
-              (fromParanthetical && toParanthetical && "" ? "-mt-2.5" : "")
-            }
-          >
-            {leg.mode === "BUS" ||
-            leg.mode === "A_BUS" ||
-            leg.mode === "S_BUS" ? (
-              <FontAwesomeIcon icon={faBus} />
-            ) : leg.mode === "S_TRAIN" || leg.mode === "LIGHT_RAIL_COPENHAGEN" ? (
-              <FontAwesomeIcon icon={faTrainTram} />
-            ) : leg.mode === "METRO" ? (
-              <FontAwesomeIcon icon={faSubway} />
-            ) : leg.mode === "REGIONAL_TRAIN" ||
-              leg.mode === "INTERCITY" ||
-              leg.mode === "INTERCITY_LYN" ? (
-              <FontAwesomeIcon icon={faTrain} />
-            ) : (
-              (console.warn(`missing icon for leg mode: ${leg.mode}`), null)
-            )}
-            {index < legs.length - 1 ? (
-              <FontAwesomeIcon
-                icon={faPersonWalking}
-                className="-mr-1.5 -ml-0.5 text-[0.5rem] text-gray-500"
-              />
-            ) : /* || (
+        <div className="flex">
+          {trip.legs.map((leg, index, legs) => (
+            <div
+              key={index}
+              className={
+                "flex items-center justify-start text-[0.666rem] text-gray-500 " +
+                (fromParanthetical && toParanthetical && "" ? "-mt-2.5" : "")
+              }
+            >
+              {leg.mode === "BUS" ||
+              leg.mode === "A_BUS" ||
+              leg.mode === "S_BUS" ? (
+                <FontAwesomeIcon icon={faBus} />
+              ) : leg.mode === "S_TRAIN" ||
+                leg.mode === "LIGHT_RAIL_COPENHAGEN" ? (
+                <FontAwesomeIcon icon={faTrainTram} />
+              ) : leg.mode === "METRO" ? (
+                <FontAwesomeIcon icon={faSubway} />
+              ) : leg.mode === "REGIONAL_TRAIN" ||
+                leg.mode === "INTERCITY" ||
+                leg.mode === "INTERCITY_LYN" ? (
+                <FontAwesomeIcon icon={faTrain} />
+              ) : (
+                (console.warn(`missing icon for leg mode: ${leg.mode}`), null)
+              )}
+              {index < legs.length - 1 ? (
+                <FontAwesomeIcon
+                  icon={faPersonWalking}
+                  className="-mr-0.5 -ml-0.5 text-[0.5rem] text-gray-500"
+                />
+              ) : /* || (
                           <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
                             {leg.to}
                           </span>
                         )*/
-            null}
-          </div>
-        ))}
+              null}
+            </div>
+          ))}
+        </div>
         <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">
           <span>{toText}</span>
           {toParanthetical && "" ? (
