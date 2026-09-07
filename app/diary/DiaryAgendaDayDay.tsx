@@ -187,6 +187,11 @@ export function DiaryAgendaDayDay({
               key={entryId}
               date={date}
               now={journalEntry.start}
+              nextEntryDate={
+                (followingJournalEntry &&
+                  getJournalEntryPrincipalDate(followingJournalEntry)?.start) ||
+                null
+              }
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
             />
           ),
