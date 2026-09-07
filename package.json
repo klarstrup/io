@@ -87,11 +87,11 @@
     "zod-defaults": "^0.2.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "@serwist/turbopack": "^9.5.12",
-    "@types/bun": "^1.4.0",
+    "@types/bun": "^1.4.1",
     "@types/luxon": "^3.7.5",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.5.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@typescript-eslint/eslint-plugin": "^8.69.0",
