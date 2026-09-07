@@ -6,7 +6,10 @@ import {
   type DateArg,
   differenceInDays,
   type Interval,
+  isAfter,
+  isBefore,
   isDate,
+  isEqual,
   isSameDay,
   isWithinInterval,
   type RoundingMethod,
@@ -41,6 +44,14 @@ export const dateMidpoint = (
 ): Date => {
   return new Date((new Date(date1).getTime() + new Date(date2).getTime()) / 2);
 };
+export const isBeforeOrEqual = (
+  date1: DateArg<Date>,
+  date2: DateArg<Date>,
+): boolean => isBefore(date1, date2) || isEqual(date1, date2);
+export const isAfterOrEqual = (
+  date1: DateArg<Date>,
+  date2: DateArg<Date>,
+): boolean => isAfter(date1, date2) || isEqual(date1, date2);
 
 export const DEFAULT_TIMEZONE = "Europe/Copenhagen";
 

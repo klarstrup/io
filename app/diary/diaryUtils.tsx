@@ -54,6 +54,13 @@ export type JournalEntry =
   | LocationChange
   | NowDividerEntry;
 
+export const isEntryThatCanHaveSeparatedEnd = (
+  entry: JournalEntry,
+): entry is WithOrWithoutSeparatedEnd<GQEvent | GQTrip | GQSleep> =>
+  entry.__typename === "Event" ||
+  entry.__typename === "Trip" ||
+  entry.__typename === "Sleep";
+
 export const isSeparatedEnd = <T extends JournalEntry>(
   entry: T,
 ): entry is WithSeparatedEnd<T> =>
@@ -119,12 +126,12 @@ export interface LocationChange {
   end: Date;
 }
 
-function hasStartDate<T extends JournalEntry>(
+export function hasStartDate<T extends JournalEntry>(
   entry: T,
 ): entry is T & { start: Date } {
   return "start" in entry && entry.start instanceof Date;
 }
-function hasEndDate<T extends JournalEntry>(
+export function hasEndDate<T extends JournalEntry>(
   entry: T,
 ): entry is T & { end: Date } {
   return "end" in entry && entry.end instanceof Date;

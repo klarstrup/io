@@ -30,6 +30,7 @@ import {
   dateToString,
   DEFAULT_TIMEZONE,
   emptyArray,
+  isBeforeOrEqual,
   isSameDayButItRespectsDayStartHour,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -49,6 +50,7 @@ import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
 import { TodoSortableContext } from "./TodoDroppable";
 import {
   getJournalEntryPrincipalDate,
+  isEntryThatCanHaveSeparatedEnd,
   isEventEntireDay,
   isSeparatedEnd,
   type JournalEntry,
@@ -122,7 +124,9 @@ export function DiaryAgendaDayDay({
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
 
-      const previousEntries = dayJournalEntries.slice(0, i);
+      const previousEntries = dayJournalEntries
+        .slice(0, i)
+        .filter((je) => isEntryThatCanHaveSeparatedEnd(je));
       const followingEndOfEntries = dayJournalEntries
         .slice(i + 1)
         .filter((je) => isSeparatedEnd(je));
@@ -142,19 +146,20 @@ export function DiaryAgendaDayDay({
           .find((prevJE) =>
             followingEndOfEntries.some((endOfJE) => prevJE.id === endOfJE.id),
           ) ||
-        dayJournalEntries
+        previousEntries
           .filter((je) =>
             je.__typename === "Event"
               ? je.datetype !== "date" && !isEventEntireDay(je, dayRange.start)
               : true,
           )
+          .filter((je) => je.id !== journalEntry.id)
           .find((je) => {
             const jePrincipalDate = getJournalEntryPrincipalDate(je);
             return (
               principalDate &&
               jePrincipalDate &&
-              isBefore(jePrincipalDate.start, principalDate.start) &&
-              isBefore(principalDate.end, jePrincipalDate.end)
+              isBeforeOrEqual(jePrincipalDate.start, principalDate.start) &&
+              isBeforeOrEqual(principalDate.end, jePrincipalDate.end)
             );
           }) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
         followingEndOfEntries
@@ -164,13 +169,16 @@ export function DiaryAgendaDayDay({
               ...endOfJE,
               _is_separated_end: undefined,
             } as JournalEntry);
-            return (
-              principalDate &&
-              endPrincipalDate &&
-              isBefore(endPrincipalDate.start, principalDate.start)
-            );
+            return isBefore(endPrincipalDate.start, principalDate.start);
           }) ||
         null;
+
+      if (
+        journalEntry.__typename === "LocationChange" &&
+        journalEntry.location === "Rock Island"
+      ) {
+        console.log({ journalEntry, entryThatSurroundsEntry });
+      }
 
       const surroundingPrincipalDate = entryThatSurroundsEntry
         ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)

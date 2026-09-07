@@ -52,6 +52,7 @@ import {
   getJournalEntryPrincipalDate,
   isEventEntireDay,
   isSeparatedEnd,
+  LocationChange,
   type JournalEntry,
 } from "./diaryUtils";
 
@@ -520,8 +521,8 @@ export function DiaryAgendaDay({
             })
             .sort((a, b) =>
               compareAsc(
-                getJournalEntryPrincipalDate(b)?.end || new Date(0),
-                getJournalEntryPrincipalDate(a)?.end || new Date(0),
+                getJournalEntryPrincipalDate(b).end,
+                getJournalEntryPrincipalDate(a).end,
               ),
             )
             .sort((a, b) => {
@@ -533,10 +534,7 @@ export function DiaryAgendaDay({
               const aPrincipalDate = getJournalEntryPrincipalDate(a);
               const bPrincipalDate = getJournalEntryPrincipalDate(b);
 
-              return compareAsc(
-                aPrincipalDate?.start || new Date(0),
-                bPrincipalDate?.start || new Date(0),
-              );
+              return compareAsc(aPrincipalDate.start, bPrincipalDate.start);
             })
             // If the previous entry is the same event and we aren't in the middle of it, we skip the end entry
             .filter(
@@ -626,7 +624,6 @@ export function DiaryAgendaDay({
             const targetDateFrom =
               (previousEntry &&
                 previousEntryPrincipalDate &&
-                entryPricipalDate &&
                 min(
                   [
                     previousEntryIsEnd ||
@@ -645,13 +642,35 @@ export function DiaryAgendaDay({
 
             if (!entryIsEnd) {
               // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
-              dayJournalEntriesIncludingLocationChanges.push({
+              const locationChangeEntry = {
                 __typename: "LocationChange",
                 id: `location-change-${location.id}-${entry.id}`,
                 location: location.name,
                 start: targetDate,
-                end: max([subMilliseconds(targetDateTo, 1), targetDate]),
-              });
+                end: max([targetDateTo, targetDate]),
+              } satisfies LocationChange;
+
+              // if the previous entry has the same start time as the current entry and no location change associated, this location should be considered the same as the previous one
+              // and be inserted before the previous entry in the list
+              if (
+                previousEntryPrincipalDate &&
+                !previousEntryIsEnd &&
+                previousEntry?.__typename !== "LocationChange" &&
+                isEqual(
+                  previousEntryPrincipalDate.start,
+                  entryPricipalDate.start,
+                )
+              ) {
+                dayJournalEntriesIncludingLocationChanges.splice(
+                  dayJournalEntriesIncludingLocationChanges.length - 1,
+                  0,
+                  locationChangeEntry,
+                );
+              } else {
+                dayJournalEntriesIncludingLocationChanges.push(
+                  locationChangeEntry,
+                );
+              }
 
               // eslint-disable-next-line react-hooks/immutability
               lastLocation = location;
