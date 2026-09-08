@@ -167,10 +167,7 @@ export const getJournalEntryPrincipalDate = (
 ): Interval<Date, Date> => {
   const slightlyIntoTheFuture = new Date(Date.now() + 5 * 60 * 1000);
   if (isSeparatedEnd(entry)) {
-    const principalDate = getJournalEntryPrincipalDate({
-      ...entry,
-      _is_separated_end: undefined,
-    } as JournalEntry);
+    const principalDate = getJournalEntryPrincipalDate(omitSeparatedEnd(entry));
 
     return { start: principalDate.end, end: principalDate.end };
   }

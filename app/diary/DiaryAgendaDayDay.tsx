@@ -164,10 +164,9 @@ export function DiaryAgendaDayDay({
         followingEndOfEntries
           // followingEndOfEvent that has started(before today in this case) but doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event)
           .find((endOfJE) => {
-            const endPrincipalDate = getJournalEntryPrincipalDate({
-              ...endOfJE,
-              _is_separated_end: undefined,
-            } as JournalEntry);
+            const endPrincipalDate = getJournalEntryPrincipalDate(
+              omitSeparatedEnd(endOfJE),
+            );
             return isBefore(endPrincipalDate.start, principalDate.start);
           }) ||
         null;
@@ -320,49 +319,21 @@ export function DiaryAgendaDayDay({
             ),
           });
         } else if (isSeparatedEnd(event)) {
-          const followingEvent =
-            followingJournalEntry &&
-            followingJournalEntry.__typename === "Event"
-              ? followingJournalEntry
-              : null;
-
-          const followingEventHasSeparateEndEvent =
-            followingEvent &&
-            dayJournalEntries
-              .slice(i + 2)
-              .some(
-                (je): je is GQEvent =>
-                  je.__typename === "Event" &&
-                  isSeparatedEnd(je) &&
-                  je.id === followingEvent.id,
-              );
-
-          if (
-            followingEvent &&
-            followingEventHasSeparateEndEvent &&
-            roundToNearestMinutes(event.end).getTime() ===
-              followingEvent.start.getTime()
-          ) {
-            entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
-              followingEvent.id,
-            );
-          } else {
-            dayJournalEntryElements.push({
-              id: entryId,
-              element: (
-                <DiaryAgendaDayEvent
-                  key={entryId}
-                  dayRange={dayRange}
-                  userTimeZone={timeZone}
-                  event={event}
-                  cotemporalityOfSurroundingEvent={
-                    cotemporalityOfSurroundingEntry
-                  }
-                  isEntryWithSeparatedEnd={false}
-                />
-              ),
-            });
-          }
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayEvent
+                key={entryId}
+                dayRange={dayRange}
+                userTimeZone={timeZone}
+                event={event}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry
+                }
+                isEntryWithSeparatedEnd={false}
+              />
+            ),
+          });
         } else {
           const precedingEndOfEvent =
             precedingJournalEntry &&
