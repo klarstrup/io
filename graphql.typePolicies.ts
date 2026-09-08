@@ -1,5 +1,6 @@
 import type { TypePolicies } from "@apollo/client";
 import { isDate, max, min } from "date-fns";
+import type { GQJournalEntriesConnection } from "./graphql.generated/graphql";
 import { dateToString, stringToDate, uniqueBy } from "./utils";
 
 const readDate = (d: unknown) =>
@@ -110,13 +111,16 @@ export const typePolicies: TypePolicies = {
     fields: {
       journalEntries: {
         keyArgs: ["on"],
-        merge(existing, incoming) {
+        merge(
+          existing: GQJournalEntriesConnection | undefined,
+          incoming: GQJournalEntriesConnection | undefined,
+        ) {
           if (!existing) return incoming;
           if (!incoming) return existing;
 
           const mergedNodes = uniqueBy(
             [...existing.nodes, ...incoming.nodes],
-            (node) => node.__ref,
+            (node) => "__ref" in node && node.__ref,
           );
 
           return {
@@ -128,21 +132,36 @@ export const typePolicies: TypePolicies = {
                 incoming.pageInfo.hasPreviousPage,
               hasNextPage:
                 existing.pageInfo.hasNextPage && incoming.pageInfo.hasNextPage,
-              startCursor: dateToString(
-                min([
-                  stringToDate(existing.pageInfo.startCursor ?? ""),
-                  stringToDate(incoming.pageInfo.startCursor ?? ""),
-                ]),
-              ),
-              endCursor: dateToString(
-                max([
-                  stringToDate(existing.pageInfo.endCursor ?? ""),
-                  stringToDate(incoming.pageInfo.endCursor ?? ""),
-                ]),
-              ),
+              startCursor:
+                existing.pageInfo.startCursor || incoming.pageInfo.startCursor
+                  ? dateToString(
+                      min(
+                        [
+                          existing.pageInfo.startCursor &&
+                            stringToDate(existing.pageInfo.startCursor),
+                          incoming.pageInfo.startCursor &&
+                            stringToDate(incoming.pageInfo.startCursor),
+                        ].filter(Boolean),
+                      ),
+                    )
+                  : existing.pageInfo.startCursor ||
+                    incoming.pageInfo.startCursor,
+              endCursor:
+                existing.pageInfo.endCursor || incoming.pageInfo.endCursor
+                  ? dateToString(
+                      max(
+                        [
+                          existing.pageInfo.endCursor &&
+                            stringToDate(existing.pageInfo.endCursor),
+                          incoming.pageInfo.endCursor &&
+                            stringToDate(incoming.pageInfo.endCursor),
+                        ].filter(Boolean),
+                      ),
+                    )
+                  : existing.pageInfo.endCursor || incoming.pageInfo.endCursor,
             },
             nodes: mergedNodes,
-          };
+          } satisfies GQJournalEntriesConnection;
         },
       },
     },
