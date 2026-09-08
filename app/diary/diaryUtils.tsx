@@ -4,6 +4,7 @@ import {
   getMinutes,
   getSeconds,
   type Interval,
+  isEqual,
   isWithinInterval,
   max,
   min,
@@ -65,6 +66,14 @@ export const isSeparatedEnd = <T extends JournalEntry>(
   entry: T,
 ): entry is WithSeparatedEnd<T> =>
   Boolean("_is_separated_end" in entry && entry._is_separated_end);
+export const omitSeparatedEnd = <
+  T extends JournalEntry | (JournalEntry & SeparatedEnd),
+>(
+  entry: T,
+): T => {
+  const { _is_separated_end, ...rest } = entry as T & SeparatedEnd;
+  return rest as T;
+};
 
 const getWorkoutPrincipalDate = (
   workout: WorkoutData | GQWorkout,
@@ -136,6 +145,22 @@ export function hasEndDate<T extends JournalEntry>(
 ): entry is T & { end: Date } {
   return "end" in entry && entry.end instanceof Date;
 }
+
+export const isEqualInterval = (
+  intervalA: Interval<Date, Date>,
+  intervalB: Interval<Date, Date>,
+): boolean =>
+  isEqual(intervalA.start, intervalB.start) &&
+  isEqual(intervalA.end, intervalB.end);
+
+export const doEntriesOverlapExactly = (
+  entryA: JournalEntry,
+  entryB: JournalEntry,
+): boolean =>
+  isEqualInterval(
+    getJournalEntryPrincipalDate(entryA),
+    getJournalEntryPrincipalDate(entryB),
+  );
 
 export const getJournalEntryPrincipalDate = (
   entry: JournalEntry,

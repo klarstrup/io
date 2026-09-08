@@ -49,10 +49,12 @@ import { DiaryAgendaDayTrip } from "./DiaryAgendaDayTrip";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
 import { TodoSortableContext } from "./TodoDroppable";
 import {
+  doEntriesOverlapExactly,
   getJournalEntryPrincipalDate,
   isEntryThatCanHaveSeparatedEnd,
   isEventEntireDay,
   isSeparatedEnd,
+  omitSeparatedEnd,
   type JournalEntry,
 } from "./diaryUtils";
 
@@ -171,10 +173,14 @@ export function DiaryAgendaDayDay({
         null;
 
       if (
-        journalEntry.__typename === "Event" &&
-        journalEntry.summary === "Hackday 🐎"
+        isSeparatedEnd(journalEntry) &&
+        entryThatSurroundsEntry &&
+        doEntriesOverlapExactly(
+          omitSeparatedEnd(journalEntry),
+          entryThatSurroundsEntry,
+        )
       ) {
-        console.log({ journalEntry, entryThatSurroundsEntry });
+        entryThatSurroundsEntry = null;
       }
 
       const surroundingPrincipalDate = entryThatSurroundsEntry
