@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@apollo/client/react";
+import { useReactiveVar, useQuery } from "@apollo/client/react";
 import { tz } from "@date-fns/tz";
 import {
   addDays,
@@ -275,6 +275,7 @@ export function DiaryAgendaDay({
 }) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
+  useReactiveVar("");
   const { data: sessionData, status: sessionStatus } = useSession();
   const sessionDataLoading = sessionStatus === "loading";
   const sessionUser = sessionData?.user;
