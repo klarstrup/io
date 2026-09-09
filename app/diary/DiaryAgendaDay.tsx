@@ -15,7 +15,6 @@ import {
   startOfDay,
   subDays,
   subHours,
-  subMilliseconds,
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useSession } from "next-auth/react";
@@ -296,16 +295,19 @@ export function DiaryAgendaDay({
     [selectedDayStart],
   );
 
-  const { data, loading, networkStatus, fetchMore } = useQuery(
+  const { data, loading, networkStatus, fetchMore, refetch } = useQuery(
     DiaryAgendaDayUserTodosDocument,
     {
       variables,
-      pollInterval,
       fetchPolicy: selectedDayStart ? "cache-and-network" : "cache-first",
     },
   );
   const startCursor = data?.user?.journalEntries?.pageInfo?.startCursor;
   const endCursor = data?.user?.journalEntries?.pageInfo?.endCursor;
+
+  useInterval(() => {
+    if (!loading) refetch({ after: startCursor, before: endCursor });
+  }, pollInterval);
 
   const fetchingInterval = useMemo(
     () => ({
