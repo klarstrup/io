@@ -1,10 +1,3 @@
-import * as z from "zod";
-import type { TopLoggerAuthTokens } from "../lib";
-import type { ExerciseData } from "../models/exercises.types";
-import type { DSB } from "./dsb";
-import type { Grippy } from "./grippy";
-import type { SnapCalorie } from "./snapcalorie";
-
 import { ReactElement } from "react";
 import {
   type UseFormRegister,
@@ -12,6 +5,12 @@ import {
   type UseFormWatch,
 } from "react-hook-form";
 import { UserStuffGeohashInput } from "../components/UserStuffGeohashInput";
+import type { TopLoggerAuthTokens } from "../lib";
+import type { ExerciseData } from "../models/exercises.types";
+import z from "../zod";
+import type { DSB } from "./dsb";
+import type { Grippy } from "./grippy";
+import type { SnapCalorie } from "./snapcalorie";
 import type { Withings } from "./withings";
 
 type UserDataSourceConfig =
