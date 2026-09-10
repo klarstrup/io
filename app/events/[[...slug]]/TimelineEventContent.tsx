@@ -170,7 +170,7 @@ export default async function TimelineEventContent({
             day: "numeric",
             hour: differenceInDays(start, end) ? undefined : "numeric",
             minute: differenceInDays(start, end) ? undefined : "2-digit",
-            timeZone: timeZone,
+            timeZone,
           }).formatRange(
             ...([start, end].sort((a, b) => Number(a) - Number(b)) as [
               Date,
@@ -276,7 +276,7 @@ export default async function TimelineEventContent({
                         minute: differenceInDays(round.start, round.end)
                           ? undefined
                           : "2-digit",
-                        timeZone: timeZone,
+                        timeZone,
                       }).formatRange(
                         ...([round.start, round.end].sort(
                           (a, b) => Number(a) - Number(b),
