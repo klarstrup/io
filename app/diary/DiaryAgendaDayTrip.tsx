@@ -7,6 +7,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useRouter } from "next/navigation";
+import { useEffectEvent } from "react";
 import { GQTrip } from "../../graphql.generated/graphql";
 import { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -23,6 +25,7 @@ export function DiaryAgendaDayTrip({
   isEntryWithSeparatedEnd: boolean;
   timeZone: string;
 }) {
+  const router = useRouter();
   const fromText = trip.legs[0]?.from
     .replace("(Metro)", "")
     .replace(/\(.+\)/, "")
@@ -44,6 +47,10 @@ export function DiaryAgendaDayTrip({
     .match(/\((.+)\)/)?.[1]
     ?.trim();
 
+  const handleOnClick = useEffectEvent(() => {
+    router.push(`/diary/entries/${trip.__typename}:${trip.id}`);
+  });
+
   return (
     <DiaryAgendaDayEntry
       date={
@@ -56,9 +63,10 @@ export function DiaryAgendaDayTrip({
       icon={faRoad}
       cotemporality={cotemporality(trip)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-      className={"rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm"}
+      className="cursor-pointer text-sm"
       iconClassName="w-10 text-[0.666rem]"
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
+      onClick={handleOnClick}
     >
       <div className="flex flex-row flex-wrap items-center justify-start gap-1">
         <div className="flex flex-col font-mono text-[0.666rem] text-gray-500 uppercase">

@@ -23,6 +23,16 @@ export default function JournalEntryModal({ entryId }: { entryId: string }) {
     );
   }
 
+  if (entityType === "Trip") {
+    return (
+      <div>
+        <h1>Trip Entry</h1>
+        <p className="break-all">Entity ID: {entityId}</p>
+        <SourceWidget dataSource={DataSource.ICal} />
+      </div>
+    );
+  }
+
   if (entityType === "Event") {
     return (
       <div>
