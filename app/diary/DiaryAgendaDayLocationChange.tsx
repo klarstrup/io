@@ -8,14 +8,17 @@ export function DiaryAgendaDayLocationChange({
   locationChange,
   cotemporalityOfSurroundingEvent,
   className,
+  timeZone,
 }: {
   locationChange: LocationChange;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   className?: string;
+  timeZone: string;
 }) {
   return (
     <DiaryAgendaDayEntry
       date={getJournalEntryPrincipalDate(locationChange).start}
+      userTimeZone={timeZone}
       entry={locationChange}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={className}

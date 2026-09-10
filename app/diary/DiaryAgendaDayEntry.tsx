@@ -7,7 +7,14 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ReactElement, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
-import { isSeparatedEnd, JournalEntry } from "./diaryUtils";
+import { DEFAULT_TIMEZONE } from "../../utils";
+import {
+  getJournalEntryPrincipalDate,
+  isSeparatedEnd,
+  JournalEntry,
+  omitSeparatedEnd,
+} from "./diaryUtils";
+import { isEqual } from "date-fns";
 
 export function DiaryAgendaDayEntry({
   entry,
@@ -25,6 +32,7 @@ export function DiaryAgendaDayEntry({
   contentClassName,
   cotemporalityOfSurroundingEvent,
   isEntryWithSeparatedEnd,
+  userTimeZone,
   ...props
 }: {
   isDraggable?: boolean;
@@ -43,7 +51,9 @@ export function DiaryAgendaDayEntry({
   isEntryWithSeparatedEnd?: boolean;
   entry: JournalEntry;
   date: Date;
+  userTimeZone: string;
 } & React.HTMLAttributes<HTMLDivElement>) {
+  const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const client = useApolloClient();
   const {
     isDragging,
@@ -80,6 +90,9 @@ export function DiaryAgendaDayEntry({
   );
 
   const isEntryEnd = isSeparatedEnd(entry);
+  const entryPrincipalInterval = getJournalEntryPrincipalDate(
+    omitSeparatedEnd(entry),
+  );
 
   return (
     <div
@@ -137,11 +150,13 @@ export function DiaryAgendaDayEntry({
       {icon || iconTxt ? (
         <IconContainer
           disabled={iconDisabled}
-          title={date.toLocaleTimeString(undefined, {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          })}
+          title={`${!isEqual(date, entryPrincipalInterval.start) ? date.toLocaleTimeString("en-DK", { timeZone }) + ", " : ""}${Intl.DateTimeFormat(
+            "en-DK",
+            { timeZone, timeStyle: "medium" },
+          ).formatRange(
+            entryPrincipalInterval.start,
+            entryPrincipalInterval.end,
+          )}`}
           className={twMerge(
             "text-md flex w-10 items-center justify-center",
             cotemporality

@@ -64,6 +64,7 @@ export function DiaryAgendaDayEvent({
           ? getJournalEntryPrincipalDate(event).end
           : getJournalEntryPrincipalDate(event).start
       }
+      userTimeZone={timeZone}
       entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}

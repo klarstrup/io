@@ -37,12 +37,14 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   now,
   className,
   backlog,
+  timeZone,
 }: {
   todo: GQTodo;
   cotemporalityOfSurroundingEvent?: "past" | "current" | "future" | null;
   now: Date;
   className?: string;
   backlog?: boolean;
+  timeZone: string;
 }) {
   const [updateTodo] = useMutation(
     gql`
@@ -145,6 +147,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     <DiaryAgendaDayEntry
       isDraggable={!backlog && !isActive}
       date={getJournalEntryPrincipalDate(todo).start}
+      userTimeZone={timeZone}
       entry={todo}
       icon={backlog ? undefined : faCircleCheck}
       onIconClick={handleIconClick}

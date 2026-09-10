@@ -16,10 +16,12 @@ export function DiaryAgendaDayTrip({
   trip,
   cotemporalityOfSurroundingEvent,
   isEntryWithSeparatedEnd,
+  timeZone,
 }: {
   trip: GQTrip;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   isEntryWithSeparatedEnd: boolean;
+  timeZone: string;
 }) {
   const fromText = trip.legs[0]?.from
     .replace("(Metro)", "")
@@ -49,6 +51,7 @@ export function DiaryAgendaDayTrip({
           ? getJournalEntryPrincipalDate(trip).end
           : getJournalEntryPrincipalDate(trip).start
       }
+      userTimeZone={timeZone}
       entry={trip}
       icon={faRoad}
       cotemporality={cotemporality(trip)}

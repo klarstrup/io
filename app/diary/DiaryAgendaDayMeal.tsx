@@ -8,14 +8,17 @@ import { getJournalEntryPrincipalDate } from "./diaryUtils";
 export function DiaryAgendaDayMeal({
   meal,
   cotemporalityOfSurroundingEvent,
+  timeZone,
 }: {
   meal: GQMeal;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  timeZone: string;
 }) {
   return (
     <DiaryAgendaDayEntry
       entry={meal}
       date={getJournalEntryPrincipalDate(meal).start}
+      userTimeZone={timeZone}
       icon={faUtensils}
       cotemporality={cotemporality({
         start: meal.datetime,

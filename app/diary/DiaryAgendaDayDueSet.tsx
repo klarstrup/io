@@ -160,6 +160,7 @@ export function DiaryAgendaDayDueSet({
   workouts,
   locations,
   cotemporalityOfSurroundingEvent,
+  timeZone,
   ...props
 }: {
   dueSet: GQNextSet;
@@ -167,6 +168,7 @@ export function DiaryAgendaDayDueSet({
   workouts?: GQWorkout[];
   locations?: GQLocation[];
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  timeZone: string;
 } & React.HTMLAttributes<HTMLDivElement>) {
   const [isActive, setIsActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -197,6 +199,7 @@ export function DiaryAgendaDayDueSet({
 
   return (
     <DiaryAgendaDayEntry
+      userTimeZone={timeZone}
       isDraggable
       date={getJournalEntryPrincipalDate(dueSet).start}
       entry={dueSet}

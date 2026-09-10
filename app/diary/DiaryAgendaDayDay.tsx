@@ -196,6 +196,7 @@ export function DiaryAgendaDayDay({
             <DiaryAgendaDayNow
               key={entryId}
               date={date}
+              timeZone={timeZone}
               now={journalEntry.start}
               nextEntryDate={
                 (followingJournalEntry &&
@@ -242,6 +243,7 @@ export function DiaryAgendaDayDay({
                 entry={event}
                 icon={faCalendarRegular}
                 cotemporality={cotemporality(event)}
+                userTimeZone={timeZone}
                 className={
                   "relative z-5 self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
                   "backdrop-blur-sm " +
@@ -415,6 +417,7 @@ export function DiaryAgendaDayDay({
               key={entryId}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               now={now}
+              timeZone={timeZone}
             />
           ),
         });
@@ -431,6 +434,7 @@ export function DiaryAgendaDayDay({
               exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
               workouts={ownWorkouts}
               locations={dayLocations}
+              timeZone={timeZone}
             />
           ),
         });
@@ -452,6 +456,7 @@ export function DiaryAgendaDayDay({
               workout={workout}
               workoutDateStr={workoutDateStr}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              timeZone={timeZone}
             />
           ),
         });
@@ -463,6 +468,7 @@ export function DiaryAgendaDayDay({
               key={entryId}
               locationChange={journalEntry}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              timeZone={timeZone}
             />
           ),
         });
@@ -495,6 +501,7 @@ export function DiaryAgendaDayDay({
                 isEntryWithSeparatedEnd={
                   !followingEntryIsEndOfTrip && !isEndOfTrip
                 }
+                timeZone={timeZone}
               />
             ),
           });
@@ -509,6 +516,7 @@ export function DiaryAgendaDayDay({
               key={entryId}
               meal={meal}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              timeZone={timeZone}
             />
           ),
         });
@@ -521,6 +529,7 @@ export function DiaryAgendaDayDay({
             <DiaryAgendaDayEntry
               key={entryId}
               date={getJournalEntryPrincipalDate(delivery).start}
+              userTimeZone={timeZone}
               entry={delivery}
               icon={faBoxesPacking}
               cotemporality={cotemporality({

@@ -24,11 +24,13 @@ export function DiaryAgendaDayWorkout({
   location,
   workout,
   workoutDateStr,
+  timeZone,
   cotemporalityOfSurroundingEvent,
 }: {
   location?: GQLocation;
   workout: GQWorkout;
   workoutDateStr: string;
+  timeZone: string;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const router = useRouter();
@@ -51,6 +53,7 @@ export function DiaryAgendaDayWorkout({
     <DiaryAgendaDayEntry
       isDraggable
       date={getJournalEntryPrincipalDate(workout).start}
+      userTimeZone={timeZone}
       entry={workout}
       icon={faDumbbell}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}

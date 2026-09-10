@@ -12,11 +12,13 @@ export function DiaryAgendaDayNow({
   cotemporalityOfSurroundingEvent,
   now,
   nextEntryDate,
+  timeZone,
 }: {
   date: `${number}-${number}-${number}`;
   cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
   now: Date;
   nextEntryDate: Date | null;
+  timeZone: string;
 }) {
   const isSSR = useIsSSR();
 
@@ -46,6 +48,7 @@ export function DiaryAgendaDayNow({
     <DiaryAgendaDayEntry
       date={now}
       entry={entry}
+      userTimeZone={timeZone}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       iconTxt={iconTxt}
       cotemporality="current"
