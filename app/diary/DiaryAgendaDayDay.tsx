@@ -144,7 +144,7 @@ export function DiaryAgendaDayDay({
                 prevJE.id,
               ),
           )
-          .find((prevJE) =>
+          .findLast((prevJE) =>
             followingEndOfEntries.some((endOfJE) => prevJE.id === endOfJE.id),
           ) ||
         previousEntries
@@ -154,7 +154,7 @@ export function DiaryAgendaDayDay({
               : true,
           )
           .filter((je) => je.id !== journalEntry.id)
-          .find((je) => {
+          .findLast((je) => {
             const jePrincipalDate = getJournalEntryPrincipalDate(je);
             return (
               isBeforeOrEqual(jePrincipalDate.start, principalDate.start) &&
