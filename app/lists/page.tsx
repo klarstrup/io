@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client/react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ListPageUserDocument } from "../../graphql.generated/graphql";
 import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
+import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "../diary/DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 
@@ -12,6 +13,7 @@ gql`
   query ListPageUser {
     user {
       id
+      timeZone
       todos {
         id
         created
@@ -29,6 +31,7 @@ export default function ListPage() {
   const now = useNow(60 * 1000);
 
   const calendarTodos = data?.user?.todos || [];
+  const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const todos = calendarTodos
     .filter((todo) => !todo.completed && todo.due)
     .sort((a, b) => {
@@ -66,7 +69,7 @@ export default function ListPage() {
         }
       >
         {todos.map((todo) => (
-          <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
+          <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} timeZone={timeZone} />
         ))}
         {dataState !== "complete" ? (
           <div className="min-h-8">Loading...</div>
@@ -85,7 +88,7 @@ export default function ListPage() {
           }
         >
           {backlogTodos.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} timeZone={timeZone} />
           ))}
         </FieldSetY>
       )}
@@ -99,7 +102,7 @@ export default function ListPage() {
           }
         >
           {todones.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} />
+            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} timeZone={timeZone} />
           ))}
         </FieldSetY>
       )}

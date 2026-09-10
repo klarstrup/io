@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { DiaryAgendaDayDayBacklogTodosDocument } from "../../graphql.generated/graphql";
 import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
-import { shuffle } from "../../utils";
+import { DEFAULT_TIMEZONE, shuffle } from "../../utils";
 import { DiaryAgendaDayTodo } from "../diary/DiaryAgendaDayTodo";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -14,6 +14,7 @@ gql`
   query DiaryAgendaDayDayBacklogTodos {
     user {
       id
+      timeZone
       todos {
         id
         created
@@ -39,6 +40,7 @@ export default function DiaryAgendaDayDayBacklog({
   const startDay = getDayOfYear(dayRange.start);
 
   const calendarTodos = data?.user?.todos;
+  const timeZone = data?.user?.timeZone || DEFAULT_TIMEZONE;
   const backlogTodos = useMemo(
     () =>
       shuffle(
@@ -66,6 +68,7 @@ export default function DiaryAgendaDayDayBacklog({
             key={todo.id}
             now={now}
             className={"inline-flex"}
+            timeZone={timeZone}
             backlog
           />
         ))}
