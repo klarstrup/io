@@ -487,6 +487,8 @@ export const resolvers: GQResolvers<
               differenceInHours(new Date(event.end), new Date(event.start)) <
               24,
           )
+          // Transparent events are usually events that the user has marked as "free" in their calendar, so we also exclude them from the busyness calculation since they don't reflect busy time slots in the calendar
+          .filter((event) => event.transparency !== "TRANSPARENT")
           .flatMap((event) => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
