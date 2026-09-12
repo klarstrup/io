@@ -1,6 +1,6 @@
 import { TZDate } from "@date-fns/tz";
+import { faCalendar as faCalendarAlt } from "@fortawesome/free-regular-svg-icons";
 import {
-  faArrowsDownToLine,
   faCalendar,
   faCalendarCheck,
   faExternalLink,
@@ -68,7 +68,13 @@ export function DiaryAgendaDayEvent({
       entry={event}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
-      icon={isPassed ? faCalendarCheck : faCalendar}
+      icon={
+        isPassed
+          ? faCalendarCheck
+          : event.transparency === "TRANSPARENT"
+            ? faCalendarAlt
+            : faCalendar
+      }
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
       onClick={handleOnClick}

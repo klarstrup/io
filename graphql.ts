@@ -1929,6 +1929,7 @@ export const typeDefs = gql`
     datetype: String!
     location: String
     url: String
+    transparency: String # "TRANSPARENT" or "OPAQUE" if the event is marked as free or busy respectively
   }
 
   type Location {

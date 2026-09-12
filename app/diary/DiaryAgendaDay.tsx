@@ -202,6 +202,7 @@ gql`
             datetype
             location
             url
+            transparency
           }
           ... on Workout {
             id
