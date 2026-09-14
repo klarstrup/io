@@ -20,8 +20,6 @@ export function DiaryAgendaDayNow({
   nextEntryDate: Date | null;
   timeZone: string;
 }) {
-  const isSSR = useIsSSR();
-
   const iconTxt = useMemo(
     () => <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>,
     [],
@@ -72,14 +70,13 @@ export function DiaryAgendaDayNow({
       >
         <span className="text-xs">➕</span> Event
       </span>
-      {!isSSR ? (
-        <span>
-          {now.toLocaleTimeString("en-DK", {
-            hour: "numeric",
-            minute: "2-digit",
-          })}
-        </span>
-      ) : null}
+      <span>
+        {now.toLocaleTimeString("en-DK", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone,
+        })}
+      </span>
     </DiaryAgendaDayEntry>
   );
 }

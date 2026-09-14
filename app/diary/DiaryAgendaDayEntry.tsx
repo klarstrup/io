@@ -5,6 +5,7 @@ import {
   IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { isEqual } from "date-fns";
 import { ReactElement, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import { DEFAULT_TIMEZONE } from "../../utils";
@@ -14,7 +15,6 @@ import {
   JournalEntry,
   omitSeparatedEnd,
 } from "./diaryUtils";
-import { isEqual } from "date-fns";
 
 export function DiaryAgendaDayEntry({
   entry,
@@ -150,9 +150,9 @@ export function DiaryAgendaDayEntry({
       {icon || iconTxt ? (
         <IconContainer
           disabled={iconDisabled}
-          title={`${!isEqual(date, entryPrincipalInterval.start) ? date.toLocaleTimeString("en-DK", { timeZone }) + ", " : ""}${Intl.DateTimeFormat(
+          title={`${!isEqual(date, entryPrincipalInterval.start) ? date.toLocaleTimeString("en-DK", { timeZone, hour: "numeric", minute: "numeric", second: undefined }) + ", " : ""}${Intl.DateTimeFormat(
             "en-DK",
-            { timeZone, timeStyle: "medium" },
+            { timeZone, hour: "numeric", minute: "numeric", second: undefined },
           ).formatRange(
             entryPrincipalInterval.start,
             entryPrincipalInterval.end,
