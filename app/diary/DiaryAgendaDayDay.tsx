@@ -1,4 +1,3 @@
-import type { StoreObject } from "@apollo/client";
 import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
@@ -117,9 +116,10 @@ export function DiaryAgendaDayDay({
     for (const journalEntry of dayJournalEntries) {
       const entryId =
         (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
-        (client.cache.identify(
-          journalEntry as StoreObject /* this can also be a synthetic LocationChange or NowDivider, but it's fine if that doesn't work */,
-        ) || journalEntry.id);
+        (journalEntry.__typename !== "LocationChange" &&
+        journalEntry.__typename !== "NowDivider"
+          ? client.cache.identify(journalEntry)
+          : journalEntry.id);
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
 
       const precedingJournalEntry = dayJournalEntries[i - 1];
