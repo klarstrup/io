@@ -1064,5 +1064,13 @@ const getLocationFromJournalEntry = (
 
     return { id: entry.location, name: entry.location };
   }
+
+  if (entry.__typename === "Meal") {
+    return {
+      id: "699cc5ce2f64a165113fc529",
+      name: "Proprty.ai Office",
+    };
+  }
+
   return null;
 };
