@@ -27,11 +27,11 @@ export function DiaryAgendaDayEvent({
   isEntryWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
 }: {
-  dayRange: { start: Date; end: Date };
+  dayRange?: { start: Date; end: Date };
   userTimeZone: GQUser["timeZone"];
   event: GQEvent;
-  isEntryWithSeparatedEnd: boolean;
-  cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
+  isEntryWithSeparatedEnd?: boolean;
+  cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
 }) {
   const router = useRouter();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
@@ -43,8 +43,9 @@ export function DiaryAgendaDayEvent({
     start: event.start,
     end: roundToNearestMinutes(event.end, { roundingMethod: "ceil" }),
   });
-  const dayNo =
-    Math.floor(differenceInHours(event.start, dayRange.start) / 24) + 1;
+  const dayNo = dayRange
+    ? Math.floor(differenceInHours(event.start, dayRange.start) / 24) + 1
+    : null;
   const numDays = Math.ceil(differenceInHours(event.end, event.start) / 24);
   const isFirstDay = dayNo === 1;
   const isLastDay = dayNo === numDays;
@@ -94,7 +95,7 @@ export function DiaryAgendaDayEvent({
       ) : (
         <>
           <div className="text-center leading-none font-semibold tabular-nums">
-            {event.datetype === "date-time" && dayNo <= 1 ? (
+            {event.datetype === "date-time" && (!dayNo || dayNo <= 1) ? (
               event.start.toLocaleTimeString("en-DK", {
                 hour: "2-digit",
                 minute: "2-digit",

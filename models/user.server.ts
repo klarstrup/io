@@ -23,10 +23,12 @@ import type {
   GQWorkoutSetInput,
   GQWorkoutSetMeta,
 } from "../graphql.generated/graphql";
+import type { MongoVEvent } from "../lib";
 import { DSBProductSummaries } from "../sources/dsb.server";
 import {
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
+  IcalEvents,
 } from "../sources/ical.server";
 import { MeyersMenus } from "../sources/meyers.server";
 import { PostNordShipmentInformation } from "../sources/postnord.server";
@@ -38,7 +40,7 @@ import {
   rangeToQuery,
   unique,
 } from "../utils";
-import { proxyCollection } from "../utils.server";
+import { type ProxyCollection, proxyCollection } from "../utils.server";
 import type { ITodoScheduleWithExerciseProgram, IUser } from "./user";
 import { getNextSets, MaterializedWorkoutsView } from "./workout.server";
 
@@ -54,6 +56,41 @@ const getURLsFromString = (str: string) => {
       ?.slice(1)
       .map((url) => url.replace(/<\/a>$/, "")) || []
   );
+};
+
+export const getUserJournalEntry = async (
+  userId: string,
+  type: string,
+  id: string,
+) => {
+  if (!userId || !type || !id) return null;
+
+  switch (type) {
+    case "Todo":
+    case "Event":
+      const event = await (IcalEvents as ProxyCollection<MongoVEvent>).findOne({
+        _io_userId: userId,
+        uid: id,
+        type: "VEVENT",
+      });
+      if (!event) return null;
+      return {
+        ...event,
+        id: event.uid,
+        __typename: "Event",
+        url:
+          typeof event.url === "string"
+            ? event.url
+            : (event.description &&
+                getURLsFromString(event.description)?.[0]) ||
+              null,
+      } satisfies GQEvent;
+    case "Meal":
+    case "Sleep":
+    case "Workout":
+    default:
+      return null;
+  }
 };
 
 export const getUserJournalEntries = async (

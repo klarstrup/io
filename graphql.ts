@@ -46,7 +46,11 @@ import { exercisesById } from "./models/exercises";
 import { AssistType, Unit } from "./models/exercises.types";
 import { ensureLocation, Locations } from "./models/location.server";
 import type { ITodoScheduleWithExerciseProgram } from "./models/user";
-import { getUserJournalEntries, Users } from "./models/user.server";
+import {
+  getUserJournalEntries,
+  getUserJournalEntry,
+  Users,
+} from "./models/user.server";
 import { type WorkoutData, WorkoutSource } from "./models/workout";
 import {
   getNextSets,
@@ -184,6 +188,9 @@ export const resolvers: GQResolvers<
     },
   },
   User: {
+    journalEntry: async (parent, args) => {
+      return getUserJournalEntry(parent.id, args.type, args.id);
+    },
     journalEntries: async (parent, args) => {
       let after = args.after ? stringToDate(args.after) : undefined;
       let before = args.before ? stringToDate(args.before) : undefined;
@@ -1753,6 +1760,7 @@ export const typeDefs = gql`
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]
+    journalEntry(type: String!, id: ID!): JournalEntryUnion
     journalEntries(
       after: String
       before: String
