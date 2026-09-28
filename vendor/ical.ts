@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { TZDate, tzOffset } from "@date-fns/tz";
-import { add, addDays, addMinutes, parse } from "date-fns";
+import { add, addDays, addMinutes, isValid, parse } from "date-fns";
 import isObject from "lodash/isObject";
 import { RRule } from "rrule";
 import { v4 as uuid } from "uuid";
@@ -847,20 +847,28 @@ const objectHandlers = {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       curr = curr as VEvent;
       let rule = (curr.rrule as unknown as string).replace("RRULE:", "");
+      console.log("RRULE before processing:", rule);
       // Make sure the rrule starts with FREQ=
       rule = rule.slice(rule.lastIndexOf("FREQ="));
       // If no rule start date
       if (!rule.includes("DTSTART")) {
         // Get date/time into a specific format for comapare
         // If the date has an toISOString function
-        if (curr.start && typeof curr.start.toISOString === "function") {
+        if (
+          curr.start &&
+          typeof curr.start.toISOString === "function" &&
+          isValid(curr.start)
+        ) {
           try {
             let timeString = curr.start.toISOString().replace(/[-:]/g, "");
             // If the original date has a TZID, add it
             if (curr.start.tz) {
               const tz = getTimeZone(curr.start.tz)!;
-              const tzDate = new Date(curr.start);
-              timeString = tzDate.toISOString().replace(/[-:]/g, "");
+              const tzDate = new TZDate(curr.start);
+              timeString = tzDate
+                .toISOString()
+                .replace(/[-:]/g, "")
+                .split("+")[0]!;
 
               rule += `;DTSTART;TZID=${tz}:${timeString}`;
             } else {
@@ -873,11 +881,20 @@ const objectHandlers = {
           } catch (error) {
             // This should not happen, issue #56
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            throw new Error("ERROR when trying to convert to ISOString", error);
+            throw new Error(
+              "ERROR when trying to convert to ISOString: " +
+                rule +
+                " error: " +
+                error,
+              error,
+            );
           }
         } else {
-          // @ts-expect-error - don't care
-          throw new Error("No toISOString function in curr.start", curr.start);
+          console.warn(
+            "No toISOString function in curr.start",
+            curr.start,
+            curr.rrule,
+          );
         }
       }
 
