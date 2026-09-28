@@ -1,14 +1,13 @@
+import { TZDate } from "@date-fns/tz";
 import {
   type RefObject,
   useEffect,
-  useEffectEvent,
   useInsertionEffect,
   useRef,
   useState,
 } from "react";
 import useInterval from "./hooks/useInterval";
 import { DEFAULT_TIMEZONE, emptyFunction } from "./utils";
-import { TZDate } from "@date-fns/tz";
 
 type AnyFunction = (...args: unknown[]) => unknown;
 
@@ -296,7 +295,7 @@ export function useInView({
   onChange,
 }: IntersectionOptions = {}): InViewHookResponse {
   const [ref, setRef] = useState<Element | null>(null);
-  const callback = useEffectEvent(onChange || emptyFunction);
+  const callback = useEvent(onChange || emptyFunction);
   const [state, setState] = useState<State>({
     inView: Boolean(initialInView),
     entry: undefined,
