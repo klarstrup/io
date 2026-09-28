@@ -27,7 +27,7 @@ export default function SourceWidget({
     (userDataSourceId: string) => {
       setIsScraping(true);
       return fetch(
-        `/api/${dataSource}_scrape?userDataSourceId=${userDataSourceId}`,
+        `/api/${dataSource}_scrape?userDataSourceId=${userDataSourceId}&force=true`,
       ).finally(async () => {
         await client.refetchQueries({ include: "all" });
         router.refresh();

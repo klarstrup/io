@@ -17,6 +17,7 @@ export const GET = (request: NextRequest) =>
     const user = (await auth())?.user;
     if (!user) return new Response("Unauthorized", { status: 401 });
 
+    const isForced = request.nextUrl.searchParams.get("force") === "true";
     yield* wrapSources(
       user,
       DataSource.ICal,
@@ -74,13 +75,15 @@ export const GET = (request: NextRequest) =>
 
         yield `Most recently modified event for icalUrlHash: ${icalUrlHash} is ${String(mostRecentlyModifiedEvent?.lastmodified) || "none"}`;
 
-        // Microsoft Exchange never sets the lastmodified property, so this optimization will not work for those feeds. We will always try to upsert all events for those feeds.
-        const eventsUpdatedSinceMostRecentlyModifiedEvent = events.filter(
-          (event) =>
-            !mostRecentlyModifiedEvent?.lastmodified ||
-            !event.lastmodified ||
-            event.lastmodified > mostRecentlyModifiedEvent.lastmodified,
-        );
+        const eventsUpdatedSinceMostRecentlyModifiedEvent = isForced
+          ? events
+          : events.filter(
+              (event) =>
+                // Microsoft Exchange never sets the lastmodified property, so this optimization will not work for those feeds. We will always try to upsert all events for those feeds.
+                !mostRecentlyModifiedEvent?.lastmodified ||
+                !event.lastmodified ||
+                event.lastmodified > mostRecentlyModifiedEvent.lastmodified,
+            );
 
         if (eventsUpdatedSinceMostRecentlyModifiedEvent.length) {
           yield `Upserting ${eventsUpdatedSinceMostRecentlyModifiedEvent.length} events(of ${events.length} scraped) updated since most recently modified event for icalUrlHash: ${icalUrlHash}`;

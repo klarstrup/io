@@ -100,7 +100,7 @@ function UserStuffSourceForm({
                 className="cursor-pointer text-2xl disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={async () => {
                   const promise = fetch(
-                    `/api/${userDataSource.source}_scrape?userDataSourceId=${userDataSource.id}`,
+                    `/api/${userDataSource.source}_scrape?userDataSourceId=${userDataSource.id}&force=true`,
                   );
                   await new Promise((resolve) => setTimeout(resolve, 1000));
                   router.refresh();
