@@ -872,7 +872,7 @@ const objectHandlers = {
             rule = rule.replace(/Z$/, "");
           } catch (error) {
             // This should not happen, issue #56
-            throw new Error(
+            console.error(
               "ERROR when trying to convert to ISOString: " +
                 rule +
                 " error: " +
