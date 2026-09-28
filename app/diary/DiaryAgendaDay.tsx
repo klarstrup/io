@@ -523,15 +523,14 @@ export function DiaryAgendaDay({
               return 0;
             })
             .sort((a, b) =>
-              a.__typename == "Meal" || b.__typename == "Meal"
-                ? compareAsc(
-                    getJournalEntryPrincipalDate(a).end,
-                    getJournalEntryPrincipalDate(b).end,
-                  )
-                : compareAsc(
-                    getJournalEntryPrincipalDate(b).end,
-                    getJournalEntryPrincipalDate(a).end,
-                  ),
+              a.__typename == "Meal"
+                ? -1
+                : b.__typename == "Meal"
+                  ? 1
+                  : compareAsc(
+                      getJournalEntryPrincipalDate(b).end,
+                      getJournalEntryPrincipalDate(a).end,
+                    ),
             )
             .sort((a, b) => {
               const aAllDay = a.__typename === "Event" && a.datetype === "date";
