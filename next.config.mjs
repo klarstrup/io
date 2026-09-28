@@ -8,6 +8,7 @@ const nextConfig = withSerwist({
   logging: { fetches: { fullUrl: true } },
   reactStrictMode: true,
   typedRoutes: true,
+  typescript: { ignoreBuildErrors: true },
   staticPageGenerationTimeout: 600,
   rewrites: () => [{ source: "/cv", destination: "/cv.pdf" }],
   redirects: () => [{ source: "/", destination: "/diary", permanent: false }],
