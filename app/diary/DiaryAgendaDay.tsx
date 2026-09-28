@@ -1066,6 +1066,8 @@ const getLocationFromJournalEntry = (
   }
 
   if (entry.__typename === "Meal") {
+    // TODO: Determine the actual location for meals, currently hardcoded to Proprty.ai Office
+    // It should be configurable per source
     return {
       id: "699cc5ce2f64a165113fc529",
       name: "Proprty.ai Office",
