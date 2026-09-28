@@ -67,7 +67,7 @@ export function DiaryAgendaDayEntry({
       (isSeparatedEnd(entry) ? "end-of-" : "") +
       (entry.__typename !== "LocationChange" &&
       entry.__typename !== "NowDivider"
-        ? client.cache.identify(entry)
+        ? client.cache.identify(entry)!
         : entry.id),
     data: { date, entry },
     disabled: !isDraggable,

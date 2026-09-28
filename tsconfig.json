@@ -28,7 +28,8 @@
     "eslint.config.mjs",
     "tailwind.config.js",
     "postcss.config.js",
+    "next.config.mjs",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "graphql.generated/index.ts"]
 }

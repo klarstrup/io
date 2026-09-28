@@ -3,9 +3,10 @@ import { TZDate } from "@date-fns/tz";
 import { addMilliseconds, isWithinInterval } from "date-fns";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useEffectEvent, useState } from "react";
+import { useState } from "react";
 import { ShyGuy } from "../../components/ShyGuy";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
+import { useEvent } from "../../hooks";
 import { decodeGeohash, getSunrise, getSunset } from "../../utils";
 import { getClosestTomorrowInterval } from "./actions";
 
@@ -41,7 +42,7 @@ export function DiaryAgendaDayLocationChangeWeather({
     date as TZDate,
   );
 
-  const handleSeen = useEffectEvent(() => {
+  const handleSeen = useEvent(() => {
     if (weather) return;
 
     void getClosestTomorrowInterval(

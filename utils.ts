@@ -35,9 +35,8 @@ export const dateToString = (date: Date): `${number}-${number}-${number}` => {
 export const stringToDate = (date: string): Date => {
   const [year, month, day] = date.split("-").map(Number);
 
-  return new Date(year!, month! - 1, day!);
+  return new Date(year!, month! - 1, day);
 };
-
 export const dateMidpoint = (
   date1: DateArg<Date>,
   date2: DateArg<Date>,
@@ -495,6 +494,7 @@ export const getSunset = (latitude: number, longitude: number, date: TZDate) =>
 const getRoundingMethod =
   (method: RoundingMethod | undefined): ((number: number) => number) =>
   (number) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const round = method ? Math[method] : Math.trunc;
     const result = round(number);
     // Prevent negative zero
@@ -887,16 +887,19 @@ export default function diff(
 
   // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in obj) {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const objKey = obj[key as keyof typeof obj];
     const path = isObjArray ? +key : key;
     if (!(key in newObj)) {
       diffs.push({
         type: "REMOVE",
         path: [path],
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         oldValue: obj[key as keyof typeof obj],
       });
       continue;
     }
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const newObjKey = newObj[key as keyof typeof newObj];
     const areCompatibleObjects =
       typeof objKey === "object" &&
@@ -952,6 +955,7 @@ export default function diff(
       diffs.push({
         type: "CREATE",
         path: [isNewObjArray ? +key : key],
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         value: newObj[key as keyof typeof newObj],
       });
     }

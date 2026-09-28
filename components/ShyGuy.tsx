@@ -45,7 +45,7 @@ export function ShyGuy({
         });
       }
     }
-  }, [inView, onSeen]);
+  }, [inView, onSeen, requireScroll]);
 
   return <div ref={ref} />;
 }

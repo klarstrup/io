@@ -118,7 +118,7 @@ export function DiaryAgendaDayDay({
         (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
         (journalEntry.__typename !== "LocationChange" &&
         journalEntry.__typename !== "NowDivider"
-          ? client.cache.identify(journalEntry)
+          ? client.cache.identify(journalEntry)!
           : journalEntry.id);
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
 

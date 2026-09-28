@@ -104,7 +104,7 @@ type UserDataSourceConfig =
       source: DataSource.DSB;
       config: { authTokens: DSB.AuthTokens };
     }
-  | { source: DataSource.PostNord; config: {} };
+  | { source: DataSource.PostNord; config: Record<string, never> };
 
 export interface UserDataSourceMeta {
   id: string;
@@ -226,12 +226,11 @@ export const dataSources = {
         refreshToken: z.string().default(""),
       }),
     }),
-    getFormElements: ({ register, watch, setValue }) => (
+    getFormElements: ({ watch, setValue }) => (
       <label className="flex flex-col gap-1">
         Auth Tokens:
         <input
           type="text"
-          // eslint-disable-next-line react-hooks/incompatible-library
           value={JSON.stringify(watch("config.authTokens"))}
           onChange={(e) => {
             const value = e.target.value;
@@ -282,12 +281,12 @@ export const dataSources = {
       authTokens: z.object({
         access: z.object({
           token: z.string().default(""),
-          expiresAt: z.number().default(NaN),
+          expiresAt: z.string().default(""),
           __typename: z.literal("AuthToken"),
         }),
         refresh: z.object({
           token: z.string().default(""),
-          expiresAt: z.number().default(NaN),
+          expiresAt: z.string().default(""),
           __typename: z.literal("AuthToken"),
         }),
         __typename: z.literal("AuthTokens"),
@@ -741,7 +740,7 @@ type DataSourceMap = {
   [key in DataSource]: {
     source: key;
     isDeprecated?: boolean;
-    configSchema: z.Schema<any>;
+    configSchema: z.ZodType;
     getFormElements: (props: {
       register: UseFormRegister<UserDataSource>;
       watch: UseFormWatch<UserDataSource>;

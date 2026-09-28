@@ -65,7 +65,7 @@ export const isEntryThatCanHaveSeparatedEnd = (
 export const isSeparatedEnd = <T extends JournalEntry>(
   entry: T,
 ): entry is WithSeparatedEnd<T> =>
-  Boolean("_is_separated_end" in entry && entry._is_separated_end);
+  "_is_separated_end" in entry && entry._is_separated_end;
 export const omitSeparatedEnd = <
   T extends JournalEntry | (JournalEntry & SeparatedEnd),
 >(

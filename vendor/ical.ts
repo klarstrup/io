@@ -880,13 +880,11 @@ const objectHandlers = {
             rule = rule.replace(/Z$/, "");
           } catch (error) {
             // This should not happen, issue #56
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             throw new Error(
               "ERROR when trying to convert to ISOString: " +
                 rule +
                 " error: " +
-                error,
-              error,
+                String(error),
             );
           }
         } else {
@@ -1003,6 +1001,7 @@ function handleObject(
   line: string,
 ): CalendarResponse {
   if (name in objectHandlers) {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const objectHandler = objectHandlers[name as keyof typeof objectHandlers];
     // @ts-expect-error - this is the rat king
     return objectHandler(value, parameters, ctx, stack, line);

@@ -1,7 +1,6 @@
 import { addSeconds } from "date-fns";
 import Link from "next/link";
 import { useMemo } from "react";
-import { useIsSSR } from "../../hooks/useIsSSR";
 import { dateMidpoint, type cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";

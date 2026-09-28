@@ -6,6 +6,7 @@ import { JournalEntryDocument } from "../../graphql.generated/graphql";
 import { DataSource } from "../../sources/utils";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
   query JournalEntry($type: String!, $id: ID!) {
     user {

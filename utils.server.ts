@@ -32,7 +32,6 @@ export type ProxyCollection<TSchema extends Document> = Pick<
   };
   find<
     TDoc extends TSchema = TSchema,
-    FilterParam extends Filter<TSchema> = Filter<TSchema>,
     Options extends
       | (Omit<Parameters<Collection<TSchema>["find"]>[1], "projection"> & {
           projection: Projection;
@@ -50,7 +49,7 @@ export type ProxyCollection<TSchema extends Document> = Pick<
       ? Pick<TDoc, Extract<keyof Projection, string>>
       : TDoc,
   >(
-    filter: FilterParam,
+    filter: Filter<TSchema>,
     options: Options,
   ): {
     [Symbol.asyncIterator](): AsyncIterableIterator<WithId<ProjDoc>>;
@@ -58,6 +57,7 @@ export type ProxyCollection<TSchema extends Document> = Pick<
   };
   find<TDoc extends TSchema = TSchema>(
     filter: Filter<TSchema>,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
     options: Omit<FindOptions & Abortable, "projection">,
   ): {
     [Symbol.asyncIterator](): AsyncIterableIterator<WithId<TDoc>>;

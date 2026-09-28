@@ -163,9 +163,11 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
       client.cache.extract() as Record<string, JournalEntry>,
     );
 
-    let nowItemDate =
-      (event.collisions?.find((collision) => collision.id === "now-divider")
-        ?.data?.droppableContainer?.data?.current?.date as Date | undefined) ||
+    const nowItemDate =
+      (event.collisions?.find(
+        (collision) => collision.id === "now-divider",
+      ) // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      ?.data?.droppableContainer?.data?.current?.date as Date | undefined) ||
       new Date();
 
     const oldIndex = sortableItems?.indexOf(active.id.toString());
@@ -204,7 +206,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
 
         if (!entry) return undefined;
 
-        let object = { ...entry[1] };
+        const object = { ...entry[1] };
         const __typename = object.__typename;
         for (const [key, value] of Object.entries(object)) {
           if (key === "__typename") continue;
@@ -212,12 +214,14 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
           if (!fieldPolicy) continue;
           if (typeof fieldPolicy === "function") {
             // @ts-expect-error -- I know my read policies don't need the second argument, but the type signature says they do.
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             object[key] = fieldPolicy(value);
           } else if (
             "read" in fieldPolicy &&
             typeof fieldPolicy.read === "function"
           ) {
             // @ts-expect-error -- I know my read policies don't need the second argument, but the type signature says they do.
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             object[key] = fieldPolicy.read(value);
           }
         }
@@ -372,7 +376,7 @@ export function TodoDragDropContainer(props: { children: ReactNode }) {
             cache.modify({
               id: cache.identify(data.updateWorkoutWorkedOutAt.workout),
               fields: {
-                workedOutAt(d) {
+                workedOutAt() {
                   return targetDate;
                 },
               },

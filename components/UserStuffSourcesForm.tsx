@@ -54,6 +54,7 @@ function UserStuffSourceForm({
     const wasFetchedRecently = Boolean(
       userDataSource.lastAttemptedAt &&
       new Date(userDataSource.lastAttemptedAt) >
+        // eslint-disable-next-line react-hooks/purity
         new Date(Date.now() - 1000 * 60 * 5),
     );
 

@@ -8,8 +8,8 @@ import {
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
-import { useEffectEvent } from "react";
 import { GQTrip } from "../../graphql.generated/graphql";
+import { useEvent } from "../../hooks";
 import { cotemporality } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
@@ -47,7 +47,7 @@ export function DiaryAgendaDayTrip({
     .match(/\((.+)\)/)?.[1]
     ?.trim();
 
-  const handleOnClick = useEffectEvent(() => {
+  const handleOnClick = useEvent(() => {
     router.push(`/diary/entries/${trip.__typename}:${trip.id}`);
   });
 

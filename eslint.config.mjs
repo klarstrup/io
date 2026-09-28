@@ -194,7 +194,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "graphql.generated.ts",
+    "graphql.generated.ts",  "graphql.generated/index.ts"
   ]),
 ]);
 

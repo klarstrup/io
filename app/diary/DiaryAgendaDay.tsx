@@ -293,6 +293,7 @@ export function DiaryAgendaDay({
               endOfDayButItRespectsDayStartHour(addDays(now, 3)),
             ),
           },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedDayStart],
   );
 
@@ -307,7 +308,7 @@ export function DiaryAgendaDay({
   const endCursor = data?.user?.journalEntries?.pageInfo?.endCursor;
 
   useInterval(() => {
-    if (!loading) refetch({ after: startCursor, before: endCursor });
+    if (!loading) void refetch({ after: startCursor, before: endCursor });
   }, pollInterval);
 
   const fetchingInterval = useMemo(
@@ -778,7 +779,7 @@ export function DiaryAgendaDay({
         element.style.overflowX = "";
       }
     };
-  }, [isPointerFine, isXL]);
+  }, [isPointerFine, isXL, selectedDayStart]);
 
   return (
     <>
