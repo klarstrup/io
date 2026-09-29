@@ -50,6 +50,7 @@
     "@vercel/functions": "^3.9.9",
     "ably": "^2.29.0",
     "babel-plugin-react-compiler": "^1.0.0",
+    "better-auth": "^1.7.6",
     "cheerio": "^1.2.0",
     "date-fns": "^4.4.0",
     "echarts-for-react": "^3.0.6",
