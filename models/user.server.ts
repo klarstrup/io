@@ -207,13 +207,15 @@ export const getUserJournalEntries = async (
                   .map((name) =>
                     / - /.test(name)
                       ? name.split(/ - /)[0]
-                      : / with /.test(name)
-                        ? name.split(/ with /)[0]
-                        : / of /.test(name)
-                          ? name.split(/ of /)[0]
-                          : /, /.test(name)
-                            ? name.split(/, /)[0]
-                            : name,
+                      : / topped with /.test(name)
+                        ? name.split(/ topped with /)[0]
+                        : / with /.test(name)
+                          ? name.split(/ with /)[0]
+                          : / of /.test(name)
+                            ? name.split(/ of /)[0]
+                            : /, /.test(name)
+                              ? name.split(/, /)[0]
+                              : name,
                   ),
               )
               .filter(Boolean),
