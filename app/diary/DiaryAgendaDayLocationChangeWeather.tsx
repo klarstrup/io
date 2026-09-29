@@ -1,12 +1,12 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
 import { addMilliseconds, isWithinInterval } from "date-fns";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
 import { ShyGuy } from "../../components/ShyGuy";
 import * as weatherIconsByCode from "../../components/weather-icons/index";
 import { useEvent } from "../../hooks";
+import { useSession } from "../../lib/auth-client";
 import { decodeGeohash, getSunrise, getSunset } from "../../utils";
 import { getClosestTomorrowInterval } from "./actions";
 

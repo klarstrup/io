@@ -1,7 +1,7 @@
 import { TZDate, tzOffset } from "@date-fns/tz";
 import { addMinutes } from "date-fns";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import {
   difficultyToGradeMap,
   type KilterBoard,
@@ -21,7 +21,7 @@ export const maxDuration = 60;
 
 async function* fetchSertAscents(
   token: string,
-  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
+  user: NonNullable<Awaited<ReturnType<typeof authUser>>>,
 ) {
   const newestAscentInDatabase = await KilterBoardAscents.findOne(
     {},
@@ -71,7 +71,7 @@ async function* fetchSertAscents(
 }
 async function* fetchSertBids(
   token: string,
-  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"],
+  user: NonNullable<Awaited<ReturnType<typeof authUser>>>,
 ) {
   const newestBidInDatabase = await KilterBoardBids.findOne(
     {},
@@ -242,7 +242,7 @@ const fetchers = [
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

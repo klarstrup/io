@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { addDays, endOfDay, startOfDay, subSeconds } from "date-fns";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import type { TomorrowResponse } from "../../../sources/tomorrow";
 import { TomorrowIntervals } from "../../../sources/tomorrow.server";
 import { DataSource } from "../../../sources/utils";
@@ -56,7 +56,7 @@ async function fetchTomorrowTimelineIntervals({
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     await TomorrowIntervals.createIndexes([

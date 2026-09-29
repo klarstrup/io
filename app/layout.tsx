@@ -1,7 +1,6 @@
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
-import { SessionProvider } from "next-auth/react";
 import { Suspense } from "react";
 import AblyWrapper from "../AblyWrapper";
 import { ApolloWrapper } from "../ApolloWrapper";
@@ -27,19 +26,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body className="flex flex-col">
-        <SessionProvider>
-          <ApolloWrapper>
-            <AblyWrapper>
-              <LoadingIndicator />
-              <Suspense>
-                <UserStuff />
-                {children}
-              </Suspense>
-              <Backdrop />
-              <Analytics />
-            </AblyWrapper>
-          </ApolloWrapper>
-        </SessionProvider>
+        <ApolloWrapper>
+          <AblyWrapper>
+            <LoadingIndicator />
+            <Suspense>
+              <UserStuff />
+              {children}
+            </Suspense>
+            <Backdrop />
+            <Analytics />
+          </AblyWrapper>
+        </ApolloWrapper>
         <div id="modal-root" />
       </body>
     </html>

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
-import { Spiir } from "../../../sources/spiir";
+import { authUser } from "../../../auth";
+import type { Spiir } from "../../../sources/spiir";
 import { SpiirAccountGroups } from "../../../sources/spiir.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
@@ -47,7 +47,7 @@ const getAccountGroups = (init?: RequestInit) =>
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

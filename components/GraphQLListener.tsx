@@ -1,12 +1,12 @@
 "use client";
 
+import { StoreObject } from "@apollo/client";
 import { useApolloClient } from "@apollo/client/react";
 import { parse } from "graphql";
 import { ListPageUserDocument } from "../graphql.generated/graphql";
 import { useChannel } from "../hooks/useChannel";
+import { useSession } from "../lib/auth-client";
 import { uniqueBy } from "../utils";
-import { useSession } from "next-auth/react";
-import { StoreObject } from "@apollo/client";
 
 function messageToGraphQLUpdate(
   client: ReturnType<typeof useApolloClient>,

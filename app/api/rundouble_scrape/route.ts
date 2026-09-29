@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
-import { RunDouble } from "../../../sources/rundouble";
+import { authUser } from "../../../auth";
+import type { RunDouble } from "../../../sources/rundouble";
 import { RunDoubleRuns } from "../../../sources/rundouble.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
@@ -24,7 +24,7 @@ async function* getRuns(userId: string) {
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

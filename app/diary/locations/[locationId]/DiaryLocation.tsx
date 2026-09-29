@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
-import { auth } from "../../../../auth";
-import { GQWorkout } from "../../../../graphql.generated/graphql";
+import { authUser } from "../../../../auth";
+import type { GQWorkout } from "../../../../graphql.generated/graphql";
 import { Locations } from "../../../../models/location.server";
 import { MaterializedWorkoutsView } from "../../../../models/workout.server";
 import WorkoutEntry from "../../WorkoutEntry";
@@ -10,7 +10,7 @@ export default async function DiaryExercise({
 }: {
   locationId: string;
 }) {
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   const location = await Locations.findOne({
     _id: new ObjectId(locationId),

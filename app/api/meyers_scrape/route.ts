@@ -1,6 +1,6 @@
 import { addWeeks } from "date-fns";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { Meyers } from "../../../sources/meyers";
 import { MeyersMenus } from "../../../sources/meyers.server";
 import { DataSource } from "../../../sources/utils";
@@ -12,7 +12,7 @@ export const maxDuration = 45;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

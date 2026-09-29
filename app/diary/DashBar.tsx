@@ -4,13 +4,13 @@ import { useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { addDays, isFuture } from "date-fns";
 import gql from "graphql-tag";
-import { useSession } from "next-auth/react";
 import { type SVGProps, useMemo } from "react";
 import { DistanceToNowShort } from "../../components/DistanceToNowStrict";
 import { Masonry } from "../../components/Masonry";
 import { GetLatestWeightEntryDocument } from "../../graphql.generated/graphql";
 import { useIsSSR } from "../../hooks/useIsSSR";
 import useTrendingNumber from "../../hooks/useTrendingNumber";
+import { useSession } from "../../lib/auth-client";
 import { DataSource, type UserDataSource } from "../../sources/utils";
 import {
   decodeGeohash,
@@ -177,7 +177,7 @@ function BarIcon({ children }: { children: React.ReactNode }) {
 
 export default function DashBar() {
   const isSSR = useIsSSR();
-  const { data: sessionData, status: sessionStatus } = useSession();
+  const { data: sessionData, isPending: sessionPending } = useSession();
   const { data } = useQuery(GetLatestWeightEntryDocument, {
     errorPolicy: "all",
   });
@@ -199,7 +199,7 @@ export default function DashBar() {
     data?.user?.fatRatioTimeSeries || [],
   );
 
-  const unauthenticated = sessionStatus === "unauthenticated";
+  const unauthenticated = !sessionData && !sessionPending;
 
   if (unauthenticated) {
     return <div className="min-h-12.5 min-w-xs" />;

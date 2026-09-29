@@ -7,7 +7,7 @@ import {
 } from "date-fns";
 import { DateTime } from "luxon";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import {
   getMyFitnessPalReport,
   MyFitnessPalFoodEntries,
@@ -39,7 +39,7 @@ export const maxDuration = 45;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

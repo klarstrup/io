@@ -1,11 +1,11 @@
 import { addDays, subDays } from "date-fns";
 import { ObjectId } from "mongodb";
 import { connection, NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { Withings } from "../../../sources/withings";
+import type { Withings } from "../../../sources/withings";
 import {
   WithingsMeasureGroup,
   WithingsSleepSummarySeries,
@@ -35,7 +35,7 @@ export const GET = async (request: NextRequest) => {
 
   await connection();
 
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
 
   const searchParams = request.nextUrl.searchParams;

@@ -2,7 +2,6 @@
 import { useApolloClient } from "@apollo/client/react";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -12,6 +11,7 @@ import {
   createUserDataSource,
   updateUserDataSource,
 } from "../app/diary/actions";
+import { useSession } from "../lib/auth-client";
 import {
   DataSource,
   dataSources,
@@ -29,7 +29,7 @@ function UserStuffSourceForm({
   userDataSource: UserDataSource;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const { data: sessionData, update } = useSession();
+  const { data: sessionData, refetch } = useSession();
   const user = sessionData?.user;
   const router = useRouter();
   const client = useApolloClient();
@@ -203,7 +203,7 @@ function UserStuffSourceForm({
         setIsEditing(false);
         router.refresh();
         void client.refetchQueries({ include: "all" });
-        void update();
+        void refetch();
       })}
       className="flex w-full max-w-full flex-col items-stretch gap-1"
     >

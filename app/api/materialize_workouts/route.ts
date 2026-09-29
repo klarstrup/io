@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import PartySocket from "partysocket";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import {
   MaterializedWorkoutsView,
@@ -13,7 +13,7 @@ import { materializeIoWorkouts, sourceToMaterializer } from "./materializers";
 export const maxDuration = 45;
 
 export const GET = async () => {
-  const user = (await auth())?.user;
+    const user = await authUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
 
   return jsonStreamResponse(async function* () {

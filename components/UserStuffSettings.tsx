@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 import { refresh } from "next/cache";
-import { auth } from "../auth";
+import { authUser } from "../auth";
 import { Users } from "../models/user.server";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 
 async function updateUser(formData: FormData) {
   "use server";
 
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   if (!user) throw new Error("No user found");
 
@@ -32,7 +32,7 @@ async function updateUser(formData: FormData) {
 }
 
 export default async function UserStuffSettings() {
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   return user ? (
     <div>

@@ -9,7 +9,7 @@ import {
 } from "date-fns";
 import type { FilterOperators } from "mongodb";
 import { RRule, RRuleSet } from "rrule";
-import { auth } from "../auth";
+import { authUser } from "../auth";
 import type { MongoVEvent, MongoVTodo } from "../lib";
 import { omit } from "../utils";
 import type { ProxyCollection } from "../utils.server";
@@ -21,12 +21,21 @@ export const IcalEvents = proxyCollection<MongoVEvent | MongoVTodo>(
   "ical_events",
 );
 
+export const getURLsFromString = (str: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return (
+    str
+      .match(urlRegex)
+      ?.slice(1)
+      .map((url) => url.replace(/<\/a>$/, "")) || []
+  );
+};
 export async function* getUserIcalEventsBetween(
   userId: string,
   { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>,
 ) {
-  const user = (await auth())?.user;
-  if (!user || userId !== user.id) throw new Error("Unauthorized");
+  const user = await authUser();
+  if (!user?.id || userId !== user.id) throw new Error("Unauthorized");
 
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
@@ -221,7 +230,7 @@ export async function* getUserIcalTodosBetween(
   interval?: Interval<Date, Date> | Interval<TZDate, TZDate> | null,
 ) {
   const { start, end } = interval || {};
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
   // Sadly we can't select the date range from the database because of recurrence logic

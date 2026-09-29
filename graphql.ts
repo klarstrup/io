@@ -21,7 +21,7 @@ import gql from "graphql-tag";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
-import { auth, ensureGoogleAuth } from "./auth";
+import { authUser, ensureGoogleAuth } from "./auth";
 import type {
   GQCreateTodoPayload,
   GQExerciseInfo,
@@ -60,6 +60,7 @@ import {
   Workouts,
 } from "./models/workout.server";
 import {
+  getURLsFromString,
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
   IcalEvents,
@@ -145,8 +146,7 @@ const editableTodoFields = ["summary", "due", "completed"] as const;
 const idealDailySleepInSeconds = 8 * 60 * 60;
 
 export const resolvers: GQResolvers<
-  | { user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"] | null }
-  | undefined
+  { user: NonNullable<Awaited<ReturnType<typeof authUser>>> | null } | undefined
 > = {
   Date: dateScalar,
   JSON: GraphQLJSON,
@@ -154,7 +154,7 @@ export const resolvers: GQResolvers<
   Query: {
     hello: () => "worlasdd",
     user: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       return {
@@ -220,7 +220,7 @@ export const resolvers: GQResolvers<
       };
     },
     availableBalance: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
 
       const spiirDataSource = user.dataSources
@@ -245,7 +245,7 @@ export const resolvers: GQResolvers<
       );
     },
     weight: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
 
       // For now, we only support Withings weight data, so we look for a Withings data source and query the weight entries from there
@@ -275,7 +275,7 @@ export const resolvers: GQResolvers<
         : null;
     },
     weightTimeSeries: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
 
       const withingsDataSource = user.dataSources?.find(
@@ -312,7 +312,7 @@ export const resolvers: GQResolvers<
         .filter(Boolean);
     },
     fatRatio: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
 
       const withingsDataSource = user.dataSources?.find(
@@ -341,7 +341,7 @@ export const resolvers: GQResolvers<
         : null;
     },
     fatRatioTimeSeries: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
       const withingsDataSource = user.dataSources?.find(
         (dataSource) => dataSource.source === DataSource.Withings,
@@ -377,7 +377,7 @@ export const resolvers: GQResolvers<
         .filter(Boolean);
     },
     sleepDebt: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
 
       if (!user) return null;
 
@@ -404,7 +404,7 @@ export const resolvers: GQResolvers<
       return totalSleepTime - idealSleepTime;
     },
     sleepDebtFraction: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
 
       if (!user) return null;
 
@@ -431,7 +431,7 @@ export const resolvers: GQResolvers<
       return totalSleepTime / idealSleepTime;
     },
     sleepDebtFractionTimeSeries: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
 
       if (!user) return null;
 
@@ -475,7 +475,7 @@ export const resolvers: GQResolvers<
     },
     pastBusynessFraction: async (_parent, _args, context) => {
       // Get events for the past week and calculate busyness fraction based on number of hours that have events scheduled vs total hours
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
       const userId = user.id;
       const now = new Date();
@@ -516,7 +516,7 @@ export const resolvers: GQResolvers<
     },
     futureBusynessFraction: async (_parent, _args, context) => {
       // Get events for the next week and calculate busyness fraction based on number of hours that have events scheduled vs total hours
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return null;
       const userId = user.id;
       const now = new Date();
@@ -596,11 +596,16 @@ export const resolvers: GQResolvers<
           ...event,
           id: event.uid,
           __typename: "Event",
-          url: typeof event.url === "string" ? event.url : null,
+          url:
+            typeof event.url === "string"
+              ? event.url
+              : (event.description &&
+                  getURLsFromString(event.description)?.[0]) ||
+                null,
         }),
       ),
     inboxEmailCount: async (_parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const oAuth2Client = await ensureGoogleAuth(user.id);
@@ -616,8 +621,9 @@ export const resolvers: GQResolvers<
 
       return data.resultSizeEstimate ?? null;
     },
+
     sleeps: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return [];
 
       return Array.fromAsync(
@@ -633,7 +639,7 @@ export const resolvers: GQResolvers<
       );
     },
     foodEntries: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       const foodEntries: GQFoodEntry[] = [];
 
       if (!user) return foodEntries;
@@ -804,7 +810,7 @@ export const resolvers: GQResolvers<
           }) satisfies GQWorkout,
       ),
     nextSets: async (parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) return [];
       const userExerciseSchedules = user.todoSchedules?.filter(
         (schedule): schedule is ITodoScheduleWithExerciseProgram =>
@@ -845,7 +851,7 @@ export const resolvers: GQResolvers<
   },
   Mutation: {
     createTodo: async (_parent, args, context, info) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const insertResult = await IcalEvents.insertOne({
@@ -894,7 +900,7 @@ export const resolvers: GQResolvers<
       }
     },
     updateTodo: async (_parent, args, context, info) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const todo = await IcalEvents.findOne<MongoVTodo>({
@@ -950,7 +956,7 @@ export const resolvers: GQResolvers<
       }
     },
     deleteTodo: async (_parent, args, context, info) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const result = await IcalEvents.deleteMany({
@@ -975,7 +981,7 @@ export const resolvers: GQResolvers<
       }
     },
     snoozeExerciseSchedule: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
@@ -1017,7 +1023,7 @@ export const resolvers: GQResolvers<
       } satisfies GQSnoozeExerciseSchedulePayload;
     },
     unsnoozeExerciseSchedule: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const exerciseScheduleId = args.input.exerciseScheduleId;
@@ -1057,7 +1063,7 @@ export const resolvers: GQResolvers<
       } satisfies GQUnsnoozeExerciseSchedulePayload;
     },
     createWorkout: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const workoutData = args.input.data;
@@ -1188,7 +1194,7 @@ export const resolvers: GQResolvers<
       };
     },
     updateWorkout: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const workoutId = args.input.id;
@@ -1322,7 +1328,7 @@ export const resolvers: GQResolvers<
       };
     },
     updateWorkoutWorkedOutAt: async (_parent, args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       const workoutId = args.input.id;
@@ -1524,7 +1530,7 @@ export const resolvers: GQResolvers<
       } satisfies GQExerciseInfo;
     },
     nextSet: async (parent, _args, context) => {
-      const user = context?.user ?? (await auth())?.user;
+      const user = context?.user ?? (await authUser());
       if (!user) throw new Error("Unauthorized");
 
       if (!parent.enabled) return null;
@@ -1756,7 +1762,7 @@ export const typeDefs = gql`
     id: ID!
     name: String!
     email: String
-    image: String!
+    image: String
     emailVerified: Boolean
     timeZone: String
     locations: [Location!]

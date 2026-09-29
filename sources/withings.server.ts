@@ -1,5 +1,5 @@
 import type { Interval } from "date-fns";
-import { auth } from "../auth";
+import { authUser } from "../auth";
 import { proxyCollection } from "../utils.server";
 import { DataSource } from "./utils";
 import type { Withings } from "./withings";
@@ -26,7 +26,7 @@ export async function* getUserWithingsSleepSummarySeriesBetween(
   userId: string,
   { start, end }: Interval<Date, Date>,
 ) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user) return [];
   if (userId !== user.id) throw new Error("Unauthorized");
 

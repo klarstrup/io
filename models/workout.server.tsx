@@ -9,7 +9,6 @@ import {
   subYears,
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
-import type { Session } from "next-auth";
 import type { GQLocation } from "../graphql.generated/graphql";
 import type { PRType } from "../lib";
 import { dayStartHour, epoch, isUTCMidnight } from "../utils";
@@ -288,7 +287,7 @@ interface GetNextSetsDoc {
   exercise: WorkoutExercise;
 }
 export async function* getNextSets(
-  userId: Session["user"]["id"],
+  userId: string,
   exerciseSchedules: ITodoScheduleWithExerciseProgram[],
   { asOf }: { asOf?: Date | null } = {},
 ) {
@@ -471,7 +470,7 @@ export function getIsSetPR(
   };
 }
 
-export const updateLocationCounts = async (userId: Session["user"]["id"]) =>
+export const updateLocationCounts = async (userId: string) =>
   await MaterializedWorkoutsView.aggregate([
     {
       $match: {
@@ -512,10 +511,10 @@ export const WorkoutLocationsView = proxyCollection<IWorkoutLocationsView>(
   "workout_locations_view",
 );
 
-export const getAllWorkoutLocations = async (user: Session["user"]) => {
+export const getAllWorkoutLocations = async (userId: string) => {
   await WorkoutLocationsView.createIndexes([{ key: { userId: 1 } }]);
 
-  return (await WorkoutLocationsView.find({ userId: user.id }).toArray()).map(
+  return (await WorkoutLocationsView.find({ userId }).toArray()).map(
     (location) => ({
       ...location,
       _id: JSON.stringify(location._id),
@@ -524,7 +523,7 @@ export const getAllWorkoutLocations = async (user: Session["user"]) => {
   );
 };
 
-export const updateExerciseCounts = async (userId: Session["user"]["id"]) => {
+export const updateExerciseCounts = async (userId: string) => {
   // Calculcate quarterly and monthly frequency
   const now = new Date();
   const oneMonthAgo = subMonths(now, 1);
@@ -576,15 +575,13 @@ export const WorkoutExercisesView = proxyCollection<IWorkoutExercisesView>(
   "workout_exercises_view",
 );
 
-export const getAllWorkoutExercises = async (user: Session["user"]) =>
-  (await WorkoutExercisesView.find({ userId: user.id }).toArray()).map(
+export const getAllWorkoutExercises = async (userId: string) =>
+  (await WorkoutExercisesView.find({ userId }).toArray()).map(
     ({ _id, ...location }) => ({ ...location, _id: _id.toString() }),
   );
 
-export const getWorkoutExercise = async (
-  user: Session["user"],
-  exerciseId: number,
-) => await WorkoutExercisesView.findOne({ userId: user.id, exerciseId });
+export const getWorkoutExercise = async (userId: string, exerciseId: number) =>
+  await WorkoutExercisesView.findOne({ userId, exerciseId });
 
 export const calculate60dayTop10AverageSendGrade = (
   allBoulderingWorkouts: WithId<WorkoutData>[],

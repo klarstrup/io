@@ -1,8 +1,7 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
 import { formatDistanceStrict } from "date-fns";
-import type { Session } from "next-auth";
-import Link from "next/link";
+ import Link from "next/link";
 import { useEffect } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import { StealthButton } from "../../components/StealthButton";
@@ -10,6 +9,7 @@ import { GQNextSet } from "../../graphql.generated/graphql";
 import { exercisesById } from "../../models/exercises";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { WorkoutEntryExerciseSetRow } from "./WorkoutEntryExerciseSetRow";
+import { IUser } from "../../models/user";
 
 export function NextSets({
   user,
@@ -19,7 +19,7 @@ export function NextSets({
   showDetails = true,
   showDueDate = false,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   nextSets: GQNextSet[];
   onAddExerciseAction?: (dueSet: GQNextSet) => void;
   onSnoozeDueSetAction?: (dueSet: GQNextSet) => void;

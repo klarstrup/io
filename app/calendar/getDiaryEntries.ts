@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { gql } from "graphql-tag";
 import { query } from "../../ApolloClient";
-import { auth } from "../../auth";
+import { authUser } from "../../auth";
 import { CalendarUserWorkoutsDocument } from "../../graphql.generated/graphql";
 import type { DiaryEntry } from "../../lib";
 import { dateToString, DEFAULT_TIMEZONE } from "../../utils";
@@ -115,7 +115,7 @@ export async function getDiaryEntriesShallow({
   from: Date;
   to?: Date;
 }) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user) throw new Error("User not found");
   const timeZone = user.timeZone || DEFAULT_TIMEZONE;
 

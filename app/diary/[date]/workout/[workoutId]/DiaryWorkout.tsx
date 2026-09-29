@@ -3,7 +3,7 @@
 import { useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import gql from "graphql-tag";
-import { auth } from "../../../../../auth";
+import { authUser } from "../../../../../auth";
 import {
   GetUserLocationsDocument,
   GetWorkoutDocument,
@@ -14,7 +14,7 @@ import { WorkoutForm } from "../../../WorkoutForm";
 export default function DiaryWorkout(props: {
   date: `${number}-${number}-${number}`;
   workoutId: string;
-  user: NonNullable<Awaited<ReturnType<typeof auth>>>["user"];
+  user: NonNullable<Awaited<ReturnType<typeof authUser>>>;
 }) {
   const { date, workoutId, user } = props;
 

@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { NextRequest, connection } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import { DSB, isDSBAuthTokens } from "../../../sources/dsb";
 import { DSBProductSummaries } from "../../../sources/dsb.server";
@@ -31,7 +31,7 @@ export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     await connection();
 
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

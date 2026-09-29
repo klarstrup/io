@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { connection, NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { isGrippyAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import {
@@ -59,7 +59,7 @@ export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     await connection();
 
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

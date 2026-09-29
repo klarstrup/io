@@ -1,7 +1,7 @@
 import { addDays } from "date-fns";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
-import { Climbalong } from "../../../sources/climbalong";
+import { authUser } from "../../../auth";
+import type { Climbalong } from "../../../sources/climbalong";
 import {
   ClimbAlongAthletes,
   ClimbAlongCircuits,
@@ -30,7 +30,7 @@ export const GET = (request: NextRequest) =>
     const getTimeRemaining = () =>
       maxDuration * 1000 - (Date.now() - startedAt);
 
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

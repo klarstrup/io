@@ -1,7 +1,7 @@
 import { compareAsc } from "date-fns";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { Users } from "../../../models/user.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
 import { epoch } from "../../../utils";
@@ -9,7 +9,7 @@ import { epoch } from "../../../utils";
 export async function GET() {
   await connection();
 
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
   const users = await Users.find({ id: user.id }).toArray();
 

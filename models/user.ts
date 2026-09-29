@@ -1,11 +1,8 @@
-import { Duration } from "../sources/fitocracy";
+import { User } from "better-auth/types";
+import type { Duration } from "../sources/fitocracy";
 import type { UserDataSource } from "../sources/utils";
 
-export interface IUser {
-  name: string;
-  email?: string | null;
-  image: string;
-  emailVerified?: boolean | null;
+export interface IUser extends User {
   timeZone?: string | null;
   todoSchedules?: ITodoSchedule[];
   dataSources?: UserDataSource[];

@@ -1,9 +1,9 @@
-import { auth } from "../auth";
+import { authUser } from "../auth";
 import { dataSources } from "../sources/utils";
 import UserStuffSourcesForm from "./UserStuffSourcesForm";
 
 export default async function UserStuffSources() {
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   if (!user) return null;
 

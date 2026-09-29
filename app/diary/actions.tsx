@@ -5,7 +5,7 @@ import { ObjectId, type WithId } from "mongodb";
 import { revalidatePath } from "next/cache";
 import PartySocket from "partysocket";
 import { v4 as uuid } from "uuid";
-import { auth } from "../../auth";
+import { authUser } from "../../auth";
 import type { LocationData } from "../../models/location";
 import { Locations } from "../../models/location.server";
 import type { ITodoScheduleWithExerciseProgram } from "../../models/user";
@@ -39,7 +39,7 @@ const emitIoUpdate = (userId: string) => {
 };
 
 export async function deleteWorkout(workoutId: string) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user) throw new Error("Unauthorized");
 
   const result = await Workouts.updateOne(
@@ -64,7 +64,7 @@ export async function snoozeUserExerciseSchedule(
   exerciseScheduleId: string,
   snoozedUntil: Date | null,
 ) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   await Users.updateOne(
@@ -92,7 +92,7 @@ export async function updateUserExerciseSchedule(
   exerciseScheduleId: ITodoScheduleWithExerciseProgram["id"],
   exerciseSchedule: ITodoScheduleWithExerciseProgram,
 ) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   console.log(
@@ -114,7 +114,7 @@ export async function updateUserExerciseSchedules(
   userId: string,
   schedules: ITodoScheduleWithExerciseProgram[],
 ) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   await Users.updateOne(
@@ -139,7 +139,7 @@ export async function createUserDataSource<
   source: S,
   dataSource: Pick<DS, "config" | "name" | "source">,
 ) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   const newDataSource = {
@@ -170,7 +170,7 @@ export async function createUserDataSource<
 export async function updateUserDataSource<
   DS extends Extract<UserDataSource, { source: DataSource }>,
 >(userId: string, dataSourceId: DS["id"], dataSource: DS) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   await Users.updateOne(
@@ -206,7 +206,7 @@ export async function updateLocation(
   locationId: string,
   location: LocationData,
 ) {
-  const user = (await auth())?.user;
+  const user = await authUser();
   if (!user || user.id !== userId) throw new Error("Unauthorized");
 
   await Locations.updateOne(

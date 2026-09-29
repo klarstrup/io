@@ -1,7 +1,7 @@
 import { startOfYear, subMonths, subYears } from "date-fns";
 import { Fragment, Suspense } from "react";
-import { auth } from "../../../../auth";
-import { GQWorkout } from "../../../../graphql.generated/graphql";
+import { authUser } from "../../../../auth";
+import type { GQWorkout } from "../../../../graphql.generated/graphql";
 import { ExerciseHistoryTimeframe, PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
 import { Locations } from "../../../../models/location.server";
@@ -27,7 +27,7 @@ export default async function DiaryExercise({
   timeframe?: ExerciseHistoryTimeframe;
 }) {
   const exercise = exercisesById.get(exerciseId)!;
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   return (
     <>

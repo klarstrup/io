@@ -1,7 +1,7 @@
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { isAuthTokens } from "../../../lib";
 import { Users } from "../../../models/user.server";
 import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
@@ -34,7 +34,7 @@ export const GET = (request: NextRequest) =>
     const getTimeRemaining = () =>
       maxDuration * 1000 - (Date.now() - startedAt);
 
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

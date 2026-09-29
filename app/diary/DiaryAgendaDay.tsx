@@ -17,7 +17,6 @@ import {
   subHours,
 } from "date-fns";
 import { gql } from "graphql-tag";
-import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
@@ -30,6 +29,7 @@ import { useIdle } from "../../hooks/useIdle";
 import useInterval from "../../hooks/useInterval";
 import { useIsSSR } from "../../hooks/useIsSSR";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { useSession } from "../../lib/auth-client";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -276,8 +276,8 @@ export function DiaryAgendaDay({
 }) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
-  const { data: sessionData, status: sessionStatus } = useSession();
-  const sessionDataLoading = sessionStatus === "loading";
+  const { data: sessionData, isPending: sessionPending } = useSession();
+  const sessionDataLoading = sessionPending;
   const sessionUser = sessionData?.user;
 
   const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;

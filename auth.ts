@@ -1,27 +1,37 @@
-import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import { OAuth2Client } from "google-auth-library";
+import { betterAuth } from "better-auth";
+import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { ObjectId } from "mongodb";
-import NextAuth, { type Session } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
-import GoogleProvider from "next-auth/providers/google";
+import type { IUser } from "./models/user";
+
 import { Accounts } from "./models/user.server";
 import { mongoClient } from "./mongodb";
-import { parseDateFields } from "./utils";
+import { OAuth2Client } from "google-auth-library";
 
-const {
-  auth: authRaw,
-  handlers,
-  signIn,
-  signOut,
-} = NextAuth({
-  trustHost: true,
-  adapter: MongoDBAdapter(mongoClient),
-  providers: [
-    GithubProvider({
+export const auth = betterAuth({
+  database: mongodbAdapter(mongoClient.db(), {
+    client: mongoClient,
+    usePlural: true,
+  }),
+  user: {
+    additionalFields: {
+      dataSources: { type: "string[]", input: false },
+      timeZone: { type: "string", input: true },
+      todoSchedules: { type: "string[]", input: false },
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+    },
+  },
+  baseURL: "http://localhost:1337/",
+  secret: process.env.JWT_SECRET!,
+  socialProviders: {
+    github: {
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
-    }),
-    GoogleProvider({
+    },
+    google: {
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       authorization: {
@@ -33,26 +43,15 @@ const {
             "openid email profile https://www.googleapis.com/auth/gmail.readonly",
         },
       },
-    }),
-  ],
-  secret: process.env.JWT_SECRET!,
-  callbacks: {
-    session: ({ session, user }) => ({ ...session, user: user ?? null }),
+    },
   },
 });
 
-const auth = async () => {
-  const session = await authRaw();
-
-  return (
-    session &&
-    (parseDateFields(
-      session as unknown as Record<string, unknown>,
-    ) as unknown as Session)
-  );
+export const authUser = async () => {
+  const { headers } = await import("next/headers");
+  return ((await auth.api.getSession({ headers: await headers() }))?.user ||
+    undefined) as IUser | undefined;
 };
-
-export { auth, handlers, signIn, signOut };
 
 const oAuth2ClientOptions = {
   clientId: process.env.AUTH_GOOGLE_ID!,
@@ -61,18 +60,18 @@ const oAuth2ClientOptions = {
 export const ensureGoogleAuth = async (userId: string) => {
   const userGoogleAccount = await Accounts.findOne({
     userId: new ObjectId(userId) as unknown as string,
-    provider: "google",
+    providerId: "google",
   });
   if (!userGoogleAccount) throw new Error("Google account not found for user");
 
   const oAuth2Client = new OAuth2Client(oAuth2ClientOptions);
   oAuth2Client.setCredentials({
-    access_token: userGoogleAccount.access_token,
-    refresh_token: userGoogleAccount.refresh_token,
-    token_type: userGoogleAccount.token_type,
-    scope: userGoogleAccount.scope,
-    expiry_date: userGoogleAccount.expires_at,
-    id_token: userGoogleAccount.id_token,
+    access_token: userGoogleAccount.accessToken,
+    refresh_token: userGoogleAccount.refreshToken,
+    //    token_type: userGoogleAccount.tokenType,
+    //    scope: userGoogleAccount.scope,
+    //    expiry_date: userGoogleAccount.expiresAt,
+    id_token: userGoogleAccount.idToken,
   });
 
   const getAccessTokenResponse = await oAuth2Client.getAccessToken();
@@ -85,24 +84,22 @@ export const ensureGoogleAuth = async (userId: string) => {
     // This is present when it refreshes the access token using a refresh token i think
     if (credentials && "access_token" in credentials) {
       await Accounts.updateOne(
-        { providerAccountId: userGoogleAccount.providerAccountId },
+        { accountId: userGoogleAccount.accountId },
         {
           $set: {
-            access_token: credentials.access_token ?? undefined,
-            refresh_token: credentials.refresh_token ?? undefined,
-            token_type:
-              (credentials.token_type as
-                Lowercase<string> | null | undefined) ?? undefined,
+            accessToken: credentials.access_token ?? undefined,
+            refreshToken: credentials.refresh_token ?? undefined,
+            tokenType: credentials.token_type ?? undefined,
             scope: credentials.scope ?? undefined,
-            expires_at: credentials.expiry_date ?? undefined,
-            id_token: credentials.id_token ?? undefined,
+            expiresAt: credentials.expiry_date ?? undefined,
+            idToken: credentials.id_token ?? undefined,
           },
         },
       );
     } else {
       await Accounts.updateOne(
-        { providerAccountId: userGoogleAccount.providerAccountId },
-        { $set: { access_token: getAccessTokenResponse.token } },
+        { accountId: userGoogleAccount.accountId },
+        { $set: { accessToken: getAccessTokenResponse.token } },
       );
     }
   }

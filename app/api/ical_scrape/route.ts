@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { isDate, max, subMilliseconds } from "date-fns";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import type { IcalIoMeta } from "../../../lib";
 import { extractIcalCalendarAndEvents } from "../../../sources/ical";
 import { IcalEvents } from "../../../sources/ical.server";
@@ -14,7 +14,7 @@ export const maxDuration = 60;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     const isForced = request.nextUrl.searchParams.get("force") === "true";

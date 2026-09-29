@@ -1,6 +1,5 @@
 "use client";
 import { TZDate } from "@date-fns/tz";
-import type { Session } from "next-auth";
 import Link from "next/link";
 import type { JSX } from "react";
 import type { GQWorkout } from "../../graphql.generated/graphql";
@@ -15,13 +14,14 @@ import {
   isNonEmptyArray,
   uniqueBy,
 } from "../../utils";
+import { IUser } from "../../models/user";
 
 export function DiaryEntryItem({
   user,
   date,
   diaryEntry,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   date: `${number}-${number}-${number}`;
   diaryEntry?: DiaryEntry;
 }) {

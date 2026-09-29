@@ -1,6 +1,6 @@
 import { tz, TZDate } from "@date-fns/tz";
 import { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import {
   MoonBoard,
   moonboardGradeStringToNumber,
@@ -15,7 +15,7 @@ export const maxDuration = 45;
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

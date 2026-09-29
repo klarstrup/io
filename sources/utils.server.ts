@@ -1,8 +1,8 @@
 import { ObjectId } from "mongodb";
-import type { Session } from "next-auth";
 import PartySocket from "partysocket";
 import { sourceToMaterializer } from "../app/api/materialize_workouts/materializers";
 import { Scrapes } from "../models/scrapes.server";
+import type { IUser } from "../models/user";
 import { Users } from "../models/user.server";
 import {
   updateExerciseCounts,
@@ -22,7 +22,7 @@ export type SetUpdatedFn = (updated: boolean | UpdateResult) => void;
 
 // TODO: Allow this to run in parallel for certain data sources, for example iCal feeds, wh
 export async function* wrapSources<S extends DataSource, T>(
-  user: Session["user"],
+  user: IUser,
   source: S,
   fn: (
     dataSource: UserDataSource & { source: S },

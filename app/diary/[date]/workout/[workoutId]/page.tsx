@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { auth } from "../../../../../auth";
+import { authUser } from "../../../../../auth";
 import { Modal } from "../../../../../components/Modal";
 import { dateToString, DEFAULT_TIMEZONE } from "../../../../../utils";
 import DiaryWorkout from "./DiaryWorkout";
@@ -11,7 +11,7 @@ export default async function DiaryWorkoutModal(props: {
   }>;
 }) {
   const { date, workoutId } = await props.params;
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const isToday = date === dateToString(TZDate.tz(timeZone));

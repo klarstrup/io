@@ -1,6 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
+import { authUser } from "../../../auth";
 import { Songkick } from "../../../sources/songkick";
 import { SongkickEvents } from "../../../sources/songkick.server";
 import { DataSource } from "../../../sources/utils";
@@ -58,7 +58,7 @@ export const GET = (request: NextRequest) =>
       return new Response("Server misconfigured", { status: 500 });
     }
 
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(

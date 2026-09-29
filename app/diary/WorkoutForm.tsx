@@ -1,6 +1,5 @@
 "use client";
-
-import { TypedDocumentNode } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import {
@@ -15,7 +14,6 @@ import {
 } from "date-fns";
 import gql from "graphql-tag";
 import { Route } from "next";
-import type { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useId, useMemo, useState } from "react";
@@ -47,6 +45,7 @@ import {
   Unit,
   type ExerciseData,
 } from "../../models/exercises.types";
+import type { IUser } from "../../models/user";
 import {
   addDurationToDate,
   getCircuitByLocationAndSetColor,
@@ -119,7 +118,7 @@ export function WorkoutForm<R extends string>({
   locations,
   exercisesStats,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   workout?: GQWorkout;
   date: `${number}-${number}-${number}`;
   dismissTo: Route<R>;

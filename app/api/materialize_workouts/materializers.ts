@@ -1,5 +1,5 @@
-import type { Session } from "next-auth";
 import { SendType, Unit } from "../../../models/exercises.types";
+import type { IUser } from "../../../models/user";
 import { WorkoutSource } from "../../../models/workout";
 import { Workouts } from "../../../models/workout.server";
 import {
@@ -22,7 +22,7 @@ import { DataSource, UserDataSource } from "../../../sources/utils";
 import { epoch } from "../../../utils";
 
 export async function* materializeToploggerWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.TopLogger },
 ) {
   yield "materializeToploggerWorkouts: start";
@@ -272,7 +272,7 @@ export async function* materializeToploggerWorkouts(
     "ms";
 }
 
-export async function* materializeIoWorkouts(user: Session["user"]) {
+export async function* materializeIoWorkouts(user: IUser) {
   yield "materializeIoWorkouts: start";
   const t = new Date();
 
@@ -295,7 +295,7 @@ export async function* materializeIoWorkouts(user: Session["user"]) {
 }
 
 export async function* materializeFitocracyWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.Fitocracy },
 ) {
   yield "materializeFitocracyWorkouts: start";
@@ -375,7 +375,7 @@ export async function* materializeFitocracyWorkouts(
 }
 
 export async function* materializeRunDoubleWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.RunDouble },
 ) {
   yield "materializeRunDoubleWorkouts: start";
@@ -430,7 +430,7 @@ export async function* materializeRunDoubleWorkouts(
 }
 
 export async function* materializeKilterBoardWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.KilterBoard },
 ) {
   yield "materializeKilterBoardWorkouts: start";
@@ -657,7 +657,7 @@ export async function* materializeKilterBoardWorkouts(
 }
 
 export async function* materializeMoonBoardWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.MoonBoard },
 ) {
   yield "materializeMoonBoardWorkouts: start";
@@ -768,7 +768,7 @@ export async function* materializeMoonBoardWorkouts(
 }
 
 export async function* materializeGrippyWorkouts(
-  user: Session["user"],
+  user: IUser,
   // TODO: Explain why the user ID is embedded and the data source isn't used
   _dataSource: UserDataSource & { source: DataSource.Grippy },
 ) {
@@ -879,7 +879,7 @@ export async function* materializeGrippyWorkouts(
 }
 
 export async function* materializeCrimpdWorkouts(
-  user: Session["user"],
+  user: IUser,
   // TODO: Explain why the user ID is embedded and the data source isn't used
   _dataSource: UserDataSource & { source: DataSource.Crimpd },
 ) {
@@ -935,7 +935,7 @@ export async function* materializeCrimpdWorkouts(
 }
 
 export async function* materializeOnsightWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.Onsight },
 ) {
   yield "materializeOnsightWorkouts: start";
@@ -1093,7 +1093,7 @@ export async function* materializeOnsightWorkouts(
 }
 
 export async function* materializeClimbalongWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.ClimbAlong },
 ) {
   yield "materializeClimbalongWorkouts: start";
@@ -1297,7 +1297,7 @@ export async function* materializeClimbalongWorkouts(
 }
 
 export async function* materializeSportstimingWorkouts(
-  user: Session["user"],
+  user: IUser,
   dataSource: UserDataSource & { source: DataSource.Sportstiming },
 ) {
   yield "materializeSportstimingWorkouts: start";
@@ -1369,7 +1369,7 @@ export const sourceToMaterializer = {
   [DataSource.TopLogger]: materializeToploggerWorkouts,
 } satisfies Partial<{
   [Source in DataSource]: (
-    user: Session["user"],
+    user: IUser,
     dataSource: UserDataSource & { source: Source },
   ) => AsyncGenerator;
 }>;

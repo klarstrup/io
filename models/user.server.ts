@@ -1,4 +1,5 @@
 import { tz } from "@date-fns/tz";
+import { Account } from "better-auth/types";
 import {
   getDay,
   type Interval,
@@ -7,8 +8,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { ObjectId } from "mongodb";
-import type { Account } from "next-auth";
-import { auth } from "../auth";
+import { authUser } from "../auth";
 import type {
   GQEvent,
   GQExerciseInfo,
@@ -26,6 +26,7 @@ import type {
 import type { MongoVEvent } from "../lib";
 import { DSBProductSummaries } from "../sources/dsb.server";
 import {
+  getURLsFromString,
   getUserIcalEventsBetween,
   getUserIcalTodosBetween,
   IcalEvents,
@@ -41,22 +42,13 @@ import {
   unique,
 } from "../utils";
 import { type ProxyCollection, proxyCollection } from "../utils.server";
+import { Attendee } from "../vendor/ical";
 import type { ITodoScheduleWithExerciseProgram, IUser } from "./user";
 import { getNextSets, MaterializedWorkoutsView } from "./workout.server";
 
 export const Users = proxyCollection<IUser>("users");
 
 export const Accounts = proxyCollection<Account>("accounts");
-
-const getURLsFromString = (str: string) => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return (
-    str
-      .match(urlRegex)
-      ?.slice(1)
-      .map((url) => url.replace(/<\/a>$/, "")) || []
-  );
-};
 
 export const getUserJournalEntry = async (
   userId: string,
@@ -316,7 +308,7 @@ export const getUserJournalEntries = async (
     Array.fromAsync(
       getNextSets(
         userId,
-        ((await auth())?.user.todoSchedules || []).filter(
+        ((await authUser())?.todoSchedules || []).filter(
           (schedule): schedule is ITodoScheduleWithExerciseProgram =>
             Boolean(schedule.exerciseProgram),
         ),

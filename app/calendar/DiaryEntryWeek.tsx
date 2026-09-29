@@ -9,17 +9,17 @@ import {
   startOfMonth,
   subWeeks,
 } from "date-fns";
-import type { Session } from "next-auth";
 import { DiaryEntry } from "../../lib";
 import { dateToString } from "../../utils";
 import { DiaryEntryItem } from "./DiaryEntryItem";
+import { IUser } from "../../models/user";
 
 export function DiaryEntryWeek({
   user,
   weekDate,
   diaryEntries,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   weekDate: Date;
   diaryEntries?: [`${number}-${number}-${number}`, DiaryEntry][];
 }) {

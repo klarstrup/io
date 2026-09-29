@@ -1,5 +1,5 @@
 import { endOfISOWeek, startOfISOWeek } from "date-fns";
-import type { Session } from "next-auth";
+import type { IUser } from "../../models/user";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { getDiaryEntriesShallow } from "./getDiaryEntries";
 
@@ -7,7 +7,7 @@ export async function DiaryEntryWeekWrapper({
   user,
   weekDate,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   weekDate: Date;
 }) {
   const diaryEntries =

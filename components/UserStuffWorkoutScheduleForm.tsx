@@ -8,7 +8,6 @@ import {
   subMonths,
   subQuarters,
 } from "date-fns";
-import { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
@@ -20,6 +19,7 @@ import { InputType } from "../models/exercises.types";
 import type {
   ITodoSchedule,
   ITodoScheduleWithExerciseProgram,
+  IUser,
 } from "../models/user";
 import { IWorkoutExercisesView } from "../models/workout.server";
 import type { ExerciseSchedule } from "../sources/fitocracy";
@@ -54,7 +54,7 @@ function UserStuffWorkoutScheduleForm({
   exerciseSchedule,
   onDismiss,
 }: {
-  user: Session["user"];
+  user: IUser;
   exerciseSchedule: ITodoScheduleWithExerciseProgram;
   onDismiss: () => void;
 }) {
@@ -269,7 +269,7 @@ export default function UserStuffWorkoutSchedulesForm({
   user,
   exercisesStats,
 }: {
-  user: Session["user"];
+  user: IUser;
   exercisesStats: IWorkoutExercisesView[];
 }) {
   const exerciseSchedules =

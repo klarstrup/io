@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import type { NextRequest } from "next/server";
-import { auth } from "../../../auth";
-import { SportsTiming } from "../../../sources/sportstiming";
+import { authUser } from "../../../auth";
+import type { SportsTiming } from "../../../sources/sportstiming";
 import {
   SportstimingEvents,
   SportstimingFavorites,
@@ -21,7 +21,7 @@ const sportstimingHeaders: HeadersInit = {
 
 export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     const events = uniqueBy(

@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import { eachWeekOfInterval, endOfISOWeek, isAfter, subWeeks } from "date-fns";
 import { Suspense } from "react";
-import { auth } from "../../auth";
+import { authUser } from "../../auth";
 import LoadMore from "../../components/LoadMore";
 import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryPoller } from "../diary/DiaryPoller";
@@ -15,7 +15,7 @@ const WEEKS_PER_PAGE = 9;
 async function loadMoreData(cursor: { start: Date; end: Date }) {
   "use server";
 
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   const { start, end } = cursor;
   if (!start || !end) throw new Error("isoYearAndWeek not found");
@@ -50,7 +50,7 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 }
 
 export default async function CalendarLayout(_props: PageProps<"/calendar">) {
-  const user = (await auth())?.user;
+  const user = await authUser();
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
   const now = TZDate.tz(timeZone);

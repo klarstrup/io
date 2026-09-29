@@ -141,7 +141,7 @@ export type DiaryAgendaDayUserTodosQueryVariables = Exact<{
 }>;
 
 
-export type DiaryAgendaDayUserTodosQuery = { user: { __typename: 'User', id: string, name: string, email: string | null, image: string, emailVerified: boolean | null, timeZone: string | null, locations: Array<{ __typename: 'Location', id: string, createdAt: Date, updatedAt: Date, name: string, userId: string, knownAddresses: Array<string> | null, boulderCircuits: Array<{ __typename: 'BoulderCircuit', id: string, holdColor: string | null, gradeEstimate: number | null, gradeRange: Array<number | null> | null, name: string, labelColor: string | null, hasZones: boolean | null, description: string | null, createdAt: Date, updatedAt: Date }> | null }> | null, journalEntries: { __typename: 'JournalEntriesConnection', pageInfo: { __typename: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null }, nodes: Array<
+export type DiaryAgendaDayUserTodosQuery = { user: { __typename: 'User', id: string, name: string, email: string | null, image: string | null, emailVerified: boolean | null, timeZone: string | null, locations: Array<{ __typename: 'Location', id: string, createdAt: Date, updatedAt: Date, name: string, userId: string, knownAddresses: Array<string> | null, boulderCircuits: Array<{ __typename: 'BoulderCircuit', id: string, holdColor: string | null, gradeEstimate: number | null, gradeRange: Array<number | null> | null, name: string, labelColor: string | null, hasZones: boolean | null, description: string | null, createdAt: Date, updatedAt: Date }> | null }> | null, journalEntries: { __typename: 'JournalEntriesConnection', pageInfo: { __typename: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null }, nodes: Array<
         | { __typename: 'Delivery', id: string, timestamp: Date, status: string, from: string, url: string | null }
         | { __typename: 'Event', id: string, created: Date | null, summary: string | null, start: Date, end: Date, datetype: string, location: string | null, url: string | null, transparency: string | null }
         | { __typename: 'Meal', id: string, datetime: Date, url: string | null, foodEntries: Array<{ __typename: 'FoodEntry', id: string, datetime: Date, food: { __typename: 'Food', id: string, description: string } }> }
@@ -742,7 +742,7 @@ export type GQUser = {
   foodEntries?: Maybe<Array<GQFoodEntry>>;
   futureBusynessFraction?: Maybe<Scalars['Float']['output']>;
   id: Scalars['ID']['output'];
-  image: Scalars['String']['output'];
+  image?: Maybe<Scalars['String']['output']>;
   inboxEmailCount?: Maybe<Scalars['Int']['output']>;
   journalEntries: GQJournalEntriesConnection;
   journalEntry?: Maybe<GQJournalEntryUnion>;
@@ -1409,7 +1409,7 @@ export type GQUserResolvers<ContextType = any, ParentType extends GQResolversPar
   foodEntries?: Resolver<Maybe<Array<GQResolversTypes['FoodEntry']>>, ParentType, ContextType, RequireFields<GQUserFoodEntriesArgs, 'interval'>>;
   futureBusynessFraction?: Resolver<Maybe<GQResolversTypes['Float']>, ParentType, ContextType>;
   id?: Resolver<GQResolversTypes['ID'], ParentType, ContextType>;
-  image?: Resolver<GQResolversTypes['String'], ParentType, ContextType>;
+  image?: Resolver<Maybe<GQResolversTypes['String']>, ParentType, ContextType>;
   inboxEmailCount?: Resolver<Maybe<GQResolversTypes['Int']>, ParentType, ContextType>;
   journalEntries?: Resolver<GQResolversTypes['JournalEntriesConnection'], ParentType, ContextType, Partial<GQUserJournalEntriesArgs>>;
   journalEntry?: Resolver<Maybe<GQResolversTypes['JournalEntryUnion']>, ParentType, ContextType, RequireFields<GQUserJournalEntryArgs, 'id' | 'type'>>;

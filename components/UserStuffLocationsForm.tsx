@@ -1,7 +1,6 @@
 "use client";
 import { useApolloClient } from "@apollo/client/react";
 import { isPast } from "date-fns";
-import { Session } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -10,6 +9,7 @@ import { v4 } from "uuid";
 import { updateLocation } from "../app/diary/actions";
 import { frenchRounded } from "../grades";
 import { LocationData } from "../models/location";
+import type { IUser } from "../models/user";
 import { omit } from "../utils";
 import { FieldSetX, FieldSetY } from "./FieldSet";
 import { TextAreaThatGrows } from "./TextAreaThatGrows";
@@ -19,7 +19,7 @@ function UserStuffLocationForm({
   location,
   onDismiss,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   location: LocationData & { id: string };
   onDismiss: () => void;
 }) {
@@ -373,7 +373,7 @@ export default function UserStuffLocationsForm({
   user,
   locations,
 }: {
-  user?: Session["user"];
+  user?: IUser;
   locations?: (LocationData & { id: string })[];
 }) {
   const [editingLocationId, setEditingLocationId] = useState<string | null>(

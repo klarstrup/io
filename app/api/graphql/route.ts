@@ -1,9 +1,9 @@
 import { ApolloServer } from "@apollo/server";
+import { ApolloServerPluginUsageReporting } from "@apollo/server/plugin/usageReporting";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
+import { authUser } from "../../../auth";
 import { resolvers, typeDefs } from "../../../graphql";
-import { auth } from "../../../auth";
-import { ApolloServerPluginUsageReporting } from "@apollo/server/plugin/usageReporting";
 
 const server = new ApolloServer({
   resolvers,
@@ -14,7 +14,7 @@ const server = new ApolloServer({
 });
 
 const handler = startServerAndCreateNextHandler(server, {
-  context: async () => ({ user: (await auth())?.user || null }),
+  context: async () => ({ user: (await authUser()) || null }),
 });
 
 export async function GET(request: NextRequest) {

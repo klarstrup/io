@@ -1,7 +1,7 @@
 "use client";
 import * as Ably from "ably";
 import { AblyProvider, ChannelProvider } from "ably/react";
-import { useSession } from "next-auth/react";
+import { useSession } from "./lib/auth-client";
 
 // Create your Ably Realtime client
 const realtimeClient =

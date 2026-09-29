@@ -1,6 +1,6 @@
-import { NextRequest, connection } from "next/server";
-import { auth } from "../../../auth";
-import { PostNord } from "../../../sources/postnord";
+import { type NextRequest, connection } from "next/server";
+import { authUser } from "../../../auth";
+import type { PostNord } from "../../../sources/postnord";
 import { PostNordShipmentInformation } from "../../../sources/postnord.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
@@ -54,7 +54,7 @@ export const GET = (request: NextRequest) =>
   jsonStreamResponse(async function* () {
     await connection();
 
-    const user = (await auth())?.user;
+    const user = await authUser();
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     yield* wrapSources(
