@@ -115,8 +115,24 @@ export const getUserJournalEntries = async (
         __typename: "Todo",
       } satisfies GQTodo),
     ),
-    Array.fromAsync(getUserIcalEventsBetween(userId, interval), (event) =>
-      entries.push({
+    Array.fromAsync(getUserIcalEventsBetween(userId, interval), (event) => {
+      const ioDeclined =
+        (event.attendee &&
+          (Array.isArray(event.attendee) ? event.attendee : [event.attendee])
+            ?.filter(
+              (attendee): attendee is Attendee & object =>
+                typeof attendee == "object",
+            )
+            .some(
+              (attendee) =>
+                attendee.params.CN === "toxicfilafel@gmail.com" &&
+                attendee.params.PARTSTAT === "DECLINED",
+            )) ||
+        false;
+
+      if (ioDeclined) return;
+
+      return entries.push({
         ...event,
         id: event.uid,
         __typename: "Event",
@@ -126,8 +142,8 @@ export const getUserJournalEntries = async (
             : (event.description &&
                 getURLsFromString(event.description)?.[0]) ||
               null,
-      } satisfies GQEvent),
-    ),
+      } satisfies GQEvent);
+    }),
     Array.fromAsync(
       (await Users.findOne({ _id: new ObjectId(userId) }))?.dataSources?.some(
         (dataSource) =>

@@ -81,6 +81,7 @@ export async function* getUserIcalEventsBetween(
         end: 1,
         uid: 1,
         location: 1,
+        attendee: 1,
         _io_icalUrlHash: 1,
         _io_userId: 1,
         _io_scrapedAt: 1,
