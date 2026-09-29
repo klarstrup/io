@@ -52,9 +52,8 @@ export const GET = (request: NextRequest) =>
         const icalData = parseICS(ics);
 
         const _io_scrapedAt = new Date();
-        const now1 = new Date();
         const { calendar, events } = extractIcalCalendarAndEvents(icalData);
-        yield `Fetched ${events.length} events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now1.getTime()) / 1000).toFixed(2)} seconds`;
+        yield `Fetched ${events.length} events for icalUrlHash: ${icalUrlHash} in ${((new Date().getTime() - now0.getTime()) / 1000).toFixed(2)} seconds`;
 
         // This accounts for a situation where we ingest an empty or otherwise malformed iCal feed
         if (existingEventIds.length * 0.25 > events.length) {
