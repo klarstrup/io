@@ -154,7 +154,10 @@ export async function* getUserIcalEventsBetween(
       : undefined;
 
     if (rrule) {
-      const dtstart = event.rrule!.origOptions.dtstart!;
+      const dtstart =
+        event.rrule?.origOptions.dtstart ||
+        event.rrule?.options.dtstart ||
+        event.start;
       const tzid = event.rrule!.origOptions.tzid!;
       const rruleSet = new RRuleSet();
 
