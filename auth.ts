@@ -24,7 +24,7 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
-  baseURL: "http://localhost:1337/",
+  baseURL: process.env.NEXTAUTH_URL ?? "http://localhost:1337/",
   secret: process.env.JWT_SECRET!,
   socialProviders: {
     github: {
