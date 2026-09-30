@@ -13,6 +13,26 @@ export default function AuthPage() {
       <button onClick={() => authClient.signIn.social({ provider: "google" })}>
         Sign In Google
       </button>
+      <button
+        onClick={() =>
+          authClient.linkSocial({
+            provider: "google",
+            scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+          })
+        }
+      >
+        Add Google Calendar
+      </button>
+      <button
+        onClick={() =>
+          authClient.linkSocial({
+            provider: "google",
+            scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+          })
+        }
+      >
+        Add Google Mail
+      </button>
     </>
   );
 }
