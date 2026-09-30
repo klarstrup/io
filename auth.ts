@@ -1,11 +1,10 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { OAuth2Client } from "google-auth-library";
 import { ObjectId } from "mongodb";
 import type { IUser } from "./models/user";
-
 import { Accounts } from "./models/user.server";
 import { mongoClient } from "./mongodb";
-import { OAuth2Client } from "google-auth-library";
 
 export const auth = betterAuth({
   database: mongodbAdapter(mongoClient.db(), {
@@ -92,14 +91,16 @@ export const ensureGoogleAuth = async (userId: string) => {
         { accountId: userGoogleAccount.accountId },
         {
           $set: {
-            accessToken: credentials.access_token ?? undefined,
-            refreshToken: credentials.refresh_token ?? undefined,
-            tokenType: credentials.token_type ?? undefined,
-            scope: credentials.scope ?? undefined,
+            accessToken:
+              credentials.access_token || userGoogleAccount.accessToken,
+            refreshToken:
+              credentials.refresh_token || userGoogleAccount.refreshToken,
+            tokenType: credentials.token_type || userGoogleAccount.tokenType,
+            scope: credentials.scope || userGoogleAccount.scope,
             accessTokenExpiresAt: credentials.expiry_date
               ? new Date(credentials.expiry_date)
-              : undefined,
-            idToken: credentials.id_token ?? undefined,
+              : userGoogleAccount.accessTokenExpiresAt,
+            idToken: credentials.id_token || userGoogleAccount.idToken,
           },
         },
       );
