@@ -23,6 +23,9 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
     },
+    additionalFields: {
+      tokenType: { type: "string", input: false, required: false },
+    },
   },
   baseURL: process.env.NEXTAUTH_URL ?? "http://localhost:1337/",
   secret: process.env.JWT_SECRET!,
@@ -68,9 +71,9 @@ export const ensureGoogleAuth = async (userId: string) => {
   oAuth2Client.setCredentials({
     access_token: userGoogleAccount.accessToken,
     refresh_token: userGoogleAccount.refreshToken,
-    //    token_type: userGoogleAccount.tokenType,
-    //    scope: userGoogleAccount.scope,
-    //    expiry_date: userGoogleAccount.expiresAt,
+    token_type: userGoogleAccount.tokenType,
+    scope: userGoogleAccount.scope || undefined,
+    expiry_date: userGoogleAccount.accessTokenExpiresAt?.getTime(),
     id_token: userGoogleAccount.idToken,
   });
 
@@ -91,7 +94,9 @@ export const ensureGoogleAuth = async (userId: string) => {
             refreshToken: credentials.refresh_token ?? undefined,
             tokenType: credentials.token_type ?? undefined,
             scope: credentials.scope ?? undefined,
-            expiresAt: credentials.expiry_date ?? undefined,
+            accessTokenExpiresAt: credentials.expiry_date
+              ? new Date(credentials.expiry_date)
+              : undefined,
             idToken: credentials.id_token ?? undefined,
           },
         },

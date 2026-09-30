@@ -8,7 +8,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { ObjectId } from "mongodb";
-import { authUser } from "../auth";
+import { auth, authUser } from "../auth";
 import type {
   GQEvent,
   GQExerciseInfo,
@@ -48,7 +48,8 @@ import { getNextSets, MaterializedWorkoutsView } from "./workout.server";
 
 export const Users = proxyCollection<IUser>("users");
 
-export const Accounts = proxyCollection<Account>("accounts");
+export const Accounts =
+  proxyCollection<Account<(typeof auth)["options"]["account"]>>("accounts");
 
 export const getUserJournalEntry = async (
   userId: string,
