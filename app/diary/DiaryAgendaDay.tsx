@@ -619,6 +619,7 @@ export function DiaryAgendaDay({
               entry.__typename === "Event" &&
               isEventEntireDay(entry, dayRange.start)
             ) &&
+            !(entry.__typename === "Meal" && location !== previousLocation) &&
             (!previousLocation || previousLocation.name !== location.name) &&
             (!lastLocation || lastLocation.name !== location.name)
           ) {
