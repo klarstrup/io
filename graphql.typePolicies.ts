@@ -84,6 +84,7 @@ export const typePolicies: TypePolicies = {
   Meal: {
     fields: {
       datetime: { read: readDate },
+      location: { read: (v: unknown) => (typeof v === "string" ? v : null) },
     },
   },
   Delivery: {
