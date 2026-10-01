@@ -511,11 +511,11 @@ export function DiaryAgendaDayDay({
 
         // skip if surrounding event has a location that is different from that of the meal
         if (
-          entryThatSurroundsEntry &&
-          "location" in entryThatSurroundsEntry &&
-          meal.location &&
-          entryThatSurroundsEntry.location
-            ? entryThatSurroundsEntry.location === meal.location
+          meal.location
+            ? entryThatSurroundsEntry &&
+              "location" in entryThatSurroundsEntry &&
+              entryThatSurroundsEntry.location &&
+              entryThatSurroundsEntry.location === meal.location
             : true
         ) {
           dayJournalEntryElements.push({
