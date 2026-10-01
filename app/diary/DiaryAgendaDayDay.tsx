@@ -509,17 +509,28 @@ export function DiaryAgendaDayDay({
       } else if (journalEntry.__typename === "Meal") {
         const meal = journalEntry;
 
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayMeal
-              key={entryId}
-              meal={meal}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              timeZone={timeZone}
-            />
-          ),
-        });
+        // skip if surrounding event has a location that is different from that of the meal
+        console.log({ meal, entryThatSurroundsEntry });
+        if (!(
+          entryThatSurroundsEntry &&
+          "location" in entryThatSurroundsEntry &&
+          meal.location &&
+          entryThatSurroundsEntry.location !== meal.location
+        )) {
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayMeal
+                key={entryId}
+                meal={meal}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry
+                }
+                timeZone={timeZone}
+              />
+            ),
+          });
+        }
       } else if (journalEntry.__typename === "Delivery") {
         const delivery = journalEntry;
 

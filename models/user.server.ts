@@ -156,6 +156,7 @@ export const getUserJournalEntries = async (
           datetime: setHours(menu.date_time, 10),
           type: "LUNCH",
           mealName: "Lunch",
+          location: "H. C. Andersens Blvd. 11, 1553 København, Denmark",
           foodEntries: unique(
             menu.menu_sections
               .filter(

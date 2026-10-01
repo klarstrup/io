@@ -106,6 +106,7 @@ gql`
             id
             datetime
             url
+            location
             foodEntries {
               id
               datetime

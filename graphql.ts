@@ -1827,6 +1827,7 @@ export const typeDefs = gql`
     id: ID!
     type: String
     mealName: String
+    location: String
     datetime: Date!
     foodEntries: [FoodEntry!]!
     url: String
