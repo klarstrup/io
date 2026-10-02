@@ -1817,7 +1817,7 @@ export const typeDefs = gql`
 
   type Sleep implements JournalEntry {
     id: ID!
-    deviceId: String!
+    deviceId: String
     startedAt: Date!
     endedAt: Date!
     totalSleepTime: Float!

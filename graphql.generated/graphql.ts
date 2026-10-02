@@ -146,7 +146,7 @@ export type DiaryAgendaDayUserTodosQuery = { user: { __typename: 'User', id: str
         | { __typename: 'Event', id: string, created: Date | null, summary: string | null, start: Date, end: Date, datetype: string, location: string | null, url: string | null, transparency: string | null }
         | { __typename: 'Meal', id: string, datetime: Date, url: string | null, location: string | null, foodEntries: Array<{ __typename: 'FoodEntry', id: string, datetime: Date, food: { __typename: 'Food', id: string, description: string } }> }
         | { __typename: 'NextSet', id: string, lastWorkedOutAt: Date | null, dueOn: Date, exerciseId: number, successful: boolean | null, nextWorkingSets: number | null, nextWorkingSetInputs: Array<{ __typename: 'WorkoutSetInput', unit: string | null, value: number | null, assistType: string | null }> | null, exerciseSchedule: { __typename: 'ExerciseSchedule', id: string, exerciseId: number, enabled: boolean, increment: number | null, workingSets: number | null, workingReps: number | null, deloadFactor: number | null, baseWeight: number | null, snoozedUntil: Date | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string, options: Array<{ __typename: 'WorkoutSetInputOption', value: string | null }> | null }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, frequency: { __typename: 'Duration', years: number | null, months: number | null, weeks: number | null, days: number | null, hours: number | null, minutes: number | null, seconds: number | null } } }
-        | { __typename: 'Sleep', id: string, startedAt: Date, endedAt: Date, totalSleepTime: number, deviceId: string }
+        | { __typename: 'Sleep', id: string, startedAt: Date, endedAt: Date, totalSleepTime: number, deviceId: string | null }
         | { __typename: 'Todo', id: string, created: Date | null, summary: string | null, due: Date | null, completed: Date | null }
         | { __typename: 'Trip', id: string, start: Date, end: Date, legs: Array<{ __typename: 'TripLeg', start: Date, end: Date, from: string, to: string, mode: string }> }
         | { __typename: 'Workout', id: string, createdAt: Date, updatedAt: Date, workedOutAt: Date, materializedAt: Date | null, locationId: string | null, source: string | null, exercises: Array<{ __typename: 'WorkoutExercise', exerciseId: number, displayName: string | null, comment: string | null, exerciseInfo: { __typename: 'ExerciseInfo', id: number, aliases: Array<string>, name: string, isHidden: boolean, inputs: Array<{ __typename: 'ExerciseInfoInput', type: string, options: Array<{ __typename: 'WorkoutSetInputOption', value: string | null }> | null }>, instructions: Array<{ __typename: 'ExerciseInfoInstruction', value: string }>, tags: Array<{ __typename: 'ExerciseInfoTag', name: string, type: string }> | null }, sets: Array<{ __typename: 'WorkoutSet', comment: string | null, createdAt: Date | null, updatedAt: Date | null, inputs: Array<{ __typename: 'WorkoutSetInput', unit: string | null, value: number | null, assistType: string | null }>, meta: Array<{ __typename: 'WorkoutSetMeta', key: string, value: string }> | null }> }> }
@@ -205,7 +205,7 @@ export type JournalEntryQuery = { user: { __typename: 'User', id: string, timeZo
       | { __typename: 'Event', id: string, created: Date | null, summary: string | null, start: Date, end: Date, due: Date | null, datetype: string, location: string | null, url: string | null, transparency: string | null }
       | { __typename: 'Meal' }
       | { __typename: 'NextSet' }
-      | { __typename: 'Sleep', id: string, deviceId: string, startedAt: Date, endedAt: Date, totalSleepTime: number }
+      | { __typename: 'Sleep', id: string, deviceId: string | null, startedAt: Date, endedAt: Date, totalSleepTime: number }
       | { __typename: 'Todo', id: string, created: Date | null, summary: string | null, due: Date | null, completed: Date | null }
       | { __typename: 'Trip', id: string, start: Date, end: Date, legs: Array<{ __typename: 'TripLeg', start: Date, end: Date, from: string, to: string, mode: string }> }
       | { __typename: 'Workout' }
@@ -609,7 +609,7 @@ export type GQServingSize = {
 
 export type GQSleep = GQJournalEntry & {
   __typename: 'Sleep';
-  deviceId: Scalars['String']['output'];
+  deviceId?: Maybe<Scalars['String']['output']>;
   endedAt: Scalars['Date']['output'];
   id: Scalars['ID']['output'];
   startedAt: Scalars['Date']['output'];
@@ -1349,7 +1349,7 @@ export type GQServingSizeResolvers<ContextType = any, ParentType extends GQResol
 };
 
 export type GQSleepResolvers<ContextType = any, ParentType extends GQResolversParentTypes['Sleep'] = GQResolversParentTypes['Sleep']> = {
-  deviceId?: Resolver<GQResolversTypes['String'], ParentType, ContextType>;
+  deviceId?: Resolver<Maybe<GQResolversTypes['String']>, ParentType, ContextType>;
   endedAt?: Resolver<GQResolversTypes['Date'], ParentType, ContextType>;
   id?: Resolver<GQResolversTypes['ID'], ParentType, ContextType>;
   startedAt?: Resolver<GQResolversTypes['Date'], ParentType, ContextType>;
