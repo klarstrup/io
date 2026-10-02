@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 import { authUser } from "../../../auth";
 import { resolvers, typeDefs } from "../../../graphql";
 
-export const maxDuration = 120;
+export const maxDuration = 90;
 
 const server = new ApolloServer({
   resolvers,
