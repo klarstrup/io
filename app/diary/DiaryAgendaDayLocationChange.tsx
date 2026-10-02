@@ -27,7 +27,9 @@ export function DiaryAgendaDayLocationChange({
         key={locationChange.id}
         className="flex w-full items-center justify-center gap-1 text-xs leading-none font-medium opacity-75 [font-variant:small-caps]"
       >
-        {locationChange.location.replace(/\d\d\d\d (.+), Denmark/g, "$1")}{" "}
+        {locationChange.location
+          .replace(/\d\d\d\d (.+), Denmark/g, "$1")
+          .replace(/(.+)\(.+\)/, "$1")}{" "}
         <DiaryAgendaDayLocationChangeWeather date={locationChange.end} />
       </center>
     </DiaryAgendaDayEntry>
