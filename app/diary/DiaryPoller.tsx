@@ -5,6 +5,7 @@ import usePartySocket from "partysocket/react";
 import { useState } from "react";
 import useInterval from "../../hooks/useInterval";
 import { MINUTE_IN_SECONDS } from "../../utils";
+import { noop } from "../../actions";
 
 export function DiaryPoller({ userId }: { userId: string }) {
   const [loadedAt] = useState(new Date());
@@ -47,6 +48,7 @@ export function DiaryPoller({ userId }: { userId: string }) {
   useInterval(
     async () => {
       await fetch("/api/cron"); // Throwaway request to trigger a random scraper
+      void noop();
     },
     MINUTE_IN_SECONDS * 1000 * 5,
   );

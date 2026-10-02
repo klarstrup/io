@@ -54,6 +54,7 @@ import {
   LocationChange,
   type JournalEntry,
 } from "./diaryUtils";
+import { noop } from "../../actions";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -310,6 +311,7 @@ export function DiaryAgendaDay({
 
   useInterval(() => {
     if (!loading) void refetch({ after: startCursor, before: endCursor });
+    void noop();
   }, pollInterval);
 
   const fetchingInterval = useMemo(
