@@ -51,7 +51,7 @@ export namespace Withings {
     timezone: string;
     model: number;
     model_id: number;
-    hash_deviceid: string;
+    hash_deviceid: string | null;
     startdate: number;
     enddate: number;
     date: string;
