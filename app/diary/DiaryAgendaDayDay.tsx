@@ -234,6 +234,14 @@ export function DiaryAgendaDayDay({
           eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt;
 
         if (isAllDayEvent) {
+          const dayNo =
+            Math.floor(differenceInHours(dayRange.start, event.start) / 24) + 1;
+          const numDays = Math.ceil(
+            differenceInHours(event.end, event.start) / 24,
+          );
+          const isFirstDay = dayNo === 1;
+          const isLastDay = dayNo === numDays;
+
           allDayJournalEntryElements.push({
             id: entryId,
             element: (
@@ -245,78 +253,58 @@ export function DiaryAgendaDayDay({
                 cotemporality={cotemporality(event)}
                 userTimeZone={timeZone}
                 className={
-                  "relative z-5 self-end rounded-tl rounded-tr pr-0.5 pl-0.5 text-sm " +
-                  "backdrop-blur-sm " +
+                  "relative z-5 self-end rounded-tl rounded-tr px-0.5 text-sm backdrop-blur-sm " +
                   (isSelectedDay
                     ? "bg-white/90"
                     : (isPast(dayRange.start) && allCompleted) ||
                         isPast(dayRange.end)
-                      ? "bg-green-100/75 pt-1"
+                      ? "bg-green-100/75"
                       : isToday
-                        ? "bg-yellow-200/75 pt-1"
-                        : "bg-slate-100/75 pt-1")
+                        ? "bg-yellow-200/75"
+                        : "bg-slate-100/75")
                 }
-                iconClassName="w-6 -mr-1"
+                contentClassName="items-center"
+                iconClassName="w-6 flex items-center gap-1 py-1 leading-none"
               >
-                {(() => {
-                  const dayNo =
-                    Math.floor(
-                      differenceInHours(dayRange.start, event.start) / 24,
-                    ) + 1;
-                  const numDays = Math.ceil(
-                    differenceInHours(event.end, event.start) / 24,
-                  );
-                  const isFirstDay = dayNo === 1;
-                  const isLastDay = dayNo === numDays;
-
-                  return (
-                    <span className="flex items-stretch leading-snug">
-                      <div className="flex items-baseline gap-1 py-0.5">
-                        {numDays > 1 ? (
-                          isFirstDay && event.datetype === "date-time" ? (
-                            <>
-                              {event.start.toLocaleTimeString("en-DK", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                timeZone,
-                              })}
-                              -
-                            </>
-                          ) : isLastDay && event.datetype === "date-time" ? (
-                            <>
-                              -
-                              {event.end.toLocaleTimeString("en-DK", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                timeZone,
-                              })}
-                            </>
-                          ) : null
-                        ) : null}
-                        <span>{event.summary}</span>
-                        {numDays > 1 ? (
-                          <span className="flex items-baseline text-[0.555rem] whitespace-nowrap tabular-nums opacity-50">
-                            <span className="px-px text-[0.777rem]">
-                              {dayNo}
-                            </span>
-                            <span>/</span>
-                            <span className="px-px">{numDays}d</span>
-                          </span>
-                        ) : null}
-                        {event.url ? (
-                          <a
-                            href={event.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
-                          >
-                            <FontAwesomeIcon icon={faExternalLink} />
-                          </a>
-                        ) : null}{" "}
-                      </div>
-                    </span>
-                  );
-                })()}
+                {numDays > 1 ? (
+                  isFirstDay && event.datetype === "date-time" ? (
+                    <>
+                      {event.start.toLocaleTimeString("en-DK", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone,
+                      })}
+                      -
+                    </>
+                  ) : isLastDay && event.datetype === "date-time" ? (
+                    <>
+                      -
+                      {event.end.toLocaleTimeString("en-DK", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone,
+                      })}
+                    </>
+                  ) : null
+                ) : null}
+                <span>{event.summary}</span>
+                {numDays > 1 ? (
+                  <span className="flex items-baseline text-[0.555rem] whitespace-nowrap tabular-nums opacity-50">
+                    <span className="px-px text-[0.777rem]">{dayNo}</span>
+                    <span>/</span>
+                    <span className="px-px">{numDays}d</span>
+                  </span>
+                ) : null}
+                {event.url ? (
+                  <a
+                    href={event.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                  >
+                    <FontAwesomeIcon icon={faExternalLink} />
+                  </a>
+                ) : null}
               </DiaryAgendaDayEntry>
             ),
           });
