@@ -202,7 +202,7 @@ export const getUserJournalEntries = async (
                         prefix = "🥘";
                       }
                     } else if (lSection.includes("delicacy")) {
-                      if (lDish.includes("salad")) {
+                      if (lDish.includes("salad") && !lDish.includes("crab")) {
                         prefix = "🥗";
                       } else {
                         prefix = "🥪";
