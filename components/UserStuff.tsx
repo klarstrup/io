@@ -20,6 +20,8 @@ export default function UserStuff() {
 
   const client = useApolloClient();
 
+  if (currentHref === "/~shell") return null;
+
   return (
     <div
       className="fixed left-1/2 z-50 flex max-w-[calc(100%-2.5rem)] -translate-x-1/2 transform items-center gap-x-2 rounded-2xl border border-[yellow]/25 bg-white/10 py-0.5 pr-0 pl-2 backdrop-blur-md sm:gap-2 lg:z-6 pointer-coarse:bottom-2 pointer-fine:top-4"
