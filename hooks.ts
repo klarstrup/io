@@ -446,6 +446,7 @@ export const useNow = (
   useInterval(
     () => setNow(TZDate.tz(timeZone)),
     useVisibilityAwarePollInterval(updateInterval),
+    true,
   );
 
   return now;
