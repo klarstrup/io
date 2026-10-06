@@ -18,6 +18,7 @@ import {
 } from "date-fns";
 import { gql } from "graphql-tag";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { noop } from "../../actions";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
 import {
@@ -54,7 +55,6 @@ import {
   LocationChange,
   type JournalEntry,
 } from "./diaryUtils";
-import { noop } from "../../actions";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 gql`
@@ -526,10 +526,11 @@ export function DiaryAgendaDay({
               }
               return 0;
             })
+            .sort((a, b) => a.__typename.localeCompare(b.__typename)) // Sort by typename to ensure consistent order for entries with the same start time
             .sort((a, b) =>
-              a.__typename == "Meal"
+              a.__typename == "Meal" && b.__typename !== "Meal"
                 ? -1
-                : b.__typename == "Meal"
+                : b.__typename == "Meal" && a.__typename !== "Meal"
                   ? 1
                   : compareAsc(
                       getJournalEntryPrincipalDate(b).end,
