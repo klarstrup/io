@@ -107,20 +107,6 @@ export function DiaryAgendaDayEntry({
         className,
       )}
     >
-      {isEntryEnd ? (
-        <div
-          className={
-            "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
-            (cotemporality
-              ? cotemporality === "past"
-                ? " border-green-400"
-                : cotemporality === "current"
-                  ? " border-[#EDAB00]"
-                  : " border-gray-500"
-              : " border-gray-500")
-          }
-        />
-      ) : null}
       {cotemporalityOfSurroundingEvent && !isDragging ? (
         <div
           className={
@@ -137,6 +123,20 @@ export function DiaryAgendaDayEntry({
         <div
           className={
             "absolute top-1/2 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
+            (cotemporality
+              ? cotemporality === "past"
+                ? " border-green-400"
+                : cotemporality === "current"
+                  ? " border-[#EDAB00]"
+                  : " border-gray-500"
+              : " border-gray-500")
+          }
+        />
+      ) : null}
+      {isEntryEnd ? (
+        <div
+          className={
+            "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
             (cotemporality
               ? cotemporality === "past"
                 ? " border-green-400"
