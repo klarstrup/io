@@ -1,10 +1,12 @@
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
+import Image from "next/image";
 import { Suspense } from "react";
 import AblyWrapper from "../AblyWrapper";
 import { ApolloWrapper } from "../ApolloWrapper";
 import UserStuff from "../components/UserStuff";
+import BackdropPNG from "../public/bg-desktop.png";
 import Backdrop from "./Backdrop";
 import LoadingIndicator from "./LoadingIndicator";
 import "./page.css";
@@ -22,6 +24,8 @@ export const viewport: Viewport = {
   minimumScale: 1,
 };
 
+export const DYNAMIC_BACKDROP = false;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
@@ -33,7 +37,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <UserStuff />
               {children}
             </Suspense>
-            <Backdrop />
+            {DYNAMIC_BACKDROP ? (
+              <Backdrop />
+            ) : (
+              <Image
+                src={BackdropPNG}
+                alt="Backdrop"
+                placeholder="blur"
+                quality={100}
+                fill
+                sizes="100vw"
+                className="pointer-events-none fixed! inset-0 -z-10 object-cover select-none"
+              />
+            )}
             <Analytics />
           </AblyWrapper>
         </ApolloWrapper>
