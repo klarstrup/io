@@ -30,6 +30,7 @@ import {
   type GQBoulderCircuit,
   type GQCreateWorkoutDataInput,
   type GQExerciseStat,
+  type GQJournalEntriesConnection,
   type GQLocation,
   type GQNextSet,
   type GQUpdateWorkoutDataInput,
@@ -516,21 +517,30 @@ export function WorkoutForm<R extends string>({
             const { data: createWorkoutPayload } = await createWorkout({
               variables: { input: { data: newWorkout } },
               update: (cache, { data: createWorkoutPayloadData }) => {
+                const newWorkoutEntry =
+                  createWorkoutPayloadData?.createWorkout?.workout;
+                if (!newWorkoutEntry) return;
                 cache.modify({
                   id: cache.identify({ __ref: "User:" + user.id }),
                   fields: {
-                    workouts: (value = []) => [
-                      ...(value as GQWorkout[]),
-                      createWorkoutPayloadData?.createWorkout
-                        ?.workout as GQWorkout,
+                    workouts: (value: GQWorkout[]) => [
+                      ...(value || []),
+                      newWorkoutEntry,
                     ],
-                    /*
-                    journalEntries: (value = []) => [
-                      ...(value as GQJournalEntryUnion[]),
-                      createWorkoutPayloadData?.createWorkout
-                        ?.workout as GQJournalEntryUnion,
-                    ],
-                    */
+                    journalEntries: (v) => {
+                      const value = v as GQJournalEntriesConnection | undefined;
+                      return {
+                        __typename: "JournalEntriesConnection" as const,
+                        ...value,
+                        nodes: [...(value?.nodes ?? []), newWorkoutEntry],
+                        pageInfo: {
+                          __typename: "PageInfo" as const,
+                          hasNextPage: false,
+                          hasPreviousPage: false,
+                          ...value?.pageInfo,
+                        },
+                      };
+                    },
                   },
                 });
               },
