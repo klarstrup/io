@@ -119,6 +119,7 @@ export function WorkoutEntryExercise({
 
           memo.push(
             <WorkoutEntryExerciseSetRow
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               key={setIndex}
               set={set}
               repeatCount={repeatCount}

@@ -36,7 +36,7 @@ export default async function DiaryExercise({
       </h1>
       <p className="text-gray-500">
         {exercise.instructions.map((instruction, i) => (
-          <Fragment key={i}>
+          <Fragment key={instruction.value}>
             {instruction.value}
             {i < exercise.instructions.length - 1 ? <br /> : null}
           </Fragment>

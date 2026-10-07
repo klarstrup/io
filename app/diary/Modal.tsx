@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ComponentRef, useEffect, useRef } from "react";
+import { type ComponentRef, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useIsSSR } from "../../hooks/useIsSSR";
 
@@ -9,6 +9,7 @@ export function Modal({ children }: { children: React.ReactNode }) {
   const isSSR = useIsSSR();
   const router = useRouter();
   const dialogRef = useRef<ComponentRef<"dialog">>(null);
+  const modalRootEl = useMemo(() => document.getElementById("modal-root"), []);
 
   useEffect(() => {
     if (dialogRef.current && !dialogRef.current?.open && !isSSR) {
@@ -46,6 +47,6 @@ export function Modal({ children }: { children: React.ReactNode }) {
         />
       </dialog>
     </div>,
-    document.getElementById("modal-root")!,
+    modalRootEl!,
   );
 }

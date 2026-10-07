@@ -1,6 +1,10 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
-import { GQLocation, GQWorkout, GQWorkoutSet } from "../graphql.generated/graphql";
+import {
+  GQLocation,
+  GQWorkout,
+  GQWorkoutSet,
+} from "../graphql.generated/graphql";
 import { PP } from "../lib";
 import { SendType } from "../models/exercises.types";
 import {
@@ -413,6 +417,34 @@ export const exerciseSetsToProblemByProblem = (
     };
   });
 
+const keyFromProblem = (
+  problem: PP,
+  groupByGradeAndFlash?: boolean,
+  groupByColorAndFlash?: boolean,
+) => {
+  const gradeOrColor = groupByGradeAndFlash
+    ? problem.grade
+    : groupByColorAndFlash
+      ? problem.color
+      : "";
+  const flash = problem.flash;
+  const top = problem.top;
+  const zone = problem.zone;
+  const attempt = problem.attempt;
+  const repeat = problem.repeat;
+  return [
+    groupByGradeAndFlash && problem.grade
+      ? new Grade(problem.grade).name
+      : gradeOrColor,
+    flash,
+    top,
+    zone,
+    attempt,
+    repeat,
+    problem.angle,
+  ].join("-");
+};
+
 export default function ProblemByProblem({
   problemByProblem,
   groupByGradeAndFlash,
@@ -447,27 +479,11 @@ export default function ProblemByProblem({
   if ((groupByGradeAndFlash || groupByColorAndFlash) && !"nope") {
     const grouped = new Map<string, [PP, ...PP[]]>();
     for (const problem of sortedProblems) {
-      const gradeOrColor = groupByGradeAndFlash
-        ? problem.grade
-        : groupByColorAndFlash
-          ? problem.color
-          : "";
-      const flash = problem.flash;
-      const top = problem.top;
-      const zone = problem.zone;
-      const attempt = problem.attempt;
-      const repeat = problem.repeat;
-      const key = [
-        groupByGradeAndFlash && problem.grade
-          ? new Grade(problem.grade).name
-          : gradeOrColor,
-        flash,
-        top,
-        zone,
-        attempt,
-        repeat,
-        problem.angle,
-      ].join("-");
+      const key = keyFromProblem(
+        problem,
+        groupByGradeAndFlash,
+        groupByColorAndFlash,
+      );
       if (!grouped.has(key)) {
         grouped.set(key, [problem]);
       } else {
@@ -483,13 +499,13 @@ export default function ProblemByProblem({
         {Array.from(grouped)
           .sort((a, b) => Number(b[1][0].grade) - Number(a[1][0].grade))
           .sort((a, b) => Number(b[1][0].angle) - Number(a[1][0].angle))
-          .map(([, problems], i) => {
+          .map(([key, problems]) => {
             const mostCommonColor = Object.entries(
               countBy(problems, "color"),
             ).sort(([, a], [, b]) => b - a)[0]![0];
 
             return (
-              <div key={i} className="flex items-center">
+              <div key={key} className="flex items-center">
                 <span>{problems.length}</span>
                 <span className="px-0.5 py-0">×</span>
                 <ProblemBadge
@@ -508,8 +524,8 @@ export default function ProblemByProblem({
         "mt-0.5 grid w-full grid-cols-[repeat(auto-fill,minmax(24px,1fr))] gap-0.5 md:grid-cols-[repeat(auto-fill,minmax(27px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(30px,1fr))]"
       }
     >
-      {sortedProblems.map((problem, i) => (
-        <ProblemBadge key={i} {...problem} />
+      {sortedProblems.map((problem) => (
+        <ProblemBadge key={keyFromProblem(problem)} {...problem} />
       ))}
     </div>
   );

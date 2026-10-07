@@ -99,6 +99,7 @@ export function DiaryAgendaDayTodoMarkdown({
           li({ node: _node, ...props }) {
             const isTaskItem = props.className?.includes("task-list-item");
             if (isTaskItem) {
+              // eslint-disable-next-line @eslint-react/no-children-to-array
               const [checkbox, ...restChildren] = Children.toArray(
                 props.children,
               );

@@ -6,6 +6,7 @@ import {
   useChannel as useAblyChannel,
 } from "ably/react";
 
+// eslint-disable-next-line @eslint-react/no-unnecessary-use-prefix
 export const useChannel =
   typeof window !== "undefined"
     ? useAblyChannel

@@ -7,8 +7,9 @@ export default function ApolloFucker() {
   useEffect(() => {
     const cache = client.cache;
     // Refetch things after restoring from persisted cache
+    let timeout: ReturnType<typeof setTimeout>;
     if (typeof window !== "undefined") {
-      setTimeout(() => {
+      timeout = setTimeout(() => {
         // If there's anything in the cache this soon as the client is created,
         // @ts-expect-error - failed to monkey patch this in the types
         if (cache._io_wasRestoredFromLocalStorage) {
@@ -20,13 +21,18 @@ export default function ApolloFucker() {
         }
       }, 1000);
     }
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
   }, [client]);
 
   const isPageVisible = usePageVisibility();
 
   const visibilityRef = useRef(isPageVisible);
   const lastVisibilityFetchRef = useRef(
-    // eslint-disable-next-line react-hooks/purity
+    // eslint-disable-next-line react-hooks/purity, @eslint-react/purity
     typeof window !== "undefined" ? Date.now() : 0,
   );
   useEffect(() => {

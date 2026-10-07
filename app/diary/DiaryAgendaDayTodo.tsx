@@ -73,7 +73,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
   });
 
   const [isActive, setIsActive] = useState(false);
-  const ref2 = useRef<HTMLDivElement>(null);
+  const innerWrapperRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleFormSubmit = useEvent((formElement: HTMLFormElement) => {
@@ -113,7 +113,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       setIsActive(false);
     }
   };
-  useClickOutside(ref2, onClickOutside);
+  useClickOutside(innerWrapperRef, onClickOutside);
 
   const handleIconClick = useCallback(() => {
     if (todo.completed) {
@@ -163,7 +163,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
       className={className}
     >
       <div
-        ref={ref2}
+        ref={innerWrapperRef}
         className={
           (isActive ? "flex rounded-b-none" : "inline-flex cursor-pointer") +
           " group relative break-inside-avoid flex-col items-stretch justify-center rounded-md border border-black/20 bg-white transition-shadow " +

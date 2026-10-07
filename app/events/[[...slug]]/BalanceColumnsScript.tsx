@@ -2,6 +2,7 @@ import Script from "next/script";
 
 export function BalanceColumnsScript() {
   return (
+    // eslint-disable-next-line @eslint-react/purity
     <Script key={String(new Date())} id={String(new Date())}>
       {`
           var balanceColumns = ${String(balanceColumns)};

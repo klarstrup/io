@@ -1,6 +1,7 @@
 "use client";
 import { LineCustomSvgLayer, LineSeries, ResponsiveLine } from "@nivo/line";
 import { differenceInMonths, getWeek, max, min } from "date-fns";
+import { useMemo } from "react";
 import Grade, { frenchRounded } from "../../../../grades";
 import { getSchemeCategory10Color } from "../../../../utils";
 
@@ -13,11 +14,9 @@ const DashedSolidLine: LineCustomSvgLayer<LineSeries & { trend?: boolean }> = ({
   series.map(({ id, data, color, trend }) => (
     <path
       key={id}
-      d={
-        lineGenerator(
-          data.map((d) => ({ x: xScale(d.data.x), y: yScale(d.data.y) })),
-        )!
-      }
+      d={lineGenerator(
+        data.map((d) => ({ x: xScale(d.data.x), y: yScale(d.data.y) })),
+      )!}
       fill="none"
       stroke={color}
       style={
@@ -36,6 +35,8 @@ export default function DiaryExerciseGraph({
     trend?: boolean;
   }[];
 }) {
+  const now = useMemo(() => new Date(), []);
+
   const minY = data.reduce(
     (min, serie) =>
       Math.min(min, ...serie.data.map((d) => d.y).filter(Boolean)),
@@ -60,7 +61,7 @@ export default function DiaryExerciseGraph({
       <ResponsiveLine
         data={data}
         margin={{ top: 50, right: 50, bottom: 50, left: 25 }}
-        xScale={{ type: "time", max: new Date() }}
+        xScale={{ type: "time", max: now }}
         axisBottom={
           spanInMonths >= 6
             ? {

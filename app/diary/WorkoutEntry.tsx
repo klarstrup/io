@@ -143,6 +143,7 @@ export default function WorkoutEntry({
           const exercise = exercisesById.get(workoutExercise.exerciseId)!;
 
           return (
+            // eslint-disable-next-line @eslint-react/no-array-index-key
             <div key={exerciseIndex}>
               <div className="flex flex-wrap gap-1">
                 {showExerciseName || workoutExercise.displayName ? (

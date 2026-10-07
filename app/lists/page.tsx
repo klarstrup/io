@@ -64,12 +64,17 @@ export default function ListPage() {
             <span className="font-bold text-shadow-md text-shadow-white">
               Todos
             </span>{" "}
-            <DiaryAgendaDayCreateTodo date={new Date()} />
+            <DiaryAgendaDayCreateTodo date={now} />
           </div>
         }
       >
         {todos.map((todo) => (
-          <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} timeZone={timeZone} />
+          <DiaryAgendaDayTodo
+            todo={todo}
+            key={todo.id}
+            now={now}
+            timeZone={timeZone}
+          />
         ))}
         {dataState !== "complete" ? (
           <div className="min-h-8">Loading...</div>
@@ -88,7 +93,12 @@ export default function ListPage() {
           }
         >
           {backlogTodos.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} timeZone={timeZone} />
+            <DiaryAgendaDayTodo
+              todo={todo}
+              key={todo.id}
+              now={now}
+              timeZone={timeZone}
+            />
           ))}
         </FieldSetY>
       )}
@@ -102,7 +112,12 @@ export default function ListPage() {
           }
         >
           {todones.map((todo) => (
-            <DiaryAgendaDayTodo todo={todo} key={todo.id} now={now} timeZone={timeZone} />
+            <DiaryAgendaDayTodo
+              todo={todo}
+              key={todo.id}
+              now={now}
+              timeZone={timeZone}
+            />
           ))}
         </FieldSetY>
       )}

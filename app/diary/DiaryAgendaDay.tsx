@@ -295,7 +295,7 @@ export function DiaryAgendaDay({
               endOfDayButItRespectsDayStartHour(addDays(now, 3)),
             ),
           },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- don't want the query to reset every minute
     [selectedDayStart],
   );
 
@@ -698,10 +698,10 @@ export function DiaryAgendaDay({
     );
   }, [daysJournalEntries, userLocations]);
 
-  const lastInteractedWithPage = useRef<Date | null>(null);
+  const lastInteractedWithPageRef = useRef<Date | null>(null);
   useEffect(() => {
     const handleInteraction = () => {
-      lastInteractedWithPage.current = new Date();
+      lastInteractedWithPageRef.current = new Date();
     };
     window.addEventListener("mousedown", handleInteraction);
     window.addEventListener("keydown", handleInteraction);

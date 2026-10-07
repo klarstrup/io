@@ -13,7 +13,7 @@ export default function UserStuff() {
 
   useEffect(() => {
     if (currentHref !== "/user/settings") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect
       setIsSettingsBarOpen(false);
     }
   }, [currentHref]);

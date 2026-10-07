@@ -5,8 +5,8 @@ import {
   formatDistanceToNowStrict,
   intervalToDuration,
 } from "date-fns";
-import { useEffect, useState } from "react";
-import useInterval from "../hooks/useInterval";
+import { useNow } from "../hooks";
+import { useIsSSR } from "../hooks/useIsSSR";
 import { formatDurationAsTimer } from "../models/workout";
 
 export function DistanceToNowStrict({
@@ -16,35 +16,25 @@ export function DistanceToNowStrict({
   date: Date;
   addSuffix?: boolean;
 }) {
-  const [state, setState] = useState<Record<string, never> | undefined>();
-
-  useInterval(() => {
-    setState({});
-  }, 1000);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({});
-  }, []);
+  useNow(1000);
+  const isSSR = useIsSSR();
 
   if (!date) return null;
 
-  return state
+  return !isSSR
     ? formatDistanceToNowStrict(date, { addSuffix })
     : date.toISOString();
 }
 
 export function DistanceToNow({ date }: { date: Date }) {
-  const [state, setState] = useState<Record<string, never> | undefined>();
-
-  useInterval(() => {
-    setState({});
-  }, 1000);
+  useNow(1000);
+  const isSSR = useIsSSR();
 
   if (!date) return null;
 
   return (
     <time dateTime={date.toISOString()} title={date.toISOString()}>
-      {state
+      {!isSSR
         ? formatDistanceToNow(date, { addSuffix: true })
         : date.toISOString()}
     </time>
@@ -52,11 +42,7 @@ export function DistanceToNow({ date }: { date: Date }) {
 }
 
 export function DistanceToNowShort({ date }: { date: Date }) {
-  const [start, setNow] = useState(() => Date.now());
-
-  useInterval(() => {
-    setNow(Date.now());
-  }, 500);
+  const start = useNow();
 
   if (!date) return null;
 

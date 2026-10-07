@@ -2,6 +2,7 @@ import { TZDate } from "@date-fns/tz";
 import {
   type RefObject,
   useEffect,
+  useEffectEvent,
   useInsertionEffect,
   useRef,
   useState,
@@ -47,6 +48,7 @@ export function useEvent<TCallback extends AnyFunction>(
  * Render methods should be pure, especially when concurrency is used,
  * so we will throw this error if the callback is called while rendering.
  */
+// eslint-disable-next-line @eslint-react/no-unnecessary-use-prefix
 function useEvent_shouldNotBeInvokedBeforeMount() {
   throw new Error(
     "INVALID_USEEVENT_INVOCATION: the callback from useEvent cannot be invoked before the component has mounted.",
@@ -221,7 +223,7 @@ interface IntersectionOptions extends IntersectionObserverInit {
   /** Margin around the root. Can have values similar to the CSS margin property, e.g. `10px 20px 30px 40px` (top, right, bottom, left). */
   rootMargin?: string;
   /** Number between `0` and `1` indicating the percentage that should be visible before triggering. Can also be an `array` of numbers, to create multiple trigger points. */
-  threshold?: number | number[];
+  threshold?: number;
   /** Only trigger the inView callback once */
   triggerOnce?: boolean;
   /** Skip assigning the observer to the `ref` */
@@ -295,7 +297,7 @@ export function useInView({
   onChange,
 }: IntersectionOptions = {}): InViewHookResponse {
   const [ref, setRef] = useState<Element | null>(null);
-  const callback = useEvent(onChange || emptyFunction);
+  const callback = useEffectEvent(onChange || emptyFunction);
   const [state, setState] = useState<State>({
     inView: Boolean(initialInView),
     entry: undefined,
@@ -338,11 +340,8 @@ export function useInView({
       };
     },
     // We break the rule here, because we aren't including the actual `threshold` variable
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      // If the threshold is an array, convert it to a string, so it won't change between renders.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      Array.isArray(threshold) ? threshold.toString() : threshold,
+      threshold,
       ref,
       root,
       rootMargin,
@@ -355,18 +354,18 @@ export function useInView({
   );
 
   const entryTarget = state.entry?.target;
-  const previousEntryTarget = useRef<Element>(undefined);
+  const previousEntryTargetRef = useRef<Element>(undefined);
   useEffect(() => {
     if (
       !ref &&
       entryTarget &&
       !triggerOnce &&
       !skip &&
-      previousEntryTarget.current !== entryTarget
+      previousEntryTargetRef.current !== entryTarget
     ) {
       // If we don't have a node ref, then reset the state (unless the hook is set to only `triggerOnce` or `skip`)
       // This ensures we correctly reflect the current state - If you aren't observing anything, then nothing is inView
-      previousEntryTarget.current = entryTarget;
+      previousEntryTargetRef.current = entryTarget;
       setState({ inView: Boolean(initialInView), entry: undefined });
     }
   }, [entryTarget, triggerOnce, skip, initialInView, ref]);
@@ -412,9 +411,6 @@ export function usePageVisibility() {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsPageVisible(document.visibilityState === "visible");
-
     function onVisibilityChange() {
       setIsPageVisible(document.visibilityState === "visible");
     }
@@ -479,11 +475,13 @@ export function useWhyDidYouUpdate(
   props: Record<string, unknown>,
 ): void {
   // Get a mutable ref object where we can store props for comparison next time this hook runs.
-  const previousProps = useRef<Record<string, unknown> | undefined>(undefined);
+  const previousPropsRef = useRef<Record<string, unknown> | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
-    if (previousProps.current) {
-      const changesObj = getChanges(previousProps.current, props);
+    if (previousPropsRef.current) {
+      const changesObj = getChanges(previousPropsRef.current, props);
 
       // If changesObj not empty then output to console
       if (Object.keys(changesObj).length) {
@@ -492,6 +490,6 @@ export function useWhyDidYouUpdate(
     }
 
     // Finally update previousProps with current props for next hook call
-    previousProps.current = props;
+    previousPropsRef.current = props;
   });
 }

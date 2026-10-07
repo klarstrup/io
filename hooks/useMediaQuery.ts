@@ -5,15 +5,11 @@ const IS_SERVER = typeof window === "undefined";
 
 type UseMediaQueryOptions = {
   defaultValue?: boolean;
-  initializeWithValue?: boolean;
 };
 
 export function useMediaQuery(
   query: string,
-  {
-    defaultValue = false,
-    initializeWithValue = true,
-  }: UseMediaQueryOptions = {},
+  { defaultValue = false }: UseMediaQueryOptions = {},
 ): boolean {
   const getMatches = (query: string): boolean => {
     if (IS_SERVER) return defaultValue;
@@ -21,20 +17,13 @@ export function useMediaQuery(
     return window.matchMedia(query).matches;
   };
 
-  const [matches, setMatches] = useState<boolean>(() => {
-    if (initializeWithValue) return getMatches(query);
-
-    return defaultValue;
-  });
+  const [matches, setMatches] = useState<boolean>(() => getMatches(query));
 
   // Handles the change event of the media query.
   const handleChange = () => setMatches(getMatches(query));
 
   useIsomorphicLayoutEffect(() => {
     const matchMedia = window.matchMedia(query);
-
-    // Triggered at the first client-side load and if query changes
-    handleChange();
 
     matchMedia.addEventListener("change", handleChange);
 

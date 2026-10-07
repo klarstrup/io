@@ -28,6 +28,10 @@ import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { ExerciseName } from "./ExerciseName";
 import { FieldSetY } from "./FieldSet";
 
+const ExerciseScheduleInput = (props) => (
+  <components.Input {...props} aria-activedescendant={undefined} />
+);
+
 /**
  * Create a date YYYY-MM-DD date string that is typecasted as a `Date`.
  * Hack when using `defaultValues` in `react-hook-form`
@@ -548,14 +552,7 @@ export default function UserStuffWorkoutSchedulesForm({
         )}
         {!exerciseScheduleBeingEditedId ? (
           <Select
-            components={{
-              Input: (props) => (
-                <components.Input
-                  {...props}
-                  aria-activedescendant={undefined}
-                />
-              ),
-            }}
+            components={{ Input: ExerciseScheduleInput }}
             instanceId={selectId}
             placeholder="Add exercise schedule..."
             options={exercises

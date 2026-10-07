@@ -2,17 +2,16 @@
 
 import {
   Children,
-  ComponentPropsWithoutRef,
-  ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   createContext,
-  ElementType,
+  type ElementType,
   isValidElement,
   PropsWithChildren,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -52,8 +51,6 @@ const MasonryItemContext = createContext({ row: NaN, position: NaN });
 
 const isBrowser = typeof window !== "undefined";
 
-const useIsomorphicLayoutEffect = isBrowser ? useLayoutEffect : useEffect;
-
 const useWindowHeight = (isResponsive: boolean = true): number => {
   const [windowHeight, setWindowHeight] = useState(
     isBrowser ? window.innerHeight : 0,
@@ -70,10 +67,6 @@ const useWindowHeight = (isResponsive: boolean = true): number => {
       window.removeEventListener("resize", updateWindowHeight);
     };
   }, [isResponsive, updateWindowHeight]);
-
-  useIsomorphicLayoutEffect(() => {
-    updateWindowHeight();
-  }, [updateWindowHeight]);
 
   return windowHeight;
 };
@@ -138,6 +131,7 @@ const useMasonry = (children: ReactNode, rows?: Columns): ReactNode[][] => {
   const rowsChildren = useMemo(() => {
     const group: ReactNode[][] = createEmptyRows(noOfRows);
 
+    // eslint-disable-next-line @eslint-react/no-children-for-each
     Children.forEach(children, (child, index) => {
       if (isValidElement(child)) group[index % noOfRows]!.push(child);
     });
@@ -153,7 +147,7 @@ export const Masonry = <T extends ElementType = "div">(
 ) => {
   const { gap, as: Component = "div", rowProps, rows, ref, ...rest } = props;
 
-  const uniq = useId();
+  const uniqId = useId();
   const rowsChildren = useMasonry(props.children, rows);
 
   return (
@@ -165,7 +159,8 @@ export const Masonry = <T extends ElementType = "div">(
     >
       {rowsChildren.map((row, index) => (
         <Component
-          key={`Masonry__Row_${uniq}_${index}`}
+          // eslint-disable-next-line @eslint-react/no-array-index-key
+          key={`Masonry__Row_${uniqId}_${index}`}
           {...rowProps}
           className={twMerge("flex flex-1", rowProps?.className)}
           style={rowProps?.style}
@@ -173,7 +168,8 @@ export const Masonry = <T extends ElementType = "div">(
           {row.map((child, childIndex) => (
             <MasonryItemContext
               value={{ row: index, position: childIndex }}
-              key={`Masonry__Row_Child_${uniq}_${childIndex}`}
+              // eslint-disable-next-line @eslint-react/no-array-index-key
+              key={`Masonry__Row_Child_${uniqId}_${childIndex}`}
             >
               {child}
             </MasonryItemContext>

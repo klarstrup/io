@@ -3,14 +3,20 @@ import { useApolloClient } from "@apollo/client/react";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useState } from "react";
+import { ComponentType, useEffect, useId, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import Select, { components, OnChangeValue } from "react-select";
+import Select, {
+  components,
+  GroupBase,
+  InputProps,
+  OnChangeValue,
+} from "react-select";
 import { getDefaultsForSchema } from "zod-defaults";
 import {
   createUserDataSource,
   updateUserDataSource,
 } from "../app/diary/actions";
+import { useNow } from "../hooks";
 import { useSession } from "../lib/auth-client";
 import {
   DataSource,
@@ -20,6 +26,16 @@ import {
 } from "../sources/utils";
 import { DistanceToNowStrict } from "./DistanceToNowStrict";
 import { FieldSetY } from "./FieldSet";
+
+const DataSourceInput: ComponentType<
+  InputProps<
+    { label: DataSource; value: DataSource },
+    false,
+    GroupBase<{ label: DataSource; value: DataSource }>
+  >
+> = (props) => (
+  <components.Input {...props} aria-activedescendant={undefined} />
+);
 
 function UserStuffSourceForm({
   sourceOptions,
@@ -33,6 +49,7 @@ function UserStuffSourceForm({
   const user = sessionData?.user;
   const router = useRouter();
   const client = useApolloClient();
+  const now = useNow();
 
   const defaultValues = useMemo(() => userDataSource, [userDataSource]);
   const {
@@ -54,8 +71,7 @@ function UserStuffSourceForm({
     const wasFetchedRecently = Boolean(
       userDataSource.lastAttemptedAt &&
       new Date(userDataSource.lastAttemptedAt) >
-        // eslint-disable-next-line react-hooks/purity
-        new Date(Date.now() - 1000 * 60 * 5),
+        new Date(now.getTime() - 1000 * 60 * 5),
     );
 
     if (!sourceOptions.includes(userDataSource.source)) {
@@ -338,9 +354,7 @@ function UserStuffSourceCreateForm({
     <Select
       value={value}
       components={{
-        Input: (props) => (
-          <components.Input {...props} aria-activedescendant={undefined} />
-        ),
+        Input: DataSourceInput,
       }}
       instanceId={instanceId}
       isDisabled={isSubmitting}

@@ -2,6 +2,7 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 import { defineConfig, globalIgnores } from "eslint/config";
+import eslintReact from "@eslint-react/eslint-plugin";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -13,6 +14,7 @@ const eslintConfig = defineConfig([
         projectService: true,
       },
     },
+    extends: [eslintReact.configs["recommended-typescript"]],
   },
 
   // Override default ignores of eslint-config-next.
@@ -194,7 +196,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "graphql.generated.ts",  "graphql.generated/index.ts"
+    "graphql.generated.ts",
+    "graphql.generated/index.ts",
   ]),
 ]);
 

@@ -16,7 +16,7 @@ import gql from "graphql-tag";
 import { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useId, useMemo, useState } from "react";
+import { Fragment, useEffect, useId, useMemo } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import Select, { components, OnChangeValue } from "react-select";
 import Creatable from "react-select/creatable";
@@ -36,8 +36,7 @@ import {
   type GQUpdateWorkoutDataInput,
   type GQWorkout,
 } from "../../graphql.generated/graphql";
-import { useEvent } from "../../hooks";
-import useInterval from "../../hooks/useInterval";
+import { useEvent, useNow } from "../../hooks";
 import { exercises, exercisesById } from "../../models/exercises";
 import {
   AssistType,
@@ -610,6 +609,7 @@ export function WorkoutForm<R extends string>({
                 isMulti={false}
                 isClearable={true}
                 components={{
+                  // eslint-disable-next-line @eslint-react/no-nested-component-definitions
                   Input: (props) => (
                     <components.Input
                       {...props}
@@ -782,6 +782,7 @@ export function WorkoutForm<R extends string>({
           })}
           <Select
             components={{
+              // eslint-disable-next-line @eslint-react/no-nested-component-definitions
               Input: (props) => (
                 <components.Input
                   {...props}
@@ -991,6 +992,7 @@ function SetsForm({
             (input.type === InputType.Grade ||
               (input.display_name === "Hold Color" &&
                 boulderCircuits?.every((c) => c.holdColor))) ? null : (
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               <th key={inputIndex}>
                 {input.display_name}{" "}
                 <small>
@@ -1255,19 +1257,13 @@ function SetsForm({
 }
 
 function TimeSince({ date }: { date: Date }) {
-  const [, setState] = useState({});
-
-  useInterval(() => {
-    setState({});
-  }, 1000);
+  useNow(1000);
 
   return (
     <small className="italic">
       Last updated{" "}
       <span className="tabular-nums">
-        {formatDistanceToNowStrict(date, {
-          addSuffix: true,
-        })}
+        {formatDistanceToNowStrict(date, { addSuffix: true })}
       </span>
     </small>
   );
@@ -1307,6 +1303,7 @@ function InputsForm({
     (input.type === InputType.Grade ||
       (input.display_name === "Hold Color" &&
         boulderCircuits?.every((c) => c.holdColor))) ? null : (
+      // eslint-disable-next-line @eslint-react/no-array-index-key
       <td key={index}>
         {input.display_name === "Hold Color" &&
         boulderCircuits?.find(

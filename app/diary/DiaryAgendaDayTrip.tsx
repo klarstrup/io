@@ -80,6 +80,7 @@ export function DiaryAgendaDayTrip({
         <div className="-mt-0.5 flex">
           {trip.legs.map((leg, index, legs) => (
             <div
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               key={index}
               className={
                 "flex items-center justify-start text-[0.666rem] text-gray-500 " +

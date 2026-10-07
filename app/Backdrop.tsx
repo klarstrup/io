@@ -344,6 +344,7 @@ export default function Backdrop() {
     <div className="pointer-events-none fixed inset-0 -z-10 -m-24 flex flex-col text-center text-[96px] leading-[1.2em] whitespace-nowrap opacity-25 select-none">
       {Array.from({ length: 24 }).map((_, i) => (
         <div
+          // eslint-disable-next-line @eslint-react/no-array-index-key
           key={i}
           className={
             "flex flex-1 items-center justify-evenly gap-2 " +
@@ -352,6 +353,7 @@ export default function Backdrop() {
         >
           {Array.from({ length: 24 }).map((_, j) => (
             <span
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               key={j}
               className={"flex flex-1 items-center justify-center text-center"}
             >
