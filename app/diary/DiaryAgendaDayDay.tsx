@@ -29,6 +29,7 @@ import {
   dateToString,
   DEFAULT_TIMEZONE,
   emptyArray,
+  isBeforeOrEqual,
   isSameDayButItRespectsDayStartHour,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -145,7 +146,21 @@ export function DiaryAgendaDayDay({
           )
           .findLast((prevJE) =>
             followingEndOfEntries.some((endOfJE) => prevJE.id === endOfJE.id),
-          ) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
+          ) ||
+        previousEntries
+          .filter((je) =>
+            je.__typename === "Event"
+              ? je.datetype !== "date" && !isEventEntireDay(je, dayRange.start)
+              : true,
+          )
+          .filter((je) => je.id !== journalEntry.id)
+          .findLast((je) => {
+            const jePrincipalDate = getJournalEntryPrincipalDate(je);
+            return (
+              isBeforeOrEqual(jePrincipalDate.start, principalDate.start) &&
+              isBefore(principalDate.end, jePrincipalDate.end)
+            );
+          }) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
         followingEndOfEntries
           // followingEndOfEvent that has started(before today in this case) but doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event)
           .find((endOfJE) => {
