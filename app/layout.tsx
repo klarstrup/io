@@ -29,7 +29,7 @@ export const DYNAMIC_BACKDROP = false;
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body className="flex flex-col">
+      <body className="relative flex flex-col">
         <ApolloWrapper>
           <AblyWrapper>
             <LoadingIndicator />
@@ -44,10 +44,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 src={BackdropPNG}
                 alt="Backdrop"
                 placeholder="blur"
-                quality={100}
-                fill
-                sizes="100vw"
                 unoptimized
+                fill
                 className="pointer-events-none fixed! inset-0 -z-10 object-cover select-none"
               />
             )}
