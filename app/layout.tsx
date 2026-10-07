@@ -47,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 quality={100}
                 fill
                 sizes="100vw"
+                unoptimized
                 className="pointer-events-none fixed! inset-0 -z-10 object-cover select-none"
               />
             )}
