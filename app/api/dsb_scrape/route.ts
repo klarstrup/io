@@ -151,6 +151,7 @@ export const GET = (request: NextRequest) =>
                       })),
                     })),
                   },
+                  _io_userDataSourceId: source.id,
                 },
               },
               upsert: true,

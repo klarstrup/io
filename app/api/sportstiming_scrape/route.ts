@@ -72,7 +72,7 @@ export const GET = (request: NextRequest) =>
     yield* wrapSources(
       user,
       DataSource.Sportstiming,
-      async function* ({ config: { name } }, setUpdated) {
+      async function* ({ config: { name }, id: userDataSourceId }, setUpdated) {
         setUpdated(false);
 
         for (const event of events) {
@@ -163,6 +163,7 @@ export const GET = (request: NextRequest) =>
                     _io_NumberOfParticipants: noParticipants,
                     _io_TotalDistance: distance,
                     _io_EventId: event.EventId,
+                    _io_userDataSourceId: userDataSourceId,
                   },
                 },
                 { upsert: true },

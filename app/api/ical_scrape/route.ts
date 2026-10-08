@@ -21,7 +21,7 @@ export const GET = (request: NextRequest) =>
     yield* wrapSources(
       user,
       DataSource.ICal,
-      async function* ({ config: { url } }, setUpdated) {
+      async function* ({ config: { url }, id }, setUpdated) {
         setUpdated(false);
 
         if (!url) throw new Error("No URL provided for iCal data source");
@@ -37,6 +37,7 @@ export const GET = (request: NextRequest) =>
           _io_userId: user.id,
           _io_icalUrlHash: icalUrlHash,
           _io_source: DataSource.ICal,
+          _io_userDataSourceId: id,
         };
         const now0 = new Date();
 

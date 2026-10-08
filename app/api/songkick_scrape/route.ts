@@ -64,7 +64,10 @@ export const GET = (request: NextRequest) =>
     yield* wrapSources(
       user,
       DataSource.Songkick,
-      async function* ({ config: { artistId } }, setUpdated) {
+      async function* (
+        { config: { artistId }, id: userDataSourceId },
+        setUpdated,
+      ) {
         setUpdated(false);
 
         yield SongkickEvents.bulkWrite(
@@ -89,6 +92,7 @@ export const GET = (request: NextRequest) =>
                       (event.end.datetime
                         ? new TZDate(event.end.datetime, "Etc/UTC")
                         : dateStringToDate(event.end.date)),
+                    _io_userDataSourceId: userDataSourceId,
                   },
                 },
                 upsert: true,
