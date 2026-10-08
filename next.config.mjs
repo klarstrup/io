@@ -2,7 +2,13 @@ import { withSerwist } from "@serwist/turbopack";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = withSerwist({
-  experimental: {},
+  experimental: {
+    turbopackRustReactCompiler: true,
+    turbopackGc: true,
+    turbopackLazyDynamicImports: true,
+    turbopackPluginRuntimeStrategy: "workerThreads",
+  },
+  reactCompiler: true,
   cacheComponents: true,
   partialPrefetching: true,
   logging: { fetches: { fullUrl: true } },
