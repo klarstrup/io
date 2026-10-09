@@ -3,10 +3,6 @@
     "eslint": {
       "versions": "^10",
       "reason": ""
-    },
-    "google-auth-library": {
-      "versions": "10.6.2",
-      "reason": "effed types"
     }
   }
 }
