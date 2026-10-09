@@ -7,6 +7,7 @@ import { DEFAULT_TIMEZONE } from "../../utils";
 import { DiaryPoller } from "../diary/DiaryPoller";
 import { DiaryEntryWeek } from "./DiaryEntryWeek";
 import { DiaryEntryWeekWrapper } from "./DiaryEntryWeekWrapper";
+import { connection } from "next/server";
 
 export const maxDuration = 45;
 
@@ -50,6 +51,7 @@ async function loadMoreData(cursor: { start: Date; end: Date }) {
 }
 
 export default async function CalendarLayout(_props: PageProps<"/calendar">) {
+  await connection();
   const user = await authUser();
 
   const timeZone = user?.timeZone || DEFAULT_TIMEZONE;
