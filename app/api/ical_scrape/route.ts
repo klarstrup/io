@@ -37,7 +37,6 @@ export const GET = (request: NextRequest) =>
           _io_userId: user.id,
           _io_icalUrlHash: icalUrlHash,
           _io_source: DataSource.ICal,
-          _io_userDataSourceId: id,
         };
         const now0 = new Date();
 
@@ -117,6 +116,7 @@ export const GET = (request: NextRequest) =>
                         exdate: event.exdate && Object.values(event.exdate),
                         calendar,
                         _io_scrapedAt,
+                        _io_userDataSourceId: id,
                         ...ioIcalMeta,
                       },
                     },

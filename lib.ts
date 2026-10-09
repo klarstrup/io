@@ -55,10 +55,7 @@ export interface TopsAndZonesScore extends BaseScore {
 }
 
 export type Score =
-  | DistanceRaceScore
-  | PointsScore
-  | TopsAndZonesScore
-  | ThousandDivideByScore;
+  DistanceRaceScore | PointsScore | TopsAndZonesScore | ThousandDivideByScore;
 
 export enum EventSource {
   TopLogger = "toplogger",
@@ -136,7 +133,6 @@ export interface IcalIoMeta {
   /** This is a hash of the iCal URL and the user ID */
   _io_icalUrlHash?: string;
   _io_source: DataSource.ICal | WorkoutSource.Self;
-  _io_userDataSourceId?: string;
 }
 export interface MongoVEventWithVCalendar
   extends Omit<VEventWithVCalendar, "recurrences">, ScrapedAt, IcalIoMeta {
