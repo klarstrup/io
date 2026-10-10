@@ -2,6 +2,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarRegular } from "@fortawesome/free-regular-svg-icons";
 import {
+  faBirthdayCake,
   faBoxesPacking,
   faExternalLink,
 } from "@fortawesome/free-solid-svg-icons";
@@ -242,6 +243,11 @@ export function DiaryAgendaDayDay({
           const isFirstDay = dayNo === 1;
           const isLastDay = dayNo === numDays;
 
+          const isBirthday =
+            event.summary?.toLowerCase().includes("birthday") ||
+            event.summary?.toLowerCase().includes("bday") ||
+            event.summary?.toLowerCase().includes("fødselsdag");
+
           allDayJournalEntryElements.push({
             id: entryId,
             element: (
@@ -249,7 +255,7 @@ export function DiaryAgendaDayDay({
                 key={entryId}
                 date={getJournalEntryPrincipalDate(event).start}
                 entry={event}
-                icon={faCalendarRegular}
+                icon={isBirthday ? faBirthdayCake : faCalendarRegular}
                 cotemporality={cotemporality(event)}
                 userTimeZone={timeZone}
                 className={
