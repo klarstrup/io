@@ -7,6 +7,9 @@ const nextConfig = withSerwist({
     turbopackGc: true,
     turbopackLazyDynamicImports: true,
     turbopackPluginRuntimeStrategy: "workerThreads",
+    turbopackChunking: {
+      generateComponentChunks: true,
+    },
   },
   reactCompiler: true,
   cacheComponents: true,
