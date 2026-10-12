@@ -6,7 +6,7 @@
     "dev": "npm-run-all --parallel dev:*",
     "dev:next": "TZ=Etc/UTC next dev --port 1337",
     "dev:graphql": "bun run codegen -- --watch",
-    "ci": "npm-run-all --parallel static:* build",
+    "ci": "npm run build:graphql && npm-run-all --parallel static:* build:next",
     "build": "npm run build:graphql && npm run build:next",
     "build:next": "next build",
     "build:graphql": "bun run codegen",
