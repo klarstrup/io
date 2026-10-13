@@ -1,12 +1,14 @@
 import { startOfYear, subMonths, subYears } from "date-fns";
 import { Fragment, Suspense } from "react";
 import { authUser } from "../../../../auth";
+import UserStuffWorkoutSchedulesForm from "../../../../components/UserStuffWorkoutScheduleForm";
 import type { GQWorkout } from "../../../../graphql.generated/graphql";
 import { ExerciseHistoryTimeframe, PRType } from "../../../../lib";
 import { exercisesById } from "../../../../models/exercises";
 import { Locations } from "../../../../models/location.server";
 import { isClimbingExercise } from "../../../../models/workout";
 import {
+  getAllWorkoutExercises,
   getIsSetPR,
   MaterializedWorkoutsView,
   mergeWorkoutsOfExercise,
@@ -42,6 +44,15 @@ export default async function DiaryExercise({
           </Fragment>
         ))}
       </p>
+      {user ? (
+        <Suspense>
+          <UserStuffWorkoutSchedulesForm
+            exercisesStats={await getAllWorkoutExercises(user.id)}
+            exerciseId={exerciseId}
+            user={user}
+          />
+        </Suspense>
+      ) : null}
       <div className="mt-4 flex items-center gap-2">
         <h2 className="text-xl font-semibold">Workouts</h2>
         <form method="GET" className="flex flex-wrap gap-2">
@@ -183,6 +194,16 @@ async function DiaryExerciseList({
       workoutsExerciseSetPRs[workout.id]!.push(exerciseSetsPRs);
     }
   }
+
+  const filteredWorkoutsOfExercise = allWorkoutsOfExercise.filter((workout) => {
+    if (!prType) return true;
+
+    const PRs = workoutsExerciseSetPRs?.[workout.id];
+    if (!PRs) return false;
+
+    return PRs.some((sets) => sets.some((set) => set[prType]));
+  });
+
   return (
     <>
       {userId && exerciseId === 2001 ? (
@@ -200,16 +221,8 @@ async function DiaryExerciseList({
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        {allWorkoutsOfExercise
-          .filter((workout) => {
-            if (!prType) return true;
-
-            const PRs = workoutsExerciseSetPRs?.[workout.id];
-            if (!PRs) return false;
-
-            return PRs.some((sets) => sets.some((set) => set[prType]));
-          })
-          .map((workout) => (
+        {filteredWorkoutsOfExercise.length > 0 ? (
+          filteredWorkoutsOfExercise.map((workout) => (
             <li key={workout.id} className="min-h-full">
               <WorkoutEntry
                 showExerciseName={false}
@@ -219,7 +232,10 @@ async function DiaryExerciseList({
                 workout={workout as unknown as GQWorkout}
               />
             </li>
-          ))}
+          ))
+        ) : (
+          <li>No workouts yet</li>
+        )}
       </ul>
     </>
   );

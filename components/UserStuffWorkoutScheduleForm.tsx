@@ -272,9 +272,11 @@ function UserStuffWorkoutScheduleForm({
 export default function UserStuffWorkoutSchedulesForm({
   user,
   exercisesStats,
+  exerciseId,
 }: {
   user: IUser;
   exercisesStats: IWorkoutExercisesView[];
+  exerciseId?: number;
 }) {
   const exerciseSchedules =
     user.todoSchedules?.filter(
@@ -287,7 +289,8 @@ export default function UserStuffWorkoutSchedulesForm({
           "exerciseProgram" in schedule &&
           schedule.exerciseProgram &&
           "exerciseId" in schedule.exerciseProgram &&
-          typeof schedule.exerciseProgram.exerciseId === "number",
+          typeof schedule.exerciseProgram.exerciseId === "number" &&
+          (!exerciseId || schedule.exerciseProgram.exerciseId === exerciseId),
         ),
     ) ?? [];
 
@@ -311,7 +314,11 @@ export default function UserStuffWorkoutSchedulesForm({
       className="w-full max-w-full"
     >
       <div className="flex w-full max-w-full flex-col gap-1 overflow-x-scroll">
-        <h1 className="text-lg font-bold">Exercise Schedules</h1>
+        <h1 className="text-lg font-bold">
+          {exerciseId
+            ? `Workout Schedule`
+            : `Exercise Schedules`}
+        </h1>
         {exerciseScheduleBeingEditedId ? (
           <UserStuffWorkoutScheduleForm
             user={user}
@@ -548,9 +555,9 @@ export default function UserStuffWorkoutSchedulesForm({
             </tbody>
           </table>
         ) : (
-          <div>No exercise schedules yet</div>
+          <div>No schedules yet</div>
         )}
-        {!exerciseScheduleBeingEditedId ? (
+        {!exerciseScheduleBeingEditedId && !exerciseId ? (
           <Select
             components={{ Input: ExerciseScheduleInput }}
             instanceId={selectId}
