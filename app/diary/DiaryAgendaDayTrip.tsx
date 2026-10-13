@@ -75,7 +75,7 @@ export function DiaryAgendaDayTrip({
               // eslint-disable-next-line @eslint-react/no-array-index-key
               key={index}
               className={
-                "flex min-w-3 items-center justify-center rounded-sm px-0.5 py-px text-[0.555rem] leading-none font-bold text-gray-500 " +
+                "flex min-h-3 min-w-3 items-center justify-center rounded-sm px-0.5 text-[0.555rem] leading-0 font-bold text-gray-500 " +
                 (fromParanthetical && toParanthetical && "" ? "-mt-2.5" : "")
               }
               style={{
