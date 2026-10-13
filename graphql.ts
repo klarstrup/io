@@ -1897,6 +1897,9 @@ export const typeDefs = gql`
     from: String!
     to: String!
     mode: String!
+    badgeColor: String!
+    badgeTextColor: String!
+    badgeText: String!
   }
 
   type ExerciseSchedule {

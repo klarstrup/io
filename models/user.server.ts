@@ -372,6 +372,7 @@ export const getUserJournalEntries = async (
           legs: tripLegs.map((leg) => {
             const firstStop = leg.stops[0]!;
             const lastStop = leg.stops[leg.stops.length - 1]!;
+            const transport = leg.transports[0];
             return {
               __typename: "TripLeg",
               start:
@@ -384,7 +385,10 @@ export const getUserJournalEntries = async (
                 leg.endDateTime,
               from: firstStop.location.name,
               to: lastStop.location.name,
-              mode: leg.transports[0]?.meansOfTransportation || "unknown",
+              mode: transport?.meansOfTransportation || "unknown",
+              badgeColor: transport?.badge?.colorCode || "",
+              badgeTextColor: transport?.badge?.badgeTextColor || "",
+              badgeText: transport?.badge?.longBadgeText || "",
             };
           }),
         });

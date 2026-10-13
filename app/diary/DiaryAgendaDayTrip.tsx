@@ -1,12 +1,4 @@
-import {
-  faBus,
-  faPersonWalking,
-  faSubway,
-  faTrain,
-  faTrainTram,
-} from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { GQTrip } from "../../graphql.generated/graphql";
 import { useEvent } from "../../hooks";
@@ -77,43 +69,21 @@ export function DiaryAgendaDayTrip({
             </span>
           ) : null}
         </div>
-        <div className="-mt-0.5 flex">
-          {trip.legs.map((leg, index, legs) => (
+        <div className="-mt-0.5 flex gap-0.5">
+          {trip.legs.map((leg, index) => (
             <div
               // eslint-disable-next-line @eslint-react/no-array-index-key
               key={index}
               className={
-                "flex items-center justify-start text-[0.666rem] text-gray-500 " +
+                "flex min-w-3 items-center justify-center rounded-sm px-0.5 py-px text-[0.555rem] leading-none font-bold text-gray-500 " +
                 (fromParanthetical && toParanthetical && "" ? "-mt-2.5" : "")
               }
+              style={{
+                color: leg.badgeTextColor,
+                backgroundColor: leg.badgeColor,
+              }}
             >
-              {leg.mode === "BUS" ||
-              leg.mode === "A_BUS" ||
-              leg.mode === "S_BUS" ? (
-                <FontAwesomeIcon icon={faBus} />
-              ) : leg.mode === "S_TRAIN" ||
-                leg.mode === "LIGHT_RAIL_COPENHAGEN" ? (
-                <FontAwesomeIcon icon={faTrainTram} />
-              ) : leg.mode === "METRO" ? (
-                <FontAwesomeIcon icon={faSubway} />
-              ) : leg.mode === "REGIONAL_TRAIN" ||
-                leg.mode === "INTERCITY" ||
-                leg.mode === "INTERCITY_LYN" ? (
-                <FontAwesomeIcon icon={faTrain} />
-              ) : (
-                (console.warn(`missing icon for leg mode: ${leg.mode}`), null)
-              )}
-              {index < legs.length - 1 ? (
-                <FontAwesomeIcon
-                  icon={faPersonWalking}
-                  className="-mr-0.5 -ml-0.5 text-[0.5rem] text-gray-500"
-                />
-              ) : /* || (
-                          <span className="font-mono text-[0.666rem] text-gray-500 uppercase">
-                            {leg.to}
-                          </span>
-                        )*/
-              null}
+              {leg.badgeText}
             </div>
           ))}
         </div>

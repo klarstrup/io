@@ -28,6 +28,9 @@ export const typePolicies: TypePolicies = {
     fields: {
       start: { read: readDate },
       end: { read: readDate },
+      badgeColor: { read: (v: unknown) => (typeof v === "string" ? v : null) },
+      badgeTextColor: { read: (v: unknown) => (typeof v === "string" ? v : null) },
+      badgeText: { read: (v: unknown) => (typeof v === "string" ? v : null) },
     },
   },
   Event: {

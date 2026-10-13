@@ -38,6 +38,9 @@ gql`
             from
             to
             mode
+            badgeColor
+            badgeTextColor
+            badgeText
           }
         }
         ... on Event {

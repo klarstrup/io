@@ -170,7 +170,16 @@ export namespace DSB {
   }
 
   export interface Transport {
-    meansOfTransportation: "BUS" | "A_BUS" | "S_TRAIN" | "METRO";
+    meansOfTransportation:
+      | "BUS"
+      | "A_BUS"
+      | "S_TRAIN"
+      | "METRO"
+      | "INTERCITY"
+      | "REGIONAL_TRAIN"
+      | "INTERCITY_LYN"
+      | "S_BUS"
+      | "LIGHT_RAIL_COPENHAGEN";
     name: string;
     operator: string;
     badge: Badge;
