@@ -155,6 +155,7 @@ gql`
 `;
 
 export function DiaryAgendaDayDueSet({
+  dayRange,
   dueSet,
   exerciseInfo,
   workouts,
@@ -163,6 +164,7 @@ export function DiaryAgendaDayDueSet({
   timeZone,
   ...props
 }: {
+  dayRange: { start: Date; end: Date };
   dueSet: GQNextSet;
   exerciseInfo: GQExerciseInfo;
   workouts?: GQWorkout[];
@@ -189,13 +191,29 @@ export function DiaryAgendaDayDueSet({
       if (exerciseInfo.isHidden) return;
 
       const dateStr = dateToString(
-        startOfDayButItRespectsDayStartHour(new Date()),
+        startOfDayButItRespectsDayStartHour(dayRange.start),
       );
       const searchStr = `exerciseScheduleId=${dueSet.exerciseSchedule.id}`;
       router.push(`/diary/${dateStr}/workout?${searchStr}`);
     },
-    [dueSet.exerciseSchedule.id, exerciseInfo.isHidden, router],
+    [dueSet.exerciseSchedule.id, exerciseInfo.isHidden, router, dayRange.start],
   );
+
+  const frequency = dueSet.exerciseSchedule.frequency;
+  const cyclesOverdue =
+    frequency &&
+    (dayRange.end.getTime() -
+      (dueSet?.lastWorkedOutAt
+        ? new Date(dueSet.lastWorkedOutAt).getTime()
+        : 0)) /
+      ((frequency.years ?? 0) * 365 * 24 * 60 * 60 * 1000 +
+        (frequency.months ?? 0) * 30 * 24 * 60 * 60 * 1000 +
+        (frequency.weeks ?? 0) * 7 * 24 * 60 * 60 * 1000 +
+        (frequency.days ?? 0) * 24 * 60 * 60 * 1000 +
+        (frequency.hours ?? 0) * 60 * 60 * 1000 +
+        (frequency.minutes ?? 0) * 60 * 1000 +
+        (frequency.seconds ?? 0) * 1000) -
+      1;
 
   return (
     <DiaryAgendaDayEntry
@@ -207,6 +225,7 @@ export function DiaryAgendaDayDueSet({
       {...props}
       icon={faDumbbell}
       onIconClick={handleIconClick}
+      contentClassName={"flex items-center gap-1"}
     >
       <div
         ref={ref}
@@ -404,6 +423,11 @@ export function DiaryAgendaDayDueSet({
           </div>
         )}
       </div>
+      {cyclesOverdue != undefined && cyclesOverdue >= 1 && (
+        <span className="text-[0.666rem] whitespace-nowrap text-red-400 tabular-nums opacity-75">
+          {Math.floor(cyclesOverdue)}x overdue
+        </span>
+      )}
     </DiaryAgendaDayEntry>
   );
 }

@@ -423,6 +423,7 @@ export function DiaryAgendaDayDay({
           element: (
             <DiaryAgendaDayDueSet
               key={entryId}
+              dayRange={dayRange}
               dueSet={dueSet}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
