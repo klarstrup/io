@@ -2,6 +2,7 @@
 import type { TypedDocumentNode } from "@apollo/client";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { TZDate } from "@date-fns/tz";
+import { ObjectId } from "bson";
 import {
   addDays,
   addHours,
@@ -150,6 +151,7 @@ export function WorkoutForm<R extends string>({
             locationId
             source
             exercises {
+              id
               exerciseId
               displayName
               comment
@@ -173,6 +175,7 @@ export function WorkoutForm<R extends string>({
                 }
               }
               sets {
+                id
                 comment
                 createdAt
                 updatedAt
@@ -205,6 +208,7 @@ export function WorkoutForm<R extends string>({
             locationId
             source
             exercises {
+              id
               exerciseId
               displayName
               comment
@@ -228,6 +232,7 @@ export function WorkoutForm<R extends string>({
                 }
               }
               sets {
+                id
                 comment
                 createdAt
                 updatedAt
@@ -434,6 +439,7 @@ export function WorkoutForm<R extends string>({
     }
 
     const sets = setEfforts.reverse().map((setEffort): WorkoutExerciseSet => ({
+      id: new ObjectId().toString(),
       createdAt: new Date(),
       updatedAt: new Date(),
       inputs: exerciseDefinition.inputs.map(
@@ -445,7 +451,11 @@ export function WorkoutForm<R extends string>({
       ),
     }));
 
-    append({ exerciseId: dueSet.exerciseId, sets });
+    append({
+      id: new ObjectId().toString(),
+      exerciseId: dueSet.exerciseId,
+      sets,
+    });
   });
 
   const handleSnoozeDueSet = useEvent(async (dueSet: GQNextSet) => {
@@ -481,9 +491,9 @@ export function WorkoutForm<R extends string>({
               user.timeZone ?? DEFAULT_TIMEZONE,
             ),
             exercises: data.exercises?.map((exercise) => ({
-              ...omit(exercise, "id" as "displayName"),
+              ...exercise,
               sets: exercise.sets.map((set) => ({
-                ...omit(set, "id" as "comment"),
+                ...set,
                 inputs: set.inputs.map((input) => ({
                   ...input,
                   value: setValueAs(input.value) as number,
@@ -672,10 +682,10 @@ export function WorkoutForm<R extends string>({
           </center>
         </div>
         <div className="flex flex-col gap-1">
-          {fields.map(({ id: fieldId, ...field }, index) => {
+          {fields.map((field, index) => {
             if (!field.exerciseId) {
               console.warn(
-                `Exercise ID is missing for field with id ${fieldId}`,
+                `Exercise ID is missing for field with id ${field.id}`,
                 field,
               );
               return null;
@@ -690,7 +700,7 @@ export function WorkoutForm<R extends string>({
 
             return (
               <FieldSetX
-                key={fieldId}
+                key={field.id}
                 className="flex flex-col"
                 legend={
                   <div className="-ml-2 flex flex-1 gap-1 text-sm font-semibold">
@@ -737,6 +747,7 @@ export function WorkoutForm<R extends string>({
                             exercise={exercise}
                             set={{
                               __typename: "WorkoutSet",
+                              id: nextExerciseSet.id,
                               inputs: nextExerciseSet.nextWorkingSetInputs,
                             }}
                             repeatCount={nextExerciseSet.nextWorkingSets}
@@ -829,7 +840,11 @@ export function WorkoutForm<R extends string>({
             ) => {
               if (!selected) return;
 
-              append({ exerciseId: selected.value, sets: [] });
+              append({
+                id: new ObjectId().toString(),
+                exerciseId: selected.value,
+                sets: [],
+              });
             }}
           />
         </div>
@@ -964,6 +979,7 @@ function SetsForm({
               disabled={isDisabled}
               onClick={() =>
                 append({
+                  id: new ObjectId().toString(),
                   createdAt: new Date(),
                   updatedAt: new Date(),
                   meta: lastSet?.meta,
@@ -1200,6 +1216,7 @@ function SetsForm({
 
                     append({
                       ...setState,
+                      id: new ObjectId().toString(),
                       createdAt: new Date(),
                       updatedAt: new Date(),
                       inputs: exercise.inputs.map((input, inputIndex) => {

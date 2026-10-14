@@ -21,6 +21,18 @@ import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource, UserDataSource } from "../../../sources/utils";
 import { epoch } from "../../../utils";
 
+// $createObjectId only exists from MongoDB 8.3, so build a random 24-char hex
+// string (ObjectId-shaped, 96 bits) from $rand. Every $rand is evaluated
+// independently, so each element gets its own value.
+const hexDigit = {
+  $substrCP: [
+    "0123456789abcdef",
+    { $toInt: { $floor: { $multiply: [{ $rand: {} }, 16] } } },
+    1,
+  ],
+};
+const randomId = { $concat: Array.from({ length: 24 }, () => hexDigit) };
+
 export async function* materializeToploggerWorkouts(
   user: IUser,
   dataSource: UserDataSource & { source: DataSource.TopLogger },
@@ -191,12 +203,29 @@ export async function* materializeToploggerWorkouts(
         location: { $first: "$climbLogs.gym.name" },
         exercises: [
           {
+            id: {
+              $concat: [
+                { $literal: WorkoutSource.TopLogger },
+                ":",
+                { $literal: topLoggerGraphQLId },
+                ":",
+                {
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: { $first: "$climbLogs.climbedAtDate" },
+                  },
+                },
+                ":",
+                { $first: "$climbLogs.gymId" },
+              ],
+            },
             exerciseId: 2001,
             sets: {
               $map: {
                 input: "$climbLogs",
                 as: "climbLog",
                 in: {
+                  id: "$$climbLog.id",
                   meta: {
                     boulderCircuitId: "$$climbLog.climbGroupClimb.climbGroupId",
                     attemptCount: { $add: ["$$climbLog.tryIndex", 1] },
@@ -333,12 +362,14 @@ export async function* materializeFitocracyWorkouts(
             input: "$root_group.children",
             as: "child",
             in: {
+              id: { $toString: "$$child.id" },
               exerciseId: "$$child.exercise.exercise_id",
               sets: {
                 $map: {
                   input: "$$child.exercise.sets",
                   as: "set",
                   in: {
+                    id: { $toString: "$$set.id" },
                     createdAt: "$updated_timestamp",
                     updatedAt: "$updated_timestamp",
                     inputs: {
@@ -396,9 +427,11 @@ export async function* materializeRunDoubleWorkouts(
         source: { $literal: WorkoutSource.RunDouble },
         exercises: [
           {
+            id: { $toString: "$key" },
             exerciseId: 518,
             sets: [
               {
+                id: { $toString: "$key" },
                 createdAt: "$completedAt",
                 updatedAt: "$completedAt",
                 inputs: [
@@ -585,12 +618,22 @@ export async function* materializeKilterBoardWorkouts(
         source: { $literal: WorkoutSource.KilterBoard },
         exercises: [
           {
+            id: {
+              $concat: [
+                { $literal: WorkoutSource.KilterBoard },
+                ":",
+                { $toString: { $first: "$ascents.user_id" } },
+                ":",
+                "$_id",
+              ],
+            },
             exerciseId: 2003,
             sets: {
               $map: {
                 input: "$ascents",
                 as: "ascent",
                 in: {
+                  id: { $toString: "$$ascent.uuid" },
                   createdAt: "$$ascent.created_at",
                   updatedAt: "$$ascent.updated_at",
                   meta: {
@@ -694,12 +737,22 @@ export async function* materializeMoonBoardWorkouts(
         source: { $literal: WorkoutSource.MoonBoard },
         exercises: [
           {
+            id: {
+              $concat: [
+                { $literal: WorkoutSource.MoonBoard },
+                ":",
+                { $toString: { $first: "$entries.User.Id" } },
+                ":",
+                "$_id",
+              ],
+            },
             exerciseId: 2003,
             sets: {
               $map: {
                 input: "$entries",
                 as: "entry",
                 in: {
+                  id: { $toString: "$$entry.Id" },
                   meta: { attemptCount: { $add: ["$$entry.Attempts", 1] } },
                   inputs: [
                     // Grade
@@ -807,12 +860,14 @@ export async function* materializeGrippyWorkouts(
                 $regexMatch: { input: "$workout.name", regex: /Dead Hang/ },
               },
               then: {
+                id: { $toString: "$uuid" },
                 exerciseId: 1434,
                 sets: {
                   $map: {
                     input: "$sets",
                     as: "set",
                     in: {
+                      id: randomId,
                       createdAt: "$$set.start_time",
                       updatedAt: "$$set.end_time",
                       inputs: [
@@ -832,10 +887,12 @@ export async function* materializeGrippyWorkouts(
                 },
               },
               else: {
+                id: { $toString: "$uuid" },
                 displayName: "$workout.name",
                 exerciseId: 2006,
                 sets: [
                   {
+                    id: { $toString: "$uuid" },
                     createdAt: "$start_time",
                     updatedAt: "$end_time",
                     inputs: [
@@ -901,10 +958,12 @@ export async function* materializeCrimpdWorkouts(
         source: { $literal: WorkoutSource.Crimpd },
         exercises: [
           {
+            id: { $toString: "$_id" },
             exerciseId: 2007,
             displayName: "$workout.name",
             sets: [
               {
+                id: { $toString: "$_id" },
                 createdAt: "$dateCreated",
                 updatedAt: "$lastUpdated",
                 inputs: [
@@ -955,6 +1014,7 @@ export async function* materializeOnsightWorkouts(
         source: { $literal: WorkoutSource.Onsight },
         exercises: [
           {
+            id: { $toString: "$_id" },
             exerciseId: 2001,
             displayName: { $first: { $split: ["$Competition_name", "/"] } },
             sets: {
@@ -962,6 +1022,7 @@ export async function* materializeOnsightWorkouts(
                 input: "$Ascents",
                 as: "ascent",
                 in: {
+                  id: randomId,
                   createdAt: "$_createdAt",
                   updatedAt: "$_updatedAt",
                   meta: {
@@ -1221,6 +1282,7 @@ export async function* materializeClimbalongWorkouts(
         },
         exercises: [
           {
+            id: { $toString: "$_id" },
             exerciseId: 2001,
             comment: "$competition.title",
             sets: {
@@ -1228,6 +1290,7 @@ export async function* materializeClimbalongWorkouts(
                 input: "$performances",
                 as: "performance",
                 in: {
+                  id: { $toString: "$$performance._id" },
                   createdAt: "$registrationTime",
                   updatedAt: "$registrationTime",
                   meta: {
@@ -1317,10 +1380,12 @@ export async function* materializeSportstimingWorkouts(
         source: { $literal: WorkoutSource.Sportstiming },
         exercises: [
           {
+            id: "$_id",
             exerciseId: 518,
             displayName: "$DistanceName",
             sets: [
               {
+                id: "$_id",
                 createdAt: "$StartTime",
                 updatedAt: "$StartTime",
                 inputs: [

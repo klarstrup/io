@@ -218,6 +218,7 @@ gql`
             locationId
             source
             exercises {
+              id
               exerciseId
               displayName
               comment
@@ -241,6 +242,7 @@ gql`
                 }
               }
               sets {
+                id
                 comment
                 createdAt
                 updatedAt

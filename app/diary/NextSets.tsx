@@ -104,6 +104,7 @@ export function NextSets({
                         exercise={exercise}
                         set={{
                           __typename: "WorkoutSet",
+                          id: dueSet.id,
                           inputs: nextWorkingSetInputs ?? [],
                         }}
                         repeatCount={nextWorkingSets}

@@ -238,6 +238,7 @@ export async function getIoTopLoggerCompEvent(
                   ),
                 )
                 .map(({ climb, climbLog }) => ({
+                  id: climb.id,
                   number: climb.name || "",
                   color:
                     holdColors.find(({ id }) => id === climb.holdColorId)

@@ -491,6 +491,7 @@ export async function getIoClimbAlongCompetitionEvent(
                     // More nastiness here because each problem is repeated for each lane
                     const key = problem.title;
                     memo.set(key, {
+                      id: problem.problemId,
                       number: problem.title,
                       color: undefined,
                       grade: undefined,

@@ -165,6 +165,7 @@ export async function getIoOnsightCompetitionEvent(
                 const result = ascent.split("/")[2]!;
 
                 return {
+                  id: index,
                   number: index + 1,
                   color: undefined,
                   grade: undefined,

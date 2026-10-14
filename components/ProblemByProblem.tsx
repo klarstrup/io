@@ -389,6 +389,7 @@ export const exerciseSetsToProblemByProblem = (
     );
 
     return {
+      id: set.id,
       grade: set.inputs[0]!.value || undefined,
       circuit: circuit && {
         ...circuit,
@@ -525,7 +526,7 @@ export default function ProblemByProblem({
       }
     >
       {sortedProblems.map((problem) => (
-        <ProblemBadge key={keyFromProblem(problem)} {...problem} />
+        <ProblemBadge key={problem.id} {...problem} />
       ))}
     </div>
   );

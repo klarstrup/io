@@ -270,6 +270,7 @@ export function DiaryAgendaDayDueSet({
                   exercise={exerciseInfo}
                   set={{
                     __typename: "WorkoutSet",
+                    id: dueSet.id,
                     inputs: dueSet.nextWorkingSetInputs ?? [],
                   }}
                   repeatCount={dueSet.nextWorkingSets}

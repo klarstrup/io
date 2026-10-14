@@ -64,6 +64,8 @@ export interface WorkoutData {
 }
 
 export interface WorkoutExercise {
+  // String that uniquely and reproducibly identifies this workout exercise
+  id: string;
   exerciseId: number;
   displayName?: string | null;
   sets: WorkoutExerciseSet[];
@@ -71,6 +73,8 @@ export interface WorkoutExercise {
 }
 
 export interface WorkoutExerciseSet {
+  // String that uniquely and reproducibly identifies this workout exercise set
+  id: string;
   createdAt?: Date | null;
   updatedAt?: Date | null;
   inputs: WorkoutExerciseSetInput[];

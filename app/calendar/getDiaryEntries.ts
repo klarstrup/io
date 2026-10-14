@@ -38,6 +38,7 @@ gql`
           }
         }
         exercises {
+          id
           exerciseId
           exerciseInfo {
             id
@@ -61,6 +62,7 @@ gql`
           displayName
           comment
           sets {
+            id
             comment
             createdAt
             updatedAt

@@ -1085,8 +1085,10 @@ export const resolvers: GQResolvers<
         source: workoutData.source as unknown as WorkoutData["source"],
         exercises: workoutData.exercises?.map((exercise) => ({
           ...omitUndefined(exercise),
+          id: new ObjectId().toString(),
           sets: exercise.sets.map((set) => ({
             ...omitUndefined(set),
+            id: new ObjectId().toString(),
             inputs: set.inputs.map((input) => ({
               ...omitUndefined(input),
               value: input.value ?? NaN,
@@ -1225,8 +1227,10 @@ export const resolvers: GQResolvers<
             source: inputData.source as unknown as WorkoutData["source"],
             exercises: inputData.exercises?.map((exercise) => ({
               ...omitUndefined(exercise),
+              id: exercise.id ?? new ObjectId().toString(),
               sets: exercise.sets.map((set) => ({
                 ...omitUndefined(set),
+                id: set.id ?? new ObjectId().toString(),
                 inputs: set.inputs.map((input) => ({
                   ...omitUndefined(input),
                   value: input.value ?? NaN,
@@ -1644,6 +1648,7 @@ export const typeDefs = gql`
     exercises: [UpdateWorkoutDataExercisesInput!]!
   }
   input UpdateWorkoutDataExercisesInput {
+    id: ID!
     exerciseId: Int!
     displayName: String
     comment: String
@@ -1651,6 +1656,7 @@ export const typeDefs = gql`
   }
 
   input UpdateWorkoutDataWorkoutSetInput {
+    id: ID!
     createdAt: Date
     updatedAt: Date
     inputs: [UpdateWorkoutDataWorkoutSetInputInput!]!
@@ -1679,6 +1685,7 @@ export const typeDefs = gql`
     exercises: [CreateWorkoutDataExercisesInput!]!
   }
   input CreateWorkoutDataExercisesInput {
+    id: ID!
     exerciseId: Int!
     displayName: String
     comment: String
@@ -1686,6 +1693,7 @@ export const typeDefs = gql`
   }
 
   input CreateWorkoutDataWorkoutSetInput {
+    id: ID!
     createdAt: Date
     updatedAt: Date
     inputs: [CreateWorkoutDataWorkoutSetInputInput!]!
@@ -1991,6 +1999,7 @@ export const typeDefs = gql`
   }
 
   type WorkoutExercise {
+    id: ID!
     exerciseId: Int!
     exerciseInfo: ExerciseInfo!
     sets: [WorkoutSet!]!
@@ -2039,6 +2048,7 @@ export const typeDefs = gql`
   }
 
   type WorkoutSet {
+    id: ID!
     createdAt: Date
     updatedAt: Date
     inputs: [WorkoutSetInput!]!

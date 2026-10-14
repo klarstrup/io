@@ -35,6 +35,7 @@ export default function DiaryWorkout(props: {
             locationId
             source
             exercises {
+              id
               exerciseId
               displayName
               comment
@@ -58,6 +59,7 @@ export default function DiaryWorkout(props: {
                 }
               }
               sets {
+                id
                 comment
                 createdAt
                 updatedAt

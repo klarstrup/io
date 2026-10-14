@@ -100,6 +100,7 @@ export interface EventRound {
 }
 
 export interface PP {
+  id: string | number;
   number: string | number;
   color: string | undefined;
   grade: number | undefined;

@@ -2,149 +2,53 @@ import { getDB } from "../../../dbConnect";
 
 export const maxDuration = 45;
 
+// $createObjectId only exists from MongoDB 8.3, so build a random 24-char hex
+// string (ObjectId-shaped, 96 bits) from $rand. Every $rand is evaluated
+// independently, so each element gets its own value.
+const hexDigit = {
+  $substrCP: [
+    "0123456789abcdef",
+    { $toInt: { $floor: { $multiply: [{ $rand: {} }, 16] } } },
+    1,
+  ],
+};
+const randomId = { $concat: Array.from({ length: 24 }, () => hexDigit) };
+
+// Maps over an array field, adding a random `id` to each element unless it
+// already has one, and merges in `extra` fields computed from the element.
+const mapWithIds = (
+  input: string,
+  name: string,
+  extra: (element: string) => Record<string, unknown> = () => ({}),
+) => {
+  const el = `${name}El`;
+  return {
+    $map: {
+      input: { $ifNull: [input, []] },
+      as: el,
+      in: {
+        $mergeObjects: [
+          `$$${el}`,
+          { id: { $ifNull: [`$$${el}.id`, randomId] } },
+          extra(`$$${el}`),
+        ],
+      },
+    },
+  };
+};
+
 export async function GET() {
   const db = await getDB();
-  const now = "$$NOW";
 
-  const [users, sessions, accounts] = await Promise.all([
-    db.collection("users").updateMany(
-      {
-        $or: [
-          { emailVerified: { $type: "date" } },
-          { createdAt: { $exists: false } },
-          { updatedAt: { $exists: false } },
-        ],
+  const result = await db.collection("workouts").updateMany({}, [
+    {
+      $set: {
+        exercises: mapWithIds("$exercises", "exercise", (exercise) => ({
+          sets: mapWithIds(`${exercise}.sets`, "set"),
+        })),
       },
-      [
-        {
-          $set: {
-            emailVerified: {
-              $cond: [
-                { $eq: [{ $type: "$emailVerified" }, "date"] },
-                true,
-                { $ifNull: ["$emailVerified", false] },
-              ],
-            },
-            createdAt: { $ifNull: ["$createdAt", now] },
-            updatedAt: { $ifNull: ["$updatedAt", now] },
-          },
-        },
-      ],
-    ),
-    db.collection("sessions").updateMany(
-      {
-        $or: [
-          { sessionToken: { $exists: true } },
-          { expires: { $exists: true } },
-          { createdAt: { $exists: false } },
-          { updatedAt: { $exists: false } },
-        ],
-      },
-      [
-        {
-          $set: {
-            token: { $ifNull: ["$token", "$sessionToken"] },
-            expiresAt: { $ifNull: ["$expiresAt", "$expires"] },
-            createdAt: { $ifNull: ["$createdAt", now] },
-            updatedAt: { $ifNull: ["$updatedAt", now] },
-          },
-        },
-        { $unset: ["sessionToken", "expires"] },
-      ],
-    ),
-    db.collection("accounts").updateMany(
-      {
-        $or: [
-          { type: { $exists: true } },
-          { provider: { $exists: true } },
-          { providerAccountId: { $exists: true } },
-          { access_token: { $exists: true } },
-          { refresh_token: { $exists: true } },
-          { expires_at: { $exists: true } },
-          { token_type: { $exists: true } },
-          { id_token: { $exists: true } },
-          { session_state: { $exists: true } },
-          { createdAt: { $exists: false } },
-          { updatedAt: { $exists: false } },
-        ],
-      },
-      [
-        {
-          $set: {
-            providerId: { $ifNull: ["$providerId", "$provider"] },
-            accountId: {
-              $ifNull: ["$accountId", "$providerAccountId"],
-            },
-            accessToken: { $ifNull: ["$accessToken", "$access_token"] },
-            refreshToken: { $ifNull: ["$refreshToken", "$refresh_token"] },
-            accessTokenExpiresAt: {
-              $ifNull: [
-                "$accessTokenExpiresAt",
-                {
-                  $cond: [
-                    { $isNumber: "$expires_at" },
-                    { $toDate: { $multiply: ["$expires_at", 1000] } },
-                    "$expires_at",
-                  ],
-                },
-              ],
-            },
-            idToken: { $ifNull: ["$idToken", "$id_token"] },
-            createdAt: { $ifNull: ["$createdAt", now] },
-            updatedAt: { $ifNull: ["$updatedAt", now] },
-          },
-        },
-        {
-          $unset: [
-            "type",
-            "provider",
-            "providerAccountId",
-            "access_token",
-            "refresh_token",
-            "expires_at",
-            "token_type",
-            "id_token",
-            "session_state",
-          ],
-        },
-      ],
-    ),
+    },
   ]);
 
-  const verificationTokens = db.collection("verification_tokens");
-  const verificationCount = await verificationTokens.countDocuments();
-
-  if (verificationCount > 0) {
-    await verificationTokens
-      .aggregate([
-        {
-          $set: {
-            id: { $toString: "$_id" },
-            value: "$token",
-            expiresAt: "$expires",
-            createdAt: { $ifNull: ["$createdAt", now] },
-            updatedAt: { $ifNull: ["$updatedAt", now] },
-          },
-        },
-        { $unset: ["token", "expires"] },
-        {
-          $merge: {
-            into: { db: db.databaseName, coll: "verifications" },
-            on: "_id",
-            whenMatched: "keepExisting",
-            whenNotMatched: "insert",
-          },
-        },
-      ])
-      .toArray();
-
-    await verificationTokens.drop();
-  }
-
-  return Response.json({
-    users: users.modifiedCount,
-    sessions: sessions.modifiedCount,
-    accounts: accounts.modifiedCount,
-    verifications: verificationCount,
-  });
+  return Response.json(result);
 }
