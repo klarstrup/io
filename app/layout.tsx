@@ -46,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 placeholder="blur"
                 unoptimized
                 fill
+                decoding="sync"
                 className="pointer-events-none fixed! inset-0 -z-10 object-cover select-none"
               />
             )}
