@@ -1,0 +1,501 @@
+import { useApolloClient } from "@apollo/client/react";
+import {
+  faBoxesPacking,
+  faExternalLink,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  differenceInDays,
+  isBefore,
+  isEqual,
+  isPast,
+  roundToNearestMinutes,
+} from "date-fns";
+import { use, useMemo, type ReactElement } from "react";
+import { browser } from "react-dom";
+import type {
+  GQEvent,
+  GQLocation,
+  GQUser,
+  GQWorkout,
+} from "../../graphql.generated/graphql";
+import { WorkoutSource } from "../../models/workout";
+import {
+  cotemporality,
+  dateToString,
+  DEFAULT_TIMEZONE,
+  emptyArray,
+  isBeforeOrEqual,
+  isSameDayButItRespectsDayStartHour,
+  startOfDayButItRespectsDayStartHour,
+} from "../../utils";
+import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
+import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
+import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
+import { DiaryAgendaDayLocationChange } from "./DiaryAgendaDayLocationChange";
+import { DiaryAgendaDayMeal } from "./DiaryAgendaDayMeal";
+import { DiaryAgendaDayNow } from "./DiaryAgendaDayNow";
+import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
+import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
+import { DiaryAgendaDayTrip } from "./DiaryAgendaDayTrip";
+import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
+import { TodoSortableContext } from "./TodoDroppable";
+import {
+  doEntriesOverlapExactly,
+  getJournalEntryPrincipalDate,
+  isEntryThatCanHaveSeparatedEnd,
+  isEventEntireDay,
+  isSeparatedEnd,
+  omitSeparatedEnd,
+  type JournalEntry,
+} from "./diaryUtils";
+
+interface DayJournalEntryElement {
+  id: string;
+  element: ReactElement;
+}
+
+export function DiaryAgendaDayDayContents({
+  now,
+  date,
+  dayRange,
+  userTimeZone,
+  dayLocations,
+  dayJournalEntries,
+  isLoadingEntries,
+}: {
+  now: Date;
+  date: `${number}-${number}-${number}`;
+  dayRange: { start: Date; end: Date };
+  userTimeZone?: GQUser["timeZone"];
+  dayLocations: GQLocation[];
+  dayJournalEntries: JournalEntry[];
+  isSelectedDay?: boolean;
+  isLoadingEntries?: boolean;
+}) {
+  use(browser());
+  const client = useApolloClient();
+  const timeZone = userTimeZone || DEFAULT_TIMEZONE;
+
+  const dayJournalItems = useMemo(() => {
+    const dayJournalEntryElements: DayJournalEntryElement[] = [];
+
+    let i = 0;
+    const entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
+      [];
+
+    let ownWorkouts = dayJournalEntries
+      .filter((jE): jE is GQWorkout => jE.__typename === "Workout")
+      .filter((w) => w.source === WorkoutSource.Self);
+    if (!ownWorkouts.length) ownWorkouts = emptyArray;
+
+    for (const journalEntry of dayJournalEntries) {
+      const entryId =
+        (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
+        (journalEntry.__typename !== "LocationChange" &&
+        journalEntry.__typename !== "NowDivider"
+          ? client.cache.identify(journalEntry)!
+          : journalEntry.id);
+      const principalDate = getJournalEntryPrincipalDate(journalEntry);
+
+      const precedingJournalEntry = dayJournalEntries[i - 1];
+      const followingJournalEntry = dayJournalEntries[i + 1];
+
+      const previousEntries = dayJournalEntries
+        .slice(0, i)
+        .filter((je) => isEntryThatCanHaveSeparatedEnd(je));
+      const followingEndOfEntries = dayJournalEntries
+        .slice(i + 1)
+        .filter((je) => isSeparatedEnd(je));
+
+      let entryThatSurroundsEntry =
+        previousEntries
+          .filter(
+            (prevJE) =>
+              (prevJE.__typename === "Event"
+                ? prevJE.datetype !== "date" &&
+                  !isEventEntireDay(prevJE, dayRange.start)
+                : true) &&
+              !entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.includes(
+                prevJE.id,
+              ),
+          )
+          .findLast((prevJE) =>
+            followingEndOfEntries.some((endOfJE) => prevJE.id === endOfJE.id),
+          ) ||
+        previousEntries
+          .filter((je) =>
+            je.__typename === "Event"
+              ? je.datetype !== "date" && !isEventEntireDay(je, dayRange.start)
+              : true,
+          )
+          .filter((je) => je.id !== journalEntry.id)
+          .findLast((je) => {
+            const jePrincipalDate = getJournalEntryPrincipalDate(je);
+            return (
+              isBeforeOrEqual(jePrincipalDate.start, principalDate.start) &&
+              isBefore(principalDate.end, jePrincipalDate.end)
+            );
+          }) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
+        followingEndOfEntries
+          // followingEndOfEvent that has started(before today in this case) but doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event)
+          .find((endOfJE) => {
+            const endPrincipalDate = getJournalEntryPrincipalDate(
+              omitSeparatedEnd(endOfJE),
+            );
+            return isBefore(endPrincipalDate.start, principalDate.start);
+          }) ||
+        null;
+
+      if (
+        isSeparatedEnd(journalEntry) &&
+        entryThatSurroundsEntry &&
+        doEntriesOverlapExactly(
+          omitSeparatedEnd(journalEntry),
+          entryThatSurroundsEntry,
+        )
+      ) {
+        entryThatSurroundsEntry = null;
+      }
+
+      const surroundingPrincipalDate = entryThatSurroundsEntry
+        ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)
+        : null;
+      const cotemporalityOfSurroundingEntry = surroundingPrincipalDate
+        ? cotemporality(surroundingPrincipalDate)
+        : null;
+
+      if (journalEntry.__typename === "NowDivider") {
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayNow
+              key={entryId}
+              date={date}
+              timeZone={timeZone}
+              now={journalEntry.start}
+              nextEntryDate={
+                (followingJournalEntry &&
+                  getJournalEntryPrincipalDate(followingJournalEntry).start) ||
+                null
+              }
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            />
+          ),
+        });
+      } else if (journalEntry.__typename === "Sleep") {
+        const sleep = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDaySleep
+              key={entryId}
+              sleep={sleep}
+              userTimeZone={timeZone}
+              principalDate={principalDate}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              hasSeparatedEnd={!isSeparatedEnd(sleep)}
+            />
+          ),
+        });
+      } else if (journalEntry.__typename === "Event") {
+        const event = journalEntry;
+
+        const eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt =
+          isEventEntireDay(event, dayRange.start);
+
+        const isAllDayEvent =
+          event.datetype === "date" ||
+          eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt;
+
+        if (isAllDayEvent) {
+          // All-day events are handled separately in the DiaryAgendaDayDayAllDayEvents component, so we don't need to render them here.
+        } else if (isSeparatedEnd(event)) {
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayEvent
+                key={entryId}
+                dayRange={dayRange}
+                userTimeZone={timeZone}
+                event={event}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry
+                }
+                isEntryWithSeparatedEnd={false}
+              />
+            ),
+          });
+        } else {
+          const precedingEndOfEvent =
+            precedingJournalEntry &&
+            precedingJournalEntry.__typename === "Event" &&
+            isSeparatedEnd(precedingJournalEntry)
+              ? precedingJournalEntry
+              : null;
+
+          const entryHasSeparateEnd = dayJournalEntries
+            .slice(i + 1)
+            .some(
+              (je): je is GQEvent => isSeparatedEnd(je) && je.id === event.id,
+            );
+
+          const startDay = startOfDayButItRespectsDayStartHour(event.start);
+          const endDay = startOfDayButItRespectsDayStartHour(event.end);
+          const days = differenceInDays(endDay, startDay) + 1;
+          const dayNo = differenceInDays(dayRange.start, startDay);
+          const isLastDay = dayNo === days;
+
+          // If the preceding journal entry is the end of an event and it ends exactly when the current event starts, then we can treat them as a single continuous event instead of two separate events for the purpose of drawing the little bracket
+          const isEntryEnd =
+            Boolean(
+              entryHasSeparateEnd &&
+              precedingEndOfEvent &&
+              roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
+                event.start.getTime(),
+            ) ||
+            (dayNo > 1 && days > 1 && isLastDay && !entryHasSeparateEnd);
+
+          if (precedingEndOfEvent && isEntryEnd) {
+            entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
+              precedingEndOfEvent.id,
+            );
+          }
+
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayEvent
+                key={entryId}
+                dayRange={dayRange}
+                userTimeZone={timeZone}
+                event={event}
+                isEntryWithSeparatedEnd={
+                  (followingEndOfEntries.some(
+                    (endOfEntry) => endOfEntry.id === event.id,
+                  ) &&
+                    isEqual(
+                      startOfDayButItRespectsDayStartHour(dayRange.start),
+                      startOfDayButItRespectsDayStartHour(event.start),
+                    )) ||
+                  (!isSameDayButItRespectsDayStartHour(
+                    event.start,
+                    event.end,
+                  ) &&
+                    isEqual(
+                      startOfDayButItRespectsDayStartHour(dayRange.start),
+                      startOfDayButItRespectsDayStartHour(event.start),
+                    ))
+                }
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry ||
+                  (dayNo > 1 && days > 1 && entryHasSeparateEnd
+                    ? cotemporality(event)
+                    : null)
+                }
+              />
+            ),
+          });
+        }
+      } else if (journalEntry.__typename === "Todo") {
+        const todo = journalEntry;
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayTodo
+              todo={todo}
+              key={entryId}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              now={now}
+              timeZone={timeZone}
+            />
+          ),
+        });
+      } else if ("exerciseSchedule" in journalEntry) {
+        const dueSet = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayDueSet
+              key={entryId}
+              dayRange={dayRange}
+              dueSet={dueSet}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
+              workouts={ownWorkouts}
+              locations={dayLocations}
+              timeZone={timeZone}
+            />
+          ),
+        });
+      } else if (journalEntry.__typename === "Workout") {
+        const workout = journalEntry;
+
+        const workoutDateStr = dateToString(
+          startOfDayButItRespectsDayStartHour(workout.workedOutAt),
+        );
+
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayWorkout
+              key={entryId}
+              location={dayLocations.find(
+                (loc) => loc.id === workout.locationId,
+              )}
+              workout={workout}
+              workoutDateStr={workoutDateStr}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              timeZone={timeZone}
+            />
+          ),
+        });
+      } else if (journalEntry.__typename === "LocationChange") {
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayLocationChange
+              key={entryId}
+              locationChange={journalEntry}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              timeZone={timeZone}
+            />
+          ),
+        });
+      } else if (journalEntry.__typename === "Trip") {
+        const trip = journalEntry;
+        const isEndOfTrip = isSeparatedEnd(trip);
+
+        const followingEntryIsEndOfTrip =
+          followingJournalEntry &&
+          followingJournalEntry.__typename === "Trip" &&
+          isSeparatedEnd(followingJournalEntry) &&
+          followingJournalEntry.id === trip.id;
+
+        if (
+          isEndOfTrip &&
+          precedingJournalEntry?.__typename === "Trip" &&
+          precedingJournalEntry.id === trip.id
+        ) {
+          // Skip rendering the separated end of the trip as it will be represented by the preceding entry
+        } else {
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayTrip
+                key={entryId}
+                trip={trip}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry
+                }
+                isEntryWithSeparatedEnd={
+                  !followingEntryIsEndOfTrip && !isEndOfTrip
+                }
+                timeZone={timeZone}
+              />
+            ),
+          });
+        }
+      } else if (journalEntry.__typename === "Meal") {
+        const meal = journalEntry;
+
+        // skip if surrounding event has a location that is different from that of the meal
+        if (
+          meal.location
+            ? entryThatSurroundsEntry &&
+              "location" in entryThatSurroundsEntry &&
+              entryThatSurroundsEntry.location &&
+              entryThatSurroundsEntry.location === meal.location
+            : true
+        ) {
+          dayJournalEntryElements.push({
+            id: entryId,
+            element: (
+              <DiaryAgendaDayMeal
+                key={entryId}
+                meal={meal}
+                cotemporalityOfSurroundingEvent={
+                  cotemporalityOfSurroundingEntry
+                }
+                timeZone={timeZone}
+              />
+            ),
+          });
+        }
+      } else if (journalEntry.__typename === "Delivery") {
+        const delivery = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayEntry
+              key={entryId}
+              date={getJournalEntryPrincipalDate(delivery).start}
+              userTimeZone={timeZone}
+              entry={delivery}
+              icon={faBoxesPacking}
+              cotemporality={cotemporality({
+                start: delivery.timestamp,
+                end: delivery.timestamp,
+              })}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              className={"pr-0.5 pl-0.5 text-xs"}
+              iconClassName="w-10 text-[0.666rem]"
+            >
+              <span className="flex items-stretch leading-snug">
+                <div className="flex items-baseline gap-1 py-0.5">
+                  <span>{delivery.status}</span>
+                  {delivery.from ? (
+                    <span className="text-[0.666rem] opacity-50">
+                      from {delivery.from}
+                    </span>
+                  ) : null}
+                  {delivery.url ? (
+                    <a
+                      href={delivery.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                    >
+                      <FontAwesomeIcon icon={faExternalLink} />
+                    </a>
+                  ) : null}{" "}
+                </div>
+              </span>
+            </DiaryAgendaDayEntry>
+          ),
+        });
+      } else {
+        journalEntry satisfies never;
+      }
+
+      i++;
+    }
+
+    return dayJournalEntryElements;
+  }, [
+    client.cache,
+    date,
+    dayJournalEntries,
+    dayLocations,
+    dayRange,
+    now,
+    timeZone,
+  ]);
+
+  return dayJournalItems.length ? (
+    <TodoSortableContext items={dayJournalItems}>
+      {dayJournalItems.map(({ element }) => element)}
+    </TodoSortableContext>
+  ) : (
+    <div className={"pl-10 text-gray-400/50 italic"}>
+      {isLoadingEntries
+        ? "Loading..."
+        : isPast(dayRange.end)
+          ? "Nothing logged"
+          : "Nothing planned"}
+    </div>
+  );
+}
