@@ -663,6 +663,7 @@ export function DiaryAgendaDay({
               const locationChangeEntry = {
                 __typename: "LocationChange",
                 id: `location-change-${location.id}-${entry.id}`,
+                locationId: location.id !== location.name ? location.id : null,
                 location: location.name,
                 start: targetDate,
                 end: max([targetDateTo, targetDate]),

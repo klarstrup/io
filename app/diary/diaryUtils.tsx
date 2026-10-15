@@ -129,6 +129,7 @@ export interface LocationChange {
   __typename: "LocationChange";
   id: string;
   location: string;
+  locationId: string | null;
   /** Represents halfway between the precending and following entries */
   start: Date;
   /** Represents immediately before the entry this is location change for */
