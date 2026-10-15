@@ -29,7 +29,9 @@ export const typePolicies: TypePolicies = {
       start: { read: readDate },
       end: { read: readDate },
       badgeColor: { read: (v: unknown) => (typeof v === "string" ? v : null) },
-      badgeTextColor: { read: (v: unknown) => (typeof v === "string" ? v : null) },
+      badgeTextColor: {
+        read: (v: unknown) => (typeof v === "string" ? v : null),
+      },
       badgeText: { read: (v: unknown) => (typeof v === "string" ? v : null) },
     },
   },
@@ -49,8 +51,14 @@ export const typePolicies: TypePolicies = {
       materializedAt: { read: readDate },
     },
   },
+  WorkoutExercise: {
+    fields: {
+      id: { read: (v: unknown) => (typeof v === "string" ? v : null) },
+    },
+  },
   WorkoutSet: {
     fields: {
+      id: { read: (v: unknown) => (typeof v === "string" ? v : null) },
       createdAt: { read: readDate },
       updatedAt: { read: readDate },
     },
