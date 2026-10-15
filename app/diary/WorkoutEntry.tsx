@@ -1,9 +1,11 @@
+import type { WithId } from "mongodb";
 import Link from "next/link";
 import { ExerciseName } from "../../components/ExerciseName";
 import { FieldSetX } from "../../components/FieldSet";
-import { GQWorkout } from "../../graphql.generated/graphql";
+import type { GQWorkout } from "../../graphql.generated/graphql";
 import { PRType } from "../../lib";
 import { exercisesById } from "../../models/exercises";
+import type { LocationData } from "../../models/location";
 import {
   ClimbingStats,
   isClimbingExercise,
@@ -18,6 +20,7 @@ export default function WorkoutEntry({
   showLocation = true,
   showSource = true,
   workout,
+  location,
   exerciseSetPRs,
   onlyPRs,
 }: {
@@ -26,12 +29,11 @@ export default function WorkoutEntry({
   showLocation?: boolean;
   showSource?: boolean;
   workout: GQWorkout;
+  location?: WithId<LocationData>;
   exerciseSetPRs?: Record<PRType, boolean>[][];
   onlyPRs?: PRType;
 }) {
   const workoutDateStr = dateToString(workout.workedOutAt);
-
-  const location = workout.location;
 
   const locationName = location?.name ?? workout.location?.name ?? null;
 
@@ -54,7 +56,7 @@ export default function WorkoutEntry({
                   {" "}
                   -{" "}
                   <Link
-                    href={`/diary/locations/${location.id}`}
+                    href={`/diary/locations/${location._id.toString()}`}
                     className="font-bold"
                     style={{ color: "#edab00" }}
                   >
@@ -67,7 +69,7 @@ export default function WorkoutEntry({
             <div>
               <small>
                 <Link
-                  href={`/diary/locations/${location.id}`}
+                  href={`/diary/locations/${location._id.toString()}`}
                   className="font-bold"
                   style={{ color: "#edab00" }}
                 >
@@ -161,7 +163,7 @@ export default function WorkoutEntry({
                   <ClimbingStats
                     setAndLocationPairs={workoutExercise.sets.map((set) => [
                       set,
-                      location ?? undefined,
+                      location?.boulderCircuits,
                       workout,
                     ])}
                   />
@@ -176,7 +178,7 @@ export default function WorkoutEntry({
                 exercise={exercise}
                 setsWithLocations={workoutExercise.sets.map((set) => [
                   set,
-                  location ?? undefined,
+                  location?.boulderCircuits,
                   workout,
                 ])}
                 exerciseIndex={exerciseIndex}

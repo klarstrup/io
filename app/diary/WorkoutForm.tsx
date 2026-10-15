@@ -46,6 +46,7 @@ import {
   Unit,
   type ExerciseData,
 } from "../../models/exercises.types";
+import type { LocationData } from "../../models/location";
 import type { IUser } from "../../models/user";
 import {
   addDurationToDate,
@@ -1091,13 +1092,13 @@ function SetsForm({
                       getCircuitByLocationAndSetColor(
                         exercise,
                         watchedSets[index]!,
-                        location,
+                        location?.boulderCircuits as LocationData["boulderCircuits"],
                       )
                         ? `("${
                             getCircuitByLocationAndSetColor(
                               exercise,
                               watchedSets[index]!,
-                              location,
+                              location?.boulderCircuits as LocationData["boulderCircuits"],
                             )!.name
                           }" assumed)`
                         : null}

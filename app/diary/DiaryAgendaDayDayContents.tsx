@@ -20,6 +20,7 @@ import type {
   GQUser,
   GQWorkout,
 } from "../../graphql.generated/graphql";
+import type { LocationData } from "../../models/location";
 import { WorkoutSource } from "../../models/workout";
 import {
   cotemporality,
@@ -372,9 +373,11 @@ export function DiaryAgendaDayDayContents({
           element: (
             <DiaryAgendaDayWorkout
               key={entryId}
-              location={dayLocations.find(
-                (loc) => loc.id === workout.locationId,
-              )}
+              location={
+                dayLocations.find(
+                  (loc) => loc.id === workout.locationId,
+                ) as LocationData
+              }
               workout={workout}
               workoutDateStr={workoutDateStr}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}

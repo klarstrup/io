@@ -3,14 +3,14 @@ import ProblemByProblem, {
   exerciseSetsToProblemByProblem,
 } from "../../components/ProblemByProblem";
 import Grade from "../../grades";
-import {
+import type {
   GQExerciseInfo,
-  GQLocation,
   GQWorkout,
   GQWorkoutSet,
 } from "../../graphql.generated/graphql";
-import { PRType } from "../../lib";
-import { type ExerciseData } from "../../models/exercises.types";
+import type { PRType } from "../../lib";
+import type { ExerciseData } from "../../models/exercises.types";
+import type { LocationData } from "../../models/location";
 import {
   getSetGrade,
   isClimbingExercise,
@@ -52,7 +52,7 @@ export function WorkoutEntryExercise({
   exercise: ExerciseData | GQExerciseInfo;
   setsWithLocations: (readonly [
     WorkoutExerciseSet | GQWorkoutSet,
-    GQLocation | undefined,
+    LocationData["boulderCircuits"] | null | undefined,
     workout: WorkoutData | GQWorkout | undefined,
   ])[];
   exerciseIndex?: number;

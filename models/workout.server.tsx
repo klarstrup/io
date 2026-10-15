@@ -9,7 +9,6 @@ import {
   subYears,
 } from "date-fns";
 import { ObjectId, type WithId } from "mongodb";
-import type { GQLocation } from "../graphql.generated/graphql";
 import type { PRType } from "../lib";
 import { dayStartHour, epoch, isUTCMidnight } from "../utils";
 import { proxyCollection } from "../utils.server";
@@ -603,12 +602,7 @@ export const calculate60dayTop10AverageSendGrade = (
                 (s.inputs[2]?.value as SendType) === SendType.Top ||
                 (s.inputs[2]?.value as SendType) === SendType.Flash,
             )
-            .map((set) =>
-              getSetGrade(
-                set,
-                location as unknown as Pick<GQLocation, "boulderCircuits">,
-              ),
-            ),
+            .map((set) => getSetGrade(set, location?.boulderCircuits)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -636,7 +630,7 @@ export const calculate60dayTop10AverageFlashGrade = (
         .flatMap((e) =>
           e.sets
             .filter((s) => (s.inputs[2]?.value as SendType) === SendType.Flash)
-            .map((set) => getSetGrade(set, location as unknown as GQLocation)),
+            .map((set) => getSetGrade(set, location?.boulderCircuits)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -666,7 +660,7 @@ export const calculate60dayTop10AverageAttemptGrade = (
             .filter(
               (s) => (s.inputs[2]?.value as SendType) === SendType.Attempt,
             )
-            .map((set) => getSetGrade(set, location as unknown as GQLocation)),
+            .map((set) => getSetGrade(set, location?.boulderCircuits)),
         );
     })
     .filter((grade): grade is number => typeof grade === "number" && grade > 0)
@@ -708,7 +702,7 @@ export function mergeWorkoutsOfExercise(
                     ...input,
                     value:
                       input.value ??
-                      getSetGrade(set, location as unknown as GQLocation),
+                      getSetGrade(set, location?.boulderCircuits),
                   }
                 : input,
             ),

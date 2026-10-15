@@ -11,7 +11,6 @@ import type { WithId } from "mongodb";
 import Grade from "../grades";
 import type {
   GQDuration,
-  GQLocation,
   GQNextSet,
   GQWorkout,
   GQWorkoutSet,
@@ -283,7 +282,7 @@ export const getCircuitByLocationAndSetColor = (
       value: number | string;
     })[];
   },
-  location: GQLocation,
+  boulderCircuits: LocationData["boulderCircuits"],
 ) => {
   let boulderingSetColor: string | undefined;
   if (exercise.id === 2001) {
@@ -295,8 +294,8 @@ export const getCircuitByLocationAndSetColor = (
   }
 
   const boulderingCircuit =
-    boulderingSetColor && location
-      ? getCircuitByLocationAndColor(boulderingSetColor, location)
+    boulderingSetColor && boulderCircuits
+      ? getCircuitByLocationAndColor(boulderingSetColor, boulderCircuits)
       : undefined;
 
   return boulderingCircuit;
@@ -304,16 +303,16 @@ export const getCircuitByLocationAndSetColor = (
 
 const getCircuitByLocationAndColor = (
   color: string,
-  location: Pick<GQLocation, "boulderCircuits">,
+  boulderCircuits: LocationData["boulderCircuits"],
 ) =>
-  location.boulderCircuits?.find(
+  boulderCircuits?.find(
     (bC) => bC.holdColor?.toLowerCase() === color.toLowerCase(),
   );
 
 const getGradeOfColorByLocation = (
   color: string,
-  location: Pick<GQLocation, "boulderCircuits">,
-) => getCircuitByLocationAndColor(color, location)?.gradeEstimate;
+  boulderCircuits: LocationData["boulderCircuits"],
+) => getCircuitByLocationAndColor(color, boulderCircuits)?.gradeEstimate;
 
 // Utility to paint over difference in DB and GraphQL representation of set meta
 export const getSetMeta = (
@@ -334,18 +333,17 @@ export const getSetMeta = (
 
 export function getSetGrade(
   set: GQWorkoutSet | WorkoutExerciseSet,
-  location: Pick<GQLocation, "boulderCircuits"> | undefined | null,
+  boulderCircuits: LocationData["boulderCircuits"] | undefined | null,
 ) {
   const inputGrade = set.inputs[0]!.value;
   if (inputGrade) return inputGrade;
 
-  if (!location) return null;
+  if (!boulderCircuits) return null;
 
   const boulderCircuitId = getSetMeta(set, "boulderCircuitId");
 
   const boulderingCircuit =
-    boulderCircuitId &&
-    location.boulderCircuits?.find((c) => c.id === boulderCircuitId);
+    boulderCircuitId && boulderCircuits?.find((c) => c.id === boulderCircuitId);
   if (boulderingCircuit) {
     return boulderingCircuit.gradeEstimate || null;
   }
@@ -353,7 +351,7 @@ export function getSetGrade(
   const color = colorOptions[set.inputs[1]!.value!]?.value;
   if (!color) return null;
 
-  const colorGrade = getGradeOfColorByLocation(color, location);
+  const colorGrade = getGradeOfColorByLocation(color, boulderCircuits);
   if (colorGrade) return colorGrade;
 
   return null;
@@ -364,7 +362,7 @@ export function ClimbingStats({
 }: {
   setAndLocationPairs: (readonly [
     set: GQWorkoutSet,
-    location: GQLocation | undefined,
+    boulderCircuits: LocationData["boulderCircuits"] | undefined,
     workout: GQWorkout | undefined,
   ])[];
 }) {
@@ -375,12 +373,13 @@ export function ClimbingStats({
   );
   const problemCount = successfulSetAndLocationPairs.length;
   const gradeSum = successfulSetAndLocationPairs.reduce(
-    (sum, [set, location]) => sum + (getSetGrade(set, location) || 0),
+    (sum, [set, boulderCircuits]) =>
+      sum + (getSetGrade(set, boulderCircuits) || 0),
     0,
   );
   const gradeTop5Average =
     successfulSetAndLocationPairs
-      .map(([set, location]) => getSetGrade(set, location) ?? 0)
+      .map(([set, boulderCircuits]) => getSetGrade(set, boulderCircuits) ?? 0)
       .filter((grade) => grade > 0)
       .sort((a, b) => b - a)
       .slice(0, Math.min(5, successfulSetAndLocationPairs.length))

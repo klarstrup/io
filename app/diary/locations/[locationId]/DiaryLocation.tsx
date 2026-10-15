@@ -47,6 +47,7 @@ export default async function DiaryExercise({
               showDate
               showLocation={false}
               workout={workout as unknown as GQWorkout}
+              location={location}
             />
           </li>
         ))}

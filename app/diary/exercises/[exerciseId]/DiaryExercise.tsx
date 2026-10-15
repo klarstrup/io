@@ -158,10 +158,7 @@ async function DiaryExerciseList({
       }))
     : [];
   const locations = userId
-    ? await Locations.find(
-        { userId },
-        { sort: { name: 1 }, projection: { id: 1, name: 1 } },
-      ).toArray()
+    ? await Locations.find({ userId }, { sort: { name: 1 } }).toArray()
     : [];
 
   if (userId && mergeWorkouts) {
@@ -230,6 +227,9 @@ async function DiaryExerciseList({
                 onlyPRs={prType || undefined}
                 showDate={!mergeWorkouts}
                 workout={workout as unknown as GQWorkout}
+                location={locations.find(
+                  (loc) => loc._id.toString() === workout.locationId,
+                )}
               />
             </li>
           ))

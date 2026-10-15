@@ -1,12 +1,9 @@
 import type { SVGProps } from "react";
 import Grade from "../grades";
-import {
-  GQLocation,
-  GQWorkout,
-  GQWorkoutSet,
-} from "../graphql.generated/graphql";
-import { PP } from "../lib";
+import type { GQWorkout, GQWorkoutSet } from "../graphql.generated/graphql";
+import type { PP } from "../lib";
 import { SendType } from "../models/exercises.types";
+import type { LocationData } from "../models/location";
 import {
   climbingExerciseInputs,
   getSetGrade,
@@ -376,17 +373,15 @@ const colorOptions = climbingExerciseInputs[1].options;
 export const exerciseSetsToProblemByProblem = (
   setsWithLocations: (readonly [
     WorkoutExerciseSet | GQWorkoutSet,
-    GQLocation | undefined,
+    LocationData["boulderCircuits"] | undefined,
     workout: WorkoutData | GQWorkout | undefined,
   ])[],
 ): PP[] =>
-  setsWithLocations.map(([set, location], i) => {
+  setsWithLocations.map(([set, boulderCircuits], i) => {
     const sendType: SendType = Number(set.inputs[2]!.value);
 
     const boulderCircuitId = getSetMeta(set, "boulderCircuitId");
-    const circuit = location?.boulderCircuits?.find(
-      (c) => c.id === boulderCircuitId,
-    );
+    const circuit = boulderCircuits?.find((c) => c.id === boulderCircuitId);
 
     return {
       id: set.id,
@@ -395,12 +390,12 @@ export const exerciseSetsToProblemByProblem = (
         ...circuit,
         gradeRange:
           circuit?.gradeRange?.length == 2
-            ? ([circuit.gradeRange[0]!, circuit.gradeRange[1]!] as const)
+            ? ([circuit.gradeRange[0], circuit.gradeRange[1]] as const)
             : circuit?.gradeRange?.length == 1
-              ? ([circuit.gradeRange[0]!, NaN] as const)
+              ? ([circuit.gradeRange[0], NaN] as const)
               : undefined,
       },
-      estGrade: getSetGrade(set, location),
+      estGrade: getSetGrade(set, boulderCircuits),
       // hold color
       color: colorOptions?.[set.inputs[1]!.value!]?.value ?? "",
       flash: sendType === SendType.Flash,

@@ -1,11 +1,8 @@
-import type {
-  GQBoulderCircuit,
-  GQFoodEntry,
-  GQWorkout,
-} from "./graphql.generated/graphql";
+import type { GQFoodEntry, GQWorkout } from "./graphql.generated/graphql";
+import type { LocationData } from "./models/location";
 import type { WorkoutSource } from "./models/workout";
 import type { Grippy } from "./sources/grippy";
-import { SnapCalorie } from "./sources/snapcalorie";
+import type { SnapCalorie } from "./sources/snapcalorie";
 import type { DataSource } from "./sources/utils";
 import type { VCalendar, VEvent, VTodo } from "./vendor/ical";
 
@@ -111,7 +108,7 @@ export interface PP {
   repeat: boolean;
   name?: string;
   angle?: number | null;
-  circuit?: GQBoulderCircuit;
+  circuit?: NonNullable<LocationData["boulderCircuits"]>[number];
   attemptCount?: number | null;
   estGrade?: number | null;
 }

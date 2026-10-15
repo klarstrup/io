@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { MouseEvent, useCallback } from "react";
 import { ExerciseName } from "../../components/ExerciseName";
 import type {
-  GQLocation,
   GQWorkout,
   GQWorkoutExercise,
   GQWorkoutSet,
 } from "../../graphql.generated/graphql";
+import type { LocationData } from "../../models/location";
 import {
   ClimbingStats,
   isClimbingExercise,
@@ -27,7 +27,7 @@ export function DiaryAgendaDayWorkout({
   timeZone,
   cotemporalityOfSurroundingEvent,
 }: {
-  location?: GQLocation;
+  location?: LocationData | null;
   workout: GQWorkout;
   workoutDateStr: string;
   timeZone: string;
@@ -129,7 +129,7 @@ export function DiaryAgendaDayWorkoutSet({
 }: {
   workout: GQWorkout;
   workoutExercise: GQWorkoutExercise;
-  location?: GQLocation;
+  location?: LocationData | null;
 }) {
   const { exerciseInfo } = workoutExercise;
 
@@ -143,7 +143,7 @@ export function DiaryAgendaDayWorkoutSet({
             return acc;
           }, {}) || {}) as GQWorkoutSet["meta"],
         },
-        location,
+        location?.boulderCircuits,
         workout,
       ] as const,
   );
