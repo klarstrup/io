@@ -10,6 +10,7 @@ import {
   isEqual,
   isPast,
   roundToNearestMinutes,
+  type Interval,
 } from "date-fns";
 import { use, useMemo, type ReactElement } from "react";
 import { browser } from "react-dom";
@@ -54,6 +55,12 @@ interface DayJournalEntryElement {
   id: string;
   element: ReactElement;
 }
+
+const emptyArrayFallback = (...args: JournalEntry[][]): JournalEntry[] => {
+  for (const arg of args) if (arg.length) return arg;
+
+  return emptyArray;
+};
 
 export function DiaryAgendaDayDayContents({
   now,
@@ -108,7 +115,7 @@ export function DiaryAgendaDayDayContents({
         .slice(i + 1)
         .filter((je) => isSeparatedEnd(je));
 
-      let entryThatSurroundsEntry =
+      let entriesThatSurroundsEntry = emptyArrayFallback(
         previousEntries
           .filter(
             (prevJE) =>
@@ -120,9 +127,10 @@ export function DiaryAgendaDayDayContents({
                 prevJE.id,
               ),
           )
-          .findLast((prevJE) =>
+          .filter((prevJE) =>
             followingEndOfEntries.some((endOfJE) => prevJE.id === endOfJE.id),
-          ) ||
+          )
+          .reverse(),
         previousEntries
           .filter((je) =>
             je.__typename === "Event"
@@ -130,36 +138,58 @@ export function DiaryAgendaDayDayContents({
               : true,
           )
           .filter((je) => je.id !== journalEntry.id)
-          .findLast((je) => {
+          .filter((je) => {
             const jePrincipalDate = getJournalEntryPrincipalDate(je);
             return (
               isBeforeOrEqual(jePrincipalDate.start, principalDate.start) &&
               isBefore(principalDate.end, jePrincipalDate.end)
             );
-          }) || // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
+          })
+          .reverse(), // Following end of event that doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event
         followingEndOfEntries
           // followingEndOfEvent that has started(before today in this case) but doesn't have a surrounding start of event, which can happen if the event started on a previous day or if the start of the event was skipped because it was exactly at the same time as the end of the previous event)
-          .find((endOfJE) => {
+          .filter((endOfJE) => {
             const endPrincipalDate = getJournalEntryPrincipalDate(
               omitSeparatedEnd(endOfJE),
             );
             return isBefore(endPrincipalDate.start, principalDate.start);
-          }) ||
-        null;
+          }),
+      );
 
       if (
         isSeparatedEnd(journalEntry) &&
-        entryThatSurroundsEntry &&
-        doEntriesOverlapExactly(
-          omitSeparatedEnd(journalEntry),
-          entryThatSurroundsEntry,
+        entriesThatSurroundsEntry?.length &&
+        entriesThatSurroundsEntry.every((entryThatSurroundsEntry) =>
+          doEntriesOverlapExactly(
+            omitSeparatedEnd(journalEntry),
+            entryThatSurroundsEntry,
+          ),
         )
       ) {
-        entryThatSurroundsEntry = null;
+        entriesThatSurroundsEntry = [];
       }
 
-      const surroundingPrincipalDate = entryThatSurroundsEntry
-        ? getJournalEntryPrincipalDate(entryThatSurroundsEntry)
+      const surroundingPrincipalDate = entriesThatSurroundsEntry?.length
+        ? entriesThatSurroundsEntry.reduce(
+            (acc: Interval<Date, Date> | null, je) => {
+              const jePrincipalDate = getJournalEntryPrincipalDate(
+                omitSeparatedEnd(je),
+              );
+              if (!acc) return jePrincipalDate;
+
+              return {
+                start:
+                  jePrincipalDate.start <= acc.start
+                    ? jePrincipalDate.start
+                    : acc.start,
+                end:
+                  acc.end <= jePrincipalDate.end
+                    ? jePrincipalDate.end
+                    : acc.end,
+              };
+            },
+            null,
+          )
         : null;
       const cotemporalityOfSurroundingEntry = surroundingPrincipalDate
         ? cotemporality(surroundingPrincipalDate)
@@ -404,10 +434,13 @@ export function DiaryAgendaDayDayContents({
         // skip if surrounding event has a location that is different from that of the meal
         if (
           meal.location
-            ? entryThatSurroundsEntry &&
-              "location" in entryThatSurroundsEntry &&
-              entryThatSurroundsEntry.location &&
-              entryThatSurroundsEntry.location === meal.location
+            ? entriesThatSurroundsEntry?.length &&
+              entriesThatSurroundsEntry.every(
+                (entryThatSurroundsEntry) =>
+                  "location" in entryThatSurroundsEntry &&
+                  entryThatSurroundsEntry.location &&
+                  entryThatSurroundsEntry.location === meal.location,
+              )
             : true
         ) {
           dayJournalEntryElements.push({
