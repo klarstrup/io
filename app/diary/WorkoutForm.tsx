@@ -136,7 +136,6 @@ export function WorkoutForm<R extends string>({
     [date, user?.timeZone],
   );
   const now = useMemo(() => new Date(), []);
-  console.log({ tzDate, now });
 
   const [updateWorkout] = useMutation(
     gql`
@@ -368,6 +367,7 @@ export function WorkoutForm<R extends string>({
     setValue,
     formState: { isDirty, isSubmitting },
     reset,
+    watch,
   } = useForm<WorkoutDataFormData>({ mode: "onChange", defaultValues });
 
   const { fields, append, update, remove } = useFieldArray({
@@ -475,7 +475,8 @@ export function WorkoutForm<R extends string>({
   const locationInstanceId = useId();
 
   const location = locations?.find(
-    (location) => getValues("locationId") === location.id,
+    // eslint-disable-next-line react-hooks/incompatible-library
+    (location) => watch("locationId") === location.id,
   );
 
   return (
