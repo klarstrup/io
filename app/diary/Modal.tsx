@@ -9,7 +9,10 @@ export function Modal({ children }: { children: React.ReactNode }) {
   const isSSR = useIsSSR();
   const router = useRouter();
   const dialogRef = useRef<ComponentRef<"dialog">>(null);
-  const modalRootEl = useMemo(() => document.getElementById("modal-root"), []);
+  const modalRootEl = useMemo(
+    () => (!isSSR ? document.getElementById("modal-root") : null),
+    [isSSR],
+  );
 
   useEffect(() => {
     if (dialogRef.current && !dialogRef.current?.open && !isSSR) {
