@@ -33,6 +33,11 @@ import {
 } from "../sources/ical.server";
 import { MeyersMenus } from "../sources/meyers.server";
 import { PostNordShipmentInformation } from "../sources/postnord.server";
+import {
+  SteamAppAchievements,
+  SteamStoreItems,
+  SteamUserAchievements,
+} from "../sources/steam.server";
 import { DataSource } from "../sources/utils";
 import { getUserWithingsSleepSummarySeriesBetween } from "../sources/withings.server";
 import {
@@ -99,6 +104,9 @@ export const getUserJournalEntries = async (
   const intervalQuery = rangeToQuery(interval.start, interval.end);
 
   const entries: GQJournalEntryUnion[] = [];
+
+  const user = await authUser();
+  if (!user || userId !== user.id) throw new Error("Unauthorized");
 
   await allPromises(
     Array.fromAsync(getUserIcalTodosBetween(userId, interval), (todo) =>
@@ -412,6 +420,38 @@ export const getUserJournalEntries = async (
           status: lastEvent.status,
           from: postNordShipmentInformation.sender.name,
           __typename: "Delivery",
+        } satisfies GQJournalEntryUnion);
+      },
+    ),
+    Array.fromAsync(
+      SteamUserAchievements.find({
+        steamid: {
+          $in: (user.dataSources || [])
+            .filter((ds) => ds.source === "steam")
+            .map((ds) => ds.config.steamid)
+            .filter(Boolean),
+        },
+        unlocked_at: intervalQuery,
+      }),
+      async (steamUserAchievement) => {
+        const steamAchievement = await SteamAppAchievements.findOne({
+          appid: steamUserAchievement.appid,
+          internal_key: steamUserAchievement.internal_key,
+        });
+        if (!steamAchievement) return;
+        const steamStoreItem = await SteamStoreItems.findOne({
+          appid: steamUserAchievement.appid,
+        });
+        if (!steamStoreItem) return;
+
+        entries.push({
+          id: `${steamUserAchievement.appid}-${steamUserAchievement.internal_key}-${steamUserAchievement.steamid}`,
+          gameName: steamStoreItem.name,
+          name: steamAchievement.name,
+          description: steamAchievement.description,
+          unlockedAt: steamUserAchievement.unlocked_at,
+          icon: steamAchievement.icon_achieved,
+          __typename: "Achievement",
         } satisfies GQJournalEntryUnion);
       },
     ),

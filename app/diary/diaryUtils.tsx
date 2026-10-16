@@ -10,6 +10,7 @@ import {
   min,
 } from "date-fns";
 import type {
+  GQAchievement,
   GQDelivery,
   GQEvent,
   GQMeal,
@@ -50,6 +51,7 @@ export type JournalEntry =
   | WithOrWithoutSeparatedEnd<GQSleep>
   | GQMeal
   | WithOrWithoutSeparatedEnd<GQTrip>
+  | GQAchievement
   | GQDelivery
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
@@ -229,6 +231,10 @@ export const getJournalEntryPrincipalDate = (
     if (hasEndDate(entry)) {
       return { start: entry.start, end: entry.end };
     }
+  }
+
+  if (entry.__typename === "Achievement") {
+    return { start: entry.unlockedAt, end: entry.unlockedAt };
   }
 
   throw new Error(

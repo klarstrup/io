@@ -1753,6 +1753,7 @@ export const typeDefs = gql`
     | Trip
     | Meal
     | Delivery
+    | Achievement
 
   type PageInfo {
     hasNextPage: Boolean!
@@ -1847,6 +1848,15 @@ export const typeDefs = gql`
     from: String!
     timestamp: Date!
     url: String
+  }
+
+  type Achievement implements JournalEntry {
+    id: ID!
+    name: String!
+    gameName: String!
+    description: String
+    icon: String!
+    unlockedAt: Date!
   }
 
   type FoodEntry {

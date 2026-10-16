@@ -103,6 +103,14 @@ gql`
             from
             url
           }
+          ... on Achievement {
+            id
+            name
+            gameName
+            description
+            icon
+            unlockedAt
+          }
           ... on Meal {
             id
             datetime
@@ -489,6 +497,8 @@ export function DiaryAgendaDay({
         addEntryToDate(entry, entry.datetime);
       } else if (entry.__typename === "Delivery") {
         addEntryToDate(entry, entry.timestamp);
+      } else if (entry.__typename === "Achievement") {
+        addEntryToDate(entry, entry.unlockedAt);
       } else {
         entry satisfies never;
       }

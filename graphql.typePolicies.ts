@@ -103,6 +103,11 @@ export const typePolicies: TypePolicies = {
       timestamp: { read: readDate },
     },
   },
+  Achievement: {
+    fields: {
+      unlockedAt: { read: readDate },
+    },
+  },
   FoodEntry: {
     fields: {
       datetime: { read: readDate },

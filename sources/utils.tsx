@@ -104,7 +104,11 @@ type UserDataSourceConfig =
       source: DataSource.DSB;
       config: { authTokens: DSB.AuthTokens };
     }
-  | { source: DataSource.PostNord; config: Record<string, never> };
+  | { source: DataSource.PostNord; config: Record<string, never> }
+  | {
+      source: DataSource.Steam;
+      config: { profile_url: string; steamid: string | null };
+    };
 
 export interface UserDataSourceMeta {
   id: string;
@@ -145,6 +149,7 @@ export enum DataSource {
   SnapCalorie = "snapcalorie",
   DSB = "dsb",
   PostNord = "postnord",
+  Steam = "steam",
 }
 
 export const exerciseIdToDataSourceMapping: Partial<
@@ -733,6 +738,25 @@ export const dataSources = {
     isDeprecated: false,
     configSchema: z.object({}),
     getFormElements: () => null,
+  },
+  [DataSource.Steam]: {
+    source: DataSource.Steam,
+    isDeprecated: false,
+    configSchema: z.object({
+      profile_url: z.string().default(""),
+      steamid: z.string().nullable(),
+    }),
+    getFormElements: ({ register }) => (
+      <label className="flex flex-col gap-1">
+        Profile URL:
+        <input
+          type="text"
+          {...register("config.profile_url")}
+          placeholder="Profile URL"
+          className="w-full"
+        />
+      </label>
+    ),
   },
 } satisfies DataSourceMap;
 

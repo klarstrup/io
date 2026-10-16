@@ -2,6 +2,7 @@ import { useApolloClient } from "@apollo/client/react";
 import {
   faBoxesPacking,
   faExternalLink,
+  faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -498,6 +499,45 @@ export function DiaryAgendaDayDayContents({
                       <FontAwesomeIcon icon={faExternalLink} />
                     </a>
                   ) : null}{" "}
+                </div>
+              </span>
+            </DiaryAgendaDayEntry>
+          ),
+        });
+      } else if (journalEntry.__typename === "Achievement") {
+        const achievement = journalEntry;
+
+        dayJournalEntryElements.push({
+          id: entryId,
+          element: (
+            <DiaryAgendaDayEntry
+              key={entryId}
+              date={getJournalEntryPrincipalDate(achievement).start}
+              userTimeZone={timeZone}
+              entry={achievement}
+              icon={faTrophy}
+              cotemporality={cotemporality({
+                start: achievement.unlockedAt,
+                end: achievement.unlockedAt,
+              })}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              className={"pr-0.5 pl-0.5 text-xs"}
+              iconClassName="w-10 text-[0.666rem]"
+            >
+              <span className="flex items-stretch leading-snug">
+                <div className="flex items-baseline gap-1 py-0.5">
+                  <span className="text-[0.666rem] opacity-50">
+                    {achievement.gameName}
+                  </span>
+                  <span>{achievement.name}</span>
+                  <span className="text-[0.666rem] opacity-50">
+                    unlocked at {achievement.unlockedAt.toLocaleString()}
+                  </span>
+                  {achievement.description ? (
+                    <span className="text-[0.666rem] opacity-50">
+                      {achievement.description}
+                    </span>
+                  ) : null}
                 </div>
               </span>
             </DiaryAgendaDayEntry>
