@@ -120,5 +120,15 @@ export default function JournalEntryModal({ entryId }: { entryId: string }) {
     );
   }
 
+  if (entityType === "Achievement") {
+    return (
+      <div>
+        <h1>Achievement Entry</h1>
+        <p className="break-all">Entity ID: {entityId}</p>
+        <SourceWidget dataSource={DataSource.Steam} />
+      </div>
+    );
+  }
+
   return "Unknown Entry Type";
 }
