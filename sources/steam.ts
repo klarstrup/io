@@ -197,6 +197,7 @@ export namespace Steam {
   export interface MongoSteamAppAchievement extends Achievement {
     appid: number;
     language: string;
+    globalpercentage: number | null;
   }
 
   export interface UserAchievementsBySteamID {

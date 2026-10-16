@@ -129,6 +129,10 @@ export const GET = (request: NextRequest) =>
                 group.achievements.map(
                   (achievement): Steam.MongoSteamAppAchievement => ({
                     ...achievement,
+                    globalpercentage:
+                      achievementses.globalpercentages?.percentages?.[
+                        achievement.internal_key
+                      ] || null,
                     appid: Number(appid),
                     language: appAchievementsSchema?.language,
                   }),
