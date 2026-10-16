@@ -21,6 +21,12 @@ const nextConfig = withSerwist({
   staticPageGenerationTimeout: 600,
   rewrites: () => [{ source: "/cv", destination: "/cv.pdf" }],
   redirects: () => [{ source: "/", destination: "/diary", permanent: false }],
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "shared.fastly.steamstatic.com" },
+      { protocol: "https", hostname: "shared.akamai.steamstatic.com" },
+    ],
+  },
 });
 
 export default nextConfig;

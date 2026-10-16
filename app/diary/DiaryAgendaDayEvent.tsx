@@ -129,7 +129,7 @@ export function DiaryAgendaDayEvent({
               {event.summary}
             </span>
             &nbsp;
-            <span className="text-[0.666rem] whitespace-nowrap tabular-nums opacity-50">
+            <span className="text-[0.666rem] whitespace-nowrap tabular-nums text-stone-500">
               {isFirstDay && duration ? (
                 formatShortDuration(duration)
               ) : isLastDay ? (

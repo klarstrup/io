@@ -2,7 +2,6 @@ import { useApolloClient } from "@apollo/client/react";
 import {
   faBoxesPacking,
   faExternalLink,
-  faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,6 +12,7 @@ import {
   roundToNearestMinutes,
   type Interval,
 } from "date-fns";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { use, useMemo, type ReactElement } from "react";
 import { browser } from "react-dom";
@@ -517,36 +517,55 @@ export function DiaryAgendaDayDayContents({
               date={getJournalEntryPrincipalDate(achievement).start}
               userTimeZone={timeZone}
               entry={achievement}
-              icon={faTrophy}
+              iconTxt={
+                <Image
+                  src={achievement.gameIcon}
+                  alt={achievement.gameName}
+                  width={24}
+                  height={24}
+                  className="rounded-sm"
+                />
+              }
               cotemporality={cotemporality({
                 start: achievement.unlockedAt,
                 end: achievement.unlockedAt,
               })}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              className={"pr-0.5 pl-0.5 text-xs"}
-              iconClassName="w-10 text-[0.666rem]"
               onClick={() => {
                 router.push(
                   `/diary/entries/${achievement.__typename}:${achievement.id}`,
                 );
               }}
+              contentClassName="flex items-center gap-2 leading-none"
             >
-              <span className="flex items-stretch leading-snug">
-                <div className="flex items-baseline gap-1 py-0.5">
-                  <span className="text-[0.666rem] opacity-50">
-                    {achievement.gameName}
+              <Image
+                src={achievement.icon}
+                alt={achievement.name}
+                width={32}
+                height={32}
+                className="rounded-md"
+              />
+              <div>
+                <span>{achievement.name}</span>{" "}
+                {achievement.description ? (
+                  <span className="text-[0.666rem] text-stone-500">
+                    {achievement.description}
                   </span>
-                  <span>{achievement.name}</span>
-                  <span className="text-[0.666rem] opacity-50">
-                    unlocked at {achievement.unlockedAt.toLocaleString()}
-                  </span>
-                  {achievement.description ? (
-                    <span className="text-[0.666rem] opacity-50">
-                      {achievement.description}
-                    </span>
-                  ) : null}
-                </div>
-              </span>
+                ) : null}{" "}
+                {achievement.url ? (
+                  <a
+                    href={achievement.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent the click from propagating to the parent div and triggering the onClick handler
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faExternalLink} />
+                  </a>
+                ) : null}
+              </div>
             </DiaryAgendaDayEntry>
           ),
         });
@@ -565,6 +584,7 @@ export function DiaryAgendaDayDayContents({
     dayLocations,
     dayRange,
     now,
+    router,
     timeZone,
   ]);
 

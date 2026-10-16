@@ -27,7 +27,7 @@ export function DiaryAgendaDayMeal({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={"pr-0.5 pl-0.5 text-xs"}
       iconClassName="w-10 text-[0.666rem]"
-      contentClassName="block text-gray-700 dark:text-gray-400"
+      contentClassName="block text-stone-500"
     >
       {meal.foodEntries.map((fe) => fe.food.description).join(", ")}
       &nbsp;

@@ -109,7 +109,9 @@ gql`
             gameName
             description
             icon
+            gameIcon
             unlockedAt
+            url
           }
           ... on Meal {
             id

@@ -26,7 +26,7 @@ export function DiaryAgendaDayLocationChange({
     >
       <center
         key={locationChange.id}
-        className="flex w-full items-center justify-center gap-1 text-xs leading-none font-medium opacity-75 [font-variant:small-caps]"
+        className="flex w-full items-center justify-center gap-1 text-xs leading-none font-medium text-stone-600 [font-variant:small-caps]"
         title={locationChange.location}
       >
         {locationChange.locationId ? (

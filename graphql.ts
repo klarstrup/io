@@ -1856,7 +1856,9 @@ export const typeDefs = gql`
     gameName: String!
     description: String
     icon: String!
+    gameIcon: String!
     unlockedAt: Date!
+    url: String
   }
 
   type FoodEntry {

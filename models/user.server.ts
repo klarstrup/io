@@ -423,38 +423,51 @@ export const getUserJournalEntries = async (
         } satisfies GQJournalEntryUnion);
       },
     ),
-    Array.fromAsync(
-      SteamUserAchievements.find({
-        steamid: {
-          $in: (user.dataSources || [])
-            .filter((ds) => ds.source === "steam")
-            .map((ds) => ds.config.steamid)
-            .filter(Boolean),
-        },
-        unlocked_at: intervalQuery,
-      }),
-      async (steamUserAchievement) => {
-        const steamAchievement = await SteamAppAchievements.findOne({
-          appid: steamUserAchievement.appid,
-          internal_key: steamUserAchievement.internal_key,
-        });
-        if (!steamAchievement) return;
-        const steamStoreItem = await SteamStoreItems.findOne({
-          appid: steamUserAchievement.appid,
-        });
-        if (!steamStoreItem) return;
+    ...(user.dataSources || [])
+      .filter((ds) => ds.source === "steam")
+      .map((ds) => ds.config)
+      .filter((config) => config.steamid)
+      .map((config) =>
+        Array.fromAsync(
+          SteamUserAchievements.find({
+            steamid: { $in: [config.steamid!] },
+            unlocked_at: intervalQuery,
+          }),
+          async (steamUserAchievement) => {
+            const [steamAchievement, steamStoreItem] = await Promise.all([
+              SteamAppAchievements.findOne({
+                appid: steamUserAchievement.appid,
+                internal_key: steamUserAchievement.internal_key,
+              }),
+              SteamStoreItems.findOne({ appid: steamUserAchievement.appid }),
+            ]);
+            if (!steamAchievement) {
+              console.warn(
+                `Missing steamAchievement for achievement: ${steamUserAchievement.internal_key} in app: ${steamUserAchievement.appid} with internal key: ${steamUserAchievement.internal_key}`,
+              );
+              return;
+            }
+            if (!steamStoreItem) {
+              console.warn(
+                `Missing steamStoreItem for achievement: ${steamUserAchievement.internal_key} in app: ${steamUserAchievement.appid}`,
+              );
+              return;
+            }
 
-        entries.push({
-          id: `${steamUserAchievement.appid}-${steamUserAchievement.internal_key}-${steamUserAchievement.steamid}`,
-          gameName: steamStoreItem.name,
-          name: steamAchievement.name,
-          description: steamAchievement.description,
-          unlockedAt: steamUserAchievement.unlocked_at,
-          icon: steamAchievement.icon_achieved,
-          __typename: "Achievement",
-        } satisfies GQJournalEntryUnion);
-      },
-    ),
+            entries.push({
+              id: `${steamUserAchievement.appid}-${steamUserAchievement.internal_key}-${steamUserAchievement.steamid}`,
+              gameName: steamStoreItem.name,
+              name: steamAchievement.name,
+              description: steamAchievement.description,
+              unlockedAt: steamUserAchievement.unlocked_at,
+              gameIcon: `https://shared.fastly.steamstatic.com/community_assets/images/apps/${steamStoreItem.appid}/${steamStoreItem.community_icon}.jpg`,
+              icon: steamAchievement.icon_achieved,
+              url: `https://steamcommunity.com/id/${config.profile_url}/achievements/${steamUserAchievement.appid}`,
+              __typename: "Achievement",
+            } satisfies GQJournalEntryUnion);
+          },
+        ),
+      ),
   );
 
   return entries;
