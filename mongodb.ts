@@ -2,7 +2,7 @@
 import { MongoClient, type MongoClientOptions } from "mongodb";
 
 const uri = process.env.MONGODB_URI
-  ? `mongodb+srv://${
+  ? `mongodb://${
       process.env.MONGODB_USERNAME && process.env.MONGODB_PASSWORD
         ? `${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@`
         : ""
