@@ -13,6 +13,7 @@ import {
   roundToNearestMinutes,
   type Interval,
 } from "date-fns";
+import { useRouter } from "next/navigation";
 import { use, useMemo, type ReactElement } from "react";
 import { browser } from "react-dom";
 import type {
@@ -83,6 +84,7 @@ export function DiaryAgendaDayDayContents({
   isLoadingEntries?: boolean;
 }) {
   use(browser());
+  const router = useRouter();
   const client = useApolloClient();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
 
@@ -523,6 +525,11 @@ export function DiaryAgendaDayDayContents({
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               className={"pr-0.5 pl-0.5 text-xs"}
               iconClassName="w-10 text-[0.666rem]"
+              onClick={() => {
+                router.push(
+                  `/diary/entries/${achievement.__typename}:${achievement.id}`,
+                );
+              }}
             >
               <span className="flex items-stretch leading-snug">
                 <div className="flex items-baseline gap-1 py-0.5">
