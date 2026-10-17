@@ -460,6 +460,7 @@ export const getUserJournalEntries = async (
               name: steamAchievement.name,
               description: steamAchievement.description,
               unlockedAt: steamUserAchievement.unlocked_at,
+              globalPercentage: steamAchievement.globalpercentage,
               gameIcon: `https://shared.fastly.steamstatic.com/community_assets/images/apps/${steamStoreItem.appid}/${steamStoreItem.community_icon}.jpg`,
               icon: steamAchievement.icon_achieved,
               url: `https://steamcommunity.com/id/${config.profile_url}/achievements/${steamUserAchievement.appid}`,

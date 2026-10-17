@@ -111,6 +111,7 @@ gql`
             icon
             gameIcon
             unlockedAt
+            globalPercentage
             url
           }
           ... on Meal {

@@ -561,51 +561,54 @@ export function DiaryAgendaDayDayContents({
                     position: "relative",
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute",
-                      maskImage: `url(${gloryPng.src})`,
-                      maskSize: "100% auto",
-                      maskRepeat: "repeat",
-                      inset: "-40%",
-                      overflow: "hidden",
-                    }}
-                  >
+                  {typeof achievement.globalPercentage === "number" &&
+                  achievement.globalPercentage <= 10 ? (
                     <div
                       style={{
                         position: "absolute",
+                        maskImage: `url(${gloryPng.src})`,
                         maskSize: "100% auto",
                         maskRepeat: "repeat",
                         inset: "-40%",
                         overflow: "hidden",
-
-                        animationName: "aeY3xSNbegI-",
-                        animationDuration: "18s",
-                        animationTimingFunction: "linear",
-                        animationIterationCount: "infinite",
-                        animationDirection: "reverse",
-                        animationPlayState: "running",
-                        maskImage: `url(${gloryMaskPng.src})`,
                       }}
                     >
                       <div
                         style={{
-                          mixBlendMode: "overlay",
+                          position: "absolute",
+                          maskSize: "100% auto",
+                          maskRepeat: "repeat",
+                          inset: "-40%",
+                          overflow: "hidden",
+
                           animationName: "aeY3xSNbegI-",
-                          animationDuration: "6s",
+                          animationDuration: "18s",
                           animationTimingFunction: "linear",
                           animationIterationCount: "infinite",
+                          animationDirection: "reverse",
                           animationPlayState: "running",
-                          position: "absolute",
-                          inset: "-10px",
-
-                          background:
-                            "repeating-conic-gradient(rgba(255, 217, 0, 0.176) 0%, rgba(255, 184, 78, 0) 6%, rgba(255, 217, 0, 0.176) 10%, rgb(255, 184, 78) 26%, rgba(255, 217, 0, 0.176) 35%, rgb(255, 184, 78) 40%, rgba(255, 217, 0, 0.176) 60%, rgb(255, 184, 78) 82%, rgba(255, 217, 0, 0.176) 100%)",
-                          overflow: "hidden",
+                          maskImage: `url(${gloryMaskPng.src})`,
                         }}
-                      ></div>
+                      >
+                        <div
+                          style={{
+                            mixBlendMode: "overlay",
+                            animationName: "aeY3xSNbegI-",
+                            animationDuration: "6s",
+                            animationTimingFunction: "linear",
+                            animationIterationCount: "infinite",
+                            animationPlayState: "running",
+                            position: "absolute",
+                            inset: "-10px",
+
+                            background:
+                              "repeating-conic-gradient(rgba(255, 217, 0, 0.176) 0%, rgba(255, 184, 78, 0) 6%, rgba(255, 217, 0, 0.176) 10%, rgb(255, 184, 78) 26%, rgba(255, 217, 0, 0.176) 35%, rgb(255, 184, 78) 40%, rgba(255, 217, 0, 0.176) 60%, rgb(255, 184, 78) 82%, rgba(255, 217, 0, 0.176) 100%)",
+                            overflow: "hidden",
+                          }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                   <div
                     style={{
                       // ::after
@@ -616,7 +619,11 @@ export function DiaryAgendaDayDayContents({
                       position: "absolute",
                       top: "0px",
                       left: "0px",
-                      boxShadow: "rgba(0, 0, 0, 0.5) 0px 0px 12px",
+                      boxShadow:
+                        typeof achievement.globalPercentage === "number" &&
+                        achievement.globalPercentage <= 10
+                          ? "rgba(0, 0, 0, 0.5) 0px 0px 12px"
+                          : undefined,
                       background:
                         "linear-gradient(90deg, rgb(59, 65, 74) 0%, rgb(44, 49, 56) 95%)",
                       borderRadius: "2px",
@@ -630,7 +637,10 @@ export function DiaryAgendaDayDayContents({
                     height={64}
                     style={{
                       boxShadow:
-                        "rgba(255, 184, 78, 0.6) 0px 0px 2px 1px, rgba(255, 184, 78, 0.4) 0px 0px 16px 1px",
+                        typeof achievement.globalPercentage === "number" &&
+                        achievement.globalPercentage <= 10
+                          ? "rgba(255, 184, 78, 0.6) 0px 0px 2px 1px, rgba(255, 184, 78, 0.4) 0px 0px 16px 1px"
+                          : undefined,
                       // asd
                       verticalAlign: "top",
                       width: "100%",

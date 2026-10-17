@@ -1858,6 +1858,7 @@ export const typeDefs = gql`
     icon: String!
     gameIcon: String!
     unlockedAt: Date!
+    globalPercentage: Float
     url: String
   }
 
