@@ -462,6 +462,13 @@ export const getUserJournalEntries = async (
               unlockedAt: steamUserAchievement.unlocked_at,
               globalPercentage: steamAchievement.globalpercentage,
               gameIcon: `https://shared.fastly.steamstatic.com/community_assets/images/apps/${steamStoreItem.appid}/${steamStoreItem.community_icon}.jpg`,
+              /*
+              gameBanner: `https://shared.fastly.steamstatic.com/store_item_assets/${steamStoreItem.asset_url_format.replace(
+                "${FILENAME}",
+                steamStoreItem.library_capsule,
+              )}`,
+              */
+
               icon: steamAchievement.icon_achieved,
               url: `https://steamcommunity.com/id/${config.profile_url}/achievements/${steamUserAchievement.appid}`,
               __typename: "Achievement",
