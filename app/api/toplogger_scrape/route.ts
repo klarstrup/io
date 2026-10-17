@@ -7,7 +7,13 @@ import { Users } from "../../../models/user.server";
 import { TopLoggerGraphQL } from "../../../sources/toplogger.server";
 import { DataSource } from "../../../sources/utils";
 import { wrapSources } from "../../../sources/utils.server";
-import { randomSliceOfSize } from "../../../utils";
+import {
+  partition,
+  pick,
+  randomSliceOfSize,
+  shuffle,
+  uniqueBy,
+} from "../../../utils";
 import {
   fetchGraphQLQuery,
   normalizeAndUpsertQueryData,
@@ -22,9 +28,18 @@ import {
   type ClimbDaysSessionsResponse,
   climbLogsQuery,
   type ClimbLogsResponse,
+  climbsQuery,
+  ClimbsResponse,
+  compClimbUsersForRankingClimbUserQuery,
+  CompClimbUsersForRankingClimbUserResponse,
+  compRoundUsersForRankingQuery,
+  CompRoundUsersForRankingResponse,
+  compsQuery,
+  CompsResponse,
   userMeStoreQuery,
   type UserMeStoreResponse,
 } from "./queries";
+import { addDays, isFuture, subDays } from "date-fns";
 
 export const maxDuration = 45;
 
@@ -192,10 +207,9 @@ export const GET = (request: NextRequest) =>
         // Aggressive materialize not to wait for the rest of the scrape to finish
         yield* materializeToploggerWorkouts(user, dataSource);
 
-        // const { data: userMeStoreData } =
-        yield* fetchsert<UserMeStoreResponse>(userMeStoreQuery);
+        const { data: userMeStoreData } =
+          yield* fetchsert<UserMeStoreResponse>(userMeStoreQuery);
 
-        /*
         const gyms = userMeStoreData?.userMe?.gymUsers.map((fav) => fav.gym);
         const userComps: CompsResponse["comps"]["data"] = [];
         yield* deadlineLoop(
@@ -209,7 +223,7 @@ export const GET = (request: NextRequest) =>
             if (compsData?.comps?.data) userComps.push(...compsData.comps.data);
           },
         );
-        const [activeComps, pastComps] = partition(
+        const [activeComps/*, pastComps*/] = partition(
           uniqueBy(userComps, (c) => c.id),
           (c) =>
             isFuture(addDays(new Date(c.loggableEndAt), 1)) ||
@@ -218,7 +232,7 @@ export const GET = (request: NextRequest) =>
 
         // Fetch all active and backfill one past comp
         yield* deadlineLoop(
-          [...activeComps, ...randomSliceOfSize(pastComps, 1)],
+          [...activeComps/*, ...randomSliceOfSize(pastComps, 1)*/],
           () => getTimeRemaining(),
           async function* (comp) {
             yield pick(comp, "id", "name");
@@ -267,8 +281,10 @@ export const GET = (request: NextRequest) =>
                       compRoundUsersVariables,
                     );
 
+                  /*
                   const bestClimberId =
                     compRoundUsersData?.ranking.data[0]?.compUser.userId;
+                  */
 
                   if (
                     compRoundUsersData &&
@@ -291,7 +307,7 @@ export const GET = (request: NextRequest) =>
                   // presuming that they've attempted every Comp Climb.
                   // This allows for backfilling of Climbs for comps that are no longer
                   // set, I haven't found a better way of doing this.
-                  for (const userIddd of [userId, bestClimberId].filter(
+                  for (const userIddd of [userId /*, bestClimberId*/].filter(
                     Boolean,
                   )) {
                     yield* fetchsert<CompClimbUsersForRankingClimbUserResponse>(
@@ -323,7 +339,6 @@ export const GET = (request: NextRequest) =>
             }
           },
         );
-        */
 
         let climbDays: ClimbDaysSessionsResponse["climbDaysPaginated"]["data"] =
           [];
