@@ -492,11 +492,6 @@ export const CompRoundUserScalarsFragment = gql`
     compId
     compRoundId
     score
-    totMaxZones
-    totMaxClips
-    totMaxHolds
-    totMinTries
-    totMinDuration
     climbsWithScoresCount
     participating
     # compUser
@@ -509,11 +504,6 @@ export interface CompRoundUserScalars extends GraphQLObject<"CompRoundUser"> {
   compUserId: string;
   compRoundId: string;
   score: number;
-  totMaxZones: number;
-  totMaxClips: number;
-  totMaxHolds: number;
-  totMinTries: number;
-  totMinDuration: number;
   climbsWithScoresCount: number;
   participating: boolean;
   // compUser: CompUser;

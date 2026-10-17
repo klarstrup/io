@@ -130,11 +130,6 @@ export async function getIoTopLoggerCompEvent(
                 compId: comp.id,
                 compRoundId: compRound.id,
                 score: NaN,
-                totMaxClips: NaN,
-                totMaxHolds: NaN,
-                totMaxZones: NaN,
-                totMinTries: NaN,
-                totMinDuration: NaN,
                 climbsWithScoresCount: NaN,
                 participating: true,
               };
