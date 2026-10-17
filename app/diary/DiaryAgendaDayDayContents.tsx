@@ -521,8 +521,9 @@ export function DiaryAgendaDayDayContents({
                 <Image
                   src={achievement.gameIcon}
                   alt={achievement.gameName}
-                  width={24}
-                  height={24}
+                  width={48}
+                  height={48}
+                  style={{ width: 24, height: 24 }}
                   className="rounded-sm"
                 />
               }
@@ -541,8 +542,9 @@ export function DiaryAgendaDayDayContents({
               <Image
                 src={achievement.icon}
                 alt={achievement.name}
-                width={32}
-                height={32}
+                width={64}
+                height={64}
+                style={{ width: 32, height: 32 }}
                 className="rounded-md"
               />
               <div>
