@@ -53,6 +53,8 @@ import {
   omitSeparatedEnd,
   type JournalEntry,
 } from "./diaryUtils";
+import gloryMaskPng from "./glory-mask.png";
+import gloryPng from "./glory.png";
 
 interface DayJournalEntryElement {
   id: string;
@@ -539,14 +541,111 @@ export function DiaryAgendaDayDayContents({
               }}
               contentClassName="flex items-center gap-2 leading-none"
             >
-              <Image
-                src={achievement.icon}
-                alt={achievement.name}
-                width={64}
-                height={64}
-                style={{ width: 32, height: 32 }}
-                className="rounded-md"
-              />
+              <div
+                style={{
+                  flexShrink: 0,
+                  display: "inline-flex",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    flexShrink: 0,
+                    contain: "size",
+                    aspectRatio: "1 / 1",
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    display: "inline-block",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      maskImage: `url(${gloryPng.src})`,
+                      maskSize: "100% auto",
+                      maskRepeat: "repeat",
+                      inset: "-40%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        maskSize: "100% auto",
+                        maskRepeat: "repeat",
+                        inset: "-40%",
+                        overflow: "hidden",
+
+                        animationName: "aeY3xSNbegI-",
+                        animationDuration: "18s",
+                        animationTimingFunction: "linear",
+                        animationIterationCount: "infinite",
+                        animationDirection: "reverse",
+                        animationPlayState: "running",
+                        maskImage: `url(${gloryMaskPng.src})`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          mixBlendMode: "overlay",
+                          animationName: "aeY3xSNbegI-",
+                          animationDuration: "6s",
+                          animationTimingFunction: "linear",
+                          animationIterationCount: "infinite",
+                          animationPlayState: "running",
+                          position: "absolute",
+                          inset: "-10px",
+
+                          background:
+                            "repeating-conic-gradient(rgba(255, 217, 0, 0.176) 0%, rgba(255, 184, 78, 0) 6%, rgba(255, 217, 0, 0.176) 10%, rgb(255, 184, 78) 26%, rgba(255, 217, 0, 0.176) 35%, rgb(255, 184, 78) 40%, rgba(255, 217, 0, 0.176) 60%, rgb(255, 184, 78) 82%, rgba(255, 217, 0, 0.176) 100%)",
+                          overflow: "hidden",
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      // ::after
+                      content: "",
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                      position: "absolute",
+                      top: "0px",
+                      left: "0px",
+                      boxShadow: "rgba(0, 0, 0, 0.5) 0px 0px 12px",
+                      background:
+                        "linear-gradient(90deg, rgb(59, 65, 74) 0%, rgb(44, 49, 56) 95%)",
+                      borderRadius: "2px",
+                    }}
+                  />
+                  <Image
+                    loading="lazy"
+                    alt={achievement.name}
+                    src={achievement.icon}
+                    width={64}
+                    height={64}
+                    style={{
+                      boxShadow:
+                        "rgba(255, 184, 78, 0.6) 0px 0px 2px 1px, rgba(255, 184, 78, 0.4) 0px 0px 16px 1px",
+                      // asd
+                      verticalAlign: "top",
+                      width: "100%",
+                      minWidth: "100%",
+                      maxWidth: "100%",
+                      height: "100%",
+                      minHeight: "100%",
+                      maxHeight: "100%",
+                      position: "relative",
+                      transition: "transform 0.1s ease-in-out",
+                      borderRadius: "2px",
+                    }}
+                  />
+                </div>
+              </div>
               <div>
                 <span>{achievement.name}</span>{" "}
                 {achievement.description ? (

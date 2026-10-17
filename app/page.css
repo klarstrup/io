@@ -15,7 +15,7 @@
   box-shadow: rgba(28, 28, 30, 0.9) 0px 0px 20px !important;
 }
 
-html{
+html {
   min-height: 100%;
 }
 
@@ -305,4 +305,13 @@ textarea:disabled {
 .close-button:after {
   content: "x";
   color: black;
+}
+
+@keyframes aeY3xSNbegI- {
+  0% {
+    transform: rotate(0turn);
+  }
+  100% {
+    transform: rotate(1turn);
+  }
 }
