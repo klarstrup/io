@@ -1,4 +1,4 @@
-import { connection } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { DataSource } from "../../sources/utils";
 
 export const scraperEndpoints = Object.values(DataSource).map(
@@ -12,6 +12,39 @@ export const fetchText = async (url: string | URL, init?: RequestInit) =>
 
 export async function jsonStreamResponse(generator: () => AsyncGenerator) {
   await connection();
+
+  const hError = (error: unknown) => {
+    console.error(error);
+
+    if (error instanceof Error) {
+      const serializableError = {};
+      for (const key of Object.getOwnPropertyNames(
+        error,
+      ) as (keyof typeof error)[]) {
+        serializableError[key] = error[key];
+      }
+      if (process.env.NODE_ENV !== "development") {
+        // @ts-expect-error - i dont care
+        delete serializableError.stack;
+      }
+
+      return serializableError;
+    } else {
+      return error;
+    }
+  };
+
+  const gen = generator();
+  let r: IteratorResult<unknown, unknown>;
+  try {
+    while ((r = await gen.next())) {
+      if (r.done) break;
+      if (r.value instanceof Response) return r.value;
+      break;
+    }
+  } catch (error) {
+    return NextResponse.json(hError(error));
+  }
 
   const responseStream = new TransformStream<Uint8Array, string>();
   const writer = responseStream.writable.getWriter();
@@ -29,35 +62,13 @@ export async function jsonStreamResponse(generator: () => AsyncGenerator) {
   (async () => {
     await writer.write(encoder.encode("[\n"));
 
-    for await (const value of generator()) await flushJSON(value);
+    await flushJSON(r.value);
+
+    for await (const value of gen) await flushJSON(value);
   })()
-    .catch(async (error: unknown) => {
-      console.error(error);
-
-      if (error instanceof Error) {
-        const serializableError = {};
-        for (const key of Object.getOwnPropertyNames(
-          error,
-        ) as (keyof typeof error)[]) {
-          serializableError[key] = error[key];
-        }
-        if (process.env.NODE_ENV !== "development") {
-          // @ts-expect-error - i dont care
-          delete serializableError.stack;
-        }
-
-        await flushJSON(serializableError);
-      } else {
-        await flushJSON(error);
-      }
-    })
-    .finally(
-      () =>
-        void (async () => {
-          await writer.write(encoder.encode("\n]"));
-
-          await writer.close();
-        })(),
+    .catch((error: unknown) => flushJSON(hError(error)))
+    .finally(() =>
+      writer.write(encoder.encode("\n]")).then(() => writer.close()),
     );
 
   return new Response(responseStream.readable, {
