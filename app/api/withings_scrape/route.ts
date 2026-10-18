@@ -40,72 +40,8 @@ export const GET = async (request: NextRequest) => {
 
   const searchParams = request.nextUrl.searchParams;
 
-  const userWithingsSources = (user.dataSources ?? []).find(
-    (ds) => ds.source === DataSource.Withings,
-  );
-
-  if (!userWithingsSources) {
-    return new Response("Withings data source not found for user", {
-      status: 400,
-    });
-  }
-
-  const code = searchParams.get("code");
-  if (!userWithingsSources.config.accessTokenResponse?.access_token || code) {
-    if (!code) {
-      const redirectUrl = new URL(
-        "https://account.withings.com/oauth2_user/authorize2",
-      );
-
-      redirectUrl.searchParams.append("response_type", "code");
-      redirectUrl.searchParams.append("client_id", clientId);
-      redirectUrl.searchParams.append("redirect_uri", uri);
-      redirectUrl.searchParams.append("state", inState);
-      redirectUrl.searchParams.append(
-        "scope",
-        "user.info,user.metrics,user.activity,user.sleepevents",
-      );
-
-      return NextResponse.redirect(redirectUrl.toString());
-    }
-
-    const body = new FormData();
-    body.append("action", "requesttoken");
-    body.append("grant_type", "authorization_code");
-    body.append("client_id", clientId);
-    body.append("client_secret", clientSecret);
-    body.append("code", code);
-    body.append("redirect_uri", uri);
-
-    const { body: accessTokenResponse } = (await (
-      await fetch("https://wbsapi.withings.net/v2/oauth2", {
-        method: "POST",
-        body,
-      })
-    ).json()) as { body: Withings.AccessTokenResponse };
-
-    if (accessTokenResponse.access_token) {
-      await Users.updateOne(
-        { _id: new ObjectId(user.id) },
-        {
-          $set: {
-            "dataSources.$[source].config.accessTokenResponse": {
-              ...accessTokenResponse,
-              expires_at: new Date(
-                Date.now() + accessTokenResponse.expires_in * 1000,
-              ),
-            },
-          },
-        },
-        { arrayFilters: [{ "source.id": userWithingsSources.id }] },
-      );
-
-      return new NextResponse("Access token obtained and saved");
-    }
-  }
-
   return jsonStreamResponse(async function* () {
-    yield* wrapSources(
+    return yield* wrapSources(
       user,
       DataSource.Withings,
       async function* (
@@ -115,10 +51,66 @@ export const GET = async (request: NextRequest) => {
             backfilledSleepSummaries,
             backfilledMeasureGroups,
           },
+          id: sourceId,
         },
         setUpdated,
       ) {
         setUpdated(false);
+
+        const code = searchParams.get("code");
+        if (!accessTokenResponse?.access_token || code) {
+          if (!code) {
+            const redirectUrl = new URL(
+              "https://account.withings.com/oauth2_user/authorize2",
+            );
+
+            redirectUrl.searchParams.append("response_type", "code");
+            redirectUrl.searchParams.append("client_id", clientId);
+            redirectUrl.searchParams.append("redirect_uri", uri);
+            redirectUrl.searchParams.append("state", inState);
+            redirectUrl.searchParams.append(
+              "scope",
+              "user.info,user.metrics,user.activity,user.sleepevents",
+            );
+            yield NextResponse.redirect(redirectUrl.toString());
+            return;
+          }
+
+          const body = new FormData();
+          body.append("action", "requesttoken");
+          body.append("grant_type", "authorization_code");
+          body.append("client_id", clientId);
+          body.append("client_secret", clientSecret);
+          body.append("code", code);
+          body.append("redirect_uri", uri);
+
+          const { body: accessTokenResponse } = (await (
+            await fetch("https://wbsapi.withings.net/v2/oauth2", {
+              method: "POST",
+              body,
+            })
+          ).json()) as { body: Withings.AccessTokenResponse };
+
+          if (accessTokenResponse.access_token) {
+            await Users.updateOne(
+              { _id: new ObjectId(user.id) },
+              {
+                $set: {
+                  "dataSources.$[source].config.accessTokenResponse": {
+                    ...accessTokenResponse,
+                    expires_at: new Date(
+                      Date.now() + accessTokenResponse.expires_in * 1000,
+                    ),
+                  },
+                },
+              },
+              { arrayFilters: [{ "source.id": sourceId }] },
+            );
+
+            yield new NextResponse("Access token obtained and saved");
+            return;
+          }
+        }
 
         const refreshTokenUrl = new URL(
           "https://wbsapi.withings.net/v2/oauth2",
@@ -155,7 +147,7 @@ export const GET = async (request: NextRequest) => {
                 },
               },
             },
-            { arrayFilters: [{ "source.id": userWithingsSources.id }] },
+            { arrayFilters: [{ "source.id": sourceId }] },
           );
 
           accessTokenResponse = refreshTokenResponse;
@@ -166,13 +158,13 @@ export const GET = async (request: NextRequest) => {
               $set: {
                 // We want to keep the userid lol
                 "dataSources.$[source].config.accessTokenResponse": omit(
-                  userWithingsSources.config.accessTokenResponse,
+                  accessTokenResponse,
                   "access_token",
                   "refresh_token",
                 ),
               },
             },
-            { arrayFilters: [{ "source.id": userWithingsSources.id }] },
+            { arrayFilters: [{ "source.id": sourceId }] },
           );
 
           throw new Error(
@@ -249,7 +241,7 @@ export const GET = async (request: NextRequest) => {
                     "dataSources.$[source].config.backfilledMeasureGroups": true,
                   },
                 },
-                { arrayFilters: [{ "source.id": userWithingsSources.id }] },
+                { arrayFilters: [{ "source.id": sourceId }] },
               );
 
               break;
@@ -321,7 +313,7 @@ export const GET = async (request: NextRequest) => {
                     "dataSources.$[source].config.backfilledSleepSummaries": true,
                   },
                 },
-                { arrayFilters: [{ "source.id": userWithingsSources.id }] },
+                { arrayFilters: [{ "source.id": sourceId }] },
               );
 
               break;
@@ -331,7 +323,7 @@ export const GET = async (request: NextRequest) => {
           }
         }
       },
-      request.nextUrl.searchParams.get("userDataSourceId"),
+      searchParams.get("userDataSourceId"),
     );
   });
 };
