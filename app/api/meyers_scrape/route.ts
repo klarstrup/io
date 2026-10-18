@@ -35,8 +35,8 @@ export const GET = (request: NextRequest) =>
           }
           const menusResponses = (await res.json()) as Meyers.MenusResponse[];
 
-          for (const menuResponse of menusResponses) {
-            yield await MeyersMenus.bulkWrite(
+          yield await MeyersMenus.bulkWrite(
+            menusResponses.flatMap((menuResponse) =>
               menuResponse.menus.map((menu) => ({
                 updateOne: {
                   filter: {
@@ -58,8 +58,8 @@ export const GET = (request: NextRequest) =>
                   upsert: true,
                 },
               })),
-            );
-          }
+            ),
+          );
         }
       },
       request.nextUrl.searchParams.get("userDataSourceId"),
