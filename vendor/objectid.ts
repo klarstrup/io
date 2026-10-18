@@ -1,157 +1,3 @@
-type TextDecoder = {
-  readonly encoding: string;
-  readonly fatal: boolean;
-  readonly ignoreBOM: boolean;
-  decode(input?: Uint8Array): string;
-};
-type TextDecoderConstructor = {
-  new (
-    label: "utf8",
-    options: { fatal: boolean; ignoreBOM?: boolean },
-  ): TextDecoder;
-};
-
-// parse utf8 globals
-declare const TextDecoder: TextDecoderConstructor;
-let TextDecoderFatal: TextDecoder;
-let TextDecoderNonFatal: TextDecoder;
-
-/**
- * Determines if the passed in bytes are valid utf8
- * @param bytes - An array of 8-bit bytes. Must be indexable and have length property
- * @param start - The index to start validating
- * @param end - The index to end validating
- */
-function parseUtf8(
-  buffer: Uint8Array,
-  start: number,
-  end: number,
-  fatal: boolean,
-): string {
-  if (fatal) {
-    TextDecoderFatal ??= new TextDecoder("utf8", { fatal: true });
-    try {
-      return TextDecoderFatal.decode(buffer.subarray(start, end));
-    } catch (cause) {
-      throw new BSONError("Invalid UTF-8 string in BSON document", { cause });
-    }
-  }
-  TextDecoderNonFatal ??= new TextDecoder("utf8", { fatal: false });
-  return TextDecoderNonFatal.decode(buffer.subarray(start, end));
-}
-
-/**
- * This function is an optimization for small basic latin strings.
- * @internal
- * @remarks
- * ### Important characteristics:
- * - If the uint8array or distance between start and end is 0 this function returns an empty string
- * - If the byteLength of the string is 1, 2, or 3 we invoke String.fromCharCode and manually offset into the buffer
- * - If the byteLength of the string is less than or equal to 20 an array of bytes is built and `String.fromCharCode.apply` is called with the result
- * - If any byte exceeds 128 this function returns null
- *
- * @param uint8array - A sequence of bytes that may contain basic latin characters
- * @param start - The start index from which to search the uint8array
- * @param end - The index to stop searching the uint8array
- * @returns string if all bytes are within the basic latin range, otherwise null
- */
-function tryReadBasicLatin(
-  uint8array: Uint8Array,
-  start: number,
-  end: number,
-): string | null {
-  if (uint8array.length === 0) {
-    return "";
-  }
-
-  const stringByteLength = end - start;
-  if (stringByteLength === 0) {
-    return "";
-  }
-
-  if (stringByteLength > 20) {
-    return null;
-  }
-
-  if (stringByteLength === 1 && uint8array[start]! < 128) {
-    return String.fromCharCode(uint8array[start]!);
-  }
-
-  if (
-    stringByteLength === 2 &&
-    uint8array[start]! < 128 &&
-    uint8array[start + 1]! < 128
-  ) {
-    return (
-      String.fromCharCode(uint8array[start]!) +
-      String.fromCharCode(uint8array[start + 1]!)
-    );
-  }
-
-  if (
-    stringByteLength === 3 &&
-    uint8array[start]! < 128 &&
-    uint8array[start + 1]! < 128 &&
-    uint8array[start + 2]! < 128
-  ) {
-    return (
-      String.fromCharCode(uint8array[start]!) +
-      String.fromCharCode(uint8array[start + 1]!) +
-      String.fromCharCode(uint8array[start + 2]!)
-    );
-  }
-
-  const latinBytes: number[] = [];
-  for (let i = start; i < end; i++) {
-    const byte = uint8array[i]!;
-    if (byte > 127) {
-      return null;
-    }
-    latinBytes.push(byte);
-  }
-
-  return String.fromCharCode(...latinBytes);
-}
-
-/**
- * This function is an optimization for writing small basic latin strings.
- * @internal
- * @remarks
- * ### Important characteristics:
- * - If the string length is 0 return 0, do not perform any work
- * - If a string is longer than 25 code units return null
- * - If any code unit exceeds 128 this function returns null
- *
- * @param destination - The uint8array to serialize the string to
- * @param source - The string to turn into UTF-8 bytes if it fits in the basic latin range
- * @param offset - The position in the destination to begin writing bytes to
- * @returns the number of bytes written to destination if all code units are below 128, otherwise null
- */
-function tryWriteBasicLatin(
-  destination: Uint8Array,
-  source: string,
-  offset: number,
-): number | null {
-  if (source.length === 0) return 0;
-
-  if (source.length > 25) return null;
-
-  if (destination.length - offset < source.length) return null;
-
-  for (
-    let charOffset = 0, destinationOffset = offset;
-    charOffset < source.length;
-    charOffset++, destinationOffset++
-  ) {
-    const char = source.charCodeAt(charOffset);
-    if (char > 127) return null;
-
-    destination[destinationOffset] = char;
-  }
-
-  return source.length;
-}
-
 type NodeJsEncoding = "hex" | "utf8" | "binary";
 type NodeJsBuffer = ArrayBufferView &
   Uint8Array & {
@@ -211,14 +57,11 @@ function nodejsSecureRandomBytes(byteLength: number): NodeJsBuffer {
 }
 
 const nodejsRandomBytes = (() => {
-  const { crypto } = globalThis as {
-    crypto?: { getRandomValues?: (space: Uint8Array) => Uint8Array };
-  };
   if (crypto != null && typeof crypto.getRandomValues === "function") {
     return nodejsSecureRandomBytes;
-  } else {
-    return nodejsMathRandomBytes;
   }
+
+  return nodejsMathRandomBytes;
 })();
 
 /**
@@ -267,47 +110,8 @@ const nodeJsByteUtils = {
     return Buffer.allocUnsafe(size);
   },
 
-  concat(list: Uint8Array[]): NodeJsBuffer {
-    return Buffer.concat(list);
-  },
-
-  copy(
-    source: Uint8Array,
-    target: Uint8Array,
-    targetStart?: number,
-    sourceStart?: number,
-    sourceEnd?: number,
-  ): number {
-    return nodeJsByteUtils
-      .toLocalBufferType(source)
-      .copy(
-        target,
-        targetStart ?? 0,
-        sourceStart ?? 0,
-        sourceEnd ?? source.length,
-      );
-  },
-
-  equals(a: Uint8Array, b: Uint8Array): boolean {
-    return nodeJsByteUtils.toLocalBufferType(a).equals(b);
-  },
-
   fromNumberArray(array: number[]): NodeJsBuffer {
     return Buffer.from(array);
-  },
-
-  fromUTF8(utf8: string): NodeJsBuffer {
-    return Buffer.from(utf8, "utf8");
-  },
-
-  /** **Legacy** binary strings are an outdated method of data transfer. Do not add public API support for interpreting this format */
-  fromISO88591(codePoints: string): NodeJsBuffer {
-    return Buffer.from(codePoints, "binary");
-  },
-
-  /** **Legacy** binary strings are an outdated method of data transfer. Do not add public API support for interpreting this format */
-  toISO88591(buffer: Uint8Array): string {
-    return nodeJsByteUtils.toLocalBufferType(buffer).toString("binary");
   },
 
   fromHex(hex: string): NodeJsBuffer {
@@ -318,68 +122,8 @@ const nodeJsByteUtils = {
     return nodeJsByteUtils.toLocalBufferType(buffer).toString("hex");
   },
 
-  toUTF8(
-    buffer: Uint8Array,
-    start: number,
-    end: number,
-    fatal: boolean,
-  ): string {
-    const basicLatin =
-      end - start <= 20 ? tryReadBasicLatin(buffer, start, end) : null;
-    if (basicLatin != null) {
-      return basicLatin;
-    }
-
-    const string = nodeJsByteUtils
-      .toLocalBufferType(buffer)
-      .toString("utf8", start, end);
-    if (fatal) {
-      for (let i = 0; i < string.length; i++) {
-        if (string.charCodeAt(i) === 0xfffd) {
-          parseUtf8(buffer, start, end, true);
-          break;
-        }
-      }
-    }
-    return string;
-  },
-
-  utf8ByteLength(input: string): number {
-    return Buffer.byteLength(input, "utf8");
-  },
-
-  encodeUTF8Into(
-    buffer: Uint8Array,
-    source: string,
-    byteOffset: number,
-  ): number {
-    const latinBytesWritten = tryWriteBasicLatin(buffer, source, byteOffset);
-    if (latinBytesWritten != null) {
-      return latinBytesWritten;
-    }
-
-    return nodeJsByteUtils
-      .toLocalBufferType(buffer)
-      .write(source, byteOffset, undefined, "utf8");
-  },
-
   randomBytes: nodejsRandomBytes,
-
-  swap32(buffer: Uint8Array): NodeJsBuffer {
-    return nodeJsByteUtils.toLocalBufferType(buffer).swap32();
-  },
 };
-
-type TextEncoder = {
-  readonly encoding: string;
-  encode(input?: string): Uint8Array;
-};
-type TextEncoderConstructor = {
-  new (): TextEncoder;
-};
-
-// Web global
-declare const TextEncoder: TextEncoderConstructor;
 
 type ArrayBufferViewWithTag = ArrayBufferView & {
   [Symbol.toStringTag]?: string;
@@ -404,12 +148,8 @@ function webMathRandomBytes(byteLength: number) {
 
 /** @internal */
 const webRandomBytes: (byteLength: number) => Uint8Array = (() => {
-  const { crypto } = globalThis as {
-    crypto?: { getRandomValues?: (space: Uint8Array) => Uint8Array };
-  };
   if (crypto != null && typeof crypto.getRandomValues === "function") {
     return (byteLength: number) => {
-      // @ts-expect-error: crypto.getRandomValues cannot actually be null here
       // You cannot separate getRandomValues from crypto (need to have this === crypto)
       return crypto.getRandomValues(webByteUtils.allocate(byteLength));
     };
@@ -481,101 +221,8 @@ const webByteUtils = {
     return webByteUtils.allocate(size);
   },
 
-  concat(uint8Arrays: Uint8Array[]): Uint8Array {
-    if (uint8Arrays.length === 0) return webByteUtils.allocate(0);
-
-    let totalLength = 0;
-    for (const uint8Array of uint8Arrays) {
-      totalLength += uint8Array.length;
-    }
-
-    const result = webByteUtils.allocate(totalLength);
-    let offset = 0;
-
-    for (const uint8Array of uint8Arrays) {
-      result.set(uint8Array, offset);
-      offset += uint8Array.length;
-    }
-
-    return result;
-  },
-
-  copy(
-    source: Uint8Array,
-    target: Uint8Array,
-    targetStart?: number,
-    sourceStart?: number,
-    sourceEnd?: number,
-  ): number {
-    // validate and standardize passed-in sourceEnd
-    if (sourceEnd !== undefined && sourceEnd < 0) {
-      throw new RangeError(
-        `The value of "sourceEnd" is out of range. It must be >= 0. Received ${sourceEnd}`,
-      );
-    }
-    sourceEnd = sourceEnd ?? source.length;
-
-    // validate and standardize passed-in sourceStart
-    if (
-      sourceStart !== undefined &&
-      (sourceStart < 0 || sourceStart > sourceEnd)
-    ) {
-      throw new RangeError(
-        `The value of "sourceStart" is out of range. It must be >= 0 and <= ${sourceEnd}. Received ${sourceStart}`,
-      );
-    }
-    sourceStart = sourceStart ?? 0;
-
-    // validate and standardize passed-in targetStart
-    if (targetStart !== undefined && targetStart < 0) {
-      throw new RangeError(
-        `The value of "targetStart" is out of range. It must be >= 0. Received ${targetStart}`,
-      );
-    }
-    targetStart = targetStart ?? 0;
-
-    // figure out how many bytes we can copy
-    const srcSlice = source.subarray(sourceStart, sourceEnd);
-    const maxLen = Math.min(srcSlice.length, target.length - targetStart);
-    if (maxLen <= 0) {
-      return 0;
-    }
-
-    // perform the copy
-    target.set(srcSlice.subarray(0, maxLen), targetStart);
-    return maxLen;
-  },
-
-  equals(uint8Array: Uint8Array, otherUint8Array: Uint8Array): boolean {
-    if (uint8Array.byteLength !== otherUint8Array.byteLength) {
-      return false;
-    }
-    for (let i = 0; i < uint8Array.byteLength; i++) {
-      if (uint8Array[i] !== otherUint8Array[i]) {
-        return false;
-      }
-    }
-    return true;
-  },
-
   fromNumberArray(array: number[]): Uint8Array {
     return Uint8Array.from(array);
-  },
-
-  fromUTF8(utf8: string): Uint8Array {
-    return new TextEncoder().encode(utf8);
-  },
-
-  /** **Legacy** binary strings are an outdated method of data transfer. Do not add public API support for interpreting this format */
-  fromISO88591(codePoints: string): Uint8Array {
-    return Uint8Array.from(codePoints, (c) => c.charCodeAt(0) & 0xff);
-  },
-
-  /** **Legacy** binary strings are an outdated method of data transfer. Do not add public API support for interpreting this format */
-  toISO88591(uint8array: Uint8Array): string {
-    return Array.from(Uint16Array.from(uint8array), (b) =>
-      String.fromCharCode(b),
-    ).join("");
   },
 
   fromHex(hex: string): Uint8Array {
@@ -605,35 +252,6 @@ const webByteUtils = {
     return Array.from(uint8array, (byte) =>
       byte.toString(16).padStart(2, "0"),
     ).join("");
-  },
-
-  toUTF8(
-    uint8array: Uint8Array,
-    start: number,
-    end: number,
-    fatal: boolean,
-  ): string {
-    const basicLatin =
-      end - start <= 20 ? tryReadBasicLatin(uint8array, start, end) : null;
-    if (basicLatin != null) {
-      return basicLatin;
-    }
-
-    return parseUtf8(uint8array, start, end, fatal);
-  },
-
-  utf8ByteLength(input: string): number {
-    return new TextEncoder().encode(input).byteLength;
-  },
-
-  encodeUTF8Into(
-    uint8array: Uint8Array,
-    source: string,
-    byteOffset: number,
-  ): number {
-    const bytes = new TextEncoder().encode(source);
-    uint8array.set(bytes, byteOffset);
-    return bytes.byteLength;
   },
 
   randomBytes: webRandomBytes,
@@ -1018,7 +636,7 @@ export class ObjectId extends BSONValue {
       return;
     }
     // workingId is set based on type of input and whether valid id exists for the input
-    let workingId;
+    let workingId: string | ObjectId | ObjectIdLike | Uint8Array | undefined;
     if (typeof inputId === "object" && inputId && "id" in inputId) {
       if (
         ObjectId.is(inputId) &&
