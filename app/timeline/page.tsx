@@ -102,21 +102,19 @@ export default function TimelinePage({
       { __typename: "NowDivider", id: "now-divider", start: now, end: now },
     ];
 
-    const addEntryToDate = (entry: JournalEntry) => {
-      if (journalEntries.some((e) => isVisuallyIdenticalEvent(e, entry))) {
-        // TODO: Find a better way of merging events that are duplicated between calendars, for now we just skip them if they are visually identical
-        return;
-      }
-      journalEntries.push(entry);
-    };
     for (const entry of userJournalEntries) {
-      addEntryToDate(entry);
+      // TODO: Find a better way of merging events that are duplicated between calendars, for now we just skip them if they are visually identical
+      if (journalEntries.some((e) => isVisuallyIdenticalEvent(e, entry))) {
+        continue;
+      }
+
+      journalEntries.push(entry);
       if (entry.__typename === "Sleep") {
-        addEntryToDate({ ...entry, _is_separated_end: true });
+        journalEntries.push({ ...entry, _is_separated_end: true });
       } else if (entry.__typename === "Event") {
-        addEntryToDate({ ...entry, _is_separated_end: true });
+        journalEntries.push({ ...entry, _is_separated_end: true });
       } else if (entry.__typename === "Trip") {
-        addEntryToDate({ ...entry, _is_separated_end: true });
+        journalEntries.push({ ...entry, _is_separated_end: true });
       }
     }
 
@@ -125,7 +123,7 @@ export default function TimelinePage({
 
   const journalEntries3 = useMemo(
     () =>
-      (journalEntries2 || [])
+      journalEntries2
         .sort((a, b) => a.id.localeCompare(b.id)) // Sort by ID to ensure consistent order for entries with the same start time
         .sort((a, b) => {
           const aText =
