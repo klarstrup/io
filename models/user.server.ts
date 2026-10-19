@@ -180,7 +180,7 @@ export const getUserJournalEntries = async (
                 section.menu_dishes
                   .map((dish) => {
                     const sectionName = section.names.en || "";
-                    const dishName = dish.names.en || "";
+                    const dishName = dish.names.da || "";
                     let prefix = "";
 
                     const lDish = dishName.toLowerCase();
@@ -194,13 +194,17 @@ export const getUserJournalEntries = async (
                         prefix = "🍝";
                       } else if (lDish.includes("pizza")) {
                         prefix = "🍕";
-                      } else if (lDish.includes("soup")) {
+                      } else if (
+                        lDish.includes("soup") ||
+                        lDish.includes("suppe")
+                      ) {
                         prefix = "🍲";
                       } else if (lDish.includes("taco")) {
                         prefix = "🌮";
                       } else if (lDish.includes("pita")) {
                         prefix = "🥙";
                       } else if (
+                        lDish.includes("karry") ||
                         lDish.includes("curry") ||
                         lDish.includes("korma") ||
                         lDish.includes("masala")
@@ -210,7 +214,10 @@ export const getUserJournalEntries = async (
                         prefix = "🥘";
                       }
                     } else if (lSection.includes("delicacy")) {
-                      if (lDish.includes("salad") && !lDish.includes("crab")) {
+                      if (
+                        (lDish.includes("salad") || lDish.includes("salat")) &&
+                        !lDish.includes("crab")
+                      ) {
                         prefix = "🥗";
                       } else {
                         prefix = "🥪";
