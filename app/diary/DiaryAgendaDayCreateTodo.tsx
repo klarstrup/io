@@ -6,8 +6,8 @@ import { useRef, useState } from "react";
 import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   CreateTodoDocument,
-  DiaryAgendaDayUserTodosDocument,
   ListPageUserDocument,
+  UserJournalEntriesDocument,
 } from "../../graphql.generated/graphql";
 import { useClickOutside, useEvent } from "../../hooks";
 
@@ -32,7 +32,7 @@ export function DiaryAgendaDayCreateTodo({ date }: { date?: Date }) {
   const formRef = useRef<HTMLFormElement>(null);
 
   const [createTodo, { loading }] = useMutation(CreateTodoDocument, {
-    refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
+    refetchQueries: [ListPageUserDocument, UserJournalEntriesDocument],
   });
 
   const handleFormSubmit = useEvent(

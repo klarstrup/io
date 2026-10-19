@@ -9,10 +9,10 @@ import { TextAreaThatGrows } from "../../components/TextAreaThatGrows";
 import {
   CreateTodoDocument,
   DeleteTodoMutation,
-  DiaryAgendaDayUserTodosDocument,
   GQTodo,
   ListPageUserDocument,
   UpdateTodoMutation,
+  UserJournalEntriesDocument,
 } from "../../graphql.generated/graphql";
 import { useClickOutside, useEvent } from "../../hooks";
 import { omitUndefined } from "../../utils";
@@ -69,7 +69,7 @@ export const DiaryAgendaDayTodo = function DiaryAgendaDayTodo({
     ` as unknown as TypedDocumentNode<DeleteTodoMutation>,
   );
   const [createTodo] = useMutation(CreateTodoDocument, {
-    refetchQueries: [ListPageUserDocument, DiaryAgendaDayUserTodosDocument],
+    refetchQueries: [ListPageUserDocument, UserJournalEntriesDocument],
   });
 
   const [isActive, setIsActive] = useState(false);

@@ -54,20 +54,10 @@ import {
   type JournalEntry,
 } from "./diaryUtils";
 
-export const DiaryAgendaDayUserTodosDocument = graphql(`
-  query DiaryAgendaDayUserTodos(
-    $after: String
-    $before: String
-    $on: String
-    $type: String
-  ) {
+export const UserLocationsDocument = graphql(`
+  query UserLocationsDocument {
     user {
       id
-      name
-      email
-      image
-      emailVerified
-      timeZone
       locations {
         id
         createdAt
@@ -88,6 +78,19 @@ export const DiaryAgendaDayUserTodosDocument = graphql(`
           updatedAt
         }
       }
+    }
+  }
+`);
+
+export const UserJournalEntriesDocument = graphql(`
+  query UserJournalEntries(
+    $after: String
+    $before: String
+    $on: String
+    $type: String
+  ) {
+    user {
+      id
       journalEntries(after: $after, before: $before, on: $on, type: $type) {
         __typename
         pageInfo {
@@ -305,8 +308,10 @@ export function DiaryAgendaDay({
     [selectedDayStart],
   );
 
+  const { data: userLocationsData } = useQuery(UserLocationsDocument);
+
   const { data, loading, networkStatus, fetchMore, refetch } = useQuery(
-    DiaryAgendaDayUserTodosDocument,
+    UserJournalEntriesDocument,
     {
       variables,
       fetchPolicy: selectedDayStart ? "cache-and-network" : "cache-first",
@@ -344,7 +349,7 @@ export function DiaryAgendaDay({
     [fetchingInterval],
   );
 
-  const userLocations = data?.user?.locations || emptyArray;
+  const userLocations = userLocationsData?.user?.locations || emptyArray;
   const userJournalEntries = data?.user?.journalEntries.nodes || emptyArray;
 
   const journalEntriesByDate2 = useMemo(() => {

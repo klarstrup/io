@@ -34,7 +34,10 @@ import {
   endOfDayButItRespectsDayStartHour,
   stringToDate,
 } from "../../utils";
-import { DiaryAgendaDayUserTodosDocument } from "../diary/DiaryAgendaDay";
+import {
+  UserJournalEntriesDocument,
+  UserLocationsDocument,
+} from "../diary/DiaryAgendaDay";
 import { DiaryAgendaDayDayContents } from "../diary/DiaryAgendaDayDayContents";
 import { DiaryPoller } from "../diary/DiaryPoller";
 import {
@@ -81,8 +84,10 @@ export default function TimelinePage({
     [selectedDayStart, entryType],
   );
 
+  const { data: locationsData } = useQuery(UserLocationsDocument);
+
   const { data, loading, fetchMore, refetch } = useQuery(
-    DiaryAgendaDayUserTodosDocument,
+    UserJournalEntriesDocument,
     {
       variables,
       fetchPolicy: selectedDayStart ? "cache-and-network" : "cache-first",
@@ -111,7 +116,7 @@ export default function TimelinePage({
     void noop();
   }, pollInterval);
 
-  const userLocations = data?.user?.locations || emptyArray;
+  const userLocations = locationsData?.user?.locations || emptyArray;
   const userJournalEntries = data?.user?.journalEntries.nodes || emptyArray;
 
   const journalEntries2 = useMemo(() => {
