@@ -21,7 +21,6 @@ import { noop } from "../../actions";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
 import { graphql } from "../../graphql.generated/gql";
-import type { GQLocation } from "../../graphql.generated/graphql";
 import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
 import { useIdle } from "../../hooks/useIdle";
 import useInterval from "../../hooks/useInterval";
@@ -47,8 +46,10 @@ import { DiaryPoller } from "./DiaryPoller";
 import { TodoDroppable } from "./TodoDroppable";
 import {
   getJournalEntryPrincipalDate,
+  getLocationFromJournalEntry,
   isEventEntireDay,
   isSeparatedEnd,
+  isVisuallyIdenticalEvent,
   LocationChange,
   type JournalEntry,
 } from "./diaryUtils";
@@ -270,18 +271,6 @@ export const DiaryAgendaDayUserTodosDocument = graphql(`
     }
   }
 `);
-
-function isVisuallyIdenticalEvent(a: JournalEntry, b: JournalEntry) {
-  if (a.__typename !== "Event" || b.__typename !== "Event") return false;
-  if (a.summary !== b.summary) return false;
-  if (a.datetype !== b.datetype) return false;
-  if (a.location !== b.location) return false;
-  if (a.start.getTime() !== b.start.getTime()) return false;
-  if (a.end.getTime() !== b.end.getTime()) return false;
-  if (isSeparatedEnd(a) !== isSeparatedEnd(b)) return false;
-
-  return true;
-}
 
 export function DiaryAgendaDay({
   selectedDayStart,
@@ -1045,59 +1034,3 @@ export function DiaryAgendaDay({
     </>
   );
 }
-
-const getLocationFromJournalEntry = (
-  locations: GQLocation[],
-  entry: JournalEntry,
-): { id: string; name: string } | null => {
-  if (entry.__typename === "Workout" && entry.location) return entry.location;
-
-  if (entry.__typename === "Workout" && entry.locationId) {
-    for (const location of locations) {
-      if (location.id === entry.locationId) return location;
-    }
-
-    return { id: entry.locationId, name: entry.locationId };
-  }
-  if (
-    entry.__typename === "Sleep" &&
-    "deviceId" in entry &&
-    entry.deviceId &&
-    typeof entry.deviceId === "string"
-  ) {
-    if (entry.deviceId.trim() === "a5805286bee9039cd23c4e59200b776eba02c6f7") {
-      return locations.find((l) => l.name === "Home") || null;
-    }
-  }
-  if (
-    entry.__typename === "Event" &&
-    "location" in entry &&
-    entry.location &&
-    entry.datetype === "date-time"
-  ) {
-    for (const location of locations) {
-      for (const knownAddress of location.knownAddresses || []) {
-        if (entry.location.includes(knownAddress)) {
-          return location;
-        }
-      }
-    }
-
-    if (entry.location.trim() === "") return null;
-    if (entry.location === "Microsoft Teams-møde") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
-    if (entry.location === "Microsoft Teams Meeting") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
-
-    return { id: entry.location, name: entry.location };
-  }
-
-  if (entry.__typename === "Meal") {
-    // TODO: Determine the actual location for meals, currently hardcoded to Proprty.ai Office
-    // It should be configurable per source
-    return {
-      id: "699cc5ce2f64a165113fc529",
-      name: "Proprty.ai Office",
-    };
-  }
-
-  return null;
-};
