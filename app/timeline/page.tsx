@@ -329,7 +329,7 @@ export default function TimelinePage({
     const nowDivider = document.querySelector<HTMLElement>(".now-divider");
     if (!nowDivider) return;
 
-    nowDivider.scrollIntoView();
+    nowDivider.scrollIntoView({ block: "center" });
   }, []);
 
   const isSSR = useIsSSR();
@@ -344,7 +344,15 @@ export default function TimelinePage({
 
   return (
     <>
-      <div>
+      <div
+        className={
+          "fixed left-1/2 z-5 flex max-w-[calc(100%-5rem)] -translate-x-1/2 gap-x-2 border border-[yellow]/25 bg-white/10 px-1 text-xs backdrop-blur-md sm:gap-2 pointer-coarse:bottom-12 pointer-coarse:rounded-t-xl pointer-fine:top-18 pointer-fine:rounded-b-xl"
+        }
+        style={{
+          boxShadow:
+            "0 0 48px rgba(0, 0, 0, 0.5), 0 0 24px #edab00, 0 0 24px #edab00, 0 0 6px rgba(0, 0, 0, 1), 0 0 1px rgba(0, 0, 0, 1)",
+        }}
+      >
         <button onClick={scrollToNow}>Scroll to Now</button>
         <button onClick={() => window.scrollTo(0, 0)}>Scroll to Top</button>
         <button onClick={() => window.scrollTo(0, document.body.scrollHeight)}>
