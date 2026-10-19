@@ -1,7 +1,7 @@
 "use client";
 import { useMutation } from "@apollo/client/react";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
-import { addDays, addHours, isFuture } from "date-fns";
+import { addDays, addHours, isFuture, max } from "date-fns";
 import { gql } from "graphql-tag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ import {
   type cotemporality,
   dateToString,
   dayStartHour,
+  endOfDayButItRespectsDayStartHour,
   epoch,
   isUTCMidnight,
   omitUndefined,
@@ -202,7 +203,10 @@ export function DiaryAgendaDayDueSet({
   const frequency = dueSet.exerciseSchedule.frequency;
   const cyclesOverdue =
     frequency &&
-    (dayRange.end.getTime() -
+    (max([
+      endOfDayButItRespectsDayStartHour(dayRange.start),
+      dueSet.dueOn,
+    ]).getTime() -
       (dueSet?.lastWorkedOutAt
         ? new Date(dueSet.lastWorkedOutAt).getTime()
         : 0)) /
