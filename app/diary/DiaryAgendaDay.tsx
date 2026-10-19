@@ -16,15 +16,12 @@ import {
   subDays,
   subHours,
 } from "date-fns";
-import { gql } from "graphql-tag";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { noop } from "../../actions";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
-import {
-  DiaryAgendaDayUserTodosDocument,
-  type GQLocation,
-} from "../../graphql.generated/graphql";
+import { graphql } from "../../graphql.generated/gql";
+import type { GQLocation } from "../../graphql.generated/graphql";
 import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
 import { useIdle } from "../../hooks/useIdle";
 import useInterval from "../../hooks/useInterval";
@@ -56,8 +53,7 @@ import {
   type JournalEntry,
 } from "./diaryUtils";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-gql`
+export const DiaryAgendaDayUserTodosDocument = graphql(`
   query DiaryAgendaDayUserTodos($after: String, $before: String, $on: String) {
     user {
       id
@@ -273,7 +269,7 @@ gql`
       }
     }
   }
-`;
+`);
 
 function isVisuallyIdenticalEvent(a: JournalEntry, b: JournalEntry) {
   if (a.__typename !== "Event" || b.__typename !== "Event") return false;
