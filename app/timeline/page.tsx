@@ -1,0 +1,857 @@
+"use client";
+import { useQuery } from "@apollo/client/react";
+import {
+  addDays,
+  compareAsc,
+  isEqual,
+  max,
+  min,
+  startOfDay,
+  subDays,
+} from "date-fns";
+import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
+import { noop } from "../../actions";
+import { FieldSetY } from "../../components/FieldSet";
+import { ShyGuy } from "../../components/ShyGuy";
+import { graphql } from "../../graphql.generated/gql";
+import type { GQLocation } from "../../graphql.generated/graphql";
+import { useNow, useVisibilityAwarePollInterval } from "../../hooks";
+import { useIdle } from "../../hooks/useIdle";
+import useInterval from "../../hooks/useInterval";
+import { useIsSSR } from "../../hooks/useIsSSR";
+import { useSession } from "../../lib/auth-client";
+import {
+  cotemporality,
+  dateMidpoint,
+  dateToString,
+  DEFAULT_TIMEZONE,
+  emptyArray,
+  endOfDayButItRespectsDayStartHour,
+  stringToDate,
+} from "../../utils";
+import { DiaryAgendaDayDayContents } from "../diary/DiaryAgendaDayDayContents";
+import { DiaryPoller } from "../diary/DiaryPoller";
+import {
+  getJournalEntryPrincipalDate,
+  isSeparatedEnd,
+  LocationChange,
+  type JournalEntry,
+} from "../diary/diaryUtils";
+
+const DiaryAgendaDayUserTodosDocument = graphql(`
+  query DiaryAgendaDayUserTodos($after: String, $before: String, $on: String) {
+    user {
+      id
+      name
+      email
+      image
+      emailVerified
+      timeZone
+      locations {
+        id
+        createdAt
+        updatedAt
+        name
+        userId
+        knownAddresses
+        boulderCircuits {
+          id
+          holdColor
+          gradeEstimate
+          gradeRange
+          name
+          labelColor
+          hasZones
+          description
+          createdAt
+          updatedAt
+        }
+      }
+      journalEntries(after: $after, before: $before, on: $on) {
+        __typename
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
+        nodes {
+          __typename
+          ... on Delivery {
+            id
+            timestamp
+            status
+            from
+            url
+          }
+          ... on Achievement {
+            id
+            name
+            gameName
+            description
+            icon
+            gameIcon
+            unlockedAt
+            globalPercentage
+            url
+          }
+          ... on Meal {
+            id
+            datetime
+            url
+            location
+            foodEntries {
+              id
+              datetime
+              food {
+                id
+                description
+              }
+            }
+          }
+          ... on Sleep {
+            id
+            startedAt
+            endedAt
+            totalSleepTime
+            deviceId
+          }
+          ... on NextSet {
+            id
+            lastWorkedOutAt
+            dueOn
+            exerciseId
+            successful
+            nextWorkingSets
+            nextWorkingSetInputs {
+              unit
+              value
+              assistType
+            }
+            exerciseSchedule {
+              id
+              exerciseId
+              exerciseInfo {
+                id
+                aliases
+                name
+                isHidden
+                inputs {
+                  type
+                  options {
+                    value
+                  }
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
+              }
+              enabled
+              frequency {
+                years
+                months
+                weeks
+                days
+                hours
+                minutes
+                seconds
+              }
+              increment
+              workingSets
+              workingReps
+              deloadFactor
+              baseWeight
+              snoozedUntil
+            }
+          }
+          ... on Todo {
+            id
+            created
+            summary
+            due
+            completed
+          }
+          ... on Trip {
+            id
+            start
+            end
+            legs {
+              start
+              end
+              from
+              to
+              mode
+              badgeColor
+              badgeTextColor
+              badgeText
+            }
+          }
+          ... on Event {
+            id
+            created
+            summary
+            start
+            end
+            datetype
+            location
+            url
+            transparency
+          }
+          ... on Workout {
+            id
+            createdAt
+            updatedAt
+            workedOutAt
+            materializedAt
+            locationId
+            source
+            exercises {
+              id
+              exerciseId
+              displayName
+              comment
+              exerciseInfo {
+                id
+                aliases
+                name
+                isHidden
+                inputs {
+                  type
+                  options {
+                    value
+                  }
+                }
+                instructions {
+                  value
+                }
+                tags {
+                  name
+                  type
+                }
+              }
+              sets {
+                id
+                comment
+                createdAt
+                updatedAt
+                inputs {
+                  unit
+                  value
+                  assistType
+                }
+                meta {
+                  key
+                  value
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
+function isVisuallyIdenticalEvent(a: JournalEntry, b: JournalEntry) {
+  if (a.__typename !== "Event" || b.__typename !== "Event") return false;
+  if (a.summary !== b.summary) return false;
+  if (a.datetype !== b.datetype) return false;
+  if (a.location !== b.location) return false;
+  if (a.start.getTime() !== b.start.getTime()) return false;
+  if (a.end.getTime() !== b.end.getTime()) return false;
+  if (isSeparatedEnd(a) !== isSeparatedEnd(b)) return false;
+
+  return true;
+}
+
+export default function TimelinePage({
+  selectedDayStart,
+}: {
+  selectedDayStart?: Date;
+}) {
+  const pollInterval = useVisibilityAwarePollInterval(300000);
+
+  const { data: sessionData, isPending: sessionPending } = useSession();
+  const sessionDataLoading = sessionPending;
+  const sessionUser = sessionData?.user;
+
+  const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
+  const now = useNow(60 * 1000, timeZone);
+
+  const variables = useMemo(
+    () =>
+      selectedDayStart
+        ? { on: dateToString(startOfDay(selectedDayStart)) }
+        : {
+            after: dateToString(startOfDay(subDays(now, 3))),
+            before: dateToString(
+              endOfDayButItRespectsDayStartHour(addDays(now, 3)),
+            ),
+          },
+    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- don't want the query to reset every minute
+    [selectedDayStart],
+  );
+
+  const { data, loading, fetchMore, refetch } = useQuery(
+    DiaryAgendaDayUserTodosDocument,
+    {
+      variables,
+      fetchPolicy: selectedDayStart ? "cache-and-network" : "cache-first",
+    },
+  );
+  const startCursor = data?.user?.journalEntries?.pageInfo?.startCursor;
+  const endCursor = data?.user?.journalEntries?.pageInfo?.endCursor;
+
+  const fetchingInterval = useMemo(
+    () => ({
+      start: startCursor
+        ? stringToDate(startCursor)
+        : startOfDay(subDays(now, 3)),
+      end: endCursor
+        ? stringToDate(endCursor)
+        : endOfDayButItRespectsDayStartHour(addDays(now, 3)),
+    }),
+    [startCursor, endCursor, now],
+  );
+
+  useInterval(() => {
+    if (!loading) void refetch({ after: startCursor, before: endCursor });
+    void noop();
+  }, pollInterval);
+
+  const userLocations = data?.user?.locations || emptyArray;
+  const userJournalEntries = data?.user?.journalEntries.nodes || emptyArray;
+
+  const journalEntries2 = useMemo(() => {
+    const journalEntries: JournalEntry[] = [
+      { __typename: "NowDivider", id: "now-divider", start: now, end: now },
+    ];
+
+    const addEntryToDate = (entry: JournalEntry) => {
+      if (journalEntries.some((e) => isVisuallyIdenticalEvent(e, entry))) {
+        // TODO: Find a better way of merging events that are duplicated between calendars, for now we just skip them if they are visually identical
+        return;
+      }
+      journalEntries.push(entry);
+    };
+    for (const entry of userJournalEntries) {
+      addEntryToDate(entry);
+      if (entry.__typename === "Sleep") {
+        addEntryToDate({ ...entry, _is_separated_end: true });
+      } else if (entry.__typename === "Event") {
+        addEntryToDate({ ...entry, _is_separated_end: true });
+      } else if (entry.__typename === "Trip") {
+        addEntryToDate({ ...entry, _is_separated_end: true });
+      }
+    }
+
+    return journalEntries;
+  }, [userJournalEntries, now]);
+
+  const journalEntries3 = useMemo(
+    () =>
+      (journalEntries2 || [])
+        .sort((a, b) => a.id.localeCompare(b.id)) // Sort by ID to ensure consistent order for entries with the same start time
+        .sort((a, b) => {
+          const aText =
+            "summary" in a
+              ? a.summary
+              : "exerciseSchedule" in a &&
+                "exerciseInfo" in a.exerciseSchedule &&
+                a.exerciseSchedule.exerciseInfo.name;
+          const bText =
+            "summary" in b
+              ? b.summary
+              : "exerciseSchedule" in b &&
+                "exerciseInfo" in b.exerciseSchedule &&
+                b.exerciseSchedule.exerciseInfo.name;
+          if (aText && bText) {
+            return aText.localeCompare(bText);
+          }
+          return 0;
+        })
+        .sort((a, b) => a.__typename.localeCompare(b.__typename)) // Sort by typename to ensure consistent order for entries with the same start time
+        .sort((a, b) =>
+          a.__typename == "Meal" && b.__typename !== "Meal"
+            ? -1
+            : b.__typename == "Meal" && a.__typename !== "Meal"
+              ? 1
+              : compareAsc(
+                  getJournalEntryPrincipalDate(b).end,
+                  getJournalEntryPrincipalDate(a).end,
+                ),
+        )
+        .sort((a, b) => {
+          const aAllDay = a.__typename === "Event" && a.datetype === "date";
+          const bAllDay = b.__typename === "Event" && b.datetype === "date";
+          if (aAllDay && !bAllDay) return -1;
+          if (!aAllDay && bAllDay) return 1;
+
+          return compareAsc(
+            getJournalEntryPrincipalDate(a).start,
+            getJournalEntryPrincipalDate(b).start,
+          );
+        })
+        // If the previous entry is the same event and we aren't in the middle of it, we skip the end entry
+        .filter(
+          (entry, i, entries) =>
+            !(
+              entry.__typename === "Event" &&
+              isSeparatedEnd(entry) &&
+              entries[i - 1]?.id === entry.id &&
+              cotemporality(entry) !== "current"
+            ),
+        )
+        // If the previous entry is a fully coincident event, we skip the end entry
+        .filter((entry, i, entries) => {
+          const previousEntry = entries[i - 1];
+          if (
+            entry.__typename === "Event" &&
+            previousEntry?.__typename === "Event"
+          ) {
+            if (
+              isSeparatedEnd(entry) &&
+              isEqual(entry.start, previousEntry.start) &&
+              isEqual(entry.end, previousEntry.end)
+            ) {
+              return false;
+            }
+          }
+          return true;
+        }),
+    [journalEntries2],
+  );
+
+  const journalEntriesIncludingLocationChanges2 = useMemo(() => {
+    let lastLocation: ReturnType<typeof getLocationFromJournalEntry> = null;
+
+    const dayJournalEntriesIncludingLocationChanges: typeof journalEntries3 =
+      [];
+
+    for (let i = 0; i < journalEntries3.length; i++) {
+      const entry = journalEntries3[i]!;
+      let previousEntry = journalEntries3[i - 1];
+      if (
+        previousEntry &&
+        previousEntry.__typename === "Event" &&
+        previousEntry.datetype === "date"
+      ) {
+        previousEntry = undefined;
+      }
+
+      const location = getLocationFromJournalEntry(userLocations, entry);
+      const previousLocation = previousEntry
+        ? getLocationFromJournalEntry(userLocations, previousEntry)
+        : null;
+
+      if (
+        location &&
+        !(entry.__typename === "Event" && entry.datetype === "date") &&
+        !(entry.__typename === "Meal" && location !== previousLocation) &&
+        (!previousLocation || previousLocation.name !== location.name) &&
+        (!lastLocation || lastLocation.name !== location.name)
+      ) {
+        const previousEntryIsEnd =
+          previousEntry && isSeparatedEnd(previousEntry);
+        const entryIsEnd = isSeparatedEnd(entry);
+
+        const entryPricipalDate = getJournalEntryPrincipalDate(entry);
+        const previousEntryPrincipalDate = previousEntry
+          ? getJournalEntryPrincipalDate(previousEntry)
+          : null;
+        const targetDateFrom =
+          previousEntry &&
+          previousEntryPrincipalDate &&
+          min(
+            [
+              previousEntryIsEnd ||
+              entryPricipalDate.start > previousEntryPrincipalDate.end
+                ? previousEntryPrincipalDate.end
+                : previousEntryPrincipalDate.start,
+              entryPricipalDate.start,
+            ].filter(Boolean),
+          );
+        const targetDateTo = entryIsEnd
+          ? entryPricipalDate?.end
+          : entryPricipalDate?.start;
+        const targetDate =
+          targetDateFrom &&
+          targetDateTo &&
+          dateMidpoint(targetDateFrom, targetDateTo);
+
+        if (!entryIsEnd && targetDate) {
+          // TOOD: This is unstable as it creates a new object that rerenders all downstream components. Fucking figure it out
+          const locationChangeEntry = {
+            __typename: "LocationChange",
+            id: `location-change-${location.id}-${entry.id}`,
+            locationId: location.id !== location.name ? location.id : null,
+            location: location.name,
+            start: targetDate,
+            end: max([targetDateTo, targetDate]),
+          } satisfies LocationChange;
+
+          // if the previous entry has the same start time as the current entry and no location change associated, this location should be considered the same as the previous one
+          // and be inserted before the previous entry in the list
+          if (
+            previousEntryPrincipalDate &&
+            !previousEntryIsEnd &&
+            previousEntry?.__typename !== "LocationChange" &&
+            isEqual(previousEntryPrincipalDate.start, entryPricipalDate.start)
+          ) {
+            dayJournalEntriesIncludingLocationChanges.splice(
+              dayJournalEntriesIncludingLocationChanges.length - 1,
+              0,
+              locationChangeEntry,
+            );
+          } else {
+            dayJournalEntriesIncludingLocationChanges.push(locationChangeEntry);
+          }
+
+          lastLocation = location;
+        }
+      }
+
+      dayJournalEntriesIncludingLocationChanges.push(entry);
+    }
+
+    return dayJournalEntriesIncludingLocationChanges;
+  }, [journalEntries3, userLocations]);
+
+  const lastInteractedWithPageRef = useRef<Date | null>(null);
+  useEffect(() => {
+    const handleInteraction = () => {
+      lastInteractedWithPageRef.current = new Date();
+    };
+    window.addEventListener("mousedown", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+    return () => {
+      window.removeEventListener("mousedown", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+  }, []);
+
+  const scrollToNow = useCallback(() => {
+    if (typeof document === "undefined") return;
+    const nowDivider = document.querySelector<HTMLElement>(".now-divider");
+    const el = nowDivider?.closest<HTMLElement>(
+      ".diary-agenda-day-entry",
+    )?.parentElement;
+    if (!el) return;
+
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
+    const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
+    nowDivider.scrollIntoView();
+    window.scrollTo(
+      elHorizontalCenter - viewportWidth / 2 + el.offsetWidth / 2,
+      elVerticalCenter - viewportHeight / 2,
+    );
+  }, []);
+
+  const isSSR = useIsSSR();
+  const isIdle = useIdle();
+  useEffect(() => {
+    if (!isSSR) scrollToNow();
+  }, [isSSR, scrollToNow]);
+
+  useInterval(() => {
+    if (isIdle) scrollToNow();
+  }, 5000);
+
+  return (
+    <>
+      {!sessionUser && !sessionDataLoading ? (
+        <div
+          className={
+            "fixed inset-0 z-10 flex items-center justify-center p-4 backdrop-blur-sm"
+          }
+        >
+          <FieldSetY
+            legend={null}
+            className="flex max-w-2xl flex-col items-center justify-center border-black/50 bg-black/50 px-[3.2vw] py-[1.6vw] text-center text-white"
+          >
+            <span className={"text-4xl"}>
+              Please{" "}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a
+                href="/api/auth/signin"
+                className={
+                  "text-yellow-300 underline underline-offset-4 hover:text-yellow-400"
+                }
+              >
+                log in
+              </a>{" "}
+              to use io&apos;s journal
+            </span>
+            <hr className="my-4 w-9/10 border-t-2 border-gray-900/20" />
+            <header className="mb-2 text-lg font-bold text-white">
+              What is this⁉
+            </header>
+            <p className="font-medium text-gray-100">
+              This is a diary that automatically fills itself with calendar
+              events, todos, workouts, sleeps and more from the services that i
+              already use.
+            </p>
+            <p className="mt-2 text-gray-100">
+              I use it to get an overview of my day, reflect on how I spend my
+              time, and plan my days by dragging and dropping the entries as
+              well as setting up workout schedules that automatically populate
+              the diary with my workouts based on set progressions and
+              frequencies that I define.
+            </p>
+
+            <a
+              href="https://github.com/klarstrup/io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={
+                "mt-4 block text-yellow-300 underline underline-offset-4 hover:text-yellow-400"
+              }
+            >
+              Learn more and read the source code on GitHub
+            </a>
+          </FieldSetY>
+        </div>
+      ) : null}
+      <div
+        className={
+          "flex flex-col items-stretch justify-center px-2" +
+          "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors " +
+          "bg-white/90"
+        }
+      >
+        {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+          <ShyGuy
+            requireScroll
+            onSeen={() => {
+              if (loading) return;
+
+              const firstDay = journalEntriesIncludingLocationChanges2[0];
+
+              if (!firstDay) return;
+
+              return fetchMore({
+                variables: {
+                  after: dateToString(
+                    startOfDay(
+                      subDays(
+                        stringToDate(
+                          data?.user?.journalEntries.pageInfo.startCursor ||
+                            dateToString(new Date()),
+                        ),
+                        4,
+                      ),
+                    ),
+                  ),
+                  before:
+                    data?.user?.journalEntries.pageInfo.startCursor ||
+                    undefined,
+                },
+                updateQuery(previousData, { fetchMoreResult }) {
+                  if (!fetchMoreResult?.user?.journalEntries)
+                    return previousData;
+
+                  const previousNodes =
+                    previousData.user?.journalEntries.nodes || [];
+                  const fetchMoreNodes =
+                    fetchMoreResult.user?.journalEntries.nodes || [];
+                  const previousPageInfo =
+                    previousData.user?.journalEntries.pageInfo;
+                  const fetchMorePageInfo =
+                    fetchMoreResult.user?.journalEntries.pageInfo;
+                  return {
+                    user: {
+                      ...previousData.user!,
+                      journalEntries: {
+                        __typename: "JournalEntriesConnection",
+                        pageInfo: {
+                          __typename: "PageInfo",
+                          hasNextPage:
+                            fetchMorePageInfo?.hasNextPage ??
+                            previousPageInfo?.hasNextPage ??
+                            true,
+                          hasPreviousPage:
+                            previousPageInfo?.hasPreviousPage ??
+                            fetchMorePageInfo?.hasPreviousPage ??
+                            true,
+                          startCursor:
+                            fetchMorePageInfo?.startCursor ||
+                            previousPageInfo?.startCursor ||
+                            null,
+                          endCursor:
+                            previousPageInfo?.endCursor ||
+                            fetchMorePageInfo?.endCursor ||
+                            null,
+                        },
+                        nodes: [...fetchMoreNodes, ...previousNodes],
+                      },
+                    },
+                  };
+                },
+              });
+            }}
+          />
+        )}
+        <Suspense
+          fallback={
+            <div className={"pl-10 text-gray-400/50 italic"}>Loading...</div>
+          }
+        >
+          <DiaryAgendaDayDayContents
+            now={now}
+            dayRange={fetchingInterval}
+            dayLocations={userLocations}
+            userTimeZone={timeZone}
+            dayJournalEntries={journalEntriesIncludingLocationChanges2}
+          />
+        </Suspense>
+        {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+          <ShyGuy
+            requireScroll
+            onSeen={() => {
+              if (loading) return;
+
+              const lastDay =
+                journalEntriesIncludingLocationChanges2.slice(-1)[0];
+
+              if (!lastDay) return;
+
+              return fetchMore({
+                variables: {
+                  after: dateToString(
+                    new Date(
+                      data?.user?.journalEntries.pageInfo.endCursor
+                        ? stringToDate(
+                            data.user.journalEntries.pageInfo.endCursor,
+                          )
+                        : new Date(),
+                    ),
+                  ),
+                  before: dateToString(
+                    endOfDayButItRespectsDayStartHour(
+                      addDays(
+                        data?.user?.journalEntries.pageInfo.endCursor
+                          ? stringToDate(
+                              data.user.journalEntries.pageInfo.endCursor,
+                            )
+                          : new Date(),
+                        4,
+                      ),
+                    ),
+                  ),
+                },
+                updateQuery(previousData, { fetchMoreResult }) {
+                  if (!fetchMoreResult?.user?.journalEntries)
+                    return previousData;
+
+                  const previousNodes =
+                    previousData.user?.journalEntries.nodes || [];
+                  const fetchMoreNodes =
+                    fetchMoreResult.user?.journalEntries.nodes || [];
+                  const previousPageInfo =
+                    previousData.user?.journalEntries.pageInfo;
+                  const fetchMorePageInfo =
+                    fetchMoreResult.user?.journalEntries.pageInfo;
+
+                  return {
+                    user: {
+                      ...previousData.user!,
+                      journalEntries: {
+                        __typename: "JournalEntriesConnection",
+                        pageInfo: {
+                          __typename: "PageInfo",
+                          hasNextPage:
+                            fetchMorePageInfo?.hasNextPage ??
+                            previousPageInfo?.hasNextPage ??
+                            true,
+                          hasPreviousPage:
+                            previousPageInfo?.hasPreviousPage ??
+                            fetchMorePageInfo?.hasPreviousPage ??
+                            true,
+                          startCursor:
+                            previousPageInfo?.startCursor ||
+                            fetchMorePageInfo?.startCursor ||
+                            null,
+                          endCursor:
+                            fetchMorePageInfo?.endCursor ||
+                            previousPageInfo?.endCursor ||
+                            null,
+                        },
+                        nodes: [...previousNodes, ...fetchMoreNodes],
+                      },
+                    },
+                  };
+                },
+              });
+            }}
+          />
+        )}
+        {sessionData?.user ? (
+          <DiaryPoller userId={sessionData.user.id} />
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+const getLocationFromJournalEntry = (
+  locations: GQLocation[],
+  entry: JournalEntry,
+): { id: string; name: string } | null => {
+  if (entry.__typename === "Workout" && entry.location) return entry.location;
+
+  if (entry.__typename === "Workout" && entry.locationId) {
+    for (const location of locations) {
+      if (location.id === entry.locationId) return location;
+    }
+
+    return { id: entry.locationId, name: entry.locationId };
+  }
+  if (
+    entry.__typename === "Sleep" &&
+    "deviceId" in entry &&
+    entry.deviceId &&
+    typeof entry.deviceId === "string"
+  ) {
+    if (entry.deviceId.trim() === "a5805286bee9039cd23c4e59200b776eba02c6f7") {
+      return locations.find((l) => l.name === "Home") || null;
+    }
+  }
+  if (
+    entry.__typename === "Event" &&
+    "location" in entry &&
+    entry.location &&
+    entry.datetype === "date-time"
+  ) {
+    for (const location of locations) {
+      for (const knownAddress of location.knownAddresses || []) {
+        if (entry.location.includes(knownAddress)) {
+          return location;
+        }
+      }
+    }
+
+    if (entry.location.trim() === "") return null;
+    if (entry.location === "Microsoft Teams-møde") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
+    if (entry.location === "Microsoft Teams Meeting") return null; // Fake location added by some calendar integrations for online meetings, we don't want to show it
+
+    return { id: entry.location, name: entry.location };
+  }
+
+  if (entry.__typename === "Meal") {
+    // TODO: Determine the actual location for meals, currently hardcoded to Proprty.ai Office
+    // It should be configurable per source
+    return {
+      id: "699cc5ce2f64a165113fc529",
+      name: "Proprty.ai Office",
+    };
+  }
+
+  return null;
+};

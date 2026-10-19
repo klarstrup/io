@@ -1,7 +1,7 @@
 import { addSeconds } from "date-fns";
 import Link from "next/link";
 import { useMemo } from "react";
-import { dateMidpoint, type cotemporality } from "../../utils";
+import { dateMidpoint, dateToString, type cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { NowDividerEntry } from "./diaryUtils";
@@ -13,7 +13,7 @@ export function DiaryAgendaDayNow({
   nextEntryDate,
   timeZone,
 }: {
-  date: `${number}-${number}-${number}`;
+  date?: `${number}-${number}-${number}`;
   cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
   now: Date;
   nextEntryDate: Date | null;
@@ -54,7 +54,7 @@ export function DiaryAgendaDayNow({
     >
       <DiaryAgendaDayCreateTodo date={newTodoDate} />
       <Link
-        href={`/diary/${date}/workout`}
+        href={`/diary/${date ?? dateToString(now)}/workout`}
         className={
           "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
         }

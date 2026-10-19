@@ -21,12 +21,14 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
 export function DiaryAgendaDayEvent({
+  date,
   dayRange,
   userTimeZone,
   event,
   isEntryWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
 }: {
+  date?: `${number}-${number}-${number}`;
   dayRange?: { start: Date; end: Date };
   userTimeZone: GQUser["timeZone"];
   event: GQEvent;
@@ -43,9 +45,10 @@ export function DiaryAgendaDayEvent({
     start: event.start,
     end: roundToNearestMinutes(event.end, { roundingMethod: "ceil" }),
   });
-  const dayNo = dayRange
-    ? Math.floor(differenceInHours(event.start, dayRange.start) / 24) + 1
-    : null;
+  const dayNo =
+    date && dayRange
+      ? Math.floor(differenceInHours(event.start, dayRange.start) / 24) + 1
+      : null;
   const numDays = Math.ceil(differenceInHours(event.end, event.start) / 24);
   const isFirstDay = dayNo === 1;
   const isLastDay = dayNo === numDays;
@@ -129,7 +132,7 @@ export function DiaryAgendaDayEvent({
               {event.summary}
             </span>
             &nbsp;
-            <span className="text-[0.666rem] whitespace-nowrap tabular-nums text-stone-500">
+            <span className="text-[0.666rem] whitespace-nowrap text-stone-500 tabular-nums">
               {isFirstDay && duration ? (
                 formatShortDuration(duration)
               ) : isLastDay ? (

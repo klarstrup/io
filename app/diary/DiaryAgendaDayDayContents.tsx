@@ -77,7 +77,7 @@ export function DiaryAgendaDayDayContents({
   isLoadingEntries,
 }: {
   now: Date;
-  date: `${number}-${number}-${number}`;
+  date?: `${number}-${number}-${number}`;
   dayRange: { start: Date; end: Date };
   userTimeZone?: GQUser["timeZone"];
   dayLocations: GQLocation[];
@@ -253,6 +253,7 @@ export function DiaryAgendaDayDayContents({
             element: (
               <DiaryAgendaDayEvent
                 key={entryId}
+                date={date}
                 dayRange={dayRange}
                 userTimeZone={timeZone}
                 event={event}
@@ -280,7 +281,7 @@ export function DiaryAgendaDayDayContents({
           const startDay = startOfDayButItRespectsDayStartHour(event.start);
           const endDay = startOfDayButItRespectsDayStartHour(event.end);
           const days = differenceInDays(endDay, startDay) + 1;
-          const dayNo = differenceInDays(dayRange.start, startDay);
+          const dayNo = date && differenceInDays(dayRange.start, startDay);
           const isLastDay = dayNo === days;
 
           // If the preceding journal entry is the end of an event and it ends exactly when the current event starts, then we can treat them as a single continuous event instead of two separate events for the purpose of drawing the little bracket
@@ -291,7 +292,11 @@ export function DiaryAgendaDayDayContents({
               roundToNearestMinutes(precedingEndOfEvent.end).getTime() ===
                 event.start.getTime(),
             ) ||
-            (dayNo > 1 && days > 1 && isLastDay && !entryHasSeparateEnd);
+            (dayNo !== undefined &&
+              dayNo > 1 &&
+              days > 1 &&
+              isLastDay &&
+              !entryHasSeparateEnd);
 
           if (precedingEndOfEvent && isEntryEnd) {
             entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding.push(
@@ -304,6 +309,7 @@ export function DiaryAgendaDayDayContents({
             element: (
               <DiaryAgendaDayEvent
                 key={entryId}
+                date={date}
                 dayRange={dayRange}
                 userTimeZone={timeZone}
                 event={event}
@@ -311,14 +317,17 @@ export function DiaryAgendaDayDayContents({
                   (followingEndOfEntries.some(
                     (endOfEntry) => endOfEntry.id === event.id,
                   ) &&
-                    isEqual(
-                      startOfDayButItRespectsDayStartHour(dayRange.start),
-                      startOfDayButItRespectsDayStartHour(event.start),
-                    )) ||
-                  (!isSameDayButItRespectsDayStartHour(
-                    event.start,
-                    event.end,
-                  ) &&
+                    (date
+                      ? isEqual(
+                          startOfDayButItRespectsDayStartHour(dayRange.start),
+                          startOfDayButItRespectsDayStartHour(event.start),
+                        )
+                      : true)) ||
+                  (date &&
+                    !isSameDayButItRespectsDayStartHour(
+                      event.start,
+                      event.end,
+                    ) &&
                     isEqual(
                       startOfDayButItRespectsDayStartHour(dayRange.start),
                       startOfDayButItRespectsDayStartHour(event.start),
@@ -326,7 +335,10 @@ export function DiaryAgendaDayDayContents({
                 }
                 cotemporalityOfSurroundingEvent={
                   cotemporalityOfSurroundingEntry ||
-                  (dayNo > 1 && days > 1 && entryHasSeparateEnd
+                  (dayNo !== undefined &&
+                  dayNo > 1 &&
+                  days > 1 &&
+                  entryHasSeparateEnd
                     ? cotemporality(event)
                     : null)
                 }
