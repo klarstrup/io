@@ -287,7 +287,14 @@ export const getUserJournalEntries = async (
         );
         break;
       case "Trip":
+        if (isBefore(interval.end, new Date(2026, 7))) {
+          hasNextPage = true;
+          break;
+        }
+
         hasPreviousPage = true; // Trips are only in the past
+        if (isAfter(interval.start, now)) break;
+
         promises.push(
           Array.fromAsync(
             DSBProductSummaries.find(
