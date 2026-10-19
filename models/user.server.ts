@@ -478,6 +478,8 @@ export const getUserJournalEntries = async (
               const lastEvent = firstItem.events[firstItem.events.length - 1];
               if (!lastEvent) return;
 
+              if (!isWithinInterval(lastEvent.eventTime, interval)) return;
+
               entries.push({
                 id: postNordShipmentInformation.shipmentId,
                 url: `https://tracking.postnord.com/dk/tracking?id=${postNordShipmentInformation.shipmentId}`,
