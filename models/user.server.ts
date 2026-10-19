@@ -3,11 +3,12 @@ import { Account } from "better-auth/types";
 import {
   getDay,
   type Interval,
+  isBefore,
   isWithinInterval,
   setHours,
   startOfDay,
 } from "date-fns";
-import { ObjectId } from "mongodb";
+import { JournalEntryType, journalEntryTypes } from "../app/diary/diaryUtils";
 import { auth, authUser } from "../auth";
 import type {
   GQEvent,
@@ -41,7 +42,6 @@ import {
 import { DataSource } from "../sources/utils";
 import { getUserWithingsSleepSummarySeriesBetween } from "../sources/withings.server";
 import {
-  allPromises,
   endOfDayButItRespectsDayStartHour,
   rangeToQuery,
   unique,
@@ -95,6 +95,7 @@ export const getUserJournalEntries = async (
   userId: string,
   fromDay: Date,
   toDay: Date,
+  typeFilter?: JournalEntryType | null,
 ) => {
   const interval = {
     // Overfetch to midnight to include legacy workouts and all-day events that are stored with start
@@ -103,387 +104,459 @@ export const getUserJournalEntries = async (
   } satisfies Interval;
   const intervalQuery = rangeToQuery(interval.start, interval.end);
 
+  let hasNextPage = false;
+  let hasPreviousPage = false;
   const entries: GQJournalEntryUnion[] = [];
+  const promises: Promise<unknown>[] = [];
 
   const user = await authUser();
   if (!user || userId !== user.id) throw new Error("Unauthorized");
 
-  await allPromises(
-    Array.fromAsync(getUserIcalTodosBetween(userId, interval), (todo) =>
-      entries.push({
-        ...todo,
-        id: todo.uid,
-        __typename: "Todo",
-      } satisfies GQTodo),
-    ),
-    Array.fromAsync(getUserIcalEventsBetween(userId, interval), (event) => {
-      const ioDeclined =
-        (event.attendee &&
-          (Array.isArray(event.attendee) ? event.attendee : [event.attendee])
-            ?.filter(
-              (attendee): attendee is Attendee & object =>
-                typeof attendee == "object",
-            )
-            .some(
-              (attendee) =>
-                attendee.params.CN === "toxicfilafel@gmail.com" &&
-                attendee.params.PARTSTAT === "DECLINED",
-            )) ||
-        false;
+  for (const type of journalEntryTypes) {
+    if (typeFilter && typeFilter !== type) continue;
 
-      if (ioDeclined) return;
-
-      return entries.push({
-        ...event,
-        id: event.uid,
-        __typename: "Event",
-        url:
-          typeof event.url === "string"
-            ? event.url
-            : (event.description &&
-                getURLsFromString(event.description)?.[0]) ||
-              null,
-      } satisfies GQEvent);
-    }),
-    Array.fromAsync(
-      (await Users.findOne({ _id: new ObjectId(userId) }))?.dataSources?.some(
-        (dataSource) =>
-          dataSource.source === DataSource.Meyers && dataSource.paused !== true,
-      )
-        ? MeyersMenus.find(
-            { date_time: intervalQuery, "names.da": "Almanak" },
-            { projection: { date_time: 1, menu_sections: 1 } },
-          )
-        : [],
-      (menu) => {
-        if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
-
-        entries.push({
-          __typename: "Meal",
-          id: menu._id.toString(),
-          datetime: setHours(menu.date_time, 10),
-          type: "LUNCH",
-          mealName: "Lunch",
-          location: "H. C. Andersens Blvd. 11, 1553 København, Denmark",
-          foodEntries: unique(
-            menu.menu_sections
-              .filter(
-                (section) =>
-                  !section.names.da?.includes("halal") &&
-                  !section.names.da?.includes("vegansk") &&
-                  !section.names.da?.includes("vegetar") &&
-                  (section.names.da?.includes("Varm ret") ||
-                    section.names.da?.includes("Delikatesse") ||
-                    section.names.da?.includes("Torsdagssødt")),
-              )
-              .flatMap((section) =>
-                section.menu_dishes
-                  .map((dish) => {
-                    const sectionName = section.names.en || "";
-                    const dishName = dish.names.da || "";
-                    let prefix = "";
-
-                    const lDish = dishName.toLowerCase();
-                    const lSection = sectionName.toLowerCase();
-                    if (lSection.includes("hot dish")) {
-                      if (lDish.includes("burrito")) {
-                        prefix = "🌯";
-                      } else if (lDish.includes("burger")) {
-                        prefix = "🍔";
-                      } else if (lDish.includes("pasta")) {
-                        prefix = "🍝";
-                      } else if (lDish.includes("pizza")) {
-                        prefix = "🍕";
-                      } else if (
-                        lDish.includes("soup") ||
-                        lDish.includes("suppe")
-                      ) {
-                        prefix = "🍲";
-                      } else if (lDish.includes("taco")) {
-                        prefix = "🌮";
-                      } else if (lDish.includes("pita")) {
-                        prefix = "🥙";
-                      } else if (
-                        lDish.includes("karry") ||
-                        lDish.includes("curry") ||
-                        lDish.includes("korma") ||
-                        lDish.includes("masala")
-                      ) {
-                        prefix = "🍛";
-                      } else {
-                        prefix = "🥘";
-                      }
-                    } else if (lSection.includes("delicacy")) {
-                      if (
-                        (lDish.includes("salad") || lDish.includes("salat")) &&
-                        !lDish.includes("crab")
-                      ) {
-                        prefix = "🥗";
-                      } else {
-                        prefix = "🥪";
-                      }
-                    } else if (lSection.includes("thursday sweet")) {
-                      prefix = "🍰";
-                    }
-
-                    return `${prefix} ${dishName || ""}`;
-                  })
-                  .filter(Boolean)
-                  .map((name) =>
-                    / - /.test(name)
-                      ? name.split(/ - /)[0]
-                      : / topped with /.test(name)
-                        ? name.split(/ topped with /)[0]
-                        : / with /.test(name)
-                          ? name.split(/ with /)[0]
-                          : / of /.test(name)
-                            ? name.split(/ of /)[0]
-                            : /, /.test(name)
-                              ? name.split(/, /)[0]
-                              : name,
-                  ),
-              )
-              .filter(Boolean),
-          ).map((dish) => ({
-            id: dish,
-            type: "FOOD_ENTRY",
-            datetime: setHours(menu.date_time, 10),
-            nutritionalContents: null,
-            mealName: "Lunch",
-            food: { id: dish, description: dish, __typename: "Food" },
-            servings: null,
-            servingSize: null,
-            __typename: "FoodEntry",
-          })),
-          url: "https://meyers.dk/frokost/almanak",
-        } satisfies GQMeal);
-      },
-    ),
-    Array.fromAsync(
-      getUserWithingsSleepSummarySeriesBetween(userId, interval),
-      (sleep) =>
-        entries.push({
-          ...sleep,
-          deviceId: sleep.hash_deviceid,
-          id: String(sleep.id),
-          totalSleepTime: sleep.data.total_sleep_time,
-          __typename: "Sleep",
-        } satisfies GQSleep),
-    ),
-    Array.fromAsync(
-      MaterializedWorkoutsView.find({
-        userId,
-        $or: [
-          { workedOutAt: intervalQuery },
-          // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
-          { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
-        ],
-        deletedAt: { $exists: false },
-      }),
-      (workout) =>
-        entries.push({
-          ...workout,
-          location: undefined,
-          exercises: workout.exercises.map(
-            (exercise) =>
-              ({
-                ...exercise,
-                __typename: "WorkoutExercise",
-                // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-                exerciseInfo: undefined as unknown as GQExerciseInfo,
-                sets: exercise.sets.map(
-                  (set) =>
-                    ({
-                      ...set,
-                      __typename: "WorkoutSet",
-                      inputs: set.inputs.map(
-                        (input) =>
-                          ({
-                            ...input,
-                            __typename: "WorkoutSetInput",
-                          }) satisfies GQWorkoutSetInput,
-                      ),
-                      meta:
-                        set.meta &&
-                        Object.entries(set.meta || {}).map(
-                          ([key, value]) =>
-                            ({
-                              key,
-                              value: String(value),
-                              __typename: "WorkoutSetMeta",
-                            }) satisfies GQWorkoutSetMeta,
-                        ),
-                    }) satisfies GQWorkoutSet,
-                ),
-              }) satisfies GQWorkoutExercise,
-          ),
-          // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
-          id: workout.id || workout._id.toString(),
-          __typename: "Workout",
-        } satisfies GQWorkout),
-    ),
-    Array.fromAsync(
-      getNextSets(
-        userId,
-        ((await authUser())?.todoSchedules || []).filter(
-          (schedule): schedule is ITodoScheduleWithExerciseProgram =>
-            Boolean(schedule.exerciseProgram),
-        ),
-      ),
-      (nextSet) => {
-        // Todo: Bake this into getNextSets instead of filtering here
-        if (!isWithinInterval(nextSet.dueOn, interval)) return;
-
-        entries.push({
-          ...nextSet,
-          __typename: "NextSet",
-          nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map((input) => ({
-            ...input,
-            __typename: "WorkoutSetInput",
-          })),
-          exerciseSchedule: {
-            ...nextSet.exerciseSchedule,
-            ...nextSet.exerciseSchedule.exerciseProgram,
-            __typename: "ExerciseSchedule",
-            frequency: {
-              ...nextSet.exerciseSchedule.frequency,
-              __typename: "Duration",
-            },
-            // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
-            exerciseInfo: undefined as unknown as GQExerciseInfo,
-          },
-        } satisfies GQNextSet);
-      },
-    ),
-    Array.fromAsync(
-      DSBProductSummaries.find(
-        {
-          _io_userId: userId,
-          timestamp: intervalQuery,
-          "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
-        },
-        { projection: { productSummary: 1, timestamp: 1, checkInId: 1 } },
-      ),
-      (productSummary) => {
-        const tripLegs = productSummary.productSummary.trips.flatMap(
-          (trip) => trip.tripLegs,
-        );
-
-        const firstLeg = tripLegs[0];
-        const firstLegFirstStop = firstLeg?.stops[0];
-        const lastLeg = tripLegs[tripLegs.length - 1];
-        const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
-        entries.push({
-          __typename: "Trip",
-          id: productSummary.checkInId,
-          start:
-            firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
-            firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
-            firstLeg!.startDateTime,
-          end:
-            lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
-            lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
-            lastLeg!.endDateTime,
-          legs: tripLegs.map((leg) => {
-            const firstStop = leg.stops[0]!;
-            const lastStop = leg.stops[leg.stops.length - 1]!;
-            const transport = leg.transports[0];
-            return {
-              __typename: "TripLeg",
-              start:
-                firstStop.actualTimeAndTrackInfo?.departureTime ||
-                firstStop.plannedTimeAndTrackInfo?.departureTime ||
-                leg.startDateTime,
-              end:
-                lastStop.actualTimeAndTrackInfo?.arrivalTime ||
-                lastStop.plannedTimeAndTrackInfo?.arrivalTime ||
-                leg.endDateTime,
-              from: firstStop.location.name,
-              to: lastStop.location.name,
-              mode: transport?.meansOfTransportation || "unknown",
-              badgeColor: transport?.badge?.colorCode || "",
-              badgeTextColor: transport?.badge?.badgeTextColor || "",
-              badgeText: transport?.badge?.longBadgeText || "",
-            };
-          }),
-        });
-      },
-    ),
-    Array.fromAsync(
-      PostNordShipmentInformation.find(
-        { _io_userId: userId },
-        { projection: { shipmentId: 1, sender: 1, items: 1 } },
-      ),
-      (postNordShipmentInformation) => {
-        const firstItem = postNordShipmentInformation.items[0];
-        if (!firstItem) return;
-        const lastEvent = firstItem.events[firstItem.events.length - 1];
-        if (!lastEvent) return;
-
-        entries.push({
-          id: postNordShipmentInformation.shipmentId,
-          url: `https://tracking.postnord.com/dk/tracking?id=${postNordShipmentInformation.shipmentId}`,
-          timestamp: lastEvent.eventTime,
-          status: lastEvent.status,
-          from: postNordShipmentInformation.sender.name,
-          __typename: "Delivery",
-        } satisfies GQJournalEntryUnion);
-      },
-    ),
-    ...(user.dataSources || [])
-      .filter((ds) => ds.source === "steam")
-      .map((ds) => ds.config)
-      .filter((config) => config.steamid)
-      .map((config) =>
-        Array.fromAsync(
-          SteamUserAchievements.find({
-            steamid: { $in: [config.steamid!] },
-            unlocked_at: intervalQuery,
-          }),
-          async (steamUserAchievement) => {
-            const [steamAchievement, steamStoreItem] = await Promise.all([
-              SteamAppAchievements.findOne({
-                appid: steamUserAchievement.appid,
-                internal_key: steamUserAchievement.internal_key,
-              }),
-              SteamStoreItems.findOne({ appid: steamUserAchievement.appid }),
-            ]);
-            if (!steamAchievement) {
-              console.warn(
-                `Missing steamAchievement for achievement: ${steamUserAchievement.internal_key} in app: ${steamUserAchievement.appid} with internal key: ${steamUserAchievement.internal_key}`,
-              );
-              return;
-            }
-            if (!steamStoreItem) {
-              console.warn(
-                `Missing steamStoreItem for achievement: ${steamUserAchievement.internal_key} in app: ${steamUserAchievement.appid}`,
-              );
-              return;
-            }
-
+    switch (type) {
+      case "Todo":
+        hasNextPage = true;
+        hasPreviousPage = true;
+        promises.push(
+          Array.fromAsync(getUserIcalTodosBetween(userId, interval), (todo) =>
             entries.push({
-              id: `${steamUserAchievement.appid}-${steamUserAchievement.internal_key}-${steamUserAchievement.steamid}`,
-              gameName: steamStoreItem.name,
-              name: steamAchievement.name,
-              description: steamAchievement.description,
-              unlockedAt: steamUserAchievement.unlocked_at,
-              globalPercentage: steamAchievement.globalpercentage,
-              gameIcon: `https://shared.fastly.steamstatic.com/community_assets/images/apps/${steamStoreItem.appid}/${steamStoreItem.community_icon}.jpg`,
-              /*
+              ...todo,
+              id: todo.uid,
+              __typename: "Todo",
+            } satisfies GQTodo),
+          ),
+        );
+        break;
+      case "Event":
+        hasNextPage = true;
+        hasPreviousPage = true;
+        promises.push(
+          Array.fromAsync(
+            getUserIcalEventsBetween(userId, interval),
+            (event) => {
+              const ioDeclined =
+                (event.attendee &&
+                  (Array.isArray(event.attendee)
+                    ? event.attendee
+                    : [event.attendee]
+                  )
+                    ?.filter(
+                      (attendee): attendee is Attendee & object =>
+                        typeof attendee == "object",
+                    )
+                    .some(
+                      (attendee) =>
+                        attendee.params.CN === "toxicfilafel@gmail.com" &&
+                        attendee.params.PARTSTAT === "DECLINED",
+                    )) ||
+                false;
+
+              if (ioDeclined) return;
+
+              return entries.push({
+                ...event,
+                id: event.uid,
+                __typename: "Event",
+                url:
+                  typeof event.url === "string"
+                    ? event.url
+                    : (event.description &&
+                        getURLsFromString(event.description)?.[0]) ||
+                      null,
+              } satisfies GQEvent);
+            },
+          ),
+        );
+        break;
+      case "Workout":
+        hasPreviousPage = true; // Workouts are only in the past
+        promises.push(
+          Array.fromAsync(
+            MaterializedWorkoutsView.find({
+              userId,
+              $or: [
+                { workedOutAt: intervalQuery },
+                // All-Day workouts are stored with workedOutAt at UTC 00:00 of the day
+                { workedOutAt: startOfDay(interval.start, { in: tz("UTC") }) },
+              ],
+              deletedAt: { $exists: false },
+            }),
+            (workout) =>
+              entries.push({
+                ...workout,
+                location: undefined,
+                exercises: workout.exercises.map(
+                  (exercise) =>
+                    ({
+                      ...exercise,
+                      __typename: "WorkoutExercise",
+                      // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                      exerciseInfo: undefined as unknown as GQExerciseInfo,
+                      sets: exercise.sets.map(
+                        (set) =>
+                          ({
+                            ...set,
+                            __typename: "WorkoutSet",
+                            inputs: set.inputs.map(
+                              (input) =>
+                                ({
+                                  ...input,
+                                  __typename: "WorkoutSetInput",
+                                }) satisfies GQWorkoutSetInput,
+                            ),
+                            meta:
+                              set.meta &&
+                              Object.entries(set.meta || {}).map(
+                                ([key, value]) =>
+                                  ({
+                                    key,
+                                    value: String(value),
+                                    __typename: "WorkoutSetMeta",
+                                  }) satisfies GQWorkoutSetMeta,
+                              ),
+                          }) satisfies GQWorkoutSet,
+                      ),
+                    }) satisfies GQWorkoutExercise,
+                ),
+                // The _id field of the MaterializedWorkoutsView is different from the Workouts document _ID
+                id: workout.id || workout._id.toString(),
+                __typename: "Workout",
+              } satisfies GQWorkout),
+          ),
+        );
+        break;
+      case "Sleep":
+        hasPreviousPage = true; // Only in the past
+        promises.push(
+          Array.fromAsync(
+            getUserWithingsSleepSummarySeriesBetween(userId, interval),
+            (sleep) =>
+              entries.push({
+                ...sleep,
+                deviceId: sleep.hash_deviceid,
+                id: String(sleep.id),
+                totalSleepTime: sleep.data.total_sleep_time,
+                __typename: "Sleep",
+              } satisfies GQSleep),
+          ),
+        );
+        break;
+      case "NextSet":
+        hasNextPage = true; // Next sets are only in the future
+        promises.push(
+          Array.fromAsync(
+            getNextSets(
+              userId,
+              ((await authUser())?.todoSchedules || []).filter(
+                (schedule): schedule is ITodoScheduleWithExerciseProgram =>
+                  Boolean(schedule.exerciseProgram),
+              ),
+            ),
+            (nextSet) => {
+              // Todo: Bake this into getNextSets instead of filtering here
+              if (!isWithinInterval(nextSet.dueOn, interval)) return;
+
+              entries.push({
+                ...nextSet,
+                __typename: "NextSet",
+                nextWorkingSetInputs: nextSet.nextWorkingSetInputs?.map(
+                  (input) => ({
+                    ...input,
+                    __typename: "WorkoutSetInput",
+                  }),
+                ),
+                exerciseSchedule: {
+                  ...nextSet.exerciseSchedule,
+                  ...nextSet.exerciseSchedule.exerciseProgram,
+                  __typename: "ExerciseSchedule",
+                  frequency: {
+                    ...nextSet.exerciseSchedule.frequency,
+                    __typename: "Duration",
+                  },
+                  // This will be resolved in the WorkoutExercise.exerciseInfo resolver, I don't know how to make the type system understand that
+                  exerciseInfo: undefined as unknown as GQExerciseInfo,
+                },
+              } satisfies GQNextSet);
+            },
+          ),
+        );
+        break;
+      case "Trip":
+        hasPreviousPage = true; // Trips are only in the past
+        promises.push(
+          Array.fromAsync(
+            DSBProductSummaries.find(
+              {
+                _io_userId: userId,
+                timestamp: intervalQuery,
+                "paymentStatus.state": { $nin: ["ZERO_TRIP"] },
+              },
+              { projection: { productSummary: 1, timestamp: 1, checkInId: 1 } },
+            ),
+            (productSummary) => {
+              const tripLegs = productSummary.productSummary.trips.flatMap(
+                (trip) => trip.tripLegs,
+              );
+
+              const firstLeg = tripLegs[0];
+              const firstLegFirstStop = firstLeg?.stops[0];
+              const lastLeg = tripLegs[tripLegs.length - 1];
+              const lastLegLastStop = lastLeg?.stops[lastLeg.stops.length - 1];
+              entries.push({
+                __typename: "Trip",
+                id: productSummary.checkInId,
+                start:
+                  firstLegFirstStop?.actualTimeAndTrackInfo?.departureTime ||
+                  firstLegFirstStop?.plannedTimeAndTrackInfo?.departureTime ||
+                  firstLeg!.startDateTime,
+                end:
+                  lastLegLastStop?.actualTimeAndTrackInfo?.arrivalTime ||
+                  lastLegLastStop?.plannedTimeAndTrackInfo?.arrivalTime ||
+                  lastLeg!.endDateTime,
+                legs: tripLegs.map((leg) => {
+                  const firstStop = leg.stops[0]!;
+                  const lastStop = leg.stops[leg.stops.length - 1]!;
+                  const transport = leg.transports[0];
+                  return {
+                    __typename: "TripLeg",
+                    start:
+                      firstStop.actualTimeAndTrackInfo?.departureTime ||
+                      firstStop.plannedTimeAndTrackInfo?.departureTime ||
+                      leg.startDateTime,
+                    end:
+                      lastStop.actualTimeAndTrackInfo?.arrivalTime ||
+                      lastStop.plannedTimeAndTrackInfo?.arrivalTime ||
+                      leg.endDateTime,
+                    from: firstStop.location.name,
+                    to: lastStop.location.name,
+                    mode: transport?.meansOfTransportation || "unknown",
+                    badgeColor: transport?.badge?.colorCode || "",
+                    badgeTextColor: transport?.badge?.badgeTextColor || "",
+                    badgeText: transport?.badge?.longBadgeText || "",
+                  };
+                }),
+              });
+            },
+          ),
+        );
+        break;
+      case "Meal":
+        hasPreviousPage = true;
+        hasNextPage = true;
+        promises.push(
+          Array.fromAsync(
+            user?.dataSources?.some(
+              (dataSource) =>
+                dataSource.source === DataSource.Meyers &&
+                dataSource.paused !== true,
+            )
+              ? MeyersMenus.find(
+                  { date_time: intervalQuery, "names.da": "Almanak" },
+                  { projection: { date_time: 1, menu_sections: 1 } },
+                )
+              : [],
+            (menu) => {
+              if (getDay(menu.date_time) === 3) return; // wfh wednesday, skip
+
+              entries.push({
+                __typename: "Meal",
+                id: menu._id.toString(),
+                datetime: setHours(menu.date_time, 10),
+                type: "LUNCH",
+                mealName: "Lunch",
+                location: "H. C. Andersens Blvd. 11, 1553 København, Denmark",
+                foodEntries: unique(
+                  menu.menu_sections
+                    .filter(
+                      (section) =>
+                        !section.names.da?.includes("halal") &&
+                        !section.names.da?.includes("vegansk") &&
+                        !section.names.da?.includes("vegetar") &&
+                        (section.names.da?.includes("Varm ret") ||
+                          section.names.da?.includes("Delikatesse") ||
+                          section.names.da?.includes("Torsdagssødt")),
+                    )
+                    .flatMap((section) =>
+                      section.menu_dishes
+                        .map((dish) => {
+                          const sectionName = section.names.en || "";
+                          const dishName = dish.names.da || "";
+                          let prefix = "";
+
+                          const lDish = dishName.toLowerCase();
+                          const lSection = sectionName.toLowerCase();
+                          if (lSection.includes("hot dish")) {
+                            if (lDish.includes("burrito")) {
+                              prefix = "🌯";
+                            } else if (lDish.includes("burger")) {
+                              prefix = "🍔";
+                            } else if (lDish.includes("pasta")) {
+                              prefix = "🍝";
+                            } else if (lDish.includes("pizza")) {
+                              prefix = "🍕";
+                            } else if (
+                              lDish.includes("soup") ||
+                              lDish.includes("suppe")
+                            ) {
+                              prefix = "🍲";
+                            } else if (lDish.includes("taco")) {
+                              prefix = "🌮";
+                            } else if (lDish.includes("pita")) {
+                              prefix = "🥙";
+                            } else if (
+                              lDish.includes("karry") ||
+                              lDish.includes("curry") ||
+                              lDish.includes("korma") ||
+                              lDish.includes("masala")
+                            ) {
+                              prefix = "🍛";
+                            } else {
+                              prefix = "🥘";
+                            }
+                          } else if (lSection.includes("delicacy")) {
+                            if (
+                              (lDish.includes("salad") ||
+                                lDish.includes("salat")) &&
+                              !lDish.includes("crab")
+                            ) {
+                              prefix = "🥗";
+                            } else {
+                              prefix = "🥪";
+                            }
+                          } else if (lSection.includes("thursday sweet")) {
+                            prefix = "🍰";
+                          }
+
+                          return `${prefix} ${dishName || ""}`;
+                        })
+                        .filter(Boolean)
+                        .map((name) =>
+                          / - /.test(name)
+                            ? name.split(/ - /)[0]
+                            : / topped with /.test(name)
+                              ? name.split(/ topped with /)[0]
+                              : / with /.test(name)
+                                ? name.split(/ with /)[0]
+                                : / of /.test(name)
+                                  ? name.split(/ of /)[0]
+                                  : /, /.test(name)
+                                    ? name.split(/, /)[0]
+                                    : name,
+                        ),
+                    )
+                    .filter(Boolean),
+                ).map((dish) => ({
+                  id: dish,
+                  type: "FOOD_ENTRY",
+                  datetime: setHours(menu.date_time, 10),
+                  nutritionalContents: null,
+                  mealName: "Lunch",
+                  food: { id: dish, description: dish, __typename: "Food" },
+                  servings: null,
+                  servingSize: null,
+                  __typename: "FoodEntry",
+                })),
+                url: "https://meyers.dk/frokost/almanak",
+              } satisfies GQMeal);
+            },
+          ),
+        );
+        break;
+      case "Delivery":
+        hasNextPage = hasPreviousPage = true; // Deliveries can be both in the past and the future
+        promises.push(
+          Array.fromAsync(
+            PostNordShipmentInformation.find(
+              { _io_userId: userId },
+              { projection: { shipmentId: 1, sender: 1, items: 1 } },
+            ),
+            (postNordShipmentInformation) => {
+              const firstItem = postNordShipmentInformation.items[0];
+              if (!firstItem) return;
+              const lastEvent = firstItem.events[firstItem.events.length - 1];
+              if (!lastEvent) return;
+
+              entries.push({
+                id: postNordShipmentInformation.shipmentId,
+                url: `https://tracking.postnord.com/dk/tracking?id=${postNordShipmentInformation.shipmentId}`,
+                timestamp: lastEvent.eventTime,
+                status: lastEvent.status,
+                from: postNordShipmentInformation.sender.name,
+                __typename: "Delivery",
+              } satisfies GQJournalEntryUnion);
+            },
+          ),
+        );
+        break;
+      case "Achievement":
+        promises.push(
+          ...(user.dataSources || [])
+            .filter((ds) => ds.source === "steam")
+            .map((ds) => ds.config)
+            .filter((config) => config.steamid)
+            .map((config) => {
+              hasPreviousPage ||= config.created_at
+                ? isBefore(config.created_at, interval.start)
+                : true;
+
+              return Array.fromAsync(
+                SteamUserAchievements.find({
+                  steamid: { $in: [config.steamid!] },
+                  unlocked_at: intervalQuery,
+                }),
+                async (steamUserAchievement) => {
+                  const [steamAchievement, steamStoreItem] = await Promise.all([
+                    SteamAppAchievements.findOne({
+                      appid: steamUserAchievement.appid,
+                      internal_key: steamUserAchievement.internal_key,
+                    }),
+                    SteamStoreItems.findOne({
+                      appid: steamUserAchievement.appid,
+                    }),
+                  ]);
+                  if (!steamAchievement) {
+                    console.warn(
+                      `Missing steamAchievement for achievement: ${steamUserAchievement.internal_key} in app: ${steamUserAchievement.appid} with internal key: ${steamUserAchievement.internal_key}`,
+                    );
+                    return;
+                  }
+                  if (!steamStoreItem) {
+                    console.warn(
+                      `Missing steamStoreItem for achievement: ${steamUserAchievement.internal_key} in app: ${steamUserAchievement.appid}`,
+                    );
+                    return;
+                  }
+
+                  entries.push({
+                    id: `${steamUserAchievement.appid}-${steamUserAchievement.internal_key}-${steamUserAchievement.steamid}`,
+                    gameName: steamStoreItem.name,
+                    name: steamAchievement.name,
+                    description: steamAchievement.description,
+                    unlockedAt: steamUserAchievement.unlocked_at,
+                    globalPercentage: steamAchievement.globalpercentage,
+                    gameIcon: `https://shared.fastly.steamstatic.com/community_assets/images/apps/${steamStoreItem.appid}/${steamStoreItem.community_icon}.jpg`,
+                    /*
               gameBanner: `https://shared.fastly.steamstatic.com/store_item_assets/${steamStoreItem.asset_url_format.replace(
                 "${FILENAME}",
                 steamStoreItem.library_capsule,
               )}`,
               */
 
-              icon: steamAchievement.icon_achieved,
-              url: `https://steamcommunity.com/id/${config.profile_url}/achievements/${steamUserAchievement.appid}`,
-              __typename: "Achievement",
-            } satisfies GQJournalEntryUnion);
-          },
-        ),
-      ),
-  );
+                    icon: steamAchievement.icon_achieved,
+                    url: `https://steamcommunity.com/id/${config.profile_url}/achievements/${steamUserAchievement.appid}`,
+                    __typename: "Achievement",
+                  } satisfies GQJournalEntryUnion);
+                },
+              );
+            }),
+        );
+        break;
+    }
+  }
 
-  return entries;
+  await Promise.all(promises);
+
+  return { entries, hasNextPage, hasPreviousPage };
 };

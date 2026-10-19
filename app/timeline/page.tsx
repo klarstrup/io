@@ -9,7 +9,14 @@ import {
   startOfDay,
   subDays,
 } from "date-fns";
-import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { noop } from "../../actions";
 import { FieldSetY } from "../../components/FieldSet";
 import { ShyGuy } from "../../components/ShyGuy";
@@ -35,6 +42,8 @@ import {
   getLocationFromJournalEntry,
   isSeparatedEnd,
   isVisuallyIdenticalEvent,
+  JournalEntryType,
+  journalEntryTypes,
   type JournalEntry,
   type LocationChange,
 } from "../diary/diaryUtils";
@@ -53,18 +62,23 @@ export default function TimelinePage({
   const timeZone = sessionData?.user?.timeZone || DEFAULT_TIMEZONE;
   const now = useNow(60 * 1000, timeZone);
 
+  const [entryType, setEntryType] = useState<JournalEntryType | null>(null);
+
   const variables = useMemo(
     () =>
       selectedDayStart
-        ? { on: dateToString(startOfDay(selectedDayStart)) }
+        ? { on: dateToString(startOfDay(selectedDayStart)), type: entryType }
         : {
-            after: dateToString(startOfDay(subDays(now, 3))),
+            after: dateToString(startOfDay(subDays(now, entryType ? 30 : 3))),
             before: dateToString(
-              endOfDayButItRespectsDayStartHour(addDays(now, 3)),
+              endOfDayButItRespectsDayStartHour(
+                addDays(now, entryType ? 30 : 3),
+              ),
             ),
+            type: entryType,
           },
     // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- don't want the query to reset every minute
-    [selectedDayStart],
+    [selectedDayStart, entryType],
   );
 
   const { data, loading, fetchMore, refetch } = useQuery(
@@ -81,16 +95,19 @@ export default function TimelinePage({
     () => ({
       start: startCursor
         ? stringToDate(startCursor)
-        : startOfDay(subDays(now, 3)),
+        : startOfDay(subDays(now, entryType ? 30 : 3)),
       end: endCursor
         ? stringToDate(endCursor)
-        : endOfDayButItRespectsDayStartHour(addDays(now, 3)),
+        : endOfDayButItRespectsDayStartHour(addDays(now, entryType ? 30 : 3)),
     }),
-    [startCursor, endCursor, now],
+    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- don't want the query to reset every minute
+    [startCursor, endCursor],
   );
 
   useInterval(() => {
-    if (!loading) void refetch({ after: startCursor, before: endCursor });
+    if (!loading) {
+      void refetch({ after: startCursor, before: endCursor, type: entryType });
+    }
     void noop();
   }, pollInterval);
 
@@ -220,7 +237,11 @@ export default function TimelinePage({
       if (
         location &&
         !(entry.__typename === "Event" && entry.datetype === "date") &&
-        !(entry.__typename === "Meal" && location !== previousLocation) &&
+        !(
+          !entryType &&
+          entry.__typename === "Meal" &&
+          location !== previousLocation
+        ) &&
         (!previousLocation || previousLocation.name !== location.name) &&
         (!lastLocation || lastLocation.name !== location.name)
       ) {
@@ -288,7 +309,7 @@ export default function TimelinePage({
     }
 
     return dayJournalEntriesIncludingLocationChanges;
-  }, [journalEntries3, userLocations]);
+  }, [entryType, journalEntries3, userLocations]);
 
   const lastInteractedWithPageRef = useRef<Date | null>(null);
   useEffect(() => {
@@ -306,20 +327,9 @@ export default function TimelinePage({
   const scrollToNow = useCallback(() => {
     if (typeof document === "undefined") return;
     const nowDivider = document.querySelector<HTMLElement>(".now-divider");
-    const el = nowDivider?.closest<HTMLElement>(
-      ".diary-agenda-day-entry",
-    )?.parentElement;
-    if (!el) return;
+    if (!nowDivider) return;
 
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
-    const elVerticalCenter = el.offsetTop + el.offsetHeight / 2;
-    const elHorizontalCenter = el.offsetLeft + el.offsetWidth / 2;
     nowDivider.scrollIntoView();
-    window.scrollTo(
-      elHorizontalCenter - viewportWidth / 2 + el.offsetWidth / 2,
-      elVerticalCenter - viewportHeight / 2,
-    );
   }, []);
 
   const isSSR = useIsSSR();
@@ -334,6 +344,25 @@ export default function TimelinePage({
 
   return (
     <>
+      <div>
+        <button onClick={scrollToNow}>Scroll to Now</button>
+        <button onClick={() => window.scrollTo(0, 0)}>Scroll to Top</button>
+        <button onClick={() => window.scrollTo(0, document.body.scrollHeight)}>
+          Scroll to Bottom
+        </button>
+        <select
+          onChange={(e) =>
+            setEntryType((e.target.value || null) as JournalEntryType | null)
+          }
+        >
+          <option value="">All</option>
+          {journalEntryTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
       {!sessionUser && !sessionDataLoading ? (
         <div
           className={
@@ -397,7 +426,7 @@ export default function TimelinePage({
       >
         {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
-            requireScroll
+            requireScroll={!entryType}
             onSeen={() => {
               if (loading) return;
 
@@ -405,22 +434,24 @@ export default function TimelinePage({
 
               if (!firstDay) return;
 
+              const startCursor =
+                data?.user?.journalEntries.pageInfo.startCursor;
+
+              if (!startCursor) return;
+
+              const hasPreviousPage =
+                data?.user?.journalEntries.pageInfo.hasPreviousPage;
+
+              if (!hasPreviousPage) return;
+
               return fetchMore({
                 variables: {
                   after: dateToString(
                     startOfDay(
-                      subDays(
-                        stringToDate(
-                          data?.user?.journalEntries.pageInfo.startCursor ||
-                            dateToString(new Date()),
-                        ),
-                        4,
-                      ),
+                      subDays(stringToDate(startCursor), entryType ? 30 : 4),
                     ),
                   ),
-                  before:
-                    data?.user?.journalEntries.pageInfo.startCursor ||
-                    undefined,
+                  before: startCursor,
                 },
                 updateQuery(previousData, { fetchMoreResult }) {
                   if (!fetchMoreResult?.user?.journalEntries)
@@ -441,21 +472,21 @@ export default function TimelinePage({
                         __typename: "JournalEntriesConnection",
                         pageInfo: {
                           __typename: "PageInfo",
-                          hasNextPage:
-                            fetchMorePageInfo?.hasNextPage ??
-                            previousPageInfo?.hasNextPage ??
-                            true,
-                          hasPreviousPage:
-                            previousPageInfo?.hasPreviousPage ??
-                            fetchMorePageInfo?.hasPreviousPage ??
-                            true,
+                          hasNextPage: previousPageInfo
+                            ? fetchMorePageInfo?.hasNextPage &&
+                              previousPageInfo.hasNextPage
+                            : fetchMorePageInfo?.hasNextPage,
+                          hasPreviousPage: previousPageInfo
+                            ? fetchMorePageInfo?.hasPreviousPage &&
+                              previousPageInfo.hasPreviousPage
+                            : fetchMorePageInfo?.hasPreviousPage,
                           startCursor:
-                            fetchMorePageInfo?.startCursor ||
+                            fetchMorePageInfo.startCursor ||
                             previousPageInfo?.startCursor ||
                             null,
                           endCursor:
                             previousPageInfo?.endCursor ||
-                            fetchMorePageInfo?.endCursor ||
+                            fetchMorePageInfo.endCursor ||
                             null,
                         },
                         nodes: [...fetchMoreNodes, ...previousNodes],
@@ -482,7 +513,7 @@ export default function TimelinePage({
         </Suspense>
         {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
-            requireScroll
+            requireScroll={!entryType}
             onSeen={() => {
               if (loading) return;
 
@@ -491,27 +522,21 @@ export default function TimelinePage({
 
               if (!lastDay) return;
 
+              const endCursor = data?.user?.journalEntries.pageInfo.endCursor;
+
+              if (!endCursor) return;
+
+              const hasNextPage =
+                data?.user?.journalEntries.pageInfo.hasNextPage;
+
+              if (!hasNextPage) return;
+
               return fetchMore({
                 variables: {
-                  after: dateToString(
-                    new Date(
-                      data?.user?.journalEntries.pageInfo.endCursor
-                        ? stringToDate(
-                            data.user.journalEntries.pageInfo.endCursor,
-                          )
-                        : new Date(),
-                    ),
-                  ),
+                  after: dateToString(new Date(stringToDate(endCursor))),
                   before: dateToString(
                     endOfDayButItRespectsDayStartHour(
-                      addDays(
-                        data?.user?.journalEntries.pageInfo.endCursor
-                          ? stringToDate(
-                              data.user.journalEntries.pageInfo.endCursor,
-                            )
-                          : new Date(),
-                        4,
-                      ),
+                      addDays(stringToDate(endCursor), entryType ? 30 : 4),
                     ),
                   ),
                 },
@@ -535,14 +560,14 @@ export default function TimelinePage({
                         __typename: "JournalEntriesConnection",
                         pageInfo: {
                           __typename: "PageInfo",
-                          hasNextPage:
-                            fetchMorePageInfo?.hasNextPage ??
-                            previousPageInfo?.hasNextPage ??
-                            true,
-                          hasPreviousPage:
-                            previousPageInfo?.hasPreviousPage ??
-                            fetchMorePageInfo?.hasPreviousPage ??
-                            true,
+                          hasNextPage: previousPageInfo
+                            ? previousPageInfo.hasNextPage &&
+                              fetchMorePageInfo.hasNextPage
+                            : fetchMorePageInfo.hasNextPage,
+                          hasPreviousPage: previousPageInfo
+                            ? previousPageInfo.hasPreviousPage &&
+                              fetchMorePageInfo.hasPreviousPage
+                            : fetchMorePageInfo.hasPreviousPage,
                           startCursor:
                             previousPageInfo?.startCursor ||
                             fetchMorePageInfo?.startCursor ||

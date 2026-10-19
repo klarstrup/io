@@ -21,6 +21,7 @@ import gql from "graphql-tag";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 import { ObjectId } from "mongodb";
 import { materializeIoWorkouts } from "./app/api/materialize_workouts/materializers";
+import { isValidJournalEntryType } from "./app/diary/diaryUtils";
 import { authUser, ensureGoogleAuth } from "./auth";
 import type {
   GQCreateTodoPayload,
@@ -207,13 +208,21 @@ export const resolvers: GQResolvers<
         );
       }
 
+      const type = args.type;
+      if (typeof type === "string" && !isValidJournalEntryType(type)) {
+        throw new Error(`Invalid journal entry type: ${type}`);
+      }
+
+      const { entries, hasNextPage, hasPreviousPage } =
+        await getUserJournalEntries(parent.id, after, before, type);
+
       return {
         __typename: "JournalEntriesConnection",
-        nodes: await getUserJournalEntries(parent.id, after, before),
+        nodes: entries,
         pageInfo: {
           __typename: "PageInfo",
-          hasNextPage: args.before ? true : false,
-          hasPreviousPage: args.after ? true : false,
+          hasNextPage: args.before && hasNextPage ? true : false,
+          hasPreviousPage: args.after && hasPreviousPage ? true : false,
           startCursor: args.after,
           endCursor: args.before,
         },
@@ -1780,6 +1789,7 @@ export const typeDefs = gql`
       after: String
       before: String
       on: String
+      type: String
     ): JournalEntriesConnection!
     todos(interval: IntervalInput): [Todo!]
     events(interval: IntervalInput!): [Event!]

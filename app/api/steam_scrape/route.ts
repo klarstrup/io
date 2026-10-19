@@ -106,7 +106,7 @@ export const GET = (request: NextRequest) =>
             {},
           );
 
-          for (const { public_data } of Object.values(
+          for (const { public_data, private_data } of Object.values(
             mergedQueryData.PlayerLinkDetails || {},
           )) {
             await Users.updateOne(
@@ -114,6 +114,9 @@ export const GET = (request: NextRequest) =>
               {
                 $set: {
                   "dataSources.$[source].config.steamid": public_data.steamid,
+                  "dataSources.$[source].config.created_at": new Date(
+                    private_data.time_created * 1000,
+                  ),
                 },
               },
               { arrayFilters: [{ "source.id": userDataSource.id }] },

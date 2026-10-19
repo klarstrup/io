@@ -127,7 +127,7 @@ export const typePolicies: TypePolicies = {
   User: {
     fields: {
       journalEntries: {
-        keyArgs: ["on"],
+        keyArgs: ["on", "type"],
         merge(
           existing: GQJournalEntriesConnection | undefined,
           incoming: GQJournalEntriesConnection | undefined,

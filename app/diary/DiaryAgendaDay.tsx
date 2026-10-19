@@ -55,7 +55,12 @@ import {
 } from "./diaryUtils";
 
 export const DiaryAgendaDayUserTodosDocument = graphql(`
-  query DiaryAgendaDayUserTodos($after: String, $before: String, $on: String) {
+  query DiaryAgendaDayUserTodos(
+    $after: String
+    $before: String
+    $on: String
+    $type: String
+  ) {
     user {
       id
       name
@@ -83,7 +88,7 @@ export const DiaryAgendaDayUserTodosDocument = graphql(`
           updatedAt
         }
       }
-      journalEntries(after: $after, before: $before, on: $on) {
+      journalEntries(after: $after, before: $before, on: $on, type: $type) {
         __typename
         pageInfo {
           hasNextPage
@@ -897,14 +902,14 @@ export function DiaryAgendaDay({
                         __typename: "JournalEntriesConnection",
                         pageInfo: {
                           __typename: "PageInfo",
-                          hasNextPage:
-                            fetchMorePageInfo?.hasNextPage ??
-                            previousPageInfo?.hasNextPage ??
-                            true,
-                          hasPreviousPage:
-                            previousPageInfo?.hasPreviousPage ??
-                            fetchMorePageInfo?.hasPreviousPage ??
-                            true,
+                          hasNextPage: previousPageInfo
+                            ? previousPageInfo.hasNextPage &&
+                              fetchMorePageInfo.hasNextPage
+                            : fetchMorePageInfo.hasNextPage,
+                          hasPreviousPage: previousPageInfo
+                            ? previousPageInfo.hasPreviousPage &&
+                              fetchMorePageInfo.hasPreviousPage
+                            : fetchMorePageInfo.hasPreviousPage,
                           startCursor:
                             fetchMorePageInfo?.startCursor ||
                             previousPageInfo?.startCursor ||
@@ -1001,14 +1006,14 @@ export function DiaryAgendaDay({
                         __typename: "JournalEntriesConnection",
                         pageInfo: {
                           __typename: "PageInfo",
-                          hasNextPage:
-                            fetchMorePageInfo?.hasNextPage ??
-                            previousPageInfo?.hasNextPage ??
-                            true,
-                          hasPreviousPage:
-                            previousPageInfo?.hasPreviousPage ??
-                            fetchMorePageInfo?.hasPreviousPage ??
-                            true,
+                          hasNextPage: previousPageInfo
+                            ? previousPageInfo.hasNextPage &&
+                              fetchMorePageInfo.hasNextPage
+                            : fetchMorePageInfo.hasNextPage,
+                          hasPreviousPage: previousPageInfo
+                            ? previousPageInfo.hasPreviousPage &&
+                              fetchMorePageInfo.hasPreviousPage
+                            : fetchMorePageInfo.hasPreviousPage,
                           startCursor:
                             previousPageInfo?.startCursor ||
                             fetchMorePageInfo?.startCursor ||

@@ -58,6 +58,28 @@ export type JournalEntry =
   | LocationChange
   | NowDividerEntry;
 
+export type JournalEntryType = Exclude<
+  JournalEntry["__typename"],
+  "NowDivider" | "LocationChange"
+>;
+
+export const journalEntryTypes = [
+  "Todo",
+  "Event",
+  "Workout",
+  "Sleep",
+  "NextSet",
+  "Trip",
+  "Meal",
+  "Delivery",
+  "Achievement",
+] satisfies JournalEntryType[];
+
+export const isValidJournalEntryType = (
+  type: string,
+): type is JournalEntryType =>
+  journalEntryTypes.includes(type as JournalEntryType);
+
 export const isEntryThatCanHaveSeparatedEnd = (
   entry: JournalEntry,
 ): entry is WithOrWithoutSeparatedEnd<GQEvent | GQTrip | GQSleep> =>

@@ -107,7 +107,7 @@ type UserDataSourceConfig =
   | { source: DataSource.PostNord; config: Record<string, never> }
   | {
       source: DataSource.Steam;
-      config: { profile_url: string; steamid: string | null };
+      config: { profile_url: string; steamid: string | null; created_at?: Date };
     };
 
 export interface UserDataSourceMeta {
@@ -745,6 +745,7 @@ export const dataSources = {
     configSchema: z.object({
       profile_url: z.string().default(""),
       steamid: z.string().nullable(),
+      created_at: z.date().optional(),
     }),
     getFormElements: ({ register }) => (
       <label className="flex flex-col gap-1">

@@ -453,7 +453,7 @@ export function DiaryAgendaDayDayContents({
 
         // skip if surrounding event has a location that is different from that of the meal
         if (
-          meal.location
+          meal.location && date
             ? entriesThatSurroundsEntry?.length &&
               entriesThatSurroundsEntry.every(
                 (entryThatSurroundsEntry) =>
