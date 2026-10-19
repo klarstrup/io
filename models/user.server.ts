@@ -1,8 +1,10 @@
 import { tz } from "@date-fns/tz";
 import { Account } from "better-auth/types";
 import {
+  addWeeks,
   getDay,
   type Interval,
+  isAfter,
   isBefore,
   isWithinInterval,
   setHours,
@@ -97,6 +99,7 @@ export const getUserJournalEntries = async (
   toDay: Date,
   typeFilter?: JournalEntryType | null,
 ) => {
+  const now = new Date();
   const interval = {
     // Overfetch to midnight to include legacy workouts and all-day events that are stored with start
     start: startOfDay(fromDay),
@@ -343,6 +346,14 @@ export const getUserJournalEntries = async (
         );
         break;
       case "Meal":
+        if (isAfter(interval.start, addWeeks(now, 2))) {
+          hasPreviousPage = true;
+          break;
+        }
+        if (isBefore(interval.end, addWeeks(new Date(2026, 4), 2))) {
+          hasNextPage = true;
+          break;
+        }
         hasPreviousPage = true;
         hasNextPage = true;
         promises.push(
