@@ -98,15 +98,11 @@ export function DiaryAgendaDayEvent({
       ) : (
         <>
           <div className="text-center leading-none font-semibold tabular-nums">
-            {event.datetype === "date-time" && (!dayNo || dayNo <= 1) ? (
-              event.start.toLocaleTimeString("en-DK", {
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone,
-              })
-            ) : (
-              <>Day {dayNo}</>
-            )}
+            {event.start.toLocaleTimeString("en-DK", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone,
+            })}
           </div>
           <div>
             <span
