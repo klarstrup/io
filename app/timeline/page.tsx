@@ -50,6 +50,7 @@ import {
   type JournalEntry,
   type LocationChange,
 } from "../diary/diaryUtils";
+import { TodoDragDropContainer } from "../diary/TodoDroppable";
 
 export default function TimelinePage({
   selectedDayStart,
@@ -416,180 +417,182 @@ export default function TimelinePage({
           </FieldSetY>
         </div>
       ) : null}
-      <div
-        className={
-          "flex flex-col items-stretch justify-center px-2" +
-          "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors " +
-          "bg-white/90"
-        }
-      >
-        {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
-          <ShyGuy
-            requireScroll={!entryType}
-            onSeen={() => {
-              if (loading) return;
-
-              const firstDay = journalEntriesIncludingLocationChanges2[0];
-
-              if (!firstDay) return;
-
-              const startCursor =
-                data?.user?.journalEntries.pageInfo.startCursor;
-
-              if (!startCursor) return;
-
-              const hasPreviousPage =
-                data?.user?.journalEntries.pageInfo.hasPreviousPage;
-
-              if (!hasPreviousPage) return;
-
-              return fetchMore({
-                variables: {
-                  after: dateToString(
-                    startOfDay(
-                      subDays(stringToDate(startCursor), entryType ? 30 : 4),
-                    ),
-                  ),
-                  before: startCursor,
-                },
-                updateQuery(previousData, { fetchMoreResult }) {
-                  if (!fetchMoreResult?.user?.journalEntries)
-                    return previousData;
-
-                  const previousNodes =
-                    previousData.user?.journalEntries.nodes || [];
-                  const fetchMoreNodes =
-                    fetchMoreResult.user?.journalEntries.nodes || [];
-                  const previousPageInfo =
-                    previousData.user?.journalEntries.pageInfo;
-                  const fetchMorePageInfo =
-                    fetchMoreResult.user?.journalEntries.pageInfo;
-                  return {
-                    user: {
-                      ...previousData.user!,
-                      journalEntries: {
-                        __typename: "JournalEntriesConnection",
-                        pageInfo: {
-                          __typename: "PageInfo",
-                          hasNextPage: previousPageInfo
-                            ? fetchMorePageInfo?.hasNextPage &&
-                              previousPageInfo.hasNextPage
-                            : fetchMorePageInfo?.hasNextPage,
-                          hasPreviousPage: previousPageInfo
-                            ? fetchMorePageInfo?.hasPreviousPage &&
-                              previousPageInfo.hasPreviousPage
-                            : fetchMorePageInfo?.hasPreviousPage,
-                          startCursor:
-                            fetchMorePageInfo.startCursor ||
-                            previousPageInfo?.startCursor ||
-                            null,
-                          endCursor:
-                            previousPageInfo?.endCursor ||
-                            fetchMorePageInfo.endCursor ||
-                            null,
-                        },
-                        nodes: [...fetchMoreNodes, ...previousNodes],
-                      },
-                    },
-                  };
-                },
-              });
-            }}
-          />
-        )}
-        <Suspense
-          fallback={
-            <div className={"pl-10 text-gray-400/50 italic"}>Loading...</div>
+      <TodoDragDropContainer>
+        <div
+          className={
+            "flex flex-col items-stretch justify-center px-2" +
+            "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
+            "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors " +
+            "bg-white/90"
           }
         >
-          <DiaryAgendaDayDayContents
-            now={now}
-            dayRange={fetchingInterval}
-            dayLocations={userLocations}
-            userTimeZone={timeZone}
-            dayJournalEntries={journalEntriesIncludingLocationChanges2}
-          />
-        </Suspense>
-        {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
-          <ShyGuy
-            requireScroll={!entryType}
-            onSeen={() => {
-              if (loading) return;
+          {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+            <ShyGuy
+              requireScroll={!entryType}
+              onSeen={() => {
+                if (loading) return;
 
-              const lastDay =
-                journalEntriesIncludingLocationChanges2.slice(-1)[0];
+                const firstDay = journalEntriesIncludingLocationChanges2[0];
 
-              if (!lastDay) return;
+                if (!firstDay) return;
 
-              const endCursor = data?.user?.journalEntries.pageInfo.endCursor;
+                const startCursor =
+                  data?.user?.journalEntries.pageInfo.startCursor;
 
-              if (!endCursor) return;
+                if (!startCursor) return;
 
-              const hasNextPage =
-                data?.user?.journalEntries.pageInfo.hasNextPage;
+                const hasPreviousPage =
+                  data?.user?.journalEntries.pageInfo.hasPreviousPage;
 
-              if (!hasNextPage) return;
+                if (!hasPreviousPage) return;
 
-              return fetchMore({
-                variables: {
-                  after: dateToString(new Date(stringToDate(endCursor))),
-                  before: dateToString(
-                    endOfDayButItRespectsDayStartHour(
-                      addDays(stringToDate(endCursor), entryType ? 30 : 4),
+                return fetchMore({
+                  variables: {
+                    after: dateToString(
+                      startOfDay(
+                        subDays(stringToDate(startCursor), entryType ? 30 : 4),
+                      ),
                     ),
-                  ),
-                },
-                updateQuery(previousData, { fetchMoreResult }) {
-                  if (!fetchMoreResult?.user?.journalEntries)
-                    return previousData;
+                    before: startCursor,
+                  },
+                  updateQuery(previousData, { fetchMoreResult }) {
+                    if (!fetchMoreResult?.user?.journalEntries)
+                      return previousData;
 
-                  const previousNodes =
-                    previousData.user?.journalEntries.nodes || [];
-                  const fetchMoreNodes =
-                    fetchMoreResult.user?.journalEntries.nodes || [];
-                  const previousPageInfo =
-                    previousData.user?.journalEntries.pageInfo;
-                  const fetchMorePageInfo =
-                    fetchMoreResult.user?.journalEntries.pageInfo;
-
-                  return {
-                    user: {
-                      ...previousData.user!,
-                      journalEntries: {
-                        __typename: "JournalEntriesConnection",
-                        pageInfo: {
-                          __typename: "PageInfo",
-                          hasNextPage: previousPageInfo
-                            ? previousPageInfo.hasNextPage &&
-                              fetchMorePageInfo.hasNextPage
-                            : fetchMorePageInfo.hasNextPage,
-                          hasPreviousPage: previousPageInfo
-                            ? previousPageInfo.hasPreviousPage &&
-                              fetchMorePageInfo.hasPreviousPage
-                            : fetchMorePageInfo.hasPreviousPage,
-                          startCursor:
-                            previousPageInfo?.startCursor ||
-                            fetchMorePageInfo?.startCursor ||
-                            null,
-                          endCursor:
-                            fetchMorePageInfo?.endCursor ||
-                            previousPageInfo?.endCursor ||
-                            null,
+                    const previousNodes =
+                      previousData.user?.journalEntries.nodes || [];
+                    const fetchMoreNodes =
+                      fetchMoreResult.user?.journalEntries.nodes || [];
+                    const previousPageInfo =
+                      previousData.user?.journalEntries.pageInfo;
+                    const fetchMorePageInfo =
+                      fetchMoreResult.user?.journalEntries.pageInfo;
+                    return {
+                      user: {
+                        ...previousData.user!,
+                        journalEntries: {
+                          __typename: "JournalEntriesConnection",
+                          pageInfo: {
+                            __typename: "PageInfo",
+                            hasNextPage: previousPageInfo
+                              ? fetchMorePageInfo?.hasNextPage &&
+                                previousPageInfo.hasNextPage
+                              : fetchMorePageInfo?.hasNextPage,
+                            hasPreviousPage: previousPageInfo
+                              ? fetchMorePageInfo?.hasPreviousPage &&
+                                previousPageInfo.hasPreviousPage
+                              : fetchMorePageInfo?.hasPreviousPage,
+                            startCursor:
+                              fetchMorePageInfo.startCursor ||
+                              previousPageInfo?.startCursor ||
+                              null,
+                            endCursor:
+                              previousPageInfo?.endCursor ||
+                              fetchMorePageInfo.endCursor ||
+                              null,
+                          },
+                          nodes: [...fetchMoreNodes, ...previousNodes],
                         },
-                        nodes: [...previousNodes, ...fetchMoreNodes],
                       },
-                    },
-                  };
-                },
-              });
-            }}
-          />
-        )}
-        {sessionData?.user ? (
-          <DiaryPoller userId={sessionData.user.id} />
-        ) : null}
-      </div>
+                    };
+                  },
+                });
+              }}
+            />
+          )}
+          <Suspense
+            fallback={
+              <div className={"pl-10 text-gray-400/50 italic"}>Loading...</div>
+            }
+          >
+            <DiaryAgendaDayDayContents
+              now={now}
+              dayRange={fetchingInterval}
+              dayLocations={userLocations}
+              userTimeZone={timeZone}
+              dayJournalEntries={journalEntriesIncludingLocationChanges2}
+            />
+          </Suspense>
+          {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
+            <ShyGuy
+              requireScroll={!entryType}
+              onSeen={() => {
+                if (loading) return;
+
+                const lastDay =
+                  journalEntriesIncludingLocationChanges2.slice(-1)[0];
+
+                if (!lastDay) return;
+
+                const endCursor = data?.user?.journalEntries.pageInfo.endCursor;
+
+                if (!endCursor) return;
+
+                const hasNextPage =
+                  data?.user?.journalEntries.pageInfo.hasNextPage;
+
+                if (!hasNextPage) return;
+
+                return fetchMore({
+                  variables: {
+                    after: dateToString(new Date(stringToDate(endCursor))),
+                    before: dateToString(
+                      endOfDayButItRespectsDayStartHour(
+                        addDays(stringToDate(endCursor), entryType ? 30 : 4),
+                      ),
+                    ),
+                  },
+                  updateQuery(previousData, { fetchMoreResult }) {
+                    if (!fetchMoreResult?.user?.journalEntries)
+                      return previousData;
+
+                    const previousNodes =
+                      previousData.user?.journalEntries.nodes || [];
+                    const fetchMoreNodes =
+                      fetchMoreResult.user?.journalEntries.nodes || [];
+                    const previousPageInfo =
+                      previousData.user?.journalEntries.pageInfo;
+                    const fetchMorePageInfo =
+                      fetchMoreResult.user?.journalEntries.pageInfo;
+
+                    return {
+                      user: {
+                        ...previousData.user!,
+                        journalEntries: {
+                          __typename: "JournalEntriesConnection",
+                          pageInfo: {
+                            __typename: "PageInfo",
+                            hasNextPage: previousPageInfo
+                              ? previousPageInfo.hasNextPage &&
+                                fetchMorePageInfo.hasNextPage
+                              : fetchMorePageInfo.hasNextPage,
+                            hasPreviousPage: previousPageInfo
+                              ? previousPageInfo.hasPreviousPage &&
+                                fetchMorePageInfo.hasPreviousPage
+                              : fetchMorePageInfo.hasPreviousPage,
+                            startCursor:
+                              previousPageInfo?.startCursor ||
+                              fetchMorePageInfo?.startCursor ||
+                              null,
+                            endCursor:
+                              fetchMorePageInfo?.endCursor ||
+                              previousPageInfo?.endCursor ||
+                              null,
+                          },
+                          nodes: [...previousNodes, ...fetchMoreNodes],
+                        },
+                      },
+                    };
+                  },
+                });
+              }}
+            />
+          )}
+          {sessionData?.user ? (
+            <DiaryPoller userId={sessionData.user.id} />
+          ) : null}
+        </div>
+      </TodoDragDropContainer>
     </>
   );
 }
