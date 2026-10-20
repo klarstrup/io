@@ -7,7 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  differenceInHours,
+  differenceInDays,
   intervalToDuration,
   isBefore,
   roundToNearestMinutes,
@@ -16,7 +16,12 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { durationToMs, formatShortDuration } from "../../models/workout";
-import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
+import {
+  cotemporality,
+  DEFAULT_TIMEZONE,
+  endOfDayButItRespectsDayStartHour,
+  startOfDayButItRespectsDayStartHour,
+} from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
@@ -45,11 +50,14 @@ export function DiaryAgendaDayEvent({
     start: event.start,
     end: roundToNearestMinutes(event.end, { roundingMethod: "ceil" }),
   });
+  const startOfEventDay = startOfDayButItRespectsDayStartHour(event.start);
   const dayNo =
-    date && dayRange
-      ? Math.floor(differenceInHours(event.start, dayRange.start) / 24) + 1
-      : null;
-  const numDays = Math.ceil(differenceInHours(event.end, event.start) / 24);
+    date && dayRange && differenceInDays(dayRange.start, startOfEventDay) + 1;
+  const numDays =
+    differenceInDays(
+      endOfDayButItRespectsDayStartHour(event.end),
+      startOfEventDay,
+    ) + 1;
   const isFirstDay = dayNo === 1;
   const isLastDay = dayNo === numDays;
 

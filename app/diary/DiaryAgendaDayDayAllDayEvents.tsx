@@ -5,7 +5,7 @@ import {
   faExternalLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { differenceInHours, isBefore, isPast } from "date-fns";
+import { differenceInDays, isBefore, isPast } from "date-fns";
 import { use, useMemo, type ReactElement } from "react";
 import { browser } from "react-dom";
 import type { GQUser } from "../../graphql.generated/graphql";
@@ -13,6 +13,7 @@ import {
   cotemporality,
   dateToString,
   DEFAULT_TIMEZONE,
+  endOfDayButItRespectsDayStartHour,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -83,11 +84,15 @@ export function DiaryAgendaDayDayAllDayEvents({
           eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt;
 
         if (isAllDayEvent) {
-          const dayNo =
-            Math.floor(differenceInHours(dayRange.start, event.start) / 24) + 1;
-          const numDays = Math.ceil(
-            differenceInHours(event.end, event.start) / 24,
+          const startOfEventDay = startOfDayButItRespectsDayStartHour(
+            event.start,
           );
+          const dayNo = differenceInDays(dayRange.start, startOfEventDay) + 1;
+          const numDays =
+            differenceInDays(
+              endOfDayButItRespectsDayStartHour(event.end),
+              startOfEventDay,
+            ) + 1;
           const isFirstDay = dayNo === 1;
           const isLastDay = dayNo === numDays;
 

@@ -125,7 +125,7 @@ export function DiaryAgendaDayDayContents({
         previousEntries
           .filter(
             (prevJE) =>
-              (prevJE.__typename === "Event"
+              (prevJE.__typename === "Event" && date
                 ? prevJE.datetype !== "date" &&
                   !isEventEntireDay(prevJE, dayRange.start)
                 : true) &&
@@ -139,7 +139,7 @@ export function DiaryAgendaDayDayContents({
           .reverse(),
         previousEntries
           .filter((je) =>
-            je.__typename === "Event"
+            je.__typename === "Event" && date
               ? je.datetype !== "date" && !isEventEntireDay(je, dayRange.start)
               : true,
           )
@@ -245,7 +245,7 @@ export function DiaryAgendaDayDayContents({
           event.datetype === "date" ||
           eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt;
 
-        if (isAllDayEvent) {
+        if (date && isAllDayEvent) {
           // All-day events are handled separately in the DiaryAgendaDayDayAllDayEvents component, so we don't need to render them here.
         } else if (isSeparatedEnd(event)) {
           dayJournalEntryElements.push({
