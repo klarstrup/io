@@ -176,17 +176,12 @@ export default function TimelinePage({
                   getJournalEntryPrincipalDate(a).end,
                 ),
         )
-        .sort((a, b) => {
-          const aAllDay = a.__typename === "Event" && a.datetype === "date";
-          const bAllDay = b.__typename === "Event" && b.datetype === "date";
-          if (aAllDay && !bAllDay) return -1;
-          if (!aAllDay && bAllDay) return 1;
-
-          return compareAsc(
+        .sort((a, b) =>
+          compareAsc(
             getJournalEntryPrincipalDate(a).start,
             getJournalEntryPrincipalDate(b).start,
-          );
-        })
+          ),
+        )
         // If the previous entry is the same event and we aren't in the middle of it, we skip the end entry
         .filter(
           (entry, i, entries) =>
@@ -225,14 +220,7 @@ export default function TimelinePage({
 
     for (let i = 0; i < journalEntries3.length; i++) {
       const entry = journalEntries3[i]!;
-      let previousEntry = journalEntries3[i - 1];
-      if (
-        previousEntry &&
-        previousEntry.__typename === "Event" &&
-        previousEntry.datetype === "date"
-      ) {
-        previousEntry = undefined;
-      }
+      const previousEntry = journalEntries3[i - 1];
 
       const location = getLocationFromJournalEntry(userLocations, entry);
       const previousLocation = previousEntry
@@ -241,7 +229,6 @@ export default function TimelinePage({
 
       if (
         location &&
-        !(entry.__typename === "Event" && entry.datetype === "date") &&
         !(
           !entryType &&
           entry.__typename === "Meal" &&
