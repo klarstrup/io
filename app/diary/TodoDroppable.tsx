@@ -124,8 +124,7 @@ const customCollisionDetectionAlgorithm: CollisionDetection = ({
         "date" in data.current &&
         (typeof data.current.date === "string" ||
           typeof data.current.date === "number" ||
-          isDate(data.current.date)) &&
-        isSameDayButItRespectsDayStartHour(data.current.date, dateBeingDragged),
+          isDate(data.current.date)),
     ),
   });
 };
