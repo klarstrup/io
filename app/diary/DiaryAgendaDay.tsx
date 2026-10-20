@@ -423,7 +423,7 @@ export function DiaryAgendaDay({
         })) {
           const dayStart = addHours(startOfDay(date), dayStartHour);
           const dayEnd = addHours(endOfDay(date), dayStartHour);
-          const eventIsAllDay = isEventEntireDay(entry, date);
+          const eventIsAllDay = isEventEntireDay(entry, dayStart);
 
           if (entry.datetype === "date") {
             if (
