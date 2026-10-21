@@ -9,10 +9,12 @@ export function DiaryAgendaDayMeal({
   meal,
   cotemporalityOfSurroundingEvent,
   timeZone,
+  className,
 }: {
   meal: GQMeal;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   timeZone: string;
+  className?: string;
 }) {
   return (
     <DiaryAgendaDayEntry
@@ -26,6 +28,7 @@ export function DiaryAgendaDayMeal({
       })}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       iconClassName="w-10 text-[0.666rem]"
+      className={className}
       contentClassName="block text-stone-500 text-xs"
     >
       {meal.foodEntries.map((fe) => fe.food.description).join(", ")}

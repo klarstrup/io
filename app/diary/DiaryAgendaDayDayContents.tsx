@@ -421,6 +421,7 @@ export function DiaryAgendaDayDayContents({
             <DiaryAgendaDayTrip
               key={entryId}
               trip={trip}
+              className={roundednessClassName}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               isEntryWithSeparatedEnd={
                 !followingEntryIsEndOfTrip && !isEndOfTrip
@@ -450,6 +451,7 @@ export function DiaryAgendaDayDayContents({
               meal={meal}
               cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
               timeZone={timeZone}
+              className={roundednessClassName}
             />,
           );
         }
@@ -468,7 +470,7 @@ export function DiaryAgendaDayDayContents({
               end: delivery.timestamp,
             })}
             cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-            className={"pr-0.5 pl-0.5 text-xs"}
+            className={"pr-0.5 pl-0.5 text-xs " + roundednessClassName}
             iconClassName="w-10 text-[0.666rem]"
           >
             <span className="flex items-stretch leading-snug">

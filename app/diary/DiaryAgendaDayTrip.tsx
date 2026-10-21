@@ -1,5 +1,6 @@
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { useRouter } from "next/navigation";
+import { twMerge } from "tailwind-merge";
 import { GQTrip } from "../../graphql.generated/graphql";
 import { useEvent } from "../../hooks";
 import { cotemporality } from "../../utils";
@@ -7,11 +8,13 @@ import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
 export function DiaryAgendaDayTrip({
+  className,
   trip,
   cotemporalityOfSurroundingEvent,
   isEntryWithSeparatedEnd,
   timeZone,
 }: {
+  className?: string;
   trip: GQTrip;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
   isEntryWithSeparatedEnd: boolean;
@@ -55,7 +58,7 @@ export function DiaryAgendaDayTrip({
       icon={faRoad}
       cotemporality={cotemporality(trip)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
-      className="cursor-pointer text-sm"
+      className={twMerge("cursor-pointer text-sm", className)}
       iconClassName="w-10 text-[0.666rem]"
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
       onClick={handleOnClick}

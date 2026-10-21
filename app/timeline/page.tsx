@@ -98,7 +98,8 @@ export default function TimelinePage({
     UserJournalEntriesDocument,
     {
       variables,
-      fetchPolicy: selectedDayStart ? "cache-and-network" : "cache-first",
+      fetchPolicy:
+        selectedDayStart || entryType ? "cache-and-network" : "cache-first",
     },
   );
   const startCursor = data?.user?.journalEntries?.pageInfo?.startCursor;
@@ -237,11 +238,15 @@ export default function TimelinePage({
         })
         .filter((entry, i, entries) => {
           const nextEntry = entries[i + 1];
+          if (!nextEntry) {
+            console.log(entry);
+          }
           return (
             !(
               entry.__typename === "DateChange" &&
               nextEntry?.__typename === "DateChange"
-            ) || !nextEntry
+            ) ||
+            (entry.__typename === "DateChange" && !nextEntry)
           ); // Skip if the next entry is a DateChange or if it is the last entry
         }),
     [journalEntries21],
@@ -454,7 +459,7 @@ export default function TimelinePage({
       <TodoDragDropContainer>
         <div
           className={
-            "z-4 mx-auto max-w-lg flex-0! justify-center transition-colors"
+            "z-4 mx-auto w-[40vw] max-w-lg flex-0! justify-center transition-colors"
             //"flex flex-col items-stretch justify-center px-2 lg:flex-1 lg:flex-row lg:gap-5 lg:self-start lg:justify-self-center lg:px-0 lg:py-2"
           }
         >
