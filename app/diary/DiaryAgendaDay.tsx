@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@apollo/client/react";
+import { useApolloClient, useQuery } from "@apollo/client/react";
 import { tz } from "@date-fns/tz";
 import {
   addDays,
@@ -43,7 +43,7 @@ import {
 } from "../../utils";
 import { DiaryAgendaDayDay } from "./DiaryAgendaDayDay";
 import { DiaryPoller } from "./DiaryPoller";
-import { TodoDroppable } from "./TodoDroppable";
+import { TodoSortableContext } from "./TodoDroppable";
 import {
   getJournalEntryPrincipalDate,
   getLocationFromJournalEntry,
@@ -287,6 +287,7 @@ export function DiaryAgendaDay({
 }) {
   const pollInterval = useVisibilityAwarePollInterval(300000);
 
+  const client = useApolloClient();
   const { data: sessionData, isPending: sessionPending } = useSession();
   const sessionDataLoading = sessionPending;
   const sessionUser = sessionData?.user;
@@ -933,29 +934,37 @@ export function DiaryAgendaDay({
             }}
           />
         )}
-        {daysJournalEntriesIncludingLocationChanges2.map(
-          ([dayRange, dayJournalEntries]) => {
-            const dayStart = startOfDayButItRespectsDayStartHour(
-              dayRange.start,
-            );
-            return (
-              <TodoDroppable key={dateToString(dayRange.start)} date={dayStart}>
-                <DiaryAgendaDayDay
-                  now={now}
-                  date={dateToString(dayRange.start)}
-                  dayRange={dayRange}
-                  userTimeZone={timeZone}
-                  dayLocations={userLocations}
-                  dayJournalEntries={dayJournalEntries}
-                  isSelectedDay={Boolean(selectedDayStart)}
-                  isLoadingEntries={
-                    loading && networkStatus !== 4 && networkStatus !== 1
-                  }
-                />
-              </TodoDroppable>
-            );
-          },
-        )}
+        <TodoSortableContext
+          items={daysJournalEntriesIncludingLocationChanges2
+            .flatMap(([_, dayJournalEntries]) => dayJournalEntries)
+            .map(
+              (journalEntry) =>
+                (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
+                (journalEntry.__typename !== "LocationChange" &&
+                journalEntry.__typename !== "NowDivider" &&
+                journalEntry.__typename !== "DateChange"
+                  ? client.cache.identify(journalEntry)!
+                  : journalEntry.id),
+            )}
+        >
+          {daysJournalEntriesIncludingLocationChanges2.map(
+            ([dayRange, dayJournalEntries]) => (
+              <DiaryAgendaDayDay
+                key={dateToString(dayRange.start)}
+                now={now}
+                date={dateToString(dayRange.start)}
+                dayRange={dayRange}
+                userTimeZone={timeZone}
+                dayLocations={userLocations}
+                dayJournalEntries={dayJournalEntries}
+                isSelectedDay={Boolean(selectedDayStart)}
+                isLoadingEntries={
+                  loading && networkStatus !== 4 && networkStatus !== 1
+                }
+              />
+            ),
+          )}
+        </TodoSortableContext>
         {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
           <ShyGuy
             requireScroll

@@ -14,7 +14,11 @@ import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDayAllDayEvents } from "./DiaryAgendaDayDayAllDayEvents";
 import DiaryAgendaDayDayBacklog from "./DiaryAgendaDayDayBacklog";
 import { DiaryAgendaDayDayContents } from "./DiaryAgendaDayDayContents";
-import { getJournalEntryPrincipalDate, type JournalEntry } from "./diaryUtils";
+import {
+  getJournalEntryPrincipalDate,
+  isEventEntireDay,
+  type JournalEntry,
+} from "./diaryUtils";
 
 const getJournalEntryPassed = (journalEntry: JournalEntry, now: Date) => {
   const principalDate = getJournalEntryPrincipalDate(journalEntry);
@@ -54,7 +58,11 @@ export function DiaryAgendaDayDay({
   );
 
   return (
-    <>
+    <div
+      className={
+        "flex flex-col items-center lg:h-full lg:w-[40vw] lg:max-w-xl lg:items-stretch"
+      }
+    >
       <div
         className={
           "relative z-5 mx-auto mt-1 -mb-px flex w-full max-w-lg items-center gap-1 pr-2 leading-normal transition-colors xl:max-w-none" +
@@ -119,7 +127,12 @@ export function DiaryAgendaDayDay({
             date={date}
             dayRange={dayRange}
             userTimeZone={userTimeZone}
-            dayJournalEntries={dayJournalEntries}
+            dayJournalEntries={dayJournalEntries.filter(
+              (je) =>
+                je.__typename === "Event" &&
+                (isEventEntireDay(je, dayRange.start) ||
+                  je.datetype === "date"),
+            )}
             isSelectedDay={isSelectedDay}
           />
         </Suspense>
@@ -127,15 +140,15 @@ export function DiaryAgendaDayDay({
       <FieldSetX
         legend={null}
         className={
-          "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
-          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors lg:max-h-[calc(80vh-80px)] lg:overflow-x-hidden lg:overflow-y-auto xl:max-w-none " +
+          "diary-agenda-day-entry z-4 w-full border-0 backdrop-blur-sm " +
+          "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch p-0 transition-colors lg:max-h-[calc(80vh-80px)] lg:overflow-x-hidden lg:overflow-y-auto xl:max-w-none " +
           (isSelectedDay
             ? "bg-white/90"
             : (isPast(dayRange.start) && allCompleted) || isPast(dayRange.end)
-              ? "bg-green-100/75 pt-1"
+              ? "bg-green-100/75"
               : isToday
-                ? "bg-yellow-200/75 pt-1"
-                : "bg-slate-100/75 pt-1") +
+                ? "bg-yellow-200/75"
+                : "bg-slate-100/75") +
           (isLoadingEntries ? " animate-pulse bg-blue-300!" : "")
         }
         style={{
@@ -154,12 +167,17 @@ export function DiaryAgendaDayDay({
             dayRange={dayRange}
             dayLocations={dayLocations}
             userTimeZone={userTimeZone}
-            dayJournalEntries={dayJournalEntries}
+            dayJournalEntries={dayJournalEntries.filter(
+              (je) =>
+                je.__typename !== "Event" ||
+                !isEventEntireDay(je, dayRange.start) ||
+                je.datetype !== "date",
+            )}
             isSelectedDay={isSelectedDay}
           />
         </Suspense>
       </FieldSetX>
       {isToday ? <DiaryAgendaDayDayBacklog dayRange={dayRange} /> : null}
-    </>
+    </div>
   );
 }

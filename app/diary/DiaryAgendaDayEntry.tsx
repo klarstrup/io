@@ -1,3 +1,4 @@
+"use client";
 import { useApolloClient } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import {
@@ -55,6 +56,16 @@ export function DiaryAgendaDayEntry({
 } & React.HTMLAttributes<HTMLDivElement>) {
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
   const client = useApolloClient();
+  const id = useMemo(
+    () =>
+      (isSeparatedEnd(entry) ? "end-of-" : "") +
+      (entry.__typename !== "LocationChange" &&
+      entry.__typename !== "NowDivider" &&
+      entry.__typename !== "DateChange"
+        ? client.cache.identify(entry)!
+        : entry.id),
+    [client.cache, entry],
+  );
   const {
     isDragging,
     attributes,
@@ -62,13 +73,11 @@ export function DiaryAgendaDayEntry({
     setNodeRef,
     transform,
     transition,
+    over,
+    index,
+    activeIndex,
   } = useSortable({
-    id:
-      (isSeparatedEnd(entry) ? "end-of-" : "") +
-      (entry.__typename !== "LocationChange" &&
-      entry.__typename !== "NowDivider"
-        ? client.cache.identify(entry)!
-        : entry.id),
+    id,
     data: { date, entry },
     disabled: !isDraggable,
   });
@@ -78,7 +87,7 @@ export function DiaryAgendaDayEntry({
   const style = useMemo(
     () => ({
       transition,
-      ...(transform
+      ...(transform && isDragging
         ? {
             transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
             zIndex: 5,
@@ -102,48 +111,52 @@ export function DiaryAgendaDayEntry({
       {...attributes}
       style={{ ...style, ...props.style }}
       className={twMerge(
-        "relative flex",
+        "relative flex py-1 pr-1 bg-white/85 ",
         isDraggable && "cursor-grab select-none",
         className,
       )}
     >
+      {over?.id === id && !isDragging ? (
+        <div
+          className={
+            "absolute right-0 left-0 z-6 h-1 bg-red-600/90 " +
+            (index > activeIndex ? " bottom-0" : " top-0")
+          }
+        />
+      ) : undefined}
       {cotemporalityOfSurroundingEvent && !isDragging ? (
         <div
           className={
-            "absolute -top-1 -bottom-1 left-0.5 w-2 border-l-2 " +
+            "absolute top-0 bottom-0 left-0.5 w-1.5 border-l-2 " +
             (cotemporalityOfSurroundingEvent === "past"
-              ? " border-green-400"
+              ? " z-2 border-green-400"
               : cotemporalityOfSurroundingEvent === "current"
-                ? " border-[#EDAB00]"
-                : " border-gray-500")
+                ? " z-3 border-[#EDAB00]"
+                : " z-1 border-gray-500")
           }
         />
       ) : null}
-      {isEntryWithSeparatedEnd ? (
+      {isEntryWithSeparatedEnd && cotemporality ? (
         <div
           className={
-            "absolute top-1/2 -bottom-1 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
-            (cotemporality
-              ? cotemporality === "past"
-                ? " border-green-400"
-                : cotemporality === "current"
-                  ? " border-[#EDAB00]"
-                  : " border-gray-500"
-              : " border-gray-500")
+            "absolute top-1/2 bottom-0 left-0.5 w-1.5 rounded-tl border-t-2 border-l-2 " +
+            (cotemporality === "past"
+              ? " z-2 border-green-400"
+              : cotemporality === "current"
+                ? " z-3 border-[#EDAB00]"
+                : " z-1 border-gray-500")
           }
         />
       ) : null}
-      {isEntryEnd ? (
+      {isEntryEnd && cotemporality ? (
         <div
           className={
-            "absolute -top-1 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
-            (cotemporality
-              ? cotemporality === "past"
-                ? " border-green-400"
-                : cotemporality === "current"
-                  ? " border-[#EDAB00]"
-                  : " border-gray-500"
-              : " border-gray-500")
+            "absolute top-0 bottom-1/2 left-0.5 w-1.5 rounded-bl border-b-2 border-l-2 " +
+            (cotemporality === "past"
+              ? " z-2 border-green-400"
+              : cotemporality === "current"
+                ? " z-3 border-[#EDAB00]"
+                : " z-1 border-gray-500")
           }
         />
       ) : null}

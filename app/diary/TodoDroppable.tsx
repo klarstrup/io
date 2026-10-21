@@ -2,11 +2,10 @@
 import { useApolloClient, useMutation } from "@apollo/client/react";
 import {
   closestCenter,
-  CollisionDetection,
+  type CollisionDetection,
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   MouseSensor,
-  rectIntersection,
   TouchSensor,
   type UniqueIdentifier,
   useDroppable,
@@ -37,7 +36,6 @@ import {
   dateMidpoint,
   endOfDayButItRespectsDayStartHour,
   haptic,
-  isSameDayButItRespectsDayStartHour,
   omitUndefined,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
@@ -88,38 +86,11 @@ gql`
 const customCollisionDetectionAlgorithm: CollisionDetection = ({
   droppableContainers,
   ...args
-}) => {
-  const dateBeingDragged = args.active.data.current?.date as Date;
-
-  const rectIntersectionCollisions = rectIntersection({
+}) =>
+  closestCenter({
     ...args,
     droppableContainers: droppableContainers.filter(
-      ({ id, data }) =>
-        String(id).startsWith("droppable-day-") &&
-        data.current &&
-        "date" in data.current &&
-        (typeof data.current.date === "string" ||
-          typeof data.current.date === "number" ||
-          isDate(data.current.date)) &&
-        !isSameDayButItRespectsDayStartHour(
-          data.current.date,
-          dateBeingDragged,
-        ),
-    ),
-  });
-
-  // Collision detection algorithms return an array of collisions
-  if (rectIntersectionCollisions.length > 0) {
-    // The trash is intersecting, return early
-    return rectIntersectionCollisions;
-  }
-
-  // Compute other collisions
-  return closestCenter({
-    ...args,
-    droppableContainers: droppableContainers.filter(
-      ({ id, data }) =>
-        !String(id).startsWith("droppable-day-") &&
+      ({ data }) =>
         data.current &&
         "date" in data.current &&
         (typeof data.current.date === "string" ||
@@ -127,7 +98,6 @@ const customCollisionDetectionAlgorithm: CollisionDetection = ({
           isDate(data.current.date)),
     ),
   });
-};
 
 export function TodoDragDropContainer(props: { children: ReactNode }) {
   const client = useApolloClient();

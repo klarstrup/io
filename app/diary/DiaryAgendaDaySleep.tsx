@@ -4,6 +4,7 @@ import type { Interval } from "date-fns";
 import { intervalToDuration } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { twMerge } from "tailwind-merge";
 import type { GQSleep, GQUser } from "../../graphql.generated/graphql";
 import { formatShortDuration } from "../../models/workout";
 import { cotemporality, DEFAULT_TIMEZONE } from "../../utils";
@@ -12,12 +13,14 @@ import type { WithOrWithoutSeparatedEnd } from "./diaryUtils";
 import { getJournalEntryPrincipalDate, isSeparatedEnd } from "./diaryUtils";
 
 export default function DiaryAgendaDaySleep({
+  className,
   sleep,
   userTimeZone,
   principalDate,
   cotemporalityOfSurroundingEvent,
   hasSeparatedEnd,
 }: {
+  className?: string;
   sleep: WithOrWithoutSeparatedEnd<GQSleep>;
   userTimeZone: GQUser["timeZone"];
   principalDate?: ReturnType<typeof getJournalEntryPrincipalDate>;
@@ -48,7 +51,7 @@ export default function DiaryAgendaDaySleep({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={hasSeparatedEnd}
       onClick={handleOnClick}
-      className={"cursor-pointer"}
+      className={twMerge("cursor-pointer", className)}
     >
       <div className="relative flex items-center gap-1.5 leading-snug">
         <div className="text-center font-semibold tabular-nums">

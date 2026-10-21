@@ -1,4 +1,6 @@
+"use client";
 import { useApolloClient } from "@apollo/client/react";
+import { TZDate } from "@date-fns/tz";
 import {
   faBoxesPacking,
   faExternalLink,
@@ -9,13 +11,16 @@ import {
   isBefore,
   isEqual,
   isPast,
+  isToday,
   roundToNearestMinutes,
   type Interval,
 } from "date-fns";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useMemo, type ReactElement } from "react";
 import { browser } from "react-dom";
+import { twMerge } from "tailwind-merge";
 import type {
   GQEvent,
   GQLocation,
@@ -33,6 +38,8 @@ import {
   isSameDayButItRespectsDayStartHour,
   startOfDayButItRespectsDayStartHour,
 } from "../../utils";
+import { DiaryAgendaDayCreateExpander } from "./DiaryAgendaDayCreateExpander";
+import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayDueSet } from "./DiaryAgendaDayDueSet";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
 import { DiaryAgendaDayEvent } from "./DiaryAgendaDayEvent";
@@ -43,7 +50,6 @@ import DiaryAgendaDaySleep from "./DiaryAgendaDaySleep";
 import { DiaryAgendaDayTodo } from "./DiaryAgendaDayTodo";
 import { DiaryAgendaDayTrip } from "./DiaryAgendaDayTrip";
 import { DiaryAgendaDayWorkout } from "./DiaryAgendaDayWorkout";
-import { TodoSortableContext } from "./TodoDroppable";
 import {
   doEntriesOverlapExactly,
   getJournalEntryPrincipalDate,
@@ -55,11 +61,6 @@ import {
 } from "./diaryUtils";
 import gloryMaskPng from "./glory-mask.png";
 import gloryPng from "./glory.png";
-
-interface DayJournalEntryElement {
-  id: string;
-  element: ReactElement;
-}
 
 const emptyArrayFallback = (...args: JournalEntry[][]): JournalEntry[] => {
   for (const arg of args) if (arg.length) return arg;
@@ -91,7 +92,7 @@ export function DiaryAgendaDayDayContents({
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
 
   const dayJournalItems = useMemo(() => {
-    const dayJournalEntryElements: DayJournalEntryElement[] = [];
+    const dayJournalEntryElements: ReactElement[] = [];
 
     let i = 0;
     const entryIdsWhereTheEndWasSkippedSoItShouldNoLongerCountAsSurrounding: string[] =
@@ -106,13 +107,28 @@ export function DiaryAgendaDayDayContents({
       const entryId =
         (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
         (journalEntry.__typename !== "LocationChange" &&
-        journalEntry.__typename !== "NowDivider"
+        journalEntry.__typename !== "NowDivider" &&
+        journalEntry.__typename !== "DateChange"
           ? client.cache.identify(journalEntry)!
           : journalEntry.id);
       const principalDate = getJournalEntryPrincipalDate(journalEntry);
 
       const precedingJournalEntry = dayJournalEntries[i - 1];
       const followingJournalEntry = dayJournalEntries[i + 1];
+
+      let roundednessClassName = "";
+      if (
+        precedingJournalEntry?.__typename === "DateChange" ||
+        !precedingJournalEntry
+      ) {
+        roundednessClassName += " rounded-t-xl";
+      }
+      if (
+        followingJournalEntry?.__typename === "DateChange" ||
+        !followingJournalEntry
+      ) {
+        roundednessClassName += " rounded-b-xl";
+      }
 
       const previousEntries = dayJournalEntries
         .slice(0, i)
@@ -202,68 +218,51 @@ export function DiaryAgendaDayDayContents({
         : null;
 
       if (journalEntry.__typename === "NowDivider") {
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayNow
-              key={entryId}
-              date={date}
-              timeZone={timeZone}
-              now={journalEntry.start}
-              nextEntryDate={
-                (followingJournalEntry &&
-                  getJournalEntryPrincipalDate(followingJournalEntry).start) ||
-                null
-              }
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-            />
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayNow
+            key={entryId}
+            date={date}
+            className={roundednessClassName}
+            timeZone={timeZone}
+            now={journalEntry.start}
+            nextEntryDate={
+              (followingJournalEntry &&
+                getJournalEntryPrincipalDate(followingJournalEntry).start) ||
+              null
+            }
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+          />,
+        );
       } else if (journalEntry.__typename === "Sleep") {
         const sleep = journalEntry;
 
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDaySleep
-              key={entryId}
-              sleep={sleep}
-              userTimeZone={timeZone}
-              principalDate={principalDate}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              hasSeparatedEnd={!isSeparatedEnd(sleep)}
-            />
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDaySleep
+            key={entryId}
+            sleep={sleep}
+            className={roundednessClassName}
+            userTimeZone={timeZone}
+            principalDate={principalDate}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            hasSeparatedEnd={!isSeparatedEnd(sleep)}
+          />,
+        );
       } else if (journalEntry.__typename === "Event") {
         const event = journalEntry;
 
-        const eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt =
-          isEventEntireDay(event, dayRange.start);
-
-        const isAllDayEvent =
-          event.datetype === "date" ||
-          eventIsMoreThan24HoursAndWereOnADayInTheMiddleOfIt;
-
-        if (date && isAllDayEvent) {
-          // All-day events are handled separately in the DiaryAgendaDayDayAllDayEvents component, so we don't need to render them here.
-        } else if (isSeparatedEnd(event)) {
-          dayJournalEntryElements.push({
-            id: entryId,
-            element: (
-              <DiaryAgendaDayEvent
-                key={entryId}
-                date={date}
-                dayRange={dayRange}
-                userTimeZone={timeZone}
-                event={event}
-                cotemporalityOfSurroundingEvent={
-                  cotemporalityOfSurroundingEntry
-                }
-                isEntryWithSeparatedEnd={false}
-              />
-            ),
-          });
+        if (isSeparatedEnd(event)) {
+          dayJournalEntryElements.push(
+            <DiaryAgendaDayEvent
+              key={entryId}
+              className={roundednessClassName}
+              date={date}
+              dayRange={dayRange}
+              userTimeZone={timeZone}
+              event={event}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              isEntryWithSeparatedEnd={false}
+            />,
+          );
         } else {
           const precedingEndOfEvent =
             precedingJournalEntry &&
@@ -304,80 +303,71 @@ export function DiaryAgendaDayDayContents({
             );
           }
 
-          dayJournalEntryElements.push({
-            id: entryId,
-            element: (
-              <DiaryAgendaDayEvent
-                key={entryId}
-                date={date}
-                dayRange={dayRange}
-                userTimeZone={timeZone}
-                event={event}
-                isEntryWithSeparatedEnd={
-                  (followingEndOfEntries.some(
-                    (endOfEntry) => endOfEntry.id === event.id,
-                  ) &&
-                    (date
-                      ? isEqual(
-                          startOfDayButItRespectsDayStartHour(dayRange.start),
-                          startOfDayButItRespectsDayStartHour(event.start),
-                        )
-                      : true)) ||
-                  (date &&
-                    !isSameDayButItRespectsDayStartHour(
-                      event.start,
-                      event.end,
-                    ) &&
-                    isEqual(
-                      startOfDayButItRespectsDayStartHour(dayRange.start),
-                      startOfDayButItRespectsDayStartHour(event.start),
-                    ))
-                }
-                cotemporalityOfSurroundingEvent={
-                  cotemporalityOfSurroundingEntry ||
-                  (dayNo !== undefined &&
-                  dayNo > 1 &&
-                  days > 1 &&
-                  entryHasSeparateEnd
-                    ? cotemporality(event)
-                    : null)
-                }
-              />
-            ),
-          });
+          dayJournalEntryElements.push(
+            <DiaryAgendaDayEvent
+              key={entryId}
+              className={roundednessClassName}
+              date={date}
+              dayRange={dayRange}
+              userTimeZone={timeZone}
+              event={event}
+              isEntryWithSeparatedEnd={
+                (followingEndOfEntries.some(
+                  (endOfEntry) => endOfEntry.id === event.id,
+                ) &&
+                  (date
+                    ? isEqual(
+                        startOfDayButItRespectsDayStartHour(dayRange.start),
+                        startOfDayButItRespectsDayStartHour(event.start),
+                      )
+                    : true)) ||
+                (date &&
+                  !isSameDayButItRespectsDayStartHour(event.start, event.end) &&
+                  isEqual(
+                    startOfDayButItRespectsDayStartHour(dayRange.start),
+                    startOfDayButItRespectsDayStartHour(event.start),
+                  ))
+              }
+              cotemporalityOfSurroundingEvent={
+                cotemporalityOfSurroundingEntry ||
+                (dayNo !== undefined &&
+                dayNo > 1 &&
+                days > 1 &&
+                entryHasSeparateEnd
+                  ? cotemporality(event)
+                  : null)
+              }
+            />,
+          );
         }
       } else if (journalEntry.__typename === "Todo") {
         const todo = journalEntry;
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayTodo
-              todo={todo}
-              key={entryId}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              now={now}
-              timeZone={timeZone}
-            />
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayTodo
+            todo={todo}
+            key={entryId}
+            className={roundednessClassName}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            now={now}
+            timeZone={timeZone}
+          />,
+        );
       } else if ("exerciseSchedule" in journalEntry) {
         const dueSet = journalEntry;
 
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayDueSet
-              key={entryId}
-              dayRange={dayRange}
-              dueSet={dueSet}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
-              workouts={ownWorkouts}
-              locations={dayLocations}
-              timeZone={timeZone}
-            />
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayDueSet
+            key={entryId}
+            className={roundednessClassName}
+            dayRange={dayRange}
+            dueSet={dueSet}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            exerciseInfo={dueSet.exerciseSchedule.exerciseInfo}
+            workouts={ownWorkouts}
+            locations={dayLocations}
+            timeZone={timeZone}
+          />,
+        );
       } else if (journalEntry.__typename === "Workout") {
         const workout = journalEntry;
 
@@ -385,35 +375,31 @@ export function DiaryAgendaDayDayContents({
           startOfDayButItRespectsDayStartHour(workout.workedOutAt),
         );
 
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayWorkout
-              key={entryId}
-              location={
-                dayLocations.find(
-                  (loc) => loc.id === workout.locationId,
-                ) as LocationData
-              }
-              workout={workout}
-              workoutDateStr={workoutDateStr}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              timeZone={timeZone}
-            />
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayWorkout
+            key={entryId}
+            className={roundednessClassName}
+            location={
+              dayLocations.find(
+                (loc) => loc.id === workout.locationId,
+              ) as LocationData
+            }
+            workout={workout}
+            workoutDateStr={workoutDateStr}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            timeZone={timeZone}
+          />,
+        );
       } else if (journalEntry.__typename === "LocationChange") {
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayLocationChange
-              key={entryId}
-              locationChange={journalEntry}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              timeZone={timeZone}
-            />
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayLocationChange
+            key={entryId}
+            className={roundednessClassName}
+            locationChange={journalEntry}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            timeZone={timeZone}
+          />,
+        );
       } else if (journalEntry.__typename === "Trip") {
         const trip = journalEntry;
         const isEndOfTrip = isSeparatedEnd(trip);
@@ -431,22 +417,17 @@ export function DiaryAgendaDayDayContents({
         ) {
           // Skip rendering the separated end of the trip as it will be represented by the preceding entry
         } else {
-          dayJournalEntryElements.push({
-            id: entryId,
-            element: (
-              <DiaryAgendaDayTrip
-                key={entryId}
-                trip={trip}
-                cotemporalityOfSurroundingEvent={
-                  cotemporalityOfSurroundingEntry
-                }
-                isEntryWithSeparatedEnd={
-                  !followingEntryIsEndOfTrip && !isEndOfTrip
-                }
-                timeZone={timeZone}
-              />
-            ),
-          });
+          dayJournalEntryElements.push(
+            <DiaryAgendaDayTrip
+              key={entryId}
+              trip={trip}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              isEntryWithSeparatedEnd={
+                !followingEntryIsEndOfTrip && !isEndOfTrip
+              }
+              timeZone={timeZone}
+            />,
+          );
         }
       } else if (journalEntry.__typename === "Meal") {
         const meal = journalEntry;
@@ -463,235 +444,304 @@ export function DiaryAgendaDayDayContents({
               )
             : true
         ) {
-          dayJournalEntryElements.push({
-            id: entryId,
-            element: (
-              <DiaryAgendaDayMeal
-                key={entryId}
-                meal={meal}
-                cotemporalityOfSurroundingEvent={
-                  cotemporalityOfSurroundingEntry
-                }
-                timeZone={timeZone}
-              />
-            ),
-          });
+          dayJournalEntryElements.push(
+            <DiaryAgendaDayMeal
+              key={entryId}
+              meal={meal}
+              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+              timeZone={timeZone}
+            />,
+          );
         }
       } else if (journalEntry.__typename === "Delivery") {
         const delivery = journalEntry;
 
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayEntry
-              key={entryId}
-              date={getJournalEntryPrincipalDate(delivery).start}
-              userTimeZone={timeZone}
-              entry={delivery}
-              icon={faBoxesPacking}
-              cotemporality={cotemporality({
-                start: delivery.timestamp,
-                end: delivery.timestamp,
-              })}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              className={"pr-0.5 pl-0.5 text-xs"}
-              iconClassName="w-10 text-[0.666rem]"
-            >
-              <span className="flex items-stretch leading-snug">
-                <div className="flex items-baseline gap-1 py-0.5">
-                  <span>{delivery.status}</span>
-                  {delivery.from ? (
-                    <span className="text-[0.666rem] opacity-50">
-                      from {delivery.from}
-                    </span>
-                  ) : null}
-                  {delivery.url ? (
-                    <a
-                      href={delivery.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
-                    >
-                      <FontAwesomeIcon icon={faExternalLink} />
-                    </a>
-                  ) : null}{" "}
-                </div>
-              </span>
-            </DiaryAgendaDayEntry>
-          ),
-        });
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayEntry
+            key={entryId}
+            date={getJournalEntryPrincipalDate(delivery).start}
+            userTimeZone={timeZone}
+            entry={delivery}
+            icon={faBoxesPacking}
+            cotemporality={cotemporality({
+              start: delivery.timestamp,
+              end: delivery.timestamp,
+            })}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            className={"pr-0.5 pl-0.5 text-xs"}
+            iconClassName="w-10 text-[0.666rem]"
+          >
+            <span className="flex items-stretch leading-snug">
+              <div className="flex items-baseline gap-1 py-0.5">
+                <span>{delivery.status}</span>
+                {delivery.from ? (
+                  <span className="text-[0.666rem] opacity-50">
+                    from {delivery.from}
+                  </span>
+                ) : null}
+                {delivery.url ? (
+                  <a
+                    href={delivery.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                  >
+                    <FontAwesomeIcon icon={faExternalLink} />
+                  </a>
+                ) : null}{" "}
+              </div>
+            </span>
+          </DiaryAgendaDayEntry>,
+        );
       } else if (journalEntry.__typename === "Achievement") {
         const achievement = journalEntry;
 
-        dayJournalEntryElements.push({
-          id: entryId,
-          element: (
-            <DiaryAgendaDayEntry
-              key={entryId}
-              date={getJournalEntryPrincipalDate(achievement).start}
-              userTimeZone={timeZone}
-              entry={achievement}
-              iconTxt={
-                <Image
-                  src={achievement.gameIcon}
-                  alt={achievement.gameName}
-                  width={48}
-                  height={48}
-                  style={{ width: 24, height: 24 }}
-                  className="rounded-sm"
-                />
-              }
-              cotemporality={cotemporality({
-                start: achievement.unlockedAt,
-                end: achievement.unlockedAt,
-              })}
-              cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
-              onClick={() => {
-                router.push(
-                  `/diary/entries/${achievement.__typename}:${achievement.id}`,
-                );
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayEntry
+            key={entryId}
+            date={getJournalEntryPrincipalDate(achievement).start}
+            userTimeZone={timeZone}
+            entry={achievement}
+            iconTxt={
+              <Image
+                src={achievement.gameIcon}
+                alt={achievement.gameName}
+                width={48}
+                height={48}
+                style={{ width: 24, height: 24 }}
+                className="rounded-sm"
+              />
+            }
+            cotemporality={cotemporality({
+              start: achievement.unlockedAt,
+              end: achievement.unlockedAt,
+            })}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            onClick={() => {
+              router.push(
+                `/diary/entries/${achievement.__typename}:${achievement.id}`,
+              );
+            }}
+            contentClassName="flex items-center gap-2 leading-none"
+            className={roundednessClassName}
+          >
+            <div
+              style={{
+                flexShrink: 0,
+                display: "inline-flex",
+                position: "relative",
               }}
-              contentClassName="flex items-center gap-2 leading-none"
             >
               <div
                 style={{
+                  width: "32px",
+                  height: "32px",
                   flexShrink: 0,
-                  display: "inline-flex",
+                  contain: "size",
+                  aspectRatio: "1 / 1",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  display: "inline-block",
                   position: "relative",
                 }}
               >
-                <div
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    flexShrink: 0,
-                    contain: "size",
-                    aspectRatio: "1 / 1",
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    display: "inline-block",
-                    position: "relative",
-                  }}
-                >
-                  {typeof achievement.globalPercentage === "number" &&
-                  achievement.globalPercentage <= 10 ? (
+                {typeof achievement.globalPercentage === "number" &&
+                achievement.globalPercentage <= 10 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      maskImage: `url(${gloryPng.src})`,
+                      maskSize: "100% auto",
+                      maskRepeat: "repeat",
+                      inset: "-40%",
+                      overflow: "hidden",
+                    }}
+                  >
                     <div
                       style={{
                         position: "absolute",
-                        maskImage: `url(${gloryPng.src})`,
                         maskSize: "100% auto",
                         maskRepeat: "repeat",
                         inset: "-40%",
                         overflow: "hidden",
+
+                        animationName: "aeY3xSNbegI-",
+                        animationDuration: "18s",
+                        animationTimingFunction: "linear",
+                        animationIterationCount: "infinite",
+                        animationDirection: "reverse",
+                        animationPlayState: "running",
+                        maskImage: `url(${gloryMaskPng.src})`,
                       }}
                     >
                       <div
                         style={{
-                          position: "absolute",
-                          maskSize: "100% auto",
-                          maskRepeat: "repeat",
-                          inset: "-40%",
-                          overflow: "hidden",
-
+                          mixBlendMode: "overlay",
                           animationName: "aeY3xSNbegI-",
-                          animationDuration: "18s",
+                          animationDuration: "6s",
                           animationTimingFunction: "linear",
                           animationIterationCount: "infinite",
-                          animationDirection: "reverse",
                           animationPlayState: "running",
-                          maskImage: `url(${gloryMaskPng.src})`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            mixBlendMode: "overlay",
-                            animationName: "aeY3xSNbegI-",
-                            animationDuration: "6s",
-                            animationTimingFunction: "linear",
-                            animationIterationCount: "infinite",
-                            animationPlayState: "running",
-                            position: "absolute",
-                            inset: "-10px",
+                          position: "absolute",
+                          inset: "-10px",
 
-                            background:
-                              "repeating-conic-gradient(rgba(255, 217, 0, 0.176) 0%, rgba(255, 184, 78, 0) 6%, rgba(255, 217, 0, 0.176) 10%, rgb(255, 184, 78) 26%, rgba(255, 217, 0, 0.176) 35%, rgb(255, 184, 78) 40%, rgba(255, 217, 0, 0.176) 60%, rgb(255, 184, 78) 82%, rgba(255, 217, 0, 0.176) 100%)",
-                            overflow: "hidden",
-                          }}
-                        ></div>
-                      </div>
+                          background:
+                            "repeating-conic-gradient(rgba(255, 217, 0, 0.176) 0%, rgba(255, 184, 78, 0) 6%, rgba(255, 217, 0, 0.176) 10%, rgb(255, 184, 78) 26%, rgba(255, 217, 0, 0.176) 35%, rgb(255, 184, 78) 40%, rgba(255, 217, 0, 0.176) 60%, rgb(255, 184, 78) 82%, rgba(255, 217, 0, 0.176) 100%)",
+                          overflow: "hidden",
+                        }}
+                      ></div>
                     </div>
-                  ) : null}
-                  <div
-                    style={{
-                      // ::after
-                      content: "",
-                      width: "100%",
-                      height: "100%",
-                      display: "block",
-                      position: "absolute",
-                      top: "0px",
-                      left: "0px",
-                      boxShadow:
-                        typeof achievement.globalPercentage === "number" &&
-                        achievement.globalPercentage <= 10
-                          ? "rgba(0, 0, 0, 0.5) 0px 0px 12px"
-                          : undefined,
-                      background:
-                        "linear-gradient(90deg, rgb(59, 65, 74) 0%, rgb(44, 49, 56) 95%)",
-                      borderRadius: "2px",
-                    }}
-                  />
-                  <Image
-                    loading="lazy"
-                    alt={achievement.name}
-                    src={achievement.icon}
-                    width={64}
-                    height={64}
-                    style={{
-                      boxShadow:
-                        typeof achievement.globalPercentage === "number" &&
-                        achievement.globalPercentage <= 10
-                          ? "rgba(255, 184, 78, 0.6) 0px 0px 2px 1px, rgba(255, 184, 78, 0.4) 0px 0px 16px 1px"
-                          : undefined,
-                      // asd
-                      verticalAlign: "top",
-                      width: "100%",
-                      minWidth: "100%",
-                      maxWidth: "100%",
-                      height: "100%",
-                      minHeight: "100%",
-                      maxHeight: "100%",
-                      position: "relative",
-                      transition: "transform 0.1s ease-in-out",
-                      borderRadius: "2px",
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <span>{achievement.name}</span>{" "}
-                {achievement.description ? (
-                  <span className="text-[0.666rem] text-stone-500">
-                    {achievement.description}
-                  </span>
-                ) : null}{" "}
-                {achievement.url ? (
-                  <a
-                    href={achievement.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent the click from propagating to the parent div and triggering the onClick handler
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faExternalLink} />
-                  </a>
+                  </div>
                 ) : null}
+                <div
+                  style={{
+                    // ::after
+                    content: "",
+                    width: "100%",
+                    height: "100%",
+                    display: "block",
+                    position: "absolute",
+                    top: "0px",
+                    left: "0px",
+                    boxShadow:
+                      typeof achievement.globalPercentage === "number" &&
+                      achievement.globalPercentage <= 10
+                        ? "rgba(0, 0, 0, 0.5) 0px 0px 12px"
+                        : undefined,
+                    background:
+                      "linear-gradient(90deg, rgb(59, 65, 74) 0%, rgb(44, 49, 56) 95%)",
+                    borderRadius: "2px",
+                  }}
+                />
+                <Image
+                  loading="lazy"
+                  alt={achievement.name}
+                  src={achievement.icon}
+                  width={64}
+                  height={64}
+                  style={{
+                    boxShadow:
+                      typeof achievement.globalPercentage === "number" &&
+                      achievement.globalPercentage <= 10
+                        ? "rgba(255, 184, 78, 0.6) 0px 0px 2px 1px, rgba(255, 184, 78, 0.4) 0px 0px 16px 1px"
+                        : undefined,
+                    // asd
+                    verticalAlign: "top",
+                    width: "100%",
+                    minWidth: "100%",
+                    maxWidth: "100%",
+                    height: "100%",
+                    minHeight: "100%",
+                    maxHeight: "100%",
+                    position: "relative",
+                    transition: "transform 0.1s ease-in-out",
+                    borderRadius: "2px",
+                  }}
+                />
               </div>
-            </DiaryAgendaDayEntry>
-          ),
-        });
+            </div>
+            <div>
+              <span>{achievement.name}</span>{" "}
+              {achievement.description ? (
+                <span className="text-[0.666rem] text-stone-500">
+                  {achievement.description}
+                </span>
+              ) : null}{" "}
+              {achievement.url ? (
+                <a
+                  href={achievement.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[0.666rem] text-[#edab00] hover:text-[#edab00]/80"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent the click from propagating to the parent div and triggering the onClick handler
+                  }}
+                >
+                  <FontAwesomeIcon icon={faExternalLink} />
+                </a>
+              ) : null}
+            </div>
+          </DiaryAgendaDayEntry>,
+        );
+      } else if (journalEntry.__typename === "DateChange") {
+        const dayName = dateToString(
+          startOfDayButItRespectsDayStartHour(journalEntry.date),
+        );
+
+        dayJournalEntryElements.push(
+          <DiaryAgendaDayEntry
+            key={entryId}
+            date={journalEntry.date}
+            userTimeZone={timeZone}
+            entry={journalEntry}
+            cotemporality={cotemporality(journalEntry)}
+            cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEntry}
+            className={twMerge(
+              "bg-white/0 backdrop-blur-none",
+              roundednessClassName,
+            )}
+            contentClassName="flex w-full items-center justify-center pl-2 gap-1 text-lg leading-none font-medium text-stone-600 [font-variant:small-caps]"
+          >
+            <div
+              className={
+                "relative z-5 mx-auto mt-1 -mb-px flex w-full max-w-lg items-center gap-1 pr-2 leading-normal transition-colors xl:max-w-none" +
+                (isLoadingEntries ? " animate-pulse bg-blue-300!" : "")
+              }
+              style={{
+                textShadow:
+                  "0 0 1px rgba(255,255,255,0.5),0 0 2px rgba(255,255,255,0.5),0 0 3px rgba(255,255,255,0.5),0 0 4px rgba(255,255,255,0.5),0 0 5px rgba(255,255,255,0.5),0 0 6px rgba(255,255,255,0.5)",
+              }}
+            >
+              <Link
+                href="/calendar"
+                className={
+                  "w-8 text-right font-mono text-xs tracking-[-1px] text-gray-900/70 tabular-nums"
+                }
+              >
+                {new TZDate(dayName, timeZone).toLocaleDateString("da-DK", {
+                  month: "numeric",
+                  day: "numeric",
+                })}
+              </Link>
+              <Link href={`/diary/${dayName}`} className="font-bold">
+                {isToday(journalEntry.date)
+                  ? "Today"
+                  : new TZDate(dayName, timeZone).toLocaleDateString("en-DK", {
+                      weekday: "long",
+                    })}
+              </Link>
+              {dateToString(new Date()) === dayName ? null : (
+                <DiaryAgendaDayCreateExpander
+                  inactiveButtonClassName={
+                    isPast(journalEntry.date) ? "bg-green-200" : "bg-yellow-200"
+                  }
+                >
+                  <DiaryAgendaDayCreateTodo date={journalEntry.date} />
+                  {isPast(journalEntry.date) ? (
+                    <>
+                      <Link
+                        href={`/diary/${dayName}/workout`}
+                        className={
+                          "cursor-pointer rounded-md bg-[#ff0] px-1 py-0.5 pr-1.5 text-sm font-semibold shadow-md shadow-black/30"
+                        }
+                      >
+                        <span className="text-xs opacity-25">➕</span> Workout
+                      </Link>
+                    </>
+                  ) : null}
+                  <span
+                    hidden
+                    className={
+                      "cursor-not-allowed rounded-md bg-gray-300 px-1 py-0.5 pr-1.5 text-sm font-semibold text-black/25 shadow-md shadow-black/30"
+                    }
+                  >
+                    <span className="text-xs">➕</span> Event
+                  </span>
+                </DiaryAgendaDayCreateExpander>
+              )}
+            </div>
+          </DiaryAgendaDayEntry>,
+        );
       } else {
         journalEntry satisfies never;
       }
@@ -706,15 +756,14 @@ export function DiaryAgendaDayDayContents({
     dayJournalEntries,
     dayLocations,
     dayRange,
+    isLoadingEntries,
     now,
     router,
     timeZone,
   ]);
 
   return dayJournalItems.length ? (
-    <TodoSortableContext items={dayJournalItems}>
-      {dayJournalItems.map(({ element }) => element)}
-    </TodoSortableContext>
+    dayJournalItems
   ) : (
     <div className={"pl-10 text-gray-400/50 italic"}>
       {isLoadingEntries

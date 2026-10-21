@@ -1,6 +1,8 @@
+"use client";
 import { addSeconds } from "date-fns";
 import Link from "next/link";
 import { useMemo } from "react";
+import { twMerge } from "tailwind-merge";
 import { dateMidpoint, dateToString, type cotemporality } from "../../utils";
 import { DiaryAgendaDayCreateTodo } from "./DiaryAgendaDayCreateTodo";
 import { DiaryAgendaDayEntry } from "./DiaryAgendaDayEntry";
@@ -12,12 +14,14 @@ export function DiaryAgendaDayNow({
   now,
   nextEntryDate,
   timeZone,
+  className,
 }: {
   date?: `${number}-${number}-${number}`;
   cotemporalityOfSurroundingEvent: ReturnType<typeof cotemporality> | null;
   now: Date;
   nextEntryDate: Date | null;
   timeZone: string;
+  className?: string;
 }) {
   const iconTxt = useMemo(
     () => <span className="text-[10px] font-bold text-[#EDAB00]">NOW</span>,
@@ -49,7 +53,7 @@ export function DiaryAgendaDayNow({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       iconTxt={iconTxt}
       cotemporality="current"
-      className="now-divider pt-0.5 pb-1.5"
+      className={twMerge("now-divider pt-0.5 pb-1.5", className)}
       contentClassName="gap-2"
     >
       <DiaryAgendaDayCreateTodo date={newTodoDate} />

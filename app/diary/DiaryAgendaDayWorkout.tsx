@@ -1,8 +1,10 @@
+"use client";
 import { faDumbbell } from "@fortawesome/free-solid-svg-icons";
 import { max, min } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MouseEvent, useCallback } from "react";
+import { twMerge } from "tailwind-merge";
 import { ExerciseName } from "../../components/ExerciseName";
 import type {
   GQWorkout,
@@ -26,12 +28,14 @@ export function DiaryAgendaDayWorkout({
   workoutDateStr,
   timeZone,
   cotemporalityOfSurroundingEvent,
+  className,
 }: {
   location?: LocationData | null;
   workout: GQWorkout;
   workoutDateStr: string;
   timeZone: string;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  className?: string;
 }) {
   const router = useRouter();
 
@@ -74,15 +78,16 @@ export function DiaryAgendaDayWorkout({
       onIconClick={handleIconClick}
     >
       <div
-        className={
-          "inline-flex flex-col items-start gap-1 " +
-          (workout.source === WorkoutSource.Self
+        className={twMerge(
+          "inline-flex flex-col items-start gap-1",
+          workout.source === WorkoutSource.Self
             ? "rounded-[5px] border border-black/20 bg-white px-1"
-            : "") +
-          (workout.exercises.some((we) => isClimbingExercise(we.exerciseId))
-            ? " w-full"
-            : "")
-        }
+            : "",
+          workout.exercises.some((we) => isClimbingExercise(we.exerciseId))
+            ? "w-full"
+            : "",
+          className,
+        )}
       >
         {workout.exercises.filter((we) => !isClimbingExercise(we.exerciseId))
           .length ? (

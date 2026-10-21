@@ -1,8 +1,10 @@
 "use client";
-import { useQuery } from "@apollo/client/react";
+import { useApolloClient, useQuery } from "@apollo/client/react";
 import {
   addDays,
+  addHours,
   compareAsc,
+  eachDayOfInterval,
   isEqual,
   max,
   min,
@@ -29,6 +31,7 @@ import {
   cotemporality,
   dateMidpoint,
   dateToString,
+  dayStartHour,
   DEFAULT_TIMEZONE,
   emptyArray,
   endOfDayButItRespectsDayStartHour,
@@ -45,12 +48,16 @@ import {
   getLocationFromJournalEntry,
   isSeparatedEnd,
   isVisuallyIdenticalEvent,
-  JournalEntryType,
   journalEntryTypes,
+  type DateChange,
   type JournalEntry,
+  type JournalEntryType,
   type LocationChange,
 } from "../diary/diaryUtils";
-import { TodoDragDropContainer } from "../diary/TodoDroppable";
+import {
+  TodoDragDropContainer,
+  TodoSortableContext,
+} from "../diary/TodoDroppable";
 
 export default function TimelinePage({
   selectedDayStart,
@@ -86,7 +93,7 @@ export default function TimelinePage({
   );
 
   const { data: locationsData } = useQuery(UserLocationsDocument);
-
+  const client = useApolloClient();
   const { data, loading, fetchMore, refetch } = useQuery(
     UserJournalEntriesDocument,
     {
@@ -144,9 +151,27 @@ export default function TimelinePage({
     return journalEntries;
   }, [userJournalEntries, now]);
 
+  const journalEntries21 = useMemo(() => {
+    const journalEntriesIncludingLocationChanges = Array.from(journalEntries2);
+
+    for (const d of eachDayOfInterval(fetchingInterval)) {
+      const day = addHours(d, dayStartHour);
+      const dateChangeEntry: DateChange = {
+        __typename: "DateChange",
+        id: `date-change-${day.toISOString()}`,
+        date: day,
+        start: day,
+        end: day,
+      };
+      journalEntriesIncludingLocationChanges.push(dateChangeEntry);
+    }
+
+    return journalEntriesIncludingLocationChanges;
+  }, [fetchingInterval, journalEntries2]);
+
   const journalEntries3 = useMemo(
     () =>
-      journalEntries2
+      journalEntries21
         .sort((a, b) => a.id.localeCompare(b.id)) // Sort by ID to ensure consistent order for entries with the same start time
         .sort((a, b) => {
           const aText =
@@ -209,8 +234,17 @@ export default function TimelinePage({
             }
           }
           return true;
+        })
+        .filter((entry, i, entries) => {
+          const nextEntry = entries[i + 1];
+          return (
+            !(
+              entry.__typename === "DateChange" &&
+              nextEntry?.__typename === "DateChange"
+            ) || !nextEntry
+          ); // Skip if the next entry is a DateChange or if it is the last entry
         }),
-    [journalEntries2],
+    [journalEntries21],
   );
 
   const journalEntriesIncludingLocationChanges2 = useMemo(() => {
@@ -420,10 +454,8 @@ export default function TimelinePage({
       <TodoDragDropContainer>
         <div
           className={
-            "flex flex-col items-stretch justify-center px-2" +
-            "diary-agenda-day-entry z-4 w-full border border-[yellow]/25 bg-white/10 backdrop-blur-sm " +
-            "mx-auto mb-1 flex max-w-lg flex-0! flex-col items-stretch gap-1 pr-1 pb-1 pl-0 transition-colors " +
-            "bg-white/90"
+            "z-4 mx-auto max-w-lg flex-0! justify-center transition-colors"
+            //"flex flex-col items-stretch justify-center px-2 lg:flex-1 lg:flex-row lg:gap-5 lg:self-start lg:justify-self-center lg:px-0 lg:py-2"
           }
         >
           {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
@@ -500,19 +532,33 @@ export default function TimelinePage({
               }}
             />
           )}
-          <Suspense
-            fallback={
-              <div className={"pl-10 text-gray-400/50 italic"}>Loading...</div>
-            }
+          <TodoSortableContext
+            items={journalEntriesIncludingLocationChanges2.map(
+              (journalEntry) =>
+                (isSeparatedEnd(journalEntry) ? "end-of-" : "") +
+                (journalEntry.__typename !== "LocationChange" &&
+                journalEntry.__typename !== "NowDivider" &&
+                journalEntry.__typename !== "DateChange"
+                  ? client.cache.identify(journalEntry)!
+                  : journalEntry.id),
+            )}
           >
-            <DiaryAgendaDayDayContents
-              now={now}
-              dayRange={fetchingInterval}
-              dayLocations={userLocations}
-              userTimeZone={timeZone}
-              dayJournalEntries={journalEntriesIncludingLocationChanges2}
-            />
-          </Suspense>
+            <Suspense
+              fallback={
+                <div className={"pl-10 text-gray-400/50 italic"}>
+                  Loading...
+                </div>
+              }
+            >
+              <DiaryAgendaDayDayContents
+                now={now}
+                dayRange={fetchingInterval}
+                dayLocations={userLocations}
+                userTimeZone={timeZone}
+                dayJournalEntries={journalEntriesIncludingLocationChanges2}
+              />
+            </Suspense>
+          </TodoSortableContext>
           {selectedDayStart ? null : ( // We only want to load more days when we are on the current day view, not when we are looking at a specific day in the past or future
             <ShyGuy
               requireScroll={!entryType}

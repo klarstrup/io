@@ -56,11 +56,12 @@ export type JournalEntry =
   | GQDelivery
   // These are synthetic entries that don't correspond to models but are used for rendering purposes
   | LocationChange
-  | NowDividerEntry;
+  | NowDividerEntry
+  | DateChange
 
 export type JournalEntryType = Exclude<
   JournalEntry["__typename"],
-  "NowDivider" | "LocationChange"
+  "NowDivider" | "LocationChange" | "DateChange"
 >;
 
 export const journalEntryTypes = [
@@ -158,6 +159,15 @@ export interface LocationChange {
   /** Represents halfway between the precending and following entries */
   start: Date;
   /** Represents immediately before the entry this is location change for */
+  end: Date;
+}
+
+// Fake client-only type for date changes, which are not stored in the database but are generated on the fly when rendering the diary agenda
+export interface DateChange {
+  __typename: "DateChange";
+  id: string;
+  date: Date;
+  start: Date;
   end: Date;
 }
 

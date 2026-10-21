@@ -1,3 +1,4 @@
+"use client";
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarAlt } from "@fortawesome/free-regular-svg-icons";
 import {
@@ -14,6 +15,7 @@ import {
 } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { twMerge } from "tailwind-merge";
 import type { GQEvent, GQUser } from "../../graphql.generated/graphql";
 import { durationToMs, formatShortDuration } from "../../models/workout";
 import {
@@ -32,6 +34,7 @@ export function DiaryAgendaDayEvent({
   event,
   isEntryWithSeparatedEnd,
   cotemporalityOfSurroundingEvent,
+  className,
 }: {
   date?: `${number}-${number}-${number}`;
   dayRange?: { start: Date; end: Date };
@@ -39,6 +42,7 @@ export function DiaryAgendaDayEvent({
   event: GQEvent;
   isEntryWithSeparatedEnd?: boolean;
   cotemporalityOfSurroundingEvent?: ReturnType<typeof cotemporality> | null;
+  className?: string;
 }) {
   const router = useRouter();
   const timeZone = userTimeZone || DEFAULT_TIMEZONE;
@@ -90,7 +94,7 @@ export function DiaryAgendaDayEvent({
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
       onClick={handleOnClick}
-      className={"cursor-pointer"}
+      className={twMerge("cursor-pointer", className)}
     >
       {isEntryEnd ? (
         <>
