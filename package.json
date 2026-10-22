@@ -47,7 +47,7 @@
     "@types/lodash": "^4.17.26",
     "@types/uuid": "^10.0.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/functions": "^3.10.1",
+    "@vercel/functions": "^3.10.3",
     "ably": "^2.29.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "^1.7.12",
@@ -89,7 +89,7 @@
     "zod-defaults": "^0.2.3"
   },
   "devDependencies": {
-    "@eslint-react/eslint-plugin": "^5.28.3",
+    "@eslint-react/eslint-plugin": "^5.28.4",
     "@playwright/test": "^1.64.1",
     "@serwist/turbopack": "^9.5.13",
     "@types/bun": "^1.4.3",
