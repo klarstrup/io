@@ -32,7 +32,7 @@ export const getURLsFromString = (str: string) => {
 };
 export async function* getUserIcalEventsBetween(
   userId: string,
-  { start, end }: Interval<Date, Date> | Interval<TZDate, TZDate>,
+  interval: Interval<Date, Date> | Interval<TZDate, TZDate>,
 ) {
   const user = await authUser();
   if (!user?.id || userId !== user.id) throw new Error("Unauthorized");
@@ -40,9 +40,9 @@ export async function* getUserIcalEventsBetween(
   // Sadly we can't select the date range from the database because of recurrence logic
   const dateSelector = {
     $or: [
-      { start: { $gte: start, $lte: end } },
-      { end: { $gte: start, $lte: end } },
-      { start: { $lte: start }, end: { $gte: end } },
+      { start: { $gte: interval.start, $lte: interval.end } },
+      { end: { $gte: interval.start, $lte: interval.end } },
+      { start: { $lte: interval.start }, end: { $gte: interval.end } },
     ],
   } satisfies FilterOperators<Omit<VEvent, "recurrences">>;
 
@@ -66,11 +66,11 @@ export async function* getUserIcalEventsBetween(
         dateSelector,
         { recurrences: { $elemMatch: dateSelector } },
         {
-          "rrule.options.dtstart": { $lte: end },
-          "rrule.options.until": { $gte: start },
+          "rrule.options.dtstart": { $lte: interval.end },
+          "rrule.options.until": { $gte: interval.start },
         },
         {
-          "rrule.options.dtstart": { $lte: end },
+          "rrule.options.dtstart": { $lte: interval.end },
           "rrule.options.until": null,
         },
       ],
@@ -115,12 +115,10 @@ export async function* getUserIcalEventsBetween(
         if (
           !recurrence.start ||
           (recurrence.start && "end" in recurrence
-            ? areIntervalsOverlapping(
-                { start: recurrence.start, end: recurrence.end },
-                { start, end },
-              )
+            ? areIntervalsOverlapping(recurrence, interval)
             : recurrence.start
-              ? recurrence.start >= start && recurrence.start <= end
+              ? recurrence.start >= interval.start &&
+                recurrence.start <= interval.end
               : false)
         ) {
           if (
@@ -143,12 +141,7 @@ export async function* getUserIcalEventsBetween(
       }
     }
 
-    if (
-      areIntervalsOverlapping(
-        { start: event.start, end: event.end },
-        { start, end },
-      )
-    ) {
+    if (areIntervalsOverlapping(event, interval)) {
       if (sourceStartDate && event.end < sourceStartDate) continue;
 
       if (
@@ -190,7 +183,11 @@ export async function* getUserIcalEventsBetween(
       const eventDurationMS = differenceInMilliseconds(event.end, event.start);
       const rruleDates = rruleSet
         // Subtract the event duration from the start of the interval to ensure we include events that start before the interval but end within it
-        .between(addMilliseconds(start, -eventDurationMS), end, true)
+        .between(
+          addMilliseconds(interval.start, -eventDurationMS),
+          interval.end,
+          true,
+        )
         .map((date) => addMinutes(date, ogOffset - tzOffset(tzid, date)));
 
       const recurrenceIdDates = new Set(
