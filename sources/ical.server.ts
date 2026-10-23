@@ -154,6 +154,9 @@ export async function* getUserIcalEventsBetween(
       if (
         !event.exdate?.some(
           (exdate) => exdate.toJSON() === event.start.toJSON(),
+        ) &&
+        !event.recurrences?.some(
+          (r) => r.recurrenceid?.toJSON() === event.start.toJSON(),
         )
       ) {
         yield eventWithoutId;
