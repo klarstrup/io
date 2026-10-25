@@ -1,4 +1,4 @@
-import { isAfter } from "date-fns";
+import { isAfter, isBefore } from "date-fns";
 import { type EventDetails, EventSource } from "../lib";
 import { SongkickEvents } from "./songkick.server";
 
@@ -110,6 +110,8 @@ const EXELERATE_ID = 6777179;
 const ETHEREAL_KINGDOMS_ID = 9563419;
 const VULVATORIOUS_ID = 10189431;
 const DODNAVN_ID = 10413608;
+const STREET_FIGHTER_ID = 1156526;
+const LIUWINA_ID = 10418182;
 
 export async function getSongkickEvents(): Promise<EventDetails[]> {
   const events = (
@@ -139,6 +141,32 @@ export async function getSongkickEvents(): Promise<EventDetails[]> {
           ),
         ),
       ),
+      getEvents(STREET_FIGHTER_ID).then((evts) =>
+        evts.filter(
+          (event) =>
+            isAfter(
+              new Date(event.start.datetime || event.start.date),
+              new Date(2022, 0),
+            ) &&
+            isBefore(
+              new Date(event.start.datetime || event.start.date),
+              new Date(2023, 0),
+            ),
+        ),
+      ),
+      getEvents(LIUWINA_ID).then((evts) =>
+        evts.filter(
+          (event) =>
+            isAfter(
+              new Date(event.start.datetime || event.start.date),
+              new Date(2018, 0),
+            ) &&
+            isBefore(
+              new Date(event.start.datetime || event.start.date),
+              new Date(2019, 0),
+            ),
+        ),
+      ),
     ])
   ).flat();
 
@@ -164,7 +192,9 @@ export async function getSongkickEvents(): Promise<EventDetails[]> {
               artist.id === EXELERATE_ID ||
               artist.id === ETHEREAL_KINGDOMS_ID ||
               artist.id === VULVATORIOUS_ID ||
-              artist.id === DODNAVN_ID,
+              artist.id === DODNAVN_ID ||
+              artist.id === STREET_FIGHTER_ID ||
+              artist.id === LIUWINA_ID,
           )?.displayName || null,
         start:
           event.id === 41027597
