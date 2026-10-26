@@ -109,13 +109,13 @@ const emitGraphQLUpdate = async (
 const dateScalar = new GraphQLScalarType({
   name: "Date",
   description: "Date custom scalar type",
-  serialize(value) {
+  coerceOutputValue(value) {
     // Convert outgoing Date to integer for JSON
     if (value instanceof Date) return value.toISOString();
 
     throw Error("GraphQL Date Scalar serializer expected a `Date` object");
   },
-  parseValue(value) {
+  coerceInputValue(value) {
     // Convert incoming integer to Date
     let date: Date | null = null;
     if (typeof value === "number") date = new Date(value);
@@ -129,7 +129,7 @@ const dateScalar = new GraphQLScalarType({
       "GraphQL Date Scalar parser expected a `number` or `string` representing a valid date",
     );
   },
-  parseLiteral(ast) {
+  coerceInputLiteral(ast) {
     // Convert hard-coded AST string to integer and then to Date
     let date: Date | null = null;
     if (ast.kind === Kind.INT) date = new Date(parseInt(ast.value, 10));
