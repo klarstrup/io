@@ -1,3 +1,9 @@
+import {
+  faBus,
+  faSubway,
+  faTrain,
+  faTrainTram,
+} from "@fortawesome/free-solid-svg-icons";
 import { faRoad } from "@fortawesome/free-solid-svg-icons/faRoad";
 import { useRouter } from "next/navigation";
 import { twMerge } from "tailwind-merge";
@@ -55,7 +61,30 @@ export function DiaryAgendaDayTrip({
       }
       userTimeZone={timeZone}
       entry={trip}
-      icon={faRoad}
+      icon={
+        // if all legs have the same mode use a specific icon for that mode
+        trip.legs.every(
+          (leg) =>
+            leg.mode === "BUS" || leg.mode === "A_BUS" || leg.mode === "S_BUS",
+        )
+          ? faBus
+          : trip.legs.every(
+                (leg) =>
+                  leg.mode === "S_TRAIN" ||
+                  leg.mode === "LIGHT_RAIL_COPENHAGEN",
+              )
+            ? faTrainTram
+            : trip.legs.every((leg) => leg.mode === "METRO")
+              ? faSubway
+              : trip.legs.every(
+                    (leg) =>
+                      leg.mode === "REGIONAL_TRAIN" ||
+                      leg.mode === "INTERCITY" ||
+                      leg.mode === "INTERCITY_LYN",
+                  )
+                ? faTrain
+                : faRoad
+      }
       cotemporality={cotemporality(trip)}
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       className={twMerge("cursor-pointer text-sm", className)}
