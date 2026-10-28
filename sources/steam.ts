@@ -156,6 +156,7 @@ export namespace Steam {
   export interface Achievementses {
     user_achievements?: UserAchievementsBySteamID;
     schema?: Schema;
+    schema_v2?: Schema;
     globalpercentages?: Globalpercentages;
   }
 

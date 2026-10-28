@@ -126,7 +126,9 @@ export const GET = (request: NextRequest) =>
           for (const [appid, achievementses] of Object.entries(
             mergedQueryData.achievements || {},
           )) {
-            const appAchievementsSchema = achievementses?.schema;
+            const appAchievementsSchema =
+              achievementses?.schema_v2 || achievementses?.schema;
+
             const steamAppAchievements =
               appAchievementsSchema?.groups.flatMap((group) =>
                 group.achievements.map(
