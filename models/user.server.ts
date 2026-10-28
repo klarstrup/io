@@ -564,7 +564,7 @@ export const getUserJournalEntries = async (
               )}`,
               */
 
-                    icon: steamAchievement.icon_achieved,
+                    icon: `https://shared.akamai.steamstatic.com/community_assets/images/apps/${steamUserAchievement.appid}/${steamAchievement.icon_achieved}`,
                     url: `https://steamcommunity.com/id/${config.profile_url}/achievements/${steamUserAchievement.appid}`,
                     __typename: "Achievement",
                   } satisfies GQJournalEntryUnion);
