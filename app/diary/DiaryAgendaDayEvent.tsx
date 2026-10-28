@@ -2,9 +2,18 @@
 import { TZDate } from "@date-fns/tz";
 import { faCalendar as faCalendarAlt } from "@fortawesome/free-regular-svg-icons";
 import {
+  faBed,
+  faBirthdayCake,
+  faBriefcase,
   faCalendar,
   faCalendarCheck,
+  faCoffee,
   faExternalLink,
+  faFilm,
+  faHandFist,
+  faMusic,
+  faTooth,
+  faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -85,11 +94,41 @@ export function DiaryAgendaDayEvent({
       cotemporalityOfSurroundingEvent={cotemporalityOfSurroundingEvent}
       isEntryWithSeparatedEnd={isEntryWithSeparatedEnd}
       icon={
-        isPassed
-          ? faCalendarCheck
-          : event.transparency === "TRANSPARENT"
-            ? faCalendarAlt
-            : faCalendar
+        event.summary?.toLowerCase()?.includes("birthday")
+          ? faBirthdayCake
+          : event.summary?.toLowerCase()?.includes("tandrensning") ||
+              event.summary?.toLowerCase()?.includes("tandlæge")
+            ? faTooth
+            : event.summary?.toLowerCase()?.includes("food") ||
+                event.summary?.toLowerCase()?.includes("meal") ||
+                event.summary?.toLowerCase()?.includes("dinner") ||
+                event.summary?.toLowerCase()?.includes("lunch") ||
+                event.summary?.toLowerCase()?.includes("breakfast")
+              ? faUtensils
+              : event.summary?.toLowerCase()?.includes("kata") ||
+                  event.summary?.toLowerCase()?.includes("karate") ||
+                  event.summary?.toLowerCase()?.includes("kumite")
+                ? faHandFist
+                : event.summary?.toLowerCase()?.includes("fika") ||
+                    event.summary?.toLowerCase()?.includes("coffee")
+                  ? faCoffee
+                  : event.summary?.toLowerCase()?.includes("film")
+                    ? faFilm
+                    : event.summary?.toLowerCase()?.includes("øver") ||
+                        event.summary?.toLowerCase()?.includes("rehearsal") ||
+                        event.summary?.toLowerCase()?.includes("concert") ||
+                        event.summary?.toLowerCase()?.includes("gig") ||
+                        event.summary?.toLowerCase()?.includes("festival")
+                      ? faMusic
+                      : event.summary?.toLowerCase()?.includes("work")
+                        ? faBriefcase
+                        : event.summary?.toLowerCase()?.includes("sleep")
+                          ? faBed
+                          : isPassed
+                            ? faCalendarCheck
+                            : event.transparency === "TRANSPARENT"
+                              ? faCalendarAlt
+                              : faCalendar
       }
       cotemporality={cotemporality(event)}
       contentClassName="flex items-center gap-1.5 leading-none"
