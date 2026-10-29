@@ -1,4 +1,4 @@
-import vulvaLogo from "../public/vulvatorious_logo.png";
+import vulvaVLogo from "../public/vulvatorious_v_logo.png";
 import muscleFemme from "../public/io_muscle_femme_black_outline.png";
 import UpTransShonkTrans from "../public/UpTransShonkTrans.png";
 import StarAndAntlers from "../public/DE_Communist_Flag_crop_free.png";
@@ -283,18 +283,17 @@ Z"
   // eslint-disable-next-line @next/next/no-img-element
   <img
     key="image"
-    src={vulvaLogo.src}
+    src={vulvaVLogo.src}
     alt="Vulvatorious Logo"
-    width={vulvaLogo.width}
-    height={vulvaLogo.height}
+    width={vulvaVLogo.width}
+    height={vulvaVLogo.height}
     style={{
-      minWidth: "3em",
+      minWidth: "0.9em",
       height: "auto",
-      marginLeft: "-0.125em",
-      marginRight: "-0.125em",
+      marginLeft: "-0.15em",
+      marginRight: "-0.15em",
       marginTop: "-0.27em",
       marginBottom: "-0.24em",
-      filter: "invert(1)",
     }}
   />,
   // eslint-disable-next-line @next/next/no-img-element
