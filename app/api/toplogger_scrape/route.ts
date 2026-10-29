@@ -1,3 +1,4 @@
+import { addDays, isFuture, subDays } from "date-fns";
 import { type DocumentNode, Kind } from "graphql";
 import { ObjectId, type UpdateResult } from "mongodb";
 import type { NextRequest } from "next/server";
@@ -39,7 +40,6 @@ import {
   userMeStoreQuery,
   type UserMeStoreResponse,
 } from "./queries";
-import { addDays, isFuture, subDays } from "date-fns";
 
 export const maxDuration = 45;
 
@@ -223,7 +223,7 @@ export const GET = (request: NextRequest) =>
             if (compsData?.comps?.data) userComps.push(...compsData.comps.data);
           },
         );
-        const [activeComps/*, pastComps*/] = partition(
+        const [activeComps, pastComps] = partition(
           uniqueBy(userComps, (c) => c.id),
           (c) =>
             isFuture(addDays(new Date(c.loggableEndAt), 1)) ||
@@ -232,7 +232,7 @@ export const GET = (request: NextRequest) =>
 
         // Fetch all active and backfill one past comp
         yield* deadlineLoop(
-          [...activeComps/*, ...randomSliceOfSize(pastComps, 1)*/],
+          [...activeComps, ...randomSliceOfSize(pastComps, 1)],
           () => getTimeRemaining(),
           async function* (comp) {
             yield pick(comp, "id", "name");
