@@ -101,13 +101,26 @@ type UserDataSourceConfig =
       };
     }
   | {
+      source: DataSource.OpenBanking;
+      config: {
+        apiKey: string;
+        privateKeyPkcs8: string;
+        balanceCutoff?: number | null;
+        balanceDisplayCeiling?: number | null;
+      };
+    }
+  | {
       source: DataSource.DSB;
       config: { authTokens: DSB.AuthTokens };
     }
   | { source: DataSource.PostNord; config: Record<string, never> }
   | {
       source: DataSource.Steam;
-      config: { profile_url: string; steamid: string | null; created_at?: Date };
+      config: {
+        profile_url: string;
+        steamid: string | null;
+        created_at?: Date;
+      };
     };
 
 export interface UserDataSourceMeta {
@@ -146,6 +159,7 @@ export enum DataSource {
   Songkick = "songkick",
   Withings = "withings",
   Spiir = "spiir",
+  OpenBanking = "openbanking",
   SnapCalorie = "snapcalorie",
   DSB = "dsb",
   PostNord = "postnord",
@@ -676,6 +690,58 @@ export const dataSources = {
             type="text"
             {...register("config.SessionKey")}
             placeholder="Session Key"
+            className="w-full"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          Balance Cutoff (optional):
+          <input
+            type="number"
+            {...register("config.balanceCutoff", { valueAsNumber: true })}
+            placeholder="Balance Cutoff"
+            className="w-full"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          Balance Display Ceiling (optional):
+          <input
+            type="number"
+            {...register("config.balanceDisplayCeiling", {
+              valueAsNumber: true,
+            })}
+            placeholder="Balance Display Ceiling"
+            className="w-full"
+          />
+        </label>
+      </>
+    ),
+  },
+  [DataSource.OpenBanking]: {
+    source: DataSource.OpenBanking,
+    isDeprecated: true,
+    configSchema: z.object({
+      apiKey: z.string().default(""),
+      privateKeyPkcs8: z.string().default(""),
+      balanceCutoff: z.number().nullable().optional(),
+      balanceDisplayCeiling: z.number().nullable().optional(),
+    }),
+    getFormElements: ({ register }) => (
+      <>
+        <label className="flex flex-col gap-1">
+          API Key:
+          <input
+            type="text"
+            {...register("config.apiKey")}
+            placeholder="API Key"
+            className="w-full"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          Private Key (PKCS8):
+          <input
+            type="text"
+            {...register("config.privateKeyPkcs8")}
+            placeholder="Private Key (PKCS8)"
             className="w-full"
           />
         </label>

@@ -67,7 +67,7 @@ import {
   IcalEvents,
 } from "./sources/ical.server";
 import { MyFitnessPalFoodEntries } from "./sources/myfitnesspal.server";
-import { SpiirAccountGroups } from "./sources/spiir.server";
+import { OpenBankingAccounts } from "./sources/openbanking.server";
 import { DataSource } from "./sources/utils";
 import { Withings } from "./sources/withings";
 import {
@@ -232,25 +232,29 @@ export const resolvers: GQResolvers<
       const user = context?.user ?? (await authUser());
       if (!user) return null;
 
-      const spiirDataSource = user.dataSources
+      const openbankingDataSource = user.dataSources
         ?.filter((dataSource) => dataSource.paused !== true)
-        .find((dataSource) => dataSource.source === DataSource.Spiir);
-      if (!spiirDataSource) return null;
+        .find((dataSource) => dataSource.source === DataSource.OpenBanking);
+      if (!openbankingDataSource) return null;
 
-      const spiirAccountGroups = await SpiirAccountGroups.find({
+      const openbankingAccounts = await OpenBankingAccounts.find({
         _io_userId: user.id,
       }).toArray();
 
       // Could probably do this in the database with an aggregation, but since we expect there to be very few Spiir account groups per user, it's probably not worth the added complexity
-      const rawBalance = spiirAccountGroups.reduce(
-        (totalBalance, accountGroup) =>
-          (totalBalance += accountGroup.availableBalance),
+      const rawBalance = openbankingAccounts.reduce(
+        (totalBalance, account) =>
+          (totalBalance +=
+            Number(
+              account.balances.find((balance) => balance.type === "FWAV")
+                ?.amount,
+            ) || 0),
         0,
       );
 
       return Math.min(
-        rawBalance - (spiirDataSource.config.balanceCutoff ?? 0),
-        spiirDataSource.config.balanceDisplayCeiling ?? Infinity,
+        rawBalance - (openbankingDataSource.config.balanceCutoff ?? 0),
+        openbankingDataSource.config.balanceDisplayCeiling ?? Infinity,
       );
     },
     weight: async (_parent, _args, context) => {
