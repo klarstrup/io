@@ -24,7 +24,7 @@ export const viewport: Viewport = {
   minimumScale: 1,
 };
 
-export const DYNAMIC_BACKDROP = true;
+export const DYNAMIC_BACKDROP = false;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
