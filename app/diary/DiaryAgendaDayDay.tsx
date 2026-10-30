@@ -170,8 +170,8 @@ export function DiaryAgendaDayDay({
             dayJournalEntries={dayJournalEntries.filter(
               (je) =>
                 je.__typename !== "Event" ||
-                !isEventEntireDay(je, dayRange.start) ||
-                je.datetype !== "date",
+                (!isEventEntireDay(je, dayRange.start) &&
+                  je.datetype !== "date"),
             )}
             isSelectedDay={isSelectedDay}
           />
