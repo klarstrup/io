@@ -238,9 +238,7 @@ export default function TimelinePage({
         })
         .filter((entry, i, entries) => {
           const nextEntry = entries[i + 1];
-          if (!nextEntry) {
-            console.log(entry);
-          }
+
           return (
             !(
               entry.__typename === "DateChange" &&
