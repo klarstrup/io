@@ -50,6 +50,8 @@ export const GET = (request: NextRequest) =>
           method: "POST",
           mode: "cors",
           credentials: "omit",
+        }).catch((error: unknown) => {
+          console.error("Error syncing with OpenBanking API:", error);
         });
 
         await OpenBankingAccounts.bulkWrite(
