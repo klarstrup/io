@@ -35,6 +35,23 @@ export const GET = (request: NextRequest) =>
 
         const accounts = await obClient.getAccounts();
 
+        await fetch("https://open-banking.io/api/sync?unlocked=true", {
+          headers: {
+            accept: "application/json, text/plain, */*",
+            "content-type": "application/json",
+          },
+          referrer: "https://open-banking.io/app",
+          body: JSON.stringify({
+            items: accounts.map((account) => ({
+              accountId: account.id,
+              uid: "d6f435bf-a3af-4649-9ffb-3b0bb070f47e",
+            })),
+          }),
+          method: "POST",
+          mode: "cors",
+          credentials: "omit",
+        });
+
         await OpenBankingAccounts.bulkWrite(
           accounts.map((account) => ({
             updateOne: {
