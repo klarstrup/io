@@ -35,7 +35,7 @@ export const GET = (request: NextRequest) =>
 
         const accounts = await obClient.getAccounts();
 
-        await fetch("https://open-banking.io/api/sync?unlocked=true", {
+        await fetch("https://open-banking.io/api/sync?manual=true", {
           headers: {
             accept: "application/json, text/plain, */*",
             "content-type": "application/json",
