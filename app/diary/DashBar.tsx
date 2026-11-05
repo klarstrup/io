@@ -253,7 +253,7 @@ export default function DashBar() {
     >
       {availableBalance != null ? (
         <a
-          href="https://mine.spiir.dk/"
+          href="https://open-banking.io/app/accounts/afdbd255-8c4d-4268-b74e-7ae63598a78a"
           target="_blank"
           rel="noopener noreferrer"
           className="flex cursor-pointer! items-center"
