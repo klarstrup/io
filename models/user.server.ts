@@ -468,7 +468,9 @@ export const getUserJournalEntries = async (
                 ).map((dish) => ({
                   id: dish,
                   type: "FOOD_ENTRY",
-                  datetime: setHours(menu.date_time, 10),
+                  datetime: setHours(menu.date_time, 10, {
+                    in: tz("Europe/Copenhagen"),
+                  }),
                   nutritionalContents: null,
                   mealName: "Lunch",
                   food: { id: dish, description: dish, __typename: "Food" },
