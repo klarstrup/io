@@ -1,52 +1,52 @@
 import { tz } from "@date-fns/tz";
 import { Account } from "better-auth/types";
 import {
-    addWeeks,
-    getDay,
-    type Interval,
-    isAfter,
-    isBefore,
-    isWithinInterval,
-    setHours,
-    startOfDay,
+  addWeeks,
+  getDay,
+  type Interval,
+  isAfter,
+  isBefore,
+  isWithinInterval,
+  setHours,
+  startOfDay,
 } from "date-fns";
 import { JournalEntryType, journalEntryTypes } from "../app/diary/diaryUtils";
 import { auth, authUser } from "../auth";
 import type {
-    GQEvent,
-    GQExerciseInfo,
-    GQJournalEntryUnion,
-    GQMeal,
-    GQNextSet,
-    GQSleep,
-    GQTodo,
-    GQWorkout,
-    GQWorkoutExercise,
-    GQWorkoutSet,
-    GQWorkoutSetInput,
-    GQWorkoutSetMeta,
+  GQEvent,
+  GQExerciseInfo,
+  GQJournalEntryUnion,
+  GQMeal,
+  GQNextSet,
+  GQSleep,
+  GQTodo,
+  GQWorkout,
+  GQWorkoutExercise,
+  GQWorkoutSet,
+  GQWorkoutSetInput,
+  GQWorkoutSetMeta,
 } from "../graphql.generated/graphql";
 import type { MongoVEvent } from "../lib";
 import { DSBProductSummaries } from "../sources/dsb.server";
 import {
-    getURLsFromString,
-    getUserIcalEventsBetween,
-    getUserIcalTodosBetween,
-    IcalEvents,
+  getURLsFromString,
+  getUserIcalEventsBetween,
+  getUserIcalTodosBetween,
+  IcalEvents,
 } from "../sources/ical.server";
 import { MeyersMenus } from "../sources/meyers.server";
 import { PostNordShipmentInformation } from "../sources/postnord.server";
 import {
-    SteamAppAchievements,
-    SteamStoreItems,
-    SteamUserAchievements,
+  SteamAppAchievements,
+  SteamStoreItems,
+  SteamUserAchievements,
 } from "../sources/steam.server";
 import { DataSource } from "../sources/utils";
 import { getUserWithingsSleepSummarySeriesBetween } from "../sources/withings.server";
 import {
-    endOfDayButItRespectsDayStartHour,
-    rangeToQuery,
-    unique,
+  endOfDayButItRespectsDayStartHour,
+  rangeToQuery,
+  unique,
 } from "../utils";
 import { type ProxyCollection, proxyCollection } from "../utils.server";
 import { Attendee } from "../vendor/ical";
@@ -381,7 +381,9 @@ export const getUserJournalEntries = async (
               entries.push({
                 __typename: "Meal",
                 id: menu._id.toString(),
-                datetime: setHours(menu.date_time, 10),
+                datetime: setHours(menu.date_time, 12, {
+                  in: tz("Europe/Copenhagen"),
+                }),
                 type: "LUNCH",
                 mealName: "Lunch",
                 location: "H. C. Andersens Blvd. 11, 1553 København, Denmark",
